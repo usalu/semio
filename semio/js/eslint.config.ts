@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🔖semio/js/eslint.config.ts#Configuration](semiorepo://section/semio/js/eslint.config.ts/CONFIGURATION)
+// [👤semio📚js⚙️eslintconfigts🔖configuration](semiorepo://section/SEMIO/JS/ESLINT.CONFIG.TS/CONFIGURATION)
 // ESLint flat configuration for the semio JS package.
 // Configuration MUST export a valid ESLint flat config array.
 

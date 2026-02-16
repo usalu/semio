@@ -21,7 +21,7 @@
 
 // #region 🔖Exports
 
-// [🔖semio/js/sketchpad/apps/index.ts#Exports](semiorepo://section/semio/js/sketchpad/apps/index.ts/EXPORTS)
+// [👤semio📚js🗃️sketchpad🗃️apps💻indexts🔖exports](semiorepo://section/SEMIO/JS/SKETCHPAD/APPS/INDEX.TS/EXPORTS)
 // Re-exports of app plugin utilities and types from the shared module.
 // Exports MUST expose only the public API surface of the shared module.
 

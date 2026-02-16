@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🔖semio-repo/vscode/vite.config.ts#Configuration](semiorepo://section/semio-repo/vscode/vite.config.ts/CONFIGURATION)
+// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration](semiorepo://section/SEMIO-REPO/VSCODE/VITE.CONFIG.TS/CONFIGURATION)
 // Vite build configuration for the VS Code extension.
 // Configuration MUST output a CJS bundle targeting Node 18.
 

@@ -10,10 +10,10 @@ package repo
 import "encoding/json"
 
 // #region 🔖EventKind
-// [🔖semio-repo/go/events.go#EventKind](semiorepo://section/semio-repo/go/events.go/EVENT-KIND)
+// [🧰semiorepo📚go💻eventsgo🔖eventkind](semiorepo://section/SEMIO-REPO/GO/EVENTS.GO/EVENT-KIND)
 
 // EventKind identifies a changing interaction. CLI emits; server subscribes and notifies.
-// [🪨semio-repo/go/events.go#EventKind§EventKind](semiorepo://definition/semio-repo/go/events.go/EVENT-KIND/EVENT-KIND)
+// [🧰semiorepo📚go💻eventsgo🔖eventkind✂️eventkind](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/EVENT-KIND/EVENT-KIND)
 type EventKind string
 
 const (
@@ -49,10 +49,10 @@ const (
 // #endregion 🔖EventKind
 
 // #region 🔖Event
-// [🔖semio-repo/go/events.go#Event](semiorepo://section/semio-repo/go/events.go/EVENT)
+// [🧰semiorepo📚go💻eventsgo🔖event](semiorepo://section/SEMIO-REPO/GO/EVENTS.GO/EVENT)
 
 // Event is the canonical envelope for a changing interaction sent from CLI to server.
-// [🛠️semio-repo/go/events.go#Event§Event](semiorepo://definition/semio-repo/go/events.go/EVENT/EVENT)
+// [🧰semiorepo📚go💻eventsgo🔖event✂️event](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/EVENT/EVENT)
 type Event struct {
 	Kind    EventKind       `json:"kind"`
 	Source  string          `json:"source"`
@@ -62,10 +62,10 @@ type Event struct {
 // #endregion 🔖Event
 
 // #region 🔖Payloads
-// [🔖semio-repo/go/events.go#Payloads](semiorepo://section/semio-repo/go/events.go/PAYLOADS)
+// [🧰semiorepo📚go💻eventsgo🔖payloads](semiorepo://section/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS)
 
 // TicketPayload holds common ticket identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§TicketPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TICKET-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️ticketpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TICKET-PAYLOAD)
 type TicketPayload struct {
 	ID    string `json:"id"`
 	Year  int    `json:"year,omitempty"`
@@ -75,7 +75,7 @@ type TicketPayload struct {
 }
 
 // TicketOpenPayload payload for ticket.open.
-// [🛠️semio-repo/go/events.go#Payloads§TicketOpenPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TICKET-OPEN-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️ticketopenpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TICKET-OPEN-PAYLOAD)
 type TicketOpenPayload struct {
 	TicketPayload
 	Title  string `json:"title"`
@@ -88,7 +88,7 @@ type TicketOpenPayload struct {
 }
 
 // TicketClosePayload payload for ticket.close.
-// [🛠️semio-repo/go/events.go#Payloads§TicketClosePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TICKET-CLOSE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️ticketclosepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TICKET-CLOSE-PAYLOAD)
 type TicketClosePayload struct {
 	TicketPayload
 	Summary string   `json:"summary"`
@@ -97,7 +97,7 @@ type TicketClosePayload struct {
 }
 
 // TicketReopenPayload payload for ticket.reopen.
-// [🛠️semio-repo/go/events.go#Payloads§TicketReopenPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TICKET-REOPEN-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️ticketreopenpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TICKET-REOPEN-PAYLOAD)
 type TicketReopenPayload struct {
 	TicketPayload
 	Prompt string `json:"prompt"`
@@ -107,7 +107,7 @@ type TicketReopenPayload struct {
 }
 
 // TicketChangePayload payload for ticket.change.
-// [🛠️semio-repo/go/events.go#Payloads§TicketChangePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TICKET-CHANGE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️ticketchangepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TICKET-CHANGE-PAYLOAD)
 type TicketChangePayload struct {
 	TicketPayload
 	Title  *string `json:"title,omitempty"`
@@ -118,13 +118,13 @@ type TicketChangePayload struct {
 }
 
 // GoalPayload holds common goal identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§GoalPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/GOAL-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️goalpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/GOAL-PAYLOAD)
 type GoalPayload struct {
 	ID string `json:"id"`
 }
 
 // GoalOpenPayload payload for goal.open.
-// [🛠️semio-repo/go/events.go#Payloads§GoalOpenPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/GOAL-OPEN-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️goalopenpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/GOAL-OPEN-PAYLOAD)
 type GoalOpenPayload struct {
 	GoalPayload
 	Title       string `json:"title"`
@@ -134,7 +134,7 @@ type GoalOpenPayload struct {
 }
 
 // GoalClosePayload payload for goal.close.
-// [🛠️semio-repo/go/events.go#Payloads§GoalClosePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/GOAL-CLOSE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️goalclosepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/GOAL-CLOSE-PAYLOAD)
 type GoalClosePayload struct {
 	GoalPayload
 	Summary string `json:"summary"`
@@ -142,7 +142,7 @@ type GoalClosePayload struct {
 }
 
 // GoalReopenPayload payload for goal.reopen.
-// [🛠️semio-repo/go/events.go#Payloads§GoalReopenPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/GOAL-REOPEN-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️goalreopenpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/GOAL-REOPEN-PAYLOAD)
 type GoalReopenPayload struct {
 	GoalPayload
 	Prompt string `json:"prompt"`
@@ -152,7 +152,7 @@ type GoalReopenPayload struct {
 }
 
 // GoalChangePayload payload for goal.change.
-// [🛠️semio-repo/go/events.go#Payloads§GoalChangePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/GOAL-CHANGE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️goalchangepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/GOAL-CHANGE-PAYLOAD)
 type GoalChangePayload struct {
 	GoalPayload
 	Title       *string `json:"title,omitempty"`
@@ -162,14 +162,14 @@ type GoalChangePayload struct {
 }
 
 // ContributorPayload holds contributor identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§ContributorPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/CONTRIBUTOR-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️contributorpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/CONTRIBUTOR-PAYLOAD)
 type ContributorPayload struct {
 	Github string `json:"github"`
 	Author string `json:"author,omitempty"`
 }
 
 // CommitPayload payload for commit (GitHub push).
-// [🛠️semio-repo/go/events.go#Payloads§CommitPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/COMMIT-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️commitpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/COMMIT-PAYLOAD)
 type CommitPayload struct {
 	Author       string   `json:"author"`
 	Github       string   `json:"github"`
@@ -185,7 +185,7 @@ type CommitPayload struct {
 }
 
 // TodoPayload holds todo identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§TodoPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TODO-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️todopayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TODO-PAYLOAD)
 type TodoPayload struct {
 	ID       string `json:"id"`
 	ParentID string `json:"parent_id,omitempty"`
@@ -194,13 +194,13 @@ type TodoPayload struct {
 }
 
 // TodoCreatePayload payload for todo.create.
-// [🛠️semio-repo/go/events.go#Payloads§TodoCreatePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TODO-CREATE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️todocreatepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TODO-CREATE-PAYLOAD)
 type TodoCreatePayload struct {
 	TodoPayload
 }
 
 // TodoChangePayload payload for todo.change.
-// [🛠️semio-repo/go/events.go#Payloads§TodoChangePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TODO-CHANGE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️todochangepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TODO-CHANGE-PAYLOAD)
 type TodoChangePayload struct {
 	TodoPayload
 	Name        *string `json:"name,omitempty"`
@@ -208,20 +208,20 @@ type TodoChangePayload struct {
 }
 
 // TodoDeletePayload payload for todo.delete.
-// [🛠️semio-repo/go/events.go#Payloads§TodoDeletePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/TODO-DELETE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️tododeletepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/TODO-DELETE-PAYLOAD)
 type TodoDeletePayload struct {
 	TodoPayload
 }
 
 // WorkItem represents a single item a contributor is working on (project, bundle, folder, file, section, definition, ticket, goal, todo).
-// [🛠️semio-repo/go/events.go#Payloads§WorkItem](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/WORK-ITEM)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️workitem](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/WORK-ITEM)
 type WorkItem struct {
 	Kind string `json:"kind"`
 	ID   string `json:"id"`
 }
 
 // ContributorWork holds all work items for one contributor.
-// [🛠️semio-repo/go/events.go#Payloads§ContributorWork](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/CONTRIBUTOR-WORK)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️contributorwork](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/CONTRIBUTOR-WORK)
 type ContributorWork struct {
 	Github      string   `json:"github"`
 	Tickets     []string `json:"tickets"`
@@ -236,7 +236,7 @@ type ContributorWork struct {
 }
 
 // DraftPayload holds draft identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§DraftPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/DRAFT-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️draftpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/DRAFT-PAYLOAD)
 type DraftPayload struct {
 	Slug   string `json:"slug"`
 	Title  string `json:"title,omitempty"`
@@ -244,7 +244,7 @@ type DraftPayload struct {
 }
 
 // FilePayload holds file operation identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§FilePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/FILE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️filepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/FILE-PAYLOAD)
 type FilePayload struct {
 	Path   string `json:"path"`
 	From   string `json:"from,omitempty"`
@@ -252,7 +252,7 @@ type FilePayload struct {
 }
 
 // FolderPayload holds folder operation identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§FolderPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/FOLDER-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️folderpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/FOLDER-PAYLOAD)
 type FolderPayload struct {
 	Path   string `json:"path"`
 	From   string `json:"from,omitempty"`
@@ -260,7 +260,7 @@ type FolderPayload struct {
 }
 
 // SectionPayload holds section operation identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§SectionPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/SECTION-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️sectionpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/SECTION-PAYLOAD)
 type SectionPayload struct {
 	File    string `json:"file"`
 	Name    string `json:"name"`
@@ -270,7 +270,7 @@ type SectionPayload struct {
 }
 
 // IntegratePayload holds integrate operation identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§IntegratePayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/INTEGRATE-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️integratepayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/INTEGRATE-PAYLOAD)
 type IntegratePayload struct {
 	Source        string `json:"source"`
 	TargetFile    string `json:"target_file"`
@@ -279,7 +279,7 @@ type IntegratePayload struct {
 }
 
 // ExtractPayload holds extract operation identifiers.
-// [🛠️semio-repo/go/events.go#Payloads§ExtractPayload](semiorepo://definition/semio-repo/go/events.go/PAYLOADS/EXTRACT-PAYLOAD)
+// [🧰semiorepo📚go💻eventsgo🔖payloads✂️extractpayload](semiorepo://definition/SEMIO-REPO/GO/EVENTS.GO/PAYLOADS/EXTRACT-PAYLOAD)
 type ExtractPayload struct {
 	SourceFile    string `json:"source_file"`
 	SourceSection string `json:"source_section"`

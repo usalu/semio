@@ -21,7 +21,7 @@
 
 // #region 🔖Imports
 
-// [🔖semio/js/sketchpad/elements.tsx#Imports](semiorepo://section/semio/js/sketchpad/elements.tsx/IMPORTS)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/IMPORTS)
 // External library and internal module imports used across all sections.
 // Consumers MUST NOT add non-tree-shakeable imports.
 
@@ -121,14 +121,14 @@ import { Camera, cn, Plane, Point, Vector } from "../semio";
 
 // #region 🔖Section Specificity
 
-// [🔖semio/js/sketchpad/elements.tsx#Section Specificity](semiorepo://section/semio/js/sketchpad/elements.tsx/SECTION-SPECIFICITY)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/SECTION-SPECIFICITY)
 // Enum defining priority levels for section content ownership.
 // Consumers MUST use these constants for section precedence.
 
 /**
  * Priority enum for section content ownership across apps.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Section Specificity§SectionSpecificity](semiorepo://definition/semio/js/sketchpad/elements.tsx/SECTION-SPECIFICITY/SECTIONSPECIFICITY)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity🛠️sectionspecificity](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/SECTION-SPECIFICITY/SECTION-SPECIFICITY)
  **/
 export enum SectionSpecificity {
   SKETCHPAD = 0,
@@ -144,7 +144,7 @@ export enum SectionSpecificity {
 
 // #region 🔖Interaction Context
 
-// [🔖semio/js/sketchpad/elements.tsx#Interaction Context](semiorepo://section/semio/js/sketchpad/elements.tsx/INTERACTION-CONTEXT)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INTERACTION-CONTEXT)
 // React context for tracking active UI interactions.
 // Consumers MUST wrap interactive elements with InteractionProvider.
 
@@ -158,7 +158,7 @@ const ActiveInteractionContext = React.createContext<string | undefined>(undefin
 /**
  * Context provider for UI interaction commands and active state.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Interaction Context§InteractionProvider](semiorepo://definition/semio/js/sketchpad/elements.tsx/INTERACTION-CONTEXT/INTERACTIONPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext🪨interactionprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INTERACTION-CONTEXT/INTERACTION-PROVIDER)
  **/
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
@@ -179,14 +179,14 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 
 // #region 🔖Level Context
 
-// [🔖semio/js/sketchpad/elements.tsx#Level Context](semiorepo://section/semio/js/sketchpad/elements.tsx/LEVEL-CONTEXT)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LEVEL-CONTEXT)
 // React context for UI depth level tracking.
 // Consumers MUST wrap components with LevelProvider.
 
 /**
  * Union type for UI depth levels.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Level Context§Level](semiorepo://definition/semio/js/sketchpad/elements.tsx/LEVEL-CONTEXT/LEVEL)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext🛠️level](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LEVEL-CONTEXT/LEVEL)
  **/
 export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
 
@@ -195,7 +195,7 @@ const LevelContext = React.createContext<Level>("base");
 /**
  * Context provider that sets the current UI level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Level Context§LevelProvider](semiorepo://definition/semio/js/sketchpad/elements.tsx/LEVEL-CONTEXT/LEVELPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext🪨levelprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LEVEL-CONTEXT/LEVEL-PROVIDER)
  **/
 export const LevelProvider: React.FC<{
   level: Level;
@@ -207,7 +207,7 @@ export const LevelProvider: React.FC<{
 /**
  * Hook returning the current UI depth level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Level Context§useLevel](semiorepo://definition/semio/js/sketchpad/elements.tsx/LEVEL-CONTEXT/USELEVEL)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext🪨uselevel](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LEVEL-CONTEXT/USE-LEVEL)
  **/
 export const useLevel = () => React.useContext(LevelContext);
 
@@ -215,14 +215,14 @@ export const useLevel = () => React.useContext(LevelContext);
 
 // #region 🔖Element
 
-// [🔖semio/js/sketchpad/elements.tsx#Element](semiorepo://section/semio/js/sketchpad/elements.tsx/ELEMENT)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖element](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT)
 // Core element types, transaction context, and level-based CSS class helpers.
 // Consumers MUST use level functions for consistent styling.
 
 /**
  * Interface for start/finalize/abort lifecycle of a UI transaction.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Element§Transaction](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/TRANSACTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🛠️transaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/TRANSACTION)
  **/
 export interface Transaction {
   start?: () => void;
@@ -235,7 +235,7 @@ const TransactionContext = React.createContext<Transaction | undefined>(undefine
 /**
  * Context provider that supplies a Transaction to descendants.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§TransactionProvider](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/TRANSACTIONPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨transactionprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/TRANSACTION-PROVIDER)
  **/
 export const TransactionProvider: React.FC<{
   transaction?: Transaction;
@@ -247,14 +247,14 @@ export const TransactionProvider: React.FC<{
 /**
  * Hook returning the current Transaction context.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Element§useTransaction](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/USETRANSACTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨usetransaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/USE-TRANSACTION)
  **/
 export const useTransaction = (): Transaction | undefined => React.useContext(TransactionContext);
 
 /**
  * Base props interface requiring an id string.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Element§ElementBaseProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/ELEMENTBASEPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🛠️elementbaseprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/ELEMENT-BASE-PROPS)
  **/
 export interface ElementBaseProps {
   id: string;
@@ -263,14 +263,14 @@ export interface ElementBaseProps {
 /**
  * Extended element props inheriting ElementBaseProps.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Element§ElementProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/ELEMENTPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🛠️elementprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/ELEMENT-PROPS)
  **/
 export interface ElementProps extends ElementBaseProps { }
 
 /**
  * Returns the Tailwind background class for a given level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§getLevelBgClass](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/GETLEVELBGCLASS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelbgclass](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/GET-LEVEL-BG-CLASS)
  **/
 export const getLevelBgClass = (level: Level): string => {
   switch (level) {
@@ -290,7 +290,7 @@ export const getLevelBgClass = (level: Level): string => {
 /**
  * Returns the Tailwind hover background class for a given level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§getLevelHoverClass](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/GETLEVELHOVERCLASS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelhoverclass](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/GET-LEVEL-HOVER-CLASS)
  **/
 export const getLevelHoverClass = (level: Level): string => {
   switch (level) {
@@ -310,7 +310,7 @@ export const getLevelHoverClass = (level: Level): string => {
 /**
  * Returns the Tailwind active-state hover class for a given level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§getLevelActiveHoverClass](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/GETLEVELACTIVEHOVERCLASS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelactivehoverclass](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/GET-LEVEL-ACTIVE-HOVER-CLASS)
  **/
 export const getLevelActiveHoverClass = (level: Level): string => {
   switch (level) {
@@ -330,7 +330,7 @@ export const getLevelActiveHoverClass = (level: Level): string => {
 /**
  * Returns the Tailwind z-index class for a given level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§getLevelZClass](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/GETLEVELZCLASS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelzclass](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/GET-LEVEL-Z-CLASS)
  **/
 export const getLevelZClass = (level: Level): string => {
   switch (level) {
@@ -350,7 +350,7 @@ export const getLevelZClass = (level: Level): string => {
 /**
  * Returns the Tailwind border class for a given level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§getLevelBorderElementClass](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/GETLEVELBORDERELEMENTCLASS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelborderelementclass](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/GET-LEVEL-BORDER-ELEMENT-CLASS)
  **/
 export const getLevelBorderElementClass = (level: Level): string => {
   switch (level) {
@@ -370,7 +370,7 @@ export const getLevelBorderElementClass = (level: Level): string => {
 /**
  * Returns the Tailwind divide class for a given level.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Element§getLevelDivideElementClass](semiorepo://definition/semio/js/sketchpad/elements.tsx/ELEMENT/GETLEVELDIVIDEELEMENTCLASS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getleveldivideelementclass](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT/GET-LEVEL-DIVIDE-ELEMENT-CLASS)
  **/
 export const getLevelDivideElementClass = (level: Level): string => {
   switch (level) {
@@ -391,7 +391,7 @@ export const getLevelDivideElementClass = (level: Level): string => {
 
 // #region 🔖Command
 
-// [🔖semio/js/sketchpad/elements.tsx#Command](semiorepo://section/semio/js/sketchpad/elements.tsx/COMMAND)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖command](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/COMMAND)
 // Command palette UI built on cmdk primitives.
 // Consumers MUST use CommandInput for search functionality.
 
@@ -483,14 +483,14 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 
 // #region 🔖Footer
 
-// [🔖semio/js/sketchpad/elements.tsx#Footer](semiorepo://section/semio/js/sketchpad/elements.tsx/FOOTER)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/FOOTER)
 // Status bar component at the bottom of the layout.
 // Consumers MUST provide FooterItem entries for each action.
 
 /**
  * Configuration interface for a single footer action item.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Footer§FooterItem](semiorepo://definition/semio/js/sketchpad/elements.tsx/FOOTER/FOOTERITEM)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖footer🛠️footeritem](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/FOOTER/FOOTER-ITEM)
  **/
 export interface FooterItem {
   id: string;
@@ -506,7 +506,7 @@ export interface FooterItem {
 /**
  * Props interface for the Footer component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Footer§FooterProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/FOOTER/FOOTERPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖footer🛠️footerprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/FOOTER/FOOTER-PROPS)
  **/
 export interface FooterProps {
   items?: FooterItem[];
@@ -539,14 +539,14 @@ export { Footer };
 
 // #region 🔖Layout
 
-// [🔖semio/js/sketchpad/elements.tsx#Layout](semiorepo://section/semio/js/sketchpad/elements.tsx/LAYOUT)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LAYOUT)
 // Top-level layout orchestrating navbar, panels, canvas, and footer.
 // Consumers MUST provide a canvas element.
 
 /**
  * Props interface for the top-level Layout component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Layout§LayoutProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/LAYOUT/LAYOUTPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖layout🛠️layoutprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LAYOUT/LAYOUT-PROPS)
  **/
 export interface LayoutProps {
   navbar?: React.ReactNode;
@@ -595,7 +595,7 @@ export { Layout };
 
 // #region 🔖Popover
 
-// [🔖semio/js/sketchpad/elements.tsx#Popover](semiorepo://section/semio/js/sketchpad/elements.tsx/POPOVER)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/POPOVER)
 // Floating popover component built on Radix primitives.
 // Consumers MUST wrap content in PopoverContent.
 
@@ -634,14 +634,14 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 
 // #region 🔖Tooltip
 
-// [🔖semio/js/sketchpad/elements.tsx#Tooltip](semiorepo://section/semio/js/sketchpad/elements.tsx/TOOLTIP)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/TOOLTIP)
 // Tooltip components with expertise-level adaptive content.
 // Consumers MUST configure the expertise mode provider.
 
 /**
  * Configuration for enhanced tooltip with label, paths, and hotkey.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Tooltip§TooltipConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/TOOLTIP/TOOLTIPCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️tooltipconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/TOOLTIP/TOOLTIP-CONFIG)
  **/
 export interface TooltipConfig {
   labelKey: string;
@@ -653,7 +653,7 @@ export interface TooltipConfig {
 /**
  * Data interface for description-based tooltip content.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Tooltip§DescriptionTooltipData](semiorepo://definition/semio/js/sketchpad/elements.tsx/TOOLTIP/DESCRIPTIONTOOLTIPDATA)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️descriptiontooltipdata](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/TOOLTIP/DESCRIPTION-TOOLTIP-DATA)
  **/
 export interface DescriptionTooltipData {
   label?: string;
@@ -669,7 +669,7 @@ let getExpertiseFunction: (() => Expertise) | undefined;
 /**
  * Registers the expertise provider function for tooltips.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Tooltip§setTooltipModeProvider](semiorepo://definition/semio/js/sketchpad/elements.tsx/TOOLTIP/SETTOOLTIPMODEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️settooltipmodeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/TOOLTIP/SET-TOOLTIP-MODE-PROVIDER)
  **/
 export function setTooltipModeProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
@@ -679,7 +679,7 @@ export function setTooltipModeProvider(fn: () => Expertise) {
 /**
  * Hook returning the current expertise level for tooltips.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Tooltip§useTooltipMode](semiorepo://definition/semio/js/sketchpad/elements.tsx/TOOLTIP/USETOOLTIPMODE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️usetooltipmode](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/TOOLTIP/USE-TOOLTIP-MODE)
  **/
 export function useTooltipMode(): Expertise {
   if (!getExpertiseFunction) return Expertise.BEGINNER;
@@ -859,7 +859,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
 
 // #region 🔖Base Components
 
-// [🔖semio/js/sketchpad/elements.tsx#Base Components](semiorepo://section/semio/js/sketchpad/elements.tsx/BASE-COMPONENTS)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖basecomponents](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/BASE-COMPONENTS)
 // Foundational internal components like Label.
 // Consumers MUST use these as building blocks for inputs.
 
@@ -893,7 +893,7 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
 
 // #region 🔖Display Components
 
-// [🔖semio/js/sketchpad/elements.tsx#Display Components](semiorepo://section/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS)
 // Read-only display wrappers for tooltips and callouts.
 // Consumers MUST pass valid config objects.
 
@@ -937,14 +937,14 @@ export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, Semi
 
 // #region 🔖Aside
 
-// [🔖semio/js/sketchpad/elements.tsx#Aside](semiorepo://section/semio/js/sketchpad/elements.tsx/ASIDE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖aside](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/ASIDE)
 // Callout boxes for notes, tips, cautions, and dangers.
 // Consumers MUST specify a valid kind prop.
 
 /**
  * Props interface for the Aside callout component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Aside§AsideProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/ASIDE/ASIDEPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖aside🛠️asideprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/ASIDE/ASIDE-PROPS)
  **/
 export interface AsideProps {
   kind?: "note" | "tip" | "caution" | "danger";
@@ -969,7 +969,7 @@ const colorMap = {
 /**
  * Callout component rendering note, tip, caution, or danger boxes.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Aside§Aside](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/ASIDE/ASIDE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖aside🪨aside](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/ASIDE/ASIDE)
  **/
 export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) => {
   const Icon = iconMap[kind];
@@ -992,7 +992,7 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 
 // #region 🔖Avatar
 
-// [🔖semio/js/sketchpad/elements.tsx#Avatar](semiorepo://section/semio/js/sketchpad/elements.tsx/AVATAR)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/AVATAR)
 // User avatar components with image, fallback, drag, and table variants.
 // Consumers MUST provide content for the fallback.
 
@@ -1025,7 +1025,7 @@ AvatarFallback.displayName = "AvatarFallback";
 /**
  * Props interface for the DraggableAvatar component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Avatar§DraggableAvatarProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/AVATAR/DRAGGABLEAVATARPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🛠️draggableavatarprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/AVATAR/DRAGGABLE-AVATAR-PROPS)
  **/
 export interface DraggableAvatarProps {
   content: string;
@@ -1046,7 +1046,7 @@ export interface DraggableAvatarProps {
 /**
  * Avatar component with drag-and-drop support and selection styling.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Avatar§DraggableAvatar](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/AVATAR/DRAGGABLEAVATAR)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🪨draggableavatar](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/AVATAR/DRAGGABLE-AVATAR)
  **/
 export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
   ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onDoubleClick, onPointerEnter, onPointerLeave, className }, ref) => {
@@ -1069,7 +1069,7 @@ DraggableAvatar.displayName = "DraggableAvatar";
 /**
  * Props interface for the TableAvatar component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Avatar§TableAvatarProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/AVATAR/TABLEAVATARPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🛠️tableavatarprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/AVATAR/TABLE-AVATAR-PROPS)
  **/
 export interface TableAvatarProps {
   id?: string;
@@ -1085,7 +1085,7 @@ export interface TableAvatarProps {
 /**
  * Avatar component optimized for table row display.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Avatar§TableAvatar](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/AVATAR/TABLEAVATAR)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🪨tableavatar](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/AVATAR/TABLE-AVATAR)
  **/
 export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
   const nameStr = typeof name === "string" ? name : String(name ?? "");
@@ -1118,14 +1118,14 @@ export { Avatar, AvatarFallback, AvatarImage };
 
 // #region 🔖Card
 
-// [🔖semio/js/sketchpad/elements.tsx#Card](semiorepo://section/semio/js/sketchpad/elements.tsx/CARD)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/CARD)
 // Card container and grid layout for content blocks.
 // Consumers MUST provide a title string.
 
 /**
  * Props interface for the Card component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Card§CardProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/CARD/CARDPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🛠️cardprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/CARD/CARD-PROPS)
  **/
 export interface CardProps {
   title: string;
@@ -1137,7 +1137,7 @@ export interface CardProps {
 /**
  * Content card with title, icon, and children.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Card§Card](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/CARD/CARD)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🪨card](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/CARD/CARD)
  **/
 export const Card: React.FC<CardProps> = ({ title, icon, children, className = "" }) => {
   const IconComponent = typeof icon === "string" ? null : icon;
@@ -1156,7 +1156,7 @@ export const Card: React.FC<CardProps> = ({ title, icon, children, className = "
 /**
  * Props interface for the CardGrid component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Card§CardGridProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/CARD/CARDGRIDPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🛠️cardgridprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/CARD/CARD-GRID-PROPS)
  **/
 export interface CardGridProps {
   stagger?: boolean;
@@ -1167,7 +1167,7 @@ export interface CardGridProps {
 /**
  * Responsive grid layout for Card components.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Card§CardGrid](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/CARD/CARDGRID)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🪨cardgrid](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/CARD/CARD-GRID)
  **/
 export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, className = "" }) => {
   return <div className={`grid grid-cols-1 md:grid-cols-2 gap-medium my-medium ${className}`}>{children}</div>;
@@ -1177,14 +1177,14 @@ export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, c
 
 // #region 🔖Spinner
 
-// [🔖semio/js/sketchpad/elements.tsx#Spinner](semiorepo://section/semio/js/sketchpad/elements.tsx/SPINNER)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖spinner](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/SPINNER)
 // Animated loading spinner in small, medium, or large sizes.
 // Consumers MUST choose an appropriate size for the context.
 
 /**
  * Props interface for the Spinner component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Spinner§SpinnerProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/SPINNER/SPINNERPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖spinner🛠️spinnerprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/SPINNER/SPINNER-PROPS)
  **/
 export interface SpinnerProps {
   size?: "small" | "medium" | "large";
@@ -1194,7 +1194,7 @@ export interface SpinnerProps {
 /**
  * Animated SVG loading spinner.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Spinner§Spinner](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/SPINNER/SPINNER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖spinner🪨spinner](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/SPINNER/SPINNER)
  **/
 export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "" }) => {
   const sizeClass = size === "small" ? "size-small" : size === "large" ? "size-large" : "size-medium";
@@ -1210,14 +1210,14 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 
 // #region 🔖NotFound
 
-// [🔖semio/js/sketchpad/elements.tsx#NotFound](semiorepo://section/semio/js/sketchpad/elements.tsx/NOTFOUND)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖notfound](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/NOT-FOUND)
 // 404-style placeholder with icon, title, and back navigation.
 // Consumers MUST provide a title for the error.
 
 /**
  * Props interface for the NotFound component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#NotFound§NotFoundProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/NOTFOUND/NOTFOUNDPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖notfound🛠️notfoundprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/NOT-FOUND/NOT-FOUND-PROPS)
  **/
 export interface NotFoundProps {
   title: string;
@@ -1230,7 +1230,7 @@ export interface NotFoundProps {
 /**
  * Not-found placeholder page with navigation link.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#NotFound§NotFound](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/NOTFOUND/NOTFOUND)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖notfound🪨notfound](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/NOT-FOUND/NOT-FOUND)
  **/
 export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
   const navigate = useNavigate();
@@ -1253,14 +1253,14 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
 
 // #region 🔖LoadingRow
 
-// [🔖semio/js/sketchpad/elements.tsx#LoadingRow](semiorepo://section/semio/js/sketchpad/elements.tsx/LOADINGROW)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖loadingrow](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/LOADING-ROW)
 // Skeleton loading row with pulsing icon and name.
 // Consumers MUST provide a name for the placeholder.
 
 /**
  * Props interface for the LoadingRow component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#LoadingRow§LoadingRowProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/LOADINGROW/LOADINGROWPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖loadingrow🛠️loadingrowprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/LOADING-ROW/LOADING-ROW-PROPS)
  **/
 export interface LoadingRowProps {
   name: string;
@@ -1271,7 +1271,7 @@ export interface LoadingRowProps {
 /**
  * Skeleton row showing pulsing icon and name placeholder.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#LoadingRow§LoadingRow](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/LOADINGROW/LOADINGROW)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖loadingrow🪨loadingrow](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/LOADING-ROW/LOADING-ROW)
  **/
 export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = "" }) => {
   return (
@@ -1287,14 +1287,14 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
 
 // #region 🔖DiagramNode
 
-// [🔖semio/js/sketchpad/elements.tsx#DiagramNode](semiorepo://section/semio/js/sketchpad/elements.tsx/DIAGRAMNODE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/DIAGRAM-NODE)
 // Individual diagram node element with selection and hover states.
 // Consumers MUST provide content for the node.
 
 /**
  * Props interface for the DiagramNode component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#DiagramNode§DiagramNodeProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/DIAGRAMNODE/DIAGRAMNODEPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode🛠️diagramnodeprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/DIAGRAM-NODE/DIAGRAM-NODE-PROPS)
  **/
 export interface DiagramNodeProps {
   content: React.ReactNode;
@@ -1312,7 +1312,7 @@ export interface DiagramNodeProps {
 /**
  * Individual node element within a diagram graph.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#DiagramNode§DiagramNode](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/DIAGRAMNODE/DIAGRAMNODE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode🪨diagramnode](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/DIAGRAM-NODE/DIAGRAM-NODE)
  **/
 export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick }) => {
   return (
@@ -1344,7 +1344,7 @@ export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = fa
 /**
  * Empty placeholder node for adding new diagram entries.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#DiagramNode§PlaceholderDiagramNode](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/DIAGRAMNODE/PLACEHOLDERDIAGRAMNODE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode🪨placeholderdiagramnode](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/DIAGRAM-NODE/PLACEHOLDER-DIAGRAM-NODE)
  **/
 export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => void }> = ({ id = "diagram.placeholder", onClick }) => {
   return <DiagramNode content={useLabel(id)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
@@ -1354,7 +1354,7 @@ export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => voi
 
 // #region 🔖HoverCard
 
-// [🔖semio/js/sketchpad/elements.tsx#HoverCard](semiorepo://section/semio/js/sketchpad/elements.tsx/HOVERCARD)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖hovercard](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/HOVER-CARD)
 // Hover-triggered card built on Radix primitives.
 // Consumers MUST use HoverCardTrigger to activate.
 
@@ -1389,7 +1389,7 @@ export { HoverCard, HoverCardContent, HoverCardTrigger };
 
 // #region 🔖Icons
 
-// [🔖semio/js/sketchpad/elements.tsx#Icons](semiorepo://section/semio/js/sketchpad/elements.tsx/ICONS)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖icons](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/ICONS)
 // Cursor icon component for collaborative pointer display.
 // Consumers MUST provide position data for rendering.
 
@@ -1425,14 +1425,14 @@ export { Cursor };
 
 // #region 🔖Section
 
-// [🔖semio/js/sketchpad/elements.tsx#Section](semiorepo://section/semio/js/sketchpad/elements.tsx/SECTION)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖section](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/SECTION)
 // Collapsible section container with heading and specificity.
 // Consumers MUST provide a heading string.
 
 /**
  * Props interface for the Section component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Section§SectionProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/SECTION/SECTIONPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖section🛠️sectionprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/SECTION/SECTION-PROPS)
  **/
 export interface SectionProps {
   id?: string;
@@ -1460,14 +1460,14 @@ export { Section };
 
 // #region 🔖Steps
 
-// [🔖semio/js/sketchpad/elements.tsx#Steps](semiorepo://section/semio/js/sketchpad/elements.tsx/STEPS)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖steps](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/STEPS)
 // Ordered step list container for tutorial or wizard flows.
 // Consumers MUST provide step children in order.
 
 /**
  * Props interface for the Steps component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Display Components#Steps§StepsProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/STEPS/STEPSPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖steps🛠️stepsprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/STEPS/STEPS-PROPS)
  **/
 export interface StepsProps {
   children: React.ReactNode;
@@ -1477,7 +1477,7 @@ export interface StepsProps {
 /**
  * Ordered step list container rendering numbered children.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Display Components#Steps§Steps](semiorepo://definition/semio/js/sketchpad/elements.tsx/DISPLAY-COMPONENTS/STEPS/STEPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖steps🪨steps](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/STEPS/STEPS)
  **/
 export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
   return <div className={`steps-container space-y-medium my-medium ${className}`}>{children}</div>;
@@ -1493,7 +1493,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 
 // #region 🔖ActionGroup
 
-// [🔖semio/js/sketchpad/elements.tsx#ActionGroup](semiorepo://section/semio/js/sketchpad/elements.tsx/ACTIONGROUP)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS)
 // Compact action button group with dropdown support.
 // Consumers MUST provide action items for the group.
 
@@ -1879,7 +1879,7 @@ export type { ButtonCycleProps, ButtonProps };
 
 // #region 🔖Combobox
 
-// [🔖semio/js/sketchpad/elements.tsx#Combobox](semiorepo://section/semio/js/sketchpad/elements.tsx/COMBOBOX)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖combobox](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/COMBOBOX)
 // Searchable dropdown with popover options list.
 // Consumers MUST provide options and onValueChange handler.
 
@@ -1903,7 +1903,7 @@ interface ComboboxProps extends ElementProps {
 /**
  * Searchable combobox dropdown with autocomplete filtering.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Input Components#Combobox§Combobox](semiorepo://definition/semio/js/sketchpad/elements.tsx/INPUT-COMPONENTS/COMBOBOX/COMBOBOX)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖combobox🪨combobox](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/COMBOBOX/COMBOBOX)
  **/
 export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
   const transaction = useTransaction();
@@ -1980,7 +1980,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
 
 // #region 🔖Input
 
-// [🔖semio/js/sketchpad/elements.tsx#Input](semiorepo://section/semio/js/sketchpad/elements.tsx/INPUT)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖input](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/INPUT)
 // Text input field with label, validation, and clear support.
 // Consumers MUST provide an id for accessibility.
 
@@ -2100,7 +2100,7 @@ export { Input };
 
 // #region 🔖Select
 
-// [🔖semio/js/sketchpad/elements.tsx#Select](semiorepo://section/semio/js/sketchpad/elements.tsx/SELECT)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖select](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/SELECT)
 // Dropdown select built on Radix primitives.
 // Consumers MUST use SelectItem children for options.
 
@@ -2276,7 +2276,7 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 
 // #region 🔖Slider
 
-// [🔖semio/js/sketchpad/elements.tsx#Slider](semiorepo://section/semio/js/sketchpad/elements.tsx/SLIDER)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖slider](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/SLIDER)
 // Range slider built on Radix primitives.
 // Consumers MUST provide min and max values.
 
@@ -2498,7 +2498,7 @@ export { Slider };
 
 // #region 🔖Stepper
 
-// [🔖semio/js/sketchpad/elements.tsx#Stepper](semiorepo://section/semio/js/sketchpad/elements.tsx/STEPPER)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖stepper](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/STEPPER)
 // Numeric stepper with increment/decrement and drag adjustment.
 // Consumers MUST provide min and max bounds.
 
@@ -2518,7 +2518,7 @@ interface StepperProps extends ElementProps {
 /**
  * Numeric stepper with increment, decrement, and drag-to-adjust.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Input Components#Stepper§Stepper](semiorepo://definition/semio/js/sketchpad/elements.tsx/INPUT-COMPONENTS/STEPPER/STEPPER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖stepper🪨stepper](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/STEPPER/STEPPER)
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id }) => {
   const transaction = useTransaction();
@@ -2737,7 +2737,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 
 // #region 🔖Textarea
 
-// [🔖semio/js/sketchpad/elements.tsx#Textarea](semiorepo://section/semio/js/sketchpad/elements.tsx/TEXTAREA)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖textarea](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/TEXTAREA)
 // Multi-line text input with label and validation.
 // Consumers MUST provide an id for the field.
 
@@ -2836,7 +2836,7 @@ export { Textarea };
 
 // #region 🔖Toggle
 
-// [🔖semio/js/sketchpad/elements.tsx#Toggle](semiorepo://section/semio/js/sketchpad/elements.tsx/TOGGLE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖toggle](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/TOGGLE)
 // Toggle button with pressed/unpressed states.
 // Consumers MUST handle onPressedChange events.
 
@@ -2861,7 +2861,7 @@ const toggleVariants = cva(
 /**
  * Configuration interface for a single toggle option with value and label.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Input Components#Toggle§ToggleItem](semiorepo://definition/semio/js/sketchpad/elements.tsx/INPUT-COMPONENTS/TOGGLE/TOGGLEITEM)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖toggle🛠️toggleitem](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/TOGGLE/TOGGLE-ITEM)
  **/
 export interface ToggleItem<T extends string> {
   value: T;
@@ -2916,7 +2916,7 @@ export type { ToggleProps };
 
 // #region 🔖ToggleGroup
 
-// [🔖semio/js/sketchpad/elements.tsx#ToggleGroup](semiorepo://section/semio/js/sketchpad/elements.tsx/TOGGLEGROUP)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖togglegroup](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/TOGGLE-GROUP)
 // Group of mutually exclusive or multi-select toggles.
 // Consumers MUST provide items with distinct values.
 
@@ -3222,7 +3222,7 @@ export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
 // #region 🔖Accordion
 
-// [🔖semio/js/sketchpad/elements.tsx#Accordion](semiorepo://section/semio/js/sketchpad/elements.tsx/ACCORDION)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖accordion](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/ACCORDION)
 // Collapsible accordion built on Radix primitives.
 // Consumers MUST use AccordionItem children.
 
@@ -3266,7 +3266,7 @@ export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 
 // #region 🔖Collapsible
 
-// [🔖semio/js/sketchpad/elements.tsx#Collapsible](semiorepo://section/semio/js/sketchpad/elements.tsx/COLLAPSIBLE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖collapsible](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/COLLAPSIBLE)
 // Collapsible section built on Radix primitives.
 // Consumers MUST use CollapsibleTrigger.
 
@@ -3288,7 +3288,7 @@ export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 
 // #region 🔖Dialog
 
-// [🔖semio/js/sketchpad/elements.tsx#Dialog](semiorepo://section/semio/js/sketchpad/elements.tsx/DIALOG)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖dialog](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/DIALOG)
 // Modal dialog built on Radix primitives.
 // Consumers MUST use DialogTrigger to open.
 
@@ -3374,7 +3374,7 @@ export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 
 // #region 🔖Resizable
 
-// [🔖semio/js/sketchpad/elements.tsx#Resizable](semiorepo://section/semio/js/sketchpad/elements.tsx/RESIZABLE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖resizable](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/RESIZABLE)
 // Resizable panel layout built on react-resizable-panels.
 // Consumers MUST use ResizableHandle between panels.
 
@@ -3445,7 +3445,7 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
 // #region 🔖Scrollable
 
-// [🔖semio/js/sketchpad/elements.tsx#Scrollable](semiorepo://section/semio/js/sketchpad/elements.tsx/SCROLLABLE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖scrollable](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/SCROLLABLE)
 // Custom scrollable area built on Radix ScrollArea.
 // Consumers MUST wrap content in Scrollable.
 
@@ -3489,14 +3489,14 @@ export { Scrollable, ScrollBar };
 
 // #region 🔖Band
 
-// [🔖semio/js/sketchpad/elements.tsx#Band](semiorepo://section/semio/js/sketchpad/elements.tsx/BAND)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖band](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/BAND)
 // Horizontal band of navigation items with labels and icons.
 // Consumers MUST provide BandItem entries.
 
 /**
  * Configuration interface for a single band item.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Band§BandItem](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/BAND/BANDITEM)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖band🛠️banditem](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/BAND/BAND-ITEM)
  **/
 export interface BandItem {
   content: React.ReactNode;
@@ -3507,7 +3507,7 @@ export interface BandItem {
 /**
  * Props interface for the Band component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Band§BandProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/BAND/BANDPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖band🛠️bandprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/BAND/BAND-PROPS)
  **/
 export interface BandProps {
   id?: string;
@@ -3545,14 +3545,14 @@ export { Band as Band };
 
 // #region 🔖Strip
 
-// [🔖semio/js/sketchpad/elements.tsx#Strip](semiorepo://section/semio/js/sketchpad/elements.tsx/STRIP)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖strip](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/STRIP)
 // Vertical strip of icon items for compact navigation.
 // Consumers MUST provide StripItem entries.
 
 /**
  * Configuration interface for a single strip item.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Strip§StripItem](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/STRIP/STRIPITEM)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖strip🛠️stripitem](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/STRIP/STRIP-ITEM)
  **/
 export interface StripItem {
   content: React.ReactNode;
@@ -3563,7 +3563,7 @@ export interface StripItem {
 /**
  * Props interface for the Strip component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Strip§StripProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/STRIP/STRIPPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖strip🛠️stripprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/STRIP/STRIP-PROPS)
  **/
 export interface StripProps {
   id?: string;
@@ -3601,14 +3601,14 @@ export { Strip };
 
 // #region 🔖Navbar
 
-// [🔖semio/js/sketchpad/elements.tsx#Navbar](semiorepo://section/semio/js/sketchpad/elements.tsx/NAVBAR)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖navbar](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/NAVBAR)
 // Top navigation bar with icon items.
 // Consumers MUST provide NavbarItem entries.
 
 /**
  * Configuration interface for a single navbar item.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Navbar§NavbarItem](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/NAVBAR/NAVBARITEM)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖navbar🛠️navbaritem](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/NAVBAR/NAVBAR-ITEM)
  **/
 export interface NavbarItem {
   content: React.ReactNode;
@@ -3619,7 +3619,7 @@ export interface NavbarItem {
 /**
  * Props interface for the Navbar component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Navbar§NavbarProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/NAVBAR/NAVBARPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖navbar🛠️navbarprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/NAVBAR/NAVBAR-PROPS)
  **/
 export interface NavbarProps {
   items: NavbarItem[];
@@ -3648,7 +3648,7 @@ export { Navbar };
 
 // #region 🔖Tabs
 
-// [🔖semio/js/sketchpad/elements.tsx#Tabs](semiorepo://section/semio/js/sketchpad/elements.tsx/TABS)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tabs](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TABS)
 // Tab container built on Radix primitives.
 // Consumers MUST use TabsTrigger and TabsContent.
 
@@ -3690,7 +3690,7 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #region 🔖Tree
 
-// [🔖semio/js/sketchpad/elements.tsx#Tree](semiorepo://section/semio/js/sketchpad/elements.tsx/TREE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE)
 // Hierarchical tree view with sections, items, and file trees.
 // Consumers MUST wrap components in TreeStateProvider.
 
@@ -3705,7 +3705,7 @@ const TreeStateContext = React.createContext<TreeStateContextValue | null>(null)
 /**
  * Context provider managing tree expansion state.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeStateProvider](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREESTATEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treestateprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-STATE-PROVIDER)
  **/
 export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [openStates, setOpenStates] = React.useState<Record<string, boolean>>({});
@@ -3724,7 +3724,7 @@ export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 /**
  * Hook returning tree expansion state and toggle functions.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§useTreeState](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/USETREESTATE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨usetreestate](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/USE-TREE-STATE)
  **/
 export const useTreeState = () => {
   const context = React.useContext(TreeStateContext);
@@ -3765,7 +3765,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
 /**
  * Wrapper rendering tree children with connecting lines.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeContent](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREECONTENT)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treecontent](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-CONTENT)
  **/
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
@@ -3780,7 +3780,7 @@ export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children 
 /**
  * Configuration interface for an action button on a tree section.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeSectionAction](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREESECTIONACTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🛠️treesectionaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-SECTION-ACTION)
  **/
 export interface TreeSectionAction {
   icon: React.ReactNode;
@@ -3845,7 +3845,7 @@ interface SortableTreeItemsProps {
 /**
  * Collapsible tree section header with optional action buttons.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeSection](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREESECTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treesection](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-SECTION)
  **/
 export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
@@ -4138,7 +4138,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 /**
  * Drag-and-drop sortable container for tree items.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§SortableTreeItems](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/SORTABLETREEITEMS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨sortabletreeitems](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/SORTABLE-TREE-ITEMS)
  **/
 export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onReorder, children }) => {
   const handleDragEnd = (event: DragEndEvent) => {
@@ -4164,7 +4164,7 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
 /**
  * Single tree item row with icon, label, and interaction handlers.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeItem](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREEITEM)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treeitem](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ITEM)
  **/
 export const TreeItem: React.FC<TreeItemProps> = ({
   label,
@@ -4310,7 +4310,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 /**
  * Iterator rendering a list of tree item children.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeItems](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREEITEMS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treeitems](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ITEMS)
  **/
 export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (child: React.ReactNode, index: number, isLast: boolean) => React.ReactNode }> = ({ children, renderItem }) => {
   return <>{children.map((child, index) => renderItem(child, index, index === children.length - 1))}</>;
@@ -4319,7 +4319,7 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
 /**
  * Data interface for a node in a file tree.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§FileTreeNode](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/FILETREENODE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🛠️filetreenode](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/FILE-TREE-NODE)
  **/
 export interface FileTreeNode {
   title: string;
@@ -4332,7 +4332,7 @@ export interface FileTreeNode {
 /**
  * Hierarchical tree view component with optional file tree rendering.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§Tree](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/TREE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨tree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE)
  **/
 export const Tree: React.FC<{ children: React.ReactNode; className?: string; showLines?: boolean }> & {
   Files: React.FC<TreeFilesProps>;
@@ -4455,7 +4455,7 @@ Tree.Section = Tree.Files;
 /**
  * Alias for Tree.Files rendering a file tree from FileTreeNode data.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§FileTree](semiorepo://definition/semio/js/sketchpad/elements.tsx/AGGREGATION-COMPONENTS/TREE/FILETREE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨filetree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/FILE-TREE)
  **/
 export const FileTree = Tree.Files;
 
@@ -4469,14 +4469,14 @@ export const FileTree = Tree.Files;
 
 // #region 🔖Breadcrumb
 
-// [🔖semio/js/sketchpad/elements.tsx#Breadcrumb](semiorepo://section/semio/js/sketchpad/elements.tsx/BREADCRUMB)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖breadcrumb](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/NAVIGATION-COMPONENTS/BREADCRUMB)
 // Breadcrumb trail for hierarchical page navigation.
 // Consumers MUST provide BreadcrumbItemData entries.
 
 /**
  * Data interface for a single breadcrumb entry.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Navigation Components#Breadcrumb§BreadcrumbItemData](semiorepo://definition/semio/js/sketchpad/elements.tsx/NAVIGATION-COMPONENTS/BREADCRUMB/BREADCRUMBITEMDATA)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖breadcrumb🛠️breadcrumbitemdata](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/NAVIGATION-COMPONENTS/BREADCRUMB/BREADCRUMB-ITEM-DATA)
  **/
 export interface BreadcrumbItemData {
   id?: string;
@@ -4647,14 +4647,14 @@ export { Breadcrumb, BreadcrumbItem };
 
 // #region 🔖PageNavigation
 
-// [🔖semio/js/sketchpad/elements.tsx#PageNavigation](semiorepo://section/semio/js/sketchpad/elements.tsx/PAGENAVIGATION)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖pagenavigation](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/NAVIGATION-COMPONENTS/PAGE-NAVIGATION)
 // Previous/next page navigation links.
 // Consumers MUST provide PageNavigationLink data.
 
 /**
  * Configuration interface for a previous/next page link.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Navigation Components#PageNavigation§PageNavigationLink](semiorepo://definition/semio/js/sketchpad/elements.tsx/NAVIGATION-COMPONENTS/PAGENAVIGATION/PAGENAVIGATIONLINK)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖pagenavigation🛠️pagenavigationlink](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/NAVIGATION-COMPONENTS/PAGE-NAVIGATION/PAGE-NAVIGATION-LINK)
  **/
 export interface PageNavigationLink {
   path: string;
@@ -4665,7 +4665,7 @@ export interface PageNavigationLink {
 /**
  * Props interface for the PageNavigation component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Navigation Components#PageNavigation§PageNavigationProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/NAVIGATION-COMPONENTS/PAGENAVIGATION/PAGENAVIGATIONPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖pagenavigation🛠️pagenavigationprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/NAVIGATION-COMPONENTS/PAGE-NAVIGATION/PAGE-NAVIGATION-PROPS)
  **/
 export interface PageNavigationProps {
   prev?: PageNavigationLink;
@@ -4718,21 +4718,21 @@ export { PageNavigation };
 
 // #region 🔖Panel
 
-// [🔖semio/js/sketchpad/elements.tsx#Panel](semiorepo://section/semio/js/sketchpad/elements.tsx/PANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS)
 // Resizable dockable panel with sections and collapse support.
 // Consumers MUST set resizeSide for the handle.
 
 /**
  * Union type for panel resize handle positions.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#Panel§ResizeSide](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/PANEL/RESIZESIDE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel🛠️resizeside](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/PANEL/RESIZE-SIDE)
  **/
 export type ResizeSide = "left" | "right" | "top" | "bottom";
 
 /**
  * Configuration interface for a collapsible section within a panel.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#Panel§PanelSection](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/PANEL/PANELSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel🛠️panelsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/PANEL/PANEL-SECTION)
  **/
 export interface PanelSection {
   id: string;
@@ -4753,7 +4753,7 @@ export interface PanelSection {
 /**
  * Props interface for the Panel component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#Panel§PanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/PANEL/PANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel🛠️panelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/PANEL/PANEL-PROPS)
  **/
 export interface PanelProps {
   visible?: boolean;
@@ -4891,14 +4891,14 @@ export { Panel };
 
 // #region 🔖PanelGroup
 
-// [🔖semio/js/sketchpad/elements.tsx#PanelGroup](semiorepo://section/semio/js/sketchpad/elements.tsx/PANELGROUP)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panelgroup](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/PANEL-GROUP)
 // Flex container grouping multiple panels together.
 // Consumers MUST provide panel children.
 
 /**
  * Props interface for the PanelGroup component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#PanelGroup§PanelGroupProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/PANELGROUP/PANELGROUPPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panelgroup🛠️panelgroupprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/PANEL-GROUP/PANEL-GROUP-PROPS)
  **/
 export interface PanelGroupProps {
   children: React.ReactNode;
@@ -4918,14 +4918,14 @@ export { PanelGroup };
 
 // #region 🔖LeftPanel
 
-// [🔖semio/js/sketchpad/elements.tsx#LeftPanel](semiorepo://section/semio/js/sketchpad/elements.tsx/LEFTPANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖leftpanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/LEFT-PANEL)
 // Left-docked panel variant with right resize handle.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for LeftPanel omitting resizeSide.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Panel Components#LeftPanel§LeftPanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/LEFTPANEL/LEFTPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖leftpanel🛠️leftpanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/LEFT-PANEL/LEFT-PANEL-PROPS)
  **/
 export type LeftPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -4937,14 +4937,14 @@ export { LeftPanel };
 
 // #region 🔖RightPanel
 
-// [🔖semio/js/sketchpad/elements.tsx#RightPanel](semiorepo://section/semio/js/sketchpad/elements.tsx/RIGHTPANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖rightpanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/RIGHT-PANEL)
 // Right-docked panel variant with left resize handle.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for RightPanel omitting resizeSide.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Panel Components#RightPanel§RightPanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/RIGHTPANEL/RIGHTPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖rightpanel🛠️rightpanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/RIGHT-PANEL/RIGHT-PANEL-PROPS)
  **/
 export type RightPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -4956,14 +4956,14 @@ export { RightPanel };
 
 // #region 🔖MiddlePanel
 
-// [🔖semio/js/sketchpad/elements.tsx#MiddlePanel](semiorepo://section/semio/js/sketchpad/elements.tsx/MIDDLEPANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖middlepanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/MIDDLE-PANEL)
 // Center panel variant without resize handles.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for MiddlePanel omitting resizeSide.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Panel Components#MiddlePanel§MiddlePanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/MIDDLEPANEL/MIDDLEPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖middlepanel🛠️middlepanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/MIDDLE-PANEL/MIDDLE-PANEL-PROPS)
  **/
 export type MiddlePanelProps = Omit<PanelProps, "resizeSide"> & {
   resizeSide?: "left" | "right";
@@ -4977,14 +4977,14 @@ export { MiddlePanel };
 
 // #region 🔖BottomPanel
 
-// [🔖semio/js/sketchpad/elements.tsx#BottomPanel](semiorepo://section/semio/js/sketchpad/elements.tsx/BOTTOMPANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖bottompanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/BOTTOM-PANEL)
 // Bottom-docked panel variant with top resize handle.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for BottomPanel omitting resizeSide.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Panel Components#BottomPanel§BottomPanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/BOTTOMPANEL/BOTTOMPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖bottompanel🛠️bottompanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/BOTTOM-PANEL/BOTTOM-PANEL-PROPS)
  **/
 export type BottomPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -4996,14 +4996,14 @@ export { BottomPanel };
 
 // #region 🔖SidePanel
 
-// [🔖semio/js/sketchpad/elements.tsx#SidePanel](semiorepo://section/semio/js/sketchpad/elements.tsx/SIDEPANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖sidepanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/SIDE-PANEL)
 // Collapsible side panel with tabbed content.
 // Consumers MUST provide SidePanelTabConfig entries.
 
 /**
  * Configuration interface for a side panel tab.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#SidePanel§SidePanelTabConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/SIDEPANEL/SIDEPANELTABCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖sidepanel🛠️sidepaneltabconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/SIDE-PANEL/SIDE-PANEL-TAB-CONFIG)
  **/
 export interface SidePanelTabConfig {
   id: string;
@@ -5015,7 +5015,7 @@ export interface SidePanelTabConfig {
 /**
  * Props interface for the SidePanel component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#SidePanel§SidePanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/SIDEPANEL/SIDEPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖sidepanel🛠️sidepanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/SIDE-PANEL/SIDE-PANEL-PROPS)
  **/
 export interface SidePanelProps {
   position: "left" | "right";
@@ -5123,14 +5123,14 @@ export { SidePanel };
 
 // #region 🔖HudPanel
 
-// [🔖semio/js/sketchpad/elements.tsx#HudPanel](semiorepo://section/semio/js/sketchpad/elements.tsx/HUDPANEL)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/HUD-PANEL)
 // Floating heads-up display panel with tabs.
 // Consumers MUST provide HudPanelTabConfig entries.
 
 /**
  * Configuration interface for a HUD panel tab.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#HudPanel§HudPanelTabConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/HUDPANEL/HUDPANELTABCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel🛠️hudpaneltabconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/HUD-PANEL/HUD-PANEL-TAB-CONFIG)
  **/
 export interface HudPanelTabConfig {
   id: string;
@@ -5142,7 +5142,7 @@ export interface HudPanelTabConfig {
 /**
  * Props interface for the HudPanel component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Panel Components#HudPanel§HudPanelProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/PANEL-COMPONENTS/HUDPANEL/HUDPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel🛠️hudpanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/HUD-PANEL/HUD-PANEL-PROPS)
  **/
 export interface HudPanelProps {
   visible?: boolean;
@@ -5251,14 +5251,14 @@ export { HudPanel };
 
 // #region 🔖Window
 
-// [🔖semio/js/sketchpad/elements.tsx#Window](semiorepo://section/semio/js/sketchpad/elements.tsx/WINDOW)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖window](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/WINDOW)
 // Draggable, resizable floating window with dashed border.
 // Consumers MUST provide a WindowConfig object.
 
 /**
  * Configuration interface for a floating window instance.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Window§WindowConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/WINDOW/WINDOWCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖window🛠️windowconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/WINDOW/WINDOW-CONFIG)
  **/
 export interface WindowConfig {
   id: string;
@@ -5361,14 +5361,14 @@ export { Window };
 
 // #region 🔖Page
 
-// [🔖semio/js/sketchpad/elements.tsx#Page](semiorepo://section/semio/js/sketchpad/elements.tsx/PAGE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/PAGE)
 // Full-page content wrapper with frontmatter and footer.
 // Consumers MUST provide frontmatter and children.
 
 /**
  * Frontmatter metadata interface for a documentation page.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Page§PageFrontmatter](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/PAGE/PAGEFRONTMATTER)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page🛠️pagefrontmatter](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/PAGE/PAGE-FRONTMATTER)
  **/
 export interface PageFrontmatter {
   title?: string;
@@ -5382,7 +5382,7 @@ export interface PageFrontmatter {
 /**
  * Props interface for the Page component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Page§PageProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/PAGE/PAGEPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page🛠️pageprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/PAGE/PAGE-PROPS)
  **/
 export interface PageProps {
   frontmatter?: PageFrontmatter;
@@ -5395,7 +5395,7 @@ export interface PageProps {
 /**
  * Full-page wrapper with frontmatter header and footer.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Page§Page](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/PAGE/PAGE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page🪨page](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/PAGE/PAGE)
  **/
 export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusComplete, footer, children }) => {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
@@ -5427,7 +5427,7 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
 // #region 🔖Diagram
 
-// [🔖semio/js/sketchpad/elements.tsx#Diagram](semiorepo://section/semio/js/sketchpad/elements.tsx/DIAGRAM)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM)
 // Interactive node-edge diagram built on ReactFlow and D3 force.
 // Consumers MUST provide nodes and edges arrays.
 
@@ -5457,21 +5457,21 @@ export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTyp
 /**
  * Base pixel unit for diagram node sizing.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Diagram§DIAGRAM_UNIT](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-UNIT)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🪨diagramunit](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-UNIT)
  **/
 export const DIAGRAM_UNIT = 48;
 
 /**
  * Union type for diagram layout directions (TB/BT/LR/RL).
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Diagram§DiagramLayoutDirection](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DIAGRAMLAYOUTDIRECTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramlayoutdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-LAYOUT-DIRECTION)
  **/
 export type DiagramLayoutDirection = "TB" | "BT" | "LR" | "RL";
 
 /**
  * Configuration interface for dagre-based diagram layout.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Diagram§DiagramLayoutOptions](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DIAGRAMLAYOUTOPTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramlayoutoptions](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-LAYOUT-OPTIONS)
  **/
 export interface DiagramLayoutOptions {
   direction?: DiagramLayoutDirection;
@@ -5484,7 +5484,7 @@ export interface DiagramLayoutOptions {
 /**
  * Computes dagre layout positions for diagram nodes and edges.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Diagram§calculateDiagramLayout](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/CALCULATEDIAGRAMLAYOUT)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️calculatediagramlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/CALCULATE-DIAGRAM-LAYOUT)
  **/
 export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {
   const { direction = "TB", nodeWidth = DIAGRAM_UNIT, nodeHeight = DIAGRAM_UNIT, rankSep = DIAGRAM_UNIT * 1.67, nodeSep = DIAGRAM_UNIT * 1.04 } = options;
@@ -5520,7 +5520,7 @@ export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: Di
 /**
  * Configuration interface for D3 force simulation parameters.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Diagram§DiagramForceConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DIAGRAMFORCECONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramforceconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-FORCE-CONFIG)
  **/
 export interface DiagramForceConfig {
   enabled: boolean;
@@ -5534,7 +5534,7 @@ export interface DiagramForceConfig {
 /**
  * Default D3 force configuration values.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Diagram§defaultDiagramForceConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DEFAULTDIAGRAMFORCECONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🪨defaultdiagramforceconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DEFAULT-DIAGRAM-FORCE-CONFIG)
  **/
 export const defaultDiagramForceConfig: DiagramForceConfig = {
   enabled: false,
@@ -5557,7 +5557,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 /**
  * Props interface for the Diagram component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Diagram§DiagramProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DIAGRAMPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-PROPS)
  **/
 export interface DiagramProps {
   nodeTypes: NodeTypes;
@@ -6006,7 +6006,7 @@ export type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, On
 /**
  * Hook computing and memoizing diagram layout from nodes and edges.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Window Components#Diagram§useDiagramLayout](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/USEDIAGRAMLAYOUT)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️usediagramlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/USE-DIAGRAM-LAYOUT)
  **/
 export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], layoutOptions?: DiagramLayoutOptions): { nodes: Node[]; edges: Edge[] } {
   return React.useMemo(() => {
@@ -6026,7 +6026,7 @@ interface DiagramSkeletonProps {
 /**
  * Skeleton loading placeholder for a diagram.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Diagram§DiagramSkeleton](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/DIAGRAM/DIAGRAMSKELETON)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🪨diagramskeleton](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/DIAGRAM/DIAGRAM-SKELETON)
  **/
 export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, className = "" }) => {
   const skeletonNodes: Node[] = React.useMemo(
@@ -6074,7 +6074,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
 
 // #region 🔖Scene
 
-// [🔖semio/js/sketchpad/elements.tsx#Scene](semiorepo://section/semio/js/sketchpad/elements.tsx/SCENE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE)
 // 3D scene viewer built on React Three Fiber.
 // Consumers MUST provide SceneGeometry data.
 
@@ -6085,7 +6085,7 @@ let selectableCursorUsageCount = 0;
 /**
  * Interface for a geometry entry in a 3D scene.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Scene§SceneGeometry](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/SCENEGEOMETRY)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️scenegeometry](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/SCENE-GEOMETRY)
  **/
 export interface SceneGeometry {
   guid: string;
@@ -6101,7 +6101,7 @@ export interface SceneGeometry {
 /**
  * Extended SceneGeometry with transform delta support.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Scene§TransformableGeometry](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/TRANSFORMABLEGEOMETRY)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️transformablegeometry](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/TRANSFORMABLE-GEOMETRY)
  **/
 export interface TransformableGeometry extends SceneGeometry {
   isTransformable?: boolean;
@@ -6110,7 +6110,7 @@ export interface TransformableGeometry extends SceneGeometry {
 /**
  * Interface for an incremental plane transformation delta.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Scene§PlaneTransformDelta](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/PLANETRANSFORMDELTA)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️planetransformdelta](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/PLANE-TRANSFORM-DELTA)
  **/
 export interface PlaneTransformDelta {
   translation?: { x: number; y: number; z: number };
@@ -6121,21 +6121,21 @@ export interface PlaneTransformDelta {
 /**
  * Callback type for a single plane update.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Window Components#Scene§OnPlaneUpdate](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/ONPLANEUPDATE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️onplaneupdate](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/ON-PLANE-UPDATE)
  **/
 export type OnPlaneUpdate = (geometryGuid: string, newPlane: Plane) => void;
 
 /**
  * Callback type for batch plane updates.
  *
- *  * [🛠️semio/js/sketchpad/elements.tsx#Window Components#Scene§OnMultiPlaneUpdate](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/ONMULTIPLANEUPDATE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️onmultiplaneupdate](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/ON-MULTI-PLANE-UPDATE)
  **/
 export type OnMultiPlaneUpdate = (updates: Array<{ geometryGuid: string; newPlane: Plane }>) => void;
 
 /**
  * Constructs a Plane from a point and direction vector.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§planeFromPointAndDirection](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/PLANEFROMPOINTANDDIRECTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨planefrompointanddirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/PLANE-FROM-POINT-AND-DIRECTION)
  **/
 export const planeFromPointAndDirection = (point: Point, direction: Vector): Plane => {
   const dir = new THREE.Vector3(direction.x, direction.y, direction.z).normalize();
@@ -6155,7 +6155,7 @@ export const planeFromPointAndDirection = (point: Point, direction: Vector): Pla
 /**
  * Extracts the THREE.Vector3 position from a Plane.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§getPlanePosition](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/GETPLANEPOSITION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨getplaneposition](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/GET-PLANE-POSITION)
  **/
 export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
   return new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
@@ -6164,7 +6164,7 @@ export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
 /**
  * Checks whether a geometry has a non-null plane.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§hasValidPlane](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/HASVALIDPLANE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨hasvalidplane](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/HAS-VALID-PLANE)
  **/
 export const hasValidPlane = (geometry: SceneGeometry): boolean => {
   return geometry.plane !== undefined && geometry.plane !== null;
@@ -6173,7 +6173,7 @@ export const hasValidPlane = (geometry: SceneGeometry): boolean => {
 /**
  * Checks whether a geometry has a valid plane for camera focus.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§isGeometryFocusable](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/ISGEOMETRYFOCUSABLE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨isgeometryfocusable](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/IS-GEOMETRY-FOCUSABLE)
  **/
 export const isGeometryFocusable = (geometry: SceneGeometry): boolean => {
   return hasValidPlane(geometry) && (geometry.isFocusable === undefined || geometry.isFocusable === true);
@@ -6198,7 +6198,7 @@ interface GeometryProps {
 /**
  * 3D geometry mesh component with selection, hover, and edge rendering.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§Geometry](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/GEOMETRY)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨geometry](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/GEOMETRY)
  **/
 export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = React.useMemo(() => getComputedColor("--foreground"), []);
@@ -6598,7 +6598,7 @@ interface SceneProps {
 /**
  * 3D scene viewer with orbit controls, grid, and geometry rendering.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§Scene](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/SCENE)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨scene](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/SCENE)
  **/
 export const Scene: React.FC<SceneProps> = ({
   children,
@@ -6648,7 +6648,7 @@ export const Scene: React.FC<SceneProps> = ({
 /**
  * Skeleton loading placeholder for a 3D scene.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Scene§SceneSkeleton](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/SCENE/SCENESKELETON)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨sceneskeleton](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE/SCENE-SKELETON)
  **/
 export const SceneSkeleton: React.FC = () => (
   <div className="h-full w-full bg-background flex items-center justify-center">
@@ -6664,21 +6664,21 @@ export const SceneSkeleton: React.FC = () => (
 
 // #region 🔖Table
 
-// [🔖semio/js/sketchpad/elements.tsx#Table](semiorepo://section/semio/js/sketchpad/elements.tsx/TABLE)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE)
 // Sortable, hierarchical data table with drag-drop support.
 // Consumers MUST provide columns and data arrays.
 
 /**
  * Union type for ascending or descending sort order.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Table§SortDirection](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/SORTDIRECTION)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️sortdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/SORT-DIRECTION)
  **/
 export type SortDirection = "asc" | "desc";
 
 /**
  * Configuration interface for a table column definition.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Table§TableColumn](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/TABLECOLUMN)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️tablecolumn](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/TABLE-COLUMN)
  **/
 export interface TableColumn<T = unknown> {
   id: string;
@@ -6694,7 +6694,7 @@ export interface TableColumn<T = unknown> {
 /**
  * Interface for hierarchical row data with parent/child relations.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Table§HierarchicalRowData](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/HIERARCHICALROWDATA)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️hierarchicalrowdata](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/HIERARCHICAL-ROW-DATA)
  **/
 export interface HierarchicalRowData {
   id: string;
@@ -6707,7 +6707,7 @@ export interface HierarchicalRowData {
 /**
  * Configuration interface for table drag-and-drop behavior.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Table§DragDropConfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/DRAGDROPCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️dragdropconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/DRAG-DROP-CONFIG)
  **/
 export interface DragDropConfig {
   enabled?: boolean;
@@ -6721,7 +6721,7 @@ export interface DragDropConfig {
 /**
  * Props interface for the Table component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Table§TableProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/TABLEPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️tableprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/TABLE-PROPS)
  **/
 export interface TableProps<T = unknown> {
   columns: TableColumn<T>[];
@@ -7008,7 +7008,7 @@ export { Table };
 /**
  * Props interface for the TableSkeleton component.
  *
- *  * [✂️semio/js/sketchpad/elements.tsx#Window Components#Table§TableSkeletonProps](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/TABLESKELETONPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️tableskeletonprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/TABLE-SKELETON-PROPS)
  **/
 export interface TableSkeletonProps {
   columns: TableColumn[];
@@ -7019,7 +7019,7 @@ export interface TableSkeletonProps {
 /**
  * Skeleton loading placeholder for a table.
  *
- *  * [🪨semio/js/sketchpad/elements.tsx#Window Components#Table§TableSkeleton](semiorepo://definition/semio/js/sketchpad/elements.tsx/WINDOW-COMPONENTS/TABLE/TABLESKELETON)
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🪨tableskeleton](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/TABLE/TABLE-SKELETON)
  **/
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>

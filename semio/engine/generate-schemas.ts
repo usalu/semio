@@ -22,7 +22,7 @@
 
 // #region 🔖Schema Generation
 
-// [🔖semio/engine/generate-schemas.ts#Schema Generation](semiorepo://section/semio/engine/generate-schemas.ts/SCHEMA-GENERATION)
+// [👤semio📚engine💻generateschemasts🔖schemageneration](semiorepo://section/SEMIO/ENGINE/GENERATE-SCHEMAS.TS/SCHEMA-GENERATION)
 // Schema generation script. MUST invoke the Python engine schema generator.
 
 import { execSync } from "child_process";

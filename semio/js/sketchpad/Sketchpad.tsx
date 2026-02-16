@@ -21,7 +21,7 @@
 
 // #region 🔖Imports
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Imports](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/IMPORTS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/IMPORTS)
 // External and internal module imports.
 
 import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
@@ -258,7 +258,7 @@ import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from
 
 // #region 🔖Utilities
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Utilities](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/UTILITIES)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖utilities](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/UTILITIES)
 // Utility functions used across sketchpad components.
 function getToolbarGroupIcon(groupId: string): ReactNode {
   if (groupId === "selection") return <FocusIcon size={16} />;
@@ -276,13 +276,13 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
 
 // #region 🔖Store
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Store](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/STORE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE)
 // Reactive stores backed by Yjs for collaborative state management.
 
 /**
  * Identity selector that returns the value unchanged.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Store§identitySelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/STORE/IDENTITYSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖store🛠️identityselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/STORE/IDENTITY-SELECTOR)
  **/
 export function identitySelector<T>(value: T): T {
   return value;
@@ -291,7 +291,7 @@ export function identitySelector<T>(value: T): T {
 /**
  * Abstract base class for Yjs-backed reactive stores with caching and field subscriptions.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Store§Store](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/STORE/STORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖store🛠️store](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/STORE/STORE)
  **/
 export abstract class Store<TState> {
   public readonly guid: Guid;
@@ -486,7 +486,7 @@ export abstract class Store<TState> {
 /**
  * Abstract application store extending Store with undo/redo transaction support and command execution.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store§AppStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🛠️appstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APP-STORE)
  **/
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
@@ -722,7 +722,7 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
 /**
  * Abstract app store that integrates kit diff operations for collaborative kit editing.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store§KitDiffAppStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KITDIFFAPPSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🛠️kitdiffappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT-DIFF-APP-STORE)
  **/
 export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends KitDiffAppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends KitDiffAppCommandResult<TDiff>> extends AppStore<
   TState,
@@ -868,13 +868,13 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 
 // #region 🔖Plain App Store (No YJS)
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/PLAIN-APP-STORE-NO-YJS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖plainappstorenoyjs](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PLAIN-APP-STORE-NO-YJS)
 // Non-YJS application stores using plain in-memory state with transaction support.
 
 /**
  * Abstract plain application store without Yjs backing for local-only state with undo/redo.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Plain App Store (No YJS)§PlainAppStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PLAIN-APP-STORE-NO-YJS/PLAINAPPSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖plainappstorenoyjs🛠️plainappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PLAIN-APP-STORE-NO-YJS/PLAIN-APP-STORE)
  **/
 export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   public readonly guid: Guid;
@@ -1054,7 +1054,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 /**
  * Abstract plain app store that integrates kit diff operations without YJS backing.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Plain App Store (No YJS)§PlainKitDiffAppStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PLAIN-APP-STORE-NO-YJS/PLAINKITDIFFAPPSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖plainappstorenoyjs🛠️plainkitdiffappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PLAIN-APP-STORE-NO-YJS/PLAIN-KIT-DIFF-APP-STORE)
  **/
 export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> extends PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   protected readonly parentStore: SketchpadStore;
@@ -1176,13 +1176,13 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
 // #region 🔖Memory File Provider
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Memory File Provider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/MEMORY-FILE-PROVIDER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖memoryfileprovider](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/MEMORY-FILE-PROVIDER)
 // In-memory file storage provider for temporary or test scenarios.
 
 /**
  * Creates a file provider factory that stores files in memory.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#File Provider#Memory File Provider§createMemoryFileProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FILE-PROVIDER/MEMORY-FILE-PROVIDER/CREATEMEMORYFILEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖memoryfileprovider🛠️creatememoryfileprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/MEMORY-FILE-PROVIDER/CREATE-MEMORY-FILE-PROVIDER)
  **/
 export function createMemoryFileProvider(config?: MemoryFileProviderConfig): FileProviderFactory {
   const storage = new Map<string, Blob>();
@@ -1226,13 +1226,13 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
 
 // #region 🔖Local File Provider (IndexedDB)
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Local File Provider (IndexedDB)](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/LOCAL-FILE-PROVIDER-INDEXEDDB)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖localfileproviderindexeddb](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/LOCAL-FILE-PROVIDER-INDEXED-DB)
 // Browser-local file storage provider backed by IndexedDB.
 
 /**
  * Creates a file provider factory that persists files in IndexedDB.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#File Provider#Local File Provider (IndexedDB)§createLocalFileProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FILE-PROVIDER/LOCAL-FILE-PROVIDER-INDEXEDDB/CREATELOCALFILEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖localfileproviderindexeddb🛠️createlocalfileprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/LOCAL-FILE-PROVIDER-INDEXED-DB/CREATE-LOCAL-FILE-PROVIDER)
  **/
 export function createLocalFileProvider(config?: LocalFileProviderConfig): FileProviderFactory {
   const dbName = config?.dbName || "semio-files";
@@ -1330,13 +1330,13 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
 
 // #region 🔖Remote File Provider
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Remote File Provider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/REMOTE-FILE-PROVIDER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖remotefileprovider](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/REMOTE-FILE-PROVIDER)
 // Remote file storage provider backed by a REST API.
 
 /**
  * Creates a file provider factory that uploads and downloads files from a remote server.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#File Provider#Remote File Provider§createRemoteFileProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FILE-PROVIDER/REMOTE-FILE-PROVIDER/CREATEREMOTEFILEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖remotefileprovider🛠️createremotefileprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/REMOTE-FILE-PROVIDER/CREATE-REMOTE-FILE-PROVIDER)
  **/
 export function createRemoteFileProvider(config: RemoteFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
@@ -1403,13 +1403,13 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
 
 // #region 🔖Composite File Provider
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Composite File Provider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/COMPOSITE-FILE-PROVIDER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖compositefileprovider](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/COMPOSITE-FILE-PROVIDER)
 // Composite file storage provider that delegates to multiple underlying providers.
 
 /**
  * Creates a file provider factory that composes memory, local, and remote providers.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#File Provider#Composite File Provider§createCompositeFileProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FILE-PROVIDER/COMPOSITE-FILE-PROVIDER/CREATECOMPOSITEFILEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖compositefileprovider🛠️createcompositefileprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/COMPOSITE-FILE-PROVIDER/CREATE-COMPOSITE-FILE-PROVIDER)
  **/
 export function createCompositeFileProvider(config: CompositeFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
@@ -1476,7 +1476,7 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 
 // #region 🔖Kits
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Kits](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/KITS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kits](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KITS)
 // Yjs-backed attribute store for kit metadata.
 
 type YAttributeVal = string;
@@ -1557,7 +1557,7 @@ class AttributeStore {
 
 // #region 🔖Coord
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Coord](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/COORD)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖coord](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/COORD)
 // Yjs-backed coordinate store managing u/v values.
 
 type YCoordVal = number;
@@ -1625,7 +1625,7 @@ class YCoordStore {
 
 // #region 🔖Vec
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Vec](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/VEC)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖vec](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/VEC)
 // Yjs-backed 3D vector component store managing x/y/z values.
 
 type YVecVal = number;
@@ -1693,7 +1693,7 @@ class YVecStore {
 
 // #region 🔖Point
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Point](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/POINT)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖point](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/POINT)
 // Yjs-backed 3D point store managing x/y/z coordinates.
 
 type YPointVal = number;
@@ -1771,7 +1771,7 @@ class YPointStore {
 
 // #region 🔖Vector
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Vector](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/VECTOR)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖vector](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/VECTOR)
 // Yjs-backed 3D direction vector store managing x/y/z components.
 
 type YVectorVal = number;
@@ -1849,7 +1849,7 @@ class YVectorStore {
 
 // #region 🔖Plane
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Plane](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/PLANE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖plane](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PLANE)
 // Yjs-backed 3D plane store managing origin point and direction vectors.
 
 type YPlaneVal = YPoint | YVector;
@@ -1917,7 +1917,7 @@ class YPlaneStore {
 
 // #region 🔖Camera
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Camera](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/CAMERA)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖camera](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CAMERA)
 // Yjs-backed camera store managing view target and perspective planes.
 
 type YCameraVal = YPoint | YVector;
@@ -1986,7 +1986,7 @@ class YCameraStore {
 
 // #region 🔖Location
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Location](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/LOCATION)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖location](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/LOCATION)
 // Yjs-backed location store managing geographical and licensing metadata.
 
 type YLocationVal = number | string | YAttributes;
@@ -2080,7 +2080,7 @@ class YLocationStore {
 
 // #region 🔖Author
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Author](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/AUTHOR)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖author](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/AUTHOR)
 // Yjs-backed author store managing author identity and attributes.
 
 type YAuthorVal = string | YAttributes;
@@ -2189,7 +2189,7 @@ const AuthorScopeContext = createContext<AuthorScope | null>(null);
 /**
  * React context provider scoping author by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Author§AuthorScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/AUTHOR/AUTHORSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖author🪨authorscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/AUTHOR/AUTHOR-SCOPE-PROVIDER)
  **/
 export const AuthorScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -2211,7 +2211,7 @@ function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string):
 /**
  * Hook for accessing author data with optional selector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Author§useAuthor](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/AUTHOR/USEAUTHOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖author🛠️useauthor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/AUTHOR/USE-AUTHOR)
  **/
 export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author | null {
   const authorScope = useAuthorScope();
@@ -2226,7 +2226,7 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
 
 // #region 🔖File
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#File](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/FILE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖file](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE)
 // Yjs-backed file store managing file metadata and content references.
 
 type YFile = Y.Map<string | number | YAttributes>;
@@ -2374,7 +2374,7 @@ class FileStore {
 
 // #region 🔖Folder
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Folder](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/FOLDER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖folder](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FOLDER)
 // Yjs-backed folder store managing folder hierarchy and file references.
 
 type YFolder = Y.Map<string | YAttributes>;
@@ -2510,7 +2510,7 @@ class FolderStore {
 
 // #region 🔖Benchmark
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Benchmark](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/BENCHMARK)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖benchmark](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/BENCHMARK)
 // Yjs-backed benchmark store managing performance measurement data.
 
 type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
@@ -2633,7 +2633,7 @@ class BenchmarkStore {
 
 // #region 🔖Quality
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Quality](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/QUALITY)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖quality](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/QUALITY)
 // Yjs-backed quality store managing quality criteria definitions.
 
 type YQuality = Y.Map<string | number | YAttributes>;
@@ -2642,7 +2642,7 @@ type YQualities = Y.Array<YQuality>;
 /**
  * Yjs-backed quality store managing quality criteria data and change tracking.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Quality§QualityStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/QUALITY/QUALITYSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖quality🛠️qualitystore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/QUALITY/QUALITY-STORE)
  **/
 export class QualityStore {
   private yQuality: YQuality;
@@ -2758,7 +2758,7 @@ export class QualityStore {
 
 // #region 🔖Prop
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Prop](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/PROP)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖prop](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PROP)
 // Yjs-backed prop store managing design property definitions.
 
 type YProp = Y.Map<string | number | boolean | YAttributes>;
@@ -2856,7 +2856,7 @@ class PropStore {
 
 // #region 🔖Model
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Model](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/MODEL)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖model](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MODEL)
 // Yjs-backed model store managing 3D model representations.
 
 type YModelVal = string | Y.Array<string> | YAttributes;
@@ -2980,7 +2980,7 @@ class ModelStore {
 
 // #region 🔖Connector
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Connector](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/CONNECTOR)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖connector](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONNECTOR)
 // Yjs-backed connector store managing type connectors and their ports.
 
 type YConnectorVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
@@ -3108,7 +3108,7 @@ class ConnectorStore {
 
 // #region 🔖Type
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Type](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/TYPE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE)
 // Yjs-backed type store managing architectural type definitions and connectors.
 
 type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YConnectors | YProps | YLocation;
@@ -3118,7 +3118,7 @@ type YTypes = Y.Array<YType>;
 /**
  * Yjs-backed type store managing architectural type definitions and their connectors.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Type§TypeStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/TYPESTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🛠️typestore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/TYPE-STORE)
  **/
 export class TypeStore {
   public readonly parent: KitStore;
@@ -3516,7 +3516,7 @@ const TypeScopeContext = createContext<TypeScope | null>(null);
 /**
  * React context provider scoping type by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§TypeScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/TYPESCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🪨typescopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/TYPE-SCOPE-PROVIDER)
  **/
 export const TypeScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -3525,13 +3525,13 @@ export const TypeScopeProvider = (props: { guid: string; children: React.ReactNo
 /**
  * Hook returning the current type scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§useTypeScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/USETYPESCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🪨usetypescope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/USE-TYPE-SCOPE)
  **/
 export const useTypeScope = () => useContext(TypeScopeContext);
 /**
  * Hook returning whether a type scope is active.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§useIsInTypeScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/USEISINTYPESCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🪨useisintypescope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/USE-IS-IN-TYPE-SCOPE)
  **/
 export const useIsInTypeScope = () => useTypeScope() !== null;
 
@@ -3550,7 +3550,7 @@ function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T |
 /**
  * Hook for accessing type data with optional selector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§useType](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/USETYPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🛠️usetype](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/USE-TYPE)
  **/
 export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type | null {
   const typeScope = useTypeScope();
@@ -3566,7 +3566,7 @@ const QualityScopeContext = createContext<QualityScope | null>(null);
 /**
  * React context provider scoping quality by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§QualityScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/QUALITYSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🪨qualityscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/QUALITY-SCOPE-PROVIDER)
  **/
 export const QualityScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -3575,13 +3575,13 @@ export const QualityScopeProvider = (props: { guid: string; children: React.Reac
 /**
  * Hook returning the current quality scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§useQualityScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/USEQUALITYSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🪨usequalityscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/USE-QUALITY-SCOPE)
  **/
 export const useQualityScope = () => useContext(QualityScopeContext);
 /**
  * Hook returning whether a quality scope is active.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§useIsInQualityScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/USEISINQUALITYSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🪨useisinqualityscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/USE-IS-IN-QUALITY-SCOPE)
  **/
 export const useIsInQualityScope = () => useQualityScope() !== null;
 
@@ -3598,7 +3598,7 @@ function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string
 /**
  * Hook for accessing quality data with optional selector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Type§useQuality](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TYPE/USEQUALITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖type🛠️usequality](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TYPE/USE-QUALITY)
  **/
 export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, deep: boolean = false): T | Quality | null {
   const qualityScope = useQualityScope();
@@ -3613,7 +3613,7 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
 
 // #region 🔖Layer
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Layer](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/LAYER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖layer](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/LAYER)
 // Yjs-backed layer store managing visibility layers in designs.
 
 type YLayer = Y.Map<string | boolean | YAttributes>;
@@ -3733,7 +3733,7 @@ class LayerStore {
 
 // #region 🔖Piece
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Piece](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/PIECE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE)
 // Yjs-backed piece store managing design piece instances and their transforms.
 
 type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
@@ -4033,7 +4033,7 @@ const PieceScopeContext = createContext<PieceScope | null>(null);
 /**
  * React context provider scoping piece by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§PieceScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/PIECESCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🪨piecescopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/PIECE-SCOPE-PROVIDER)
  **/
 export const PieceScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -4042,7 +4042,7 @@ export const PieceScopeProvider = (props: { guid: string; children: React.ReactN
 /**
  * Hook returning the current piece scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§usePieceScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPIECESCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🪨usepiecescope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PIECE-SCOPE)
  **/
 export const usePieceScope = () => useContext(PieceScopeContext);
 
@@ -4059,7 +4059,7 @@ function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T
 /**
  * Hook for accessing piece data with optional selector.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Piece§usePiece](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usepiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PIECE)
  **/
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece | null {
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : (identitySelector as any));
@@ -4068,7 +4068,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
 /**
  * Hook returning the plane of the current piece in scope.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§useCurrentPiecePlane](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USECURRENTPIECEPLANE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usecurrentpieceplane](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-CURRENT-PIECE-PLANE)
  **/
 export function useCurrentPiecePlane(): Plane {
   const plane = usePiece((p) => p.plane) as Plane | undefined;
@@ -4087,7 +4087,7 @@ export function useCurrentPiecePlane(): Plane {
 /**
  * Metadata for a piece including depth, parent, and connectivity.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Piece§PieceMetadata](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/PIECEMETADATA)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️piecemetadata](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/PIECE-METADATA)
  **/
 export type PieceMetadata = {
   plane: Plane;
@@ -4100,7 +4100,7 @@ export type PieceMetadata = {
 /**
  * Hook returning a map of piece guids to their computed metadata.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§usePiecesMetadataMap](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPIECESMETADATAMAP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usepiecesmetadatamap](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PIECES-METADATA-MAP)
  **/
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   const kitStore = useKitStore(identitySelector) as KitStore | null;
@@ -4127,7 +4127,7 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
 /**
  * Hook returning the metadata for a specific piece by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§usePieceMetadata](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPIECEMETADATA)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usepiecemetadata](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PIECE-METADATA)
  **/
 export function usePieceMetadata(pieceId?: Guid): PieceMetadata | undefined {
   const pieceScope = usePieceScope();
@@ -4139,7 +4139,7 @@ export function usePieceMetadata(pieceId?: Guid): PieceMetadata | undefined {
 /**
  * Hook returning the flattened plane of a piece by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§useFlatPiecePlane](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEFLATPIECEPLANE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️useflatpieceplane](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-FLAT-PIECE-PLANE)
  **/
 export function useFlatPiecePlane(id?: Guid): Plane {
   const meta = usePieceMetadata(id);
@@ -4149,7 +4149,7 @@ export function useFlatPiecePlane(id?: Guid): Plane {
 /**
  * Hook returning the flattened center coordinate of a piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§useFlatPieceCenter](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEFLATPIECECENTER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️useflatpiececenter](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-FLAT-PIECE-CENTER)
  **/
 export function useFlatPieceCenter(id?: Guid): Coord {
   const meta = usePieceMetadata(id);
@@ -4159,7 +4159,7 @@ export function useFlatPieceCenter(id?: Guid): Coord {
 /**
  * Hook returning whether a piece is connected to any other piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§useIsConnectedPiece](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEISCONNECTEDPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️useisconnectedpiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-IS-CONNECTED-PIECE)
  **/
 export function useIsConnectedPiece(id?: Guid): boolean {
   const meta = usePieceMetadata(id);
@@ -4169,7 +4169,7 @@ export function useIsConnectedPiece(id?: Guid): boolean {
 /**
  * Hook returning the nesting depth of a piece in the hierarchy.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§usePieceDepth](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPIECEDEPTH)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usepiecedepth](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PIECE-DEPTH)
  **/
 export function usePieceDepth(id?: Guid): number {
   const meta = usePieceMetadata(id);
@@ -4179,7 +4179,7 @@ export function usePieceDepth(id?: Guid): number {
 /**
  * Hook returning the fixed piece id constraining a piece position.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§useFixedPieceId](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEFIXEDPIECEID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usefixedpieceid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-FIXED-PIECE-ID)
  **/
 export function useFixedPieceId(id?: Guid): string | undefined {
   const meta = usePieceMetadata(id);
@@ -4189,7 +4189,7 @@ export function useFixedPieceId(id?: Guid): string | undefined {
 /**
  * Hook returning the parent piece id of a piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§useParentPieceId](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPARENTPIECEID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️useparentpieceid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PARENT-PIECE-ID)
  **/
 export function useParentPieceId(id?: Guid): string | null {
   const meta = usePieceMetadata(id);
@@ -4199,7 +4199,7 @@ export function useParentPieceId(id?: Guid): string | null {
 /**
  * Hook returning the parent connection of a piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Piece§usePieceParentConnection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/PIECE/USEPIECEPARENTCONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖piece🛠️usepieceparentconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PIECE/USE-PIECE-PARENT-CONNECTION)
  **/
 export function usePieceParentConnection(id?: Guid): Connection | null {
   const pieceScope = usePieceScope();
@@ -4231,7 +4231,7 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
 // #region 🔖Group
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Group](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/GROUP)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖group](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/GROUP)
 // Yjs-backed group store managing piece grouping within designs.
 
 type YGroupVal = string | Y.Array<string> | YAttributes;
@@ -4347,7 +4347,7 @@ class GroupStore {
 
 // #region 🔖Side
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Side](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/SIDE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖side](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE)
 // Side store managing connection endpoints for pieces.
 
 class SideStore {
@@ -4488,7 +4488,7 @@ class SideStore {
 
 // #region 🔖Connection
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Connection](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/CONNECTION)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖connection](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONNECTION)
 // Yjs-backed connection store managing piece-to-piece connections.
 
 type YSideVal = string | number | YAttributes;
@@ -4688,7 +4688,7 @@ const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
 /**
  * React context provider scoping connection by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Connection§ConnectionScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CONNECTION/CONNECTIONSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖connection🪨connectionscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONNECTION/CONNECTION-SCOPE-PROVIDER)
  **/
 export const ConnectionScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -4697,7 +4697,7 @@ export const ConnectionScopeProvider = (props: { guid: string; children: React.R
 /**
  * Hook returning the current connection scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Connection§useConnectionScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CONNECTION/USECONNECTIONSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖connection🪨useconnectionscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONNECTION/USE-CONNECTION-SCOPE)
  **/
 export const useConnectionScope = () => useContext(ConnectionScopeContext);
 
@@ -4714,7 +4714,7 @@ function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: 
 /**
  * Hook for accessing connection data with optional selector.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Connection§useConnection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CONNECTION/USECONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖connection🛠️useconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONNECTION/USE-CONNECTION)
  **/
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: Guid, deep: boolean = false): T | Connection | null {
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : (identitySelector as any));
@@ -4724,7 +4724,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 
 // #region 🔖Stat
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Stat](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/STAT)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖stat](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/STAT)
 // Yjs-backed stat store managing statistical measurement data.
 
 type YStat = Y.Map<string | number | boolean>;
@@ -4854,7 +4854,7 @@ class StatStore {
 
 // #region 🔖Design
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Design](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/DESIGN)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN)
 // Yjs-backed design store managing complete design layouts with pieces and connections.
 
 type YDesignVal = string | boolean | number | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats | YProps | YLocation | Y.Array<string>;
@@ -4864,7 +4864,7 @@ type YDesigns = Y.Array<YDesign>;
 /**
  * Yjs-backed design store managing complete design layouts with pieces and connections.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Design§DesignStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/DESIGNSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️designstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/DESIGN-STORE)
  **/
 export class DesignStore {
   public readonly parent: KitStore;
@@ -5592,7 +5592,7 @@ export class DesignStore {
 
   // #region 🔖YPath API
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#YPath API](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/YPATH-API)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🔖ypathapi](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/Y-PATH-API)
   // Path-based observation and subscription API for deep design Yjs map access.
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
@@ -5639,7 +5639,7 @@ const DesignScopeContext = createContext<DesignScope | null>(null);
 /**
  * React context provider scoping design by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§DesignScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/DESIGNSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🪨designscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/DESIGN-SCOPE-PROVIDER)
  **/
 export const DesignScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -5648,13 +5648,13 @@ export const DesignScopeProvider = (props: { guid: string; children: React.React
 /**
  * Hook returning the current design scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useDesignScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEDESIGNSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🪨usedesignscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-DESIGN-SCOPE)
  **/
 export const useDesignScope = () => useContext(DesignScopeContext);
 /**
  * Hook returning whether a design scope is active.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useIsInDesignScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEISINDESIGNSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🪨useisindesignscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-IS-IN-DESIGN-SCOPE)
  **/
 export const useIsInDesignScope = () => useDesignScope() !== null;
 
@@ -5670,7 +5670,7 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
 /**
  * Hook for accessing design data with optional selector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useDesign](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEDESIGN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usedesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-DESIGN)
  **/
 export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: Guid, deep: boolean = false): T | DesignShallow | Design | null {
   const designScope = useDesignScope();
@@ -5688,7 +5688,7 @@ const EMPTY_CONNECTIONS: Connection[] = [];
 /**
  * Hook returning all pieces in the current design scope.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§usePieces](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usepieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-PIECES)
  **/
 export function usePieces(): Piece[] {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
@@ -5716,7 +5716,7 @@ export function usePieces(): Piece[] {
 /**
  * Hook returning all connections in the current design scope.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useConnections](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USECONNECTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️useconnections](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-CONNECTIONS)
  **/
 export function useConnections(): Connection[] {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
@@ -5744,7 +5744,7 @@ export function useConnections(): Connection[] {
 /**
  * Hook returning all included sub-designs of the current design.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useIncludedDesigns](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEINCLUDEDDESIGNS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️useincludeddesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-INCLUDED-DESIGNS)
  **/
 export function useIncludedDesigns() {
   const designScope = useDesignScope();
@@ -5760,7 +5760,7 @@ export function useIncludedDesigns() {
 /**
  * Hook returning the guid of the design in scope.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useDesignId](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEDESIGNID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usedesignid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-DESIGN-ID)
  **/
 export function useDesignId() {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
@@ -5795,7 +5795,7 @@ export function useDesignId() {
 /**
  * Hook returning pieces matching the given list of piece guids.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§usePiecesFromIds](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEPIECESFROMIDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usepiecesfromids](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-PIECES-FROM-IDS)
  **/
 export function usePiecesFromIds(pieceIds: Guid[]) {
   const pieces = usePieces();
@@ -5841,7 +5841,7 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
 /**
  * Hook returning replaceable types for the specified pieces with optional variant filtering.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useReplacableTypes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEREPLACABLETYPES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usereplacabletypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-REPLACABLE-TYPES)
  **/
 export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
   const kitTypes = useKitTypes();
@@ -5864,7 +5864,7 @@ export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]
 /**
  * Hook returning replaceable design alternatives for a piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useReplacableDesigns](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEREPLACABLEDESIGNS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usereplacabledesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-REPLACABLE-DESIGNS)
  **/
 export function useReplacableDesigns(piece: Piece) {
   const kitDesigns = useKitDesigns();
@@ -5881,7 +5881,7 @@ export function useReplacableDesigns(piece: Piece) {
 /**
  * Hook returning design nodes that can be exploded from the current selection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Design§useExplodeableDesignNodes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DESIGN/USEEXPLODEABLEDESIGNNODES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️useexplodeabledesignnodes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-EXPLODEABLE-DESIGN-NODES)
  **/
 export function useExplodeableDesignNodes(nodes: any[], selection: any) {
   const kitDesigns = useKitDesigns();
@@ -5902,7 +5902,7 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 
 // #region 🔖Kit
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Kit](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/KIT)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT)
 // Yjs-backed kit store managing the complete kit data structure.
 
 type YConceptVal = string | YAttributes;
@@ -6066,7 +6066,7 @@ type YKits = Y.Array<YKit>;
 /**
  * Yjs-backed kit store managing the complete kit data structure with all entities.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit§KitStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/KITSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🛠️kitstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/KIT-STORE)
  **/
 export class KitStore {
   public readonly parent: SketchpadStore;
@@ -6873,7 +6873,7 @@ export class KitStore {
 
   // #region 🔖YPath API
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#YPath API](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/YPATH-API)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖ypathapi](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/Y-PATH-API)
   // Path-based observation and subscription API for deep kit Yjs map access.
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
@@ -7191,7 +7191,7 @@ const KitScopeContext = createContext<KitScope | null>(null);
 /**
  * React context provider scoping kit by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§KitScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/KITSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🪨kitscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/KIT-SCOPE-PROVIDER)
  **/
 export const KitScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
@@ -7200,20 +7200,20 @@ export const KitScopeProvider = (props: { guid: string; children: React.ReactNod
 /**
  * Hook returning the current kit scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useKitScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEKITSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🪨usekitscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-KIT-SCOPE)
  **/
 export const useKitScope = () => useContext(KitScopeContext);
 /**
  * Hook returning whether a kit scope is active.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useIsInKitScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEISINKITSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🪨useisinkitscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-IS-IN-KIT-SCOPE)
  **/
 export const useIsInKitScope = () => useKitScope() !== null;
 
 /**
  * Hook for accessing the kit store with optional selector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useKitStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEKITSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🛠️usekitstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-KIT-STORE)
  **/
 export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore | null {
   const store = useSketchpadStore();
@@ -7227,7 +7227,7 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string)
 /**
  * Hook for accessing kit data with optional selector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🛠️usekit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-KIT)
  **/
 export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, deep: boolean = false): T | KitShallow | Kit | null {
   const store = useSketchpadStore();
@@ -7242,7 +7242,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
 
 // #region 🔖Targeted Kit Hooks
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Targeted Kit Hooks](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/TARGETED-KIT-HOOKS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS)
 // React hooks for accessing specific kit data through scope providers.
 
 const EMPTY_TYPES: Type[] = [];
@@ -7270,7 +7270,7 @@ const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 /**
  * Hook returning all types in the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitTypes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITTYPES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekittypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-TYPES)
  **/
 export function useKitTypes(guid?: Guid): Type[] {
   const kitScope = useKitScope();
@@ -7300,7 +7300,7 @@ export function useKitTypes(guid?: Guid): Type[] {
 /**
  * Hook returning the name of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitName](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITNAME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitname](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-NAME)
  **/
 export function useKitName(guid?: Guid): string {
   const kitScope = useKitScope();
@@ -7329,7 +7329,7 @@ export function useKitName(guid?: Guid): string {
 /**
  * Hook returning the description of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitDescription](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITDESCRIPTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitdescription](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-DESCRIPTION)
  **/
 export function useKitDescription(guid?: Guid): string | undefined {
   const kitScope = useKitScope();
@@ -7358,7 +7358,7 @@ export function useKitDescription(guid?: Guid): string | undefined {
 /**
  * Hook returning all authors of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitAuthors](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITAUTHORS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitauthors](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-AUTHORS)
  **/
 export function useKitAuthors(guid?: Guid): Author[] {
   const kitScope = useKitScope();
@@ -7388,7 +7388,7 @@ export function useKitAuthors(guid?: Guid): Author[] {
 /**
  * Hook returning all files of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitFiles](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITFILES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitfiles](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-FILES)
  **/
 export function useKitFiles(guid?: Guid): SemioFile[] {
   const kitScope = useKitScope();
@@ -7418,7 +7418,7 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 /**
  * Hook returning all qualities of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitQualities](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITQUALITIES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitqualities](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-QUALITIES)
  **/
 export function useKitQualities(guid?: Guid): Quality[] {
   const kitScope = useKitScope();
@@ -7448,7 +7448,7 @@ export function useKitQualities(guid?: Guid): Quality[] {
 /**
  * Hook returning all designs of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitDesigns](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITDESIGNS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitdesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-DESIGNS)
  **/
 export function useKitDesigns(guid?: Guid): Design[] {
   const kitScope = useKitScope();
@@ -7478,7 +7478,7 @@ export function useKitDesigns(guid?: Guid): Design[] {
 /**
  * Hook returning all designs from the current kit scope.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useDesigns](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEDESIGNS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usedesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-DESIGNS)
  **/
 export function useDesigns(): Design[] {
   return useKitDesigns();
@@ -7487,7 +7487,7 @@ export function useDesigns(): Design[] {
 /**
  * Hook returning all folders of the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitFolders](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITFOLDERS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitfolders](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-FOLDERS)
  **/
 export function useKitFolders(guid?: Guid): Folder[] {
   const kitScope = useKitScope();
@@ -7517,7 +7517,7 @@ export function useKitFolders(guid?: Guid): Folder[] {
 /**
  * Hook returning all ports of the targeted kit.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitPorts](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITPORTS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitports](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-PORTS)
  **/
 export function useKitPorts(guid?: Guid): Port[] {
   return useKit(selectPorts, guid, true) as Port[];
@@ -7526,7 +7526,7 @@ export function useKitPorts(guid?: Guid): Port[] {
 /**
  * Hook returning all tags of the targeted kit.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitTags](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITTAGS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekittags](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-TAGS)
  **/
 export function useKitTags(guid?: Guid): Tag[] {
   return useKit(selectTags, guid, true) as Tag[];
@@ -7535,7 +7535,7 @@ export function useKitTags(guid?: Guid): Tag[] {
 /**
  * Hook returning all concepts of the targeted kit.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitConcepts](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITCONCEPTS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitconcepts](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-CONCEPTS)
  **/
 export function useKitConcepts(guid?: Guid): Concept[] {
   return useKit(selectConcepts, guid, true) as Concept[];
@@ -7544,7 +7544,7 @@ export function useKitConcepts(guid?: Guid): Concept[] {
 /**
  * Hook returning a specific type from the kit by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useTypeFromKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USETYPEFROMKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usetypefromkit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-TYPE-FROM-KIT)
  **/
 export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined {
   const kitTypes = useKitTypes(kitGuid);
@@ -7554,7 +7554,7 @@ export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined
 /**
  * Hook returning a specific design from the kit by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useDesignFromKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEDESIGNFROMKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usedesignfromkit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-DESIGN-FROM-KIT)
  **/
 export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | undefined {
   const kitDesigns = useKitDesigns(kitGuid);
@@ -7564,7 +7564,7 @@ export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | und
 /**
  * Hook returning connector compatibility information for the targeted kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit#Targeted Kit Hooks§useKitConnectorCompatibility](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/TARGETED-KIT-HOOKS/USEKITCONNECTORCOMPATIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🔖targetedkithooks🛠️usekitconnectorcompatibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/TARGETED-KIT-HOOKS/USE-KIT-CONNECTOR-COMPATIBILITY)
  **/
 export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } {
   const ports = useKitPorts(kitGuid);
@@ -7576,7 +7576,7 @@ export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } 
 /**
  * Hook returning the resolved file URL map from the current kit store.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useFileUrls](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEFILEURLS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🛠️usefileurls](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-FILE-URLS)
  **/
 export function useFileUrls(): Map<Url, Url> {
   const kitStore = useKitStore() as KitStore | null;
@@ -7589,7 +7589,7 @@ export function useFileUrls(): Map<Url, Url> {
 /**
  * Hook returning the transaction interface for the current kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useKitTransaction](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEKITTRANSACTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🛠️usekittransaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-KIT-TRANSACTION)
  **/
 export function useKitTransaction(): Transaction {
   const store = useSketchpadStore();
@@ -7614,7 +7614,7 @@ export function useKitTransaction(): Transaction {
 /**
  * Hook returning the command execution interface for the current kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Kit§useKitCommands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/USEKITCOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖kit🛠️usekitcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/KIT/USE-KIT-COMMANDS)
  **/
 export function useKitCommands() {
   const store = useSketchpadStore();
@@ -7674,7 +7674,7 @@ export function useKitCommands() {
 
 // #region 🔖Commands
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Commands](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/COMMANDS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/COMMANDS)
 // Kit command definitions for import, export, and sync operations.
 
 const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
@@ -7682,7 +7682,7 @@ const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 /**
  * Command map for kit CRUD operations on authors, types, designs, and other kit entities.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Commands§kitCommands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/COMMANDS/KITCOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖commands🪨kitcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/COMMANDS/KIT-COMMANDS)
  **/
 export const kitCommands = {
   "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
@@ -8123,13 +8123,13 @@ export const kitCommands = {
 
 // #region 🔖Types
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Types](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/TYPES)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE)
 // Type definitions for app state, machine input, and context structures.
 
 /**
  * Default panel visibility configuration with all panels hidden.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types§defaultPanelVisibility](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/DEFAULTPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🪨defaultpanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/DEFAULT-PANEL-VISIBILITY)
  **/
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: false,
@@ -8141,13 +8141,13 @@ export const defaultPanelVisibility: PanelVisibility = {
 
 // #region 🔖App State Types
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#App State Types](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/APP-STATE-TYPES)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES)
 // State shape interfaces for all application views: home, kit, design, type, quality.
 
 /**
  * Selection state for the home app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§HomeAppSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/HOMEAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️homeappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/HOME-APP-SELECTION)
  **/
 export interface HomeAppSelection {
   kits?: Guid[];
@@ -8155,7 +8155,7 @@ export interface HomeAppSelection {
 /**
  * State for the home app view including panel visibility, selection, and sorting.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§HomeAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/HOMEAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️homeappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/HOME-APP-STATE)
  **/
 export interface HomeAppState {
   panelVisibility: PanelVisibility;
@@ -8169,19 +8169,19 @@ export interface HomeAppState {
 /**
  * Kind of feedback: bug report or idea suggestion.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§FeedbackKind](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACKKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️feedbackkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACK-KIND)
  **/
 export type FeedbackKind = "bug" | "idea";
 /**
  * Kind of app context for feedback submission.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§FeedbackAppKind](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACKAPPKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️feedbackappkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACK-APP-KIND)
  **/
 export type FeedbackAppKind = "home" | "kit" | "design" | "type" | "quality" | "docs" | "feedback";
 /**
  * Form data shape for feedback submissions.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§FeedbackFormData](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACKFORMDATA)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️feedbackformdata](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACK-FORM-DATA)
  **/
 export interface FeedbackFormData {
   kind: FeedbackKind;
@@ -8194,7 +8194,7 @@ export interface FeedbackFormData {
 /**
  * State for the feedback app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§FeedbackAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACKAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️feedbackappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/FEEDBACK-APP-STATE)
  **/
 export interface FeedbackAppState {
   panelVisibility: PanelVisibility;
@@ -8207,7 +8207,7 @@ export interface FeedbackAppState {
 /**
  * Selection state for the kit app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§KitAppSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/KITAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️kitappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/KIT-APP-SELECTION)
  **/
 export interface KitAppSelection {
   types?: Guid[];
@@ -8219,7 +8219,7 @@ export interface KitAppSelection {
 /**
  * Force simulation settings for the kit diagram view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§DiagramForceSettings](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/DIAGRAMFORCESETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️diagramforcesettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/DIAGRAM-FORCE-SETTINGS)
  **/
 export interface DiagramForceSettings {
   chargeStrength: number;
@@ -8230,7 +8230,7 @@ export interface DiagramForceSettings {
 /**
  * Default force simulation settings for the kit diagram.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§defaultDiagramForceSettings](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/DEFAULTDIAGRAMFORCESETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🪨defaultdiagramforcesettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/DEFAULT-DIAGRAM-FORCE-SETTINGS)
  **/
 export const defaultDiagramForceSettings: DiagramForceSettings = {
   chargeStrength: -150,
@@ -8241,7 +8241,7 @@ export const defaultDiagramForceSettings: DiagramForceSettings = {
 /**
  * Fullscreen window options for the kit app view.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§KitAppFullscreenWindow](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/KITAPPFULLSCREENWINDOW)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️kitappfullscreenwindow](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/KIT-APP-FULLSCREEN-WINDOW)
  **/
 export enum KitAppFullscreenWindow {
   None = "none",
@@ -8251,7 +8251,7 @@ export enum KitAppFullscreenWindow {
 /**
  * State for the kit app view including layout, selection, tools, and transactions.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§KitAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/KITAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️kitappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/KIT-APP-STATE)
  **/
 export interface KitAppState {
   panelVisibility: PanelVisibility;
@@ -8273,7 +8273,7 @@ export interface KitAppState {
 /**
  * Selection state for the type app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§TypeAppSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPEAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️typeappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPE-APP-SELECTION)
  **/
 export interface TypeAppSelection {
   connectors?: Guid[];
@@ -8282,7 +8282,7 @@ export interface TypeAppSelection {
 /**
  * Hover state for the type app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§TypeAppHover](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPEAPPHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️typeapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPE-APP-HOVER)
  **/
 export interface TypeAppHover {
   connector?: Guid;
@@ -8291,7 +8291,7 @@ export interface TypeAppHover {
 /**
  * Fullscreen window options for the type app view.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§TypeAppFullscreenWindow](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPEAPPFULLSCREENWINDOW)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️typeappfullscreenwindow](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPE-APP-FULLSCREEN-WINDOW)
  **/
 export enum TypeAppFullscreenWindow {
   None = "none",
@@ -8301,7 +8301,7 @@ export enum TypeAppFullscreenWindow {
 /**
  * Transaction state tracking undo/redo stacks for app operations.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§AppTransactionState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/APPTRANSACTIONSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️apptransactionstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/APP-TRANSACTION-STATE)
  **/
 export interface AppTransactionState<TEdit = any> {
   isTransactionActive: boolean;
@@ -8313,7 +8313,7 @@ export interface AppTransactionState<TEdit = any> {
 /**
  * State for the type app view including tools, camera, and transactions.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§TypeAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPEAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️typeappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/TYPE-APP-STATE)
  **/
 export interface TypeAppState {
   panelVisibility: PanelVisibility;
@@ -8333,7 +8333,7 @@ export interface TypeAppState {
 /**
  * Selection state for the design app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§DesignAppSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGNAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️designappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGN-APP-SELECTION)
  **/
 export interface DesignAppSelection {
   pieces?: Guid[];
@@ -8343,7 +8343,7 @@ export interface DesignAppSelection {
 /**
  * Hover state for the design app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§DesignAppHover](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGNAPPHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️designapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGN-APP-HOVER)
  **/
 export interface DesignAppHover {
   pieces?: Guid[];
@@ -8355,7 +8355,7 @@ export interface DesignAppHover {
 /**
  * Fullscreen window options for the design app view.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§DesignAppFullscreenWindow](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGNAPPFULLSCREENWINDOW)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️designappfullscreenwindow](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGN-APP-FULLSCREEN-WINDOW)
  **/
 export enum DesignAppFullscreenWindow {
   None = "none",
@@ -8365,7 +8365,7 @@ export enum DesignAppFullscreenWindow {
 /**
  * State for the design app view including selection, camera, tools, and transactions.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§DesignAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGNAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️designappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/DESIGN-APP-STATE)
  **/
 export interface DesignAppState {
   panelVisibility: PanelVisibility;
@@ -8385,7 +8385,7 @@ export interface DesignAppState {
 /**
  * Selection state for the quality app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§QualityAppSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/QUALITYAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️qualityappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/QUALITY-APP-SELECTION)
  **/
 export interface QualityAppSelection {
   benchmarks?: Guid[];
@@ -8393,7 +8393,7 @@ export interface QualityAppSelection {
 /**
  * State for the quality app view.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§QualityAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/QUALITYAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️qualityappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/QUALITY-APP-STATE)
  **/
 export interface QualityAppState {
   panelVisibility: PanelVisibility;
@@ -8407,7 +8407,7 @@ export interface QualityAppState {
 /**
  * Single step in a tutorial sequence.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§TutorialStep](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/TUTORIALSTEP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️tutorialstep](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/TUTORIAL-STEP)
  **/
 export interface TutorialStep {
   id: string;
@@ -8421,7 +8421,7 @@ export interface TutorialStep {
 /**
  * Context state for managing the active tutorial and progress.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types#App State Types§TutorialContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/APP-STATE-TYPES/TUTORIALCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🔖appstatetypes🛠️tutorialcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/APP-STATE-TYPES/TUTORIAL-CONTEXT)
  **/
 export interface TutorialContext {
   activeTutorial?: string;
@@ -8438,7 +8438,7 @@ export interface TutorialContext {
 /**
  * Input configuration for the sketchpad XState machine.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types§SketchpadMachineInput](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/SKETCHPADMACHINEINPUT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🛠️sketchpadmachineinput](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/SKETCHPAD-MACHINE-INPUT)
  **/
 export interface SketchpadMachineInput {
   id?: string;
@@ -8448,7 +8448,7 @@ export interface SketchpadMachineInput {
 /**
  * Context state shape for the sketchpad XState machine.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types§SketchpadContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/SKETCHPADCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🛠️sketchpadcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/SKETCHPAD-CONTEXT)
  **/
 export interface SketchpadContext {
   id?: string;
@@ -8470,7 +8470,7 @@ export interface SketchpadContext {
 /**
  * Union type of all events the sketchpad machine can receive.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Types§SketchpadEvent](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/TYPES/SKETCHPADEVENT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🛠️sketchpadevent](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/SKETCHPAD-EVENT)
  **/
 export type SketchpadEvent =
   | { type: "NAVIGATE"; path: string }
@@ -8603,7 +8603,7 @@ export type SketchpadEvent =
 
 // #region 🔖Helpers
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Helpers](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/HELPERS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖helpers](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/HELPERS)
 // Helper functions for path migration, default state creation, and store initialization.
 
 function migratePath(path: string): string {
@@ -8736,7 +8736,7 @@ function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): vo
 /**
  * Creates the default empty transaction state.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Helpers§createDefaultTransactionState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/HELPERS/CREATEDEFAULTTRANSACTIONSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖helpers🛠️createdefaulttransactionstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/HELPERS/CREATE-DEFAULT-TRANSACTION-STATE)
  **/
 export function createDefaultTransactionState(): AppTransactionState {
   return {
@@ -8750,7 +8750,7 @@ export function createDefaultTransactionState(): AppTransactionState {
 /**
  * Creates the default design app state with initial transaction and panel settings.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Helpers§createDefaultDesignAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/HELPERS/CREATEDEFAULTDESIGNAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖helpers🛠️createdefaultdesignappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/HELPERS/CREATE-DEFAULT-DESIGN-APP-STATE)
  **/
 export function createDefaultDesignAppState(): DesignAppState {
   return {
@@ -8771,7 +8771,7 @@ export function createDefaultDesignAppState(): DesignAppState {
 /**
  * Creates the default type app state with initial transaction and panel settings.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Helpers§createDefaultTypeAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/HELPERS/CREATEDEFAULTTYPEAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖helpers🛠️createdefaulttypeappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/HELPERS/CREATE-DEFAULT-TYPE-APP-STATE)
  **/
 export function createDefaultTypeAppState(): TypeAppState {
   return {
@@ -8792,7 +8792,7 @@ export function createDefaultTypeAppState(): TypeAppState {
 /**
  * Creates the default kit app state with initial transaction and panel settings.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Helpers§createDefaultKitAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/HELPERS/CREATEDEFAULTKITAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖helpers🛠️createdefaultkitappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/HELPERS/CREATE-DEFAULT-KIT-APP-STATE)
  **/
 export function createDefaultKitAppState(): KitAppState {
   return {
@@ -8814,7 +8814,7 @@ export function createDefaultKitAppState(): KitAppState {
 /**
  * Creates the default quality app state with initial transaction and panel settings.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Helpers§createDefaultQualityAppState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/HELPERS/CREATEDEFAULTQUALITYAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖helpers🛠️createdefaultqualityappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/HELPERS/CREATE-DEFAULT-QUALITY-APP-STATE)
  **/
 export function createDefaultQualityAppState(): QualityAppState {
   return {
@@ -8955,13 +8955,13 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
 
 // #region 🔖Sketchpad Machine
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Sketchpad Machine](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/SKETCHPAD-MACHINE)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE)
 // XState state machine definition for the sketchpad application lifecycle.
 
 /**
  * XState machine governing sketchpad navigation, kit management, and app state transitions.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine§sketchpadMachine](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPADMACHINE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🪨sketchpadmachine](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-MACHINE)
  **/
 export const sketchpadMachine = setup({
   types: {
@@ -9331,19 +9331,19 @@ export const sketchpadMachine = setup({
 
 // #region 🔖Sketchpad Selectors
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Sketchpad Selectors](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/SKETCHPAD-SELECTORS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS)
 // Selector functions for extracting state from the sketchpad machine context.
 
 /**
  * Union of possible navigation state values.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§NavigationState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/NAVIGATIONSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🛠️navigationstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/NAVIGATION-STATE)
  **/
 export type NavigationState = "home" | "kit" | "design" | "type" | "quality" | "docs";
 /**
  * Selector deriving the current navigation state from the machine value.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectNavigationState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTNAVIGATIONSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectnavigationstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-NAVIGATION-STATE)
  **/
 export const selectNavigationState = (state: { value: any }): NavigationState => {
   const value = state.value;
@@ -9359,93 +9359,93 @@ export const selectNavigationState = (state: { value: any }): NavigationState =>
 /**
  * Selector returning whether the navigation state is home.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectIsInHome](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTISINHOME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectisinhome](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-IS-IN-HOME)
  **/
 export const selectIsInHome = (state: { value: any }): boolean => selectNavigationState(state) === "home";
 /**
  * Selector returning whether the navigation state is kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectIsInKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTISINKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectisinkit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-IS-IN-KIT)
  **/
 export const selectIsInKit = (state: { value: any }): boolean => selectNavigationState(state) === "kit";
 /**
  * Selector returning whether the navigation state is design.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectIsInDesign](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTISINDESIGN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectisindesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-IS-IN-DESIGN)
  **/
 export const selectIsInDesign = (state: { value: any }): boolean => selectNavigationState(state) === "design";
 /**
  * Selector returning whether the navigation state is type.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectIsInType](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTISINTYPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectisintype](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-IS-IN-TYPE)
  **/
 export const selectIsInType = (state: { value: any }): boolean => selectNavigationState(state) === "type";
 /**
  * Selector returning whether the navigation state is quality.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectIsInQuality](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTISINQUALITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectisinquality](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-IS-IN-QUALITY)
  **/
 export const selectIsInQuality = (state: { value: any }): boolean => selectNavigationState(state) === "quality";
 /**
  * Selector returning whether the navigation state is docs.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectIsInDocs](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTISINDOCS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectisindocs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-IS-IN-DOCS)
  **/
 export const selectIsInDocs = (state: { value: any }): boolean => selectNavigationState(state) === "docs";
 
 /**
  * Selector returning the home app state.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomeApp](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMEAPP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomeapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-APP)
  **/
 export const selectHomeApp = (state: { context: SketchpadContext }) => state.context.homeApp;
 /**
  * Selector returning the home app panel visibility.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomePanelVisibility](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMEPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomepanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-PANEL-VISIBILITY)
  **/
 export const selectHomePanelVisibility = (state: { context: SketchpadContext }) => state.context.homeApp.panelVisibility;
 /**
  * Selector returning the home app selection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomeSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMESELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomeselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-SELECTION)
  **/
 export const selectHomeSelection = (state: { context: SketchpadContext }) => state.context.homeApp.selection;
 /**
  * Selector returning the home app hover.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomeHover](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMEHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomehover](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-HOVER)
  **/
 export const selectHomeHover = (state: { context: SketchpadContext }) => state.context.homeApp.hover;
 /**
  * Selector returning the home app sort column.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomeSortColumn](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMESORTCOLUMN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomesortcolumn](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-SORT-COLUMN)
  **/
 export const selectHomeSortColumn = (state: { context: SketchpadContext }) => state.context.homeApp.sortColumn;
 /**
  * Selector returning the home app sort direction.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomeSortDirection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMESORTDIRECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomesortdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-SORT-DIRECTION)
  **/
 export const selectHomeSortDirection = (state: { context: SketchpadContext }) => state.context.homeApp.sortDirection;
 /**
  * Selector returning the home app loading kits.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectHomeLoadingKits](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTHOMELOADINGKITS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecthomeloadingkits](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-HOME-LOADING-KITS)
  **/
 export const selectHomeLoadingKits = (state: { context: SketchpadContext }) => state.context.homeApp.loadingKits;
 
 /**
  * Selector returning background operations.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectBackgroundOperations](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTBACKGROUNDOPERATIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectbackgroundoperations](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-BACKGROUND-OPERATIONS)
  **/
 export const selectBackgroundOperations = (state: { context: SketchpadContext }) => state.context.backgroundOperations;
 /**
  * Selector returning kit import operations from background operations.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectKitImportOperations](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTKITIMPORTOPERATIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectkitimportoperations](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-KIT-IMPORT-OPERATIONS)
  **/
 export const selectKitImportOperations = (state: { context: SketchpadContext }) => {
   const ops = state.context.backgroundOperations;
@@ -9462,7 +9462,7 @@ export const selectKitImportOperations = (state: { context: SketchpadContext }) 
 /**
  * Creates a selector for the design app state by kit and design guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignAppSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNAPPSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignappselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-APP-SELECTOR)
  **/
 export const createDesignAppSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9472,7 +9472,7 @@ export const createDesignAppSelector = (kitGuid: Guid, designGuid: Guid) => {
 /**
  * Creates a selector for the design panel visibility.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignPanelVisibilitySelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNPANELVISIBILITYSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignpanelvisibilityselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-PANEL-VISIBILITY-SELECTOR)
  **/
 export const createDesignPanelVisibilitySelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9482,7 +9482,7 @@ export const createDesignPanelVisibilitySelector = (kitGuid: Guid, designGuid: G
 /**
  * Creates a selector for the design selection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignSelectionSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNSELECTIONSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignselectionselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-SELECTION-SELECTOR)
  **/
 export const createDesignSelectionSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9492,7 +9492,7 @@ export const createDesignSelectionSelector = (kitGuid: Guid, designGuid: Guid) =
 /**
  * Creates a selector for the design hover.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignHoverSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNHOVERSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignhoverselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-HOVER-SELECTOR)
  **/
 export const createDesignHoverSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9502,7 +9502,7 @@ export const createDesignHoverSelector = (kitGuid: Guid, designGuid: Guid) => {
 /**
  * Creates a selector for the design focused piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignFocusedPieceSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNFOCUSEDPIECESELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignfocusedpieceselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-FOCUSED-PIECE-SELECTOR)
  **/
 export const createDesignFocusedPieceSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9512,7 +9512,7 @@ export const createDesignFocusedPieceSelector = (kitGuid: Guid, designGuid: Guid
 /**
  * Creates a selector for the design selected model tags.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignSelectedModelTagsSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNSELECTEDMODELTAGSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignselectedmodeltagsselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-SELECTED-MODEL-TAGS-SELECTOR)
  **/
 export const createDesignSelectedModelTagsSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9522,7 +9522,7 @@ export const createDesignSelectedModelTagsSelector = (kitGuid: Guid, designGuid:
 /**
  * Creates a selector for the design diagram center.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignDiagramCenterSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNDIAGRAMCENTERSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesigndiagramcenterselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-DIAGRAM-CENTER-SELECTOR)
  **/
 export const createDesignDiagramCenterSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9532,7 +9532,7 @@ export const createDesignDiagramCenterSelector = (kitGuid: Guid, designGuid: Gui
 /**
  * Creates a selector for the design diagram scale.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignDiagramScaleSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNDIAGRAMSCALESELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesigndiagramscaleselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-DIAGRAM-SCALE-SELECTOR)
  **/
 export const createDesignDiagramScaleSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9542,7 +9542,7 @@ export const createDesignDiagramScaleSelector = (kitGuid: Guid, designGuid: Guid
 /**
  * Creates a selector for the design camera.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignCameraSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNCAMERASELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesigncameraselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-CAMERA-SELECTOR)
  **/
 export const createDesignCameraSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9552,7 +9552,7 @@ export const createDesignCameraSelector = (kitGuid: Guid, designGuid: Guid) => {
 /**
  * Creates a selector for the design active tool.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignActiveToolSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNACTIVETOOLSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignactivetoolselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-ACTIVE-TOOL-SELECTOR)
  **/
 export const createDesignActiveToolSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9562,7 +9562,7 @@ export const createDesignActiveToolSelector = (kitGuid: Guid, designGuid: Guid) 
 /**
  * Creates a selector for the design fullscreen window.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignFullscreenWindowSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNFULLSCREENWINDOWSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignfullscreenwindowselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-FULLSCREEN-WINDOW-SELECTOR)
  **/
 export const createDesignFullscreenWindowSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9572,7 +9572,7 @@ export const createDesignFullscreenWindowSelector = (kitGuid: Guid, designGuid: 
 /**
  * Creates a selector for the design others.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createDesignOthersSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEDESIGNOTHERSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createdesignothersselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-DESIGN-OTHERS-SELECTOR)
  **/
 export const createDesignOthersSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
@@ -9582,7 +9582,7 @@ export const createDesignOthersSelector = (kitGuid: Guid, designGuid: Guid) => {
 /**
  * Creates a selector for the type app state by kit and type guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeAppSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEAPPSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypeappselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-APP-SELECTOR)
  **/
 export const createTypeAppSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9595,7 +9595,7 @@ export const createTypeAppSelector = (kitGuid: Guid, typeGuid: Guid) => {
 /**
  * Creates a selector for the type panel visibility.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypePanelVisibilitySelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEPANELVISIBILITYSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypepanelvisibilityselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-PANEL-VISIBILITY-SELECTOR)
  **/
 export const createTypePanelVisibilitySelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9605,7 +9605,7 @@ export const createTypePanelVisibilitySelector = (kitGuid: Guid, typeGuid: Guid)
 /**
  * Creates a selector for the type selection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeSelectionSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPESELECTIONSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypeselectionselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-SELECTION-SELECTOR)
  **/
 export const createTypeSelectionSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9615,7 +9615,7 @@ export const createTypeSelectionSelector = (kitGuid: Guid, typeGuid: Guid) => {
 /**
  * Creates a selector for the type focused connector.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeFocusedConnectorSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEFOCUSEDCONNECTORSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypefocusedconnectorselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-FOCUSED-CONNECTOR-SELECTOR)
  **/
 export const createTypeFocusedConnectorSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9625,7 +9625,7 @@ export const createTypeFocusedConnectorSelector = (kitGuid: Guid, typeGuid: Guid
 /**
  * Creates a selector for the type selected model tags.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeSelectedModelTagsSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPESELECTEDMODELTAGSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypeselectedmodeltagsselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-SELECTED-MODEL-TAGS-SELECTOR)
  **/
 export const createTypeSelectedModelTagsSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9635,7 +9635,7 @@ export const createTypeSelectedModelTagsSelector = (kitGuid: Guid, typeGuid: Gui
 /**
  * Creates a selector for the type camera.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeCameraSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPECAMERASELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypecameraselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-CAMERA-SELECTOR)
  **/
 export const createTypeCameraSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9645,7 +9645,7 @@ export const createTypeCameraSelector = (kitGuid: Guid, typeGuid: Guid) => {
 /**
  * Creates a selector for the type active tool.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeActiveToolSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEACTIVETOOLSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypeactivetoolselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-ACTIVE-TOOL-SELECTOR)
  **/
 export const createTypeActiveToolSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9655,7 +9655,7 @@ export const createTypeActiveToolSelector = (kitGuid: Guid, typeGuid: Guid) => {
 /**
  * Creates a selector for the type hover.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeHoverSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEHOVERSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypehoverselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-HOVER-SELECTOR)
  **/
 export const createTypeHoverSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9665,7 +9665,7 @@ export const createTypeHoverSelector = (kitGuid: Guid, typeGuid: Guid) => {
 /**
  * Creates a selector for the type fullscreen window.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeFullscreenWindowSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEFULLSCREENWINDOWSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypefullscreenwindowselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-FULLSCREEN-WINDOW-SELECTOR)
  **/
 export const createTypeFullscreenWindowSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9675,7 +9675,7 @@ export const createTypeFullscreenWindowSelector = (kitGuid: Guid, typeGuid: Guid
 /**
  * Creates a selector for the type others.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTypeOthersSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETYPEOTHERSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtypeothersselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TYPE-OTHERS-SELECTOR)
  **/
 export const createTypeOthersSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
@@ -9685,7 +9685,7 @@ export const createTypeOthersSelector = (kitGuid: Guid, typeGuid: Guid) => {
 /**
  * Creates a selector for the kit app state.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitAppSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITAPPSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitappselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-APP-SELECTOR)
  **/
 export const createKitAppSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid] ?? createDefaultKitAppState();
@@ -9694,7 +9694,7 @@ export const createKitAppSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit panel visibility.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitPanelVisibilitySelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITPANELVISIBILITYSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitpanelvisibilityselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-PANEL-VISIBILITY-SELECTOR)
  **/
 export const createKitPanelVisibilitySelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.panelVisibility ?? defaultPanelVisibility;
@@ -9703,7 +9703,7 @@ export const createKitPanelVisibilitySelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit selection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitSelectionSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITSELECTIONSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitselectionselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-SELECTION-SELECTOR)
  **/
 export const createKitSelectionSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.selection;
@@ -9712,7 +9712,7 @@ export const createKitSelectionSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit hover.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitHoverSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITHOVERSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkithoverselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-HOVER-SELECTOR)
  **/
 export const createKitHoverSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.hover;
@@ -9721,7 +9721,7 @@ export const createKitHoverSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit filter search.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitFilterSearchSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITFILTERSEARCHSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitfiltersearchselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-FILTER-SEARCH-SELECTOR)
  **/
 export const createKitFilterSearchSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.filterSearch ?? "";
@@ -9730,7 +9730,7 @@ export const createKitFilterSearchSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit expanded rows.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitExpandedRowsSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITEXPANDEDROWSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitexpandedrowsselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-EXPANDED-ROWS-SELECTOR)
  **/
 export const createKitExpandedRowsSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.expandedRows ?? new Set<string>();
@@ -9739,7 +9739,7 @@ export const createKitExpandedRowsSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit sort column.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitSortColumnSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITSORTCOLUMNSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitsortcolumnselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-SORT-COLUMN-SELECTOR)
  **/
 export const createKitSortColumnSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.sortColumn ?? "artifact";
@@ -9748,7 +9748,7 @@ export const createKitSortColumnSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit sort direction.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitSortDirectionSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITSORTDIRECTIONSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitsortdirectionselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-SORT-DIRECTION-SELECTOR)
  **/
 export const createKitSortDirectionSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.sortDirection ?? "asc";
@@ -9757,7 +9757,7 @@ export const createKitSortDirectionSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit fullscreen window.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitFullscreenSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITFULLSCREENSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitfullscreenselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-FULLSCREEN-SELECTOR)
  **/
 export const createKitFullscreenSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.fullscreenWindow ?? KitAppFullscreenWindow.None;
@@ -9766,7 +9766,7 @@ export const createKitFullscreenSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit others.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitOthersSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITOTHERSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitothersselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-OTHERS-SELECTOR)
  **/
 export const createKitOthersSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.others ?? [];
@@ -9775,7 +9775,7 @@ export const createKitOthersSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit window layout.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitWindowLayoutSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITWINDOWLAYOUTSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitwindowlayoutselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-WINDOW-LAYOUT-SELECTOR)
  **/
 export const createKitWindowLayoutSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.windowLayout;
@@ -9784,7 +9784,7 @@ export const createKitWindowLayoutSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the kit diagram force settings.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createKitDiagramForceSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEKITDIAGRAMFORCESELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createkitdiagramforceselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-KIT-DIAGRAM-FORCE-SELECTOR)
  **/
 export const createKitDiagramForceSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.diagramForce;
@@ -9793,7 +9793,7 @@ export const createKitDiagramForceSelector = (kitGuid: Guid) => {
 /**
  * Creates a selector for the quality app state by kit and quality guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createQualityAppSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEQUALITYAPPSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createqualityappselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-QUALITY-APP-SELECTOR)
  **/
 export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
   const key = `${kitGuid}:${qualityGuid}`;
@@ -9814,7 +9814,7 @@ export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
 /**
  * Creates a selector for the quality panel visibility.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createQualityPanelVisibilitySelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATEQUALITYPANELVISIBILITYSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createqualitypanelvisibilityselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-QUALITY-PANEL-VISIBILITY-SELECTOR)
  **/
 export const createQualityPanelVisibilitySelector = (kitGuid: Guid, qualityGuid: Guid) => {
   const key = `${kitGuid}:${qualityGuid}`;
@@ -9824,106 +9824,106 @@ export const createQualityPanelVisibilitySelector = (kitGuid: Guid, qualityGuid:
 /**
  * Selector returning the tutorial context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectTutorial](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTTUTORIAL)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecttutorial](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-TUTORIAL)
  **/
 export const selectTutorial = (state: { context: SketchpadContext }) => state.context.tutorial;
 /**
  * Selector returning the active tutorial identifier.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectActiveTutorial](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTACTIVETUTORIAL)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectactivetutorial](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-ACTIVE-TUTORIAL)
  **/
 export const selectActiveTutorial = (state: { context: SketchpadContext }) => state.context.tutorial.activeTutorial;
 /**
  * Selector returning the tutorial current step index.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectTutorialCurrentStep](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTTUTORIALCURRENTSTEP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecttutorialcurrentstep](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-TUTORIAL-CURRENT-STEP)
  **/
 export const selectTutorialCurrentStep = (state: { context: SketchpadContext }) => state.context.tutorial.currentStepIndex;
 /**
  * Selector returning the tutorial steps.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectTutorialSteps](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTTUTORIALSTEPS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selecttutorialsteps](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-TUTORIAL-STEPS)
  **/
 export const selectTutorialSteps = (state: { context: SketchpadContext }) => state.context.tutorial.steps;
 
 /**
  * Selector returning the sketchpad kits map.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadKits](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADKITS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadkits](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-KITS)
  **/
 export const selectSketchpadKits = (state: { context: SketchpadContext }) => state.context.kits;
 
 /**
  * Selector returning the sketchpad state.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-STATE)
  **/
 export const selectSketchpadState = (state: { context: SketchpadContext }) => state.context.sketchpad;
 
 /**
  * Selector returning the sketchpad navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadNavigation](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADNAVIGATION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadnavigation](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-NAVIGATION)
  **/
 export const selectSketchpadNavigation = (state: { context: SketchpadContext }) => migratePath(state.context.sketchpad.navigation || "/");
 /**
  * Selector returning the sketchpad theme.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadTheme](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADTHEME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadtheme](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-THEME)
  **/
 export const selectSketchpadTheme = (state: { context: SketchpadContext }) => state.context.sketchpad.theme;
 /**
  * Selector returning the sketchpad language.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadLanguage](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADLANGUAGE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadlanguage](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-LANGUAGE)
  **/
 export const selectSketchpadLanguage = (state: { context: SketchpadContext }) => state.context.sketchpad.language || "en";
 /**
  * Selector returning the sketchpad expertise level.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadExpertise](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADEXPERTISE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadexpertise](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-EXPERTISE)
  **/
 export const selectSketchpadExpertise = (state: { context: SketchpadContext }) => state.context.sketchpad.expertise ?? Expertise.BEGINNER;
 /**
  * Selector returning the sketchpad mode.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadMode](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADMODE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadmode](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-MODE)
  **/
 export const selectSketchpadMode = (state: { context: SketchpadContext }) => state.context.sketchpad.mode ?? Mode.USER;
 /**
  * Selector returning the sketchpad device.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadDevice](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADDEVICE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpaddevice](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-DEVICE)
  **/
 export const selectSketchpadDevice = (state: { context: SketchpadContext }) => state.context.sketchpad.device || "desktop";
 /**
  * Selector returning whether the sketchpad is fullscreen.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadIsFullscreen](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADISFULLSCREEN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadisfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-IS-FULLSCREEN)
  **/
 export const selectSketchpadIsFullscreen = (state: { context: SketchpadContext }) => state.context.sketchpad.isFullscreen || false;
 /**
  * Selector returning the sketchpad panel sizes.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadPanelSizes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADPANELSIZES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadpanelsizes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-PANEL-SIZES)
  **/
 export const selectSketchpadPanelSizes = (state: { context: SketchpadContext }) => state.context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
 /**
  * Selector returning the sketchpad navigation history.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadNavigationHistory](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADNAVIGATIONHISTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadnavigationhistory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-NAVIGATION-HISTORY)
  **/
 export const selectSketchpadNavigationHistory = (state: { context: SketchpadContext }) => (state.context.sketchpad.navigationHistory || ["/"]).map(migratePath);
 /**
  * Selector returning the sketchpad navigation history index.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadNavigationHistoryIndex](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADNAVIGATIONHISTORYINDEX)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadnavigationhistoryindex](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-NAVIGATION-HISTORY-INDEX)
  **/
 export const selectSketchpadNavigationHistoryIndex = (state: { context: SketchpadContext }) => state.context.sketchpad.navigationHistoryIndex ?? 0;
 /**
  * Selector returning the sketchpad settings.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§selectSketchpadSettings](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECTSKETCHPADSETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨selectsketchpadsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/SELECT-SKETCHPAD-SETTINGS)
  **/
 export const selectSketchpadSettings = (state: { context: SketchpadContext }) => state.context.sketchpad.settings || createDefaultSketchpadState().settings;
 
@@ -9953,21 +9953,21 @@ const defaultTransactionState: AppTransactionState = {
 /**
  * Creates a selector for the transaction state of a given app key.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTransactionSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETRANSACTIONSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtransactionselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TRANSACTION-SELECTOR)
  **/
 export const createTransactionSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey) || defaultTransactionState;
 
 /**
  * Creates a selector returning whether a transaction is active.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTransactionIsActiveSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETRANSACTIONISACTIVESELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtransactionisactiveselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TRANSACTION-IS-ACTIVE-SELECTOR)
  **/
 export const createTransactionIsActiveSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey)?.isTransactionActive ?? false;
 
 /**
  * Creates a selector returning whether an undo operation is available.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTransactionCanUndoSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETRANSACTIONCANUNDOSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtransactioncanundoselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TRANSACTION-CAN-UNDO-SELECTOR)
  **/
 export const createTransactionCanUndoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
   const tx = getAppTransaction(state.context, appKey);
@@ -9978,7 +9978,7 @@ export const createTransactionCanUndoSelector = (appKey: string) => (state: { co
 /**
  * Creates a selector returning whether a redo operation is available.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Sketchpad Machine#Sketchpad Selectors§createTransactionCanRedoSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATETRANSACTIONCANREDOSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨createtransactioncanredoselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SKETCHPAD-MACHINE/SKETCHPAD-SELECTORS/CREATE-TRANSACTION-CAN-REDO-SELECTOR)
  **/
 export const createTransactionCanRedoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
   const tx = getAppTransaction(state.context, appKey);
@@ -9993,14 +9993,14 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 /**
  * Union of entity kind identifiers for UI selection and hover.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine§UiEntityKind](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/UIENTITYKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🛠️uientitykind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/UI-ENTITY-KIND)
  **/
 export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag" | "concept";
 
 /**
  * Selector extracting the active kit guid from the navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiActiveKitGuid](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIACTIVEKITGUID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiactivekitguid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-ACTIVE-KIT-GUID)
  **/
 export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
@@ -10010,7 +10010,7 @@ export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
 /**
  * Selector extracting the active design guid from the navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiActiveDesignGuid](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIACTIVEDESIGNGUID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiactivedesignguid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-ACTIVE-DESIGN-GUID)
  **/
 export const selectUiActiveDesignGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
@@ -10020,7 +10020,7 @@ export const selectUiActiveDesignGuid = (state: { context: SketchpadContext }) =
 /**
  * Selector extracting the active type guid from the navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiActiveTypeGuid](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIACTIVETYPEGUID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiactivetypeguid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-ACTIVE-TYPE-GUID)
  **/
 export const selectUiActiveTypeGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
@@ -10030,7 +10030,7 @@ export const selectUiActiveTypeGuid = (state: { context: SketchpadContext }) => 
 /**
  * Selector extracting the active quality guid from the navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiActiveQualityGuid](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIACTIVEQUALITYGUID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiactivequalityguid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-ACTIVE-QUALITY-GUID)
  **/
 export const selectUiActiveQualityGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
@@ -10040,49 +10040,49 @@ export const selectUiActiveQualityGuid = (state: { context: SketchpadContext }) 
 /**
  * Selector alias for checking home navigation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiIsInHome](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIISINHOME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiisinhome](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-IS-IN-HOME)
  **/
 export const selectUiIsInHome = selectIsInHome;
 /**
  * Selector alias for checking kit navigation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiIsInKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIISINKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiisinkit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-IS-IN-KIT)
  **/
 export const selectUiIsInKit = selectIsInKit;
 /**
  * Selector alias for checking design navigation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiIsInDesign](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIISINDESIGN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiisindesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-IS-IN-DESIGN)
  **/
 export const selectUiIsInDesign = selectIsInDesign;
 /**
  * Selector alias for checking type navigation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiIsInType](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIISINTYPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiisintype](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-IS-IN-TYPE)
  **/
 export const selectUiIsInType = selectIsInType;
 /**
  * Selector alias for checking quality navigation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiIsInQuality](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIISINQUALITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiisinquality](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-IS-IN-QUALITY)
  **/
 export const selectUiIsInQuality = selectIsInQuality;
 /**
  * Selector alias for checking docs navigation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine§selectUiIsInDocs](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/SELECTUIISINDOCS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🪨selectuiisindocs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/SELECT-UI-IS-IN-DOCS)
  **/
 export const selectUiIsInDocs = selectIsInDocs;
 
 // #region 🔖Factory
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Factory](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/FACTORY)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖factory](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/FACTORY)
 // Factory function to instantiate the sketchpad actor.
 
 /**
  * Instantiates and returns a sketchpad XState actor from the given input.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Factory§createSketchpadActor](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/FACTORY/CREATESKETCHPADACTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖factory🛠️createsketchpadactor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/FACTORY/CREATE-SKETCHPAD-ACTOR)
  **/
 export function createSketchpadActor(input: SketchpadMachineInput) {
   return createActor(sketchpadMachine, {
@@ -10101,13 +10101,13 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
 
 // #region 🔖Legacy Type Exports
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Legacy Type Exports](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/LEGACY-TYPE-EXPORTS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS)
 // Legacy type exports for backward compatibility with existing consumers.
 
 /**
  * Legacy transaction context interface with typed edits.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§TransactionContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/TRANSACTIONCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️transactioncontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/TRANSACTION-CONTEXT)
  **/
 export interface TransactionContext<TEdit = any> {
   isTransactionActive: boolean;
@@ -10120,7 +10120,7 @@ export interface TransactionContext<TEdit = any> {
 /**
  * Legacy app machine input interface with optional identifier.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§AppMachineInput](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/APPMACHINEINPUT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️appmachineinput](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/APP-MACHINE-INPUT)
  **/
 export interface AppMachineInput<TId = any> {
   id?: TId;
@@ -10129,7 +10129,7 @@ export interface AppMachineInput<TId = any> {
 /**
  * Legacy app machine context with selection and transaction state.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§AppMachineContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/APPMACHINECONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️appmachinecontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/APP-MACHINE-CONTEXT)
  **/
 export interface AppMachineContext<TSelection = any, TId = any> {
   id?: TId;
@@ -10145,7 +10145,7 @@ export interface AppMachineContext<TSelection = any, TId = any> {
 /**
  * Legacy kit machine input with Yjs document and map references.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§KitMachineInput](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/KITMACHINEINPUT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️kitmachineinput](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/KIT-MACHINE-INPUT)
  **/
 export interface KitMachineInput {
   yDoc: Y.Doc;
@@ -10158,7 +10158,7 @@ export interface KitMachineInput {
 /**
  * Legacy kit context with Yjs-backed state and caching.
  *
- *  * [✂️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§KitContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/KITCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️kitcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/KIT-CONTEXT)
  **/
 export interface KitContext {
   yDoc: Y.Doc;
@@ -10173,7 +10173,7 @@ export interface KitContext {
 /**
  * Legacy kit event union for CRUD and synchronization operations.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§KitEvent](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/KITEVENT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️kitevent](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/KIT-EVENT)
  **/
 export type KitEvent =
   | { type: "CHANGE"; diff: KitDiff }
@@ -10204,7 +10204,7 @@ function buildKitSnapshot(yKit: Y.Map<any>): Partial<Kit> {
 /**
  * Legacy selector returning the sketchpad state snapshot.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectSnapshot](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTSNAPSHOT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectsnapshot](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-SNAPSHOT)
  **/
 export function selectSnapshot(context: SketchpadContext): SketchpadState {
   return context.sketchpad;
@@ -10213,7 +10213,7 @@ export function selectSnapshot(context: SketchpadContext): SketchpadState {
 /**
  * Legacy selector returning the navigation path.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectNavigation](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTNAVIGATION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectnavigation](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-NAVIGATION)
  **/
 export function selectNavigation(context: SketchpadContext): string {
   return migratePath(context.sketchpad.navigation || "/");
@@ -10222,7 +10222,7 @@ export function selectNavigation(context: SketchpadContext): string {
 /**
  * Legacy selector returning the theme.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectTheme](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTTHEME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selecttheme](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-THEME)
  **/
 export function selectTheme(context: SketchpadContext): Theme {
   return context.sketchpad.theme;
@@ -10231,7 +10231,7 @@ export function selectTheme(context: SketchpadContext): Theme {
 /**
  * Legacy selector returning the language.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectLanguage](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTLANGUAGE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectlanguage](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-LANGUAGE)
  **/
 export function selectLanguage(context: SketchpadContext): string {
   return context.sketchpad.language || "en";
@@ -10240,7 +10240,7 @@ export function selectLanguage(context: SketchpadContext): string {
 /**
  * Legacy selector returning the expertise level.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectExpertise](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTEXPERTISE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectexpertise](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-EXPERTISE)
  **/
 export function selectExpertise(context: SketchpadContext): Expertise {
   return context.sketchpad.expertise ?? Expertise.BEGINNER;
@@ -10249,7 +10249,7 @@ export function selectExpertise(context: SketchpadContext): Expertise {
 /**
  * Legacy selector returning the mode.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectMode](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTMODE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectmode](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-MODE)
  **/
 export function selectMode(context: SketchpadContext): Mode {
   return context.sketchpad.mode ?? Mode.USER;
@@ -10258,7 +10258,7 @@ export function selectMode(context: SketchpadContext): Mode {
 /**
  * Legacy selector returning the device.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectDevice](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTDEVICE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectdevice](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-DEVICE)
  **/
 export function selectDevice(context: SketchpadContext): Device {
   return context.sketchpad.device || "desktop";
@@ -10267,7 +10267,7 @@ export function selectDevice(context: SketchpadContext): Device {
 /**
  * Legacy selector returning whether fullscreen is active.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectIsFullscreen](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTISFULLSCREEN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectisfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-IS-FULLSCREEN)
  **/
 export function selectIsFullscreen(context: SketchpadContext): boolean {
   return context.sketchpad.isFullscreen || false;
@@ -10276,7 +10276,7 @@ export function selectIsFullscreen(context: SketchpadContext): boolean {
 /**
  * Legacy selector returning the panel sizes.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectPanelSizes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTPANELSIZES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectpanelsizes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-PANEL-SIZES)
  **/
 export function selectPanelSizes(context: SketchpadContext): PanelSizes {
   return context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
@@ -10285,7 +10285,7 @@ export function selectPanelSizes(context: SketchpadContext): PanelSizes {
 /**
  * Legacy selector returning the kit guid from kit context.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectKitGuid](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTKITGUID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectkitguid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-KIT-GUID)
  **/
 export function selectKitGuid(context: KitContext): Guid {
   return context.yKit.get("guid") as Guid;
@@ -10294,7 +10294,7 @@ export function selectKitGuid(context: KitContext): Guid {
 /**
  * Legacy selector returning the kit name from kit context.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectKitName](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTKITNAME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectkitname](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-KIT-NAME)
  **/
 export function selectKitName(context: KitContext): string {
   return context.yKit.get("name") as string;
@@ -10303,7 +10303,7 @@ export function selectKitName(context: KitContext): string {
 /**
  * Legacy selector returning the kit snapshot with optional caching.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Legacy Type Exports§selectKitSnapshot](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECTKITSNAPSHOT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖legacytypeexports🛠️selectkitsnapshot](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/LEGACY-TYPE-EXPORTS/SELECT-KIT-SNAPSHOT)
  **/
 export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   if (!context.dirty && context.cache) {
@@ -10316,34 +10316,34 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
 
 // #region 🔖Actor Types
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Actor Types](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/ACTOR-TYPES)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖actortypes](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/ACTOR-TYPES)
 // Type aliases for the sketchpad XState actor references and snapshots.
 
 /**
  * Actor reference type for the sketchpad machine.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Actor Types§SketchpadActorRef](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/ACTOR-TYPES/SKETCHPADACTORREF)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖actortypes🛠️sketchpadactorref](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/ACTOR-TYPES/SKETCHPAD-ACTOR-REF)
  **/
 export type SketchpadActorRef = ActorRefFrom<typeof sketchpadMachine>;
 
 /**
  * Snapshot type for the sketchpad machine.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Actor Types§SketchpadSnapshot](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/ACTOR-TYPES/SKETCHPADSNAPSHOT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖actortypes🛠️sketchpadsnapshot](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/ACTOR-TYPES/SKETCHPAD-SNAPSHOT)
  **/
 export type SketchpadSnapshot = SnapshotFrom<typeof sketchpadMachine>;
 
 /**
  * State type alias for the sketchpad context.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Actor Types§SketchpadState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/ACTOR-TYPES/SKETCHPADSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖actortypes🛠️sketchpadstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/ACTOR-TYPES/SKETCHPAD-STATE)
  **/
 export type SketchpadState$ = { context: SketchpadContext };
 
 /**
  * React context holding the sketchpad actor reference.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Machine#Actor Types§SketchpadActorContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/MACHINE/ACTOR-TYPES/SKETCHPADACTORCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖actortypes🪨sketchpadactorcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/ACTOR-TYPES/SKETCHPAD-ACTOR-CONTEXT)
  **/
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
@@ -10358,13 +10358,13 @@ export const SketchpadActorContext = createContext<SketchpadActorRef | null>(nul
 
 // #region 🔖Design
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Design](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/DESIGN)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS)
 // Design app hooks for piece and connection selection, hover, and diff state.
 
 /**
  * Hook returning whether the current scoped piece is selected.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useIsPieceSelected](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEISPIECESELECTED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useispieceselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-IS-PIECE-SELECTED)
  **/
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
@@ -10376,7 +10376,7 @@ export function useIsPieceSelected(): boolean {
 /**
  * Hook returning whether the current scoped piece is hovered.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useIsPieceHovered](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEISPIECEHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useispiecehovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-IS-PIECE-HOVERED)
  **/
 export function useIsPieceHovered(): boolean {
   const pieceScope = usePieceScope();
@@ -10388,7 +10388,7 @@ export function useIsPieceHovered(): boolean {
 /**
  * Hook returning whether the current scoped piece is transitively hovered.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useIsPieceTransitiveHovered](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEISPIECETRANSITIVEHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useispiecetransitivehovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-IS-PIECE-TRANSITIVE-HOVERED)
  **/
 export function useIsPieceTransitiveHovered(): boolean {
   const pieceScope = usePieceScope();
@@ -10402,7 +10402,7 @@ export function useIsPieceTransitiveHovered(): boolean {
 /**
  * Hook returning the diff status of the current scoped piece.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceStatus](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECESTATUS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiecestatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-STATUS)
  **/
 export function usePieceStatus(): DiffStatus {
   const piece = usePieceScope();
@@ -10452,7 +10452,7 @@ export function usePieceStatus(): DiffStatus {
 /**
  * Hook returning the diffed piece with applied transaction edits.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useDiffedPiece](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEDIFFEDPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usediffedpiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-DIFFED-PIECE)
  **/
 export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, deep: boolean = false): T | Piece {
   const originalPiece = usePiece(identitySelector, id, deep) as Piece;
@@ -10491,7 +10491,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
 /**
  * Hook returning the piece center U coordinate with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceCenterU](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECECENTERU)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiececenteru](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-CENTER-U)
  **/
 export function usePieceCenterU(): HookResult<number> {
   const pieceScope = usePieceScope();
@@ -10510,7 +10510,7 @@ export function usePieceCenterU(): HookResult<number> {
 /**
  * Hook returning the piece center V coordinate with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceCenterV](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECECENTERV)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiececenterv](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-CENTER-V)
  **/
 export function usePieceCenterV(): HookResult<number> {
   const pieceScope = usePieceScope();
@@ -10529,7 +10529,7 @@ export function usePieceCenterV(): HookResult<number> {
 /**
  * Hook returning the piece scale with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceScale](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECESCALE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiecescale](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-SCALE)
  **/
 export function usePieceScale(): HookResult<number> {
   const pieceScope = usePieceScope();
@@ -10548,7 +10548,7 @@ export function usePieceScale(): HookResult<number> {
 /**
  * Hook returning the piece hidden state with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceIsHidden](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECEISHIDDEN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepieceishidden](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-IS-HIDDEN)
  **/
 export function usePieceIsHidden(): HookResult<boolean> {
   const pieceScope = usePieceScope();
@@ -10567,7 +10567,7 @@ export function usePieceIsHidden(): HookResult<boolean> {
 /**
  * Hook returning the piece locked state with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceIsLocked](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECEISLOCKED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepieceislocked](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-IS-LOCKED)
  **/
 export function usePieceIsLocked(): HookResult<boolean> {
   const pieceScope = usePieceScope();
@@ -10586,7 +10586,7 @@ export function usePieceIsLocked(): HookResult<boolean> {
 /**
  * Hook returning the piece color with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceColor](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECECOLOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiececolor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-COLOR)
  **/
 export function usePieceColor(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
@@ -10605,7 +10605,7 @@ export function usePieceColor(): HookResult<string | undefined> {
 /**
  * Hook returning the piece description with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceDescription](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECEDESCRIPTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiecedescription](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-DESCRIPTION)
  **/
 export function usePieceDescription(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
@@ -10624,7 +10624,7 @@ export function usePieceDescription(): HookResult<string | undefined> {
 /**
  * Hook returning the piece name with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceName](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECENAME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiecename](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-NAME)
  **/
 export function usePieceName(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
@@ -10643,7 +10643,7 @@ export function usePieceName(): HookResult<string | undefined> {
 /**
  * Hook returning whether the current scoped connection is selected.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useIsConnectionSelected](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEISCONNECTIONSELECTED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useisconnectionselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-IS-CONNECTION-SELECTED)
  **/
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionScope();
@@ -10655,7 +10655,7 @@ export function useIsConnectionSelected(): boolean {
 /**
  * Hook returning whether the current scoped connection is hovered.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useIsConnectionHovered](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEISCONNECTIONHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useisconnectionhovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-IS-CONNECTION-HOVERED)
  **/
 export function useIsConnectionHovered(): boolean {
   const connectionScope = useConnectionScope();
@@ -10667,7 +10667,7 @@ export function useIsConnectionHovered(): boolean {
 /**
  * Hook returning the diff status of the current scoped connection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionStatus](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONSTATUS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionstatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-STATUS)
  **/
 export function useConnectionStatus(): DiffStatus {
   const connection = useConnectionScope();
@@ -10709,7 +10709,7 @@ export function useConnectionStatus(): DiffStatus {
 /**
  * Hook returning the connection gap with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionGap](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONGAP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectiongap](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-GAP)
  **/
 export function useConnectionGap(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10728,7 +10728,7 @@ export function useConnectionGap(): HookResult<number> {
 /**
  * Hook returning the connection shift with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionShift](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONSHIFT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionshift](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-SHIFT)
  **/
 export function useConnectionShift(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10747,7 +10747,7 @@ export function useConnectionShift(): HookResult<number> {
 /**
  * Hook returning the connection rise with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionRise](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONRISE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionrise](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-RISE)
  **/
 export function useConnectionRise(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10766,7 +10766,7 @@ export function useConnectionRise(): HookResult<number> {
 /**
  * Hook returning the connection rotation with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionRotation](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONROTATION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionrotation](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-ROTATION)
  **/
 export function useConnectionRotation(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10785,7 +10785,7 @@ export function useConnectionRotation(): HookResult<number> {
 /**
  * Hook returning the connection turn with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionTurn](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONTURN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionturn](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-TURN)
  **/
 export function useConnectionTurn(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10804,7 +10804,7 @@ export function useConnectionTurn(): HookResult<number> {
 /**
  * Hook returning the connection tilt with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionTilt](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONTILT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectiontilt](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-TILT)
  **/
 export function useConnectionTilt(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10823,7 +10823,7 @@ export function useConnectionTilt(): HookResult<number> {
 /**
  * Hook returning the connection U coordinate with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionU](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONU)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionu](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-U)
  **/
 export function useConnectionU(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10842,7 +10842,7 @@ export function useConnectionU(): HookResult<number> {
 /**
  * Hook returning the connection V coordinate with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionV](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONV)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectionv](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-V)
  **/
 export function useConnectionV(): HookResult<number> {
   const connectionScope = useConnectionScope();
@@ -10861,7 +10861,7 @@ export function useConnectionV(): HookResult<number> {
 /**
  * Hook returning clusterable piece groups for the current design.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useClusterableGroups](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECLUSTERABLEGROUPS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useclusterablegroups](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CLUSTERABLE-GROUPS)
  **/
 export function useClusterableGroups() {
   const designScope = useDesignScope();
@@ -10879,7 +10879,7 @@ export function useClusterableGroups() {
 /**
  * Hook returning the kit with applied transaction diffs.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useDiffedKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEDIFFEDKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usediffedkit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-DIFFED-KIT)
  **/
 export function useDiffedKit(): Kit {
   const kit = useKit() as Kit;
@@ -10891,7 +10891,7 @@ export function useDiffedKit(): Kit {
 /**
  * Hook returning types with port-colored connectors from the diffed kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePortColoredTypes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPORTCOLOREDTYPES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useportcoloredtypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PORT-COLORED-TYPES)
  **/
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
@@ -10908,7 +10908,7 @@ export function usePortColoredTypes(): Type[] {
 /**
  * Hook returning original and diffed piece with diff indicator.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§usePieceWithDiff](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEPIECEWITHDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usepiecewithdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-PIECE-WITH-DIFF)
  **/
 export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
   const originalPiece = usePiece() as Piece;
@@ -10927,7 +10927,7 @@ export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; has
 /**
  * Hook returning stroke and fill colors based on connection diff status.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useConnectionColor](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USECONNECTIONCOLOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️useconnectioncolor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-CONNECTION-COLOR)
  **/
 export function useConnectionColor(): { stroke: string; fill: string } {
   const connection = useConnectionScope();
@@ -10974,7 +10974,7 @@ export function useConnectionColor(): { stroke: string; fill: string } {
 /**
  * Hook returning the design with applied transaction diffs.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Design§useDiffedDesign](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/DESIGN/USEDIFFEDDESIGN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design🛠️usediffeddesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/DESIGN/USE-DIFFED-DESIGN)
  **/
 export function useDiffedDesign(): Design {
   const kit = useDiffedKit();
@@ -10987,13 +10987,13 @@ export function useDiffedDesign(): Design {
 
 // #region 🔖Sketchpad
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Sketchpad](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/SKETCHPAD)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD)
 // Core reactive observation, synchronization hooks, and sketchpad store implementation.
 
 /**
  * Creates a Yjs observer that triggers the given subscription callback on changes.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§createObserver](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/CREATEOBSERVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️createobserver](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/CREATE-OBSERVER)
  **/
 export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
@@ -11011,7 +11011,7 @@ export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscr
 /**
  * Creates a Yjs field observer that tracks a single key on a Y.Map.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§createFieldObserver](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/CREATEFIELDOBSERVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️createfieldobserver](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/CREATE-FIELD-OBSERVER)
  **/
 export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
@@ -11048,7 +11048,7 @@ export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: S
 /**
  * Creates a Yjs observer that tracks multiple keys on a Y.Map.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§createFieldsObserver](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/CREATEFIELDSOBSERVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️createfieldsobserver](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/CREATE-FIELDS-OBSERVER)
  **/
 export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
@@ -11102,7 +11102,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
 /**
  * Creates a Yjs observer tracking item membership in a Y.Array.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§createArrayItemMembershipObserver](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/CREATEARRAYITEMMEMBERSHIPOBSERVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️createarrayitemmembershipobserver](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/CREATE-ARRAY-ITEM-MEMBERSHIP-OBSERVER)
  **/
 export function createArrayItemMembershipObserver(getYArray: () => Y.Array<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
@@ -11145,7 +11145,7 @@ export function createArrayItemMembershipObserver(getYArray: () => Y.Array<strin
 /**
  * Creates a Yjs observer tracking nested array item membership within a Y.Map.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§createNestedArrayItemMembershipObserver](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/CREATENESTEDARRAYITEMMEMBERSHIPOBSERVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️createnestedarrayitemmembershipobserver](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/CREATE-NESTED-ARRAY-ITEM-MEMBERSHIP-OBSERVER)
  **/
 export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey: string, arrayKey: string, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
@@ -11257,7 +11257,7 @@ const performanceLogTimestamps = new Map<string, number>();
 /**
  * Enables or disables performance logging for store operations.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§enablePerformanceLogging](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/ENABLEPERFORMANCELOGGING)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️enableperformancelogging](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/ENABLE-PERFORMANCE-LOGGING)
  **/
 export function enablePerformanceLogging(enabled: boolean = true) {
   performanceLoggingEnabled = enabled;
@@ -11283,7 +11283,7 @@ function logStateAccess(hookName: string, storeType: string, selectorInfo?: stri
 /**
  * Hook synchronizing a store snapshot with React state via useSyncExternalStore.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSync](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNC)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesync](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC)
  **/
 export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T }, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected {
   const subscribe = useCallback(
@@ -11306,7 +11306,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
 /**
  * Hook synchronizing an optional store snapshot returning null when absent.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncOptional](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCOPTIONAL)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncoptional](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-OPTIONAL)
  **/
 export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
   const subscribe = useCallback(
@@ -11331,7 +11331,7 @@ export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe
 /**
  * Hook synchronizing a store snapshot with deep observation support.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncDeep](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCDEEP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncdeep](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-DEEP)
  **/
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
@@ -11356,7 +11356,7 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
 /**
  * Hook synchronizing a single field of a Yjs-backed store.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncField](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-FIELD)
  **/
 export function useSyncField<T, TSelected = T>(
   store: { onFieldChanged: (key: string, subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T; getFieldSnapshot?: (key: string) => any },
@@ -11422,7 +11422,7 @@ export function useSyncField<T, TSelected = T>(
 /**
  * Hook synchronizing multiple fields of a Yjs-backed store.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncFields](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCFIELDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncfields](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-FIELDS)
  **/
 export function useSyncFields<T, TSelected = T>(
   store: { onFieldsChanged: (keys: string[], subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T },
@@ -11485,7 +11485,7 @@ export function useSyncFields<T, TSelected = T>(
 /**
  * Hook tracking nested array item membership via Yjs observation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncNestedArrayItemMembership](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCNESTEDARRAYITEMMEMBERSHIP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncnestedarrayitemmembership](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-NESTED-ARRAY-ITEM-MEMBERSHIP)
  **/
 export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
@@ -11515,7 +11515,7 @@ export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | n
 /**
  * Hook tracking selection item membership via Yjs observation.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncSelectionItemMembership](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCSELECTIONITEMMEMBERSHIP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncselectionitemmembership](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-SELECTION-ITEM-MEMBERSHIP)
  **/
 export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | null, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
@@ -11546,7 +11546,7 @@ export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | nul
 /**
  * Hook traversing a Yjs path and selecting a value from the resolved node.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§usePath](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEPATH)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usepath](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-PATH)
  **/
 export function usePath<T, TSelected = T>(
   store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any } | null,
@@ -11586,7 +11586,7 @@ export function usePath<T, TSelected = T>(
 /**
  * Hook computing and caching a derived value from store dependencies.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useDerived](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEDERIVED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usederived](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-DERIVED)
  **/
 export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, key: string, deps: BaseDependency[], compute: () => T, selector: (value: T) => TSelected = identitySelector as any): TSelected | undefined {
   const nodeRef = useRef<DerivedNode<T> | null>(null);
@@ -11666,7 +11666,7 @@ const nullStore: Synchronizable<null> = {
 /**
  * Hook synchronizing a store with state tracking for loading, error, and idle status.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSyncWithState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESYNCWITHSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesyncwithstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SYNC-WITH-STATE)
  **/
 export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchronizable<TAccessl> & Store<TAccessl>) | null, selector?: (state: TAccessl) => TSelected, deep: boolean = false): StoreState<TAccessl | TSelected> {
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
@@ -11758,7 +11758,7 @@ let docsAppStoreFactory: DocsAppStoreFactory | undefined;
 /**
  * Registers the home store factory for lazy initialization.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§registerHomeStoreFactory](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/REGISTERHOMESTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️registerhomestorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/REGISTER-HOME-STORE-FACTORY)
  **/
 export function registerHomeStoreFactory(factory: HomeStoreFactory) {
   homeStoreFactory = factory;
@@ -11767,7 +11767,7 @@ export function registerHomeStoreFactory(factory: HomeStoreFactory) {
 /**
  * Registers the docs app store factory for lazy initialization.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§registerDocsAppStoreFactory](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/REGISTERDOCSAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️registerdocsappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/REGISTER-DOCS-APP-STORE-FACTORY)
  **/
 export function registerDocsAppStoreFactory(factory: DocsAppStoreFactory) {
   docsAppStoreFactory = factory;
@@ -11791,7 +11791,7 @@ type YSketchpad = Y.Map<YSketchpadVal>;
 /**
  * Central store managing Yjs-backed sketchpad state with reactive subscriptions.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§SketchpadStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/SKETCHPADSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️sketchpadstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/SKETCHPAD-STORE)
  **/
 export class SketchpadStore {
   private static _modulesLoaded = false;
@@ -12879,7 +12879,7 @@ const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 /**
  * React context provider initializing and scoping the sketchpad store and actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§SketchpadScopeProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/SKETCHPADSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🪨sketchpadscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/SKETCHPAD-SCOPE-PROVIDER)
  **/
 export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
@@ -12937,14 +12937,14 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
 /**
  * Hook returning the current sketchpad scope context.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSketchpadScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESKETCHPADSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🪨usesketchpadscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SKETCHPAD-SCOPE)
  **/
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 
 /**
  * Hook returning the sketchpad store instance for the current scope.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSketchpadStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESKETCHPADSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesketchpadstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SKETCHPAD-STORE)
  **/
 export function useSketchpadStore(id?: string): SketchpadStore {
   const scope = useSketchpadScope();
@@ -12958,7 +12958,7 @@ export function useSketchpadStore(id?: string): SketchpadStore {
 /**
  * Hook returning the sketchpad state with optional selector.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSketchpad](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESKETCHPAD)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesketchpad](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SKETCHPAD)
  **/
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState | null {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : (identitySelector as any));
@@ -12967,7 +12967,7 @@ export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: st
 /**
  * Hook returning the current navigation path from the router.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useNavigation](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USENAVIGATION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usenavigation](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-NAVIGATION)
  **/
 export function useNavigation(): string {
   const location = useLocation();
@@ -12977,7 +12977,7 @@ export function useNavigation(): string {
 /**
  * Hook returning the current app kind based on navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useAppType](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEAPPTYPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useapptype](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-APP-TYPE)
  **/
 export function useAppType(): AppKind {
   const navigation = useNavigation();
@@ -12996,7 +12996,7 @@ export function useAppType(): AppKind {
 /**
  * Returns the app kind for a given navigation path.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§getAppTypeFromPath](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/GETAPPTYPEFROMPATH)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️getapptypefrompath](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/GET-APP-TYPE-FROM-PATH)
  **/
 export function getAppTypeFromPath(path: string): AppKind {
   const pathParts = path.split("/").filter((p) => p);
@@ -13007,7 +13007,7 @@ export function getAppTypeFromPath(path: string): AppKind {
 /**
  * Hook returning the current theme with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useTheme](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USETHEME)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usetheme](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-THEME)
  **/
 export function useTheme(): HookResult<Theme> {
   const actor = useSketchpadActor();
@@ -13024,7 +13024,7 @@ export function useTheme(): HookResult<Theme> {
 /**
  * Hook returning the current language with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useLanguage](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USELANGUAGE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️uselanguage](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-LANGUAGE)
  **/
 export function useLanguage(): HookResult<string> {
   const actor = useSketchpadActor();
@@ -13041,7 +13041,7 @@ export function useLanguage(): HookResult<string> {
 /**
  * Hook returning the current device with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useDevice](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEDEVICE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usedevice](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-DEVICE)
  **/
 export function useDevice(): HookResult<Device> {
   const actor = useSketchpadActor();
@@ -13058,7 +13058,7 @@ export function useDevice(): HookResult<Device> {
 /**
  * Hook returning the current mode with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useMode](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEMODE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usemode](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-MODE)
  **/
 export function useMode(): HookResult<Mode> {
   const actor = useSketchpadActor();
@@ -13075,7 +13075,7 @@ export function useMode(): HookResult<Mode> {
 /**
  * Hook returning the current expertise level with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useExpertise](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEEXPERTISE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useexpertise](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-EXPERTISE)
  **/
 export function useExpertise(): HookResult<Expertise> {
   const actor = useSketchpadActor();
@@ -13092,7 +13092,7 @@ export function useExpertise(): HookResult<Expertise> {
 /**
  * Hook returning the fullscreen state with toggle setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useFullscreen](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEFULLSCREEN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usefullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-FULLSCREEN)
  **/
 export function useFullscreen(): HookResult<boolean> {
   const actor = useSketchpadActor();
@@ -13109,7 +13109,7 @@ export function useFullscreen(): HookResult<boolean> {
 /**
  * Hook returning a tooltip resolver based on expertise level.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useTooltip](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USETOOLTIP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usetooltip](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-TOOLTIP)
  **/
 export function useTooltip(): (key: string) => string | undefined {
   const [expertise] = useExpertise();
@@ -13122,7 +13122,7 @@ export function useTooltip(): (key: string) => string | undefined {
 /**
  * Hook returning semio tooltip context with current mode.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSemioTooltip](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESEMIOTOOLTIP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesemiotooltip](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SEMIO-TOOLTIP)
  **/
 export function useSemioTooltip() {
   const [mode] = useMode();
@@ -13132,7 +13132,7 @@ export function useSemioTooltip() {
 /**
  * Hook returning whether the navbar is expanded on the current device.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useIsNavbarExpanded](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEISNAVBAREXPANDED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useisnavbarexpanded](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-IS-NAVBAR-EXPANDED)
  **/
 export function useIsNavbarExpanded(): boolean {
   const [device] = useDevice();
@@ -13142,7 +13142,7 @@ export function useIsNavbarExpanded(): boolean {
 /**
  * Hook returning whether the footer is expanded on the current device.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useIsFooterExpanded](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEISFOOTEREXPANDED)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useisfooterexpanded](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-IS-FOOTER-EXPANDED)
  **/
 export function useIsFooterExpanded(): boolean {
   const [device] = useDevice();
@@ -13152,7 +13152,7 @@ export function useIsFooterExpanded(): boolean {
 /**
  * Hook returning the currently active interaction identifier.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useActiveInteraction](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEACTIVEINTERACTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useactiveinteraction](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-ACTIVE-INTERACTION)
  **/
 export function useActiveInteraction(): string | undefined {
   return useSketchpad((s) => s.activeInteraction) as string | undefined;
@@ -13161,7 +13161,7 @@ export function useActiveInteraction(): string | undefined {
 /**
  * Hook returning whether the current device is mobile.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useIsMobile](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEISMOBILE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useismobile](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-IS-MOBILE)
  **/
 export function useIsMobile(): boolean {
   return useSketchpad((s) => s.isMobile) as boolean;
@@ -13170,7 +13170,7 @@ export function useIsMobile(): boolean {
 /**
  * Hook returning the navigation history with forward and back capabilities.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useNavigationHistory](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USENAVIGATIONHISTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usenavigationhistory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-NAVIGATION-HISTORY)
  **/
 export function useNavigationHistory(): {
   history: string[];
@@ -13190,13 +13190,13 @@ export function useNavigationHistory(): {
 
 // #region 🔖XState Hooks
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#XState Hooks](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/XSTATE-HOOKS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS)
 // React hooks for accessing XState sketchpad actor state and sending events.
 
 /**
  * Hook returning the sketchpad XState actor reference.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useSketchpadActor](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USESKETCHPADACTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usesketchpadactor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-SKETCHPAD-ACTOR)
  **/
 export function useSketchpadActor(): SketchpadActorRef {
   const actor = useContext(SketchpadActorContext);
@@ -13209,7 +13209,7 @@ export function useSketchpadActor(): SketchpadActorRef {
 /**
  * Hook returning the sketchpad actor reference or null when outside scope.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useSketchpadActorSafe](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USESKETCHPADACTORSAFE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usesketchpadactorsafe](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-SKETCHPAD-ACTOR-SAFE)
  **/
 export function useSketchpadActorSafe(): SketchpadActorRef | null {
   return useContext(SketchpadActorContext);
@@ -13218,7 +13218,7 @@ export function useSketchpadActorSafe(): SketchpadActorRef | null {
 /**
  * Hook selecting a value from the sketchpad actor snapshot.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useSketchpadSelector](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USESKETCHPADSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usesketchpadselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-SKETCHPAD-SELECTOR)
  **/
 export function useSketchpadSelector<T>(selector: (snapshot: ReturnType<SketchpadActorRef["getSnapshot"]>) => T): T {
   const actor = useSketchpadActor();
@@ -13228,7 +13228,7 @@ export function useSketchpadSelector<T>(selector: (snapshot: ReturnType<Sketchpa
 /**
  * Hook returning the full sketchpad state snapshot.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useSketchpadSnapshot](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USESKETCHPADSNAPSHOT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usesketchpadsnapshot](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-SKETCHPAD-SNAPSHOT)
  **/
 export function useSketchpadSnapshot(): SketchpadState {
   const actor = useSketchpadActor();
@@ -13238,7 +13238,7 @@ export function useSketchpadSnapshot(): SketchpadState {
 /**
  * Hook returning whether the given event can be sent to the sketchpad actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useSketchpadCan](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USESKETCHPADCAN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usesketchpadcan](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-SKETCHPAD-CAN)
  **/
 export function useSketchpadCan(event: SketchpadEvent): boolean {
   const actor = useSketchpadActor();
@@ -13253,7 +13253,7 @@ export function useSketchpadCan(event: SketchpadEvent): boolean {
 /**
  * Hook returning the navigation path from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useNavigationXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USENAVIGATIONXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usenavigationxstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-NAVIGATION-X-STATE)
  **/
 export function useNavigationXState(): string {
   const actor = useSketchpadActor();
@@ -13263,7 +13263,7 @@ export function useNavigationXState(): string {
 /**
  * Hook returning the theme from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useThemeXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USETHEMEXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usethemexstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-THEME-X-STATE)
  **/
 export function useThemeXState(): Theme {
   const actor = useSketchpadActor();
@@ -13273,7 +13273,7 @@ export function useThemeXState(): Theme {
 /**
  * Hook returning the language from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useLanguageXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USELANGUAGEXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️uselanguagexstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-LANGUAGE-X-STATE)
  **/
 export function useLanguageXState(): string {
   const actor = useSketchpadActor();
@@ -13283,7 +13283,7 @@ export function useLanguageXState(): string {
 /**
  * Hook returning the expertise level from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useExpertiseXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEEXPERTISEXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️useexpertisexstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-EXPERTISE-X-STATE)
  **/
 export function useExpertiseXState(): Expertise {
   const actor = useSketchpadActor();
@@ -13293,7 +13293,7 @@ export function useExpertiseXState(): Expertise {
 /**
  * Hook returning the mode from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useModeXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEMODEXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usemodexstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-MODE-X-STATE)
  **/
 export function useModeXState(): Mode {
   const actor = useSketchpadActor();
@@ -13303,7 +13303,7 @@ export function useModeXState(): Mode {
 /**
  * Hook returning the device from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useDeviceXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEDEVICEXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usedevicexstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-DEVICE-X-STATE)
  **/
 export function useDeviceXState(): Device {
   const actor = useSketchpadActor();
@@ -13313,7 +13313,7 @@ export function useDeviceXState(): Device {
 /**
  * Hook returning the fullscreen state from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useIsFullscreenXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEISFULLSCREENXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️useisfullscreenxstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-IS-FULLSCREEN-X-STATE)
  **/
 export function useIsFullscreenXState(): boolean {
   const actor = useSketchpadActor();
@@ -13323,7 +13323,7 @@ export function useIsFullscreenXState(): boolean {
 /**
  * Hook returning panel sizes from XState actor.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§usePanelSizesXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEPANELSIZESXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usepanelsizesxstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-PANEL-SIZES-X-STATE)
  **/
 export function usePanelSizesXState(): PanelSizes {
   const actor = useSketchpadActor();
@@ -13333,7 +13333,7 @@ export function usePanelSizesXState(): PanelSizes {
 /**
  * Hook returning a memoized object of sketchpad action dispatchers.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useSketchpadActions](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USESKETCHPADACTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usesketchpadactions](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-SKETCHPAD-ACTIONS)
  **/
 export function useSketchpadActions() {
   const actor = useSketchpadActor();
@@ -13359,7 +13359,7 @@ export function useSketchpadActions() {
 /**
  * Hook wrapping an XState field value with a guarded setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useXStateField](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEXSTATEFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usexstatefield](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-X-STATE-FIELD)
  **/
 export function useXStateField<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent): Field<T> {
   const actor = useSketchpadActor();
@@ -13370,7 +13370,7 @@ export function useXStateField<T, TEvent extends { type: string }>(value: T, can
 /**
  * Hook wrapping an XState field value with a scope-aware guarded setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useXStateFieldWithScope](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEXSTATEFIELDWITHSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usexstatefieldwithscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-X-STATE-FIELD-WITH-SCOPE)
  **/
 export function useXStateFieldWithScope<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent, hasScope: boolean): Field<T> {
   const actor = useSketchpadActor();
@@ -13382,7 +13382,7 @@ export function useXStateFieldWithScope<T, TEvent extends { type: string }>(valu
 /**
  * Hook wrapping an XState action with a guard check.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad#XState Hooks§useXStateAction](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/XSTATE-HOOKS/USEXSTATEACTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🔖xstatehooks🛠️usexstateaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/X-STATE-HOOKS/USE-X-STATE-ACTION)
  **/
 export function useXStateAction<TEvent extends { type: string }>(canEvent: TEvent, event: TEvent): ActionField {
   const actor = useSketchpadActor();
@@ -13395,7 +13395,7 @@ export function useXStateAction<TEvent extends { type: string }>(canEvent: TEven
 /**
  * Hook returning the design app state for a given kit and design.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useDesignAppXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEDESIGNAPPXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usedesignappxstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-DESIGN-APP-X-STATE)
  **/
 export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppState {
   const actor = useSketchpadActor();
@@ -13406,7 +13406,7 @@ export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppSt
 /**
  * Hook returning the type app state for a given kit and type.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useTypeAppXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USETYPEAPPXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usetypeappxstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-TYPE-APP-X-STATE)
  **/
 export function useTypeAppXState(kitGuid: Guid, typeGuid: Guid): TypeAppState {
   const actor = useSketchpadActor();
@@ -13417,7 +13417,7 @@ export function useTypeAppXState(kitGuid: Guid, typeGuid: Guid): TypeAppState {
 /**
  * Hook returning the kit app state for a given kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useKitAppXState](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEKITAPPXSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usekitappxstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-KIT-APP-X-STATE)
  **/
 export function useKitAppXState(kitGuid: Guid): KitAppState {
   const actor = useSketchpadActor();
@@ -13428,7 +13428,7 @@ export function useKitAppXState(kitGuid: Guid): KitAppState {
 /**
  * Hook returning the home app state.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeApp](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMEAPP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomeapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-APP)
  **/
 export function useHomeApp(): HomeAppState {
   const actor = useSketchpadActor();
@@ -13438,7 +13438,7 @@ export function useHomeApp(): HomeAppState {
 /**
  * Hook returning the home panel visibility.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomePanelVisibility](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMEPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomepanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-PANEL-VISIBILITY)
  **/
 export function useHomePanelVisibility(): PanelVisibility {
   const actor = useSketchpadActor();
@@ -13448,7 +13448,7 @@ export function useHomePanelVisibility(): PanelVisibility {
 /**
  * Hook returning the home selection.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeSelection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMESELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomeselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-SELECTION)
  **/
 export function useHomeSelection(): HomeAppSelection | undefined {
   const actor = useSketchpadActor();
@@ -13458,7 +13458,7 @@ export function useHomeSelection(): HomeAppSelection | undefined {
 /**
  * Hook returning the home hover state.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeHover](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMEHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomehover](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-HOVER)
  **/
 export function useHomeHover(): { kits?: Guid[] } | undefined {
   const actor = useSketchpadActor();
@@ -13468,7 +13468,7 @@ export function useHomeHover(): { kits?: Guid[] } | undefined {
 /**
  * Hook returning the home sort column.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeSortColumn](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMESORTCOLUMN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomesortcolumn](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-SORT-COLUMN)
  **/
 export function useHomeSortColumn(): string | undefined {
   const actor = useSketchpadActor();
@@ -13478,7 +13478,7 @@ export function useHomeSortColumn(): string | undefined {
 /**
  * Hook returning the home sort direction.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeSortDirection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMESORTDIRECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomesortdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-SORT-DIRECTION)
  **/
 export function useHomeSortDirection(): "asc" | "desc" | undefined {
   const actor = useSketchpadActor();
@@ -13488,7 +13488,7 @@ export function useHomeSortDirection(): "asc" | "desc" | undefined {
 /**
  * Hook returning the home loading kits list.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeLoadingKits](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMELOADINGKITS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomeloadingkits](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-LOADING-KITS)
  **/
 export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> {
   const actor = useSketchpadActor();
@@ -13498,7 +13498,7 @@ export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> 
 /**
  * Hook returning the current kit import operations.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useKitImportOperations](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEKITIMPORTOPERATIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usekitimportoperations](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-KIT-IMPORT-OPERATIONS)
  **/
 export function useKitImportOperations(): Array<{
   operationId: string;
@@ -13513,7 +13513,7 @@ export function useKitImportOperations(): Array<{
 /**
  * Hook returning memoized home app command dispatchers.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHomeCommands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHOMECOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehomecommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HOME-COMMANDS)
  **/
 export function useHomeCommands() {
   const actor = useSketchpadActor();
@@ -13552,7 +13552,7 @@ export function useHomeCommands() {
 /**
  * Hook returning shallow kit data for all kits with reactive updates.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useKitShallows](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEKITSHALLOWS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usekitshallows](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-KIT-SHALLOWS)
  **/
 export function useKitShallows(): KitShallow[] {
   const store = useSketchpadStore();
@@ -13581,7 +13581,7 @@ export function useKitShallows(): KitShallow[] {
 /**
  * Hook returning whether a kit with the given guid exists.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useHasKit](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEHASKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usehaskit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-HAS-KIT)
  **/
 export function useHasKit(kitGuid: string): boolean {
   const store = useSketchpadStore();
@@ -13601,7 +13601,7 @@ export function useHasKit(kitGuid: string): boolean {
 /**
  * Hook returning the persistence kind of a kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useKitKind](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEKITKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usekitkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-KIT-KIND)
  **/
 export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | undefined {
   const store = useSketchpadStore();
@@ -13629,7 +13629,7 @@ export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | 
 /**
  * Hook returning a callback to get the persistence kind of any kit.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useGetKitKind](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEGETKITKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usegetkitkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-GET-KIT-KIND)
  **/
 export function useGetKitKind(): (kitGuid: string) => "temporary" | "local" | "remote" | undefined {
   const store = useSketchpadStore();
@@ -13648,7 +13648,7 @@ export function useGetKitKind(): (kitGuid: string) => "temporary" | "local" | "r
 /**
  * Hook returning kit shallows filtered by persistence kind.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useFilteredKitShallows](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEFILTEREDKITSHALLOWS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usefilteredkitshallows](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-FILTERED-KIT-SHALLOWS)
  **/
 export function useFilteredKitShallows(kind?: "temporary" | "local" | "remote"): KitShallow[] {
   const store = useSketchpadStore();
@@ -13666,7 +13666,7 @@ export function useFilteredKitShallows(kind?: "temporary" | "local" | "remote"):
 /**
  * Hook returning the current panel sizes.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§usePanelSizes](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEPANELSIZES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usepanelsizes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-PANEL-SIZES)
  **/
 export function usePanelSizes(): PanelSizes {
   return useSketchpad((state) => state.panelSizes) as PanelSizes;
@@ -13675,7 +13675,7 @@ export function usePanelSizes(): PanelSizes {
 /**
  * Hook returning the current settings.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSettings](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SETTINGS)
  **/
 export function useSettings(): { apps: Record<string, any> } {
   return useSketchpad((state) => state.settings) as { apps: Record<string, any> };
@@ -13684,7 +13684,7 @@ export function useSettings(): { apps: Record<string, any> } {
 /**
  * Hook returning the panel visibility for the current app.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useAppPanelVisibility](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEAPPPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useapppanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-APP-PANEL-VISIBILITY)
  **/
 export function useAppPanelVisibility(): PanelVisibility {
   const navigation = useNavigation();
@@ -13734,7 +13734,7 @@ export function useAppPanelVisibility(): PanelVisibility {
 /**
  * Hook returning command dispatchers for the current app.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useAppCommands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEAPPCOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useappcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-APP-COMMANDS)
  **/
 export function useAppCommands() {
   const navigation = useNavigation();
@@ -13837,7 +13837,7 @@ export function useAppCommands() {
 /**
  * Hook returning a callback to update recent searches.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useUpdateRecentSearches](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEUPDATERECENTSEARCHES)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useupdaterecentsearches](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-UPDATE-RECENT-SEARCHES)
  **/
 export function useUpdateRecentSearches() {
   const store = useSketchpadStore();
@@ -13852,7 +13852,7 @@ export function useUpdateRecentSearches() {
 /**
  * Hook returning a callback to update recent focus items.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useUpdateRecentFocusItems](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEUPDATERECENTFOCUSITEMS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️useupdaterecentfocusitems](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-UPDATE-RECENT-FOCUS-ITEMS)
  **/
 export function useUpdateRecentFocusItems() {
   const store = useSketchpadStore();
@@ -13867,7 +13867,7 @@ export function useUpdateRecentFocusItems() {
 /**
  * Hook returning a navigation callback that syncs with the store.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useNavigate](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USENAVIGATE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usenavigate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-NAVIGATE)
  **/
 export function useNavigate() {
   const store = useSketchpadStore();
@@ -13890,7 +13890,7 @@ export function useNavigate() {
 /**
  * Hook returning memoized sketchpad command dispatchers.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useSketchpadCommands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USESKETCHPADCOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usesketchpadcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-SKETCHPAD-COMMANDS)
  **/
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
@@ -13995,7 +13995,7 @@ export function useSketchpadCommands() {
 /**
  * Hook returning shallow kit data for all kits.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useKits](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEKITS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usekits](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-KITS)
  **/
 export function useKits(): KitShallow[] {
   const store = useSketchpadStore();
@@ -14027,7 +14027,7 @@ export function useKits(): KitShallow[] {
 /**
  * Hook returning kit command dispatchers for a specific kit by guid.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad§useKitCommandsById](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/SKETCHPAD/USEKITCOMMANDSBYID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️usekitcommandsbyid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/USE-KIT-COMMANDS-BY-ID)
  **/
 export function useKitCommandsById(kitGuid?: string) {
   const store = useSketchpadStore();
@@ -14066,13 +14066,13 @@ export function useKitCommandsById(kitGuid?: string) {
 
 // #region 🔖Commands
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Commands](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/COMMANDS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/COMMANDS)
 // Exported sketchpad command map for theme, language, mode, device, and navigation.
 
 /**
  * Map of sketchpad commands keyed by command identifier.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Commands§commands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/COMMANDS/COMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖commands🪨commands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/COMMANDS/COMMANDS)
  **/
 export const commands = {
   "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
@@ -14254,7 +14254,7 @@ export const commands = {
 /**
  * Map of developer-only sketchpad commands.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps#Commands§devCommands](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS/COMMANDS/DEVCOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖commands🪨devcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/COMMANDS/DEV-COMMANDS)
  **/
 export const devCommands = {
   "semio.sketchpad.freeze": (context: SketchpadCommandContext): SketchpadCommandResult => {
@@ -14271,13 +14271,13 @@ export const devCommands = {
 
 // #region 🔖Apps Registry
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Apps Registry](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/APPS-REGISTRY)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖appsregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS-REGISTRY)
 // Dynamic app panel loader for registering app-specific panels.
 
 /**
  * Loads panel configurations for a given app by dynamic import.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Apps Registry§loadAppPanels](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/APPS-REGISTRY/LOADAPPPANELS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖appsregistry🛠️loadapppanels](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS-REGISTRY/LOAD-APP-PANELS)
  **/
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
   try {
@@ -14407,7 +14407,7 @@ export { appRegistry, loadAppConfigs };
 
 // #region 🔖Navbar
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Navbar](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/NAVBAR)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR)
 // Focus-based navigation context provider for navbar breadcrumbs and search.
 
 interface FocusContextValue {
@@ -14422,7 +14422,7 @@ const FocusContext = createContext<FocusContextValue | null>(null);
 /**
  * React context provider managing focus items and focus callbacks.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§FocusProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/FOCUSPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨focusprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/FOCUS-PROVIDER)
  **/
 export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [focusItems, setFocusItems] = useState<FocusItem[]>([]);
@@ -14454,7 +14454,7 @@ export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
 /**
  * Hook returning the focus context value.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§useFocus](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/USEFOCUS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨usefocus](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/USE-FOCUS)
  **/
 export const useFocus = () => {
   const context = useContext(FocusContext);
@@ -14465,7 +14465,7 @@ export const useFocus = () => {
 /**
  * Hook returning the focus context value or null when outside provider.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§useFocusSafe](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/USEFOCUSSAFE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨usefocussafe](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/USE-FOCUS-SAFE)
  **/
 export const useFocusSafe = () => {
   const context = useContext(FocusContext);
@@ -14483,7 +14483,7 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
 /**
  * React context provider managing panel sections by panel key.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§PanelSectionProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/PANELSECTIONPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨panelsectionprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/PANEL-SECTION-PROVIDER)
  **/
 export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sections, setSections] = useState<PanelSections>({
@@ -14524,7 +14524,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
 /**
  * Hook returning panel sections for a given panel key.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§usePanelSections](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/USEPANELSECTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨usepanelsections](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/USE-PANEL-SECTIONS)
  **/
 export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
   const context = useContext(PanelSectionContext);
@@ -14536,7 +14536,7 @@ export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
 /**
  * Hook returning a callback to add a section to a panel.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§useAddPanelSection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/USEADDPANELSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨useaddpanelsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/USE-ADD-PANEL-SECTION)
  **/
 export const useAddPanelSection = () => {
   const context = useContext(PanelSectionContext);
@@ -14547,7 +14547,7 @@ export const useAddPanelSection = () => {
 /**
  * Hook returning a callback to remove a section from a panel.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Navbar§useRemovePanelSection](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/NAVBAR/USEREMOVEPANELSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖navbar🪨useremovepanelsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/NAVBAR/USE-REMOVE-PANEL-SECTION)
  **/
 export const useRemovePanelSection = () => {
   const context = useContext(PanelSectionContext);
@@ -14559,7 +14559,7 @@ export const useRemovePanelSection = () => {
 
 // #region 🔖SidePanel Tabs
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#SidePanel Tabs](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/SIDEPANEL-TABS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS)
 // Context provider managing side panel and HUD panel tab registration.
 
 interface SidePanelTabsState {
@@ -14591,7 +14591,7 @@ const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null)
 /**
  * React context provider managing side panel and HUD panel tab registration.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§SidePanelTabProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/SIDEPANELTABPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨sidepaneltabprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/SIDE-PANEL-TAB-PROVIDER)
  **/
 export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sidePanelTabs, setSidePanelTabs] = useState<SidePanelTabsState>({ left: [], right: [] });
@@ -14643,7 +14643,7 @@ export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) 
 /**
  * Hook returning side panel tabs for a given position.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useSidePanelTabs](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USESIDEPANELTABS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨usesidepaneltabs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-SIDE-PANEL-TABS)
  **/
 export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => {
   const context = useContext(SidePanelTabContext);
@@ -14654,7 +14654,7 @@ export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => 
 /**
  * Hook returning HUD panel tabs.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useHudPanelTabs](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEHUDPANELTABS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨usehudpaneltabs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-HUD-PANEL-TABS)
  **/
 export const useHudPanelTabs = (): HudPanelTab[] => {
   const context = useContext(SidePanelTabContext);
@@ -14665,7 +14665,7 @@ export const useHudPanelTabs = (): HudPanelTab[] => {
 /**
  * Hook returning a callback to add a side panel tab.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useAddSidePanelTab](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEADDSIDEPANELTAB)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useaddsidepaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ADD-SIDE-PANEL-TAB)
  **/
 export const useAddSidePanelTab = () => {
   const context = useContext(SidePanelTabContext);
@@ -14676,7 +14676,7 @@ export const useAddSidePanelTab = () => {
 /**
  * Hook returning a callback to remove a side panel tab.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useRemoveSidePanelTab](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEREMOVESIDEPANELTAB)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useremovesidepaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-REMOVE-SIDE-PANEL-TAB)
  **/
 export const useRemoveSidePanelTab = () => {
   const context = useContext(SidePanelTabContext);
@@ -14687,7 +14687,7 @@ export const useRemoveSidePanelTab = () => {
 /**
  * Hook returning a callback to add a HUD panel tab.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useAddHudPanelTab](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEADDHUDPANELTAB)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useaddhudpaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ADD-HUD-PANEL-TAB)
  **/
 export const useAddHudPanelTab = () => {
   const context = useContext(SidePanelTabContext);
@@ -14698,7 +14698,7 @@ export const useAddHudPanelTab = () => {
 /**
  * Hook returning a callback to remove a HUD panel tab.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useRemoveHudPanelTab](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEREMOVEHUDPANELTAB)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useremovehudpaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-REMOVE-HUD-PANEL-TAB)
  **/
 export const useRemoveHudPanelTab = () => {
   const context = useContext(SidePanelTabContext);
@@ -14709,7 +14709,7 @@ export const useRemoveHudPanelTab = () => {
 /**
  * Hook returning the active left tab ID with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useActiveLeftTabId](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEACTIVELEFTTABID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useactivelefttabid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ACTIVE-LEFT-TAB-ID)
  **/
 export const useActiveLeftTabId = (): [string | undefined, (tabId: string) => void] => {
   const context = useContext(SidePanelTabContext);
@@ -14720,7 +14720,7 @@ export const useActiveLeftTabId = (): [string | undefined, (tabId: string) => vo
 /**
  * Hook returning the active right tab ID with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useActiveRightTabId](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEACTIVERIGHTTABID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useactiverighttabid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ACTIVE-RIGHT-TAB-ID)
  **/
 export const useActiveRightTabId = (): [string | undefined, (tabId: string) => void] => {
   const context = useContext(SidePanelTabContext);
@@ -14731,7 +14731,7 @@ export const useActiveRightTabId = (): [string | undefined, (tabId: string) => v
 /**
  * Hook returning the active HUD tab ID with setter.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#SidePanel Tabs§useActiveHudTabId](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/SIDEPANEL-TABS/USEACTIVEHUDTABID)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useactivehudtabid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ACTIVE-HUD-TAB-ID)
  **/
 export const useActiveHudTabId = (): [string | undefined, (tabId: string) => void] => {
   const context = useContext(SidePanelTabContext);
@@ -14743,7 +14743,7 @@ export const useActiveHudTabId = (): [string | undefined, (tabId: string) => voi
 
 // #region 🔖Origin
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Origin](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/ORIGIN)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖origin](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/ORIGIN)
 // Context provider for tracking the origin URL of the sketchpad instance.
 
 type OriginStore = {
@@ -14783,7 +14783,7 @@ const OriginContext = createContext<OriginStore | null>(null);
 /**
  * React context provider tracking the UI origin of user interactions.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Origin§OriginProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/ORIGIN/ORIGINPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖origin🪨originprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/ORIGIN/ORIGIN-PROVIDER)
  **/
 export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const storeRef = useRef<ReturnType<typeof createOriginStore> | null>(null);
@@ -14809,7 +14809,7 @@ export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
 /**
  * Hook returning a callback that resolves the current origin string.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Origin§useOrigin](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/ORIGIN/USEORIGIN)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖origin🛠️useorigin](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/ORIGIN/USE-ORIGIN)
  **/
 export function useOrigin(): () => string {
   const store = useContext(OriginContext);
@@ -14819,7 +14819,7 @@ export function useOrigin(): () => string {
 /**
  * Hook returning the current origin string reactively.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Origin§useOriginValue](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/ORIGIN/USEORIGINVALUE)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖origin🛠️useoriginvalue](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/ORIGIN/USE-ORIGIN-VALUE)
  **/
 export function useOriginValue(): string {
   const store = useContext(OriginContext);
@@ -14833,7 +14833,7 @@ export function useOriginValue(): string {
 
 // #region 🔖Footer Items
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Footer Items](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/FOOTER-ITEMS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖footeritems](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FOOTER-ITEMS)
 // Context provider for dynamically registering footer bar items.
 
 interface FooterItemContextValue {
@@ -14847,7 +14847,7 @@ const FooterItemContext = createContext<FooterItemContextValue | null>(null);
 /**
  * React context provider for dynamically registered footer items.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Footer Items§FooterItemProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FOOTER-ITEMS/FOOTERITEMPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖footeritems🪨footeritemprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FOOTER-ITEMS/FOOTER-ITEM-PROVIDER)
  **/
 export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<FooterItem[]>([]);
@@ -14871,7 +14871,7 @@ export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) =>
 /**
  * Hook returning the registered footer items.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Footer Items§useFooterItems](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FOOTER-ITEMS/USEFOOTERITEMS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖footeritems🪨usefooteritems](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FOOTER-ITEMS/USE-FOOTER-ITEMS)
  **/
 export const useFooterItems = (): FooterItem[] => {
   const context = useContext(FooterItemContext);
@@ -14882,7 +14882,7 @@ export const useFooterItems = (): FooterItem[] => {
 /**
  * Hook returning a callback to add a footer item.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Footer Items§useAddFooterItem](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FOOTER-ITEMS/USEADDFOOTERITEM)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖footeritems🪨useaddfooteritem](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FOOTER-ITEMS/USE-ADD-FOOTER-ITEM)
  **/
 export const useAddFooterItem = () => {
   const context = useContext(FooterItemContext);
@@ -14893,7 +14893,7 @@ export const useAddFooterItem = () => {
 /**
  * Hook returning a callback to remove a footer item.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Footer Items§useRemoveFooterItem](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/FOOTER-ITEMS/USEREMOVEFOOTERITEM)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖footeritems🪨useremovefooteritem](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FOOTER-ITEMS/USE-REMOVE-FOOTER-ITEM)
  **/
 export const useRemoveFooterItem = () => {
   const context = useContext(FooterItemContext);
@@ -14905,7 +14905,7 @@ export const useRemoveFooterItem = () => {
 
 // #region 🔖Global Footer Items
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Global Footer Items](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/GLOBAL-FOOTER-ITEMS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖globalfooteritems](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/GLOBAL-FOOTER-ITEMS)
 // Global footer items component that registers persistent footer entries.
 
 const GlobalFooterItems: FC = () => {
@@ -14933,13 +14933,13 @@ const GlobalFooterItems: FC = () => {
 
 // #region 🔖ConceptFilter
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#ConceptFilter](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/CONCEPTFILTER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖conceptfilter](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONCEPT-FILTER)
 // Filter component for narrowing results by architectural concepts.
 
 /**
  * Component rendering a concept filter strip with toggle actions.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#ConceptFilter§ConceptFilter](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CONCEPTFILTER/CONCEPTFILTER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖conceptfilter🪨conceptfilter](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CONCEPT-FILTER/CONCEPT-FILTER)
  **/
 export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = ({ allConcepts, paramName = "concepts" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14991,13 +14991,13 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
 
 // #region 🔖ToolGroup
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#ToolGroup](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/TOOLGROUP)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖toolgroup](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TOOL-GROUP)
 // Toolbar group component for switching between tool modes.
 
 /**
  * Component rendering a tool group with mode selection popover.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#ToolGroup§ToolGroup](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/TOOLGROUP/TOOLGROUP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖toolgroup🪨toolgroup](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/TOOL-GROUP/TOOL-GROUP)
  **/
 export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange }) => {
   const getActiveToolDefinition = () => {
@@ -15067,7 +15067,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 
 // #region 🔖DragDrop
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#DragDrop](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/DRAGDROP)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖dragdrop](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DRAG-DROP)
 // Context provider for drag-and-drop type placement interactions.
 
 interface DragDropContextValue {
@@ -15082,7 +15082,7 @@ const DragDropContext = createContext<DragDropContextValue | null>(null);
 /**
  * React context provider for drag-and-drop type and design placement.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#DragDrop§DragDropProvider](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DRAGDROP/DRAGDROPPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖dragdrop🪨dragdropprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DRAG-DROP/DRAG-DROP-PROVIDER)
  **/
 export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
@@ -15094,7 +15094,7 @@ export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
 /**
  * Hook returning the drag-and-drop context value.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#DragDrop§useDragDrop](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/DRAGDROP/USEDRAGDROP)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖dragdrop🪨usedragdrop](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DRAG-DROP/USE-DRAG-DROP)
  **/
 export const useDragDrop = () => {
   const context = useContext(DragDropContext);
@@ -15106,13 +15106,13 @@ export const useDragDrop = () => {
 
 // #region 🔖Hotkeys
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Hotkeys](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/HOTKEYS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖hotkeys](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/HOTKEYS)
 // Keyboard shortcut hook with configurable hotkey overrides.
 
 /**
  * Hook binding a keyboard shortcut with optional override resolution.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Hotkeys§useHotkeys](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/HOTKEYS/USEHOTKEYS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖hotkeys🛠️usehotkeys](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/HOTKEYS/USE-HOTKEYS)
  **/
 export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?: { enableOnFormTags?: boolean }, deps?: React.DependencyList) {
   const hotkeyOverrides = useSketchpad((s) => s.hotkeyOverrides) as Record<string, string> | undefined;
@@ -15132,7 +15132,7 @@ export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?:
 /**
  * Hook returning the enriched panel configurations for all panel definitions.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store§usePanelConfigs](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/USEPANELCONFIGS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🛠️usepanelconfigs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/USE-PANEL-CONFIGS)
  **/
 export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
   const { t } = useI18nTranslation();
@@ -16444,7 +16444,7 @@ const PanelToggles: FC = ({ }) => {
 
 // #region 🔖Canvas
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Canvas](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/CANVAS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS)
 // Canvas layout components for window management and multi-pane rendering.
 
 export { createDefaultLayout } from "./shared";
@@ -16453,7 +16453,7 @@ export type { AppWindowConfig, WindowControl, WindowKindDefinition } from "./sha
 /**
  * Configuration for a canvas window pane.
  *
- *  * [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Canvas§WindowConfig](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CANVAS/WINDOWCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas🛠️windowconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS/WINDOW-CONFIG)
  **/
 export type WindowConfig = {
   id: string;
@@ -16477,7 +16477,7 @@ const CanvasContext = createContext<{ activeWindow?: string; onActiveWindowChang
 /**
  * Hook returning the canvas context for active window management.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Canvas§useCanvasContext](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CANVAS/USECANVASCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas🛠️usecanvascontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS/USE-CANVAS-CONTEXT)
  **/
 export function useCanvasContext() {
   const context = useContext(CanvasContext);
@@ -16487,7 +16487,7 @@ export function useCanvasContext() {
 /**
  * Container component for canvas window layout.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Canvas§Canvas](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CANVAS/CANVAS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas🪨canvas](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS/CANVAS)
  **/
 export const Canvas: FC<{ children: ReactNode; id?: string }> = ({ children, id }) => {
   return (
@@ -16500,7 +16500,7 @@ export const Canvas: FC<{ children: ReactNode; id?: string }> = ({ children, id 
 /**
  * Layout component arranging windows horizontally.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Canvas§HorizontalWindows](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CANVAS/HORIZONTALWINDOWS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas🪨horizontalwindows](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS/HORIZONTAL-WINDOWS)
  **/
 export const HorizontalWindows: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
@@ -16509,7 +16509,7 @@ export const HorizontalWindows: FC<{ children: ReactNode }> = ({ children }) => 
 /**
  * Layout component arranging windows vertically.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Canvas§VerticalWindows](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CANVAS/VERTICALWINDOWS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas🪨verticalwindows](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS/VERTICAL-WINDOWS)
  **/
 export const VerticalWindows: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
@@ -16610,7 +16610,7 @@ class LayoutErrorBoundary extends React.Component<LayoutErrorBoundaryProps, Layo
 /**
  * Component rendering the full canvas layout with window configuration.
  *
- *  * [🪨semio/js/sketchpad/Sketchpad.tsx#Store#Canvas§LayoutCanvas](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/CANVAS/LAYOUTCANVAS)
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖canvas🪨layoutcanvas](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/CANVAS/LAYOUT-CANVAS)
  **/
 export const LayoutCanvas: FC<{
   windowConfig: AppWindowConfig;
@@ -17185,7 +17185,7 @@ export const LayoutCanvas: FC<{
 
 // #region 🔖App Router
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#App Router](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/APP-ROUTER)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖approuter](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APP-ROUTER)
 // React Router integration with scope providers and route-based app switching.
 
 const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: ReactNode }>; paramName: string; children: ReactNode }> = ({ ScopeProvider, paramName, children }) => {
@@ -17265,7 +17265,7 @@ const AppRouter: FC = () => {
 
 // #region 🔖Sketchpad Components
 
-// [🔖semio/js/sketchpad/Sketchpad.tsx#Sketchpad Components](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/SKETCHPAD-COMPONENTS)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sketchpadcomponents](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SKETCHPAD-COMPONENTS)
 // Top-level sketchpad React components for rendering the complete application.
 
 const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {

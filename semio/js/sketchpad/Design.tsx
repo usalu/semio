@@ -21,7 +21,7 @@
 
 // #region 🔖Imports
 
-// [🔖semio/js/sketchpad/Design.tsx#Imports](semiorepo://section/semio/js/sketchpad/Design.tsx/IMPORTS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/IMPORTS)
 // Imports for Design app MUST include all shared sketchpad, React, and UI dependencies.
 
 import { useSelector } from "@xstate/react";
@@ -222,7 +222,7 @@ import {
 
 // #region 🔖State Management
 
-// [🔖semio/js/sketchpad/Design.tsx#State Management](semiorepo://section/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT)
 // State management types and interfaces MUST define the Design app selection, presence, hover, diff, and state shape.
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
@@ -230,7 +230,7 @@ let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<
 /**
  * Tracks the current piece, connection, and connector selection state for the Design app.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppSelection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-SELECTION)
  **/
 export interface DesignAppSelection {
   pieces?: Guid[];
@@ -241,7 +241,7 @@ export interface DesignAppSelection {
 /**
  * Diff for added/removed piece GUIDs in a selection change.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppSelectionPiecesDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPSELECTIONPIECESDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappselectionpiecesdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-SELECTION-PIECES-DIFF)
  **/
 export interface DesignAppSelectionPiecesDiff {
   added?: Guid[];
@@ -250,7 +250,7 @@ export interface DesignAppSelectionPiecesDiff {
 /**
  * Diff for added/removed connection GUIDs in a selection change.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppSelectionConnectionsDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPSELECTIONCONNECTIONSDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappselectionconnectionsdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-SELECTION-CONNECTIONS-DIFF)
  **/
 export interface DesignAppSelectionConnectionsDiff {
   added?: Guid[];
@@ -259,7 +259,7 @@ export interface DesignAppSelectionConnectionsDiff {
 /**
  * Diff for a selected port change identifying the piece and connector.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppSelectionPortDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPSELECTIONPORTDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappselectionportdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-SELECTION-PORT-DIFF)
  **/
 export interface DesignAppSelectionPortDiff {
   piece?: Guid;
@@ -269,7 +269,7 @@ export interface DesignAppSelectionPortDiff {
 /**
  * Composite diff combining pieces, connections, and connector selection changes.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppSelectionDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPSELECTIONDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-SELECTION-DIFF)
  **/
 export interface DesignAppSelectionDiff {
   pieces?: DesignAppSelectionPiecesDiff;
@@ -279,7 +279,7 @@ export interface DesignAppSelectionDiff {
 /**
  * Enumeration of fullscreen window modes for the Design app.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#State Management§DesignAppFullscreenWindow](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPFULLSCREENWINDOW)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappfullscreenwindow](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-FULLSCREEN-WINDOW)
  **/
 export enum DesignAppFullscreenWindow {
   None = "none",
@@ -289,7 +289,7 @@ export enum DesignAppFullscreenWindow {
 /**
  * Enumeration of window kinds available in the Design app.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#State Management§DesignAppWindowKind](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPWINDOWKIND)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-WINDOW-KIND)
  **/
 export enum DesignAppWindowKind {
   Diagram = "diagram",
@@ -298,7 +298,7 @@ export enum DesignAppWindowKind {
 /**
  * Presence state for a Design app user including cursor, camera, and diagram viewport.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppPresence](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPPRESENCE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designapppresence](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-PRESENCE)
  **/
 export interface DesignAppPresence {
   cursor?: Coord;
@@ -309,7 +309,7 @@ export interface DesignAppPresence {
 /**
  * Hover state tracking which pieces, connections, connectors, types, and designs are hovered.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppHover](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-HOVER)
  **/
 export interface DesignAppHover {
   pieces?: Guid[];
@@ -321,7 +321,7 @@ export interface DesignAppHover {
 /**
  * Extended presence for other collaborators including their display name.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppPresenceOther](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPPRESENCEOTHER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designapppresenceother](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-PRESENCE-OTHER)
  **/
 export interface DesignAppPresenceOther extends DesignAppPresence {
   name: string;
@@ -329,7 +329,7 @@ export interface DesignAppPresenceOther extends DesignAppPresence {
 /**
  * Complete diff describing all mutable Design app state changes.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-DIFF)
  **/
 export interface DesignAppDiff {
   selection?: DesignAppSelectionDiff;
@@ -348,13 +348,13 @@ export interface DesignAppDiff {
 /**
  * Edit record extending KitDiffAppEdit with Design app selection diff.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppEdit](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPEDIT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappedit](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-EDIT)
  **/
 export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> { }
 /**
  * Complete runtime state for a Design app instance.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppState](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-STATE)
  **/
 export interface DesignAppState {
   fullscreenWindow: DesignAppFullscreenWindow;
@@ -376,7 +376,7 @@ export interface DesignAppState {
 /**
  * Context passed to Design app commands including app state, GUID, and design data.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppCommandContext](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPCOMMANDCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappcommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-COMMAND-CONTEXT)
  **/
 export interface DesignAppCommandContext extends KitCommandContext {
   designApp: DesignAppState;
@@ -386,7 +386,7 @@ export interface DesignAppCommandContext extends KitCommandContext {
 /**
  * Result returned by Design app commands containing diffs to apply.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#State Management§DesignAppCommandResult](semiorepo://definition/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGNAPPCOMMANDRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-COMMAND-RESULT)
  **/
 export interface DesignAppCommandResult {
   diff?: DesignAppDiff;
@@ -397,13 +397,13 @@ export interface DesignAppCommandResult {
 
 // #region Commands
 
-// [🔖semio/js/sketchpad/Design.tsx#Commands](semiorepo://section/semio/js/sketchpad/Design.tsx/COMMANDS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/COMMANDS)
 // Commands MUST define all executable Design app actions dispatched by keyboard shortcuts and UI interactions.
 
 /**
  * Registry of all named Design app commands mapped to their handler functions.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Commands§commands](semiorepo://definition/semio/js/sketchpad/Design.tsx/COMMANDS/COMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖commands🪨commands](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/COMMANDS/COMMANDS)
  **/
 export const commands: Record<string, (context: DesignAppCommandContext, ...args: any[]) => DesignAppCommandResult> = {
   "semio.designApp.selectAll": (context: DesignAppCommandContext): DesignAppCommandResult => {
@@ -1115,7 +1115,7 @@ designAppCommands = commands;
 
 // #region Store
 
-// [🔖semio/js/sketchpad/Design.tsx#Store](semiorepo://section/semio/js/sketchpad/Design.tsx/STORE)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE)
 // Store MUST implement DesignStore extending PlainKitDiffAppStore with undo/redo, selection diff inversion, and state persistence.
 
 /**
@@ -1123,7 +1123,7 @@ designAppCommands = commands;
  *
  * MUST return a diff that reverses the given selection diff.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§inverseDesignAppSelectionDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/INVERSEDESIGNAPPSELECTIONDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🪨inversedesignappselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/INVERSE-DESIGN-APP-SELECTION-DIFF)
  **/
 export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, diff: DesignAppSelectionDiff): DesignAppSelectionDiff => {
   const inverseDiff: DesignAppSelectionDiff = {};
@@ -1161,13 +1161,13 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 /**
  * Checks whether two Design app identifiers refer to the same design.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§areSameDesignApp](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/ARESAMEDESIGNAPP)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🪨aresamedesignapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/ARE-SAME-DESIGN-APP)
  **/
 export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => designApp.kit === other.kit && designApp.design === other.design;
 /**
  * Checks whether a Design app identifier matches any in a list.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§hasSameDesignApp](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/HASSAMEDESIGNAPP)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🪨hassamedesignapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/HAS-SAME-DESIGN-APP)
  **/
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
@@ -1176,7 +1176,7 @@ export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]):
  *
  * MUST extend PlainKitDiffAppStore and synchronize state with the Y.js shared document.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store§DesignStore](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/DESIGNSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️designstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/DESIGN-STORE)
  **/
 export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
   private readonly kitGuid: Guid;
@@ -1370,7 +1370,7 @@ let designStoreInitialized = false;
  *
  * MUST register the DesignStore factory exactly once via registerDesignAppStoreFactory.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store§initializeDesignStore](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/INITIALIZEDESIGNSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️initializedesignstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/INITIALIZE-DESIGN-STORE)
  **/
 export function initializeDesignStore() {
   if (designStoreInitialized) return;
@@ -1380,7 +1380,7 @@ export function initializeDesignStore() {
 
 // #region 🔖Design App Plugin Registration
 
-// [🔖semio/js/sketchpad/Design.tsx#Design App Plugin Registration](semiorepo://section/semio/js/sketchpad/Design.tsx/DESIGN-APP-PLUGIN-REGISTRATION)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖designapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/DESIGN-APP-PLUGIN-REGISTRATION)
 // Design app plugin registration MUST register the Design app plugin with machine actions, guards, and default state.
 
 const designAppPlugin: AppPlugin = {
@@ -1542,7 +1542,7 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
 
 // #region 🔖Hooks
 
-// [🔖semio/js/sketchpad/Design.tsx#Hooks](semiorepo://section/semio/js/sketchpad/Design.tsx/HOOKS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖hooks](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/HOOKS)
 // Hooks MUST provide the Design app initialization lifecycle within the React component tree.
 
 function useDesignAppInitialize() {
@@ -1586,7 +1586,7 @@ function useDesignAppInitialize() {
 
 // #region Components
 
-// [🔖semio/js/sketchpad/Design.tsx#Components](semiorepo://section/semio/js/sketchpad/Design.tsx/COMPONENTS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS)
 // Components MUST provide Design app scope, actor context, and synchronization wrapper components.
 
 /**
@@ -1594,7 +1594,7 @@ function useDesignAppInitialize() {
  *
  * MUST wrap children with DesignAppScopeContext and DesignAppActorContext providers.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§DesignAppScopeProvider](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/DESIGNAPPSCOPEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🪨designappscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/DESIGN-APP-SCOPE-PROVIDER)
  **/
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
@@ -1608,7 +1608,7 @@ const useDesignAppScope = () => useContext(DesignAppScopeContext);
  *
  * MUST return the actor from DesignAppActorContext.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppActor](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPACTOR)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappactor](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-ACTOR)
  **/
 export function useDesignAppActor(): any {
   return useContext(DesignAppActorContext);
@@ -1619,7 +1619,7 @@ export function useDesignAppActor(): any {
  *
  * MUST resolve the DesignStore from the orchestrator and apply the selector.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignStore](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-STORE)
  **/
 export function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignAppId): T | DesignStore | null {
   const store = useSketchpadStore();
@@ -1641,7 +1641,7 @@ export { useDesignStore as useDesignAppStore };
  *
  * MUST use useSelector to reactively track the Design app state slice.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignApp](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPP)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP)
  **/
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
   const kitScope = useKitScope();
@@ -1704,7 +1704,7 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
  *
  * MUST create a Field wrapping the selection value and setter.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectionField](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPSELECTIONFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappselectionfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-SELECTION-FIELD)
  **/
 export function useDesignAppSelectionField(): Field<DesignAppSelection> {
   return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
@@ -1720,7 +1720,7 @@ export function useDesignAppSelectionField(): Field<DesignAppSelection> {
  *
  * MUST provide the current selection, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-SELECTION)
  **/
 export function useDesignAppSelection(): HookResult<DesignAppSelection> {
   return fieldToHookResult(useDesignAppSelectionField());
@@ -1731,7 +1731,7 @@ export function useDesignAppSelection(): HookResult<DesignAppSelection> {
  *
  * MUST create a Field wrapping the fullscreen value and setter.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFullscreenField](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPFULLSCREENFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappfullscreenfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-FULLSCREEN-FIELD)
  **/
 export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> {
   return useDesignAppField<DesignAppFullscreenWindow, { type: "DESIGN.SET_FULLSCREEN"; kitGuid: Guid; designGuid: Guid; window: DesignAppFullscreenWindow }>({
@@ -1747,7 +1747,7 @@ export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> 
  *
  * MUST provide the current fullscreen window, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFullscreen](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPFULLSCREEN)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-FULLSCREEN)
  **/
 export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> {
   return fieldToHookResult(useDesignAppFullscreenField());
@@ -1758,7 +1758,7 @@ export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> 
  *
  * MUST create a Field wrapping the active tool value and setter.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppActiveToolField](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPACTIVETOOLFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappactivetoolfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-ACTIVE-TOOL-FIELD)
  **/
 export function useDesignAppActiveToolField(): Field<ToolKind> {
   return useDesignAppField<ToolKind, { type: "DESIGN.SET_ACTIVE_TOOL"; kitGuid: Guid; designGuid: Guid; tool: ToolKind }>({
@@ -1775,7 +1775,7 @@ export function useDesignAppActiveToolField(): Field<ToolKind> {
  *
  * MUST provide the current active tool, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppActiveTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPACTIVETOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappactivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-ACTIVE-TOOL)
  **/
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
   return fieldToHookResult(useDesignAppActiveToolField());
@@ -1786,7 +1786,7 @@ export function useDesignAppActiveTool(): HookResult<ToolKind> {
  *
  * MUST provide the current diff, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiff](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-DIFF)
  **/
 export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
   return readonlyHookResult<KitDiff | undefined>(undefined);
@@ -1797,7 +1797,7 @@ export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
  *
  * MUST return a read-only list of other users' presence data.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppOthers](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPOTHERS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappothers](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-OTHERS)
  **/
 export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   const actor = useSketchpadActor();
@@ -1815,7 +1815,7 @@ export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
  *
  * MUST create a Field wrapping the camera value and setter.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppCameraField](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPCAMERAFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappcamerafield](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-CAMERA-FIELD)
  **/
 export function useDesignAppCameraField(): Field<Camera | undefined> {
   return useDesignAppField<Camera | undefined, { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: Camera | undefined }>({
@@ -1831,7 +1831,7 @@ export function useDesignAppCameraField(): Field<Camera | undefined> {
  *
  * MUST provide the current camera, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppCamera](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPCAMERA)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappcamera](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-CAMERA)
  **/
 export function useDesignAppCamera(): HookResult<Camera | undefined> {
   return fieldToHookResult(useDesignAppCameraField());
@@ -1842,7 +1842,7 @@ export function useDesignAppCamera(): HookResult<Camera | undefined> {
  *
  * MUST provide the current diagram center, a setter, and a canSet flag.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiagramCenter](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPDIAGRAMCENTER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappdiagramcenter](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-DIAGRAM-CENTER)
  **/
 export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   const actor = useSketchpadActor();
@@ -1871,7 +1871,7 @@ export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
  *
  * MUST provide the current diagram scale, a setter, and a canSet flag.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppDiagramScale](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPDIAGRAMSCALE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappdiagramscale](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-DIAGRAM-SCALE)
  **/
 export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const actor = useSketchpadActor();
@@ -1899,7 +1899,7 @@ export function useDesignAppDiagramScale(): HookResult<number | undefined> {
  *
  * MUST create a Field wrapping the focused piece GUID value and setter.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFocusedPieceGuidField](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPFOCUSEDPIECEGUIDFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappfocusedpieceguidfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-FOCUSED-PIECE-GUID-FIELD)
  **/
 export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
   return useDesignAppField<Guid | undefined, { type: "DESIGN.FOCUS_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid: Guid | undefined }>({
@@ -1915,7 +1915,7 @@ export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
  *
  * MUST provide the current focused piece GUID, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppFocusedPieceGuid](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPFOCUSEDPIECEGUID)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappfocusedpieceguid](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-FOCUSED-PIECE-GUID)
  **/
 export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
   return fieldToHookResult(useDesignAppFocusedPieceGuidField());
@@ -1926,7 +1926,7 @@ export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
  *
  * MUST provide the current selected model tags, a setter, and a canSet flag.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppSelectedModelTags](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPSELECTEDMODELTAGS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappselectedmodeltags](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-SELECTED-MODEL-TAGS)
  **/
 export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
   const actor = useSketchpadActor();
@@ -1952,7 +1952,7 @@ export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[
  *
  * MUST provide the current hover, a setter, and a canSet flag.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppHover](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-HOVER)
  **/
 export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const actor = useSketchpadActor();
@@ -1982,7 +1982,7 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
  *
  * MUST create a Field wrapping the panel visibility value and setter.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPanelVisibilityField](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPPANELVISIBILITYFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignapppanelvisibilityfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-PANEL-VISIBILITY-FIELD)
  **/
 export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
   return useDesignAppField<PanelVisibility, { type: "DESIGN.SET_PANEL_VISIBILITY"; kitGuid: Guid; designGuid: Guid; panelVisibility: PanelVisibility }>({
@@ -1998,7 +1998,7 @@ export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
  *
  * MUST provide the current panel visibility, a setter, and a canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppPanelVisibility](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignapppanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-PANEL-VISIBILITY)
  **/
 export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
   return fieldToHookResult(useDesignAppPanelVisibilityField());
@@ -2006,13 +2006,13 @@ export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
 
 //#region 🔖Action Hooks
 
-// [🔖semio/js/sketchpad/Design.tsx#Action Hooks](semiorepo://section/semio/js/sketchpad/Design.tsx/ACTION-HOOKS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS)
 // Action hooks MUST provide composable React hooks for Design app selection, hover, focus, panel, and transaction actions.
 
 /**
  * Tuple type for action hook results pairing an action callback with a canAct flag.
  *
- *  * [🛠️semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§ActionHookResult](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/ACTIONHOOKRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️actionhookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/ACTION-HOOK-RESULT)
  **/
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -2021,7 +2021,7 @@ export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args:
  *
  * MUST return a callback that sets hover to the given piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPiece](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPHOVERPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapphoverpiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-HOVER-PIECE)
  **/
 export function useDesignAppHoverPiece(): ActionHookResult<[pieceGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2037,7 +2037,7 @@ export function useDesignAppHoverPiece(): ActionHookResult<[pieceGuid: string]> 
  *
  * MUST return a callback that sets hover to the given piece GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPieces](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPHOVERPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapphoverpieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-HOVER-PIECES)
  **/
 export function useDesignAppHoverPieces(): ActionHookResult<[pieceGuids: string[]]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2053,7 +2053,7 @@ export function useDesignAppHoverPieces(): ActionHookResult<[pieceGuids: string[
  *
  * MUST return a callback that sets hover to the given connection GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverConnection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPHOVERCONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapphoverconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-HOVER-CONNECTION)
  **/
 export function useDesignAppHoverConnection(): ActionHookResult<[connectionGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2069,7 +2069,7 @@ export function useDesignAppHoverConnection(): ActionHookResult<[connectionGuid:
  *
  * MUST return a callback that sets hover to the given port identifiers.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverPort](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPHOVERPORT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapphoverport](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-HOVER-PORT)
  **/
 export function useDesignAppHoverPort(): ActionHookResult<[pieceGuid: string, connectorGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2085,7 +2085,7 @@ export function useDesignAppHoverPort(): ActionHookResult<[pieceGuid: string, co
  *
  * MUST return a callback that sets hover to the given type GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverTypes](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPHOVERTYPES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapphovertypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-HOVER-TYPES)
  **/
 export function useDesignAppHoverTypes(): ActionHookResult<[typeGuids: string[]]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2101,7 +2101,7 @@ export function useDesignAppHoverTypes(): ActionHookResult<[typeGuids: string[]]
  *
  * MUST return a callback that sets hover to the given design GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppHoverDesigns](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPHOVERDESIGNS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapphoverdesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-HOVER-DESIGNS)
  **/
 export function useDesignAppHoverDesigns(): ActionHookResult<[designGuids: string[]]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2117,7 +2117,7 @@ export function useDesignAppHoverDesigns(): ActionHookResult<[designGuids: strin
  *
  * MUST return a callback that clears all hover state.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClearHover](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPCLEARHOVER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappclearhover](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-CLEAR-HOVER)
  **/
 export function useDesignAppClearHover(): ActionHookResult<[]> {
   const [, setHover, canSetHover] = useDesignAppHover();
@@ -2133,7 +2133,7 @@ export function useDesignAppClearHover(): ActionHookResult<[]> {
  *
  * MUST return a callback that selects the given piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPiece](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPSELECTPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappselectpiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-SELECT-PIECE)
  **/
 export function useDesignAppSelectPiece(): ActionHookResult<[pieceGuid: string]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2149,7 +2149,7 @@ export function useDesignAppSelectPiece(): ActionHookResult<[pieceGuid: string]>
  *
  * MUST return a callback that selects the given piece GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPieces](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPSELECTPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappselectpieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-SELECT-PIECES)
  **/
 export function useDesignAppSelectPieces(): ActionHookResult<[pieceGuids: string[]]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2165,7 +2165,7 @@ export function useDesignAppSelectPieces(): ActionHookResult<[pieceGuids: string
  *
  * MUST return a callback that adds the given piece GUID to selection.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPieceToSelection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDPIECETOSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddpiecetoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-PIECE-TO-SELECTION)
  **/
 export function useDesignAppAddPieceToSelection(): ActionHookResult<[pieceGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2186,7 +2186,7 @@ export function useDesignAppAddPieceToSelection(): ActionHookResult<[pieceGuid: 
  *
  * MUST return a callback that removes the given piece GUID from selection.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePieceFromSelection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVEPIECEFROMSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremovepiecefromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-PIECE-FROM-SELECTION)
  **/
 export function useDesignAppRemovePieceFromSelection(): ActionHookResult<[pieceGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2205,7 +2205,7 @@ export function useDesignAppRemovePieceFromSelection(): ActionHookResult<[pieceG
  *
  * MUST return a callback that selects the given connection GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectConnection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPSELECTCONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappselectconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-SELECT-CONNECTION)
  **/
 export function useDesignAppSelectConnection(): ActionHookResult<[connectionGuid: string]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2221,7 +2221,7 @@ export function useDesignAppSelectConnection(): ActionHookResult<[connectionGuid
  *
  * MUST return a callback that adds the given connection GUID to selection.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnectionToSelection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDCONNECTIONTOSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddconnectiontoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-CONNECTION-TO-SELECTION)
  **/
 export function useDesignAppAddConnectionToSelection(): ActionHookResult<[connectionGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2242,7 +2242,7 @@ export function useDesignAppAddConnectionToSelection(): ActionHookResult<[connec
  *
  * MUST return a callback that removes the given connection GUID from selection.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnectionFromSelection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVECONNECTIONFROMSELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremoveconnectionfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-CONNECTION-FROM-SELECTION)
  **/
 export function useDesignAppRemoveConnectionFromSelection(): ActionHookResult<[connectionGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2261,7 +2261,7 @@ export function useDesignAppRemoveConnectionFromSelection(): ActionHookResult<[c
  *
  * MUST return a callback that selects the given piece-connector port.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectPiecePort](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPSELECTPIECEPORT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappselectpieceport](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-SELECT-PIECE-PORT)
  **/
 export function useDesignAppSelectPiecePort(): ActionHookResult<[pieceGuid: string, connectorGuid: string, designPieceGuid?: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2279,7 +2279,7 @@ export function useDesignAppSelectPiecePort(): ActionHookResult<[pieceGuid: stri
  *
  * MUST return a callback that deselects the given piece-connector port.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeselectPiecePort](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPDESELECTPIECEPORT)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappdeselectpieceport](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-DESELECT-PIECE-PORT)
  **/
 export function useDesignAppDeselectPiecePort(): ActionHookResult<[]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2298,7 +2298,7 @@ export function useDesignAppDeselectPiecePort(): ActionHookResult<[]> {
  *
  * MUST return a callback that clears all selection state.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeselectAll](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPDESELECTALL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappdeselectall](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-DESELECT-ALL)
  **/
 export function useDesignAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
@@ -2314,7 +2314,7 @@ export function useDesignAppDeselectAll(): ActionHookResult<[]> {
  *
  * MUST return a callback that adds all piece and connection GUIDs to selection.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppSelectAll](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPSELECTALL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappselectall](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-SELECT-ALL)
  **/
 export function useDesignAppSelectAll(): ActionHookResult<[]> {
   const design = useDesign() as Design | null;
@@ -2335,7 +2335,7 @@ export function useDesignAppSelectAll(): ActionHookResult<[]> {
  *
  * MUST return a callback that sets the focused piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppFocusPiece](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPFOCUSPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappfocuspiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-FOCUS-PIECE)
  **/
 export function useDesignAppFocusPiece(): ActionHookResult<[pieceGuid: string]> {
   const [, setFocusedPieceGuid, canSetFocus] = useDesignAppFocusedPieceGuid();
@@ -2351,7 +2351,7 @@ export function useDesignAppFocusPiece(): ActionHookResult<[pieceGuid: string]> 
  *
  * MUST return a callback that clears the focused piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClearFocus](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPCLEARFOCUS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappclearfocus](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-CLEAR-FOCUS)
  **/
 export function useDesignAppClearFocus(): ActionHookResult<[]> {
   const [, setFocusedPieceGuid, canSetFocus] = useDesignAppFocusedPieceGuid();
@@ -2367,7 +2367,7 @@ export function useDesignAppClearFocus(): ActionHookResult<[]> {
  *
  * MUST return a callback that toggles the diagram fullscreen window state.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppToggleDiagramFullscreen](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPTOGGLEDIAGRAMFULLSCREEN)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapptogglediagramfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-TOGGLE-DIAGRAM-FULLSCREEN)
  **/
 export function useDesignAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useDesignAppFullscreen();
@@ -2383,7 +2383,7 @@ export function useDesignAppToggleDiagramFullscreen(): ActionHookResult<[]> {
  *
  * MUST return a callback that toggles the accessl fullscreen window state.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppToggleAccesslFullscreen](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPTOGGLEACCESSLFULLSCREEN)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapptoggleaccesslfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-TOGGLE-ACCESSL-FULLSCREEN)
  **/
 export function useDesignAppToggleAccesslFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useDesignAppFullscreen();
@@ -2399,7 +2399,7 @@ export function useDesignAppToggleAccesslFullscreen(): ActionHookResult<[]> {
  *
  * MUST return a callback that toggles the given panel's visibility.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppTogglePanel](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPTOGGLEPANEL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapptogglepanel](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-TOGGLE-PANEL)
  **/
 export function useDesignAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
   const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useDesignAppPanelVisibility();
@@ -2417,7 +2417,7 @@ export function useDesignAppTogglePanel(): ActionHookResult<[panelKey: keyof Pan
  *
  * MUST return a callback that adds the given tag to all type entries.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddModelTagForAllTypes](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDMODELTAGFORALLTYPES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddmodeltagforalltypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-MODEL-TAG-FOR-ALL-TYPES)
  **/
 export function useDesignAppAddModelTagForAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
   const [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags] = useDesignAppSelectedModelTags();
@@ -2440,7 +2440,7 @@ export function useDesignAppAddModelTagForAllTypes(): ActionHookResult<[tagGuid:
  *
  * MUST return a callback that removes the given tag from all type entries.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveModelTagFromAllTypes](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVEMODELTAGFROMALLTYPES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremovemodeltagfromalltypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-MODEL-TAG-FROM-ALL-TYPES)
  **/
 export function useDesignAppRemoveModelTagFromAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
   const [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags] = useDesignAppSelectedModelTags();
@@ -2461,7 +2461,7 @@ export function useDesignAppRemoveModelTagFromAllTypes(): ActionHookResult<[tagG
 /**
  * Interface for transaction action callbacks including start, finalize, and abort.
  *
- *  * [✂️semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§TransactionActions](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/TRANSACTIONACTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️transactionactions](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/TRANSACTION-ACTIONS)
  **/
 export interface TransactionActions {
   start: () => void;
@@ -2474,7 +2474,7 @@ export interface TransactionActions {
  *
  * MUST provide start, finalize, and abort transaction actions.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppTransaction](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPTRANSACTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignapptransaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-TRANSACTION)
  **/
 export function useDesignAppTransaction(): [TransactionActions | undefined, boolean] {
   const store = useDesignStore() as DesignStore | null;
@@ -2496,7 +2496,7 @@ export function useDesignAppTransaction(): [TransactionActions | undefined, bool
  *
  * MUST wrap children with the Design app transaction provider.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§DesignAppTransactionProvider](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/DESIGNAPPTRANSACTIONPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🪨designapptransactionprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/DESIGN-APP-TRANSACTION-PROVIDER)
  **/
 export const DesignAppTransactionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [transaction] = useDesignAppTransaction();
@@ -2508,7 +2508,7 @@ export const DesignAppTransactionProvider: FC<{ children: ReactNode }> = ({ chil
  *
  * MUST return a callback that undoes the most recent transaction.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUndo](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPUNDO)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappundo](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-UNDO)
  **/
 export function useDesignAppUndo(): ActionHookResult<[]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2525,7 +2525,7 @@ export function useDesignAppUndo(): ActionHookResult<[]> {
  *
  * MUST return a callback that redoes the most recently undone transaction.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRedo](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREDO)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappredo](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REDO)
  **/
 export function useDesignAppRedo(): ActionHookResult<[]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2542,7 +2542,7 @@ export function useDesignAppRedo(): ActionHookResult<[]> {
  *
  * MUST return a callback that removes all selected pieces and connections.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppDeleteSelected](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPDELETESELECTED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappdeleteselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-DELETE-SELECTED)
  **/
 export function useDesignAppDeleteSelected(): ActionHookResult<[]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2559,7 +2559,7 @@ export function useDesignAppDeleteSelected(): ActionHookResult<[]> {
  *
  * MUST return a callback that adds a piece with the given type GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPiece](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddpiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-PIECE)
  **/
 export function useDesignAppAddPiece(): ActionHookResult<[piece: Piece]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2576,7 +2576,7 @@ export function useDesignAppAddPiece(): ActionHookResult<[piece: Piece]> {
  *
  * MUST return a callback that adds pieces with the given type GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddPieces](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddpieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-PIECES)
  **/
 export function useDesignAppAddPieces(): ActionHookResult<[pieces: Piece[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2593,7 +2593,7 @@ export function useDesignAppAddPieces(): ActionHookResult<[pieces: Piece[]]> {
  *
  * MUST return a callback that removes the piece with the given GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePiece](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVEPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremovepiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-PIECE)
  **/
 export function useDesignAppRemovePiece(): ActionHookResult<[pieceGuid: Guid]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2610,7 +2610,7 @@ export function useDesignAppRemovePiece(): ActionHookResult<[pieceGuid: Guid]> {
  *
  * MUST return a callback that removes the pieces with the given GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemovePieces](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVEPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremovepieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-PIECES)
  **/
 export function useDesignAppRemovePieces(): ActionHookResult<[pieceGuids: Guid[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2627,7 +2627,7 @@ export function useDesignAppRemovePieces(): ActionHookResult<[pieceGuids: Guid[]
  *
  * MUST return a callback that updates the piece with the given GUID and partial data.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdatePiece](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPUPDATEPIECE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappupdatepiece](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-UPDATE-PIECE)
  **/
 export function useDesignAppUpdatePiece(): ActionHookResult<[pieceGuid: Guid, diff: PieceDiff]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2644,7 +2644,7 @@ export function useDesignAppUpdatePiece(): ActionHookResult<[pieceGuid: Guid, di
  *
  * MUST return a callback that updates the pieces with the given GUID-data pairs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdatePieces](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPUPDATEPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappupdatepieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-UPDATE-PIECES)
  **/
 export function useDesignAppUpdatePieces(): ActionHookResult<[updates: { id: Guid; diff: PieceDiff }[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2666,7 +2666,7 @@ export function useDesignAppUpdatePieces(): ActionHookResult<[updates: { id: Gui
  *
  * MUST return a callback that adds a connection with the given data.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDCONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-CONNECTION)
  **/
 export function useDesignAppAddConnection(): ActionHookResult<[connection: Connection]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2683,7 +2683,7 @@ export function useDesignAppAddConnection(): ActionHookResult<[connection: Conne
  *
  * MUST return a callback that adds connections with the given data array.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppAddConnections](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPADDCONNECTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappaddconnections](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-ADD-CONNECTIONS)
  **/
 export function useDesignAppAddConnections(): ActionHookResult<[connections: Connection[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2700,7 +2700,7 @@ export function useDesignAppAddConnections(): ActionHookResult<[connections: Con
  *
  * MUST return a callback that removes the connection with the given GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVECONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremoveconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-CONNECTION)
  **/
 export function useDesignAppRemoveConnection(): ActionHookResult<[connectionGuid: Guid]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2717,7 +2717,7 @@ export function useDesignAppRemoveConnection(): ActionHookResult<[connectionGuid
  *
  * MUST return a callback that removes the connections with the given GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppRemoveConnections](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPREMOVECONNECTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappremoveconnections](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-REMOVE-CONNECTIONS)
  **/
 export function useDesignAppRemoveConnections(): ActionHookResult<[connectionGuids: Guid[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2734,7 +2734,7 @@ export function useDesignAppRemoveConnections(): ActionHookResult<[connectionGui
  *
  * MUST return a callback that updates the connection with the given GUID and partial data.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdateConnection](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPUPDATECONNECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappupdateconnection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-UPDATE-CONNECTION)
  **/
 export function useDesignAppUpdateConnection(): ActionHookResult<[connectionGuid: Guid, diff: ConnectionDiff]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2751,7 +2751,7 @@ export function useDesignAppUpdateConnection(): ActionHookResult<[connectionGuid
  *
  * MUST return a callback that updates the connections with the given GUID-data pairs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppUpdateConnections](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPUPDATECONNECTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappupdateconnections](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-UPDATE-CONNECTIONS)
  **/
 export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id: Guid; diff: ConnectionDiff }[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2773,7 +2773,7 @@ export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id
  *
  * MUST return a callback that clusters the given piece GUIDs.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppClusterPieces](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPCLUSTERPIECES)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappclusterpieces](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-CLUSTER-PIECES)
  **/
 export function useDesignAppClusterPieces(): ActionHookResult<[pieceGuids: Guid[]]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2790,7 +2790,7 @@ export function useDesignAppClusterPieces(): ActionHookResult<[pieceGuids: Guid[
  *
  * MUST return a callback that expands the design with the given piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components#Action Hooks§useDesignAppExpandDesign](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/ACTION-HOOKS/USEDESIGNAPPEXPANDDESIGN)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🔖actionhooks🛠️usedesignappexpanddesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/ACTION-HOOKS/USE-DESIGN-APP-EXPAND-DESIGN)
  **/
 export function useDesignAppExpandDesign(): ActionHookResult<[designGuid: Guid]> {
   const store = useDesignStore() as DesignStore | null;
@@ -2864,7 +2864,7 @@ const EMPTY_COMMANDS = {
  *
  * MUST expose all Design app commands through the store controller.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppCommands](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPCOMMANDS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-COMMANDS)
  **/
 export function useDesignAppCommands(id?: DesignAppId) {
   const store = useDesignStore(undefined, id) as DesignStore | null;
@@ -2971,7 +2971,7 @@ export function useDesignAppCommands(id?: DesignAppId) {
  *
  * MUST observe Y.js map changes and dispatch corresponding XState events.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store#Components§useDesignAppYjsToXStateSync](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/COMPONENTS/USEDESIGNAPPYJSTOXSTATESYNC)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignappyjstoxstatesync](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-APP-YJS-TO-X-STATE-SYNC)
  **/
 export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const actor = useSketchpadActorSafe();
@@ -3090,7 +3090,7 @@ function TransactionPiecesProviderInner({ store, children }: { store: DesignStor
  *
  * MUST compute and provide the set of piece GUIDs changed in the current transaction.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§TransactionPiecesProvider](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/TRANSACTIONPIECESPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️transactionpiecesprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/TRANSACTION-PIECES-PROVIDER)
  **/
 export function TransactionPiecesProvider({ children }: { children: ReactNode }) {
   const store = useDesignStore(identitySelector) as DesignStore | null;
@@ -3107,7 +3107,7 @@ export function TransactionPiecesProvider({ children }: { children: ReactNode })
  *
  * MUST check the transaction pieces context for the given GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useIsDesignPieceChangedInTransaction](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEISDESIGNPIECECHANGEDINTRANSACTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️useisdesignpiecechangedintransaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-IS-DESIGN-PIECE-CHANGED-IN-TRANSACTION)
  **/
 export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined, pieceId: string): boolean {
   const { changedPieces } = useContext(TransactionPiecesContext);
@@ -3119,7 +3119,7 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
  *
  * MUST check the hover state for the given piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsPieceHovered](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISPIECEHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappispiecehovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-PIECE-HOVERED)
  **/
 export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
@@ -3204,7 +3204,7 @@ function HoverPiecesProviderInner({ store, children }: { store: DesignStore; chi
  *
  * MUST compute and provide the set of piece GUIDs that are transitively hovered.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§HoverPiecesProvider](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/HOVERPIECESPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️hoverpiecesprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/HOVER-PIECES-PROVIDER)
  **/
 export function HoverPiecesProvider({ children }: { children: ReactNode }) {
   const store = useDesignStore(identitySelector) as DesignStore | null;
@@ -3221,7 +3221,7 @@ export function HoverPiecesProvider({ children }: { children: ReactNode }) {
  *
  * MUST check the transitive hover pieces for the given GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsPieceTransitiveHovered](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISPIECETRANSITIVEHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappispiecetransitivehovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-PIECE-TRANSITIVE-HOVERED)
  **/
 export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?: string): boolean {
   const { transitivelyHoveredPieces } = useContext(HoverPiecesContext);
@@ -3234,7 +3234,7 @@ export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?:
  *
  * MUST check the hover state for the given type GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsTypeTransitiveHovered](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISTYPETRANSITIVEHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappistypetransitivehovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-TYPE-TRANSITIVE-HOVERED)
  **/
 export function useDesignAppIsTypeTransitiveHovered(id: DesignAppId | undefined, typeId: string): boolean {
   const { transitivelyHoveredTypes } = useContext(HoverPiecesContext);
@@ -3246,7 +3246,7 @@ export function useDesignAppIsTypeTransitiveHovered(id: DesignAppId | undefined,
  *
  * MUST return DiffStatus from the design diff for the given piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppPieceStatus](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPPIECESTATUS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignapppiecestatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-PIECE-STATUS)
  **/
 export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: string): DiffStatus {
   const { statusMap } = useContext(TransactionPiecesContext);
@@ -3258,7 +3258,7 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
  *
  * MUST check the selection state for the given piece GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsPieceSelected](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISPIECESELECTED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappispieceselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-PIECE-SELECTED)
  **/
 export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
@@ -3277,7 +3277,7 @@ export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string):
  *
  * MUST derive the color from selection, hover, diff status, and type mapping.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppPieceColor](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPPIECECOLOR)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignapppiececolor](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-PIECE-COLOR)
  **/
 export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: string): { fill: string; stroke: string; opacity: number } {
   const isSelected = useDesignAppIsPieceSelected(id, pieceId);
@@ -3341,7 +3341,7 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
  *
  * MUST check the hover state for the given connection GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsConnectionHovered](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISCONNECTIONHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappisconnectionhovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-CONNECTION-HOVERED)
  **/
 export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
@@ -3360,7 +3360,7 @@ export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?:
  *
  * MUST check the selection state for the given connection GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsConnectionSelected](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISCONNECTIONSELECTED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappisconnectionselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-CONNECTION-SELECTED)
  **/
 export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
@@ -3379,7 +3379,7 @@ export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?
  *
  * MUST check the hover state for the given piece-connector port.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsPortHovered](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISPORTHOVERED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappisporthovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-PORT-HOVERED)
  **/
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {
   const actor = useSketchpadActor();
@@ -3400,7 +3400,7 @@ const EMPTY_CONNECTOR: SelectedConnector = undefined;
  *
  * MUST return the currently selected connector from the selection state.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppSelectedConnector](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPSELECTEDCONNECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappselectedconnector](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-SELECTED-CONNECTOR)
  **/
 export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {
   const actor = useSketchpadActor();
@@ -3420,7 +3420,7 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnect
  *
  * MUST check the selection connector state for the given piece-connector pair.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppIsPiecePortSelected](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPISPIECEPORTSELECTED)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappispieceportselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-IS-PIECE-PORT-SELECTED)
  **/
 export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {
   const actor = useSketchpadActor();
@@ -3468,7 +3468,7 @@ function getConnectionStatusFromTransactionStack(store: DesignStore | null, conn
  *
  * MUST return DiffStatus from the design diff for the given connection GUID.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppConnectionStatus](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPCONNECTIONSTATUS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappconnectionstatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-CONNECTION-STATUS)
  **/
 export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
   const store = useDesignStore(identitySelector, id) as DesignStore | null;
@@ -3480,7 +3480,7 @@ export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connec
  *
  * MUST derive the color from selection, hover, and diff status.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppConnectionColor](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPCONNECTIONCOLOR)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignappconnectioncolor](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-CONNECTION-COLOR)
  **/
 export function useDesignAppConnectionColor(id: DesignAppId | undefined, connectionId: string): { fill: string; stroke: string; opacity: number } {
   const isSelected = useDesignAppIsConnectionSelected(id, connectionId);
@@ -3534,7 +3534,7 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
  *
  * MUST look up the piece metadata for the given GUID and return its center.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppPieceCenter](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPPIECECENTER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignapppiececenter](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-PIECE-CENTER)
  **/
 export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord | undefined {
   const scope = useDesignAppScope();
@@ -3550,7 +3550,7 @@ export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord
  *
  * MUST look up the piece metadata for the given GUID and return its plane.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Store§useDesignAppPiecePlane](semiorepo://definition/semio/js/sketchpad/Design.tsx/STORE/USEDESIGNAPPPIECEPLANE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🛠️usedesignapppieceplane](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/USE-DESIGN-APP-PIECE-PLANE)
  **/
 export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane | undefined {
   const scope = useDesignAppScope();
@@ -3565,7 +3565,7 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
 
 // #region 🔖Footer
 
-// [🔖semio/js/sketchpad/Design.tsx#Footer](semiorepo://section/semio/js/sketchpad/Design.tsx/FOOTER)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FOOTER)
 // Footer MUST render dynamic Design app footer items showing selection and transaction state.
 
 /**
@@ -3573,7 +3573,7 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
  *
  * MUST register and unregister footer items based on selection and transaction state.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Footer§DesignAppFooter](semiorepo://definition/semio/js/sketchpad/Design.tsx/FOOTER/DESIGNAPPFOOTER)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖footer🪨designappfooter](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FOOTER/DESIGN-APP-FOOTER)
  **/
 export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -3691,13 +3691,13 @@ export const DesignAppFooter: FC = () => {
 
 // #region 🔖Tools
 
-// [🔖semio/js/sketchpad/Design.tsx#Tools](semiorepo://section/semio/js/sketchpad/Design.tsx/TOOLS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖tools](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS)
 // Tools MUST define all Design app tool configurations for selection, lasso, and hand modes.
 
 /**
  * Tool configuration for normal selection mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§SelectionNormalTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/SELECTIONNORMALTOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨selectionnormaltool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/SELECTION-NORMAL-TOOL)
  **/
 export const SelectionNormalTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_NORMAL,
@@ -3708,7 +3708,7 @@ export const SelectionNormalTool: Tool<DesignAppState> = {
 /**
  * Tool configuration for additive selection mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§SelectionAdditiveTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/SELECTIONADDITIVETOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨selectionadditivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/SELECTION-ADDITIVE-TOOL)
  **/
 export const SelectionAdditiveTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_ADDITIVE,
@@ -3719,7 +3719,7 @@ export const SelectionAdditiveTool: Tool<DesignAppState> = {
 /**
  * Tool configuration for subtractive selection mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§SelectionSubtractiveTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/SELECTIONSUBTRACTIVETOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨selectionsubtractivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/SELECTION-SUBTRACTIVE-TOOL)
  **/
 export const SelectionSubtractiveTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_SUBTRACTIVE,
@@ -3730,7 +3730,7 @@ export const SelectionSubtractiveTool: Tool<DesignAppState> = {
 /**
  * Tool configuration for rectangular lasso selection mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§LassoRectangularTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/LASSORECTANGULARTOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨lassorectangulartool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/LASSO-RECTANGULAR-TOOL)
  **/
 export const LassoRectangularTool: Tool<DesignAppState> = {
   id: ToolKind.LASSO_RECTANGULAR,
@@ -3741,7 +3741,7 @@ export const LassoRectangularTool: Tool<DesignAppState> = {
 /**
  * Tool configuration for freeform lasso selection mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§LassoFreeformTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/LASSOFREEFORMTOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨lassofreeformtool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/LASSO-FREEFORM-TOOL)
  **/
 export const LassoFreeformTool: Tool<DesignAppState> = {
   id: ToolKind.LASSO_FREEFORM,
@@ -3752,7 +3752,7 @@ export const LassoFreeformTool: Tool<DesignAppState> = {
 /**
  * Tool configuration for hand/pan mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§HandTool](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/HANDTOOL)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨handtool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/HAND-TOOL)
  **/
 export const HandTool: Tool<DesignAppState> = {
   id: ToolKind.HAND,
@@ -3763,7 +3763,7 @@ export const HandTool: Tool<DesignAppState> = {
 /**
  * Array of all Design app tool configurations.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§DesignAppTools](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/DESIGNAPPTOOLS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designapptools](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-APP-TOOLS)
  **/
 export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool, HandTool];
 
@@ -3772,7 +3772,7 @@ export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, Sele
  *
  * MUST render toggle buttons for each selection sub-mode.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§DesignSelectSettings](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/DESIGNSELECTSETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designselectsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-SELECT-SETTINGS)
  **/
 export const DesignSelectSettings: FC = () => {
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
@@ -3818,7 +3818,7 @@ export const DesignSelectSettings: FC = () => {
  *
  * MUST activate the hand tool on mount.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§DesignHandSettings](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/DESIGNHANDSETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designhandsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-HAND-SETTINGS)
  **/
 export const DesignHandSettings: FC = () => {
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
@@ -3837,7 +3837,7 @@ export const DesignHandSettings: FC = () => {
  *
  * MUST render toggle group for lasso sub-modes.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Tools§DesignLassoSettings](semiorepo://definition/semio/js/sketchpad/Design.tsx/TOOLS/DESIGNLASSOSETTINGS)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designlassosettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-LASSO-SETTINGS)
  **/
 export const DesignLassoSettings: FC = () => {
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
@@ -3867,7 +3867,7 @@ export const DesignLassoSettings: FC = () => {
 
 // #region 🔖WindowLibrary
 
-// [🔖semio/js/sketchpad/Design.tsx#WindowLibrary](semiorepo://section/semio/js/sketchpad/Design.tsx/WINDOWLIBRARY)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖panels](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS)
 // WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
 interface WindowTemplate {
@@ -3977,7 +3977,7 @@ const DraggableWindowItem: FC<DraggableWindowItemProps> = ({ template }) => {
  *
  * MUST render categorized window templates for scene, diagram, and table types.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Panels#WindowLibrary§WindowLibrary](semiorepo://definition/semio/js/sketchpad/Design.tsx/PANELS/WINDOWLIBRARY/WINDOWLIBRARY)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖windowlibrary🪨windowlibrary](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/WINDOW-LIBRARY/WINDOW-LIBRARY)
  **/
 export const WindowLibrary: FC = () => {
   const sceneTemplates = windowTemplates.filter((t) => t.windowTypeId === "scene");
@@ -4009,7 +4009,7 @@ export const WindowLibrary: FC = () => {
 
 // #region 🔖Details
 
-// [🔖semio/js/sketchpad/Design.tsx#Details](semiorepo://section/semio/js/sketchpad/Design.tsx/DETAILS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/DETAILS)
 // Details MUST render the Design app detail panels for design, pieces, connections, and connector sections.
 
 /**
@@ -4017,7 +4017,7 @@ export const WindowLibrary: FC = () => {
  *
  * MUST render the design form fields within a detail panel section.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Panels#Details§DesignSection](semiorepo://definition/semio/js/sketchpad/Design.tsx/PANELS/DETAILS/DESIGNSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖details🪨designsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/DETAILS/DESIGN-SECTION)
  **/
 export const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
@@ -4435,7 +4435,7 @@ const DesignSectionForm: FC = () => {
  *
  * MUST render each piece with its type, name, and selection interactions.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Panels#Details§PiecesSection](semiorepo://definition/semio/js/sketchpad/Design.tsx/PANELS/DETAILS/PIECESSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖details🪨piecessection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/DETAILS/PIECES-SECTION)
  **/
 export const PiecesSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
@@ -5132,7 +5132,7 @@ const PiecesSectionForm: FC = () => {
  *
  * MUST render each connection with its connected pieces and ports.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Panels#Details§ConnectionsSection](semiorepo://definition/semio/js/sketchpad/Design.tsx/PANELS/DETAILS/CONNECTIONSSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖details🪨connectionssection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/DETAILS/CONNECTIONS-SECTION)
  **/
 export const ConnectionsSection: FC<{
   connections: any[];
@@ -5281,7 +5281,7 @@ const ConnectionsSectionForm: FC<{
  *
  * MUST render the connector detail form for the selected port.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Panels#Details§ConnectorSection](semiorepo://definition/semio/js/sketchpad/Design.tsx/PANELS/DETAILS/CONNECTORSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖details🪨connectorsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/DETAILS/CONNECTOR-SECTION)
  **/
 export const ConnectorSection: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pieceGuid, connectorGuid }) => {
   const isInDesignScope = useIsInDesignScope();
@@ -5383,7 +5383,7 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
 // #region 🔖Hover Intent Context
 
-// [🔖semio/js/sketchpad/Design.tsx#Hover Intent Context](semiorepo://section/semio/js/sketchpad/Design.tsx/HOVER-INTENT-CONTEXT)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖hoverintentcontext](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/HOVER-INTENT-CONTEXT)
 // Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
 
 interface HoverIntentContextValue {
@@ -5451,7 +5451,7 @@ function usePieceRenderData(pieceGuid: string): PieceRenderData {
 
 // #region 🔖Diagram
 
-// [🔖semio/js/sketchpad/Design.tsx#Diagram](semiorepo://section/semio/js/sketchpad/Design.tsx/DIAGRAM)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖diagram](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/DIAGRAM)
 // Diagram MUST render the interactive React Flow design diagram with nodes, edges, minimap, and controls.
 
 type ClusterMenuProps = {
@@ -6357,7 +6357,7 @@ const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props:
  *
  * MUST render a circle at the given position with accent color when selected.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#Canvas#Diagram§MiniMapNode](semiorepo://definition/semio/js/sketchpad/Design.tsx/CANVAS/DIAGRAM/MINIMAPNODE)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖diagram🪨minimapnode](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/DIAGRAM/MINI-MAP-NODE)
  **/
 export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }: MiniMapNodeProps) => {
   return <circle className={`${selected ? "fill-accent" : "fill-foreground"} transition-colors duration-200`} cx={x} cy={y} r="10" />;
@@ -8052,7 +8052,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
 // #region 🔖Scene
 
-// [🔖semio/js/sketchpad/Design.tsx#Scene](semiorepo://section/semio/js/sketchpad/Design.tsx/SCENE)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖scene](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/SCENE)
 // Scene MUST render the Three.js 3D scene view of design pieces with selection and hover highlighting.
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -8708,11 +8708,11 @@ const DesignAppScene: FC = () => {
 // #endregion 🔖Canvas
 
 // #region 🔖Windows
-// [🔖semio/js/sketchpad/Design.tsx#Windows](semiorepo://section/semio/js/sketchpad/Design.tsx/WINDOWS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖windows](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/WINDOWS)
 // Window components MUST wrap diagram and scene views with hover and transaction providers.
 
 /** Props interface for the Design app root component.
- * [🪨semio/js/sketchpad/Design.tsx#Windows§AppProps](semiorepo://definition/semio/js/sketchpad/Design.tsx/WINDOWS/APPPROPS)
+ * [👤semio📚js🗃️sketchpad💻designtsx🔖windows🛠️appprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/WINDOWS/APP-PROPS)
 **/
 export interface AppProps { }
 
@@ -8748,7 +8748,7 @@ SceneWindow.displayName = "SceneWindow";
 
 // #region App
 
-// [🔖semio/js/sketchpad/Design.tsx#App](semiorepo://section/semio/js/sketchpad/Design.tsx/APP)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP)
 // App MUST compose all Design app panels, canvas, toolbar, and footer into the main Design app layout.
 
 const renderCountRef = { current: 0 };
@@ -9452,7 +9452,7 @@ const App: FC<AppProps> = () => {
 
 // #region 🔖Settings
 
-// [🔖semio/js/sketchpad/Design.tsx#Settings](semiorepo://section/semio/js/sketchpad/Design.tsx/SETTINGS)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖settings](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/SETTINGS)
 // Settings MUST render the Design app settings panel with theme, language, device, expertise, and mode toggles.
 
 const DesignSettingsContent: FC = () => {
@@ -9611,13 +9611,13 @@ const DesignApp: FC = () => {
 
 // #region 🔖Config
 
-// [🔖semio/js/sketchpad/Design.tsx#Config](semiorepo://section/semio/js/sketchpad/Design.tsx/CONFIG)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/CONFIG)
 // Config MUST export the Design app configuration with route segments, panel definitions, and path matching.
 
 /**
  * Exported Design app configuration including routes, panels, and path matching.
  *
- *  * [🪨semio/js/sketchpad/Design.tsx#App#Config§config](semiorepo://definition/semio/js/sketchpad/Design.tsx/APP/CONFIG/CONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/CONFIG/CONFIG)
  **/
 export const config: AppConfig = {
   id: "design",

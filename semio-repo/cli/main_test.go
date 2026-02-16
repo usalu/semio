@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧪maintestgo](semiorepo://file/SEMIO-REPO/CLI/MAIN_TEST.GO)
+// [🧰semiorepo⌨️cli🧪maintestgo](semiorepo://file/SEMIO-REPO/CLI/MAIN_TEST.GO)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -2841,6 +2841,10 @@ func TestFixStatuteMeta(t *testing.T) {
 		BreachCodeSectionEmpty,
 		BreachCodeSectionMissingEndName,
 		BreachCodeSectionNameMismatch,
+		BreachCodeSectionWrongIdentificationId,
+		BreachCodeSectionWrongIdentificationUri,
+		BreachCodeDefWrongIdentificationId,
+		BreachCodeDefWrongIdentificationUri,
 		BreachCodeCommentInline,
 		BreachCodeCommentBlock,
 		BreachCodeCommentJSDoc,
@@ -3516,6 +3520,201 @@ func TestDefinitionIdentificationAutofix(t *testing.T) {
 	}
 }
 
+func TestSectionWrongIdentificationDetected(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [wrong-section-id](semiorepo://section/WRONG/SECTION)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
+	if err := WriteTextFile(filepath.Join(tmpDir, testFile), content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeFile, FilePath: testFile}, []Bundle{}, []string{testFile})
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	foundWrongId := false
+	foundWrongURI := false
+	for _, v := range breachs {
+		if v.Kind == BreachCodeSectionWrongIdentificationId {
+			foundWrongId = true
+		}
+		if v.Kind == BreachCodeSectionWrongIdentificationUri {
+			foundWrongURI = true
+		}
+	}
+	if !foundWrongId {
+		t.Fatal("expected section wrong identification id breach")
+	}
+	if !foundWrongURI {
+		t.Fatal("expected section wrong identification uri breach")
+	}
+}
+
+func TestDefinitionWrongIdentificationDetected(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\n// [wrong-definition-id](semiorepo://definition/WRONG/DEFINITION)\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
+	testFile := "src/app.go"
+	if err := WriteTextFile(filepath.Join(tmpDir, testFile), content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeFile, FilePath: testFile}, []Bundle{}, []string{testFile})
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	foundWrongId := false
+	foundWrongURI := false
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefWrongIdentificationId {
+			foundWrongId = true
+		}
+		if v.Kind == BreachCodeDefWrongIdentificationUri {
+			foundWrongURI = true
+		}
+	}
+	if !foundWrongId {
+		t.Fatal("expected definition wrong identification id breach")
+	}
+	if !foundWrongURI {
+		t.Fatal("expected definition wrong identification uri breach")
+	}
+}
+
+func TestSectionWrongIdentificationAutofix(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [wrong-section-id](semiorepo://section/WRONG/SECTION)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeFile, FilePath: testFile}, []Bundle{}, []string{testFile})
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	var wrong []Breach
+	for _, v := range breachs {
+		if v.Kind == BreachCodeSectionWrongIdentificationId || v.Kind == BreachCodeSectionWrongIdentificationUri {
+			wrong = append(wrong, v)
+		}
+	}
+	if len(wrong) == 0 {
+		t.Fatal("expected section wrong identification breaches before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, wrong)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected autofix to update wrong section identification")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	expectedLine := "// [" + SectionHeaderId(testFile, "Functions") + "](" + SectionHeaderUri(testFile, "Functions") + ")"
+	if !strings.Contains(fixedContent, expectedLine) {
+		t.Fatalf("expected section id line %q after autofix", expectedLine)
+	}
+}
+
+func TestDefinitionWrongIdentificationAutofixGoTypeUsesInterfaceKind(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\n// [wrong-definition-id](semiorepo://definition/WRONG/DEFINITION)\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
+	testFile := "src/app.go"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeFile, FilePath: testFile}, []Bundle{}, []string{testFile})
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	var wrong []Breach
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefWrongIdentificationId || v.Kind == BreachCodeDefWrongIdentificationUri {
+			wrong = append(wrong, v)
+		}
+	}
+	if len(wrong) == 0 {
+		t.Fatal("expected definition wrong identification breaches before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, wrong)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected autofix to update wrong definition identification")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	sectionPath := "GraphQL Types#GraphQL Input Types"
+	expectedLine := "// [" + DefinitionHeaderId(testFile, sectionPath, "TicketCloseInput", DefinitionKindInterface) + "](" + DefinitionHeaderUri(testFile, sectionPath, "TicketCloseInput") + ")"
+	if !strings.Contains(fixedContent, expectedLine) {
+		t.Fatalf("expected definition id line %q after autofix", expectedLine)
+	}
+}
+
+func TestDefinitionMissingIdentificationAutofixGoTypeUsesInterfaceKind(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
+	testFile := "src/app.go"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeFile, FilePath: testFile}, []Bundle{}, []string{testFile})
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	var missing []Breach
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefMissingIdentification {
+			missing = append(missing, v)
+		}
+	}
+	if len(missing) == 0 {
+		t.Fatal("expected definition missing identification breach before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, missing)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected autofix to insert definition identification")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	sectionPath := "GraphQL Types#GraphQL Input Types"
+	expectedLine := "// [" + DefinitionHeaderId(testFile, sectionPath, "TicketCloseInput", DefinitionKindInterface) + "](" + DefinitionHeaderUri(testFile, sectionPath, "TicketCloseInput") + ")"
+	if !strings.Contains(fixedContent, expectedLine) {
+		t.Fatalf("expected definition id line %q after autofix", expectedLine)
+	}
+}
+
 func TestDefinitionNativeDocstring(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -3829,11 +4028,11 @@ func TestDefinitionJSDocExemptFromCommentBan(t *testing.T) {
 
 func TestSectionHeaderIdAndUri(t *testing.T) {
 	id := SectionHeaderId("src/app.ts", "Functions")
-	if !strings.Contains(id, Flat("Functions")) {
+	if !strings.Contains(id, emojiText(EmojiSection)+Flat("Functions")) {
 		t.Fatalf("unexpected section header id: %s", id)
 	}
-	if !strings.HasPrefix(id, emojiText(EmojiSection)) {
-		t.Fatalf("section header id missing emoji: %s", id)
+	if strings.HasPrefix(id, emojiText(EmojiSection)) {
+		t.Fatalf("section header id should include file parent before section emoji: %s", id)
 	}
 	uri := SectionHeaderUri("src/app.ts", "Functions")
 	if !strings.HasPrefix(uri, "semiorepo://section/") {
@@ -3846,7 +4045,7 @@ func TestSectionHeaderIdAndUri(t *testing.T) {
 
 func TestDefinitionHeaderIdAndUri(t *testing.T) {
 	id := DefinitionHeaderId("src/app.ts", "Functions", "doWork", "implementation")
-	if !strings.Contains(id, Flat("doWork")) {
+	if !strings.Contains(id, emojiText(EmojiDefinitionImpl)+Flat("doWork")) {
 		t.Fatalf("unexpected definition header id: %s", id)
 	}
 	uri := DefinitionHeaderUri("src/app.ts", "Functions", "doWork")
@@ -6372,23 +6571,23 @@ func TestBundleListIDs(t *testing.T) {
 		t.Fatal("ToolBundleList data is not []Bundle")
 	}
 	expectedIDs := map[string]string{
-		"semio/js":          emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-		"semio/engine":      emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine",
-		"semio/go":          emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "go",
-		"semio/rs":          emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "rs",
-		"semio/py":          emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "py",
-		"semio/net":         emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "net",
-		"semio/graphql":     emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql",
-		"semio/jsonschema":  emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "jsonschema",
-		"semio/openapi":     emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "openapi",
-		"semio/desktop":     emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-		"semio/docs":        emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
-		"semio/play":        emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSite) + "play",
-		"semio/assets":      emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
-		"semio-repo/cli":    emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli",
-		"semio-repo/server": emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "server",
-		"semio-repo/go":     emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleLibrary) + "go",
-		"semio-repo/vscode": emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleUI) + "vscode",
+		"semio/js":           emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
+		"semio/engine":       emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine",
+		"semio/go":           emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "go",
+		"semio/rs":           emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "rs",
+		"semio/py":           emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "py",
+		"semio/net":          emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "net",
+		"semio/graphql":      emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql",
+		"semio/jsonschema":   emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "jsonschema",
+		"semio/openapi":      emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "openapi",
+		"semio/desktop":      emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
+		"semio/docs":         emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
+		"semio/play":         emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSite) + "play",
+		"semio/assets":       emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
+		"semio-repo/cli":     emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli",
+		"semio-repo/server":  emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "server",
+		"semio-repo/go":      emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleLibrary) + "go",
+		"semio-repo/vscode":  emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleUI) + "vscode",
 		"semio-repo/graphql": emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleSchema) + "graphql",
 	}
 	for _, b := range bundles {
@@ -6979,7 +7178,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("repo tree default output missing markdown list items, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("folder", "tree", "semio/go")
+	output, err = executeTreeCommand("tree", "--only-folder", "semio/go")
 	if err != nil {
 		t.Errorf("folder tree failed: %v", err)
 	}
@@ -6993,7 +7192,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("folder tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("file", "tree", "semio/go")
+	output, err = executeTreeCommand("tree", "--only-file", "semio/go")
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
@@ -7004,7 +7203,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("file tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("ticket", "tree")
+	output, err = executeTreeCommand("tree", "--only-ticket")
 	if err != nil {
 		t.Errorf("ticket tree failed: %v", err)
 	}
@@ -7015,7 +7214,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("ticket tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("goal", "tree")
+	output, err = executeTreeCommand("tree", "--only-goal")
 	if err != nil {
 		t.Errorf("goal tree failed: %v", err)
 	}
@@ -7137,7 +7336,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		t.Fatalf("expected open status, got %s", status)
 	}
 
-	listOut, listErr, err := executeCommand("ticket", "list", "--year", strconv.Itoa(y))
+	listOut, listErr, err := executeCommand("list", "--only-ticket", "--only-year", strconv.Itoa(y))
 	if err != nil {
 		t.Fatalf("ticket list failed: %v\nStdout: %s\nStderr: %s", err, listOut, listErr)
 	}
@@ -7199,19 +7398,19 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"bundle list", []string{"bundle", "list"}},
-		{"bundle tree", []string{"bundle", "tree"}},
-		{"folder list", []string{"folder", "list", "go"}},
-		{"file list", []string{"file", "list", "go"}},
-		{"section list", []string{"section", "list", "semio/js/semio.ts"}},
-		{"definition list", []string{"definition", "list", "semio/js/semio.ts"}},
-		{"policy list", []string{"policy", "list"}},
+		{"bundle list", []string{"list", "--only-bundle"}},
+		{"bundle tree", []string{"tree", "--only-bundle"}},
+		{"folder list", []string{"list", "--only-folder", "go"}},
+		{"file list", []string{"list", "--only-file", "go"}},
+		{"section list", []string{"list", "--only-section", "semio/js/semio.ts"}},
+		{"definition list", []string{"list", "--only-definition", "semio/js/semio.ts"}},
+		{"policy list", []string{"list", "--only-policy"}},
 		{"policy check", []string{"policy", "check", "code", "semio/js"}},
-		{"goal list", []string{"goal", "list"}},
-		{"goal tree", []string{"goal", "tree"}},
-		{"ticket list", []string{"ticket", "list"}},
-		{"ticket tree", []string{"ticket", "tree"}},
-		{"contributor list", []string{"contributor", "list"}},
+		{"goal list", []string{"list", "--only-goal"}},
+		{"goal tree", []string{"tree", "--only-goal"}},
+		{"ticket list", []string{"list", "--only-ticket"}},
+		{"ticket tree", []string{"tree", "--only-ticket"}},
+		{"contributor list", []string{"list", "--only-contributor"}},
 		{"mcp dry-run", []string{"mcp", "--dry-run"}},
 		{"update", []string{"update"}},
 	}
@@ -7456,8 +7655,6 @@ func TestCliWrongArgs_SectionOperations(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"list missing file", []string{"section", "list"}},
-		{"tree missing file", []string{"section", "tree"}},
 		{"create missing args", []string{"section", "create"}},
 		{"move missing args", []string{"section", "move"}},
 		{"delete missing args", []string{"section", "delete"}},
@@ -7479,9 +7676,7 @@ func TestCliWrongArgs_DefinitionOperations(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string
-	}{
-		{"list missing file", []string{"definition", "list"}},
-	}
+	}{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, err := executeCommand(tt.args...)
@@ -7614,17 +7809,11 @@ func TestCliWrongArgs_ErrorMessages(t *testing.T) {
 		{"file move missing args", []string{"file", "move"}, "missing"},
 		{"file delete missing path", []string{"file", "delete"}, "missing path"},
 
-		{"section list missing file", []string{"section", "list"}, "missing file"},
-		{"section tree missing file", []string{"section", "tree"}, "missing file"},
 		{"section create missing args", []string{"section", "create"}, "missing"},
 		{"section move missing args", []string{"section", "move"}, "missing"},
 		{"section delete missing args", []string{"section", "delete"}, "missing file or name"},
 		{"section extract missing args", []string{"section", "extract"}, "missing source file, source section, or target file"},
 		{"section integrate missing args", []string{"section", "integrate"}, "missing source, target section, or target file"},
-
-		{"definition list missing file", []string{"definition", "list"}, "missing file"},
-
-		{"contributor add missing github", []string{"contributor", "add"}, "missing"},
 		{"contributor remove missing github", []string{"contributor", "remove"}, "missing"},
 
 		{"graphql missing query", []string{"graphql"}, "missing query"},
@@ -7712,14 +7901,11 @@ func TestCliJsonErrorsToStderr(t *testing.T) {
 		{"policy check missing id", []string{"policy", "check"}},
 		{"folder create missing path", []string{"folder", "create"}},
 		{"file create missing path", []string{"file", "create"}},
-		{"section list missing file", []string{"section", "list"}},
 		{"section delete missing args", []string{"section", "delete"}},
 		{"section extract missing args", []string{"section", "extract"}},
 		{"section integrate missing args", []string{"section", "integrate"}},
-		{"definition list missing file", []string{"definition", "list"}},
 		{"todo create missing args", []string{"todo", "create"}},
-		{"todo change missing id", []string{"todo", "change"}},
-		{"todo delete missing id", []string{"todo", "delete"}},
+		{"todo chaete missing id", []string{"todo", "delete"}},
 		{"graphql missing query", []string{"graphql"}},
 		{"contributor add missing github", []string{"contributor", "add"}},
 		{"contributor remove missing github", []string{"contributor", "remove"}},
@@ -8591,17 +8777,17 @@ func TestMarkdownOutput(t *testing.T) {
 		},
 		{
 			name:        "Ticket Tree MD",
-			args:        []string{"ticket", "tree"},
+			args:        []string{"tree", "--only-ticket"},
 			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
 		},
 		{
 			name:        "Goal Tree MD",
-			args:        []string{"goal", "tree"},
+			args:        []string{"tree", "--only-goal"},
 			wantMarkers: []string{"- [", "](semiorepo://goal/"},
 		},
 		{
 			name:        "Ticket List MD",
-			args:        []string{"ticket", "list"},
+			args:        []string{"list", "--only-ticket"},
 			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
 		},
 	}
@@ -8700,7 +8886,7 @@ func TestLifecycleCommands(t *testing.T) {
 			listB := bytes.NewBufferString("")
 			listCmd.SetOut(listB)
 			listCmd.SetErr(listB)
-			listCmd.SetArgs([]string{"ticket", "list", "--json"})
+			listCmd.SetArgs([]string{"list", "--only-ticket", "--json"})
 			listCmd.Execute()
 
 			var y, m, d int
@@ -8822,57 +9008,57 @@ func TestListCommands(t *testing.T) {
 	}{
 		{
 			name:  "bundle list",
-			args:  []string{"bundle", "list"},
+			args:  []string{"list", "--only-bundle"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "ticket list",
-			args:  []string{"ticket", "list"},
+			args:  []string{"list", "--only-ticket"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "folder list",
-			args:  []string{"folder", "list", "semio-repo/go"},
+			args:  []string{"list", "--only-folder", "semio-repo/go"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "file list",
-			args:  []string{"file", "list", "semio-repo/go"},
+			args:  []string{"list", "--only-file", "semio-repo/go"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "section list",
-			args:  []string{"section", "list", "semio-repo/go/main.go"},
+			args:  []string{"list", "--only-section", "semio-repo/go/main.go"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "definition list",
-			args:  []string{"definition", "list", "semio-repo/go/main.go"},
+			args:  []string{"list", "--only-definition", "semio-repo/go/main.go"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "policy list",
-			args:  []string{"policy", "list"},
+			args:  []string{"list", "--only-policy"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "contributor list",
-			args:  []string{"contributor", "list"},
+			args:  []string{"list", "--only-contributor"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "project list",
-			args:  []string{"project", "list"},
+			args:  []string{"list", "--only-project"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "statute list",
-			args:  []string{"statute", "list"},
+			args:  []string{"list", "--only-statute"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "commit list",
-			args:  []string{"commit", "list", "--limit", "5"},
+			args:  []string{"list", "--only-commit", "--limit", "5"},
 			modes: []string{"", "json", "md", "text"},
 		},
 	}
@@ -9072,11 +9258,11 @@ func TestStreamingList(t *testing.T) {
 	}{
 		{
 			name: "Ticket List (Text)",
-			args: []string{"ticket", "list"},
+			args: []string{"list", "--only-ticket"},
 		},
 		{
 			name: "Bundle List (Text)",
-			args: []string{"bundle", "list"},
+			args: []string{"list", "--only-bundle"},
 		},
 	}
 
@@ -9416,14 +9602,14 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
-			wantID:  emojiText(EmojiSection) + "designstore",
+			wantID:  buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
 			wantURI: "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE",
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
-			wantID:  emojiText(EmojiSection) + "imports",
+			wantID:  buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
 			wantURI: "semiorepo://section/SEMIO/JS/SRC/FILE.TS/IMPORTS",
 		},
 		{
@@ -9437,21 +9623,28 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
-			wantID:  emojiText(EmojiDefinitionImpl) + "myclass",
+			wantID:  buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
 			wantURI: "semiorepo://definition/SEMIO/JS/SRC/INDEX.TS/MY-CLASS",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
-			wantID:  emojiText(EmojiDefinitionInterface) + "myinterface",
+			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
 			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/TYPES/MY-INTERFACE",
+		},
+		{
+			name:    "definition go type treated as interface",
+			kind:    "definition",
+			data:    map[string]interface{}{"kind": "type", "filePath": "semio-repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"},
+			wantID:  buildDefinitionID(buildFileID("semio-repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
+			wantURI: "semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/GRAPH-QL-TYPES/GRAPH-QL-INPUT-TYPES/TICKET-CLOSE-INPUT",
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
-			wantID:  emojiText(EmojiDefinitionConstant) + "maxsize",
+			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
 			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MAX-SIZE",
 		},
 		{
@@ -9642,8 +9835,8 @@ func TestIdToUri(t *testing.T) {
 		{"file docs", emojiText(EmojiFileDocs) + "testtxt", "semiorepo://file/TESTTXT"},
 		{"file code", emojiText(EmojiFileCode) + "maingo", "semiorepo://file/MAINGO"},
 		{"section collection", emojiText(EmojiSection), "semiorepo://sections"},
-		{"section", emojiText(EmojiSection) + "designstore", "semiorepo://section/DESIGNSTORE"},
-		{"definition impl", emojiText(EmojiDefinitionImpl) + "myclass", "semiorepo://definition/MYCLASS"},
+		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), "semiorepo://section/SEMIO/JS/SRC/DESIGNTSX/STATEMANAGMENT/STORE"},
+		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "semiorepo://definition/SEMIO/JS/SRC/FILETS/TYPES/MYCLASS"},
 		{"ticket collection", emojiText(EmojiTicket), "semiorepo://tickets"},
 		{"ticket", emojiText(EmojiTicket) + "testticket", "semiorepo://ticket/TESTTICKET"},
 		{"goal collection", emojiText(EmojiGoal), "semiorepo://goals"},
@@ -9689,10 +9882,10 @@ func TestUriToId(t *testing.T) {
 		{"files", "semiorepo://files", emojiText(EmojiFiles)},
 		{"file", "semiorepo://file/TEST.TXT", emojiText(EmojiFileCode) + "testtxt"},
 		{"sections", "semiorepo://sections", emojiText(EmojiSections)},
-		{"section", "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE", emojiText(EmojiSection) + "semiojssrcdesigntsx#STATE-MANAGEMENT#DESIGN-STORE"},
+		{"section", "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"STATE-MANAGEMENT", "DESIGN-STORE"})},
 		{"definitions", "semiorepo://definitions", emojiText(EmojiDefinitions)},
-		{"definition single", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MY-FUNC", emojiText(EmojiDefinitionImpl) + "semiojssrcfilets" + "§MY-FUNC"},
-		{"definition with section", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC", emojiText(EmojiDefinitionImpl) + "semiojssrcfilets" + "#SECTION§MY-FUNC"},
+		{"definition single", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MY-FUNC", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MY-FUNC", DefinitionKindImplementation)},
+		{"definition with section", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"SECTION"}, "MY-FUNC", DefinitionKindImplementation)},
 		{"tickets", "semiorepo://tickets", emojiText(EmojiTicket)},
 		{"ticket", "semiorepo://ticket/2025/02/04/TEST-TICKET", emojiText(EmojiTicket) + "20250204testticket"},
 		{"goals", "semiorepo://goals", emojiText(EmojiGoal)},
@@ -10074,133 +10267,133 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "project list --query matches",
-			args:        []string{"project", "list", "--query", "semio", "--json"},
+			args:        []string{"list", "--only-project", "--query", "semio", "--json"},
 			query:       "",
 			expectMatch: "semio",
 		},
 		{
 			name:        "project tree --query matches",
-			args:        []string{"project", "tree", "--query", "semio", "--json"},
+			args:        []string{"tree", "--only-project", "--query", "semio", "--json"},
 			query:       "",
 			expectMatch: "semio",
 		},
 		{
 			name:        "bundle list --query matches",
-			args:        []string{"bundle", "list", "--query", "engine", "--json"},
+			args:        []string{"list", "--only-bundle", "--query", "engine", "--json"},
 			query:       "",
 			expectMatch: "engine",
 		},
 		{
 			name:          "bundle list --query excludes unrelated",
-			args:          []string{"bundle", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			args:          []string{"list", "--only-bundle", "--query", "zzz_nonexistent_xyz", "--json"},
 			query:         "",
 			expectMissing: "engine",
 		},
 		{
 			name:        "bundle tree --query matches",
-			args:        []string{"bundle", "tree", "--query", "engine", "--text"},
+			args:        []string{"tree", "--only-bundle", "--query", "engine", "--text"},
 			query:       "",
 			expectMatch: "engine",
 		},
 		{
 			name:        "folder list --query matches",
-			args:        []string{"folder", "list", "semio/go", "--query", "go", "--json"},
+			args:        []string{"list", "--only-folder", "--query", "go", "--json"},
 			query:       "",
 			expectMatch: "go",
 		},
 		{
 			name:        "folder tree --query matches",
-			args:        []string{"folder", "tree", "semio/go", "--query", "go", "--text"},
+			args:        []string{"tree", "--only-folder", "--query", "go", "--text"},
 			query:       "",
 			expectMatch: "go",
 		},
 		{
 			name:        "file list --query matches",
-			args:        []string{"file", "list", "semio/go", "--query", "semio", "--json"},
+			args:        []string{"list", "--only-file", "--query", "semio", "--json"},
 			query:       "",
 			expectMatch: "semio",
 		},
 		{
 			name:        "file tree --query matches",
-			args:        []string{"file", "tree", "semio/go", "--query", "semio", "--text"},
+			args:        []string{"tree", "--only-file", "--query", "semio", "--text"},
 			query:       "",
 			expectMatch: "semio",
 		},
 		{
 			name:        "section list --query matches",
-			args:        []string{"section", "list", "semio/go/semio.go", "--query", "Models", "--json"},
+			args:        []string{"list", "--only-section", "--query", "Models", "--json"},
 			query:       "",
 			expectMatch: "Model",
 		},
 		{
 			name:        "section tree --query matches",
-			args:        []string{"section", "tree", "semio/go/semio.go", "--query", "Models", "--text"},
+			args:        []string{"tree", "--only-section", "--query", "Models", "--text"},
 			query:       "",
 			expectMatch: "Model",
 		},
 		{
 			name:        "definition list --query matches",
-			args:        []string{"definition", "list", "--file", "semio/go/semio.go", "--query", "Kit", "--json"},
+			args:        []string{"list", "--only-definition", "--query", "Kit", "--json"},
 			query:       "",
 			expectMatch: "Kit",
 		},
 		{
 			name:        "ticket list --query matches",
-			args:        []string{"ticket", "list", "--query", "ticket", "--json"},
+			args:        []string{"list", "--only-ticket", "--query", "ticket", "--json"},
 			query:       "",
 			expectMatch: "ticket",
 		},
 		{
 			name:        "ticket tree --query matches",
-			args:        []string{"ticket", "tree", "--query", "ticket", "--text"},
+			args:        []string{"tree", "--only-ticket", "--query", "ticket", "--text"},
 			query:       "",
 			expectMatch: "ticket",
 		},
 		{
 			name:        "goal list --query matches",
-			args:        []string{"goal", "list", "--query", "repo", "--json"},
+			args:        []string{"list", "--only-goal", "--query", "repo", "--json"},
 			query:       "",
 			expectMatch: "repo",
 		},
 		{
 			name:        "goal tree --query matches",
-			args:        []string{"goal", "tree", "--query", "sketchpad", "--text"},
+			args:        []string{"tree", "--only-goal", "--query", "sketchpad", "--text"},
 			query:       "",
 			expectMatch: "Sketchpad",
 		},
 		{
 			name:          "goal tree --query excludes unrelated",
-			args:          []string{"goal", "tree", "--query", "zzz_nonexistent_xyz", "--text"},
+			args:          []string{"tree", "--only-goal", "--query", "zzz_nonexistent_xyz", "--text"},
 			query:         "",
 			expectMissing: "Sketchpad",
 		},
 		{
 			name:        "policy list --query matches",
-			args:        []string{"policy", "list", "--query", "header", "--json"},
+			args:        []string{"list", "--only-policy", "--query", "header", "--json"},
 			query:       "",
 			expectMatch: "header",
 		},
 		{
 			name:        "policy tree --query matches",
-			args:        []string{"policy", "tree", "--query", "header", "--text"},
+			args:        []string{"tree", "--only-policy", "--query", "header", "--text"},
 			query:       "",
 			expectMatch: "header",
 		},
 		{
 			name:        "statute list --query matches",
-			args:        []string{"statute", "list", "--query", "header", "--json"},
+			args:        []string{"list", "--only-statute", "--query", "header", "--json"},
 			query:       "",
 			expectMatch: "header",
 		},
 		{
 			name:          "statute list --query excludes unrelated",
-			args:          []string{"statute", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			args:          []string{"list", "--only-statute", "--query", "zzz_nonexistent_xyz", "--json"},
 			query:         "",
 			expectMissing: "header",
 		},
 		{
 			name:        "statute tree --query matches",
-			args:        []string{"statute", "tree", "--query", "header", "--text"},
+			args:        []string{"tree", "--only-statute", "--query", "header", "--text"},
 			query:       "",
 			expectMatch: "header",
 		},
@@ -10212,19 +10405,19 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "contributor list --query matches",
-			args:        []string{"contributor", "list", "--query", "usalu", "--json"},
+			args:        []string{"list", "--only-contributor", "--query", "usalu", "--json"},
 			query:       "",
 			expectMatch: "usalu",
 		},
 		{
 			name:          "contributor list --query excludes unrelated",
-			args:          []string{"contributor", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			args:          []string{"list", "--only-contributor", "--query", "zzz_nonexistent_xyz", "--json"},
 			query:         "",
 			expectMissing: "usalu",
 		},
 		{
 			name:        "commit list --query matches",
-			args:        []string{"commit", "list", "--query", "merge", "--json", "--limit", "200"},
+			args:        []string{"list", "--only-commit", "--query", "merge", "--json", "--limit", "200"},
 			query:       "",
 			expectMatch: "merge",
 		},
@@ -10260,7 +10453,7 @@ func TestQueryFuzzyMatch(t *testing.T) {
 	SetRootDir(repoRoot)
 
 	t.Run("policy list fuzzy match with misspelling", func(t *testing.T) {
-		output, err := executeTreeCommand("policy", "list", "--query", "headr", "--json")
+		output, err := executeTreeCommand("list", "--only-policy", "--query", "headr", "--json")
 		if err != nil {
 			t.Fatalf("command failed: %v\nOutput: %s", err, output)
 		}
@@ -10270,7 +10463,7 @@ func TestQueryFuzzyMatch(t *testing.T) {
 	})
 
 	t.Run("statute list fuzzy match with misspelling", func(t *testing.T) {
-		output, err := executeTreeCommand("statute", "list", "--query", "licenss", "--json")
+		output, err := executeTreeCommand("list", "--only-statute", "--query", "licenss", "--json")
 		if err != nil {
 			t.Fatalf("command failed: %v\nOutput: %s", err, output)
 		}
@@ -10280,7 +10473,7 @@ func TestQueryFuzzyMatch(t *testing.T) {
 	})
 
 	t.Run("bundle list fuzzy match with misspelling", func(t *testing.T) {
-		output, err := executeTreeCommand("bundle", "list", "--query", "engin", "--json")
+		output, err := executeTreeCommand("list", "--only-bundle", "--query", "engin", "--json")
 		if err != nil {
 			t.Fatalf("command failed: %v\nOutput: %s", err, output)
 		}
@@ -10290,7 +10483,7 @@ func TestQueryFuzzyMatch(t *testing.T) {
 	})
 
 	t.Run("goal list fuzzy match with misspelling", func(t *testing.T) {
-		output, err := executeTreeCommand("goal", "list", "--query", "sketchpd", "--json")
+		output, err := executeTreeCommand("list", "--only-goal", "--query", "sketchpd", "--json")
 		if err != nil {
 			t.Fatalf("command failed: %v\nOutput: %s", err, output)
 		}
@@ -10408,12 +10601,12 @@ func TestQueryEmptyReturnsAll(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"policy list no query", []string{"policy", "list", "--json"}},
-		{"statute list no query", []string{"statute", "list", "--json"}},
-		{"contributor list no query", []string{"contributor", "list", "--json"}},
-		{"bundle list no query", []string{"bundle", "list", "--json"}},
-		{"goal list no query", []string{"goal", "list", "--json"}},
-		{"commit list no query", []string{"commit", "list", "--json", "--limit", "5"}},
+		{"policy list no query", []string{"list", "--only-policy", "--json"}},
+		{"statute list no query", []string{"list", "--only-statute", "--json"}},
+		{"contributor list no query", []string{"list", "--only-contributor", "--json"}},
+		{"bundle list no query", []string{"list", "--only-bundle", "--json"}},
+		{"goal list no query", []string{"list", "--only-goal", "--json"}},
+		{"commit list no query", []string{"list", "--only-commit", "--json", "--limit", "5"}},
 	}
 
 	for _, tt := range tests {
@@ -10438,7 +10631,7 @@ func TestStatuteCommands(t *testing.T) {
 	SetRootDir(repoRoot)
 
 	t.Run("statute list returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("statute", "list", "--json")
+		output, err := executeTreeCommand("list", "--only-statute", "--json")
 		if err != nil {
 			t.Fatalf("statute list failed: %v", err)
 		}
@@ -10452,7 +10645,7 @@ func TestStatuteCommands(t *testing.T) {
 	})
 
 	t.Run("statute tree returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("statute", "tree", "--text")
+		output, err := executeTreeCommand("tree", "--only-statute", "--text")
 		if err != nil {
 			t.Fatalf("statute tree failed: %v", err)
 		}
@@ -10462,7 +10655,7 @@ func TestStatuteCommands(t *testing.T) {
 	})
 
 	t.Run("statute list markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("statute", "list", "--md")
+		output, err := executeTreeCommand("list", "--only-statute", "--md")
 		if err != nil {
 			t.Fatalf("statute list md failed: %v", err)
 		}
@@ -10472,7 +10665,7 @@ func TestStatuteCommands(t *testing.T) {
 	})
 
 	t.Run("statute tree markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("statute", "tree", "--md")
+		output, err := executeTreeCommand("tree", "--only-statute", "--md")
 		if err != nil {
 			t.Fatalf("statute tree md failed: %v", err)
 		}
@@ -10491,7 +10684,7 @@ func TestCommitCommands(t *testing.T) {
 	SetRootDir(repoRoot)
 
 	t.Run("commit list returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("commit", "list", "--json", "--limit", "5")
+		output, err := executeTreeCommand("list", "--only-commit", "--json", "--limit", "5")
 		if err != nil {
 			t.Fatalf("commit list failed: %v", err)
 		}
@@ -10505,13 +10698,13 @@ func TestCommitCommands(t *testing.T) {
 	})
 
 	t.Run("commit list --query filters", func(t *testing.T) {
-		allOutput, err := executeTreeCommand("commit", "list", "--json", "--limit", "200")
+		allOutput, err := executeTreeCommand("list", "--only-commit", "--json", "--limit", "200")
 		if err != nil {
 			t.Fatalf("commit list failed: %v", err)
 		}
 		allLines := strings.Split(strings.TrimSpace(allOutput), "\n")
 
-		filteredOutput, err := executeTreeCommand("commit", "list", "--json", "--limit", "200", "--query", "merge")
+		filteredOutput, err := executeTreeCommand("list", "--only-commit", "--json", "--limit", "200", "--query", "merge")
 		if err != nil {
 			t.Fatalf("commit list --query failed: %v", err)
 		}
@@ -10522,7 +10715,7 @@ func TestCommitCommands(t *testing.T) {
 	})
 
 	t.Run("commit list markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("commit", "list", "--md", "--limit", "5")
+		output, err := executeTreeCommand("list", "--only-commit", "--md", "--limit", "5")
 		if err != nil {
 			t.Fatalf("commit list md failed: %v", err)
 		}
@@ -10532,7 +10725,7 @@ func TestCommitCommands(t *testing.T) {
 	})
 
 	t.Run("commit list text", func(t *testing.T) {
-		output, err := executeTreeCommand("commit", "list", "--text", "--limit", "5")
+		output, err := executeTreeCommand("list", "--only-commit", "--text", "--limit", "5")
 		if err != nil {
 			t.Fatalf("commit list text failed: %v", err)
 		}
@@ -10847,7 +11040,7 @@ func TestParityGoalList(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("goal", "list")
+		cliOut, _, err := executeCommandMd("list", "--only-goal")
 		if err != nil {
 			t.Fatalf("CLI goal list failed: %v", err)
 		}
@@ -10862,7 +11055,7 @@ func TestParityGoalList(t *testing.T) {
 	})
 
 	t.Run("both return same number of goals", func(t *testing.T) {
-		cliOut, _, _ := executeCommandMd("goal", "list")
+		cliOut, _, _ := executeCommandMd("list", "--only-goal")
 		toolResult := ToolGoalList()
 		mcpOut := toolOutputText(toolResult)
 		cliLines := strings.Count(cliOut, "\n")
@@ -10874,7 +11067,7 @@ func TestParityGoalList(t *testing.T) {
 
 	t.Run("empty output when no goals match filter", func(t *testing.T) {
 
-		cliOut, _, _ := executeCommandMd("goal", "list")
+		cliOut, _, _ := executeCommandMd("list", "--only-goal")
 		mcpOut := toolOutputText(ToolGoalList())
 		if len(cliOut) == 0 && len(mcpOut) != 0 {
 			t.Error("CLI produced empty output but MCP did not")
@@ -10892,7 +11085,7 @@ func TestParityContributorList(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("contributor", "list")
+		cliOut, _, err := executeCommandMd("list", "--only-contributor")
 		if err != nil {
 			t.Fatalf("CLI contributor list failed: %v", err)
 		}
@@ -10907,7 +11100,7 @@ func TestParityContributorList(t *testing.T) {
 	})
 
 	t.Run("both return same number of contributors", func(t *testing.T) {
-		cliOut, _, _ := executeCommandMd("contributor", "list")
+		cliOut, _, _ := executeCommandMd("list", "--only-contributor")
 		mcpOut := toolOutputText(ToolContributorList())
 		cliLines := strings.Count(cliOut, "\n")
 		mcpLines := strings.Count(mcpOut, "\n")
@@ -10924,7 +11117,7 @@ func TestParityTicketList(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("ticket", "list")
+		cliOut, _, err := executeCommandMd("list", "--only-ticket")
 		if err != nil {
 			t.Fatalf("CLI ticket list failed: %v", err)
 		}
@@ -10939,7 +11132,7 @@ func TestParityTicketList(t *testing.T) {
 	})
 
 	t.Run("both return same number of tickets", func(t *testing.T) {
-		cliOut, _, _ := executeCommandMd("ticket", "list")
+		cliOut, _, _ := executeCommandMd("list", "--only-ticket")
 		mcpOut := toolOutputText(ToolTicketList(nil, nil, nil))
 		cliLines := strings.Count(cliOut, "\n")
 		mcpLines := strings.Count(mcpOut, "\n")
@@ -10993,7 +11186,7 @@ func TestParityProjectList(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("project", "list")
+		cliOut, _, err := executeCommandMd("list", "--only-project")
 		if err != nil {
 			t.Fatalf("CLI project list failed: %v", err)
 		}
@@ -11008,7 +11201,7 @@ func TestParityProjectList(t *testing.T) {
 	})
 
 	t.Run("both return non-empty output", func(t *testing.T) {
-		cliOut, _, _ := executeCommandMd("project", "list")
+		cliOut, _, _ := executeCommandMd("list", "--only-project")
 		mcpOut := toolOutputText(ToolProjectList())
 		if len(cliOut) == 0 {
 			t.Error("CLI project list returned empty output")
@@ -11026,7 +11219,7 @@ func TestParityProjectTree(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("project", "tree")
+		cliOut, _, err := executeCommandMd("tree", "--only-project")
 		if err != nil {
 			t.Fatalf("CLI project tree failed: %v", err)
 		}
@@ -11058,7 +11251,7 @@ func TestParityPolicyList(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("policy", "list")
+		cliOut, _, err := executeCommandMd("list", "--only-policy")
 		if err != nil {
 			t.Fatalf("CLI policy list failed: %v", err)
 		}
@@ -11073,7 +11266,7 @@ func TestParityPolicyList(t *testing.T) {
 	})
 
 	t.Run("both return same number of policies", func(t *testing.T) {
-		cliOut, _, _ := executeCommandMd("policy", "list")
+		cliOut, _, _ := executeCommandMd("list", "--only-policy")
 		mcpOut := toolOutputText(ToolPolicyList())
 		cliLines := strings.Count(cliOut, "\n")
 		mcpLines := strings.Count(mcpOut, "\n")
@@ -13182,6 +13375,43 @@ func TestFilePolicyGodfile(t *testing.T) {
 	}
 }
 
+func TestFilePolicyGodfileSupportsGlobPatterns(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	metaDir := filepath.Join(tmpDir, ".semio-repo")
+	os.MkdirAll(metaDir, 0755)
+	godfileContent := `["allowed.txt", "src/**/*.ts", "docs/*.md"]`
+	os.WriteFile(filepath.Join(metaDir, "files.json"), []byte(godfileContent), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "allowed.txt"), []byte("ok"), 0644)
+	srcNestedDir := filepath.Join(tmpDir, "src", "nested")
+	os.MkdirAll(srcNestedDir, 0755)
+	os.WriteFile(filepath.Join(srcNestedDir, "main.ts"), []byte("ok"), 0644)
+	docsDir := filepath.Join(tmpDir, "docs")
+	os.MkdirAll(docsDir, 0755)
+	os.WriteFile(filepath.Join(docsDir, "guide.md"), []byte("ok"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "unlisted.txt"), []byte("bad"), 0644)
+	bundles := []Bundle{}
+	scope := Scope{Kind: ScopeRepo}
+	ctx := NewPolicyContext(scope, bundles)
+	breachs := filePolicy(ctx)
+	foundUnlisted := false
+	for _, v := range breachs {
+		if v.Kind == BreachFileIllegalUseGodfile && v.Excerpt == "unlisted.txt" {
+			foundUnlisted = true
+		}
+	}
+	if !foundUnlisted {
+		t.Error("expected BreachFileIllegalUseGodfile for unlisted.txt")
+	}
+	for _, v := range breachs {
+		if v.Kind == BreachFileIllegalUseGodfile && (v.Excerpt == "allowed.txt" || v.Excerpt == "src/nested/main.ts" || v.Excerpt == "docs/guide.md") {
+			t.Errorf("should not report breach for glob-allowed file %s", v.Excerpt)
+		}
+	}
+}
+
 func TestFilePolicyGodfileSkipsSemioRepo(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
@@ -13199,6 +13429,44 @@ func TestFilePolicyGodfileSkipsSemioRepo(t *testing.T) {
 		if v.Kind == BreachFileIllegalUseGodfile && strings.HasPrefix(v.Excerpt, ".semio-repo") {
 			t.Errorf("should skip .semio-repo files, got breach for %s", v.Excerpt)
 		}
+	}
+}
+
+func TestFilePolicyGodfileSkipsNestedNodeModules(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	SetRootDir(tmpDir)
+	defer func() { SetRootDir(oldRoot) }()
+	os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte("node_modules/\n"), 0644)
+	metaDir := filepath.Join(tmpDir, ".semio-repo")
+	os.MkdirAll(metaDir, 0755)
+	os.WriteFile(filepath.Join(metaDir, "files.json"), []byte(`[]`), 0644)
+	nested := filepath.Join(tmpDir, "semio-repo", "vscode", "node_modules", "undici-types")
+	os.MkdirAll(nested, 0755)
+	os.WriteFile(filepath.Join(nested, "fetch.d.ts"), []byte("export {};"), 0644)
+	bundles := []Bundle{}
+	scope := Scope{Kind: ScopeRepo}
+	ctx := NewPolicyContext(scope, bundles)
+	breachs := filePolicy(ctx)
+	for _, v := range breachs {
+		if v.Kind == BreachFileIllegalUseGodfile && strings.Contains(v.Excerpt, "node_modules/") {
+			t.Errorf("should skip ignored node_modules files, got breach for %s", v.Excerpt)
+		}
+	}
+}
+
+func TestSetRootDirResetsGitignoreCache(t *testing.T) {
+	tmpDirA := t.TempDir()
+	tmpDirB := t.TempDir()
+	oldRoot := rootDir
+	defer func() { SetRootDir(oldRoot) }()
+	SetRootDir(tmpDirA)
+	_ = isGitIgnored("any.txt")
+	os.WriteFile(filepath.Join(tmpDirB, ".gitignore"), []byte("node_modules/\n"), 0644)
+	SetRootDir(tmpDirB)
+	ignored := isGitIgnored(filepath.Join(tmpDirB, "node_modules", "x.ts"))
+	if !ignored {
+		t.Error("expected SetRootDir to refresh gitignore cache for new root")
 	}
 }
 

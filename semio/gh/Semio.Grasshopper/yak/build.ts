@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [🔖semio/gh/Semio.Grasshopper/yak/build.ts#Build](semiorepo://section/semio/gh/Semio.Grasshopper/yak/build.ts/BUILD)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🔖build](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/BUILD.TS/BUILD)
 // Yak package build script. MUST prepare the distribution folder and build the .yak package.
 
 import { execSync } from "child_process";

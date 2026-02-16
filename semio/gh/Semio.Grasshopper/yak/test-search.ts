@@ -22,7 +22,7 @@
 
 // #region 🔖Script
 
-// [🔖semio/gh/Semio.Grasshopper/yak/test-search.ts#Script](semiorepo://section/semio/gh/Semio.Grasshopper/yak/test-search.ts/SCRIPT)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🔖script](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/TEST-SEARCH.TS/SCRIPT)
 // Test script for searching the Yak package manager test server.
 // Script MUST execute yak search against the test.yak.rhino3d.com server.
 

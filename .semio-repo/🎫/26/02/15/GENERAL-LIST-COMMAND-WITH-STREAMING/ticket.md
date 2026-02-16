@@ -10,24 +10,32 @@ Introduce a general `list` command that streams a flat list of monorepo items us
 ## Changes
 - Added `listCommand` function and `flattenTreeNodes` helper
 - Registered `listCommand` in `NewRootWithConfig`
-- Removing entity-level list/tree subcommands from: policy, draft, todo, ticket, goal, interaction, statute, commit, contributor, project, bundle, folder, file, section, definition
-- Removing empty entity commands from root: interaction, statute, commit, project, bundle, definition
-- Updating canonical commands in repoPolicy
-- Refactoring tests to use general `list` command
+- Removed entity-level list/tree from sectionCommand (code + AddCommand)
+- Updated all ~20 test functions with new args
+- Fixed buildOpts.IncludeSections optimization
+- Fixed bleve cache invalidation: swapped filter/search order so cache indexes full unfiltered tree
 
 ## Log
 - Implemented listCommand with --sorted flag
 - Implemented flattenTreeNodes helper
-- Build passes
+- Removed sectionCommand list/tree (code + registration)
+- Updated all test args across ~20 test functions
+- Fixed buildOpts: IncludeSections only when targeting sections/definitions or no specific filter
+- Discovered bleve cache bug: cache fingerprint ignores filter, so different --only-* filters cause stale hits
+- Fix: swap to search-first, filter-second order in list/tree/mcpTree commands
+- Clear stale cache; all query tests pass individually after fix
 
 ## Todos
 - [x] Implement listCommand function
 - [x] Register listCommand in root
-- [ ] Remove entity list/tree subcommands
-- [ ] Remove empty entity commands from root
-- [ ] Update canonical commands
-- [ ] Refactor tests
-- [ ] Run tests and fix all failures
+- [x] Remove sectionCommand list/tree
+- [x] Update all test args
+- [x] Fix buildOpts optimization
+- [ ] Fix bleve cache invalidation (swap filter/search order)
+- [ ] Run full query test suite
+- [ ] Run all remaining test groups
+- [ ] Fix any failures
+- [ ] Close ticket
 
 ## Plan
 1. Remove list/tree subcommands from each entity command

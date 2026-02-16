@@ -30,7 +30,229 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 - Id system should be slugged to make sure no illegal characters are used.
 
-## History
+# History
+
+
+# [👤semio]
+
+## [👤semio📚js]()
+
+### [👤semio📚js🗃️sketchpad]()
+
+#### [👤semio📚js🗃️sketchpad💻designtsx]
+
+# 🧰semiorepo
+
+## 🧰semiorepo⌨️cli
+
+semio repo cli tree is not showing the full project tree.
+Note that TODO, STATUTE, BREACH are not shown because they can be children of most entities.
+- FOLDER*
+  - FILE
+- PROJECT
+  - BUNDLE
+    - FOLDER*
+      - FILE
+        - SECTION
+          - DEFINITION
+- GOAL*
+  - TICKET
+- DRAFT*
+- POLICY
+  - ENTITYKIND
+    - STATUTE
+---
+
+The semio repo specs were majorly updated.
+
+You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
+
+flat strings means slugged (preserve only alphanumeric and emojis) and then lower cased.
+
+Every id is full, globally unique and treelike.
+
+Extract all the ids from below and refactor/extend the existing tests to use them.
+
+entity kinds: root, year, month, day, hour, minute, second, project, bundle, folder, file, line, range, section, definition, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
+
+resource kinds: repo, project, bundle, folder, file, section, definition
+diffable: root, year, month, day, hour, project, bundle, folder, file, section, definition, goal, ticket, contributor, commit, interaction
+interactable: 
+
+relations:
+- year | month | day | hour | second - project: A project has years 
+related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
+
+Only stop once you have tests every single list and tree command to have exactly this ids:
+
+
+repo: ``, parent: none,
+years: `{{repo-id}}🎆` parent: repo, e.g. `🎆`
+year: `{{repo-id}}🎆{{YY}}` parent: repo, e.g. `🎆26`
+months: `{{year-id}}🌙` parent: year, e.g. `🎆26🌙`
+month: `{{year-id}}🌙{{MM}}` parent: year, e.g. `🎆26🌙02`
+days: `{{month-id}}☀️` parent: month, e.g. `🎆26🌙02☀️`
+day: `{{month-id}}☀️{{DD}}` parent: month, e.g. `🎆26🌙02☀️15`
+hours: `{{day-id}}⏰` parent: day, e.g. `🎆26🌙02☀️15⏰`
+hour: `{{day-id}}⏰{{HH}}` parent: day, e.g. `🎆26🌙02☀️15⏰14`
+minutes: `{{hour-id}}⏳` parent: hour, e.g. `🎆26🌙02☀️15⏰14⏳`
+minute: `{{hour-id}}⏳{{MM}}` parent: hour, e.g. `🎆26🌙02☀️15⏰14⏳33`
+seconds: `{{minute-id}}⏱️` parent: minute, e.g. `🎆26🌙02☀️15⏰14⏳33⏱️`
+second: `{{minute-id}}⏱️{{SS}}` parent: minute, e.g. `🎆26🌙02☀️15⏰14⏳33⏱️38` 
+projects: `{{repo-id}}🏗️` parent: repo, e.g. `🏗️`
+project: `{{repo-id}}<project-kind>{{flat-project-code}}`, parent: repo, <kind> - 👤:user, 🧰:infrastructure, 🔬:research, e.g. `🧰semiorepo` for `semio-repo`
+bundles: `{{parent-project-id}}📦` parent: project, e.g. `👤semio📦`
+bundle: `{{parent-project-id}}<bundle-kind>{{flat-bundle-code}}`, parent: project, <kind> - 📚:library, 🛂:schema, ⌨️️:binary, 🖱️️:ui, 📔:example, 🌐:site, 🏪:assets, e.g. `👤semio📚js` for bundle code `semio/js`
+folders: `{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}📁` parent: folder | bundle | project | repo, e.g. `📁` for all folders on the repo that match`./*`(this does not include project folders) | `👤semio📚js🗃️sketchpad📁` for folders that match `semio/js/sketchpad/*` | `🛅github📁` for all subfolders of `.github`
+folder: `{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-folder-name}}`, parent: folder | bundle | project | repo, <kind> - 🗃️️:organization, 🛅:required, e.g. `👤semio📚js🗃️sketchpad` for `semio/js/sketchpad` `🛅devcontainer` for `.devcontainer` // by design the repo folder for bundles have no id and are not addressable/documentable/… because they "are" the bundle
+files: `{{diffable-id?}}📄`, parent: folder | bundle | project | repo e.g. `📄` for all files on the repo that match`./*` | `👤semio📚js🗃️sketchpad📄` for files that match `semio/js/sketchpad/*` | `🛅github📄` for all files inside `.github`
+file: `{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | repo, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
+line: `{{parent-file-id}}📌{{linenumber}}` parent: file, e.g. `👤semio📚js🗃️sketchpad💻designtsx📌3872` for line number `3872` in `semio/js/sketchpad/Design.tsx`
+sections: `{{(parent-file-id|parent-section-id)?}}🔖` parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖` for all sections in `semio/js/sketchpad/Design.tsx`
+section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
+definitions: `{{<diffable-id>}}🏷️` parent: diffable, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️` for all definitions in `Store` section
+definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
+goals: `{{(repo-id|parent-goal-id)?}}🎯` parent: goal | repo, e.g. `🎯` for all goals on the repo or `🎯r26021🎯runningsketchpad🎯` for all goals under `Running Sketchpad`
+goal: `{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}` parent: goal | repo, e.g. `🎯r26021🎯runningsketchpad` for goal with name `Running Sketchpad` for parent `r26.02-1`
+tickets: `{{diffable-id?}}🎫` parent: diffable, e.g. `🎫` for all tickets (on repo) | `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫` for all tickets that diffed `Store` section | `🎯r26021🎯runningsketchpad🎫` for all tickets under `Running Sketchpad`
+ticket: `{{goal-id}}🎫{{flat-title}}`, parent: goal, e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism` for ticket with title `Introduce Key Guid Uri Mechanism`
+draft: `{{parent-resource-id}}📝{{flat-title}}` parent: resource, e.g. `🧰semiorepo⌨️cli📝newarchitecture` for draft with title `New Architecture`
+todo: `{{parent-resource-id}}📝{{flat-title}}` parent: resource, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism` for todo with title `Introduce Proper Sync Mechanism`
+policy: `{{(parent-resource-kind|parent-resource-id)?}}👮{{flat-name}}` parent: resource kind or resource, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore` for policy with name `Only One Store` - `💻👮godfiles` for policy `Godfiles` that affect all code files. // policies are either specific when on an entity or general when on a an entity kind.
+breach: `{{parent-policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}` parent: territory, e.g. `💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🌐🎆26🌙02☀️14⏰19⏳07⏱️12` for breach in `semio/js/sketchpad/design-store.ts` at line number `3872` on the 14th of February 2026 at 19:07:12
+contributor: `🧑‍💻{{github-username}}` parent: repo, e.g. `🧑‍💻usalu` for `https://github.com/usalu`
+commit: `{{day-id}}🔀{{sha}}{{contributors-ids}}` parent: repo, e.g. `🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak`
+interaction: `{{second-id}}{{contributor-id}}{{entity-id}}<kind>` parent:  <kind> - 🌱:started, ✏️:edited, ✅:finished, 🔁:restarted, 🗑️: deleted e.g. `🎆26🌙02☀️14⏰19⏳07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱🧑‍💻usalu` | `🎆26🌙02☀️14⏰19⏳07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅🧑‍💻usalu`
+
+
+
+Display codebase diffs as
+added: `➕{{added}}`
+removed: `➖{{removed}}`
+total: `{{removed}}{{added}}🟰{{(➕|➖)?}}{{total}}`
+
+loc-diff: `{{diffable-id}}📌{{loc-total}}`
+root-loc-diff: `{{root-id}}📌{{loc-total}}` e.g. `📌➖253➕387🟰➕134`
+year-loc-diff: `{{year-id}}📌{{loc-total}}` e.g. `🎆26📌➖253➕387🟰➕134`
+month-loc-diff: `{{month-id}}📌{{loc-total}}` e.g. `🎆26🌙02📌➖253➕387🟰➕134`
+day-loc-diff: `{{day-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14📌➖253➕387🟰➕134`
+hour-loc-diff: `{{hour-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14⏰19📌➖253➕387🟰➕134`
+project-loc-diff: `{{project-id}}📌{{loc-total}}` e.g. `👤semio📌➖75324➕154056🟰➕78732`
+bundle-loc-diff: `{{bundle-id}}📌{{loc-total}}` e.g. `👤semio📚js📌➖253➕387🟰➕134`
+folder-loc-diff: `{{folder-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad📌➖253➕387🟰➕134`
+file-loc-diff: `{{file-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx📌➖253➕387🟰➕134`
+section-loc-diff: `{{section-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store📌➖253➕387🟰➕134`
+definition-loc-diff: `{{definition-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📌➖253➕387🟰➕134`
+goal-loc-diff: `{{goal-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad📌➖253➕387🟰➕134`
+ticket-loc-diff: `{{ticket-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism📌➖253➕387🟰➕134`
+contributor-loc-diff: `{{contributor-id}}{{loc-total}}` e.g. `🧑‍💻usalu➖253➕387🟰➕134`
+commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a➖253➕387🟰➕134`
+
+The uri system (mcp, rest, rdf) is:
+
+repo: `semiorepo://` e.g. `semiorepo://`
+years: `semiorepo://years` e.g. `semiorepo://years`
+year: `semiorepo://year/{{YY}}` e.g. `semiorepo://year/26`
+months: `semiorepo://months/{{YY}}` e.g. `semiorepo://months/26`
+month: `semiorepo://month/{{YY}}/{{MM}}` e.g. `semiorepo://month/26/02`
+days: `semiorepo://days/{{YY}}/{{MM}}` e.g. `semiorepo://days/26/02`
+day: `semiorepo://day/{{YY}}/{{MM}}/{{DD}}` e.g. `semiorepo://day/26/02/15`
+hours: `semiorepo://hours/{{YY}}/{{MM}}/{{DD}}` e.g. `semiorepo://hours/26/02/15`
+hour: `semiorepo://hour/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `semiorepo://hour/26/02/15/14`
+minutes: `semiorepo://minutes/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `semiorepo://minutes/26/02/15/14`
+minute: `semiorepo://minute/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `semiorepo://minute/26/02/15/14/33`
+seconds: `semiorepo://seconds/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `semiorepo://seconds/26/02/15/14/33`
+second: `semiorepo://second/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}/{{SS}}` e.g. `semiorepo://second/26/02/15/14/33/38`
+projects: `semiorepo://projects` e.g. `semiorepo://projects`
+project: `semiorepo://project/{{project-id}}` e.g. `semiorepo://project/semio-repo`
+bundles: `semiorepo://bundles/{{project-id}}` e.g. `semiorepo://bundles/semio-repo`
+bundle: `semiorepo://bundle/{{project-id}}/{{bundle-code}}` e.g. `semiorepo://bundle/semio-repo/cli`
+folders: `semiorepo://folders/{{uri-encoded-parent-path?*}}` e.g. `semiorepo://folders/semio/js`
+folder: `semiorepo://folder/{{uri-encoded-path*}}` e.g. `semiorepo://folder/semio/js/sketchpad`
+files: `semiorepo://files/{{uri-encoded-parent-path?*}}` e.g. `semiorepo://files/semio/js/sketchpad`
+file: `semiorepo://file/{{uri-encoded-file-path*}}` e.g. `semiorepo://file/semio/js/sketchpad/design.tsx`
+lines: `semiorepo://lines/{{uri-encoded-file-path*}}` e.g. `semiorepo://lines/semio/js/sketchpad/design.tsx`
+line: `semiorepo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `semiorepo://line/semio/js/sketchpad/design.tsx/3872`
+ranges: `semiorepo://ranges/{{uri-encoded-file-path*}}` e.g. `semiorepo://ranges/semio/js/sketchpad/design.tsx`
+range: `semiorepo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `semiorepo://range/semio/js/sketchpad/design.tsx/3872/3875`
+sections: `semiorepo://sections/{{uri-encoded-file-path*}}` e.g. `semiorepo://sections/semio/js/sketchpad/design.tsx`
+section: `semiorepo://section/{{uri-encoded-section-path*}}` e.g. `semiorepo://section/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definitions: `semiorepo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `semiorepo://definitions/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definition: `semiorepo://definition/{{uri-encoded-definition-path*}}` e.g. `semiorepo://definition/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
+goals: `semiorepo://goals/{{uri-encoded-parent-goal-path?*}}` e.g. `semiorepo://goals/r26.02-1`
+goal: `semiorepo://goal/{{uri-encoded-goal-path*}}` e.g. `semiorepo://goal/r26.02-1/Running%20Sketchpad`
+tickets: `semiorepo://tickets/{{uri-encoded-parent-scope?*}}` e.g. `semiorepo://tickets/r26.02-1/Running%20Sketchpad`
+ticket: `semiorepo://ticket/{{uri-encoded-ticket-path*}}` e.g. `semiorepo://ticket/r26.02-1/Running%20Sketchpad/Introduce%20Key%20Guid%20Uri%20Mechanism`
+drafts: `semiorepo://drafts/{{uri-encoded-parent-resource-uri?*}}` e.g. `semiorepo://drafts/semiorepo%3A%2F%2Fbundle%2Fsemio-repo%2Fcli`
+draft: `semiorepo://draft/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-draft-title*}}` e.g. `semiorepo://draft/semiorepo%3A%2F%2Fbundle%2Fsemio-repo%2Fcli/New%20Architecture`
+todos: `semiorepo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `semiorepo://todos/semiorepo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
+todo: `semiorepo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `semiorepo://todo/semiorepo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
+policies: `semiorepo://policies/{{uri-encoded-parent-resource-or-kind?*}}` e.g. `semiorepo://policies/code`
+policy: `semiorepo://policy/{{uri-encoded-parent-resource-or-kind?*}}/{{uri-encoded-policy-name*}}` e.g. `semiorepo://policy/code/Godfiles`
+statutes: `semiorepo://statutes/{{uri-encoded-policy-path?*}}` e.g. `semiorepo://statutes/code/Godfiles`
+statute: `semiorepo://statute/{{uri-encoded-policy-path*}}/{{uri-encoded-statute-name*}}` e.g. `semiorepo://statute/code/Godfiles/Max%20Lines%20Per%20File`
+breaches: `semiorepo://breaches/{{uri-encoded-policy-path?*}}` e.g. `semiorepo://breaches/code/Godfiles`
+breach: `semiorepo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `semiorepo://breach/code/Godfiles/affects/semiorepo%3A%2F%2Ffile%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/semiorepo%3A%2F%2Frange%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/semiorepo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
+contributors: `semiorepo://contributors` e.g. `semiorepo://contributors`
+contributor: `semiorepo://contributor/{{uri-encoded-contributor-name*}}` e.g. `semiorepo://contributor/usalu`
+commits: `semiorepo://commits` e.g. `semiorepo://commits`
+commit: `semiorepo://commit/{{uri-encoded-commit-sha*}}` e.g. `semiorepo://commit/cfb3b6084ff3fe883d5f39b08810a0b90997907a`
+interactions: `semiorepo://interactions` e.g. `semiorepo://interactions`
+interaction: `semiorepo://interaction/when/{{uri-encoded-second-path*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind}}/by/{{uri-encoded-contributor-name*}}` e.g. `semiorepo://interaction/when/semiorepo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12/on/semiorepo%3A%2F%2Fticket%2Fr26.02-1%2FRunning%2520Sketchpad%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu`
+
+The query params are
+General query params:
+{?client}
+tickets: at least one interaction with the given client
+goals: at least one interaction with the given client
+{?llm?}
+tickets: at least one interaction with the given llm
+goal: at least one interaction with the given llm
+{?year}
+tickets: at least one interaction with the given year
+goals: at least one interaction with the given year
+{?month}
+tickets: at least one interaction with the given month
+goals: at least one interaction with the given month
+{?day}
+tickets: at least one interaction with the given day
+goals: at least one interaction with the given day
+{?contributor}
+tickets: at least one interaction with the given contributor
+goals: at least one interaction with the given contributor
+{?status}
+tickets: only the given status
+goals: only the given status
+
+The semio repo folder layout changed.
+
+You must update the implementation and tests to match the new layout.
+
+Dont keep any legacy api.
+
+- .semio-repo
+- ✍️ // drafts
+- 🎫 // tickets
+  - {{YY}}
+    - {{MM}}
+      - {{DD}}
+        - {{UPPERCASESLUG}}
+- 🎯 // goals
+- 👤 // contributors
+  - {{github}}
+- 💡
+- 💬 // prompts
+  - 👤 // contributors
+    - {{contributor-name}}
+  - 📋 // templates
+    - {{template-name}}.
+
+## ⌨️server
+
+##
+
+# coda
+
 
 When semio repo go is tested there is a cli binary placed at root. Just use the semio-repo/cli/cli,
 
@@ -55,26 +277,29 @@ Remove all list and tree mcp tools except the main `tree` tool.
 
 Remove
 Remove status, prompt, started, finished from from ticket.json. Just leave title, goal, interactions. Derive status from interactions. I
+
+```json
 {
-"title": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
-"status": "closed",
-"prompt": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
-"goal": "R26-02/RUNNING-SKETCHPAD",
-"started": "2025-12-16T17:06:07.672Z",
-"interactions": [
-{
-"dates": {
-"created": "2025-12-16T17:06:07.672Z"
-},
-"author": "uelisaluz",
-"system": "",
-"client": "",
-"commit": "0000000000000000000000000000000000000000",
-"prompt": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
-"llm": "sonnet-4"
+  "title": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
+  "status": "closed",
+  "prompt": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "started": "2025-12-16T17:06:07.672Z",
+  "interactions": [
+    {
+      "dates": {
+        "created": "2025-12-16T17:06:07.672Z"
+      },
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
+      "llm": "sonnet-4"
+    }
+  ]
 }
-]
-}
+```
 
 Rename
 
@@ -309,7 +534,7 @@ Every TODO has exactly two lines with `TODO: <TODONAME>`. The next line is the d
 The remaining lines are the docs.
 e.g. in typescript:
 
-```
+```ts
 // #region 🔖Constants
 
 /**
@@ -325,7 +550,7 @@ export const ICON_WIDTH = CONSTANTS.icon.width;
 
 should be:
 
-```
+```ts
 // #region 🔖Constants
 // [🔖semio/js/semio.ts#Constants](semiorepo://section/semio/js/semio.ts/CONSTANTS)
 // Global constants of semio.
@@ -683,13 +908,13 @@ e.g.
 
 should be:
 
-```
+```json
 "author": "usalu",
 ```
 
 or
 
-```
+```json
 "author": "Someone Unknown <someone.unknown@example.com>",
 ```
 
@@ -790,7 +1015,7 @@ All items should always be identically rendered across all commands regardless t
 e.g.
 the goal format in the tree command is correct:
 
-```
+```bash
 $ ./semio-repo/cli/cli goal tree
 - [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 1 week ago` - `2 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
   - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `Running Sketchpad` - `open` - `1 week from now` - `Running sketchpad infrastructure and apps with MVP functionality.`
@@ -799,7 +1024,7 @@ $ ./semio-repo/cli/cli goal tree
 
 and the list command is currently differing and wrong:
 
-```
+```bash
 $ ./semio-repo/cli/cli goal list
 - [🎯︎R26-02](semiorepo://goal/R26-02) - r26-02 - open - 2 weeks from now
 - [🎯︎R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - Running Sketchpad - open - 1 week from now
@@ -809,7 +1034,7 @@ $ ./semio-repo/cli/cli goal list
 
 should be:
 
-```
+```bash
 $ ./semio-repo/cli/cli goal list
 - [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 1 week ago` - `2 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
 - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `Running Sketchpad` - `open` - `1 week from now` - `Running sketchpad infrastructure and apps with MVP functionality.`
@@ -818,7 +1043,7 @@ $ ./semio-repo/cli/cli goal list
 
 and the tree command is differing again and wrong:
 
-```
+```bash
 $ ./semio-repo/cli/cli tree
 - [🎯Goals](semiorepo://goals)
  - [🎯r26-02](semiorepo://goal/R26-02)
@@ -828,7 +1053,7 @@ $ ./semio-repo/cli/cli tree
 
 should be:
 
-```
+```bash
 $ ./semio-repo/cli/cli tree
 - [🎯Goals](semiorepo://goals)
   - [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 1 week ago` - `2 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
@@ -913,7 +1138,7 @@ $ ./semio-repo/cli/cli tree --no-folder required --only-file implementation --on
 $ ./semio-repo/cli/cli tree "semio repo cli filter mechanism"
 ```
 
-```
+```bash
 $ ./semio-repo/cli/cli tree
 - [🏗️️Projects](semiorepo://projects)
   - <PROJECTITEM>
@@ -945,7 +1170,7 @@ E.g. when click with ctrl on `semiorepo://ticket/2026/01/26/ZERO-TOUCH-DEVCONTAI
 
 The semio repo cli should be thoroughly tested. The items of trees or list all must have valid ids and uris.
 
-```
+```bash
 $ ./semio-repo/cli/cli ticket list
 - [🎫︎2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
 ```
@@ -1057,7 +1282,7 @@ Make sure every single command is tested for syntactically correct markdown outp
 
 e.g. this should fail:
 
-````
+````bash
 $ ./semio-repo/cli/cli ticket reopen 2026/02/06/FIX-VSCODE-FILTER-MENU-CONSISTENCY "The filter tree items should have a name. Just the menu buttons should just have the emoji. Dont use codeicons (e.g. bundles). Dont use text (most such as projects, etc)" codex gpt-5-2-codex
 
 ```json
@@ -1108,7 +1333,7 @@ $ ./semio-repo/cli/cli bundle list
 [<id>](<uri>) - <description>
 ```
 
-```
+```bash
 $ ./semio-repo/cli/cli bundle list
 - [📚︎ coda/examples](semiorepo://bundle/coda/examples) - coda/examples
 - [📚︎ coda/py](semiorepo://bundle/coda/py) - coda/py
@@ -1117,7 +1342,7 @@ $ ./semio-repo/cli/cli bundle list
 
 should be:
 
-```
+```bash
 $ ./semio-repo/cli/cli bundle list
 - [📔coda/examples](semiorepo://bundle/coda/examples) - coda/examples
 - [⌨️️coda/py](semiorepo://bundle/coda/py) - coda/py
@@ -1238,18 +1463,25 @@ The id/uri system is not implemented clean and consistent. Refactor it. The syst
 
 All list commands currently output dfferent formats. They should have the following format: `<id> <property1> <property2> ...` and all properties have different colors and are truncated to terminal width (or default of 90 characters if not available). For the --md mode, the format should be `- [<id>](<uri>) - <property1> - <property2> ...`.
 
+```bash
 ./semio-repo/cli/cli bundle list
 📚coda/examples - coda/examples
 📚coda/py - coda/py
+```
 
+```bash
 ./semio-repo/cli/cli contributor list
 👤kinansarak - KinanSarak
 👤usalu - Ueli Saluz
+```
 
+```bash
 ./semio-repo/cli/cli file list
 ⚙️️📄.codex/config.toml
 📄📄.devcontainer/post-attach.sh
+```
 
+```bash
 ./semio-repo/cli/cli section list
 📝 Sketch Breakdown (lines 72-127)
 ├── 🔲 Creating the Brick Molds (lines 89-114)
@@ -1257,22 +1489,30 @@ All list commands currently output dfferent formats. They should have the follow
 Cobe Silo (lines 13-14)
 Test on temporary kits (lines 11-12)
 Header (lines 1-20)
+```
 
+```bash
 ./semio-repo/cli/cli definition list
 ✂️semio/js/sketchpad/Type.tsx§TypeAppFooter - TypeAppFooter - :3284-3361
 🛠️semio/js/sketchpad/Type.tsx§config - config - :3367-3397
 🪨semio/js/sketchpad/elements.tsx§SectionSpecificity - SectionSpecificity - :92-100
 ✂️semio/js/sketchpad/elements.tsx§InteractionCommands - InteractionCommands - :106-108
+```
 
+```bash
 ./semio-repo/cli/cli goal list
 🎯 - AI-optimized Repo - open
 🎯 - r26-02 - open
+```
 
+```bash
 ./semio-repo/cli/cli project list
 🔬coda
 👤semio
 🧰semio-repo
+```
 
+```bash
 ./semio-repo/cli/cli section list semio/js/semio.ts
 Header (lines 1-20)
 Design (lines 2956-3923)
@@ -1281,17 +1521,22 @@ Kit (lines 3925-7742)
 └── Validation (lines 7023-7740)
 ├── Validation core types (lines 7025-7054)
 └── Validation serialization (lines 7657-7738)
+```
 
+```bash
 ./semio-repo/cli/cli ticket list
 🎫2026/02/04/RENAME-ITERATION-TO-INTERACTION - Rename Iteration to Interaction - open - 2026-02-04
 🎫2026/02/04/STANDARDIZE-LIST-AND-TREE-COMMANDS - Standardize List and Tree Commands - open - 2026-02-04
+```
 
+```bash
 ./semio-repo/cli/cli tree
 DEBUG: Markdown=false
 /workspaces/semio
 ├── .claude
 ├── .codex
 │ └── config.toml
+```
 
 The `ticket.json` should change. Remove the `status`, `started`, `finished` and `prompt` fields. Status should be derived wheather the last interactions was finished (has a finished date) or not.
 
@@ -1331,7 +1576,7 @@ text format:
 │   │   ├── <kind> <sub-ticket-title> (isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
 ```
 
-```
+```bash
 ./semio-repo/cli/cli goal tree
 🎯 r26-02 24 days left 2 open subgoals 10 open tickets The r26-02 release aims to del…
 ├── 🎯 Running Sketchpad overdue since 1 day 10 open tickets Running sketchpad infra…
@@ -1461,7 +1706,7 @@ text format:
 │   │   ├── <kind> <sub-ticket-title> (isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
 ```
 
-```
+```bash
 ./semio-repo/cli/cli goal tree
 🎯 r26-02 24 days left 2 open subgoals 10 open tickets The r26-02 release aims to del…
 ├── 🎯 Running Sketchpad overdue since 1 day 10 open tickets Running sketchpad infra…
@@ -1489,16 +1734,23 @@ All ticket github issues should automatically be linked to the project `https://
 All tickets should be assigned to the account creating the ticket. Test it just now with gh cli and make sure that it works.
 For goals and tickets:
 The author should not be
+
+```json
 {
-"author": {
-"name": "Ueli Saluz",
-"email": "ueli@semio-tech.com"
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com"
+  }
 }
-}
+```
+
 but instead:
+
+```json
 {
-"author": "usalu" // or "GITAUTHOR <GITAUTHOR>" e.g. "Ueli Saluz <ueli@semio-tech.com>" when no contributor is found
+  "author": "usalu" // or "GITAUTHOR <GITAUTHOR>" e.g. "Ueli Saluz <ueli@semio-tech.com>" when no contributor is found
 }
+```
 
 Extend all `list` and `tree` commands with a filter for status. Again support either `--open` or `--status open` syntax.
 e.g. `semio-repo/cli/cli ticket list --closed` `semio-repo/cli/cli ticket list --status closed`.
@@ -1734,191 +1986,38 @@ Make sure to adjust all config files, docs, etc for the new layout and make sure
 
 Rename ui to client for tickets and goals.
 
+Extend `.semio-repo/files.json` to allow for glob patterns.
+
 ---
 
-The codebase diff mechanism should change. Instead of computing diffs on ticket finish, remove the diff calculation and only calculate it on before committing. 
+The codebase diff mechanism should change. Instead of computing diffs on ticket finish, remove the diff calculation and only calculate it on before committing.
 
 Introduce a general `list` command that always streams a list of items. By defaul show everything such as `tree` but streaming. Only when `--sorted` is passed, wait until you gathered all the results and sort everything by id.
-Remove the existing `<entity> list` and `<entity> tree` as they are equivalent to `list --only-<entity>` and `tree --only-<entity>`. Keep all the tests and extend them to be extensive. You MUST NOT stop until everything passes. 
+Remove the existing `<entity> list` and `<entity> tree` as they are equivalent to `list --only-<entity>` and `tree --only-<entity>`. Keep all the tests and extend them to be extensive. You MUST NOT stop until everything passes.
 
 The codebase diff is not complete. projects, todos, drafts, policies,
 All diffs always have removed, renamed, modified, added.
 The diffs are purely derived from current git changes.
 
+The policy/area/statute/breach system should be refactored. It should be
 
+The ids of sections and defintions are not correct.
 
-The policy/area/statute/breach system should be refactored. It should be 
+In the source code definition and section ids are also not correct
 
-The ids of files are not correct. They should be long.
+section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
+definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
+
+e.g. `🧰semiorepo⌨️cli💻maingo#GraphQL Types#GraphQL Input Types§TicketCloseInput` or `🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketCloseInput` should be only `🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseInput`
+go types are not currectly identified as ✂️
+
 file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
-
-
 
 The id of the projects contain an @ they shouldnt. The tests check for the correct ids.
- - [👤semio](semiorepo://project/@SEMIO)
 
----
+- [👤semio](semiorepo://project/@SEMIO)
 
-The semio repo specs were majorly updated.
-
-You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
-
-flat strings means slugged (preserve only alphanumeric and emojis) and then lower cased.
-
-Every id is full, globally unique and treelike.
-
-Extract all the ids from below and refactor/extend the existing tests to use them.
-
-entity kinds: root, year, month, day, hour, minute, second, project, bundle, folder, file, line, range, section, definition, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
-
-resource kinds: repo, project, bundle, folder, file, section, definition
-diffable: root, year, month, day, hour, project, bundle, folder, file, section, definition, goal, ticket, contributor, commit, interaction
-
-relations:
-- year | month | day | hour | second - project: A project has years 
-related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
-
-Only stop once you have tests every single list and tree command to have exactly this ids:
-
-
-root: ``, parent: none,
-years: `{{root-id}}🎆` parent: root, e.g. `🎆`
-year: `{{root-id}}🎆{{YY}}` parent: root, e.g. `🎆26`
-months: `{{year-id}}🌙` parent: year, e.g. `🎆26🌙`
-month: `{{year-id}}🌙{{MM}}` parent: year, e.g. `🎆26🌙02`
-days: `{{month-id}}☀️` parent: month, e.g. `🎆26🌙02☀️`
-day: `{{month-id}}☀️{{DD}}` parent: month, e.g. `🎆26🌙02☀️15`
-hours: `{{day-id}}⏰` parent: day, e.g. `🎆26🌙02☀️15⏰`
-hour: `{{day-id}}⏰{{HH}}` parent: day, e.g. `🎆26🌙02☀️15⏰14`
-minutes: `{{hour-id}}⏳` parent: hour, e.g. `🎆26🌙02☀️15⏰14⏳`
-minute: `{{hour-id}}⏳{{MM}}` parent: hour, e.g. `🎆26🌙02☀️15⏰14⏳33`
-seconds: `{{minute-id}}⏱️` parent: minute, e.g. `🎆26🌙02☀️15⏰14⏳33⏱️`
-second: `{{minute-id}}⏱️{{SS}}` parent: minute, e.g. `🎆26🌙02☀️15⏰14⏳33⏱️38` 
-projects: `{{root-id}}🏗️` parent: root, e.g. `🏗️`
-project: `{{root-id}}<project-kind>{{flat-project-code}}`, parent: root, <kind> - 👤:user, 🧰:infrastructure, 🔬:research, e.g. `🧰semiorepo` for `semio-repo`
-bundles: `{{parent-project-id}}📦` parent: project, e.g. `👤semio📦`
-bundle: `{{parent-project-id}}<bundle-kind>{{flat-bundle-code}}`, parent: project, <kind> - 📚:library, 🛂:schema, ⌨️️:binary, 🖱️️:ui, 📔:example, 🌐:site, 🏪:assets, e.g. `👤semio📚js` for bundle code `semio/js`
-folders: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}📁` parent: folder | bundle | project | root, e.g. `📁` for all folders on the root that match`./*`(this does not include project folders) | `👤semio📚js🗃️sketchpad📁` for folders that match `semio/js/sketchpad/*` | `🛅github📁` for all subfolders of `.github`
-folder: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-folder-name}}`, parent: folder | bundle | project | root, <kind> - 🗃️️:organization, 🛅:required, e.g. `👤semio📚js🗃️sketchpad` for `semio/js/sketchpad` `🛅devcontainer` for `.devcontainer` // by design the root folder for bundles have no id and are not addressable/documentable/… because they "are" the bundle
-files: `{{diffable-id?}}📄`, parent: folder | bundle | project | root e.g. `📄` for all files on the root that match`./*` | `👤semio📚js🗃️sketchpad📄` for files that match `semio/js/sketchpad/*` | `🛅github📄` for all files inside `.github`
-file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
-line: `{{parent-file-id}}📌{{linenumber}}` parent: file, e.g. `👤semio📚js🗃️sketchpad💻designtsx📌3872` for line number `3872` in `semio/js/sketchpad/Design.tsx`
-sections: `{{(parent-file-id|parent-section-id)?}}🔖` parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖` for all sections in `semio/js/sketchpad/Design.tsx`
-section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
-definitions: `{{<diffable-id>}}🏷️` parent: diffable, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️` for all definitions in `Store` section
-definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
-goals: `{{(root-id|parent-goal-id)?}}🎯` parent: goal | root, e.g. `🎯` for all goals on the root or `🎯r26021🎯runningsketchpad🎯` for all goals under `Running Sketchpad`
-goal: `{{(root-id|parent-goal-id)?}}🎯{{flat-name}}` parent: goal | root, e.g. `🎯r26021🎯runningsketchpad` for goal with name `Running Sketchpad` for parent `r26.02-1`
-tickets: `{{diffable-id?}}🎫` parent: diffable, e.g. `🎫` for all tickets (on root) | `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫` for all tickets that diffed `Store` section | `🎯r26021🎯runningsketchpad🎫` for all tickets under `Running Sketchpad`
-ticket: `{{goal-id}}🎫{{flat-title}}`, parent: goal, e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism` for ticket with title `Introduce Key Guid Uri Mechanism`
-draft: `{{parent-resource-id}}📝{{flat-title}}` parent: resource, e.g. `🧰semiorepo⌨️cli📝newarchitecture` for draft with title `New Architecture`
-todo: `{{parent-resource-id}}📝{{flat-title}}` parent: resource, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism` for todo with title `Introduce Proper Sync Mechanism`
-policy: `{{(parent-resource-kind|parent-resource-id)?}}👮{{flat-name}}` parent: resource kind or resource, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore` for policy with name `Only One Store` - `💻👮godfiles` for policy `Godfiles` that affect all code files. // policies are either specific when on an entity or general when on a an entity kind.
-breach: `{{parent-policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}` parent: territory, e.g. `💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🌐🎆26🌙02☀️14⏰19⏳07⏱️12` for breach in `semio/js/sketchpad/design-store.ts` at line number `3872` on the 14th of February 2026 at 19:07:12
-contributor: `🧑‍💻{{github-username}}` parent: root, e.g. `🧑‍💻usalu` for `https://github.com/usalu`
-commit: `{{contributor-id}}🔀{{sha}}` parent: root, e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a`
-interaction: `{{second-id}}{{contributor-id}}{{entity-id}}<kind>` <kind> - 🌱:started, ✏️:edited, ✅:finished, 🔁:restarted, 🗑️: deleted e.g. `🎆26🌙02☀️14⏰19⏳07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱` | `🎆26🌙02☀️14⏰19⏳07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅`
-
-
-
-Display codebase diffs as
-added: `➕{{added}}`
-removed: `➖{{removed}}`
-total: `{{removed}}{{added}}🟰{{(➕|➖)?}}{{total}}`
-
-loc-diff: `{{diffable-id}}📌{{loc-total}}`
-root-loc-diff: `{{root-id}}📌{{loc-total}}` e.g. `📌➖253➕387🟰➕134`
-year-loc-diff: `{{year-id}}📌{{loc-total}}` e.g. `🎆26📌➖253➕387🟰➕134`
-month-loc-diff: `{{month-id}}📌{{loc-total}}` e.g. `🎆26🌙02📌➖253➕387🟰➕134`
-day-loc-diff: `{{day-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14📌➖253➕387🟰➕134`
-hour-loc-diff: `{{hour-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14⏰19📌➖253➕387🟰➕134`
-project-loc-diff: `{{project-id}}📌{{loc-total}}` e.g. `👤semio📌➖75324➕154056🟰➕78732`
-bundle-loc-diff: `{{bundle-id}}📌{{loc-total}}` e.g. `👤semio📚js📌➖253➕387🟰➕134`
-folder-loc-diff: `{{folder-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad📌➖253➕387🟰➕134`
-file-loc-diff: `{{file-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx📌➖253➕387🟰➕134`
-section-loc-diff: `{{section-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store📌➖253➕387🟰➕134`
-definition-loc-diff: `{{definition-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📌➖253➕387🟰➕134`
-goal-loc-diff: `{{goal-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad📌➖253➕387🟰➕134`
-ticket-loc-diff: `{{ticket-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism📌➖253➕387🟰➕134`
-contributor-loc-diff: `{{contributor-id}}{{loc-total}}` e.g. `🧑‍💻usalu➖253➕387🟰➕134`
-commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a➖253➕387🟰➕134`
-
-
-
-
-The uri system in semio-repo is:
-repo: `semiorepo://repo`
-projects: `semiorepo://projects`
-project: `semiorepo://project/{id}`
-bundles: `semiorepo://bundles`
-bundle: `semiorepo://bundle/{id}`
-folders: `semiorepo://folders/{PARENT-PATH*}`
-folder: `semiorepo://folder/{PATH*}`
-files: `semiorepo://files/{FOLDER-PATH*}`
-file: `semiorepo://file/{PATH*}`
-sections: `semiorepo://sections/{FILE-PATH*}`
-section: `semiorepo://section/{PATH*}` # just id but replace `#` with `/` and replace section name and definition name with uppercase slugs e.g. `🔖semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `semio/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE`
-definitions: `semiorepo://definitions/{PATH*}`
-definition: `semiorepo://definition/{PATH*}`
-tickets: `semiorepo://tickets`
-ticket: `semiorepo://ticket/{YEAR}/{MONTH}/{DAY}/{SLUG}`
-goals: `semiorepo://goals`
-goal: `semiorepo://goal/{PATH*}` # {PATH*} is a uppercase slug path to a goal e.g. "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP"
-drafts: `semiorepo://drafts`
-draft: `semiorepo://draft/{SLUG}`
-todos: `semiorepo://todos`
-todo: `semiorepo://todo/{SLUG}`
-policies: `semiorepo://policies`
-policy: `semiorepo://policy/{ID}`
-statutes: `semiorepo://statutes`
-statute: `semiorepo://statute/{POLICY-ID}#{PATH*}`# {PATH*} is uppercase slug path of breach id e.g. "🚫Code# Header#Missing Region" is`semiorepo://statute/CODE/HEADER/MISSING-REGION\*}`contributors:`semiorepo://contributors`contributor:`semiorepo://contributor/{GITHUB}`commits:`semiorepo://commits`commit:`semiorepo://commit/{SHA}`
-
-The query params are
-General query params:
-{?client}
-tickets: at least one interaction with the given client
-goals: at least one interaction with the given client
-{?llm?}
-tickets: at least one interaction with the given llm
-goal: at least one interaction with the given llm
-{?year}
-tickets: at least one interaction with the given year
-goals: at least one interaction with the given year
-{?month}
-tickets: at least one interaction with the given month
-goals: at least one interaction with the given month
-{?day}
-tickets: at least one interaction with the given day
-goals: at least one interaction with the given day
-{?contributor}
-tickets: at least one interaction with the given contributor
-goals: at least one interaction with the given contributor
-{?status}
-tickets: only the given status
-goals: only the given status
-
-The semio repo folder layout changed.
-
-You must update the implementation and tests to match the new layout. 
-
-Dont keep any legacy api.
-
-- .semio-repo
-- ✍️ // drafts
-- 🎫 // tickets
-  - {{YY}}
-    - {{MM}}
-      - {{DD}}
-        - {{UPPERCASESLUG}}
-- 🎯 // goals
-- 👤 // contributors
-  - {{github}}
-- 💡
-- 💬 // prompts
-  - 👤 // contributors
-    - {{contributor-name}}
-  - 📋 // templates
-    - {{template-name}}.tpl
+tpl
 
 The semio repo mcp server should expose the following
 resources:
@@ -2191,11 +2290,11 @@ All commands from the binary should be available in vscode (a lot are missing e.
 
 All section tree items in codebase tree should be unfoldable and show the definitions and subsections. They should be sorted same as in the appearance in the source code.
 
-Goals must have a title, a description, prompt, due date, client and llm. Throw if the arguments are not provided. Allow same as the other command positional ( <title> <description> <prompt> <due-date> <client> <llm>), flagged such as (--<date> --<client> --<llm>) or named flaggs such as: --title <title> --description <description> --prompt <prompt> --due-date <due-date> --client <client> --llm <llm>. Test everything. Never interact with github on tests and cleanup afterwards.
+Goals must have a title, a description, prompt, due date, client and llm. Throw if the arguments are not provided. Allow same as the other command positional ( `<title> <description> <prompt> <due-date> <client> <llm>`), flagged such as (`--<date> --<client> --<llm>`) or named flaggs such as: `--title <title> --description <description> --prompt <prompt> --due-date <due-date> --client <client> --llm <llm>`. Test everything. Never interact with github on tests and cleanup afterwards.
 
-Change the positional arguments from <llm> <client> to <client> <llm?> for all commands. llm is optional. Extend client to antigravity, antigravity-chat, cursor, cursor-chat, vscode, copilot-chat, codex, droid.
+Change the positional arguments from `<llm> <client>` to `<client> <llm?>` for all commands. llm is optional. Extend client to antigravity, antigravity-chat, cursor, cursor-chat, vscode, copilot-chat, codex, droid.
 
-Ticket reopen needs to have client flag either positional or over "--client <client>" or "--<client>".
+Ticket reopen needs to have client flag either positional or over `--client <client>` or `--<client>`.
 
 Some commands show semio: and some show semio-repo: prefix in vscode. The output panel of vscode logs also shows semio instead of semio-repo. All should be semio-repo.
 
@@ -2463,62 +2562,68 @@ Consolidate ./semio-repo/cli/github.go into ./semio-repo/cli/main.go.
 
 The definitions are not correctly identified in the languages. Definitions are only toplevel definitions. They always start on a new line. A variable, function, class inside another function, class, etc doesnt count as definition. Currently way too many definitions are idenitified.
 e.g.
-"modified": [
+
+```json
 {
-"path": "js/semio/sketchpad/Sketchpad.tsx",
-"status": "modified",
-"sections": [
-{
-"name": "Apps#Sketchpad Components",
-"range": {
-"start": 15177,
-"end": 15874
-},
-"definitions": [
-"LayoutWrapper",
-"location",
-"navigate",
-"reactNavigate",
-"store",
-"tutorialStore",
-"navigation",
-"isNavbarExpanded",
-"isFooterExpanded",
-"panelVisibility",
-"appType",
-"panelSizes",
-"footerItems",
-"workbenchSections",
-"toolsSections",
-"toolbarSections",
-"hudSections",
-"statsSections",
-"detailsSections",
-"chatSections",
-"settingsSections",
-"consoleSections",
-"leftSidePanelTabs",
-"rightSidePanelTabs",
-"hudPanelTabs",
-"addSidePanelTab",
-"removeSidePanelTab",
-"addHudPanelTab",
-"removeHudPanelTab",
-"panelConfigs",
-"panels",
-"registeredIds",
-"config",
-"tab",
-"panel"
-],
-"lines": {
-"added": 65,
-"removed": 18
+  "modified": [
+    {
+      "path": "js/semio/sketchpad/Sketchpad.tsx",
+      "status": "modified",
+      "sections": [
+        {
+          "name": "Apps#Sketchpad Components",
+          "range": {
+            "start": 15177,
+            "end": 15874
+          },
+          "definitions": [
+            "LayoutWrapper",
+            "location",
+            "navigate",
+            "reactNavigate",
+            "store",
+            "tutorialStore",
+            "navigation",
+            "isNavbarExpanded",
+            "isFooterExpanded",
+            "panelVisibility",
+            "appType",
+            "panelSizes",
+            "footerItems",
+            "workbenchSections",
+            "toolsSections",
+            "toolbarSections",
+            "hudSections",
+            "statsSections",
+            "detailsSections",
+            "chatSections",
+            "settingsSections",
+            "consoleSections",
+            "leftSidePanelTabs",
+            "rightSidePanelTabs",
+            "hudPanelTabs",
+            "addSidePanelTab",
+            "removeSidePanelTab",
+            "addHudPanelTab",
+            "removeHudPanelTab",
+            "panelConfigs",
+            "panels",
+            "registeredIds",
+            "config",
+            "tab",
+            "panel"
+          ],
+          "lines": {
+            "added": 65,
+            "removed": 18
+          }
+        }
+      ]
+    }
+  ]
 }
-}
-]
-}
-],
+```
+
 just modiefied LayoutWrapper.
 
 Add .sh Language to repo binary.
@@ -5608,9 +5713,16 @@ There is a large schema refactor: Currently guids are used to reference entities
 Make sure to adjust all code, introduce new types in typescript, adjust all store and command api, etc.
 Dont worry about breaking compatibility.
 E.g. a kit looks now like this:
+
+```json
 { "types": [ { "guid": "GUID1" } ], "designs: [ { "pieces": [ { "type": "GUID1" } } ] } ] }
+```
+
 and after the refactor like this:
+
+```json
 { "types": [ { "guid": ... } ], "designs: [ { "pieces": [ { "type": { "guid": "GUID1" } } ] } ] }
+```
 
 The i18n.ps1 script doesnt catch all errors. E.g. semio.sketchpad.navbar.breadcrumb.temporary is still displayed as key. Fix script. Then run it and solve all i18n. E.g. there are a lot of leftovers of unused keys that shouldnt existst.
 
@@ -6552,11 +6664,9 @@ On mobile the active toggles should be on the first lines and the suggested togg
 Somehow the sort toggles in home and kit editor have no border. This should not be possible. All toggles should always have a border.
 
 tree:
-
 When adding children to the tree item then they should have exactly the same space as items in the navbar. E.g. design editor details name and descriptions borders are touching but should have 1 space.
 
 design editor details:
-
 removing Location doesnt work
 adding attributes doesnt work
 
@@ -6568,7 +6678,6 @@ E.g. when inside design editor and I press on the name, variant or view then it 
 The current workbench is only for design editor. Make sure to generalize workbench such as settings and details where sections can be mounted. Add the design editor from within the design editor.
 
 design editor details:
-
 After adding one attribute, the + action does nothing. - deletes the attribute and then a new one can be added again but not never more than one.
 Sorting of authors and attributes doesnt work.
 Concepts should be a tree item with a plus on it with
@@ -6678,10 +6787,6 @@ Rows should only navigate to the item when hovering over the text of the name. T
 Design rows have two action + for new variant and + for new view (which creates a new view for the default variant)
 The home editor style is not consistent with the kit editor. Make sure to apply all alignment and elements to kit editor. E.g. right align of +. Or search toggle style.
 
-Columns in table should be
-
-Navigating up should
-
 Design editor should not only have a selection but also hover effects. Either a piece or a connection or a connector can be hovered over. The hover effect should show everywhere. E.g. workbench avatars, diagram nodes, 3d mesh material
 
 Use the same solid colors (and not just borders) for pieces hovers and selection (=active) as for toggles, breadcrumb, etc
@@ -6715,7 +6820,6 @@ Every clickable element which performs a callback (such as button, toggle, bread
 Every draggable element (such as sortable tree items, …) should show a draggable and a dragging cursor
 
 Introduce a new hook which returns
-
 The hover currently is either piece, connection, connector, type, design. Everything should be pluralized. E.g. hovering over the tree item of a type name should set the hover to all types with that name (which are all the avatars in that list). At the same time all the pieces of those types are by transitivity also highlighted in the diagram and scene.
 
 The hover currently is either pieces, connections, connectors, types, designs. Everything should be composable and not exclusive. Currently there is no mixed kind ui element but it will soon come. For now e.g. hovering over the tree item of types should set the hover to all types with that name (which are all the avatars in that list). At the same time all the pieces of those types are by transitivity also highlighted in the diagram and scene.

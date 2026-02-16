@@ -21,7 +21,7 @@
 
 // #region 🔖I18n
 
-// [🔖semio/js/i18n.ts#I18n](semiorepo://section/semio/js/i18n.ts/I18N)
+// [👤semio📚js💻i18nts🔖i18n](semiorepo://section/SEMIO/JS/I18N.TS/I18N)
 // Initializes i18next with language detection, React bindings and expertise-aware label hooks.
 // MUST fall back to English when the detected language is unavailable.
 
@@ -56,7 +56,7 @@ i18n
  *
  * MUST map to the key structure in locale JSON files.
  *
- *  * [🛠️semio/js/i18n.ts#I18n§Expertise](semiorepo://definition/semio/js/i18n.ts/I18N/EXPERTISE)
+ *  * [👤semio📚js💻i18nts🔖i18n🛠️expertise](semiorepo://definition/SEMIO/JS/I18N.TS/I18N/EXPERTISE)
  **/
 export enum Expertise {
   BEGINNER = "beginner",
@@ -73,7 +73,7 @@ let getExpertiseFunction: (() => Expertise) | undefined;
  *
  * MUST be called once during app initialization.
  *
- *  * [🛠️semio/js/i18n.ts#I18n§setExpertiseProvider](semiorepo://definition/semio/js/i18n.ts/I18N/SETEXPERTISEPROVIDER)
+ *  * [👤semio📚js💻i18nts🔖i18n🛠️setexpertiseprovider](semiorepo://definition/SEMIO/JS/I18N.TS/I18N/SET-EXPERTISE-PROVIDER)
  **/
 export function setExpertiseProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
@@ -84,7 +84,7 @@ export function setExpertiseProvider(fn: () => Expertise) {
  *
  * MUST fall back to normal expertise when no provider is set.
  *
- *  * [🪨semio/js/i18n.ts#I18n§useLabel](semiorepo://definition/semio/js/i18n.ts/I18N/USELABEL)
+ *  * [👤semio📚js💻i18nts🔖i18n🛠️uselabel](semiorepo://definition/SEMIO/JS/I18N.TS/I18N/USE-LABEL)
  **/
 export function useLabel(id: string): string | undefined {
   const { t } = useI18nTranslation();
@@ -123,7 +123,7 @@ export function useLabel(id: string): string | undefined {
  *
  * MUST return undefined when no hotkey is configured.
  *
- *  * [🪨semio/js/i18n.ts#I18n§useHotkey](semiorepo://definition/semio/js/i18n.ts/I18N/USEHOTKEY)
+ *  * [👤semio📚js💻i18nts🔖i18n🛠️usehotkey](semiorepo://definition/SEMIO/JS/I18N.TS/I18N/USE-HOTKEY)
  **/
 export function useHotkey(id: string): string | undefined {
   const { t } = useI18nTranslation();

@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🔖semio/js/tailwind.config.ts#Configuration](semiorepo://section/semio/js/tailwind.config.ts/CONFIGURATION)
+// [👤semio📚js⚙️tailwindconfigts🔖configuration](semiorepo://section/SEMIO/JS/TAILWIND.CONFIG.TS/CONFIGURATION)
 // Tailwind CSS configuration with typography plugin and custom prose styles.
 // Configuration MUST define content paths, dark mode, and typography theme extensions.
 

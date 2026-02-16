@@ -4662,11 +4662,10 @@
   "semio/sketchpad/tsconfig.json",
   "semio/sketchpad/vite.config.ts",
   "semio/softwarearchitecture.pu",
-  "semio/sqlite/README.md",
   "semio/sqlite/package.json",
   "semio/sqlite/schema.sql",
   "semio/sqlite/select.sql",
-  "tsconfig.json",
-  "uv.lock",
-  "vitest.config.ts"
+  "**/*.lock",
+  "**/*config*",
+  "**/README.md"
 ]

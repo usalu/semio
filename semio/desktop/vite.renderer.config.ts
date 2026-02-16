@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🔖semio/desktop/vite.renderer.config.ts#Configuration](semiorepo://section/semio/desktop/vite.renderer.config.ts/CONFIGURATION)
+// [👤semio🖱️desktop⚙️viterendererconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/VITE.RENDERER.CONFIG.TS/CONFIGURATION)
 // Vite configuration for the Electron renderer process with React and Tailwind.
 // Configuration MUST enable the React and Tailwind CSS plugins.
 

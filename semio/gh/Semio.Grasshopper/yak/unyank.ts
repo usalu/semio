@@ -22,7 +22,7 @@
 
 // #region 🔖Unyank
 
-// [🔖semio/gh/Semio.Grasshopper/yak/unyank.ts#Unyank](semiorepo://section/semio/gh/Semio.Grasshopper/yak/unyank.ts/UNYANK)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🔖unyank](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/UNYANK.TS/UNYANK)
 // Yak unyank script. MUST restore a previously yanked package version.
 
 import { execSync } from "child_process";

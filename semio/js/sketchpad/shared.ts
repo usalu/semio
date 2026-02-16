@@ -24,7 +24,7 @@ import { ComponentType, ReactNode } from "react";
 
 // #region 🔖Imports
 
-// [🔖semio/js/sketchpad/shared.ts#Imports](semiorepo://section/semio/js/sketchpad/shared.ts/IMPORTS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/IMPORTS)
 // MUST import XState, Y.js, and semio core types for shared sketchpad infrastructure.
 
 import { AnyActorRef, assign, fromCallback } from "xstate";
@@ -39,20 +39,20 @@ import { Guid, Kit, KitDiff } from "../semio";
 
 // #region 🔖YPath Types
 
-// [🔖semio/js/sketchpad/shared.ts#YPath Types](semiorepo://section/semio/js/sketchpad/shared.ts/YPATH-TYPES)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES)
 // MUST define path segment and path types for navigating Y.js document structures.
 
 /**
  * A single segment in a Y.js document path, either a map key, array index, or array item by ID.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#YPath Types§YPathSegment](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YPATH-TYPES/YPATHSEGMENT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖ypathtypes🛠️ypathsegment](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-PATH-TYPES/Y-PATH-SEGMENT)
  **/
 export type YPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIndex"; index: number } | { kind: "arrayItemById"; id: string; idKey: string };
 
 /**
  * An ordered sequence of YPathSegment values describing a path through a Y.js document.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#YPath Types§YPath](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YPATH-TYPES/YPATH)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖ypathtypes🛠️ypath](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-PATH-TYPES/Y-PATH)
  **/
 export type YPath = YPathSegment[];
 
@@ -60,33 +60,33 @@ export type YPath = YPathSegment[];
 
 // #region 🔖Granular Hook Types
 
-// [🔖semio/js/sketchpad/shared.ts#Granular Hook Types](semiorepo://section/semio/js/sketchpad/shared.ts/GRANULAR-HOOK-TYPES)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES)
 // MUST define hook result tuples and field abstractions for granular reactive state access.
 
 /**
  * A readonly tuple of value, optional setter, and canSet flag for granular hook access.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§HookResult](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/HOOKRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️hookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/HOOK-RESULT)
  **/
 export type HookResult<T> = readonly [T, ((value: T) => void) | undefined, boolean];
 
 /**
  * A readonly tuple of value, undefined setter, and canSet flag for read-only hook access.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§HookNoSetResult](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/HOOKNOSETRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️hooknosetresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/HOOK-NO-SET-RESULT)
  **/
 export type HookNoSetResult<T> = readonly [T, undefined, boolean];
 
 /**
  * Sentinel undefined value indicating that a hook result has no setter.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Granular Hook Types§READONLY_SETTER](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/READONLY-SETTER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🪨readonlysetter](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/READONLY-SETTER)
  **/
 export const READONLY_SETTER = undefined as undefined;
 /**
  * Sentinel false value indicating that a hook result is read-only.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Granular Hook Types§READONLY_CAN](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/READONLY-CAN)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🪨readonlycan](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/READONLY-CAN)
  **/
 export const READONLY_CAN = false;
 
@@ -95,7 +95,7 @@ export const READONLY_CAN = false;
  *
  * MUST return a frozen readonly tuple with undefined setter and false canSet.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§readonlyHookResult](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/READONLYHOOKRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️readonlyhookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/READONLY-HOOK-RESULT)
  **/
 export function readonlyHookResult<T>(value: T): HookResult<T> {
   return [value, READONLY_SETTER, READONLY_CAN] as const;
@@ -106,7 +106,7 @@ export function readonlyHookResult<T>(value: T): HookResult<T> {
  *
  * MUST return a tuple with the setter included only when canSet is true.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§writableHookResult](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/WRITABLEHOOKRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️writablehookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/WRITABLE-HOOK-RESULT)
  **/
 export function writableHookResult<T>(value: T, setter: (value: T) => void, canSet: boolean = true): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
@@ -117,7 +117,7 @@ export function writableHookResult<T>(value: T, setter: (value: T) => void, canS
  *
  * MUST return a tuple with the setter conditional on the canSet flag.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§conditionalHookResult](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/CONDITIONALHOOKRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️conditionalhookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/CONDITIONAL-HOOK-RESULT)
  **/
 export function conditionalHookResult<T>(canSet: boolean, value: T, setter: ((value: T) => void) | undefined): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
@@ -126,7 +126,7 @@ export function conditionalHookResult<T>(canSet: boolean, value: T, setter: ((va
 /**
  * A reactive field with a value, canSet flag, and setter function.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§Field](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/FIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️field](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/FIELD)
  **/
 export interface Field<T> {
   value: T;
@@ -137,7 +137,7 @@ export interface Field<T> {
 /**
  * A reactive action field with canExecute flag and execute function.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§ActionField](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/ACTIONFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️actionfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/ACTION-FIELD)
  **/
 export interface ActionField {
   canExecute: boolean;
@@ -155,7 +155,7 @@ const NOOP_SETTER = () => {
  *
  * MUST use the provided setter when canSet is true, otherwise a no-op setter.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§createField](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/CREATEFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️createfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/CREATE-FIELD)
  **/
 export function createField<T>(value: T, setter: (next: T) => void, canSet: boolean): Field<T> {
   return {
@@ -170,7 +170,7 @@ export function createField<T>(value: T, setter: (next: T) => void, canSet: bool
  *
  * MUST set canSet to false and use a no-op setter.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§createReadonlyField](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/CREATEREADONLYFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️createreadonlyfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/CREATE-READONLY-FIELD)
  **/
 export function createReadonlyField<T>(value: T): Field<T> {
   return {
@@ -185,7 +185,7 @@ export function createReadonlyField<T>(value: T): Field<T> {
  *
  * MUST guard execute behind canExecute, logging a warning in dev mode when disabled.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§createAction](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/CREATEACTION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️createaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/CREATE-ACTION)
  **/
 export function createAction(execute: () => void, canExecute: boolean): ActionField {
   return {
@@ -205,7 +205,7 @@ export function createAction(execute: () => void, canExecute: boolean): ActionFi
  *
  * MUST convert the field's canSet and set properties into the hook result format.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Granular Hook Types§fieldToHookResult](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/FIELDTOHOOKRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️fieldtohookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/FIELD-TO-HOOK-RESULT)
  **/
 export function fieldToHookResult<T>(field: Field<T>): HookResult<T> {
   return [field.value, field.canSet ? field.set : undefined, field.canSet] as const;
@@ -216,7 +216,7 @@ export function fieldToHookResult<T>(field: Field<T>): HookResult<T> {
  *
  * MUST reconstruct a Field from the tuple, using a no-op setter when undefined.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Granular Hook Types§hookResultToField](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GRANULAR-HOOK-TYPES/HOOKRESULTTOFIELD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes🛠️hookresulttofield](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES/HOOK-RESULT-TO-FIELD)
  **/
 export function hookResultToField<T>(result: HookResult<T>): Field<T> {
   const [value, setter, canSet] = result;
@@ -231,38 +231,38 @@ export function hookResultToField<T>(result: HookResult<T>): Field<T> {
 
 // #region 🔖Standard Empty Constants
 
-// [🔖semio/js/sketchpad/shared.ts#Standard Empty Constants](semiorepo://section/semio/js/sketchpad/shared.ts/STANDARD-EMPTY-CONSTANTS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS)
 // MUST provide frozen singleton constants for empty collections and default panel visibility.
 
 /**
  * Frozen empty array singleton for default array values.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_ARRAY](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-ARRAY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants🪨emptyarray](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-ARRAY)
  **/
 export const EMPTY_ARRAY: readonly any[] = Object.freeze([]);
 /**
  * Frozen empty object singleton for default record values.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_OBJECT](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-OBJECT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants🪨emptyobject](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-OBJECT)
  **/
 export const EMPTY_OBJECT: Readonly<Record<string, never>> = Object.freeze({});
 /**
  * Frozen empty Guid array singleton for default guid collections.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_GUID_ARRAY](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-GUID-ARRAY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants🪨emptyguidarray](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-GUID-ARRAY)
  **/
 export const EMPTY_GUID_ARRAY: readonly Guid[] = Object.freeze([]);
 /**
  * Frozen empty string array singleton for default string collections.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_STRING_ARRAY](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-STRING-ARRAY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants🪨emptystringarray](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-STRING-ARRAY)
  **/
 export const EMPTY_STRING_ARRAY: readonly string[] = Object.freeze([]);
 
 /**
  * Frozen default panel visibility with only toolbar visible.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_PANEL_VISIBILITY](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-PANEL-VISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants🪨emptypanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-PANEL-VISIBILITY)
  **/
 export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
   toolbar: true,
@@ -276,13 +276,13 @@ export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
 
 // #region 🔖Generic Diff Types
 
-// [🔖semio/js/sketchpad/shared.ts#Generic Diff Types](semiorepo://section/semio/js/sketchpad/shared.ts/GENERIC-DIFF-TYPES)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES)
 // MUST define generic array and selection diff types with apply and inverse operations.
 
 /**
  * Describes added and removed items for an array diff operation.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Types#Generic Diff Types§ArrayDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GENERIC-DIFF-TYPES/ARRAYDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes🛠️arraydiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES/ARRAY-DIFF)
  **/
 export interface ArrayDiff<T> {
   added?: T[];
@@ -292,7 +292,7 @@ export interface ArrayDiff<T> {
 /**
  * Maps selection keys to their corresponding array diffs.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Generic Diff Types§SelectionDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GENERIC-DIFF-TYPES/SELECTIONDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes🛠️selectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES/SELECTION-DIFF)
  **/
 export type SelectionDiff<TSelection extends Record<string, any[]>> = {
   [K in keyof TSelection]?: ArrayDiff<TSelection[K][number]>;
@@ -303,7 +303,7 @@ export type SelectionDiff<TSelection extends Record<string, any[]>> = {
  *
  * MUST swap added and removed arrays to produce the inverse diff.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Generic Diff Types§inverseArrayDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GENERIC-DIFF-TYPES/INVERSEARRAYDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes🛠️inversearraydiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES/INVERSE-ARRAY-DIFF)
  **/
 export function inverseArrayDiff<T>(diff: ArrayDiff<T>): ArrayDiff<T> {
   const inverse: ArrayDiff<T> = {};
@@ -317,7 +317,7 @@ export function inverseArrayDiff<T>(diff: ArrayDiff<T>): ArrayDiff<T> {
  *
  * MUST apply inverseArrayDiff to each key in the selection diff.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Generic Diff Types§inverseSelectionDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GENERIC-DIFF-TYPES/INVERSESELECTIONDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes🛠️inverseselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES/INVERSE-SELECTION-DIFF)
  **/
 export function inverseSelectionDiff<T extends Record<string, ArrayDiff<any>>>(diff: T): T {
   const inverse = {} as T;
@@ -334,7 +334,7 @@ export function inverseSelectionDiff<T extends Record<string, ArrayDiff<any>>>(d
  *
  * MUST remove items first, then add non-duplicate items.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types#Generic Diff Types§applyArrayDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GENERIC-DIFF-TYPES/APPLYARRAYDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes🛠️applyarraydiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES/APPLY-ARRAY-DIFF)
  **/
 export function applyArrayDiff<T>(current: T[] | undefined, diff: ArrayDiff<T>): T[] {
   let result = current ? [...current] : [];
@@ -348,7 +348,7 @@ export function applyArrayDiff<T>(current: T[] | undefined, diff: ArrayDiff<T>):
  *
  * MUST apply the array diff for each key present in the selection diff.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Types#Generic Diff Types§applySelectionDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/GENERIC-DIFF-TYPES/APPLYSELECTIONDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes🛠️applyselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES/APPLY-SELECTION-DIFF)
  **/
 export function applySelectionDiff<TSelection extends Record<string, any[]>>(current: Partial<TSelection>, diff: SelectionDiff<TSelection>): Partial<TSelection> {
   const result = { ...current } as Partial<TSelection>;
@@ -366,161 +366,161 @@ export function applySelectionDiff<TSelection extends Record<string, any[]>>(cur
 /**
  * A string alias representing a URL.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§Url](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/URL)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️url](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/URL)
  **/
 export type Url = string;
 
 /**
  * A callback subscription function that returns an unsubscribe disposer.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§Subscribe](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/SUBSCRIBE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️subscribe](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/SUBSCRIBE)
  **/
 export type Subscribe = (callback: () => void) => () => void;
 
 /**
  * A cleanup function that disposes of a resource.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§Disposable](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/DISPOSABLE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️disposable](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/DISPOSABLE)
  **/
 export type Disposable = () => void;
 
 /**
  * A function that executes a mutation within a transaction with optional origin.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§Transact](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/TRANSACT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️transact](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/TRANSACT)
  **/
 export type Transact = (fn: () => void, origin?: string) => void;
 
 /**
  * A function that unsubscribes a previously registered callback.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§Unsubscribe](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/UNSUBSCRIBE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️unsubscribe](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/UNSUBSCRIBE)
  **/
 export type Unsubscribe = () => void;
 
 /**
  * A factory function that creates a Y.js document provider for a given ID.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YProviderFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YPROVIDERFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yproviderfactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-PROVIDER-FACTORY)
  **/
 export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
 /**
  * A string alias identifying the kind of an app.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§AppKind](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/APPKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️appkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/APP-KIND)
  **/
 export type AppKind = string;
 
 /**
  * Union type for desktop, tablet, or mobile device contexts.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§Device](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/DEVICE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️device](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/DEVICE)
  **/
 export type Device = "desktop" | "tablet" | MobileDevice;
 
 /**
  * Union of all panel identifier strings including side and HUD panels.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§PanelKey](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/PANELKEY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️panelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/PANEL-KEY)
  **/
 export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar" | "leftSidePanel" | "rightSidePanel" | "hudPanel";
 
 /**
  * Union of left and right side panel keys.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§SidePanelKey](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/SIDEPANELKEY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️sidepanelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/SIDE-PANEL-KEY)
  **/
 export type SidePanelKey = "leftSidePanel" | "rightSidePanel";
 
 /**
  * The HUD panel key literal type.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§HudPanelKey](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/HUDPANELKEY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️hudpanelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/HUD-PANEL-KEY)
  **/
 export type HudPanelKey = "hudPanel";
 
 /**
  * A string alias for a hotkey path identifier.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§HotkeyPath](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/HOTKEYPATH)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️hotkeypath](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/HOTKEY-PATH)
  **/
 export type HotkeyPath = string;
 
 /**
  * A string alias for a hotkey binding value.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§HotkeyValue](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/HOTKEYVALUE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️hotkeyvalue](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/HOTKEY-VALUE)
  **/
 export type HotkeyValue = string;
 
 /**
  * A record mapping hotkey paths to their override values.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§HotkeyOverrides](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/HOTKEYOVERRIDES)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️hotkeyoverrides](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/HOTKEY-OVERRIDES)
  **/
 export type HotkeyOverrides = Record<HotkeyPath, HotkeyValue>;
 
 /**
  * A factory function that creates a FileProvider for a given kit ID.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§FileProviderFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/FILEPROVIDERFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️fileproviderfactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/FILE-PROVIDER-FACTORY)
  **/
 export type FileProviderFactory = (kitId: string) => Promise<FileProvider>;
 
 /**
  * A string alias for a Y.js-compatible UUID.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YUuid](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YUUID)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yuuid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-UUID)
  **/
 export type YUuid = string;
 
 /**
  * A Y.js array of UUID strings.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YUuidArray](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YUUIDARRAY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yuuidarray](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-UUID-ARRAY)
  **/
 export type YUuidArray = Y.Array<YUuid>;
 
 /**
  * A string alias for a Y.js concept name.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YConcept](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YCONCEPT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yconcept](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-CONCEPT)
  **/
 export type YConcept = string;
 
 /**
  * A Y.js array of concept name strings.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YConcepts](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YCONCEPTS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yconcepts](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-CONCEPTS)
  **/
 export type YConcepts = Y.Array<string>;
 
 /**
  * A Y.js array of strings.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YStringArray](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YSTRINGARRAY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️ystringarray](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-STRING-ARRAY)
  **/
 export type YStringArray = Y.Array<string>;
 
 /**
  * A Y.js map with string leaf values.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YLeafMapString](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YLEAFMAPSTRING)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yleafmapstring](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-LEAF-MAP-STRING)
  **/
 export type YLeafMapString = Y.Map<string>;
 
 /**
  * A Y.js map with number leaf values.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YLeafMapNumber](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YLEAFMAPNUMBER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yleafmapnumber](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-LEAF-MAP-NUMBER)
  **/
 export type YLeafMapNumber = Y.Map<number>;
 
 /**
  * A Y.js array of Y.js maps representing attribute key-value pairs.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Types§YAttributes](semiorepo://definition/semio/js/sketchpad/shared.ts/TYPES/YATTRIBUTES)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️yattributes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/Y-ATTRIBUTES)
  **/
 export type YAttributes = Y.Array<Y.Map<string>>;
 
@@ -528,13 +528,13 @@ export type YAttributes = Y.Array<Y.Map<string>>;
 
 // #region 🔖Enums
 
-// [🔖semio/js/sketchpad/shared.ts#Enums](semiorepo://section/semio/js/sketchpad/shared.ts/ENUMS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖enums](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS)
 // MUST enumerate theme, expertise, mode, store status, tool, window, and panel kinds.
 
 /**
  * Available UI theme options: system, light, or dark.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§Theme](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/THEME)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️theme](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/THEME)
  **/
 export enum Theme {
   SYSTEM = "system",
@@ -545,7 +545,7 @@ export enum Theme {
 /**
  * User expertise levels: beginner, normal, or expert.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§Expertise](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/EXPERTISE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️expertise](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/EXPERTISE)
  **/
 export enum Expertise {
   BEGINNER = "beginner",
@@ -556,7 +556,7 @@ export enum Expertise {
 /**
  * Application modes: user or dev.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§Mode](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/MODE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️mode](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/MODE)
  **/
 export enum Mode {
   USER = "user",
@@ -566,7 +566,7 @@ export enum Mode {
 /**
  * Store lifecycle states: idle, loading, error, or ready.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§StoreStatus](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/STORESTATUS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️storestatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/STORE-STATUS)
  **/
 export enum StoreStatus {
   IDLE = "idle",
@@ -578,7 +578,7 @@ export enum StoreStatus {
 /**
  * Available tool kinds for selection, lasso, connector, and hand interactions.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§ToolKind](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/TOOLKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️toolkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/TOOL-KIND)
  **/
 export enum ToolKind {
   SELECTION_NORMAL = "selection-normal",
@@ -594,7 +594,7 @@ export enum ToolKind {
 /**
  * Window content kinds: table, scene, diagram, or custom.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§WindowKind](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/WINDOWKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️windowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/WINDOW-KIND)
  **/
 export enum WindowKind {
   TABLE = "table",
@@ -606,7 +606,7 @@ export enum WindowKind {
 /**
  * Panel layout positions: left, right, middle, or bottom.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§PanelPosition](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/PANELPOSITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️panelposition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/PANEL-POSITION)
  **/
 export enum PanelPosition {
   LEFT = "left",
@@ -618,7 +618,7 @@ export enum PanelPosition {
 /**
  * Panel kinds: workbench, tools, toolbar, HUD, stats, details, chat, settings, params, or console.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Enums§PanelKind](semiorepo://definition/semio/js/sketchpad/shared.ts/ENUMS/PANELKIND)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️panelkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/PANEL-KIND)
  **/
 export enum PanelKind {
   WORKBENCH = "workbench",
@@ -641,13 +641,13 @@ export enum PanelKind {
 
 // #region 🔖File Provider
 
-// [🔖semio/js/sketchpad/shared.ts#File Provider](semiorepo://section/semio/js/sketchpad/shared.ts/FILE-PROVIDER)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER)
 // MUST define file storage provider interfaces for upload, download, and delete operations.
 
 /**
  * Interface for file upload, download, delete, and URL retrieval operations.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§FileProvider](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/FILEPROVIDER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️fileprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/FILE-PROVIDER)
  **/
 export interface FileProvider {
   upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
@@ -659,14 +659,14 @@ export interface FileProvider {
 /**
  * Configuration interface for in-memory file provider.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§MemoryFileProviderConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/MEMORYFILEPROVIDERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️memoryfileproviderconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/MEMORY-FILE-PROVIDER-CONFIG)
  **/
 export interface MemoryFileProviderConfig { }
 
 /**
  * Configuration interface for local IndexedDB file provider.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§LocalFileProviderConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/LOCALFILEPROVIDERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️localfileproviderconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/LOCAL-FILE-PROVIDER-CONFIG)
  **/
 export interface LocalFileProviderConfig {
   dbName?: string;
@@ -676,7 +676,7 @@ export interface LocalFileProviderConfig {
 /**
  * Configuration interface for remote file provider with base URL and headers.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§RemoteFileProviderConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/REMOTEFILEPROVIDERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️remotefileproviderconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/REMOTE-FILE-PROVIDER-CONFIG)
  **/
 export interface RemoteFileProviderConfig {
   baseUrl: string;
@@ -686,7 +686,7 @@ export interface RemoteFileProviderConfig {
 /**
  * Configuration interface combining memory, local, and remote file providers.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§CompositeFileProviderConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/COMPOSITEFILEPROVIDERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️compositefileproviderconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/COMPOSITE-FILE-PROVIDER-CONFIG)
  **/
 export interface CompositeFileProviderConfig {
   memory?: boolean;
@@ -697,7 +697,7 @@ export interface CompositeFileProviderConfig {
 /**
  * Interface for remote Y.js document and file provider factories.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§RemoteProviders](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/REMOTEPROVIDERS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️remoteproviders](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/REMOTE-PROVIDERS)
  **/
 export interface RemoteProviders {
   yProvider: (yDoc: Y.Doc, name: string) => void;
@@ -707,7 +707,7 @@ export interface RemoteProviders {
 /**
  * Describes a file operation with type, kit ID, file ID, path, and optional blob.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#File Provider§FileOperation](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FILE-PROVIDER/FILEOPERATION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider🛠️fileoperation](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER/FILE-OPERATION)
  **/
 export interface FileOperation {
   type: "upload" | "download" | "delete";
@@ -721,13 +721,13 @@ export interface FileOperation {
 
 // #region 🔖App IDs
 
-// [🔖semio/js/sketchpad/shared.ts#App IDs](semiorepo://section/semio/js/sketchpad/shared.ts/APP-IDS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appids](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-I-DS)
 // MUST define identifier interfaces for design, kit, type, and quality app scopes.
 
 /**
  * Identifier for a design app scope with kit and design GUIDs.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App IDs§DesignAppId](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-IDS/DESIGNAPPID)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appids🛠️designappid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-I-DS/DESIGN-APP-ID)
  **/
 export interface DesignAppId {
   kit: Guid;
@@ -737,7 +737,7 @@ export interface DesignAppId {
 /**
  * Identifier for a kit app scope with a kit GUID.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App IDs§KitAppId](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-IDS/KITAPPID)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appids🛠️kitappid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-I-DS/KIT-APP-ID)
  **/
 export interface KitAppId {
   kit: Guid;
@@ -746,7 +746,7 @@ export interface KitAppId {
 /**
  * Identifier for a type app scope with kit and type GUIDs.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App IDs§TypeAppId](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-IDS/TYPEAPPID)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appids🛠️typeappid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-I-DS/TYPE-APP-ID)
  **/
 export interface TypeAppId {
   kit: Guid;
@@ -756,7 +756,7 @@ export interface TypeAppId {
 /**
  * Identifier for a quality app scope with kit and quality GUIDs.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App IDs§QualityAppId](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-IDS/QUALITYAPPID)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appids🛠️qualityappid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-I-DS/QUALITY-APP-ID)
  **/
 export interface QualityAppId {
   kit: Guid;
@@ -767,13 +767,13 @@ export interface QualityAppId {
 
 // #region 🔖Panel
 
-// [🔖semio/js/sketchpad/shared.ts#Panel](semiorepo://section/semio/js/sketchpad/shared.ts/PANEL)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL)
 // MUST define panel kind configurations, visibility, sizing, sections, and definition interfaces.
 
 /**
  * Configuration for a panel kind including icon, position, group, and hotkey.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelKindConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELKINDCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelkindconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-KIND-CONFIG)
  **/
 export interface PanelKindConfig {
   icon: ComponentType<{ size?: number }>;
@@ -787,7 +787,7 @@ export interface PanelKindConfig {
 /**
  * Registry mapping each PanelKind to its PanelKindConfig.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Ports#Panel§panelKindConfigs](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELKINDCONFIGS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🪨panelkindconfigs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-KIND-CONFIGS)
  **/
 export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
   [PanelKind.WORKBENCH]: {
@@ -862,7 +862,7 @@ export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
 /**
  * Side panel positions: left or right.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Panel§SidePanelPosition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/SIDEPANELPOSITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️sidepanelposition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/SIDE-PANEL-POSITION)
  **/
 export enum SidePanelPosition {
   LEFT = "left",
@@ -872,7 +872,7 @@ export enum SidePanelPosition {
 /**
  * A tab entry for a side panel with ID, icon, order, and content.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§SidePanelTab](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/SIDEPANELTAB)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️sidepaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/SIDE-PANEL-TAB)
  **/
 export interface SidePanelTab {
   id: string;
@@ -884,7 +884,7 @@ export interface SidePanelTab {
 /**
  * A tab entry for the HUD panel with ID, icon, order, and content.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§HudPanelTab](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/HUDPANELTAB)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️hudpaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/HUD-PANEL-TAB)
  **/
 export interface HudPanelTab {
   id: string;
@@ -896,7 +896,7 @@ export interface HudPanelTab {
 /**
  * Visibility flags for left and right side panels.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§SidePanelVisibility](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/SIDEPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️sidepanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/SIDE-PANEL-VISIBILITY)
  **/
 export interface SidePanelVisibility {
   left: boolean;
@@ -906,7 +906,7 @@ export interface SidePanelVisibility {
 /**
  * Visibility flag for the HUD panel.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§HudPanelVisibility](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/HUDPANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️hudpanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/HUD-PANEL-VISIBILITY)
  **/
 export interface HudPanelVisibility {
   visible: boolean;
@@ -915,7 +915,7 @@ export interface HudPanelVisibility {
 /**
  * Optional visibility flags for all panel kinds.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelVisibility](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELVISIBILITY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-VISIBILITY)
  **/
 export interface PanelVisibility {
   toolbar?: boolean;
@@ -936,7 +936,7 @@ export interface PanelVisibility {
 /**
  * Numeric sizes for all panel dimensions including widths and heights.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelSizes](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELSIZES)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelsizes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-SIZES)
  **/
 export interface PanelSizes {
   toolbarHeight: number;
@@ -956,7 +956,7 @@ export interface PanelSizes {
 /**
  * A collapsible section within a panel with content, actions, and toolbar group.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelSection](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELSECTION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-SECTION)
  **/
 export interface PanelSection {
   id: string;
@@ -986,7 +986,7 @@ export interface PanelSection {
 /**
  * Left and right arrays of side panel tabs.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§SidePanelTabs](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/SIDEPANELTABS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️sidepaneltabs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/SIDE-PANEL-TABS)
  **/
 export interface SidePanelTabs {
   left: SidePanelTab[];
@@ -996,7 +996,7 @@ export interface SidePanelTabs {
 /**
  * Array of HUD panel tabs.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§HudPanelTabs](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/HUDPANELTABS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️hudpaneltabs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/HUD-PANEL-TABS)
  **/
 export interface HudPanelTabs {
   tabs: HudPanelTab[];
@@ -1005,7 +1005,7 @@ export interface HudPanelTabs {
 /**
  * Collections of panel sections and tabs organized by panel kind.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelSections](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELSECTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelsections](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-SECTIONS)
  **/
 export interface PanelSections {
   details: PanelSection[];
@@ -1025,7 +1025,7 @@ export interface PanelSections {
 /**
  * Definition of a panel with ID, kind, hotkey, and tooltip.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelDefinition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELDEFINITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️paneldefinition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-DEFINITION)
  **/
 export interface PanelDefinition {
   id: string;
@@ -1040,7 +1040,7 @@ export interface PanelDefinition {
 /**
  * Extended panel definition with resolved icon, position, group, and transparency.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§EnrichedPanelDefinition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/ENRICHEDPANELDEFINITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️enrichedpaneldefinition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/ENRICHED-PANEL-DEFINITION)
  **/
 export interface EnrichedPanelDefinition extends PanelDefinition {
   key: string;
@@ -1057,7 +1057,7 @@ export interface EnrichedPanelDefinition extends PanelDefinition {
  *
  * MUST use the panelKindConfigs hotkey as fallback when no explicit hotkey is provided.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Ports#Panel§createPanelDefinition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/CREATEPANELDEFINITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️createpaneldefinition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/CREATE-PANEL-DEFINITION)
  **/
 export function createPanelDefinition(kind: PanelKind, id: string, hotkey?: string, tooltip?: { labelKey?: string; manualPath?: string }): PanelDefinition {
   const config = panelKindConfigs[kind];
@@ -1074,7 +1074,7 @@ export function createPanelDefinition(kind: PanelKind, id: string, hotkey?: stri
  *
  * MUST resolve all config properties from panelKindConfigs for the panel's kind.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Ports#Panel§enrichPanelDefinition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/ENRICHPANELDEFINITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️enrichpaneldefinition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/ENRICH-PANEL-DEFINITION)
  **/
 export function enrichPanelDefinition(panel: PanelDefinition): EnrichedPanelDefinition {
   const config = panelKindConfigs[panel.kind];
@@ -1093,7 +1093,7 @@ export function enrichPanelDefinition(panel: PanelDefinition): EnrichedPanelDefi
 /**
  * Configuration for a panel instance with ID, key, label, order, and content.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§PanelConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/PANELCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-CONFIG)
  **/
 export interface PanelConfig {
   id: string;
@@ -1107,7 +1107,7 @@ export interface PanelConfig {
 /**
  * Container for an array of panel configurations.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel§AppPanels](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL/APPPANELS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️apppanels](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/APP-PANELS)
  **/
 export interface AppPanels {
   panels: PanelConfig[];
@@ -1117,13 +1117,13 @@ export interface AppPanels {
 
 // #region 🔖App Registry
 
-// [🔖semio/js/sketchpad/shared.ts#App Registry](semiorepo://section/semio/js/sketchpad/shared.ts/APP-REGISTRY)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-REGISTRY)
 // MUST define route segment and app configuration interfaces for app registration.
 
 /**
  * A URL route segment with path, optional param name, and scope provider.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App Registry§RouteSegment](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-REGISTRY/ROUTESEGMENT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appregistry🛠️routesegment](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-REGISTRY/ROUTE-SEGMENT)
  **/
 export interface RouteSegment {
   path: string;
@@ -1134,7 +1134,7 @@ export interface RouteSegment {
 /**
  * Full app configuration with ID, component, routes, panels, and order.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App Registry§AppConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-REGISTRY/APPCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appregistry🛠️appconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-REGISTRY/APP-CONFIG)
  **/
 export interface AppConfig {
   id: string;
@@ -1149,7 +1149,7 @@ export interface AppConfig {
 /**
  * App registration entry extending AppConfig.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#App Registry§AppRegistration](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/APP-REGISTRY/APPREGISTRATION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appregistry🛠️appregistration](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-REGISTRY/APP-REGISTRATION)
  **/
 export interface AppRegistration extends AppConfig { }
 
@@ -1157,13 +1157,13 @@ export interface AppRegistration extends AppConfig { }
 
 // #region 🔖Sketchpad State
 
-// [🔖semio/js/sketchpad/shared.ts#Sketchpad State](semiorepo://section/semio/js/sketchpad/shared.ts/SKETCHPAD-STATE)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE)
 // MUST define mutable and immutable sketchpad state interfaces with diff types.
 
 /**
  * Mobile device state with navbar and footer expansion flags.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§MobileDevice](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/MOBILEDEVICE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️mobiledevice](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/MOBILE-DEVICE)
  **/
 export interface MobileDevice {
   isNavbarExpanded: boolean;
@@ -1173,7 +1173,7 @@ export interface MobileDevice {
 /**
  * Mutable fields of sketchpad state including navigation, theme, device, and settings.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§SketchpadChangableState](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/SKETCHPADCHANGABLESTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️sketchpadchangablestate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/SKETCHPAD-CHANGABLE-STATE)
  **/
 export interface SketchpadChangableState {
   navigation: string;
@@ -1200,7 +1200,7 @@ export interface SketchpadChangableState {
 /**
  * Full sketchpad state extending changeable state with ID and persistence flag.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§SketchpadState](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/SKETCHPADSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️sketchpadstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/SKETCHPAD-STATE)
  **/
 export interface SketchpadState extends SketchpadChangableState {
   id?: string;
@@ -1210,7 +1210,7 @@ export interface SketchpadState extends SketchpadChangableState {
 /**
  * Partial diff of sketchpad state fields for incremental updates.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§SketchpadDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/SKETCHPADDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️sketchpaddiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/SKETCHPAD-DIFF)
  **/
 export interface SketchpadDiff {
   navigation?: string;
@@ -1237,7 +1237,7 @@ export interface SketchpadDiff {
 /**
  * Initial kit state with kit data and local/remote flags.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§InitialStateKit](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/INITIALSTATEKIT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️initialstatekit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/INITIAL-STATE-KIT)
  **/
 export interface InitialStateKit {
   kit: Kit;
@@ -1248,7 +1248,7 @@ export interface InitialStateKit {
 /**
  * Extended initial state combining partial sketchpad state with initial kits.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§ExtendedInitialState](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/EXTENDEDINITIALSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️extendedinitialstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/EXTENDED-INITIAL-STATE)
  **/
 export interface ExtendedInitialState extends Partial<SketchpadState> {
   kits?: InitialStateKit[];
@@ -1257,7 +1257,7 @@ export interface ExtendedInitialState extends Partial<SketchpadState> {
 /**
  * Callback functions for window minimize, maximize, and close events.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§WindowEvents](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/WINDOWEVENTS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️windowevents](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/WINDOW-EVENTS)
  **/
 export type WindowEvents = {
   minimize: () => void;
@@ -1268,7 +1268,7 @@ export type WindowEvents = {
 /**
  * Scoped sketchpad context with ID, optional remote providers, and window events.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Sketchpad State§SketchpadScope](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/SKETCHPAD-STATE/SKETCHPADSCOPE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate🛠️sketchpadscope](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE/SKETCHPAD-SCOPE)
  **/
 export type SketchpadScope = { id: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents };
 
@@ -1276,13 +1276,13 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; onWindowEve
 
 // #region 🔖Commands
 
-// [🔖semio/js/sketchpad/shared.ts#Commands](semiorepo://section/semio/js/sketchpad/shared.ts/COMMANDS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMMANDS)
 // MUST define command context and result interfaces for kit and sketchpad operations.
 
 /**
  * Context for kit commands including kit data, file URLs, and origin.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Commands§KitCommandContext](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/COMMANDS/KITCOMMANDCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖commands🛠️kitcommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMMANDS/KIT-COMMAND-CONTEXT)
  **/
 export interface KitCommandContext {
   kit: Kit;
@@ -1293,7 +1293,7 @@ export interface KitCommandContext {
 /**
  * Result of a kit command with optional diff, files, and origin.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Commands§KitCommandResult](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/COMMANDS/KITCOMMANDRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖commands🛠️kitcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMMANDS/KIT-COMMAND-RESULT)
  **/
 export interface KitCommandResult {
   diff?: KitDiff;
@@ -1304,7 +1304,7 @@ export interface KitCommandResult {
 /**
  * Context for sketchpad commands including sketchpad state and origin.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Commands§SketchpadCommandContext](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/COMMANDS/SKETCHPADCOMMANDCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖commands🛠️sketchpadcommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMMANDS/SKETCHPAD-COMMAND-CONTEXT)
  **/
 export interface SketchpadCommandContext {
   sketchpad: SketchpadState;
@@ -1314,7 +1314,7 @@ export interface SketchpadCommandContext {
 /**
  * Result of a sketchpad command with optional diff and origin.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Commands§SketchpadCommandResult](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/COMMANDS/SKETCHPADCOMMANDRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖commands🛠️sketchpadcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMMANDS/SKETCHPAD-COMMAND-RESULT)
  **/
 export interface SketchpadCommandResult {
   diff?: SketchpadDiff;
@@ -1325,13 +1325,13 @@ export interface SketchpadCommandResult {
 
 // #region 🔖Store
 
-// [🔖semio/js/sketchpad/shared.ts#Store](semiorepo://section/semio/js/sketchpad/shared.ts/STORE)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE)
 // MUST define store state, app step, edit, diff, and command result interfaces.
 
 /**
  * Interface for objects that support change subscription and snapshot retrieval.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§Synchronizable](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/SYNCHRONIZABLE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️synchronizable](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/SYNCHRONIZABLE)
  **/
 export interface Synchronizable<TAccessl> {
   onChanged: (subscribe: Subscribe) => Unsubscribe;
@@ -1342,7 +1342,7 @@ export interface Synchronizable<TAccessl> {
 /**
  * Wrapper for store status, data, and error.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§StoreState](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/STORESTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️storestate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/STORE-STATE)
  **/
 export interface StoreState<TState> {
   status: StoreStatus;
@@ -1353,7 +1353,7 @@ export interface StoreState<TState> {
 /**
  * A single app step with optional selection diff.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§AppStep](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/APPSTEP)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️appstep](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/APP-STEP)
  **/
 export interface AppStep<TSelectionDiff = any> {
   selectionDiff?: TSelectionDiff;
@@ -1362,7 +1362,7 @@ export interface AppStep<TSelectionDiff = any> {
 /**
  * An undoable edit consisting of do and undo app steps.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§AppEdit](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/APPEDIT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️appedit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/APP-EDIT)
  **/
 export interface AppEdit<TSelectionDiff = any> {
   do: AppStep<TSelectionDiff>;
@@ -1372,7 +1372,7 @@ export interface AppEdit<TSelectionDiff = any> {
 /**
  * A diff containing selection, presence, hover, fullscreen, and panel visibility changes.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§AppDiff](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/APPDIFF)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️appdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/APP-DIFF)
  **/
 export interface AppDiff<TSelectionDiff = any> {
   selection?: TSelectionDiff;
@@ -1385,7 +1385,7 @@ export interface AppDiff<TSelectionDiff = any> {
 /**
  * Result of an app command with optional diff and origin.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§AppCommandResult](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/APPCOMMANDRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️appcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/APP-COMMAND-RESULT)
  **/
 export interface AppCommandResult<TDiff = any> {
   diff?: TDiff;
@@ -1395,7 +1395,7 @@ export interface AppCommandResult<TDiff = any> {
 /**
  * An app step extended with an optional kit diff.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§KitDiffAppStep](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/KITDIFFAPPSTEP)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️kitdiffappstep](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/KIT-DIFF-APP-STEP)
  **/
 export interface KitDiffAppStep<TSelectionDiff = any> extends AppStep<TSelectionDiff> {
   kitDiff?: KitDiff;
@@ -1404,7 +1404,7 @@ export interface KitDiffAppStep<TSelectionDiff = any> extends AppStep<TSelection
 /**
  * An undoable edit with kit diff-aware do and undo steps.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§KitDiffAppEdit](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/KITDIFFAPPEDIT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️kitdiffappedit](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/KIT-DIFF-APP-EDIT)
  **/
 export interface KitDiffAppEdit<TSelectionDiff = any> {
   do: KitDiffAppStep<TSelectionDiff>;
@@ -1414,7 +1414,7 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 /**
  * An app command result extended with an optional kit diff.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§KitDiffAppCommandResult](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/KITDIFFAPPCOMMANDRESULT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️kitdiffappcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/KIT-DIFF-APP-COMMAND-RESULT)
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
   kitDiff?: KitDiff;
@@ -1423,7 +1423,7 @@ export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<T
 /**
  * Interface for objects that support change subscription and snapshot retrieval.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Store§Synchronizable](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/STORE/SYNCHRONIZABLE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store🛠️synchronizable](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE/SYNCHRONIZABLE)
  **/
 export interface Synchronizable<TAccessl> {
   onChanged: (subscribe: Subscribe) => Unsubscribe;
@@ -1435,13 +1435,13 @@ export interface Synchronizable<TAccessl> {
 
 // #region 🔖Complete State
 
-// [🔖semio/js/sketchpad/shared.ts#Complete State](semiorepo://section/semio/js/sketchpad/shared.ts/COMPLETE-STATE)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖completestate](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMPLETE-STATE)
 // MUST define the complete aggregated state interface for the entire sketchpad.
 
 /**
  * Full aggregated state containing sketchpad, kits, and all app states.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Complete State§CompleteState](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/COMPLETE-STATE/COMPLETESTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖completestate🛠️completestate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMPLETE-STATE/COMPLETE-STATE)
  **/
 export interface CompleteState {
   sketchpad: SketchpadState;
@@ -1463,13 +1463,13 @@ export interface CompleteState {
 
 // #region 🔖Window
 
-// [🔖semio/js/sketchpad/shared.ts#Window](semiorepo://section/semio/js/sketchpad/shared.ts/WINDOW)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW)
 // MUST define window configuration, control, layout parsing, and default layout creation.
 
 /**
  * Configuration for a window with ID, title, icon, component, and default size.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Window§WindowConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/WINDOWCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️windowconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/WINDOW-CONFIG)
  **/
 export interface WindowConfig {
   id: string;
@@ -1483,7 +1483,7 @@ export interface WindowConfig {
 /**
  * A window control with kind, ID, icon, options, and change handler.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Window§WindowControl](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/WINDOWCONTROL)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️windowcontrol](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/WINDOW-CONTROL)
  **/
 export interface WindowControl {
   kind: "toggle" | "dropdown";
@@ -1501,7 +1501,7 @@ export interface WindowControl {
 /**
  * Definition of a window kind with label, icon, component, controls, and variants.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Window§WindowKindDefinition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/WINDOWKINDDEFINITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️windowkinddefinition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/WINDOW-KIND-DEFINITION)
  **/
 export interface WindowKindDefinition {
   id: string;
@@ -1519,7 +1519,7 @@ export interface WindowKindDefinition {
 /**
  * App-level window configuration with window kinds and default layout.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Window§AppWindowConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/APPWINDOWCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️appwindowconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/APP-WINDOW-CONFIG)
  **/
 export interface AppWindowConfig {
   windowKinds: WindowKindDefinition[];
@@ -1531,7 +1531,7 @@ export interface AppWindowConfig {
  *
  * MUST return undefined for null, empty, or unparseable inputs and parse valid JSON strings.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Window§parseWindowLayout](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/PARSEWINDOWLAYOUT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️parsewindowlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/PARSE-WINDOW-LAYOUT)
  **/
 export function parseWindowLayout(layout: unknown): any | undefined {
   if (layout === undefined || layout === null) return undefined;
@@ -1553,7 +1553,7 @@ export function parseWindowLayout(layout: unknown): any | undefined {
  *
  * MUST remove duplicate component entries and filter out disallowed window IDs.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Window§deduplicateWindowLayout](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/DEDUPLICATEWINDOWLAYOUT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️deduplicatewindowlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/DEDUPLICATE-WINDOW-LAYOUT)
  **/
 export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
   if (!layout || typeof layout !== "object") return layout;
@@ -1606,7 +1606,7 @@ export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[])
  *
  * MUST return undefined when serialization fails.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Window§stringifyWindowLayout](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/STRINGIFYWINDOWLAYOUT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️stringifywindowlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/STRINGIFY-WINDOW-LAYOUT)
  **/
 export function stringifyWindowLayout(layout: unknown): string | undefined {
   if (layout === undefined || layout === null) return undefined;
@@ -1620,7 +1620,7 @@ export function stringifyWindowLayout(layout: unknown): string | undefined {
 /**
  * Props for an app window component with kind, children, and className.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Window§AppWindowProps](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/APPWINDOWPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️appwindowprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/APP-WINDOW-PROPS)
  **/
 export interface AppWindowProps {
   kind: WindowKind;
@@ -1633,7 +1633,7 @@ export interface AppWindowProps {
  *
  * MUST generate a GoldenLayout config with one stack per window ID.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Ports#Window§createDefaultLayout](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/WINDOW/CREATEDEFAULTLAYOUT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window🛠️createdefaultlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW/CREATE-DEFAULT-LAYOUT)
  **/
 export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): any {
   return {
@@ -1659,13 +1659,13 @@ export function createDefaultLayout(windowIds: string[], direction: "row" | "col
 
 // #region 🔖Tool
 
-// [🔖semio/js/sketchpad/shared.ts#Tool](semiorepo://section/semio/js/sketchpad/shared.ts/TOOL)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL)
 // MUST define tool interfaces for selection, lasso, connector, and hand interactions.
 
 /**
  * A tool with ID, icon, and render function returning scene, diagram, and table nodes.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Tool§Tool](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/TOOL/TOOL)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool🛠️tool](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL/TOOL)
  **/
 export interface Tool<TState = any> {
   id: ToolKind | string;
@@ -1676,7 +1676,7 @@ export interface Tool<TState = any> {
 /**
  * A tool mode with ID, icon, label, and tooltip.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Tool§ToolMode](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/TOOL/TOOLMODE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool🛠️toolmode](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL/TOOL-MODE)
  **/
 export interface ToolMode {
   id: string;
@@ -1688,7 +1688,7 @@ export interface ToolMode {
 /**
  * Definition of a tool with ID, default mode, and available modes.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Tool§ToolDefinition](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/TOOL/TOOLDEFINITION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool🛠️tooldefinition](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL/TOOL-DEFINITION)
  **/
 export interface ToolDefinition {
   id: string;
@@ -1699,7 +1699,7 @@ export interface ToolDefinition {
 /**
  * Context passed to a tool's render function containing the current state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Tool§ToolRenderContext](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/TOOL/TOOLRENDERCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool🛠️toolrendercontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL/TOOL-RENDER-CONTEXT)
  **/
 export interface ToolRenderContext<TState = any> {
   state: TState;
@@ -1708,7 +1708,7 @@ export interface ToolRenderContext<TState = any> {
 /**
  * Props for a tool group component with tools, active tool, and change handler.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Tool§ToolGroupProps](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/TOOL/TOOLGROUPPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool🛠️toolgroupprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL/TOOL-GROUP-PROPS)
  **/
 export interface ToolGroupProps {
   tools: ToolDefinition[];
@@ -1720,13 +1720,13 @@ export interface ToolGroupProps {
 
 // #region 🔖Focus
 
-// [🔖semio/js/sketchpad/shared.ts#Focus](semiorepo://section/semio/js/sketchpad/shared.ts/FOCUS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖focus](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOCUS)
 // MUST define the focus item interface for search and navigation targets.
 
 /**
  * A focusable item with ID, label, optional description, and category.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Focus§FocusItem](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FOCUS/FOCUSITEM)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖focus🛠️focusitem](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOCUS/FOCUS-ITEM)
  **/
 export interface FocusItem {
   id: string;
@@ -1739,13 +1739,13 @@ export interface FocusItem {
 
 // #region 🔖Footer
 
-// [🔖semio/js/sketchpad/shared.ts#Footer](semiorepo://section/semio/js/sketchpad/shared.ts/FOOTER)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOOTER)
 // MUST define the footer item interface for status bar entries.
 
 /**
  * A footer status bar item with ID, icon, text, content, and click handler.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Footer§FooterItem](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/FOOTER/FOOTERITEM)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖footer🛠️footeritem](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOOTER/FOOTER-ITEM)
  **/
 export interface FooterItem {
   id: string;
@@ -1762,13 +1762,13 @@ export interface FooterItem {
 
 // #region 🔖Panel Props
 
-// [🔖semio/js/sketchpad/shared.ts#Panel Props](semiorepo://section/semio/js/sketchpad/shared.ts/PANEL-PROPS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panelprops](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL-PROPS)
 // MUST define resizable panel props interface for panel width management.
 
 /**
  * Props for a resizable panel with visibility, width, and width change handler.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Ports#Panel Props§ResizablePanelProps](semiorepo://definition/semio/js/sketchpad/shared.ts/PORTS/PANEL-PROPS/RESIZABLEPANELPROPS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panelprops🛠️resizablepanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL-PROPS/RESIZABLE-PANEL-PROPS)
  **/
 export interface ResizablePanelProps {
   visible: boolean;
@@ -1786,13 +1786,13 @@ export interface ResizablePanelProps {
 
 // #region 🔖XState Types
 
-// [🔖semio/js/sketchpad/shared.ts#XState Types](semiorepo://section/semio/js/sketchpad/shared.ts/XSTATE-TYPES)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES)
 // MUST define XState machine context and event type interfaces for sketchpad, kit, and app machines.
 
 /**
  * Base context for Y.js-synced machines with dirty flag and cache.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#XState Types§YjsSyncContext](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/YJSSYNCCONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️yjssynccontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/YJS-SYNC-CONTEXT)
  **/
 export interface YjsSyncContext {
   dirty: boolean;
@@ -1803,7 +1803,7 @@ export interface YjsSyncContext {
 /**
  * XState context for the sketchpad machine with navigation, theme, kits, and refs.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#XState Types§SketchpadMachineContext](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/SKETCHPADMACHINECONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️sketchpadmachinecontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/SKETCHPAD-MACHINE-CONTEXT)
  **/
 export interface SketchpadMachineContext extends YjsSyncContext {
   navigation: string;
@@ -1836,7 +1836,7 @@ export interface SketchpadMachineContext extends YjsSyncContext {
 /**
  * Union of all events the sketchpad machine can receive.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#XState Integration#XState Types§SketchpadMachineEvent](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/SKETCHPADMACHINEEVENT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️sketchpadmachineevent](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/SKETCHPAD-MACHINE-EVENT)
  **/
 export type SketchpadMachineEvent =
   | { type: "NAVIGATE"; path: string }
@@ -1857,7 +1857,7 @@ export type SketchpadMachineEvent =
 /**
  * XState context for a kit machine with GUID, kit data, types, designs, and files.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#XState Types§KitMachineContext](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/KITMACHINECONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️kitmachinecontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/KIT-MACHINE-CONTEXT)
  **/
 export interface KitMachineContext extends YjsSyncContext {
   guid: Guid;
@@ -1877,7 +1877,7 @@ export interface KitMachineContext extends YjsSyncContext {
 /**
  * Union of all events the kit machine can receive.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#XState Integration#XState Types§KitMachineEvent](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/KITMACHINEEVENT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️kitmachineevent](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/KIT-MACHINE-EVENT)
  **/
 export type KitMachineEvent =
   | { type: "LOAD" }
@@ -1893,7 +1893,7 @@ export type KitMachineEvent =
 /**
  * XState context for an app machine with panels, selection, hover, and transaction state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#XState Types§AppMachineContext](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/APPMACHINECONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️appmachinecontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/APP-MACHINE-CONTEXT)
  **/
 export interface AppMachineContext<TSelection = any> extends YjsSyncContext {
   panelVisibility: PanelVisibility;
@@ -1911,7 +1911,7 @@ export interface AppMachineContext<TSelection = any> extends YjsSyncContext {
 /**
  * Union of all events an app machine can receive.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#XState Integration#XState Types§AppMachineEvent](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/APPMACHINEEVENT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️appmachineevent](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/APP-MACHINE-EVENT)
  **/
 export type AppMachineEvent<TSelectionDiff = any, TDiff = any> =
   | { type: "START_TRANSACTION" }
@@ -1930,7 +1930,7 @@ export type AppMachineEvent<TSelectionDiff = any, TDiff = any> =
 /**
  * Extended app machine context with a kit GUID for kit-diff-aware apps.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#XState Types§KitDiffAppMachineContext](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/XSTATE-TYPES/KITDIFFAPPMACHINECONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes🛠️kitdiffappmachinecontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES/KIT-DIFF-APP-MACHINE-CONTEXT)
  **/
 export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineContext<TSelection> {
   kitGuid: Guid;
@@ -1940,7 +1940,7 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
 
 // #region 🔖Y.js-XState Bridge
 
-// [🔖semio/js/sketchpad/shared.ts#Y.js-XState Bridge](semiorepo://section/semio/js/sketchpad/shared.ts/Y-JS-XSTATE-BRIDGE)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖yjsxstatebridge](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE)
 // MUST bridge Y.js document observation to XState machine events.
 
 /**
@@ -1948,7 +1948,7 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
  *
  * MUST observe the Y.js map deeply and send Y_UPDATE events on every change.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#XState Integration#Y.js-XState Bridge§createYjsSyncActor](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/Y-JS-XSTATE-BRIDGE/CREATEYJSSYNCACTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖yjsxstatebridge🛠️createyjssyncactor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE/CREATE-YJS-SYNC-ACTOR)
  **/
 export function createYjsSyncActor(yMap: Y.Map<any>) {
   return fromCallback<{ type: "Y_UPDATE"; data: any }>(({ sendBack }: { sendBack: (event: { type: "Y_UPDATE"; data: any }) => void }) => {
@@ -1971,7 +1971,7 @@ export function createYjsSyncActor(yMap: Y.Map<any>) {
  *
  * MUST observe a specific field in the Y.js map and send Y_FIELD_UPDATE events.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#XState Integration#Y.js-XState Bridge§createYjsFieldSyncActor](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/Y-JS-XSTATE-BRIDGE/CREATEYJSFIELDSYNCACTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖yjsxstatebridge🛠️createyjsfieldsyncactor](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE/CREATE-YJS-FIELD-SYNC-ACTOR)
  **/
 export function createYjsFieldSyncActor(yMap: Y.Map<any>, field: string) {
   return fromCallback<{ type: "Y_FIELD_UPDATE"; field: string; value: any }>(({ sendBack }: { sendBack: (event: { type: "Y_FIELD_UPDATE"; field: string; value: any }) => void }) => {
@@ -1998,7 +1998,7 @@ export function createYjsFieldSyncActor(yMap: Y.Map<any>, field: string) {
  *
  * MUST delegate to the Y.Doc transact method with the given origin.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#XState Integration#Y.js-XState Bridge§yTransact](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/Y-JS-XSTATE-BRIDGE/YTRANSACT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖yjsxstatebridge🛠️ytransact](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE/Y-TRANSACT)
  **/
 export function yTransact(yDoc: Y.Doc, fn: () => void, origin?: string): void {
   yDoc.transact(fn, origin);
@@ -2009,7 +2009,7 @@ export function yTransact(yDoc: Y.Doc, fn: () => void, origin?: string): void {
  *
  * MUST return an XState assign that sets dirty to true and caches event data.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#XState Integration#Y.js-XState Bridge§createYjsUpdateAssign](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/Y-JS-XSTATE-BRIDGE/CREATEYJSUPDATEASSIGN)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖yjsxstatebridge🛠️createyjsupdateassign](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE/CREATE-YJS-UPDATE-ASSIGN)
  **/
 export function createYjsUpdateAssign() {
   return assign({
@@ -2023,7 +2023,7 @@ export function createYjsUpdateAssign() {
  *
  * MUST return cached snapshot when not dirty, rebuilding only when dirty.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#XState Integration#Y.js-XState Bridge§createYjsSelector](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/Y-JS-XSTATE-BRIDGE/CREATEYJSSELECTOR)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖yjsxstatebridge🛠️createyjsselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE/CREATE-YJS-SELECTOR)
  **/
 export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(buildSnapshot: (context: TContext) => TSnapshot): (context: TContext) => TSnapshot {
   return (context: TContext): TSnapshot => {
@@ -2038,13 +2038,13 @@ export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(bu
 
 // #region 🔖Machine Factories
 
-// [🔖semio/js/sketchpad/shared.ts#Machine Factories](semiorepo://section/semio/js/sketchpad/shared.ts/MACHINE-FACTORIES)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖machinefactories](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/MACHINE-FACTORIES)
 // MUST define machine input and transaction configuration interfaces for state machine creation.
 
 /**
  * Input for creating an app machine with Y.js map and transact function.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#Machine Factories§AppMachineInput](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/MACHINE-FACTORIES/APPMACHINEINPUT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖machinefactories🛠️appmachineinput](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/MACHINE-FACTORIES/APP-MACHINE-INPUT)
  **/
 export interface AppMachineInput {
   yMap: Y.Map<any>;
@@ -2054,7 +2054,7 @@ export interface AppMachineInput {
 /**
  * Extended app machine input with a kit GUID.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#Machine Factories§KitDiffAppMachineInput](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/MACHINE-FACTORIES/KITDIFFAPPMACHINEINPUT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖machinefactories🛠️kitdiffappmachineinput](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/MACHINE-FACTORIES/KIT-DIFF-APP-MACHINE-INPUT)
  **/
 export interface KitDiffAppMachineInput extends AppMachineInput {
   kitGuid: Guid;
@@ -2063,7 +2063,7 @@ export interface KitDiffAppMachineInput extends AppMachineInput {
 /**
  * Configuration for transaction handling with apply and inverse functions.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#XState Integration#Machine Factories§TransactionMachineConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/XSTATE-INTEGRATION/MACHINE-FACTORIES/TRANSACTIONMACHINECONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖machinefactories🛠️transactionmachineconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/MACHINE-FACTORIES/TRANSACTION-MACHINE-CONFIG)
  **/
 export interface TransactionMachineConfig<TEdit = any> {
   applySelectionDiff: (selectionDiff: any) => void;
@@ -2081,7 +2081,7 @@ export interface TransactionMachineConfig<TEdit = any> {
 
 // #region 🔖YPath Helpers
 
-// [🔖semio/js/sketchpad/shared.ts#YPath Helpers](semiorepo://section/semio/js/sketchpad/shared.ts/YPATH-HELPERS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS)
 // MUST provide path segment constructors, value retrieval, and observation functions for Y.js paths.
 
 /**
@@ -2089,7 +2089,7 @@ export interface TransactionMachineConfig<TEdit = any> {
  *
  * MUST return a mapKey segment with the given key.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#YPath Helpers§yPathMapKey](semiorepo://definition/semio/js/sketchpad/shared.ts/YPATH-HELPERS/YPATHMAPKEY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers🛠️ypathmapkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS/Y-PATH-MAP-KEY)
  **/
 export function yPathMapKey(key: string): YPathSegment {
   return { kind: "mapKey", key };
@@ -2100,7 +2100,7 @@ export function yPathMapKey(key: string): YPathSegment {
  *
  * MUST return an arrayIndex segment with the given index.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#YPath Helpers§yPathArrayIndex](semiorepo://definition/semio/js/sketchpad/shared.ts/YPATH-HELPERS/YPATHARRAYINDEX)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers🛠️ypatharrayindex](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS/Y-PATH-ARRAY-INDEX)
  **/
 export function yPathArrayIndex(index: number): YPathSegment {
   return { kind: "arrayIndex", index };
@@ -2111,7 +2111,7 @@ export function yPathArrayIndex(index: number): YPathSegment {
  *
  * MUST return an arrayItemById segment with the given ID and idKey.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#YPath Helpers§yPathArrayItemById](semiorepo://definition/semio/js/sketchpad/shared.ts/YPATH-HELPERS/YPATHARRAYITEMBYID)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers🛠️ypatharrayitembyid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS/Y-PATH-ARRAY-ITEM-BY-ID)
  **/
 export function yPathArrayItemById(id: string, idKey: string = "guid"): YPathSegment {
   return { kind: "arrayItemById", id, idKey };
@@ -2122,7 +2122,7 @@ export function yPathArrayItemById(id: string, idKey: string = "guid"): YPathSeg
  *
  * MUST traverse each path segment, returning undefined when a segment cannot be resolved.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#YPath Helpers§getValueAtPath](semiorepo://definition/semio/js/sketchpad/shared.ts/YPATH-HELPERS/GETVALUEATPATH)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers🛠️getvalueatpath](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS/GET-VALUE-AT-PATH)
  **/
 export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): any {
   let current: any = root;
@@ -2152,7 +2152,7 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
  *
  * MUST set up nested observers along the path and notify when the leaf value changes.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#YPath Helpers§createPathObserver](semiorepo://definition/semio/js/sketchpad/shared.ts/YPATH-HELPERS/CREATEPATHOBSERVER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers🛠️createpathobserver](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS/CREATE-PATH-OBSERVER)
  **/
 export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
@@ -2234,13 +2234,13 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
 
 // #region 🔖Derived Store
 
-// [🔖semio/js/sketchpad/shared.ts#Derived Store](semiorepo://section/semio/js/sketchpad/shared.ts/DERIVED-STORE)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖derivedstore](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/DERIVED-STORE)
 // MUST provide reactive derived computation nodes with dependency tracking and caching.
 
 /**
  * A dependency on a store path used by DerivedNode for change tracking.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Derived Store§BaseDependency](semiorepo://definition/semio/js/sketchpad/shared.ts/DERIVED-STORE/BASEDEPENDENCY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖derivedstore🛠️basedependency](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DERIVED-STORE/BASE-DEPENDENCY)
  **/
 export interface BaseDependency {
   store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any };
@@ -2252,7 +2252,7 @@ export interface BaseDependency {
  *
  * MUST lazily initialize observers and recompute only when dependency values change.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Derived Store§DerivedNode](semiorepo://definition/semio/js/sketchpad/shared.ts/DERIVED-STORE/DERIVEDNODE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖derivedstore🛠️derivednode](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DERIVED-STORE/DERIVED-NODE)
  **/
 export class DerivedNode<T> {
   private deps: BaseDependency[];
@@ -2326,7 +2326,7 @@ export class DerivedNode<T> {
  *
  * MUST manage DerivedNode lifecycle including creation, retrieval, and disposal.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Derived Store§DerivedStore](semiorepo://definition/semio/js/sketchpad/shared.ts/DERIVED-STORE/DERIVEDSTORE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖derivedstore🛠️derivedstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DERIVED-STORE/DERIVED-STORE)
  **/
 export class DerivedStore {
   private nodes = new Map<string, DerivedNode<any>>();
@@ -2370,31 +2370,31 @@ export class DerivedStore {
 
 // #region 🔖Store Factory Registry
 
-// [🔖semio/js/sketchpad/shared.ts#Store Factory Registry](semiorepo://section/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY)
 // MUST manage registration and retrieval of app-specific store factory functions.
 
 /**
  * Factory function type for creating a design app store.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§DesignAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/DESIGNAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️designappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/DESIGN-APP-STORE-FACTORY)
  **/
 export type DesignAppStoreFactory = (parent: any, id: any, state?: any) => any;
 /**
  * Factory function type for creating a kit app store.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§KitAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/KITAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️kitappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/KIT-APP-STORE-FACTORY)
  **/
 export type KitAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
 /**
  * Factory function type for creating a type app store.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§TypeAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/TYPEAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️typeappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/TYPE-APP-STORE-FACTORY)
  **/
 export type TypeAppStoreFactory = (parent: any, id: any, state?: any) => any;
 /**
  * Factory function type for creating a quality app store.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§QualityAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/QUALITYAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️qualityappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/QUALITY-APP-STORE-FACTORY)
  **/
 export type QualityAppStoreFactory = (parent: any, id: any, state?: any) => any;
 
@@ -2408,7 +2408,7 @@ let qualityAppStoreFactory: QualityAppStoreFactory | undefined;
  *
  * MUST replace any previously registered design app store factory.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§registerDesignAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/REGISTERDESIGNAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️registerdesignappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/REGISTER-DESIGN-APP-STORE-FACTORY)
  **/
 export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
   designAppStoreFactory = factory;
@@ -2419,7 +2419,7 @@ export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
  *
  * MUST replace any previously registered kit app store factory.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§registerKitAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/REGISTERKITAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️registerkitappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/REGISTER-KIT-APP-STORE-FACTORY)
  **/
 export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
   kitAppStoreFactory = factory;
@@ -2430,7 +2430,7 @@ export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
  *
  * MUST replace any previously registered type app store factory.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§registerTypeAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/REGISTERTYPEAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️registertypeappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/REGISTER-TYPE-APP-STORE-FACTORY)
  **/
 export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
   typeAppStoreFactory = factory;
@@ -2441,7 +2441,7 @@ export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
  *
  * MUST replace any previously registered quality app store factory.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§registerQualityAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/REGISTERQUALITYAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️registerqualityappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/REGISTER-QUALITY-APP-STORE-FACTORY)
  **/
 export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) {
   qualityAppStoreFactory = factory;
@@ -2452,7 +2452,7 @@ export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) 
  *
  * MUST throw if no design app store factory has been registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§getDesignAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/GETDESIGNAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️getdesignappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/GET-DESIGN-APP-STORE-FACTORY)
  **/
 export function getDesignAppStoreFactory(): DesignAppStoreFactory {
   if (!designAppStoreFactory) throw new Error("Design app store factory not registered");
@@ -2464,7 +2464,7 @@ export function getDesignAppStoreFactory(): DesignAppStoreFactory {
  *
  * MUST throw if no kit app store factory has been registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§getKitAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/GETKITAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️getkitappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/GET-KIT-APP-STORE-FACTORY)
  **/
 export function getKitAppStoreFactory(): KitAppStoreFactory {
   if (!kitAppStoreFactory) throw new Error("Kit app store factory not registered");
@@ -2476,7 +2476,7 @@ export function getKitAppStoreFactory(): KitAppStoreFactory {
  *
  * MUST throw if no type app store factory has been registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§getTypeAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/GETTYPEAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️gettypeappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/GET-TYPE-APP-STORE-FACTORY)
  **/
 export function getTypeAppStoreFactory(): TypeAppStoreFactory {
   if (!typeAppStoreFactory) throw new Error("Type app store factory not registered");
@@ -2488,7 +2488,7 @@ export function getTypeAppStoreFactory(): TypeAppStoreFactory {
  *
  * MUST throw if no quality app store factory has been registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Store Factory Registry§getQualityAppStoreFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/STORE-FACTORY-REGISTRY/GETQUALITYAPPSTOREFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry🛠️getqualityappstorefactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY/GET-QUALITY-APP-STORE-FACTORY)
  **/
 export function getQualityAppStoreFactory(): QualityAppStoreFactory {
   if (!qualityAppStoreFactory) throw new Error("Quality app store factory not registered");
@@ -2499,13 +2499,13 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
 
 // #region 🔖App Plugin Registry
 
-// [🔖semio/js/sketchpad/shared.ts#App Plugin Registry](semiorepo://section/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY)
 // MUST manage plugin registration, retrieval, and contribution composition for app extensions.
 
 /**
  * Plugin contribution of event types, actions, guards, handlers, selectors, and default state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Plugin Registry§AppMachineContribution](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/APPMACHINECONTRIBUTION)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️appmachinecontribution](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/APP-MACHINE-CONTRIBUTION)
  **/
 export interface AppMachineContribution {
   eventTypes?: Record<string, any>;
@@ -2524,7 +2524,7 @@ export interface AppMachineContribution {
 /**
  * An app plugin with ID, namespace, machine contribution, and lifecycle hooks.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Plugin Registry§AppPlugin](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/APPPLUGIN)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️appplugin](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/APP-PLUGIN)
  **/
 export interface AppPlugin {
   id: string;
@@ -2545,7 +2545,7 @@ const appPlugins: Map<string, AppPlugin> = new Map();
  *
  * MUST store the plugin and invoke registerStores and onRegister hooks if present.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Plugin Registry§registerAppPlugin](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/REGISTERAPPPLUGIN)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️registerappplugin](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/REGISTER-APP-PLUGIN)
  **/
 export function registerAppPlugin(plugin: AppPlugin): void {
   if (appPlugins.has(plugin.id)) {
@@ -2567,7 +2567,7 @@ export function registerAppPlugin(plugin: AppPlugin): void {
  *
  * MUST return all registered plugins as an array.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Plugin Registry§getAppPlugins](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/GETAPPPLUGINS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️getappplugins](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/GET-APP-PLUGINS)
  **/
 export function getAppPlugins(): AppPlugin[] {
   return Array.from(appPlugins.values());
@@ -2578,7 +2578,7 @@ export function getAppPlugins(): AppPlugin[] {
  *
  * MUST look up the plugin by ID in the registry.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Plugin Registry§getAppPlugin](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/GETAPPPLUGIN)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️getappplugin](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/GET-APP-PLUGIN)
  **/
 export function getAppPlugin(id: string): AppPlugin | undefined {
   return appPlugins.get(id);
@@ -2589,7 +2589,7 @@ export function getAppPlugin(id: string): AppPlugin | undefined {
  *
  * MUST check the registry for the given plugin ID.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Plugin Registry§hasAppPlugin](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/HASAPPPLUGIN)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️hasappplugin](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/HAS-APP-PLUGIN)
  **/
 export function hasAppPlugin(id: string): boolean {
   return appPlugins.has(id);
@@ -2600,7 +2600,7 @@ export function hasAppPlugin(id: string): boolean {
  *
  * MUST iterate all plugins and merge their contributions into single records.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Plugin Registry§composePluginContributions](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/COMPOSEPLUGINCONTRIBUTIONS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️composeplugincontributions](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/COMPOSE-PLUGIN-CONTRIBUTIONS)
  **/
 export function composePluginContributions(): {
   actions: Record<string, (context: any, event: any) => any>;
@@ -2649,7 +2649,7 @@ export function composePluginContributions(): {
  *
  * MUST call createDefaultState on each plugin that defines it.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Plugin Registry§getPluginDefaultStates](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-PLUGIN-REGISTRY/GETPLUGINDEFAULTSTATES)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry🛠️getplugindefaultstates](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY/GET-PLUGIN-DEFAULT-STATES)
  **/
 export function getPluginDefaultStates(): Record<string, any> {
   const defaults: Record<string, any> = {};
@@ -2665,13 +2665,13 @@ export function getPluginDefaultStates(): Record<string, any> {
 
 // #region 🔖Dynamic Event Dispatch Registry
 
-// [🔖semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry](semiorepo://section/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY)
 // MUST manage dynamic event handler and guard registration with namespace-based dispatch.
 
 /**
  * Configuration for a dynamic event handler with optional guard and action.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§EventHandlerConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/EVENTHANDLERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️eventhandlerconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/EVENT-HANDLER-CONFIG)
  **/
 export interface EventHandlerConfig<TContext = any, TEvent = any> {
   guard?: (context: TContext, event: TEvent) => boolean;
@@ -2688,7 +2688,7 @@ const guardRegistry: Map<string, (context: any, event: any) => boolean> = new Ma
  *
  * MUST store the handler config in the registry keyed by event type.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§registerEventHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/REGISTEREVENTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️registereventhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/REGISTER-EVENT-HANDLER)
  **/
 export function registerEventHandler<TContext = any, TEvent = any>(eventType: string, config: EventHandlerConfig<TContext, TEvent>): void {
   eventHandlerRegistry.set(eventType, config as EventHandlerConfig);
@@ -2699,7 +2699,7 @@ export function registerEventHandler<TContext = any, TEvent = any>(eventType: st
  *
  * MUST remove the handler for the given event type.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§unregisterEventHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/UNREGISTEREVENTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️unregistereventhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/UNREGISTER-EVENT-HANDLER)
  **/
 export function unregisterEventHandler(eventType: string): void {
   eventHandlerRegistry.delete(eventType);
@@ -2710,7 +2710,7 @@ export function unregisterEventHandler(eventType: string): void {
  *
  * MUST check the registry for the given event type.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§hasEventHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/HASEVENTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️haseventhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/HAS-EVENT-HANDLER)
  **/
 export function hasEventHandler(eventType: string): boolean {
   return eventHandlerRegistry.has(eventType);
@@ -2721,7 +2721,7 @@ export function hasEventHandler(eventType: string): boolean {
  *
  * MUST return the handler config or undefined.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§getEventHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/GETEVENTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️geteventhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/GET-EVENT-HANDLER)
  **/
 export function getEventHandler(eventType: string): EventHandlerConfig | undefined {
   return eventHandlerRegistry.get(eventType);
@@ -2732,7 +2732,7 @@ export function getEventHandler(eventType: string): EventHandlerConfig | undefin
  *
  * MUST run the guard before the action, returning empty context when guard fails.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§executeEventHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/EXECUTEEVENTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️executeeventhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/EXECUTE-EVENT-HANDLER)
  **/
 export function executeEventHandler<TContext = any, TEvent extends { type: string } = any>(context: TContext, event: TEvent): Partial<TContext> {
   const handler = eventHandlerRegistry.get(event.type);
@@ -2750,7 +2750,7 @@ export function executeEventHandler<TContext = any, TEvent extends { type: strin
  *
  * MUST store the guard function keyed by name.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§registerGuard](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/REGISTERGUARD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️registerguard](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/REGISTER-GUARD)
  **/
 export function registerGuard(name: string, guard: (context: any, event: any) => boolean): void {
   guardRegistry.set(name, guard);
@@ -2761,7 +2761,7 @@ export function registerGuard(name: string, guard: (context: any, event: any) =>
  *
  * MUST remove the guard function by name.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§unregisterGuard](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/UNREGISTERGUARD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️unregisterguard](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/UNREGISTER-GUARD)
  **/
 export function unregisterGuard(name: string): void {
   guardRegistry.delete(name);
@@ -2772,7 +2772,7 @@ export function unregisterGuard(name: string): void {
  *
  * MUST return the guard function or undefined.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§getGuard](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/GETGUARD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️getguard](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/GET-GUARD)
  **/
 export function getGuard(name: string): ((context: any, event: any) => boolean) | undefined {
   return guardRegistry.get(name);
@@ -2783,7 +2783,7 @@ export function getGuard(name: string): ((context: any, event: any) => boolean) 
  *
  * MUST check the guard registry for the given name.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§hasGuard](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/HASGUARD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️hasguard](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/HAS-GUARD)
  **/
 export function hasGuard(name: string): boolean {
   return guardRegistry.has(name);
@@ -2794,7 +2794,7 @@ export function hasGuard(name: string): boolean {
  *
  * MUST return false when the guard is not registered.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§executeGuard](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/EXECUTEGUARD)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️executeguard](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/EXECUTE-GUARD)
  **/
 export function executeGuard(name: string, context: any, event: any): boolean {
   const guard = guardRegistry.get(name);
@@ -2807,7 +2807,7 @@ export function executeGuard(name: string, context: any, event: any): boolean {
  *
  * MUST filter event types by the namespace prefix.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§getEventTypesForNamespace](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/GETEVENTTYPESFORNAMESPACE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️geteventtypesfornamespace](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/GET-EVENT-TYPES-FOR-NAMESPACE)
  **/
 export function getEventTypesForNamespace(namespace: string): string[] {
   const prefix = `${namespace}.`;
@@ -2819,7 +2819,7 @@ export function getEventTypesForNamespace(namespace: string): string[] {
  *
  * MUST extract unique namespace prefixes from all registered event types.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§getRegisteredNamespaces](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/GETREGISTEREDNAMESPACES)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️getregisterednamespaces](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/GET-REGISTERED-NAMESPACES)
  **/
 export function getRegisteredNamespaces(): string[] {
   const namespaces = new Set<string>();
@@ -2837,7 +2837,7 @@ export function getRegisteredNamespaces(): string[] {
  *
  * MUST return all event type strings from the registry.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§getRegisteredEventTypes](semiorepo://definition/semio/js/sketchpad/shared.ts/DYNAMIC-EVENT-DISPATCH-REGISTRY/GETREGISTEREDEVENTTYPES)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry🛠️getregisteredeventtypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY/GET-REGISTERED-EVENT-TYPES)
  **/
 export function getRegisteredEventTypes(): string[] {
   return Array.from(eventHandlerRegistry.keys());
@@ -2847,13 +2847,13 @@ export function getRegisteredEventTypes(): string[] {
 
 // #region 🔖App Event Handler Factories
 
-// [🔖semio/js/sketchpad/shared.ts#App Event Handler Factories](semiorepo://section/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES)
 // MUST provide factory functions for creating standard app event handlers for panels, hover, selection, and windows.
 
 /**
  * Configuration for an app event handler with namespace, app key, and default state factory.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Event Handler Factories§AppEventHandlerConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/APPEVENTHANDLERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️appeventhandlerconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/APP-EVENT-HANDLER-CONFIG)
  **/
 export interface AppEventHandlerConfig<TAppKey extends string, TAppState> {
   namespace: string;
@@ -2866,7 +2866,7 @@ export interface AppEventHandlerConfig<TAppKey extends string, TAppState> {
  *
  * MUST register a handler that toggles the specified panel in panelVisibility.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createTogglePanelHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATETOGGLEPANELHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createtogglepanelhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-TOGGLE-PANEL-HANDLER)
  **/
 export function createTogglePanelHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.TOGGLE_PANEL`;
@@ -2891,7 +2891,7 @@ export function createTogglePanelHandler<TAppKey extends string, TAppState exten
  *
  * MUST register a handler that replaces the entire panelVisibility.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSetPanelVisibilityHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESETPANELVISIBILITYHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsetpanelvisibilityhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SET-PANEL-VISIBILITY-HANDLER)
  **/
 export function createSetPanelVisibilityHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_PANEL_VISIBILITY`;
@@ -2910,7 +2910,7 @@ export function createSetPanelVisibilityHandler<TAppKey extends string, TAppStat
  *
  * MUST register a handler that sets hover using the provided mapper.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSetHoverHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESETHOVERHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsethoverhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SET-HOVER-HANDLER)
  **/
 export function createSetHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any): void {
   const eventType = `${config.namespace}.SET_HOVER`;
@@ -2929,7 +2929,7 @@ export function createSetHoverHandler<TAppKey extends string, TAppState extends 
  *
  * MUST register a handler with a guard that only clears non-empty hover state.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createClearHoverHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATECLEARHOVERHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createclearhoverhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-CLEAR-HOVER-HANDLER)
  **/
 export function createClearHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_HOVER`;
@@ -2953,7 +2953,7 @@ export function createClearHoverHandler<TAppKey extends string, TAppState extend
  *
  * MUST register a handler that sets the windowLayout from the event.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSetWindowLayoutHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESETWINDOWLAYOUTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsetwindowlayouthandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SET-WINDOW-LAYOUT-HANDLER)
  **/
 export function createSetWindowLayoutHandler<TAppKey extends string, TAppState extends { windowLayout?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_WINDOW_LAYOUT`;
@@ -2972,7 +2972,7 @@ export function createSetWindowLayoutHandler<TAppKey extends string, TAppState e
  *
  * MUST register a handler that sets selection to undefined.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createClearSelectionHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATECLEARSELECTIONHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createclearselectionhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-CLEAR-SELECTION-HANDLER)
  **/
 export function createClearSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_SELECTION`;
@@ -2989,7 +2989,7 @@ export function createClearSelectionHandler<TAppKey extends string, TAppState ex
 /**
  * Extended app event handler config with a getKey function for keyed state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Event Handler Factories§KeyedAppEventHandlerConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/KEYEDAPPEVENTHANDLERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️keyedappeventhandlerconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/KEYED-APP-EVENT-HANDLER-CONFIG)
  **/
 export interface KeyedAppEventHandlerConfig<TAppKey extends string, TAppState> extends AppEventHandlerConfig<TAppKey, TAppState> {
   getKey: (event: any) => string;
@@ -3000,7 +3000,7 @@ export interface KeyedAppEventHandlerConfig<TAppKey extends string, TAppState> e
  *
  * MUST register a keyed handler that toggles the panel for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedTogglePanelHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDTOGGLEPANELHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedtogglepanelhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-TOGGLE-PANEL-HANDLER)
  **/
 export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.TOGGLE_PANEL`;
@@ -3030,7 +3030,7 @@ export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState 
  *
  * MUST register a keyed handler that replaces panelVisibility for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetPanelVisibilityHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETPANELVISIBILITYHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsetpanelvisibilityhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-PANEL-VISIBILITY-HANDLER)
  **/
 export function createKeyedSetPanelVisibilityHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_PANEL_VISIBILITY`;
@@ -3054,7 +3054,7 @@ export function createKeyedSetPanelVisibilityHandler<TAppKey extends string, TAp
  *
  * MUST register a keyed handler that sets hover for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetHoverHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETHOVERHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsethoverhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-HOVER-HANDLER)
  **/
 export function createKeyedSetHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any): void {
   const eventType = `${config.namespace}.SET_HOVER`;
@@ -3078,7 +3078,7 @@ export function createKeyedSetHoverHandler<TAppKey extends string, TAppState ext
  *
  * MUST register a keyed handler that clears hover for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedClearHoverHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDCLEARHOVERHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedclearhoverhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-CLEAR-HOVER-HANDLER)
  **/
 export function createKeyedClearHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_HOVER`;
@@ -3102,7 +3102,7 @@ export function createKeyedClearHoverHandler<TAppKey extends string, TAppState e
  *
  * MUST register a keyed handler that sets selection for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetSelectionHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETSELECTIONHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsetselectionhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-SELECTION-HANDLER)
  **/
 export function createKeyedSetSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_SELECTION`;
@@ -3126,7 +3126,7 @@ export function createKeyedSetSelectionHandler<TAppKey extends string, TAppState
  *
  * MUST register a keyed handler that clears selection for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedClearSelectionHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDCLEARSELECTIONHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedclearselectionhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-CLEAR-SELECTION-HANDLER)
  **/
 export function createKeyedClearSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_SELECTION`;
@@ -3150,7 +3150,7 @@ export function createKeyedClearSelectionHandler<TAppKey extends string, TAppSta
  *
  * MUST register a keyed handler that sets windowLayout for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetWindowLayoutHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETWINDOWLAYOUTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsetwindowlayouthandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-WINDOW-LAYOUT-HANDLER)
  **/
 export function createKeyedSetWindowLayoutHandler<TAppKey extends string, TAppState extends { windowLayout?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_WINDOW_LAYOUT`;
@@ -3174,7 +3174,7 @@ export function createKeyedSetWindowLayoutHandler<TAppKey extends string, TAppSt
  *
  * MUST register a keyed handler that sets camera for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetCameraHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETCAMERAHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsetcamerahandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-CAMERA-HANDLER)
  **/
 export function createKeyedSetCameraHandler<TAppKey extends string, TAppState extends { camera?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_CAMERA`;
@@ -3198,7 +3198,7 @@ export function createKeyedSetCameraHandler<TAppKey extends string, TAppState ex
  *
  * MUST register a keyed handler that sets activeTool for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetActiveToolHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETACTIVETOOLHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsetactivetoolhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-ACTIVE-TOOL-HANDLER)
  **/
 export function createKeyedSetActiveToolHandler<TAppKey extends string, TAppState extends { activeTool?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_ACTIVE_TOOL`;
@@ -3222,7 +3222,7 @@ export function createKeyedSetActiveToolHandler<TAppKey extends string, TAppStat
  *
  * MUST register a keyed handler that sets fullscreenWindow for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSetFullscreenWindowHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSETFULLSCREENWINDOWHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsetfullscreenwindowhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SET-FULLSCREEN-WINDOW-HANDLER)
  **/
 export function createKeyedSetFullscreenWindowHandler<TAppKey extends string, TAppState extends { fullscreenWindow?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_FULLSCREEN_WINDOW`;
@@ -3246,7 +3246,7 @@ export function createKeyedSetFullscreenWindowHandler<TAppKey extends string, TA
  *
  * MUST register a keyed handler that initializes state for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedInitHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDINITHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedinithandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-INIT-HANDLER)
  **/
 export function createKeyedInitHandler<TAppKey extends string, TAppState>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.INIT`;
@@ -3269,7 +3269,7 @@ export function createKeyedInitHandler<TAppKey extends string, TAppState>(config
  *
  * MUST register a keyed handler that merges state for the resolved key.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createKeyedSyncHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATEKEYEDSYNCHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createkeyedsynchandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-KEYED-SYNC-HANDLER)
  **/
 export function createKeyedSyncHandler<TAppKey extends string, TAppState>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SYNC`;
@@ -3293,7 +3293,7 @@ export function createKeyedSyncHandler<TAppKey extends string, TAppState>(config
  *
  * MUST register toggle panel, set panel visibility, hover, clear hover, window layout, and clear selection handlers.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Event Handler Factories§registerStandardAppEventHandlers](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/REGISTERSTANDARDAPPEVENTHANDLERS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️registerstandardappeventhandlers](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/REGISTER-STANDARD-APP-EVENT-HANDLERS)
  **/
 export function registerStandardAppEventHandlers<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility; hover?: any; selection?: any; windowLayout?: any }>(
   config: AppEventHandlerConfig<TAppKey, TAppState>,
@@ -3312,7 +3312,7 @@ export function registerStandardAppEventHandlers<TAppKey extends string, TAppSta
  *
  * MUST register init, sync, and all standard keyed handlers including camera, tool, and fullscreen.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Event Handler Factories§registerKeyedAppEventHandlers](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/REGISTERKEYEDAPPEVENTHANDLERS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️registerkeyedappeventhandlers](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/REGISTER-KEYED-APP-EVENT-HANDLERS)
  **/
 export function registerKeyedAppEventHandlers<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility; hover?: any; selection?: any; windowLayout?: any; camera?: any; activeTool?: any; fullscreenWindow?: any }>(
   config: KeyedAppEventHandlerConfig<TAppKey, TAppState>,
@@ -3335,7 +3335,7 @@ export function registerKeyedAppEventHandlers<TAppKey extends string, TAppState 
 /**
  * Configuration for single-key event handlers with namespace, app key, key field, and default state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Event Handler Factories§SingleKeyAppEventHandlerConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/SINGLEKEYAPPEVENTHANDLERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️singlekeyappeventhandlerconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/SINGLE-KEY-APP-EVENT-HANDLER-CONFIG)
  **/
 export interface SingleKeyAppEventHandlerConfig<TAppKey extends string, TAppState> {
   namespace: string;
@@ -3349,7 +3349,7 @@ export interface SingleKeyAppEventHandlerConfig<TAppKey extends string, TAppStat
  *
  * MUST register a handler that initializes state for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeyInitHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYINITHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeyinithandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-INIT-HANDLER)
  **/
 export function createSingleKeyInitHandler<TAppKey extends string, TAppState>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3366,7 +3366,7 @@ export function createSingleKeyInitHandler<TAppKey extends string, TAppState>(co
  *
  * MUST register a handler that merges state for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeySyncHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYSYNCHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeysynchandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-SYNC-HANDLER)
  **/
 export function createSingleKeySyncHandler<TAppKey extends string, TAppState>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3384,7 +3384,7 @@ export function createSingleKeySyncHandler<TAppKey extends string, TAppState>(co
  *
  * MUST register a handler that toggles the panel for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeyTogglePanelHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYTOGGLEPANELHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeytogglepanelhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-TOGGLE-PANEL-HANDLER)
  **/
 export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3402,7 +3402,7 @@ export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppSt
  *
  * MUST register a handler that replaces panelVisibility for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeySetPanelVisibilityHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYSETPANELVISIBILITYHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeysetpanelvisibilityhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-SET-PANEL-VISIBILITY-HANDLER)
  **/
 export function createSingleKeySetPanelVisibilityHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3420,7 +3420,7 @@ export function createSingleKeySetPanelVisibilityHandler<TAppKey extends string,
  *
  * MUST register a handler that sets hover for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeySetHoverHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYSETHOVERHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeysethoverhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-SET-HOVER-HANDLER)
  **/
 export function createSingleKeySetHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3438,7 +3438,7 @@ export function createSingleKeySetHoverHandler<TAppKey extends string, TAppState
  *
  * MUST register a handler that clears hover for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeyClearHoverHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYCLEARHOVERHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeyclearhoverhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-CLEAR-HOVER-HANDLER)
  **/
 export function createSingleKeyClearHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3456,7 +3456,7 @@ export function createSingleKeyClearHoverHandler<TAppKey extends string, TAppSta
  *
  * MUST register a handler that sets selection for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeySetSelectionHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYSETSELECTIONHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeysetselectionhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-SET-SELECTION-HANDLER)
  **/
 export function createSingleKeySetSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3474,7 +3474,7 @@ export function createSingleKeySetSelectionHandler<TAppKey extends string, TAppS
  *
  * MUST register a handler that clears selection for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeyClearSelectionHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYCLEARSELECTIONHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeyclearselectionhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-CLEAR-SELECTION-HANDLER)
  **/
 export function createSingleKeyClearSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3492,7 +3492,7 @@ export function createSingleKeyClearSelectionHandler<TAppKey extends string, TAp
  *
  * MUST register a handler that sets windowLayout for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeySetWindowLayoutHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYSETWINDOWLAYOUTHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeysetwindowlayouthandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-SET-WINDOW-LAYOUT-HANDLER)
  **/
 export function createSingleKeySetWindowLayoutHandler<TAppKey extends string, TAppState extends { windowLayout?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3510,7 +3510,7 @@ export function createSingleKeySetWindowLayoutHandler<TAppKey extends string, TA
  *
  * MUST register a handler that sets fullscreenWindow for the event's key field value.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#App Event Handler Factories§createSingleKeySetFullscreenWindowHandler](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/CREATESINGLEKEYSETFULLSCREENWINDOWHANDLER)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️createsinglekeysetfullscreenwindowhandler](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/CREATE-SINGLE-KEY-SET-FULLSCREEN-WINDOW-HANDLER)
  **/
 export function createSingleKeySetFullscreenWindowHandler<TAppKey extends string, TAppState extends { fullscreenWindow?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3528,7 +3528,7 @@ export function createSingleKeySetFullscreenWindowHandler<TAppKey extends string
  *
  * MUST register init, sync, and all standard single-key handlers.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Event Handler Factories§registerSingleKeyAppEventHandlers](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-EVENT-HANDLER-FACTORIES/REGISTERSINGLEKEYAPPEVENTHANDLERS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️registersinglekeyappeventhandlers](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/REGISTER-SINGLE-KEY-APP-EVENT-HANDLERS)
  **/
 export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility; hover?: any; selection?: any; windowLayout?: any; fullscreenWindow?: any }>(
   config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>,
@@ -3550,13 +3550,13 @@ export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppSt
 
 // #region 🔖Transaction Handler Factory
 
-// [🔖semio/js/sketchpad/shared.ts#Transaction Handler Factory](semiorepo://section/semio/js/sketchpad/shared.ts/TRANSACTION-HANDLER-FACTORY)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY)
 // MUST provide factory functions for creating undo/redo transaction event handlers.
 
 /**
  * Configuration for keyed transaction handlers with namespace, app key, key fields, and default state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Transaction Handler Factory§KeyedTransactionHandlerConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/TRANSACTION-HANDLER-FACTORY/KEYEDTRANSACTIONHANDLERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory🛠️keyedtransactionhandlerconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY/KEYED-TRANSACTION-HANDLER-CONFIG)
  **/
 export interface KeyedTransactionHandlerConfig {
   namespace: string;
@@ -3568,7 +3568,7 @@ export interface KeyedTransactionHandlerConfig {
 /**
  * Transaction state with active flag, current stack, past stack, and redo stack.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Transaction Handler Factory§AppTransactionState](semiorepo://definition/semio/js/sketchpad/shared.ts/TRANSACTION-HANDLER-FACTORY/APPTRANSACTIONSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory🛠️apptransactionstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY/APP-TRANSACTION-STATE)
  **/
 export interface AppTransactionState<TEdit = any> {
   isTransactionActive: boolean;
@@ -3582,7 +3582,7 @@ export interface AppTransactionState<TEdit = any> {
  *
  * MUST register start, commit, abort, undo, redo, and record edit handlers for keyed state.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Transaction Handler Factory§createKeyedTransactionHandlers](semiorepo://definition/semio/js/sketchpad/shared.ts/TRANSACTION-HANDLER-FACTORY/CREATEKEYEDTRANSACTIONHANDLERS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory🛠️createkeyedtransactionhandlers](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY/CREATE-KEYED-TRANSACTION-HANDLERS)
  **/
 export function createKeyedTransactionHandlers(config: KeyedTransactionHandlerConfig): void {
   const { namespace, appKey, keyFields, createDefaultState } = config;
@@ -3676,7 +3676,7 @@ export function createKeyedTransactionHandlers(config: KeyedTransactionHandlerCo
 /**
  * Configuration for single-key transaction handlers with namespace, app key, key field, and default state.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#Transaction Handler Factory§SingleKeyTransactionHandlerConfig](semiorepo://definition/semio/js/sketchpad/shared.ts/TRANSACTION-HANDLER-FACTORY/SINGLEKEYTRANSACTIONHANDLERCONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory🛠️singlekeytransactionhandlerconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY/SINGLE-KEY-TRANSACTION-HANDLER-CONFIG)
  **/
 export interface SingleKeyTransactionHandlerConfig {
   namespace: string;
@@ -3690,7 +3690,7 @@ export interface SingleKeyTransactionHandlerConfig {
  *
  * MUST register start, commit, abort, undo, redo, and record edit handlers for single-key state.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Transaction Handler Factory§createSingleKeyTransactionHandlers](semiorepo://definition/semio/js/sketchpad/shared.ts/TRANSACTION-HANDLER-FACTORY/CREATESINGLEKEYTRANSACTIONHANDLERS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory🛠️createsinglekeytransactionhandlers](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY/CREATE-SINGLE-KEY-TRANSACTION-HANDLERS)
  **/
 export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionHandlerConfig): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3784,7 +3784,7 @@ export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionH
 
 // #region 🔖Selector Factory Pattern
 
-// [🔖semio/js/sketchpad/shared.ts#Selector Factory Pattern](semiorepo://section/semio/js/sketchpad/shared.ts/SELECTOR-FACTORY-PATTERN)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/SELECTOR-FACTORY-PATTERN)
 // MUST provide factory functions for creating property selectors with app key scoping.
 
 /**
@@ -3792,7 +3792,7 @@ export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionH
  *
  * MUST return a factory that creates selectors reading from the given app key.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Selector Factory Pattern§createAppPropertySelectorFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/SELECTOR-FACTORY-PATTERN/CREATEAPPPROPERTYSELECTORFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern🛠️createapppropertyselectorfactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/SELECTOR-FACTORY-PATTERN/CREATE-APP-PROPERTY-SELECTOR-FACTORY)
  **/
 export function createAppPropertySelectorFactory<TApps extends Record<string, any>>(appKey: string) {
   return function createPropertySelector<TProperty>(propertyKey: keyof TApps[string], fallback: TProperty) {
@@ -3808,7 +3808,7 @@ export function createAppPropertySelectorFactory<TApps extends Record<string, an
  *
  * MUST return a factory that creates keyed selectors reading from the given app key.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Selector Factory Pattern§createKeyedAppPropertySelectorFactory](semiorepo://definition/semio/js/sketchpad/shared.ts/SELECTOR-FACTORY-PATTERN/CREATEKEYEDAPPPROPERTYSELECTORFACTORY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern🛠️createkeyedapppropertyselectorfactory](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/SELECTOR-FACTORY-PATTERN/CREATE-KEYED-APP-PROPERTY-SELECTOR-FACTORY)
  **/
 export function createKeyedAppPropertySelectorFactory<TAppState>(appKey: string) {
   return function createPropertySelector<TProperty>(propertyKey: keyof TAppState, fallback: TProperty) {
@@ -3825,7 +3825,7 @@ export function createKeyedAppPropertySelectorFactory<TAppState>(appKey: string)
  *
  * MUST join all scope strings with colon separators.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#Selector Factory Pattern§getAppKey](semiorepo://definition/semio/js/sketchpad/shared.ts/SELECTOR-FACTORY-PATTERN/GETAPPKEY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern🛠️getappkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/SELECTOR-FACTORY-PATTERN/GET-APP-KEY)
  **/
 export function getAppKey(...scopes: string[]): string {
   return scopes.join(":");
@@ -3836,7 +3836,7 @@ export function getAppKey(...scopes: string[]): string {
  *
  * MUST return existing state or call the default factory to create it.
  *
- *  * [🪨semio/js/sketchpad/shared.ts#Selector Factory Pattern§getOrCreateAppState](semiorepo://definition/semio/js/sketchpad/shared.ts/SELECTOR-FACTORY-PATTERN/GETORCREATEAPPSTATE)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern🛠️getorcreateappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/SELECTOR-FACTORY-PATTERN/GET-OR-CREATE-APP-STATE)
  **/
 export function getOrCreateAppState<TState>(context: Record<string, Record<string, TState>>, appKey: string, key: string, defaultFactory: () => TState): TState {
   const apps = context[appKey] || {};
@@ -3847,13 +3847,13 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
 
 // #region 🔖App Hooks Registry
 
-// [🔖semio/js/sketchpad/shared.ts#App Hooks Registry](semiorepo://section/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY)
 // MUST manage registration and retrieval of design and kit app hook implementations.
 
 /**
  * Interface for design app hook functions including commands, diff, hover, and selection.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Hooks Registry§DesignAppHooks](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY/DESIGNAPPHOOKS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry🛠️designapphooks](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY/DESIGN-APP-HOOKS)
  **/
 export interface DesignAppHooks {
   useDesignAppCommands: (id?: { kit: string; design: string }) => any;
@@ -3871,7 +3871,7 @@ export interface DesignAppHooks {
 /**
  * Interface for kit app hook functions including commands.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Hooks Registry§KitAppHooks](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY/KITAPPHOOKS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry🛠️kitapphooks](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY/KIT-APP-HOOKS)
  **/
 export interface KitAppHooks {
   useKitAppCommands: (id?: { kit: string }) => any;
@@ -3902,7 +3902,7 @@ let registeredKitAppHooks: KitAppHooks | null = null;
  *
  * MUST store the provided hooks, replacing any previously registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Hooks Registry§registerDesignAppHooks](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY/REGISTERDESIGNAPPHOOKS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry🛠️registerdesignapphooks](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY/REGISTER-DESIGN-APP-HOOKS)
  **/
 export function registerDesignAppHooks(hooks: DesignAppHooks): void {
   registeredDesignAppHooks = hooks;
@@ -3913,7 +3913,7 @@ export function registerDesignAppHooks(hooks: DesignAppHooks): void {
  *
  * MUST store the provided hooks, replacing any previously registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Hooks Registry§registerKitAppHooks](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY/REGISTERKITAPPHOOKS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry🛠️registerkitapphooks](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY/REGISTER-KIT-APP-HOOKS)
  **/
 export function registerKitAppHooks(hooks: KitAppHooks): void {
   registeredKitAppHooks = hooks;
@@ -3924,7 +3924,7 @@ export function registerKitAppHooks(hooks: KitAppHooks): void {
  *
  * MUST fall back to default no-op hooks when none are registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Hooks Registry§getDesignAppHooks](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY/GETDESIGNAPPHOOKS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry🛠️getdesignapphooks](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY/GET-DESIGN-APP-HOOKS)
  **/
 export function getDesignAppHooks(): DesignAppHooks {
   return registeredDesignAppHooks ?? defaultDesignAppHooks;
@@ -3935,7 +3935,7 @@ export function getDesignAppHooks(): DesignAppHooks {
  *
  * MUST fall back to default no-op hooks when none are registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Hooks Registry§getKitAppHooks](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-HOOKS-REGISTRY/GETKITAPPHOOKS)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry🛠️getkitapphooks](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY/GET-KIT-APP-HOOKS)
  **/
 export function getKitAppHooks(): KitAppHooks {
   return registeredKitAppHooks ?? defaultKitAppHooks;
@@ -3945,13 +3945,13 @@ export function getKitAppHooks(): KitAppHooks {
 
 // #region 🔖App Registry Exports
 
-// [🔖semio/js/sketchpad/shared.ts#App Registry Exports](semiorepo://section/semio/js/sketchpad/shared.ts/APP-REGISTRY-EXPORTS)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖appregistryexports](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-REGISTRY-EXPORTS)
 // MUST provide docs registry port interface and registration for documentation section access.
 
 /**
  * Port interface for retrieving documentation section trees and pages.
  *
- *  * [✂️semio/js/sketchpad/shared.ts#App Registry Exports§DocsRegistryPort](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-REGISTRY-EXPORTS/DOCSREGISTRYPORT)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appregistryexports🛠️docsregistryport](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-REGISTRY-EXPORTS/DOCS-REGISTRY-PORT)
  **/
 export interface DocsRegistryPort {
   getSectionTree: (section: string) => any[];
@@ -3966,7 +3966,7 @@ let registeredDocsRegistry: DocsRegistryPort | null = null;
  *
  * MUST store the given docs registry, replacing any previous one.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Registry Exports§registerDocsRegistry](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-REGISTRY-EXPORTS/REGISTERDOCSREGISTRY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appregistryexports🛠️registerdocsregistry](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-REGISTRY-EXPORTS/REGISTER-DOCS-REGISTRY)
  **/
 export function registerDocsRegistry(registry: DocsRegistryPort): void {
   registeredDocsRegistry = registry;
@@ -3977,7 +3977,7 @@ export function registerDocsRegistry(registry: DocsRegistryPort): void {
  *
  * MUST return the registered docs registry or null when none is registered.
  *
- *  * [🛠️semio/js/sketchpad/shared.ts#App Registry Exports§getDocsRegistry](semiorepo://definition/semio/js/sketchpad/shared.ts/APP-REGISTRY-EXPORTS/GETDOCSREGISTRY)
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appregistryexports🛠️getdocsregistry](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-REGISTRY-EXPORTS/GET-DOCS-REGISTRY)
  **/
 export function getDocsRegistry(): DocsRegistryPort | null {
   return registeredDocsRegistry;

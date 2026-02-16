@@ -22,7 +22,7 @@
 
 // #region 🔖Publish
 
-// [🔖semio/gh/Semio.Grasshopper/yak/publish.ts#Publish](semiorepo://section/semio/gh/Semio.Grasshopper/yak/publish.ts/PUBLISH)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🔖publish](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/PUBLISH.TS/PUBLISH)
 // Yak publish script. MUST push the built package to the Yak server.
 
 import { execSync } from "child_process";

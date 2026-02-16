@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🔖semio/sketchpad/tailwind.config.ts#Configuration](semiorepo://section/semio/sketchpad/tailwind.config.ts/CONFIGURATION)
+// [👤semio🖱️sketchpad⚙️tailwindconfigts🔖configuration](semiorepo://section/SEMIO/SKETCHPAD/TAILWIND.CONFIG.TS/CONFIGURATION)
 // Tailwind CSS configuration extending the shared semio preset for the sketchpad application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/js.
 

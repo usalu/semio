@@ -19,7 +19,7 @@
 
 # region Imports
 
-# [🔖coda/py/coda.py#Imports](semiorepo://section/coda/py/coda.py/IMPORTS)
+# [🔬coda📚py💻codapy🔖imports](semiorepo://section/CODA/PY/CODA.PY/IMPORTS)
 # Imports MUST include standard library, third-party FastMCP, and module-level configuration.
 
 """coda MCP server - ACC design assistant with resources, tools, and prompts."""
@@ -44,7 +44,7 @@ _PROJECT_ENV = "CODA_PROJECT"
 
 # region Helpers
 
-# [🔖coda/py/coda.py#Helpers](semiorepo://section/coda/py/coda.py/HELPERS)
+# [🔬coda📚py💻codapy🔖helpers](semiorepo://section/CODA/PY/CODA.PY/HELPERS)
 # Helpers MUST provide private functions for config loading and project root resolution.
 
 
@@ -104,7 +104,7 @@ def _get_latest_iteration(run_dir: Path) -> Path | None:
 
 # region Resources
 
-# [🔖coda/py/coda.py#Resources](semiorepo://section/coda/py/coda.py/RESOURCES)
+# [🔬coda📚py💻codapy🔖resources](semiorepo://section/CODA/PY/CODA.PY/RESOURCES)
 # Resources MUST expose MCP resource handlers for measures, targets, properties, rules, and project data.
 
 
@@ -112,7 +112,7 @@ def _get_latest_iteration(run_dir: Path) -> Path | None:
 def get_measures() -> str:
     """List all measures that are available.
     Implementations MUST load the coda config and return the measures array.
-    [🛠️coda/py/coda.py#Resources§get_measures](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-MEASURES)
+    [🔬coda📚py💻codapy🔖resources🛠️getmeasures](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-MEASURES)
     """
     config = _get_coda_config()
     return json.dumps(config.get("measures", []), indent=2)
@@ -122,7 +122,7 @@ def get_measures() -> str:
 def get_measure(id: str) -> str:
     """Get a measure by id.
     Implementations MUST return an error JSON object when the measure is not found.
-    [🛠️coda/py/coda.py#Resources§get_measure](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-MEASURE)
+    [🔬coda📚py💻codapy🔖resources🛠️getmeasure](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-MEASURE)
     """
     config = _get_coda_config()
     for m in config.get("measures", []):
@@ -135,7 +135,7 @@ def get_measure(id: str) -> str:
 def get_targets() -> str:
     """List all targets.
     Implementations MUST load the coda config and return the targets array.
-    [🛠️coda/py/coda.py#Resources§get_targets](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-TARGETS)
+    [🔬coda📚py💻codapy🔖resources🛠️gettargets](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-TARGETS)
     """
     config = _get_coda_config()
     return json.dumps(config.get("targets", []), indent=2)
@@ -145,7 +145,7 @@ def get_targets() -> str:
 def get_target(id: str) -> str:
     """Get a target by id.
     Implementations MUST return an error JSON object when the target is not found.
-    [🛠️coda/py/coda.py#Resources§get_target](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-TARGET)
+    [🔬coda📚py💻codapy🔖resources🛠️gettarget](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-TARGET)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -158,7 +158,7 @@ def get_target(id: str) -> str:
 def get_target_properties(target_id: str) -> str:
     """Get properties for a target.
     Implementations MUST return an error JSON object when the target is not found.
-    [🛠️coda/py/coda.py#Resources§get_target_properties](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-TARGET-PROPERTIES)
+    [🔬coda📚py💻codapy🔖resources🛠️gettargetproperties](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-TARGET-PROPERTIES)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -171,7 +171,7 @@ def get_target_properties(target_id: str) -> str:
 def get_target_property(target_id: str, id: str) -> str:
     """Get a property by id for a target.
     Implementations MUST return an error JSON object when the target or property is not found.
-    [🛠️coda/py/coda.py#Resources§get_target_property](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-TARGET-PROPERTY)
+    [🔬coda📚py💻codapy🔖resources🛠️gettargetproperty](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-TARGET-PROPERTY)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -187,7 +187,7 @@ def get_target_property(target_id: str, id: str) -> str:
 def get_target_rules(target_id: str) -> str:
     """Get rules for a target.
     Implementations MUST return an error JSON object when the target is not found.
-    [🛠️coda/py/coda.py#Resources§get_target_rules](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-TARGET-RULES)
+    [🔬coda📚py💻codapy🔖resources🛠️gettargetrules](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-TARGET-RULES)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -200,7 +200,7 @@ def get_target_rules(target_id: str) -> str:
 def get_target_rule(target_id: str, id: str) -> str:
     """Get a rule by id for a target.
     Implementations MUST return an error JSON object when the target or rule is not found.
-    [🛠️coda/py/coda.py#Resources§get_target_rule](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-TARGET-RULE)
+    [🔬coda📚py💻codapy🔖resources🛠️gettargetrule](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-TARGET-RULE)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -216,7 +216,7 @@ def get_target_rule(target_id: str, id: str) -> str:
 def get_project() -> str:
     """Get the current project configuration.
     Implementations MUST return an error JSON object when no project root is found.
-    [🛠️coda/py/coda.py#Resources§get_project](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-PROJECT)
+    [🔬coda📚py💻codapy🔖resources🛠️getproject](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-PROJECT)
     """
     proj = _get_project_config()
     if proj is None:
@@ -232,7 +232,7 @@ def get_project() -> str:
 def get_current_run() -> str:
     """Get the current run metadata.
     Implementations MUST return an error JSON object when no project or run exists.
-    [🛠️coda/py/coda.py#Resources§get_current_run](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-CURRENT-RUN)
+    [🔬coda📚py💻codapy🔖resources🛠️getcurrentrun](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-CURRENT-RUN)
     """
     root = _get_project_root()
     if not root:
@@ -253,7 +253,7 @@ def get_current_run() -> str:
 def get_current_iteration() -> str:
     """Get the current iteration metadata.
     Implementations MUST return an error JSON object when no project, run, or iteration exists.
-    [🛠️coda/py/coda.py#Resources§get_current_iteration](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-CURRENT-ITERATION)
+    [🔬coda📚py💻codapy🔖resources🛠️getcurrentiteration](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-CURRENT-ITERATION)
     """
     root = _get_project_root()
     if not root:
@@ -277,7 +277,7 @@ def get_current_iteration() -> str:
 def get_iterations() -> str:
     """List iterations in the current run.
     Implementations MUST return an empty array when no runs or iterations exist.
-    [🛠️coda/py/coda.py#Resources§get_iterations](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-ITERATIONS)
+    [🔬coda📚py💻codapy🔖resources🛠️getiterations](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-ITERATIONS)
     """
     root = _get_project_root()
     if not root:
@@ -297,7 +297,7 @@ def get_iterations() -> str:
 def get_report() -> str:
     """Get the current report from the latest iteration.
     Implementations MUST return an error JSON object when no project, run, iteration, or report exists.
-    [🛠️coda/py/coda.py#Resources§get_report](semiorepo://definition/coda/py/coda.py/RESOURCES/GET-REPORT)
+    [🔬coda📚py💻codapy🔖resources🛠️getreport](semiorepo://definition/CODA/PY/CODA.PY/RESOURCES/GET-REPORT)
     """
     root = _get_project_root()
     if not root:
@@ -318,7 +318,7 @@ def get_report() -> str:
 
 # region Tools
 
-# [🔖coda/py/coda.py#Tools](semiorepo://section/coda/py/coda.py/TOOLS)
+# [🔬coda📚py💻codapy🔖tools](semiorepo://section/CODA/PY/CODA.PY/TOOLS)
 # Tools MUST expose MCP tool handlers for run management, translation, and design fixes.
 
 
@@ -326,7 +326,7 @@ def get_report() -> str:
 def start_run() -> dict:
     """Start a new run. Creates a new run directory under .coda/runs.
     Implementations MUST create the run directory with run.json and iterations subdirectory.
-    [🛠️coda/py/coda.py#Tools§start_run](semiorepo://definition/coda/py/coda.py/TOOLS/START-RUN)
+    [🔬coda📚py💻codapy🔖tools🛠️startrun](semiorepo://definition/CODA/PY/CODA.PY/TOOLS/START-RUN)
     """
     root = _get_project_root()
     if not root:
@@ -345,7 +345,7 @@ def start_run() -> dict:
 def start_iteration(run_id: str | None = None) -> dict:
     """Start a new iteration in the current or specified run.
     Implementations MUST create the iteration directory with targets subdirectory and iteration.json.
-    [🛠️coda/py/coda.py#Tools§start_iteration](semiorepo://definition/coda/py/coda.py/TOOLS/START-ITERATION)
+    [🔬coda📚py💻codapy🔖tools🛠️startiteration](semiorepo://definition/CODA/PY/CODA.PY/TOOLS/START-ITERATION)
     """
     root = _get_project_root()
     if not root:
@@ -376,7 +376,7 @@ def start_iteration(run_id: str | None = None) -> dict:
 def translate(target_id: str) -> dict:
     """Translate design to target format. Invokes the translator agent for the given target.
     Implementations MUST verify the target exists in the project before invoking translation.
-    [🛠️coda/py/coda.py#Tools§translate](semiorepo://definition/coda/py/coda.py/TOOLS/TRANSLATE)
+    [🔬coda📚py💻codapy🔖tools🛠️translate](semiorepo://definition/CODA/PY/CODA.PY/TOOLS/TRANSLATE)
     """
     proj = _get_project_config()
     if not proj:
@@ -394,7 +394,7 @@ def translate(target_id: str) -> dict:
 def fix(prompt: str) -> dict:
     """Fix design to address breachs. Invokes the fixer agent with the given prompt.
     Implementations MUST verify project existence before invoking the fixer.
-    [🛠️coda/py/coda.py#Tools§fix](semiorepo://definition/coda/py/coda.py/TOOLS/FIX)
+    [🔬coda📚py💻codapy🔖tools🛠️fix](semiorepo://definition/CODA/PY/CODA.PY/TOOLS/FIX)
     """
     proj = _get_project_config()
     if not proj:
@@ -406,7 +406,7 @@ def fix(prompt: str) -> dict:
 
 # region Prompts
 
-# [🔖coda/py/coda.py#Prompts](semiorepo://section/coda/py/coda.py/PROMPTS)
+# [🔬coda📚py💻codapy🔖prompts](semiorepo://section/CODA/PY/CODA.PY/PROMPTS)
 # Prompts MUST expose MCP prompt handlers for design change instructions.
 
 
@@ -414,7 +414,7 @@ def fix(prompt: str) -> dict:
 def change(prompt: str) -> str:
     """Change the design according to the given prompt. Use with the fixer agent.
     Implementations MUST return a formatted instruction string from the user prompt.
-    [🛠️coda/py/coda.py#Prompts§change](semiorepo://definition/coda/py/coda.py/PROMPTS/CHANGE)
+    [🔬coda📚py💻codapy🔖prompts🛠️change](semiorepo://definition/CODA/PY/CODA.PY/PROMPTS/CHANGE)
     """
     return f"Change the design to address the following: {prompt}"
 
@@ -423,14 +423,14 @@ def change(prompt: str) -> str:
 
 # region Main
 
-# [🔖coda/py/coda.py#Main](semiorepo://section/coda/py/coda.py/MAIN)
+# [🔬coda📚py💻codapy🔖main](semiorepo://section/CODA/PY/CODA.PY/MAIN)
 # Main MUST provide the CLI entry point for the coda MCP server.
 
 
 def main() -> None:
     """Parses CLI arguments and starts the MCP server.
     Implementations MUST support both stdio and HTTP transport modes.
-    [🛠️coda/py/coda.py#Main§main](semiorepo://definition/coda/py/coda.py/MAIN/MAIN)
+    [🔬coda📚py💻codapy🔖main🛠️main](semiorepo://definition/CODA/PY/CODA.PY/MAIN/MAIN)
     """
     parser = argparse.ArgumentParser(description="coda MCP server")
     parser.add_argument(

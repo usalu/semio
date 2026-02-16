@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🔖semio/desktop/forge.config.ts#Configuration](semiorepo://section/semio/desktop/forge.config.ts/CONFIGURATION)
+// [👤semio🖱️desktop⚙️forgeconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/FORGE.CONFIG.TS/CONFIGURATION)
 // Electron Forge build configuration for the desktop application.
 // Configuration MUST define packager, makers, and plugins for Electron Forge.
 
