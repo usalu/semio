@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🌐play⚙️postcssconfigts🔖configuration](semiorepo://section/SEMIO/PLAY/POSTCSS.CONFIG.TS/CONFIGURATION)
+// [👤semio🌐play⚙️postcssconfigts🔖configuration](semiorepo://section/semio/play/postcss.config.ts/configuration)
 // PostCSS plugin configuration for the play application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

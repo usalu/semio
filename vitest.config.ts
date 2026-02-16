@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [⚙️vitestconfigts🔖configuration](semiorepo://section/VITEST.CONFIG.TS/CONFIGURATION)
+// [⚙️vitestconfigts🔖configuration](semiorepo://section/vitest.config.ts/configuration)
 // Root Vitest configuration aggregating all workspace test projects.
 // Configuration MUST reference all workspace vite config files that define tests.
 

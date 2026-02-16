@@ -21,7 +21,7 @@
 
 // #region 🔖Renderer
 
-// [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://section/SEMIO/DESKTOP/RENDERER.TSX/RENDERER)
+// [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://section/semio/desktop/renderer.tsx/renderer)
 // Electron renderer process that mounts the Sketchpad React app with window controls.
 // MUST resolve the user identity before rendering the sketchpad.
 

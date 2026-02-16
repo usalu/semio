@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🌐docs⚙️postcssconfigts🔖configuration](semiorepo://section/SEMIO/DOCS/POSTCSS.CONFIG.TS/CONFIGURATION)
+// [👤semio🌐docs⚙️postcssconfigts🔖configuration](semiorepo://section/semio/docs/postcss.config.ts/configuration)
 // PostCSS plugin configuration for the docs application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

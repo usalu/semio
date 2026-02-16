@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode💻codegents](semiorepo://file/SEMIO-REPO/VSCODE/CODEGEN.TS)
+// [🧰semiorepo🖱️vscode💻codegents](semiorepo://file/semio-repo/vscode/codegen.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🧰semiorepo🖱️vscode💻codegents🔖configuration](semiorepo://section/SEMIO-REPO/VSCODE/CODEGEN.TS/CONFIGURATION)
+// [🧰semiorepo🖱️vscode💻codegents🔖configuration](semiorepo://section/semio-repo/vscode/codegen.ts/configuration)
 // GraphQL code generation configuration for the VS Code extension.
 // Configuration MUST generate typed client code from the GraphQL schema.
 

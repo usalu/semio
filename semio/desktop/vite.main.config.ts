@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️desktop⚙️vitemainconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/VITE.MAIN.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️desktop⚙️vitemainconfigts🔖configuration](semiorepo://section/semio/desktop/vite.main.config.ts/configuration)
 // Vite configuration for the Electron main process.
 // Configuration MUST export a valid Vite config object.
 

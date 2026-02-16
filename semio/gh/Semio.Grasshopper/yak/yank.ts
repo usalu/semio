@@ -22,7 +22,7 @@
 
 // #region 🔖Yank
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🔖yank](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/YANK.TS/YANK)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🔖yank](semiorepo://section/semio/gh/semio.grasshopper/yak/yank.ts/yank)
 // Yak yank script. MUST remove a package version from the Yak server.
 
 import { execSync } from "child_process";

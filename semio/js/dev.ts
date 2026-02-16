@@ -21,7 +21,7 @@
 
 // #region 🔖Dev
 
-// [👤semio📚js💻devts🔖dev](semiorepo://section/SEMIO/JS/DEV.TS/DEV)
+// [👤semio📚js💻devts🔖dev](semiorepo://section/semio/js/dev.ts/dev)
 // Spawns parallel sketchpad and storybook dev servers.
 // MUST kill both child processes on SIGINT and SIGTERM.
 

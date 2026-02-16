@@ -21,7 +21,7 @@
 
 // #region 🔖Exports
 
-// [👤semio🏪assets💻iconsts🔖exports](semiorepo://section/SEMIO/ASSETS/ICONS.TS/EXPORTS)
+// [👤semio🏪assets💻iconsts🔖exports](semiorepo://section/semio/assets/icons.ts/exports)
 // Re-exports of Lucide React icons with semantic aliases for the UI.
 // Exports MUST map each Lucide icon to a domain-specific alias name.
 

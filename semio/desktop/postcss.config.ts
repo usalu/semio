@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️desktop⚙️postcssconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/POSTCSS.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️desktop⚙️postcssconfigts🔖configuration](semiorepo://section/semio/desktop/postcss.config.ts/configuration)
 // PostCSS plugin configuration for the desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 

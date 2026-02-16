@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode⚙️viteconfigts](semiorepo://file/SEMIO-REPO/VSCODE/VITE.CONFIG.TS)
+// [🧰semiorepo🖱️vscode⚙️viteconfigts](semiorepo://file/semio-repo/vscode/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration](semiorepo://section/SEMIO-REPO/VSCODE/VITE.CONFIG.TS/CONFIGURATION)
+// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration](semiorepo://section/semio-repo/vscode/vite.config.ts/configuration)
 // Vite build configuration for the VS Code extension.
 // Configuration MUST output a CJS bundle targeting Node 18.
 

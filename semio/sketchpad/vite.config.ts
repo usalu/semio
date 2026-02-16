@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️sketchpad⚙️viteconfigts🔖configuration](semiorepo://section/SEMIO/SKETCHPAD/VITE.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️sketchpad⚙️viteconfigts🔖configuration](semiorepo://section/semio/sketchpad/vite.config.ts/configuration)
 // Vite build configuration for the sketchpad application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 

@@ -22,7 +22,7 @@
 
 // #region 🔖Electron Fuses
 
-// [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://section/SEMIO/DESKTOP/FORGE.ENV.D.TS/ELECTRON-FUSES)
+// [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://section/semio/desktop/forge.env.d.ts/electron-fuses)
 // Type declarations for Electron Forge fuse options.
 // Consumers MUST use these enums for configuring fuse settings.
 

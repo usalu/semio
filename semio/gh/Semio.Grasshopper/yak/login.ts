@@ -22,7 +22,7 @@
 
 // #region 🔖Login
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🔖login](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/LOGIN.TS/LOGIN)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🔖login](semiorepo://section/semio/gh/semio.grasshopper/yak/login.ts/login)
 // Yak login script. MUST authenticate with the Yak package manager.
 
 import { execSync } from "child_process";

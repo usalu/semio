@@ -22,7 +22,7 @@
 
 // #region 🔖Schema Export
 
-// [👤semio📚engine💻sqliteschemats🔖schemaexport](semiorepo://section/SEMIO/ENGINE/SQLITESCHEMA.TS/SCHEMA-EXPORT)
+// [👤semio📚engine💻sqliteschemats🔖schemaexport](semiorepo://section/semio/engine/sqliteschema.ts/schema-export)
 // SQLite schema export script. MUST dump the database schema to a SQL file.
 
 import { execSync } from "child_process";

@@ -1,8 +1,8 @@
 {
   "title": "Fix Full Project Tree Rendering In Cli Tree",
-  "status": "open",
+  "status": "closed",
   "prompt": "Implement the `tree \u003cquery\u003ee?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003ee` and `--no-\u003cfilter\u003ee` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
-  "summary": "Implemented the monorepo `tree` command with fuzzy full-text search via bleve and comprehensive filtering. Added `TreeNodeKind` enum and `TreeNode` struct modeling the complete monorepo hierarchy (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, contributors, commits). Added `TreeFilter` with kind-level, sub-kind-level, date, status, and contributor filtering with case-insensitive matching. `BuildMonorepoTree` streams all data sources concurrently with a single filesystem walk, assigns folders/files to bundles by path prefix. `FilterMonorepoTree` recursively filters and `collapseFilteredKinds` promotes children of excluded kinds. `SearchMonorepoTree` uses bleve in-memory index for fuzzy matching with parent chain preservation. Section/definition parsing is opt-in via `TreeBuildOptions.IncludeSections`. Added `bindTreeFlags` with 60+ CLI flags. 46 tests added covering all units (TreeNodeKind, TreeFilter methods, FilterMonorepoTree, SearchMonorepoTree, RenderMonorepoTree, BuildMonorepoTree, collapseFilteredKinds, sortTreeChildren, flag binding). Updated README.md and AGENTS.md documentation.",
+  "summary": "Fixed full tree hierarchy rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy-\u003eentitykind-\u003estatute. Extended existing tree tests and validated with targeted go test runs.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
   "interactions": [
     {
@@ -2172,6 +2172,639 @@
       "commit": "fd5d919ef2e766ae252b8737756de119f1de6132",
       "prompt": "Fix semio-repo cli tree to show full project tree hierarchy consistently. Ensure tree structure includes FOLDER*-\u003eFILE and PROJECT-\u003eBUNDLE-\u003eFOLDER*-\u003eFILE-\u003eSECTION-\u003eDEFINITION plus GOAL*-\u003eTICKET, DRAFT*, POLICY-\u003eENTITYKIND-\u003eSTATUTE. TODO/STATUTE/BREACH are excluded from generic tree view unless naturally nested.",
       "llm": "gpt-5-mini"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-16 03:01:24",
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "adfa491807cce231861ceec171ee87ab0cc15ef9",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 493,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻maingo",
+              "lines": {
+                "added": 456,
+                "removed": 54
+              }
+            },
+            {
+              "path": "🧪maintestgo",
+              "lines": {
+                "added": 102,
+                "removed": 11
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻maingo#Cli Adapter",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻maingo#Cli Adapter#Tree Logic#Monorepo Tree",
+              "lines": {
+                "added": 12,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻maingo#Types#Utils",
+              "lines": {
+                "added": 7,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID",
+              "lines": {
+                "added": 228,
+                "removed": 33
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types",
+              "lines": {
+                "added": 22,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types#Drafts",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types",
+              "lines": {
+                "added": 8,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events",
+              "lines": {
+                "added": 175,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪maintestgo#Policy Tests",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "path": "🧪maintestgo#Monorepo Tree Tests",
+              "lines": {
+                "added": 92,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻maingo#Engine Events§buildFolderRoots",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§attachFilesToFolders",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§cloneTreeNode",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§buildPolicyEntityKindTree",
+              "lines": {
+                "added": 73,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§inferEntityKindFromStatute",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Cli Adapter§syncCommand",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻maingo#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree",
+              "lines": {
+                "added": 12,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§AllowedLLMs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§String",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§Contributor",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§ContributorSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types#Drafts§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetPrompt",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetClient",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types#GraphQL Input Types§GoalReopenInput",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types§GetURI",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types§GetURI",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages§resolveAuthorToGithub",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages§statuteInfoTable",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Utils§ReadTextFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Utils§PathToUriPath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Utils§PathFromUriPath",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§interactionKindFromEmoji",
+              "lines": {
+                "added": 13,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§DefinitionIdValueToUriPath",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§StatuteIdToUriPath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§IdToUri",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§UriToId",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻maingo#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types#Drafts§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Languages§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Utils§PathToUriPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Utils§PathFromUriPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§DefinitionIdValueToUriPath",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§StatuteIdToUriPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§IdToUri",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§UriToId",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "🧪maintestgo#Policy Tests§TestSectionWithIdentification",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧪maintestgo#Policy Tests§TestDefinitionWithIdentification",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧪maintestgo#Monorepo Tree Tests§TestBuildMonorepoTree",
+              "lines": {
+                "added": 92,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪maintestgo#Policy Tests§TestSectionWithIdentification",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧪maintestgo#Policy Tests§TestDefinitionWithIdentification",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧪maintestgo#Monorepo Tree Tests§TestBuildMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻maingo#Engine Events§buildPolicyEntityKindTree",
+              "lines": {
+                "added": 73,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§inferEntityKindFromStatute",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§buildFolderRoots",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§cloneTreeNode",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Engine Events§attachFilesToFolders",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻maingo#Types#Todos#Entity Rendering#Artifact ID§interactionKindFromEmoji",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
     }
   ]
 }

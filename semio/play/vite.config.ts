@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🌐play⚙️viteconfigts🔖configuration](semiorepo://section/SEMIO/PLAY/VITE.CONFIG.TS/CONFIGURATION)
+// [👤semio🌐play⚙️viteconfigts🔖configuration](semiorepo://section/semio/play/vite.config.ts/configuration)
 // Vite build configuration for the play application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 

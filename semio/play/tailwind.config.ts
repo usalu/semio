@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🌐play⚙️tailwindconfigts🔖configuration](semiorepo://section/SEMIO/PLAY/TAILWIND.CONFIG.TS/CONFIGURATION)
+// [👤semio🌐play⚙️tailwindconfigts🔖configuration](semiorepo://section/semio/play/tailwind.config.ts/configuration)
 // Tailwind CSS configuration extending the shared semio preset for the play application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/js.
 

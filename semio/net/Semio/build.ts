@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [👤semio📚net🛅semio💻buildts🔖build](semiorepo://section/SEMIO/NET/SEMIO/BUILD.TS/BUILD)
+// [👤semio📚net🛅semio💻buildts🔖build](semiorepo://section/semio/net/semio/build.ts/build)
 // .NET build script. MUST compile the Semio C# project via MSBuild.
 
 import { execSync } from "child_process";

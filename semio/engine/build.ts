@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [👤semio📚engine💻buildts🔖build](semiorepo://section/SEMIO/ENGINE/BUILD.TS/BUILD)
+// [👤semio📚engine💻buildts🔖build](semiorepo://section/semio/engine/build.ts/build)
 // Build script for the engine binary. MUST bundle the engine via PyInstaller.
 
 import { execSync } from "child_process";

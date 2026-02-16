@@ -21,7 +21,7 @@
 
 // #region 🔖Entrypoint
 
-// [👤semio🌐docs💻indextsx🔖entrypoint](semiorepo://section/SEMIO/DOCS/INDEX.TSX/ENTRYPOINT)
+// [👤semio🌐docs💻indextsx🔖entrypoint](semiorepo://section/semio/docs/index.tsx/entrypoint)
 // Docs entrypoint that mounts the Sketchpad React component with StrictMode.
 // Entrypoint MUST render into the root element defined in the docs index.html.
 
