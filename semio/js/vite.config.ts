@@ -1,31 +1,29 @@
 // #region 🔖Header
 
-// ⚙️semio/js/vite.config.ts
+// [👤semio📚js⚙️viteconfigts](semiorepo://file/SEMIO/JS/VITE.CONFIG.TS)
 
-// 2025 Ueli Saluz
-
-// #region 🔖License
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Vite build and development configuration for the JavaScript workspace.
 
 // #endregion 🔖Header
+
+// #region 🔖Configuration
+
+// [👤semio📚js⚙️viteconfigts🔖configuration](semiorepo://section/SEMIO/JS/VITE.CONFIG.TS/CONFIGURATION)
+// Vite build and test configuration for the js library.
+// Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
@@ -42,9 +40,15 @@ import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 import { defineConfig } from "vitest/config";
 
+// Absolute file path of the current module.
+// Path MUST be derived from import.meta.url.
 const __filename = fileURLToPath(import.meta.url);
+// Absolute directory path of the current module.
+// Path MUST be derived from __filename.
 const __dirname = path.dirname(__filename);
 
+// Vite configuration with plugins, resolve aliases, and test settings.
+// Export MUST call defineConfig with the complete build configuration.
 export default defineConfig({
   publicDir: "public",
   plugins: [
@@ -117,3 +121,4 @@ export default defineConfig({
     },
   },
 });
+// #endregion 🔖Configuration

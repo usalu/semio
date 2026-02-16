@@ -1,0 +1,62 @@
+{
+  "title": "Remove Query Params From Uris",
+  "status": "closed",
+  "prompt": "All query params should not be part of URIs. Refactor all semiorepo:// URIs that use query parameters (like semiorepo://tickets?year=2026\u0026month=02) to use path segments instead. Also remove status query params from ticket IDs. Clean up all URI parsing/construction code accordingly.",
+  "summary": "Removed all query parameters from semiorepo:// URIs. Changed ticket tree URI from semiorepo://tickets?year=X\u0026month=Y\u0026day=Z to semiorepo://tickets/X/Y/Z using path segments. Removed ?status suffix from Ticket.GetID() and renderEntityID. Cleaned up query param stripping code in GetArtifactURI and IdToUri that was parsing ? from ticket IDs. Removed unused status variable from GetArtifactID. Updated two test expectations in main_test.go. All tests pass, clean build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/567"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-14 15:28:49",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
+      "prompt": "All query params should not be part of URIs. Refactor all semiorepo:// URIs that use query parameters (like semiorepo://tickets?year=2026\u0026month=02) to use path segments instead. Also remove status query params from ticket IDs. Clean up all URI parsing/construction code accordingly.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-14 15:38:47",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

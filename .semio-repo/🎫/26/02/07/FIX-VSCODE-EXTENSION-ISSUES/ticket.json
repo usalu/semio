@@ -1,0 +1,1011 @@
+{
+  "title": "Fix VSCode Extension Issues",
+  "status": "closed",
+  "prompt": "semio repo vscode extension:\n- target and temp are appearing as user projects although they are not\n- sections in the explorer sideview are not appearing\n- definitions tree items are appearing twice - once wrongly with a section emoji in the right place and once on root of the section (not part of the subsection) as definitions.\n- filter kind menu buttons are working but should indicate the filter state.",
+  "summary": "Fixed VS Code extension issues: target/temp project exclusion, implemented Sections view, added filter state toggles.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/440"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-07 23:06:07",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
+      "prompt": "semio repo vscode extension:\n- target and temp are appearing as user projects although they are not\n- sections in the explorer sideview are not appearing\n- definitions tree items are appearing twice - once wrongly with a section emoji in the right place and once on root of the section (not part of the subsection) as definitions.\n- filter kind menu buttons are working but should indicate the filter state.",
+      "llm": "gemini-3-pro",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 0,
+                "removed": 100
+              }
+            },
+            {
+              "path": "semio/semio/semio-repo/vscode",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 128,
+                "removed": 228
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 267,
+                "removed": 286
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#CLI Renderers",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Missing Utilities",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Update Command",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase",
+              "lines": {
+                "added": 3,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets",
+              "lines": {
+                "added": 111,
+                "removed": 215
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets#SQLite Export",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation",
+              "lines": {
+                "added": 68,
+                "removed": 139
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Data Fetching",
+              "lines": {
+                "added": 19,
+                "removed": 61
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers",
+              "lines": {
+                "added": 159,
+                "removed": 85
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Utilities",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#CLI Renderers§toolErrorMsg",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#CLI Renderers§toolErrorResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Missing Utilities§ComputeTicketFiles",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Missing Utilities§GetGitDiffLines",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Update Command§loadUpdateConfig",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Update Command§loadUpdateConfig",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Update Command§updateNpm",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§BuildCodebaseDefinitionsForFiles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§ToolCodebase",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§ToolCodebase",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Default Context§defaultContext",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets#SQLite Export§ExportResult",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets#SQLite Export§ExportToSQLite",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets#SQLite Export§ToolExport",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets#SQLite Export§ToolExport",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets#SQLite Export§exportBundles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§OpenGoal",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§RemoveAgentsDocsEntry",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§SaveTicket",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolBundleList",
+              "lines": {
+                "added": 8,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolContributorAdd",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolContributorAdd",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolContributorList",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolContributorList",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolContributorRemove",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolContributorRemove",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDefinitionList",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDefinitionList",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDefinitionTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDraftCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDraftCreate",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDraftDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDraftDelete",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDraftList",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolDraftList",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolExtract",
+              "lines": {
+                "added": 8,
+                "removed": 14
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolExtract",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileCreate",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileCreate",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileDelete",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileDelete",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileList",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileList",
+              "lines": {
+                "added": 1,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileMove",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileMove",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileTree",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFileTree",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderCreate",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderCreate",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderDelete",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderDelete",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderList",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderList",
+              "lines": {
+                "added": 2,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderMove",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderMove",
+              "lines": {
+                "added": 4,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderTree",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolFolderTree",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalClose",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalClose",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 1,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalList",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalList",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalReopen",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolGoalReopen",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolIntegrate",
+              "lines": {
+                "added": 8,
+                "removed": 25
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolIntegrate",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolProjectList",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolProjectList",
+              "lines": {
+                "added": 5,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolProjectTree",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionCreate",
+              "lines": {
+                "added": 0,
+                "removed": 22
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionCreate",
+              "lines": {
+                "added": 11,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionDelete",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionDelete",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionList",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionList",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionMove",
+              "lines": {
+                "added": 10,
+                "removed": 22
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionMove",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionTree",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolSectionTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketClose",
+              "lines": {
+                "added": 3,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketClose",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketList",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketList",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketOpen",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketOpen",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketRead",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketRead",
+              "lines": {
+                "added": 1,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolTicketReopen",
+              "lines": {
+                "added": 3,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolUpdateMetabolism",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolUpdateMetabolism",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§UpdateAgentsDocsPath",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§UpdateTicketTitle",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§generateFileHeader",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ghListOpenIssuesWithLabel",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§isProjectDir",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§isProjectDir",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§loadPackages",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§loadPackages",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§printTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 0,
+                "removed": 139
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 65,
+                "removed": 134
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
+              "lines": {
+                "added": 3,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§extractFilePathFromScope",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 85
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "lines": {
+                "added": 38,
+                "removed": 64
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionTreeItem",
+              "lines": {
+                "added": 25,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionsTreeDataProvider",
+              "lines": {
+                "added": 77,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§execShell",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§resetUrqlClient",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#CLI Renderers§toolErrorMsg",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#CLI Renderers§toolErrorResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ToolBundleList",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionTreeItem",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionsTreeDataProvider",
+              "lines": {
+                "added": 79,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§execShell",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

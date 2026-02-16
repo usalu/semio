@@ -8,12 +8,10 @@
 // it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -44,9 +42,9 @@ export const HorizontalWithToggles: Story = {
         key="designs"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showDesigns"
         actionId="semio.sketchpad.app.kit.kitApp.createDesign"
         icon={<LayoutIcon className="size-tiny" />}
@@ -55,9 +53,9 @@ export const HorizontalWithToggles: Story = {
         key="types"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showTypes"
         actionId="semio.sketchpad.app.kit.kitApp.createType"
         icon={<TypeIcon className="size-tiny" />}
@@ -66,9 +64,9 @@ export const HorizontalWithToggles: Story = {
         key="qualities"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showQualities"
         actionId="semio.sketchpad.app.kit.kitApp.createQuality"
         icon={<AwardIcon className="size-tiny" />}
@@ -77,9 +75,9 @@ export const HorizontalWithToggles: Story = {
         key="files"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showFiles"
         actionId="semio.sketchpad.app.kit.kitApp.createFile"
         icon={<DocumentIcon className="size-tiny" />}
@@ -88,9 +86,9 @@ export const HorizontalWithToggles: Story = {
         key="folders"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showFolders"
         actionId="semio.sketchpad.app.kit.kitApp.createFolder"
         icon={<FolderIcon className="size-tiny" />}
@@ -99,9 +97,9 @@ export const HorizontalWithToggles: Story = {
         key="authors"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showAuthors"
         actionId="semio.sketchpad.app.kit.kitApp.createAuthor"
         icon={<UserIcon className="size-tiny" />}
@@ -119,8 +117,8 @@ export const HorizontalWithMixedElements: Story = {
   args: {
     id: "band-horizontal-mixed",
     items: [
-      <Toggle key="1" pressed={true} onPressedChange={() => {}} id="toggle-1" icon={<LayoutIcon className="size-tiny" />} />,
-      <Toggle key="2" pressed={false} onPressedChange={() => {}} id="toggle-2" icon={<TypeIcon className="size-tiny" />} />,
+      <Toggle key="1" pressed={true} onPressedChange={() => { }} id="toggle-1" icon={<LayoutIcon className="size-tiny" />} />,
+      <Toggle key="2" pressed={false} onPressedChange={() => { }} id="toggle-2" icon={<TypeIcon className="size-tiny" />} />,
       <Input key="3" id="search" placeholder="Search..." className="flex-1 min-w-[160px]" />,
       <Button key="4" id="action" icon={<AddIcon className="size-tiny" />}>
         Add
@@ -143,9 +141,9 @@ export const VerticalWithToggles: Story = {
         key="designs"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showDesigns"
         actionId="semio.sketchpad.app.kit.kitApp.createDesign"
         icon={<LayoutIcon className="size-tiny" />}
@@ -154,9 +152,9 @@ export const VerticalWithToggles: Story = {
         key="types"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showTypes"
         actionId="semio.sketchpad.app.kit.kitApp.createType"
         icon={<TypeIcon className="size-tiny" />}
@@ -165,9 +163,9 @@ export const VerticalWithToggles: Story = {
         key="qualities"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showQualities"
         actionId="semio.sketchpad.app.kit.kitApp.createQuality"
         icon={<AwardIcon className="size-tiny" />}
@@ -176,9 +174,9 @@ export const VerticalWithToggles: Story = {
         key="files"
         kind="withAction"
         pressed={false}
-        onPressedChange={() => {}}
+        onPressedChange={() => { }}
         actionIcon={<AddIcon className="size-tiny" />}
-        onActionClick={() => {}}
+        onActionClick={() => { }}
         id="semio.sketchpad.app.kit.kitApp.showFiles"
         actionId="semio.sketchpad.app.kit.kitApp.createFile"
         icon={<DocumentIcon className="size-tiny" />}
@@ -195,7 +193,7 @@ export const VerticalWithToggles: Story = {
 export const OverflowingHorizontal: Story = {
   args: {
     id: "band-overflowing-horizontal",
-    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />).map((content) => ({ content })),
+    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => { }} id={`toggle-${i}`} icon={`Item ${i + 1}`} />).map((content) => ({ content })),
   },
   render: (args) => (
     <div className="w-[600px]">
@@ -208,7 +206,7 @@ export const OverflowingVertical: Story = {
   args: {
     id: "band-overflowing-non-scrollable",
     scrollable: false,
-    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => {}} id={`toggle-${i}`} icon={`Item ${i + 1}`} />).map((content) => ({ content })),
+    items: Array.from({ length: 20 }, (_, i) => <Toggle key={i} pressed={false} onPressedChange={() => { }} id={`toggle-${i}`} icon={`Item ${i + 1}`} />).map((content) => ({ content })),
   },
   render: (args) => (
     <div className="w-[600px]">

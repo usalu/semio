@@ -1,0 +1,30 @@
+{
+  "title": "Configure Prettier Markdown Nested List Indentation",
+  "status": "closed",
+  "prompt": "Configure Prettier to use only one space for markdown nested list indentation by adding a markdown-specific override with tabWidth: 1.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/569"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-14 16:53:09",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
+      "prompt": "Configure Prettier to use only one space for markdown nested list indentation by adding a markdown-specific override with tabWidth: 1.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-14 16:59:16",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b"
+    }
+  ]
+}

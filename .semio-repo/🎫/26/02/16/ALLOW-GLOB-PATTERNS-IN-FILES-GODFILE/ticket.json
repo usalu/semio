@@ -1,0 +1,2424 @@
+{
+  "title": "Allow Glob Patterns in Files Godfile",
+  "status": "closed",
+  "prompt": "Extend .semio-repo/files.json to allow for glob patterns.",
+  "summary": "Added glob support for .semio-repo/files.json in file policy with exact+glob matcher and tests.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-16 01:23:46",
+      "author": "usalu",
+      "system": "linux",
+      "client": "codex",
+      "commit": "fd5d919ef2e766ae252b8737756de119f1de6132",
+      "prompt": "Extend .semio-repo/files.json to allow for glob patterns.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-16 01:24:56",
+      "author": "usalu",
+      "system": "linux",
+      "client": "codex",
+      "commit": "fd5d919ef2e766ae252b8737756de119f1de6132",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo",
+              "lines": {
+                "added": 940,
+                "removed": 908
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧰semiorepo⌨️cli🧪maintestgo",
+              "lines": {
+                "added": 13527,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Errors",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Handlers",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#File Utilities",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies",
+              "lines": {
+                "added": 64,
+                "removed": 32
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Utils",
+              "lines": {
+                "added": 44,
+                "removed": 44
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#Rust",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#SQL",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mutation Resolvers",
+              "lines": {
+                "added": 33,
+                "removed": 33
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Preamble",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Requests",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Tree Logic",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Tool Functions",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#Markdown",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Fix Command",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#Go",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#TOML",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID",
+              "lines": {
+                "added": 17,
+                "removed": 17
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Entity Rendering",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Resolver Methods",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Sections",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#GraphQL",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#Ruby",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#GraphQL",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Utilities",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#GraphQL Resolver",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Goals",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Schema Builder",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Models",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Tree Logic#Monorepo Tree",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Handlers#Mcp Resources Handlers",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context",
+              "lines": {
+                "added": 96,
+                "removed": 96
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Analyze Command",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#Codebase Types",
+              "lines": {
+                "added": 37,
+                "removed": 37
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets#SQLite Export",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#YAML",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase",
+              "lines": {
+                "added": 32,
+                "removed": 32
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Events",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#CLI Renderers",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Preflight Command",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#GraphQL Executor",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#C#",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets",
+              "lines": {
+                "added": 88,
+                "removed": 88
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#Shell",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#CLI Renderers#ANSI",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Tree Logic#Query Cache",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types#GraphQL Input Types",
+              "lines": {
+                "added": 17,
+                "removed": 17
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types",
+              "lines": {
+                "added": 19,
+                "removed": 19
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Paths",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Args",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Models#Monorepo Tree Types",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#TypeScript#JSON",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#GraphQL Helpers",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Benchmark Command",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers",
+              "lines": {
+                "added": 29,
+                "removed": 29
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages",
+              "lines": {
+                "added": 69,
+                "removed": 69
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#GraphQL Context Port",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types",
+              "lines": {
+                "added": 125,
+                "removed": 125
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types#Drafts",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Resolver Interfaces",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Update Command",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Events§Kind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo§ErrorCode",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Requests§Command",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter§EngineFactory",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Models#Monorepo Tree Types§TreeNodeKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§DefinitionKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§TicketStatus",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§BreachPriority",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§ProjectKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§BundleKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§FolderKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§SemanticChangeType",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types§ScopeKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types§TicketBundles",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages§OutputType",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#Codebase Types§CbTreeNodeKind",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§Godfile",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§isGlobPattern",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§loadGodfile",
+              "lines": {
+                "added": 10,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§godfileMatchesPath",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§filePolicy",
+              "lines": {
+                "added": 1,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§LoadBundles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§LoadFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§LoadBreachs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§GetBundleForFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§GetBundleInfo",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseBundles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseFolders",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§addSections",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseContributors",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebasePolicies",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseBreachs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebase",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseBundlesForFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseFoldersForFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseFilesForFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§addSectionsForContent",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§BuildCodebaseDefinitionsForFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Codebase§ToolCodebase",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§LatestTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§shouldContinueTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§OpenTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§UpdateTicketTitle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§buildProjectLinkArgs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ghAssignIssueToCurrentUser",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§CountLinesInFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§updateTicketSummaryFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ghListOpenIssuesWithLabel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ListTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ticketMatchesKinds",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§loadProjectsInternal",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§LoadCommits",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§loadPackages",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§runProjectTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§shouldIncludeFolderKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§StreamFolders",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§StreamSections",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§StreamDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§generateMetricsComment",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ProgressTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§FinishTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ReopenTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolTicketList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolTicketRead",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolTicketClose",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolTicketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolDraftCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolGoalList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolGoalReopen",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolContributorAdd",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolContributorList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolContributorRemove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolBundleList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolProjectTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolFolderCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolFolderMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§printTree",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§FileHeaderId",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§AGPLLicenseText",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§SectionHeaderId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§DefinitionHeaderId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§generateFileHeader",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolFileMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolFileDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolFileList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolSectionCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolSectionMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolIntegrate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolExtract",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§UpdateAgentsDocsPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§RemoveAgentsDocsEntry",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§MergeHeaders",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolSectionDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolSectionList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolSectionTree",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolDefinitionList",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets§ToolUpdateMetabolism",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets#SQLite Export§exportBreachs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Tickets#SQLite Export§ToolExport",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#GraphQL Context Port§RepoContext",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#GraphQL Resolver§NewResolverWithContext",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§defaultContext",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§NewDefaultContext",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetBundles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetSections",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetContributors",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§UpdateGoalTitle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GoalChange",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GoalClose",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GoalReopen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketChange",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GoalDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetPolicies",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetStatutes",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§applySystemAutofixes",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§findMatchingSectionStartName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketClose",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§FolderMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§FolderDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§FileCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§FileMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§SectionCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§SectionDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§Integrate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§ContributorAdd",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§ensureGoalMilestone",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§SyncGithub",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§_",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§GetStatutes",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§Analyze",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§Fix",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketOpen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketProgress",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§TicketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§SectionCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§SectionMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§Extract",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types§_",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#GraphQL Executor§ValidateQuery",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Schema Builder§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Node",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Projects",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Project",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Bundles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Sections",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Definitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Todos",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Policies",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Bundle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§File",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Contributor",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Ticket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Policy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Statute",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Query Resolvers§Analyze",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mutation Resolvers§Mutation",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mutation Resolvers§SyncGithub",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mutation Resolvers§Fix",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mutation Resolvers§SectionDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mutation Resolvers§Integrate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers§Repo_",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers§Bundles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers§Sections",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers§Definitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers§Policies",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Entity Resolvers§Statutes",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Resolver Interfaces§QueryResolver",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Resolver Interfaces§MutationResolver",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp§createMcpServer",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Paths§requireFileTargetPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Paths§requireFolderTargetPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Handlers§graphqlQuery",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Handlers#Mcp Resources Handlers§handleCommitsResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Mcp#Handlers#Mcp Resources Handlers§handleCommitResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Analyze Command§analyzeCmd",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Fix Command§fixCmd",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§isRepoExcludedPath",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§GitIndexRef",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§ComputeTicketFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§GetGitDiffLines",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§buildFileID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§buildSectionID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§buildDefinitionID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§uniqueStrings",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§findSectionForLine",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§GetGitDiffStatus",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§GetFolderChildren",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§GetFolderFiles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli§StreamContributors",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli§CreateContributor",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli§LoadContributor",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli§filterGitIgnored",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli§init",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Resolver Methods§Bundles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Resolver Methods§Folders",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Resolver Methods§Files",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Resolver Methods§Sections",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Resolver Methods§Contributors",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Tool Functions§ToolAnalyze",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Tool Functions§ToolPolicyList",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Tool Functions§ToolPolicyTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Benchmark Command§benchmarkDryRun",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Benchmark Command§writeBenchmarkReport",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Preflight Command§runPreflight",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Preflight Command§runNx",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Update Command§updateDryRun",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Update Command§DependabotConfig",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Update Command§updateDotNet",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#File Utilities§MoveFile",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#File Utilities§CopyFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Goals§ListGoals",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Goals§StreamGoals",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Goals§StreamStatutes",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Goals§ghAddSubIssue",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli§ResolveContributorContributions",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos§ScanTodos",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos§ParseTodoMarkdown",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos§TodoCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos§TodoToTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos§removeLineFromMarkdown",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§goalArtifactID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§ParseArtifactRef",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§FindSectionBySlug",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§ResolveSectionName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§DefinitionIdValueToUriPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§ParseSectionUriPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§IdToUri",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Todos#Entity Rendering#Artifact ID§UriToId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Events§Kind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo§ErrorCode",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Engine Requests§Command",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter§EngineFactory",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Cli Adapter#Models#Monorepo Tree Types§TreeNodeKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§DefinitionKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§TicketStatus",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§BreachPriority",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§ProjectKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§BundleKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§FolderKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#GraphQL Types§SemanticChangeType",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types§ScopeKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types§TicketBundles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages§OutputType",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Languages#Codebase Types§CbTreeNodeKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§loadGodfile",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§filePolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Default Context§_",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types§_",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Missing Utilities§GitIndexRef",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Cli#Benchmark Command§benchmarkDryRun",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli🧪maintestgo§TestFilePolicyGodfileSupportsGlobPatterns",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§godfileMatchesPath",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli🧪maintestgo§TestFilePolicyGodfileSupportsGlobPatterns",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§Godfile",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§isGlobPattern",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

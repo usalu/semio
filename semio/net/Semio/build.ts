@@ -1,35 +1,34 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 📜semio/net/Semio/build.ts
+// [👤semio📚net🛅semio📜buildts](semiorepo://file/SEMIO/NET/SEMIO/BUILD.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Build script for the Semio .NET library assembly.
 
 // #endregion 🔖Header
 
+// #region 🔖Build
+
+// [👤semio📚net🛅semio💻buildts🔖build](semiorepo://section/SEMIO/NET/SEMIO/BUILD.TS/BUILD)
+// .NET build script. MUST compile the Semio C# project via MSBuild.
+
 import { execSync } from "child_process";
 
+// MSBuild executable path for Visual Studio 2022.
+// MUST point to the installed MSBuild binary.
 const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";
 
 execSync(`"${msbuild}" Semio.csproj /p:Configuration=Debug`, {
@@ -38,3 +37,5 @@ execSync(`"${msbuild}" Semio.csproj /p:Configuration=Debug`, {
 });
 
 console.log("✅ Semio.NET build complete");
+
+// #endregion 🔖Build

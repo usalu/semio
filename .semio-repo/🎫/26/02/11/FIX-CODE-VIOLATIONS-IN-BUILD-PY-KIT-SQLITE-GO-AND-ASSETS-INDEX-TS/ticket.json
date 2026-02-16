@@ -1,0 +1,70 @@
+{
+  "title": "Fix Code Breachs in Build Py Kit Sqlite Go and Assets Index Ts",
+  "status": "closed",
+  "prompt": "Fix all code breachs in semio/assets/grasshopper/build.py (8), semio/go/kit_sqlite.go (8), and semio/assets/index.ts (18) by adding missing summary and spec comments for definitions and sections.",
+  "summary": "Added missing summary and spec comments for all definitions across 3 files: build.py (4 functions + 4 module vars), kit_sqlite.go (9 functions), index.ts (25+ exports/consts + 1 section wrapper). All definition-level summary comments added with RFC2119 spec comments on behavioral definitions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/520"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-11 22:38:28",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix all code breachs in semio/assets/grasshopper/build.py (8), semio/go/kit_sqlite.go (8), and semio/assets/index.ts (18) by adding missing summary and spec comments for definitions and sections.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/assets",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio/assets/grasshopper/build.py",
+              "lines": {
+                "added": 267,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

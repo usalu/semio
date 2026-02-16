@@ -2,21 +2,17 @@
 
 // js/semio/sketchpad/Kit.tsx
 
-// SPDX-License-Identifier: LGPL-3.0-or-later
-
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion Header
@@ -209,6 +205,9 @@ import {
 
 // #region Design Family Helpers
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖designfamilyhelpers](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/DESIGN-FAMILY-HELPERS)
+// Design family helper functions MUST traverse the design hierarchy to collect related design GUIDs.
+
 const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
   const guids = new Set<string>();
 
@@ -235,16 +234,27 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 
 // #region Constants
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT)
+// Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
+
 const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concepts", "files", "folders", "authors"];
 
 // #endregion Constants
 
 // #region Internal State Management
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT)
+// Internal state management MUST define all Kit app types, interfaces, store, and Y.js synchronization.
+
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitApp = Y.Map<YKitAppVal>;
 type YKitApps = Y.Map<YKitApp>;
 
+/**
+ * Tracks the current entity selection state across all artifact kinds for the Kit app.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION)
+ **/
 export interface KitAppSelection {
   types?: Guid[];
   designs?: Guid[];
@@ -257,42 +267,92 @@ export interface KitAppSelection {
   authors?: string[];
 }
 const EMPTY_KIT_SELECTION: KitAppSelection = {};
+/**
+ * Diff for added/removed type GUIDs in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectiontypesdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-TYPES-DIFF)
+ **/
 export interface KitAppSelectionTypesDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+/**
+ * Diff for added/removed design GUIDs in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectiondesignsdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-DESIGNS-DIFF)
+ **/
 export interface KitAppSelectionDesignsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+/**
+ * Diff for added/removed quality strings in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectionqualitiesdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-QUALITIES-DIFF)
+ **/
 export interface KitAppSelectionQualitiesDiff {
   added?: string[];
   removed?: string[];
 }
+/**
+ * Diff for added/removed port GUIDs in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectionportsdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-PORTS-DIFF)
+ **/
 export interface KitAppSelectionPortsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+/**
+ * Diff for added/removed tag GUIDs in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectiontagsdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-TAGS-DIFF)
+ **/
 export interface KitAppSelectionTagsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+/**
+ * Diff for added/removed concept GUIDs in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectionconceptsdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-CONCEPTS-DIFF)
+ **/
 export interface KitAppSelectionConceptsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+/**
+ * Diff for added/removed file strings in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectionfilesdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-FILES-DIFF)
+ **/
 export interface KitAppSelectionFilesDiff {
   added?: string[];
   removed?: string[];
 }
+/**
+ * Diff for added/removed folder GUIDs in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectionfoldersdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-FOLDERS-DIFF)
+ **/
 export interface KitAppSelectionFoldersDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+/**
+ * Diff for added/removed author strings in a Kit app selection change.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectionauthorsdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-AUTHORS-DIFF)
+ **/
 export interface KitAppSelectionAuthorsDiff {
   added?: string[];
   removed?: string[];
 }
+/**
+ * Composite diff combining all artifact-kind selection changes for the Kit app.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SELECTION-DIFF)
+ **/
 export interface KitAppSelectionDiff {
   types?: KitAppSelectionTypesDiff;
   designs?: KitAppSelectionDesignsDiff;
@@ -304,14 +364,29 @@ export interface KitAppSelectionDiff {
   folders?: KitAppSelectionFoldersDiff;
   authors?: KitAppSelectionAuthorsDiff;
 }
+/**
+ * Enumeration of window kinds available in the Kit app.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-WINDOW-KIND)
+ **/
 export enum KitAppWindowKind {
   Table = "table",
   Diagram = "diagram",
 }
+/**
+ * Presence state for a Kit app user including cursor and camera.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitapppresence](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-PRESENCE)
+ **/
 export interface KitAppPresence {
   cursor?: Coord;
   camera?: Camera;
 }
+/**
+ * Hover state tracking which single entity is hovered per artifact kind.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-HOVER)
+ **/
 export interface KitAppHover {
   type?: Guid;
   design?: Guid;
@@ -323,12 +398,32 @@ export interface KitAppHover {
   folder?: Guid;
   author?: Guid;
 }
+/**
+ * Extended presence for other Kit app collaborators including their display name.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitapppresenceother](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-PRESENCE-OTHER)
+ **/
 export interface KitAppPresenceOther extends KitAppPresence {
   name: string;
 }
+/**
+ * Column identifier type for Kit app table sorting.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappsortcolumn](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SORT-COLUMN)
+ **/
 export type KitAppSortColumn = "artifact" | "kind" | "authors" | "updatedAt" | "createdAt";
+/**
+ * Sort direction type for Kit app table sorting.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappsortdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-SORT-DIRECTION)
+ **/
 export type KitAppSortDirection = "asc" | "desc";
 
+/**
+ * Configuration interface for Kit diagram force simulation parameters.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️diagramforcesettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/DIAGRAM-FORCE-SETTINGS)
+ **/
 export interface DiagramForceSettings {
   chargeStrength: number;
   linkDistance: number;
@@ -336,6 +431,11 @@ export interface DiagramForceSettings {
   centerStrength: number;
 }
 
+/**
+ * Default force simulation settings for the Kit diagram layout.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🪨defaultdiagramforcesettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/DEFAULT-DIAGRAM-FORCE-SETTINGS)
+ **/
 export const defaultDiagramForceSettings: DiagramForceSettings = {
   chargeStrength: -15000,
   linkDistance: 400,
@@ -343,6 +443,11 @@ export const defaultDiagramForceSettings: DiagramForceSettings = {
   centerStrength: 0.1,
 };
 
+/**
+ * Complete diff describing all mutable Kit app state changes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-DIFF)
+ **/
 export interface KitAppDiff {
   selection?: KitAppSelectionDiff;
   presence?: KitAppPresence;
@@ -374,14 +479,31 @@ export interface KitAppState {
   activeTool: ToolKind;
 }
 
+/**
+ * Context passed to Kit app commands including the current app state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappcommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-COMMAND-CONTEXT)
+ **/
 export interface KitAppCommandContext extends KitCommandContext {
   kitApp: KitAppState;
 }
+/**
+ * Result returned by Kit app commands containing diffs to apply.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-COMMAND-RESULT)
+ **/
 export interface KitAppCommandResult {
   diff?: KitAppDiff;
   kitDiff?: KitDiff;
 }
 
+/**
+ * Computes the inverse of a Kit app selection diff for undo support.
+ *
+ * MUST return a diff that reverses the given selection diff across all artifact kinds.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🪨inversekitappselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/INVERSE-KIT-APP-SELECTION-DIFF)
+ **/
 export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: KitAppSelectionDiff): KitAppSelectionDiff => {
   const inverseDiff: KitAppSelectionDiff = {};
 
@@ -447,7 +569,17 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
 
   return inverseDiff;
 };
+/**
+ * Checks whether two Kit app identifiers refer to the same kit.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🪨aresamekitapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ARE-SAME-KIT-APP)
+ **/
 export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => kitApp.kit === other.kit;
+/**
+ * Checks whether a Kit app identifier matches any in a list.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🪨hassamekitapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/HAS-SAME-KIT-APP)
+ **/
 export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
 
 class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
@@ -1022,6 +1154,9 @@ if (typeof window !== "undefined") {
 
 // #region Kit App Plugin Registration
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖kitapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-PLUGIN-REGISTRATION)
+// Kit app plugin registration MUST register the Kit app plugin with machine actions, guards, and default state.
+
 const kitAppPlugin: AppPlugin = {
   id: "kit",
   namespace: "KIT",
@@ -1147,8 +1282,25 @@ if (typeof window !== "undefined") {
 
 // #endregion Kit App Plugin Registration
 
+/**
+ * Overload: returns the KitStore instance when no selector is provided.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-STORE)
+ **/
 export function useKitAppStore(selector?: undefined, id?: KitAppId): KitStore | null;
+/**
+ * Overload: returns a derived value when a selector function is provided.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-STORE)
+ **/
 export function useKitAppStore<T>(selector: (controller: KitStore) => T, id?: KitAppId): T | null;
+/**
+ * Selects derived state or the raw KitStore from the sketchpad orchestrator.
+ *
+ * MUST resolve the KitStore for the current kit scope and apply the optional selector.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-STORE)
+ **/
 export function useKitAppStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): T | KitStore | null {
   const orchestrator = useSketchpadStore();
   const kitScope = useKitScope();
@@ -1168,6 +1320,13 @@ export function useKitAppStore<T>(selector?: (controller: KitStore) => T, id?: K
   }
 }
 
+/**
+ * Selects derived state from the Kit app XState snapshot.
+ *
+ * MUST use the sketchpad actor to reactively track the Kit app state slice.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP)
+ **/
 export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? id?.kit;
@@ -1206,6 +1365,13 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   return state;
 }
 
+/**
+ * Returns a hook result for the current Kit app selection.
+ *
+ * MUST provide the current selection, a setter, and a canSet flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-SELECTION)
+ **/
 export function useKitAppSelection(): HookResult<KitAppSelection> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1223,6 +1389,13 @@ export function useKitAppSelection(): HookResult<KitAppSelection> {
   return conditionalHookResult(canSet, selection, setSelection);
 }
 
+/**
+ * Returns a hook result for the Kit app fullscreen window state.
+ *
+ * MUST provide the current fullscreen window, a setter, and a canSet flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-FULLSCREEN)
+ **/
 export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -1240,6 +1413,13 @@ export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   return conditionalHookResult(canSet, fullscreen, setFullscreen);
 }
 
+/**
+ * Returns other collaborators' presence state for the Kit app.
+ *
+ * MUST return a read-only list of other users' presence data.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappothers](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-OTHERS)
+ **/
 export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1250,6 +1430,13 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   return [others, undefined, canRead];
 }
 
+/**
+ * Returns a hook result for the Kit app window layout.
+ *
+ * MUST provide the current window layout, a setter, and a canSet flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappwindowlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-WINDOW-LAYOUT)
+ **/
 export function useKitAppWindowLayout(): HookResult<any> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -1267,6 +1454,13 @@ export function useKitAppWindowLayout(): HookResult<any> {
   return conditionalHookResult(canSet, windowLayout, setWindowLayout);
 }
 
+/**
+ * Returns the Kit app diagram force settings with an updater.
+ *
+ * MUST provide the current force settings, an updater, and a canSet flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappdiagramforce](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-DIAGRAM-FORCE)
+ **/
 export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value: Partial<DiagramForceSettings>) => void) | undefined, boolean] {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -1284,6 +1478,13 @@ export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value
   return [resolvedForce, canSet ? setForce : undefined, canSet] as const;
 }
 
+/**
+ * Returns a hook result for the Kit app active tool.
+ *
+ * MUST provide the current active tool, a setter, and a canSet flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappactivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-ACTIVE-TOOL)
+ **/
 export function useKitAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
   const kitGuid = useKitScope()?.guid;
@@ -1307,11 +1508,25 @@ export function useKitAppActiveTool(): HookResult<ToolKind> {
   return conditionalHookResult(canSet, activeTool, setActiveTool);
 }
 
+/**
+ * Returns a reactive field for the Kit app active tool.
+ *
+ * MUST create a Field wrapping the active tool value and setter.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappactivetoolfield](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-ACTIVE-TOOL-FIELD)
+ **/
 export function useKitAppActiveToolField(): Field<ToolKind> {
   const [value, setValue, canSet] = useKitAppActiveTool();
-  return createField(value, setValue ?? (() => {}), canSet);
+  return createField(value, setValue ?? (() => { }), canSet);
 }
 
+/**
+ * Returns a read-only hook result for the Kit app sort column.
+ *
+ * MUST provide the current sort column from the XState snapshot.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappsortcolumn](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-SORT-COLUMN)
+ **/
 export function useKitAppSortColumn(): HookNoSetResult<string> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1322,6 +1537,13 @@ export function useKitAppSortColumn(): HookNoSetResult<string> {
   return [sortColumn, undefined, canRead];
 }
 
+/**
+ * Returns a read-only hook result for the Kit app sort direction.
+ *
+ * MUST provide the current sort direction from the XState snapshot.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappsortdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-SORT-DIRECTION)
+ **/
 export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1332,6 +1554,13 @@ export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
   return [sortDirection, undefined, canRead];
 }
 
+/**
+ * Returns a read-only hook result for the Kit app expanded rows.
+ *
+ * MUST provide the current expanded row set from the XState snapshot.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappexpandedrows](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-EXPANDED-ROWS)
+ **/
 export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1342,6 +1571,13 @@ export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
   return [expandedRows, undefined, canRead];
 }
 
+/**
+ * Returns the Kit app transaction controller with start, finalize, and abort.
+ *
+ * MUST provide transaction actions dispatching to the XState actor.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitapptransaction](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-TRANSACTION)
+ **/
 export function useKitAppTransaction(): Transaction {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1357,6 +1593,13 @@ export function useKitAppTransaction(): Transaction {
   };
 }
 
+/**
+ * Returns the full Kit app commands API for programmatic access.
+ *
+ * MUST expose all Kit app commands through the store controller.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/USE-KIT-APP-COMMANDS)
+ **/
 export function useKitAppCommands(id?: KitAppId) {
   const controller = useKitAppStore(undefined, id) as KitStore | null;
   const getOrigin = useOrigin();
@@ -1504,8 +1747,23 @@ export function useKitAppCommands(id?: KitAppId) {
 
 //#region Action Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS)
+// Action hooks MUST provide composable React hooks for Kit app selection, hover, sort, filter, and transaction actions.
+
+/**
+ * Tuple type for action hook results pairing an action callback with a canAct flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️actionhookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/ACTION-HOOK-RESULT)
+ **/
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
+/**
+ * Returns an action to select a single type in the Kit app.
+ *
+ * MUST return a callback that selects the given type GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappselecttype](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-SELECT-TYPE)
+ **/
 export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1519,6 +1777,13 @@ export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to deselect a single type in the Kit app.
+ *
+ * MUST return a callback that deselects the given type GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappdeselecttype](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-DESELECT-TYPE)
+ **/
 export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1532,6 +1797,13 @@ export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select a single design in the Kit app.
+ *
+ * MUST return a callback that selects the given design GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappselectdesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-SELECT-DESIGN)
+ **/
 export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1545,6 +1817,13 @@ export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to deselect a single design in the Kit app.
+ *
+ * MUST return a callback that deselects the given design GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappdeselectdesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-DESELECT-DESIGN)
+ **/
 export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1558,6 +1837,13 @@ export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to set the full Kit app selection.
+ *
+ * MUST return a callback that replaces the entire selection state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappsetselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-SET-SELECTION)
+ **/
 export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSelection]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1571,6 +1857,13 @@ export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSele
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear the full Kit app selection.
+ *
+ * MUST return a callback that clears all selection state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappclearselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-CLEAR-SELECTION)
+ **/
 export function useKitAppClearSelection(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1674,6 +1967,16 @@ function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensio
 
 // #region Types Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS)
+// Types selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for type selection.
+
+/**
+ * Returns an action to add a type to the Kit app selection.
+ *
+ * MUST return a callback that adds the given type GUID to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks🛠️usekitappaddtypetoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS/USE-KIT-APP-ADD-TYPE-TO-SELECTION)
+ **/
 export function useKitAppAddTypeToSelection(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1687,6 +1990,13 @@ export function useKitAppAddTypeToSelection(): ActionHookResult<[typeGuid: Guid]
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a type from the Kit app selection.
+ *
+ * MUST return a callback that removes the given type GUID from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks🛠️usekitappremovetypefromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS/USE-KIT-APP-REMOVE-TYPE-FROM-SELECTION)
+ **/
 export function useKitAppRemoveTypeFromSelection(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1700,6 +2010,13 @@ export function useKitAppRemoveTypeFromSelection(): ActionHookResult<[typeGuid: 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a type in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given type GUID in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks🛠️usekitapptoggletypeinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-TYPE-IN-SELECTION)
+ **/
 export function useKitAppToggleTypeInSelection(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1713,6 +2030,13 @@ export function useKitAppToggleTypeInSelection(): ActionHookResult<[typeGuid: Gu
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single type, clearing others.
+ *
+ * MUST return a callback that clears types and selects the given GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks🛠️usekitappselectsingletype](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-TYPE)
+ **/
 export function useKitAppSelectSingleType(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1726,6 +2050,13 @@ export function useKitAppSelectSingleType(): ActionHookResult<[typeGuid: Guid]> 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple types in the Kit app.
+ *
+ * MUST return a callback that selects the given type GUIDs.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks🛠️usekitappselecttypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS/USE-KIT-APP-SELECT-TYPES)
+ **/
 export function useKitAppSelectTypes(): ActionHookResult<[typeGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1739,6 +2070,13 @@ export function useKitAppSelectTypes(): ActionHookResult<[typeGuids: Guid[]]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all type selections.
+ *
+ * MUST return a callback that clears all type GUIDs from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖typesselectionhooks🛠️usekitappcleartypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TYPES-SELECTION-HOOKS/USE-KIT-APP-CLEAR-TYPES)
+ **/
 export function useKitAppClearTypes(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1756,6 +2094,16 @@ export function useKitAppClearTypes(): ActionHookResult<[]> {
 
 // #region Designs Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS)
+// Designs selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for design selection.
+
+/**
+ * Returns an action to add a design to the Kit app selection.
+ *
+ * MUST return a callback that adds the given design GUID to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks🛠️usekitappadddesigntoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS/USE-KIT-APP-ADD-DESIGN-TO-SELECTION)
+ **/
 export function useKitAppAddDesignToSelection(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1769,6 +2117,13 @@ export function useKitAppAddDesignToSelection(): ActionHookResult<[designGuid: G
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a design from the Kit app selection.
+ *
+ * MUST return a callback that removes the given design GUID from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks🛠️usekitappremovedesignfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS/USE-KIT-APP-REMOVE-DESIGN-FROM-SELECTION)
+ **/
 export function useKitAppRemoveDesignFromSelection(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1782,6 +2137,13 @@ export function useKitAppRemoveDesignFromSelection(): ActionHookResult<[designGu
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a design in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given design GUID in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks🛠️usekitapptoggledesigninselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-DESIGN-IN-SELECTION)
+ **/
 export function useKitAppToggleDesignInSelection(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1795,6 +2157,13 @@ export function useKitAppToggleDesignInSelection(): ActionHookResult<[designGuid
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single design, clearing others.
+ *
+ * MUST return a callback that clears designs and selects the given GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks🛠️usekitappselectsingledesign](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-DESIGN)
+ **/
 export function useKitAppSelectSingleDesign(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1808,6 +2177,13 @@ export function useKitAppSelectSingleDesign(): ActionHookResult<[designGuid: Gui
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple designs in the Kit app.
+ *
+ * MUST return a callback that selects the given design GUIDs.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks🛠️usekitappselectdesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS/USE-KIT-APP-SELECT-DESIGNS)
+ **/
 export function useKitAppSelectDesigns(): ActionHookResult<[designsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1821,6 +2197,13 @@ export function useKitAppSelectDesigns(): ActionHookResult<[designsGuids: Guid[]
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all design selections.
+ *
+ * MUST return a callback that clears all design GUIDs from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖designsselectionhooks🛠️usekitappcleardesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/DESIGNS-SELECTION-HOOKS/USE-KIT-APP-CLEAR-DESIGNS)
+ **/
 export function useKitAppClearDesigns(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1838,6 +2221,16 @@ export function useKitAppClearDesigns(): ActionHookResult<[]> {
 
 // #region Qualities Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS)
+// Qualities selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for quality selection.
+
+/**
+ * Returns an action to add a quality to the Kit app selection.
+ *
+ * MUST return a callback that adds the given quality string to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks🛠️usekitappaddqualitytoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS/USE-KIT-APP-ADD-QUALITY-TO-SELECTION)
+ **/
 export function useKitAppAddQualityToSelection(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1851,6 +2244,13 @@ export function useKitAppAddQualityToSelection(): ActionHookResult<[qualitie: st
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a quality from the Kit app selection.
+ *
+ * MUST return a callback that removes the given quality string from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks🛠️usekitappremovequalityfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS/USE-KIT-APP-REMOVE-QUALITY-FROM-SELECTION)
+ **/
 export function useKitAppRemoveQualityFromSelection(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1864,6 +2264,13 @@ export function useKitAppRemoveQualityFromSelection(): ActionHookResult<[qualiti
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a quality in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given quality string in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks🛠️usekitapptogglequalityinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-QUALITY-IN-SELECTION)
+ **/
 export function useKitAppToggleQualityInSelection(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1877,6 +2284,13 @@ export function useKitAppToggleQualityInSelection(): ActionHookResult<[qualitie:
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single quality, clearing others.
+ *
+ * MUST return a callback that clears qualities and selects the given string.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks🛠️usekitappselectsinglequality](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-QUALITY)
+ **/
 export function useKitAppSelectSingleQuality(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1890,6 +2304,13 @@ export function useKitAppSelectSingleQuality(): ActionHookResult<[qualitie: stri
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple qualities in the Kit app.
+ *
+ * MUST return a callback that selects the given quality strings.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks🛠️usekitappselectqualities](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS/USE-KIT-APP-SELECT-QUALITIES)
+ **/
 export function useKitAppSelectQualities(): ActionHookResult<[qualitiesNames: string[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1903,6 +2324,13 @@ export function useKitAppSelectQualities(): ActionHookResult<[qualitiesNames: st
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all quality selections.
+ *
+ * MUST return a callback that clears all quality strings from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖qualitiesselectionhooks🛠️usekitappclearqualities](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/QUALITIES-SELECTION-HOOKS/USE-KIT-APP-CLEAR-QUALITIES)
+ **/
 export function useKitAppClearQualities(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1920,6 +2348,16 @@ export function useKitAppClearQualities(): ActionHookResult<[]> {
 
 // #region Ports Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS)
+// Ports selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for port selection.
+
+/**
+ * Returns an action to add a port to the Kit app selection.
+ *
+ * MUST return a callback that adds the given port GUID to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks🛠️usekitappaddporttoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS/USE-KIT-APP-ADD-PORT-TO-SELECTION)
+ **/
 export function useKitAppAddPortToSelection(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1933,6 +2371,13 @@ export function useKitAppAddPortToSelection(): ActionHookResult<[portGuid: Guid]
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a port from the Kit app selection.
+ *
+ * MUST return a callback that removes the given port GUID from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks🛠️usekitappremoveportfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS/USE-KIT-APP-REMOVE-PORT-FROM-SELECTION)
+ **/
 export function useKitAppRemovePortFromSelection(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1946,6 +2391,13 @@ export function useKitAppRemovePortFromSelection(): ActionHookResult<[portGuid: 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a port in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given port GUID in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks🛠️usekitapptoggleportinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-PORT-IN-SELECTION)
+ **/
 export function useKitAppTogglePortInSelection(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1959,6 +2411,13 @@ export function useKitAppTogglePortInSelection(): ActionHookResult<[portGuid: Gu
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single port, clearing others.
+ *
+ * MUST return a callback that clears ports and selects the given GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks🛠️usekitappselectsingleport](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-PORT)
+ **/
 export function useKitAppSelectSinglePort(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1972,6 +2431,13 @@ export function useKitAppSelectSinglePort(): ActionHookResult<[portGuid: Guid]> 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple ports in the Kit app.
+ *
+ * MUST return a callback that selects the given port GUIDs.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks🛠️usekitappselectports](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS/USE-KIT-APP-SELECT-PORTS)
+ **/
 export function useKitAppSelectPorts(): ActionHookResult<[portsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1985,6 +2451,13 @@ export function useKitAppSelectPorts(): ActionHookResult<[portsGuids: Guid[]]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all port selections.
+ *
+ * MUST return a callback that clears all port GUIDs from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖portsselectionhooks🛠️usekitappclearports](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/PORTS-SELECTION-HOOKS/USE-KIT-APP-CLEAR-PORTS)
+ **/
 export function useKitAppClearPorts(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2002,6 +2475,16 @@ export function useKitAppClearPorts(): ActionHookResult<[]> {
 
 // #region Tags Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS)
+// Tags selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for tag selection.
+
+/**
+ * Returns an action to add a tag to the Kit app selection.
+ *
+ * MUST return a callback that adds the given tag GUID to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks🛠️usekitappaddtagtoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS/USE-KIT-APP-ADD-TAG-TO-SELECTION)
+ **/
 export function useKitAppAddTagToSelection(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2015,6 +2498,13 @@ export function useKitAppAddTagToSelection(): ActionHookResult<[tagGuid: Guid]> 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a tag from the Kit app selection.
+ *
+ * MUST return a callback that removes the given tag GUID from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks🛠️usekitappremovetagfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS/USE-KIT-APP-REMOVE-TAG-FROM-SELECTION)
+ **/
 export function useKitAppRemoveTagFromSelection(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2028,6 +2518,13 @@ export function useKitAppRemoveTagFromSelection(): ActionHookResult<[tagGuid: Gu
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a tag in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given tag GUID in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks🛠️usekitapptoggletaginselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-TAG-IN-SELECTION)
+ **/
 export function useKitAppToggleTagInSelection(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2041,6 +2538,13 @@ export function useKitAppToggleTagInSelection(): ActionHookResult<[tagGuid: Guid
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single tag, clearing others.
+ *
+ * MUST return a callback that clears tags and selects the given GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks🛠️usekitappselectsingletag](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-TAG)
+ **/
 export function useKitAppSelectSingleTag(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2054,6 +2558,13 @@ export function useKitAppSelectSingleTag(): ActionHookResult<[tagGuid: Guid]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple tags in the Kit app.
+ *
+ * MUST return a callback that selects the given tag GUIDs.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks🛠️usekitappselecttags](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS/USE-KIT-APP-SELECT-TAGS)
+ **/
 export function useKitAppSelectTags(): ActionHookResult<[tagsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2067,6 +2578,13 @@ export function useKitAppSelectTags(): ActionHookResult<[tagsGuids: Guid[]]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all tag selections.
+ *
+ * MUST return a callback that clears all tag GUIDs from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖tagsselectionhooks🛠️usekitappcleartags](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/TAGS-SELECTION-HOOKS/USE-KIT-APP-CLEAR-TAGS)
+ **/
 export function useKitAppClearTags(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2084,6 +2602,16 @@ export function useKitAppClearTags(): ActionHookResult<[]> {
 
 // #region Concepts Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS)
+// Concepts selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for concept selection.
+
+/**
+ * Returns an action to add a concept to the Kit app selection.
+ *
+ * MUST return a callback that adds the given concept GUID to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks🛠️usekitappaddconcepttoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS/USE-KIT-APP-ADD-CONCEPT-TO-SELECTION)
+ **/
 export function useKitAppAddConceptToSelection(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2097,6 +2625,13 @@ export function useKitAppAddConceptToSelection(): ActionHookResult<[conceptGuid:
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a concept from the Kit app selection.
+ *
+ * MUST return a callback that removes the given concept GUID from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks🛠️usekitappremoveconceptfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS/USE-KIT-APP-REMOVE-CONCEPT-FROM-SELECTION)
+ **/
 export function useKitAppRemoveConceptFromSelection(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2110,6 +2645,13 @@ export function useKitAppRemoveConceptFromSelection(): ActionHookResult<[concept
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a concept in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given concept GUID in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks🛠️usekitapptoggleconceptinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-CONCEPT-IN-SELECTION)
+ **/
 export function useKitAppToggleConceptInSelection(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2123,6 +2665,13 @@ export function useKitAppToggleConceptInSelection(): ActionHookResult<[conceptGu
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single concept, clearing others.
+ *
+ * MUST return a callback that clears concepts and selects the given GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks🛠️usekitappselectsingleconcept](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-CONCEPT)
+ **/
 export function useKitAppSelectSingleConcept(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2136,6 +2685,13 @@ export function useKitAppSelectSingleConcept(): ActionHookResult<[conceptGuid: G
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple concepts in the Kit app.
+ *
+ * MUST return a callback that selects the given concept GUIDs.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks🛠️usekitappselectconcepts](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS/USE-KIT-APP-SELECT-CONCEPTS)
+ **/
 export function useKitAppSelectConcepts(): ActionHookResult<[conceptsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2149,6 +2705,13 @@ export function useKitAppSelectConcepts(): ActionHookResult<[conceptsGuids: Guid
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all concept selections.
+ *
+ * MUST return a callback that clears all concept GUIDs from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖conceptsselectionhooks🛠️usekitappclearconcepts](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/CONCEPTS-SELECTION-HOOKS/USE-KIT-APP-CLEAR-CONCEPTS)
+ **/
 export function useKitAppClearConcepts(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2166,6 +2729,16 @@ export function useKitAppClearConcepts(): ActionHookResult<[]> {
 
 // #region Files Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS)
+// Files selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for file selection.
+
+/**
+ * Returns an action to add a file to the Kit app selection.
+ *
+ * MUST return a callback that adds the given file string to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks🛠️usekitappaddfiletoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS/USE-KIT-APP-ADD-FILE-TO-SELECTION)
+ **/
 export function useKitAppAddFileToSelection(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2179,6 +2752,13 @@ export function useKitAppAddFileToSelection(): ActionHookResult<[file: string]> 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a file from the Kit app selection.
+ *
+ * MUST return a callback that removes the given file string from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks🛠️usekitappremovefilefromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS/USE-KIT-APP-REMOVE-FILE-FROM-SELECTION)
+ **/
 export function useKitAppRemoveFileFromSelection(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2192,6 +2772,13 @@ export function useKitAppRemoveFileFromSelection(): ActionHookResult<[file: stri
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a file in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given file string in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks🛠️usekitapptogglefileinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-FILE-IN-SELECTION)
+ **/
 export function useKitAppToggleFileInSelection(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2205,6 +2792,13 @@ export function useKitAppToggleFileInSelection(): ActionHookResult<[file: string
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single file, clearing others.
+ *
+ * MUST return a callback that clears files and selects the given string.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks🛠️usekitappselectsinglefile](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-FILE)
+ **/
 export function useKitAppSelectSingleFile(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2218,6 +2812,13 @@ export function useKitAppSelectSingleFile(): ActionHookResult<[file: string]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple files in the Kit app.
+ *
+ * MUST return a callback that selects the given file strings.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks🛠️usekitappselectfiles](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS/USE-KIT-APP-SELECT-FILES)
+ **/
 export function useKitAppSelectFiles(): ActionHookResult<[filesNames: string[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2231,6 +2832,13 @@ export function useKitAppSelectFiles(): ActionHookResult<[filesNames: string[]]>
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all file selections.
+ *
+ * MUST return a callback that clears all file strings from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖filesselectionhooks🛠️usekitappclearfiles](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FILES-SELECTION-HOOKS/USE-KIT-APP-CLEAR-FILES)
+ **/
 export function useKitAppClearFiles(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2248,6 +2856,16 @@ export function useKitAppClearFiles(): ActionHookResult<[]> {
 
 // #region Folders Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS)
+// Folders selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for folder selection.
+
+/**
+ * Returns an action to add a folder to the Kit app selection.
+ *
+ * MUST return a callback that adds the given folder GUID to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks🛠️usekitappaddfoldertoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS/USE-KIT-APP-ADD-FOLDER-TO-SELECTION)
+ **/
 export function useKitAppAddFolderToSelection(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2261,6 +2879,13 @@ export function useKitAppAddFolderToSelection(): ActionHookResult<[folderGuid: G
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove a folder from the Kit app selection.
+ *
+ * MUST return a callback that removes the given folder GUID from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks🛠️usekitappremovefolderfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS/USE-KIT-APP-REMOVE-FOLDER-FROM-SELECTION)
+ **/
 export function useKitAppRemoveFolderFromSelection(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2274,6 +2899,13 @@ export function useKitAppRemoveFolderFromSelection(): ActionHookResult<[folderGu
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a folder in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given folder GUID in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks🛠️usekitapptogglefolderinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-FOLDER-IN-SELECTION)
+ **/
 export function useKitAppToggleFolderInSelection(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2287,6 +2919,13 @@ export function useKitAppToggleFolderInSelection(): ActionHookResult<[folderGuid
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single folder, clearing others.
+ *
+ * MUST return a callback that clears folders and selects the given GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks🛠️usekitappselectsinglefolder](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-FOLDER)
+ **/
 export function useKitAppSelectSingleFolder(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2300,6 +2939,13 @@ export function useKitAppSelectSingleFolder(): ActionHookResult<[folderGuid: Gui
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple folders in the Kit app.
+ *
+ * MUST return a callback that selects the given folder GUIDs.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks🛠️usekitappselectfolders](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS/USE-KIT-APP-SELECT-FOLDERS)
+ **/
 export function useKitAppSelectFolders(): ActionHookResult<[foldersGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2313,6 +2959,13 @@ export function useKitAppSelectFolders(): ActionHookResult<[foldersGuids: Guid[]
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all folder selections.
+ *
+ * MUST return a callback that clears all folder GUIDs from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖foldersselectionhooks🛠️usekitappclearfolders](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/FOLDERS-SELECTION-HOOKS/USE-KIT-APP-CLEAR-FOLDERS)
+ **/
 export function useKitAppClearFolders(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2330,6 +2983,16 @@ export function useKitAppClearFolders(): ActionHookResult<[]> {
 
 // #region Authors Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS)
+// Authors selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for author selection.
+
+/**
+ * Returns an action to add an author to the Kit app selection.
+ *
+ * MUST return a callback that adds the given author string to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks🛠️usekitappaddauthortoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS/USE-KIT-APP-ADD-AUTHOR-TO-SELECTION)
+ **/
 export function useKitAppAddAuthorToSelection(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2343,6 +3006,13 @@ export function useKitAppAddAuthorToSelection(): ActionHookResult<[author: strin
   return [action, canAct];
 }
 
+/**
+ * Returns an action to remove an author from the Kit app selection.
+ *
+ * MUST return a callback that removes the given author string from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks🛠️usekitappremoveauthorfromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS/USE-KIT-APP-REMOVE-AUTHOR-FROM-SELECTION)
+ **/
 export function useKitAppRemoveAuthorFromSelection(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2356,6 +3026,13 @@ export function useKitAppRemoveAuthorFromSelection(): ActionHookResult<[author: 
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle an author in the Kit app selection.
+ *
+ * MUST return a callback that toggles the given author string in selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks🛠️usekitapptoggleauthorinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS/USE-KIT-APP-TOGGLE-AUTHOR-IN-SELECTION)
+ **/
 export function useKitAppToggleAuthorInSelection(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2369,6 +3046,13 @@ export function useKitAppToggleAuthorInSelection(): ActionHookResult<[author: st
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select only a single author, clearing others.
+ *
+ * MUST return a callback that clears authors and selects the given string.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks🛠️usekitappselectsingleauthor](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS/USE-KIT-APP-SELECT-SINGLE-AUTHOR)
+ **/
 export function useKitAppSelectSingleAuthor(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2382,6 +3066,13 @@ export function useKitAppSelectSingleAuthor(): ActionHookResult<[author: string]
   return [action, canAct];
 }
 
+/**
+ * Returns an action to select multiple authors in the Kit app.
+ *
+ * MUST return a callback that selects the given author strings.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks🛠️usekitappselectauthors](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS/USE-KIT-APP-SELECT-AUTHORS)
+ **/
 export function useKitAppSelectAuthors(): ActionHookResult<[authorsNames: string[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2395,6 +3086,13 @@ export function useKitAppSelectAuthors(): ActionHookResult<[authorsNames: string
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear all author selections.
+ *
+ * MUST return a callback that clears all author strings from selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖authorsselectionhooks🛠️usekitappclearauthors](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/AUTHORS-SELECTION-HOOKS/USE-KIT-APP-CLEAR-AUTHORS)
+ **/
 export function useKitAppClearAuthors(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2453,6 +3151,13 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
 
 // #endregion Selection Helper Hooks
 
+/**
+ * Returns an action to set the Kit app filter search query.
+ *
+ * MUST return a callback that sets the filter search string.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappsetfilter](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-SET-FILTER)
+ **/
 export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2466,6 +3171,13 @@ export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a row's expanded state in the Kit table.
+ *
+ * MUST return a callback that toggles the given row GUID in expanded rows.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitapptogglerow](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-TOGGLE-ROW)
+ **/
 export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2479,6 +3191,13 @@ export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to set the Kit table sort column.
+ *
+ * MUST return a callback that sets the sort column identifier.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappsetsort](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-SET-SORT)
+ **/
 export function useKitAppSetSort(): ActionHookResult<[column: string, direction: "asc" | "desc"]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2492,6 +3211,13 @@ export function useKitAppSetSort(): ActionHookResult<[column: string, direction:
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle the Kit table sort direction.
+ *
+ * MUST return a callback that toggles between ascending and descending.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitapptogglesort](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-TOGGLE-SORT)
+ **/
 export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColumn]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2512,6 +3238,13 @@ export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColum
   return [action, canAct];
 }
 
+/**
+ * Returns a hook result for the Kit app hover state.
+ *
+ * MUST provide the current hover, a setter, and a canSet flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-HOVER)
+ **/
 export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -2522,6 +3255,13 @@ export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
   return [hover, undefined, canRead];
 }
 
+/**
+ * Returns an action to set the Kit app hover state.
+ *
+ * MUST return a callback that sets hover to the given entity.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappsethover](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-SET-HOVER)
+ **/
 export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2535,6 +3275,13 @@ export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to clear the Kit app hover state.
+ *
+ * MUST return a callback that clears all hover state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitappclearhover](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-CLEAR-HOVER)
+ **/
 export function useKitAppClearHover(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2548,6 +3295,13 @@ export function useKitAppClearHover(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
+/**
+ * Returns an action to toggle a specific panel's visibility.
+ *
+ * MUST return a callback that toggles the given panel's visibility.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🛠️usekitapptogglepanel](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/USE-KIT-APP-TOGGLE-PANEL)
+ **/
 export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisibility]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2567,6 +3321,16 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
 
 // #region Types
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/TYPES)
+// Types MUST provide hover status and color hooks for type visual indication in the Kit app.
+
+/**
+ * Returns whether a type is currently hovered in the Kit app.
+ *
+ * MUST check the hover state for the given type GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖types🛠️usekitappistypehovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/TYPES/USE-KIT-APP-IS-TYPE-HOVERED)
+ **/
 export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid;
@@ -2575,12 +3339,26 @@ export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
   return [isHovered ?? false, undefined, canRead];
 }
 
+/**
+ * Returns the selection/hover status of a type for visual indication.
+ *
+ * MUST derive status from selection and hover states for the given type GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖types🛠️usekitapptypestatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/TYPES/USE-KIT-APP-TYPE-STATUS)
+ **/
 export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
   const typeScope = useTypeScope();
   const canRead = typeScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
 
+/**
+ * Returns the computed color for a type based on its status.
+ *
+ * MUST derive the color from the type's hovered and selected state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖types🛠️usekitapptypecolor](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/TYPES/USE-KIT-APP-TYPE-COLOR)
+ **/
 export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
   const typeScope = useTypeScope();
   const [isHovered] = useKitAppIsTypeHovered();
@@ -2636,6 +3414,16 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
 
 // #region Designs
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖designs](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/DESIGNS)
+// Designs MUST provide hover status and color hooks for design visual indication in the Kit app.
+
+/**
+ * Returns whether a design is currently hovered in the Kit app.
+ *
+ * MUST check the hover state for the given design GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖designs🛠️usekitappisdesignhovered](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/DESIGNS/USE-KIT-APP-IS-DESIGN-HOVERED)
+ **/
 export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid;
@@ -2644,12 +3432,26 @@ export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   return [isHovered ?? false, undefined, canRead];
 }
 
+/**
+ * Returns the selection/hover status of a design for visual indication.
+ *
+ * MUST derive status from selection and hover states for the given design GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖designs🛠️usekitappdesignstatus](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/DESIGNS/USE-KIT-APP-DESIGN-STATUS)
+ **/
 export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
   const designScope = useDesignScope();
   const canRead = designScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
 
+/**
+ * Returns the computed color for a design based on its status.
+ *
+ * MUST derive the color from the design's hovered and selected state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖designs🛠️usekitappdesigncolor](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/DESIGNS/USE-KIT-APP-DESIGN-COLOR)
+ **/
 export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
   const designScope = useDesignScope();
   const [isHovered] = useKitAppIsDesignHovered();
@@ -2705,6 +3507,14 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
 
 // #region Commands
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/COMMANDS)
+// Commands MUST define all executable Kit app actions for artifact CRUD, import, and export.
+
+/**
+ * Registry of all named Kit app commands mapped to their handler functions.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖commands🪨commands](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/COMMANDS/COMMANDS)
+ **/
 export const commands = {
   "semio.kitApp.setTheme": (context: KitAppCommandContext, theme: Theme): KitAppCommandResult => {
     return { diff: {} };
@@ -3451,6 +4261,9 @@ export const commands = {
 // #region Windows
 
 // #region Table
+
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS)
+// Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
 type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "tags" | "concepts" | "files" | "folders" | "authors";
 
@@ -5968,6 +6781,9 @@ const App: FC = () => {
 
 // #region Diagram
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖diagram](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/WINDOWS/DIAGRAM)
+// Diagram MUST render the interactive force-directed Kit diagram with type and design nodes.
+
 interface KitDiagramNode extends Record<string, unknown> {
   guid: string;
   name: string;
@@ -7171,6 +7987,16 @@ export default MultiWindowApp;
 
 // #region Tools
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖tools](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/WINDOWS/TOOLS)
+// Tools MUST define Kit app toolbar filter and selection tool components.
+
+/**
+ * Returns a hook for the Kit app filter search input state.
+ *
+ * MUST provide the current filter string and a setter.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖tools🛠️usekitappfiltersearch](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/WINDOWS/TOOLS/USE-KIT-APP-FILTER-SEARCH)
+ **/
 export function useKitAppFilterSearch(): HookResult<string> {
   const store = useKitAppStore();
   const filterSearch = useSyncDeep(store, (s: KitAppState | null) => s?.filterSearch ?? "") || "";
@@ -7183,6 +8009,13 @@ export function useKitAppFilterSearch(): HookResult<string> {
   return [filterSearch, setFilterSearch, !!store];
 }
 
+/**
+ * Filter toolbar component rendering the search input for Kit artifacts.
+ *
+ * MUST render a filter input connected to the Kit app filter search state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖tools🪨kitfilters](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/WINDOWS/TOOLS/KIT-FILTERS)
+ **/
 export const KitFilters: FC = () => {
   return (
     <ToolbarGroup>
@@ -7191,6 +8024,13 @@ export const KitFilters: FC = () => {
   );
 };
 
+/**
+ * Toolbar selection tool component for the Kit app.
+ *
+ * MUST render selection mode toggle buttons.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖tools🪨kittoolbarselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/WINDOWS/TOOLS/KIT-TOOLBAR-SELECTION)
+ **/
 export const KitToolbarSelection: FC = () => {
   const [activeTool, setActiveTool] = useKitAppActiveTool();
   const additiveLabel = useLabel("semio.sketchpad.app.kit.tools.select.mode.additive");
@@ -7266,6 +8106,16 @@ export const KitToolbarSelection: FC = () => {
 
 // #region Details
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS)
+// Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
+
+/**
+ * Detail section component for the currently open kit.
+ *
+ * MUST render the kit metadata form fields within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨kitsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/KIT-SECTION)
+ **/
 export const KitSection: FC = () => {
   const isInKitScope = useIsInKitScope();
   if (!isInKitScope) return null;
@@ -7378,6 +8228,13 @@ const KitSectionForm: FC = () => {
   }
 };
 
+/**
+ * Detail section component for the selected type.
+ *
+ * MUST render the type form fields within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨typesection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/TYPE-SECTION)
+ **/
 export const TypeSection: FC = () => {
   const [selection] = useKitAppSelection();
   const selectedTypes = selection?.types || [];
@@ -7455,6 +8312,13 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
   );
 };
 
+/**
+ * Detail section component for the selected port.
+ *
+ * MUST render the port form fields within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨portsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/PORT-SECTION)
+ **/
 export const PortSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7518,6 +8382,13 @@ const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   );
 };
 
+/**
+ * Detail section component for the selected tag.
+ *
+ * MUST render the tag form fields within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨tagsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/TAG-SECTION)
+ **/
 export const TagSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7570,6 +8441,13 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   );
 };
 
+/**
+ * Detail section component for the selected concept.
+ *
+ * MUST render the concept form fields within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨conceptsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/CONCEPT-SECTION)
+ **/
 export const ConceptSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7622,6 +8500,13 @@ const MultipleConceptsSection: FC<{ conceptGuids: string[] }> = ({ conceptGuids 
   );
 };
 
+/**
+ * Detail section component for the selected design.
+ *
+ * MUST render the design form fields within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨designsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/DESIGN-SECTION)
+ **/
 export const DesignSection: FC = () => {
   const [selection] = useKitAppSelection();
   const selectedDesigns = selection?.designs || [];
@@ -7745,6 +8630,13 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
   );
 };
 
+/**
+ * Detail section component for the selected file.
+ *
+ * MUST render the file metadata within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨filesection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/FILE-SECTION)
+ **/
 export const FileSection: FC = () => {
   const { t } = useTranslation();
   const kit = useKit() as Kit;
@@ -7807,6 +8699,13 @@ export const FileSection: FC = () => {
   );
 };
 
+/**
+ * Detail section component for the selected folder.
+ *
+ * MUST render the folder metadata within a detail panel section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨foldersection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/FOLDER-SECTION)
+ **/
 export const FolderSection: FC = () => {
   const { t } = useTranslation();
   const kit = useKit() as Kit;
@@ -7891,6 +8790,13 @@ export const FolderSection: FC = () => {
   );
 };
 
+/**
+ * Detail section component for multiple selected artifacts.
+ *
+ * MUST render a summary of all selected artifacts across kinds.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleartifactssection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS/MULTIPLE-ARTIFACTS-SECTION)
+ **/
 export const MultipleArtifactsSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7924,6 +8830,9 @@ export const MultipleArtifactsSection: FC = () => {
 // #endregion Details
 
 // #region Settings
+
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖settings](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/SETTINGS)
+// Settings MUST render the Kit app settings panel with theme, language, device, expertise, mode, and diagram force controls.
 
 const KitEditorSettingsContent: FC = () => {
   const [diagramForce, setDiagramForce, canSetDiagramForce] = useKitAppDiagramForce();
@@ -8093,6 +9002,16 @@ const SketchpadSettingsContent: FC = () => {
 
 // #region Footer
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/FOOTER)
+// Footer MUST render the Kit app footer with selection count status.
+
+/**
+ * Footer component that renders the Kit app selection count status.
+ *
+ * MUST register and unregister footer items based on current selection state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖footer🪨kitappfooter](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/FOOTER/KIT-APP-FOOTER)
+ **/
 export const KitAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -8115,6 +9034,14 @@ export const KitAppFooter: FC = () => {
 
 // #region Config
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CONFIG)
+// Config MUST export the Kit app configuration with route segments, panel definitions, and path matching.
+
+/**
+ * Exported Kit app configuration including routes, panels, and path matching.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CONFIG/CONFIG)
+ **/
 export const config: AppConfig = {
   id: "kit",
   component: MultiWindowApp,

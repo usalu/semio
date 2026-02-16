@@ -36,3 +36,6 @@ test = [
 python_files = ["test_*.py", "*_test.py", "*.test.py"]
 testpaths = ["semio/py", "semio/engine"]
 addopts = "--import-mode=importlib"
+
+[tool.ruff.lint.per-file-ignores]
+"conftest.py" = ["E402", "F401"]

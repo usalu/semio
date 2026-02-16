@@ -1,0 +1,21 @@
+{
+  "title": "Normalize Author Field to String Format",
+  "status": "open",
+  "prompt": "Make sure that author is never stored as object with name and email but always as a string (the github username if one of the contributors matches or otherwise the `NAME \u003cEMAIL\u003e` format). Migrate all existing JSON files. No backwards compatibility needed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/453"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-CONTRIBUTOR-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-09 12:03:43",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
+      "prompt": "Make sure that author is never stored as object with name and email but always as a string (the github username if one of the contributors matches or otherwise the `NAME \u003cEMAIL\u003e` format). Migrate all existing JSON files. No backwards compatibility needed.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

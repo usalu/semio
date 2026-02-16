@@ -22,7 +22,7 @@ query NodesAndEdges {
     definitions {
       id
     }
-    violations {
+    breachs {
       id
     }
   }
@@ -47,7 +47,7 @@ query NodesAndEdges {
   definitions {
     id
   }
-  violations {
+  breachs {
     id
   }
 }

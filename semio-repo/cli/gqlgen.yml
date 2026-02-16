@@ -137,12 +137,12 @@ models:
   Policy:
     model:
       - github.com/usalu/semio/semio-repo/go/repo.Policy
-  ViolationKind:
+  Statute:
     model:
-      - github.com/usalu/semio/semio-repo/go/repo.ViolationKindMeta
-  Violation:
+      - github.com/usalu/semio/semio-repo/go/repo.StatuteMeta
+  Breach:
     model:
-      - github.com/usalu/semio/semio-repo/go/repo.Violation
+      - github.com/usalu/semio/semio-repo/go/repo.Breach
     fields:
       kindInfo:
         resolver: true
@@ -156,9 +156,9 @@ models:
   TicketStatus:
     model:
       - github.com/usalu/semio/semio-repo/go/repo.TicketStatus
-  ViolationPriority:
+  BreachPriority:
     model:
-      - github.com/usalu/semio/semio-repo/go/repo.ViolationPriority
+      - github.com/usalu/semio/semio-repo/go/repo.BreachPriority
   ContributorIcons:
     model:
       - github.com/usalu/semio/semio-repo/go/repo.ContributorIcons

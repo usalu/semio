@@ -52,94 +52,67 @@ Let me walk you through 🚶
    - [👥 studio](#-studio-)
    - [☁ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
-   - [VS Code Extension](#vs-code-extension-)
    - [🦗 semio.gh](#-semiogh-)
    - [🦏 semio.3dm](#-semio3dm-)
    - [🐝 semio.wasp](#-semiowasp-)
    - [🦌 semio.monoceros](#-semiomonoceros-)
    - [🐞 semio.ladybug](#-semioladybug-)
-1. [📄 Specs](#-specs-)
-   - [📦 Kit](#-kit-)
-   - [🏘 Design](#%EF%B8%8F-design-)
-   - [🏠 Type](#-type-)
-   - [🔗 Connection](#-connection-)
-   - [⭕ Piece](#-piece-)
-   - [⚓ Connector](#-port-)
-   - [💾 Model](#-model-)
-   - [🏷️ Attribute](#%EF%B8%8F-attribute-)
-   - [🏷️ Tag](#%EF%B8%8F-tag-)
-   - [◳ Plane](#-plane-)
-   - [🔗 Url](#-url-)
-   - [🔢 Quality](#-quality-)
-   - [📊 Benchmark](#-benchmark-)
-   - [🏷️ Concept](#%EF%B8%8F-concept-)
-   - [👤 Author](#-author-)
-   - [📋 Layer](#-layer-)
-   - [👥 Group](#-group-)
-   - [⚙️️ Prop](#-prop-)
-   - [📈 Stat](#-stat-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#-principles-)
-   - [🔀 Git](#-git-)
-     - [🦑 GitKraken](#-gitkraken-)
-     - [💬 Discord](#-discord-)
-     - [📢 Release](#-release-)
-     - [🏷️ Tag](#%EF%B8%8F-tag-)
-     - [🌿 Branch](#-branch-)
-     - [🗃️️ Commit](#%EF%B8%8F-commit-)
-1. [🧑‍💻 Development](#-development-)
-   - [🔌 Connector Numbers](#-port-numbers-)
-   - [📒 Tickets and reports](#-tickets-and-reports)
-   - [🪄 AI](#-ai-)
-     - [🛠️ Uses-Cases](#-uses-cases-)
-       - [⚖️ Decision Making](#-decision-making-)
-       - [🔁 Refactoring](#-refactoring-)
-       - [🐛 Bug Fixes](#-bug-fixes-)
-     - [⌨️️ Tools](#-tools-)
-       - [🌐 Web-Chat](#-web-chat-)
-         - [❄ ChatGPT](#-chatgpt-)
-         - [🌟 Gemini](#-gemini-)
-         - [AI studio](#-ai-studio-)
-       - [💻 Editor](#-editor-)
-         - [✈ Copilot](#-copilot-)
-         - [🖱️️ Cursor](#-cursor-)
-         - [🌊 Windsurf](#-windsurf-)
-       - [⌨️️ CLI](#-cli-)
-         - [⌨️️ Claude Code](#-claude-code-)
-         - [🧾 Codex](#-codex-)
-       - [☁ Cloud](#-cloud-)
-         - [🦑 Jules](#-jules-)
-       - [🔍 Agents](#-agents-)
-         - [↕ Reorderer](#-reorderer-)
-         - [🔁 Formatter](#-formatter-)
-       - [🤖 Models](#-models-)
-         - [Claude Opus 4.5](#-opus-45-)
-         - [GPT-5.2 Codex](#-gpt-52-codex-)
-         - [GPT-5.3 Codex](#-gpt-53-codex-)
-     - [🔄 CI/CD](#-cicd-)
-1. [♻ Ecosystems](#%EF%B8%8F-ecosystems-)
-   - [🟨 JavaScript](#-javascript-)
+   - [🏗️ Projects](#-projects-)
+   - [👤 semio](#-semio-)
+   - [🧰 semio-repo](#-semio-repo-)
+   - [🔬 coda](#-coda-)
+   - [♻ Ecosystems](#%EF%B8%8F-ecosystems-)
+   - [🟦 Typescript](#-typescript-)
+   - [🐹 Go](#-go-)
+   - [🦀 Rust](#-rust-)
    - [🟪 .NET](#-net-)
    - [🐍 Python](#-python-)
-1. [📦 Bundles](#-bundles-)
-   - [🟨 semio/js](#-semiojs-)
-   - [✏ semio/desktop](#-semiodesktop-)
-   - [📚 semio/docs](#-semiodocs-)
-   - [🎛 semio/play](#%EF%B8%8F-semioplay-)
-   - [🤖 semio/assistant](#-semioassistant-)
-   - [⚙️️ semio/engine](#-semioengine-)
-   - [🟪 semio/net](#-semionet-)
-   - [🦗 semio/grasshopper](#-semiograsshopper-)
-     - [🪢 Scripting](#-scripting-)
-   - [🛍 semio/assets](#%EF%B8%8F-semioassets-)
-     - [🏷️ Badges](#%EF%B8%8F-badges-)
-     - [📄 Fonts](#-fonts-)
-     - [👁 Icons](#%EF%B8%8F-icons-)
-1. [🏘 Examples](#%EF%B8%8F-examples-)
-   - [🚀 Starter](#-starter-)
-   - [👋 Hello semio](#-hello-semio-)
-   - [🌈 Geometry](#-geometry-)
-   - [🫀 Metabolism](#-metabolism-)
+   - [🔀 Git](#-git-)
+   - [🦑 GitKraken](#-gitkraken-)
+   - [💬 Discord](#-discord-)
+   - [📢 Release](#-release-)
+   - [🏷️ Tag](#%EF%B8%8F-tag-)
+   - [🌿 Branch](#-branch-)
+   - [🗃️️ Commit](#%EF%B8%8F-commit-)
+   - [🔀 Tools](#-git-)
+1. [🧑‍💻 Development](#-development-)
+
+- [🖥️ Systems](#-systems-)
+  - [🪟 Windows](#-windows-)
+  - [🍎 macOS](#-macos-)
+  - [🐧 Linux](#-linux-)
+- [📒 Tickets and reports](#-tickets-and-reports)
+- [🔌 Connector Numbers](#-port-numbers-)
+- [🤖 AI](#-ai-)
+  - [🛠️ Uses-Cases](#-uses-cases-)
+    - [⚖️ Decision Making](#-decision-making-)
+    - [🔁 Refactoring](#-refactoring-)
+    - [🐛 Bug Fixes](#-bug-fixes-)
+  - [⌨️️ Tools](#-tools-)
+    - [🌐 Web-Chat](#-web-chat-)
+      - [❄ ChatGPT](#-chatgpt-)
+      - [🌟 Gemini](#-gemini-)
+      - [AI studio](#-ai-studio-)
+    - [💻 Editor](#-editor-)
+      - [✈ Copilot](#-copilot-)
+      - [🖱️️ Cursor](#-cursor-)
+      - [🌊 Windsurf](#-windsurf-)
+    - [⌨️️ CLI](#-cli-)
+      - [⌨️️ Claude Code](#-claude-code-)
+      - [🧾 Codex](#-codex-)
+    - [☁ Cloud](#-cloud-)
+      - [🦑 Jules](#-jules-)
+    - [🔍 Agents](#-agents-)
+      - [↕ Reorderer](#-reorderer-)
+      - [🔁 Formatter](#-formatter-)
+    - [🤖 Models](#-models-)
+      - [Claude Opus 4.5](#-opus-45-)
+      - [GPT-5.2 Codex](#-gpt-52-codex-)
+      - [GPT-5.3 Codex](#-gpt-53-codex-)
+  - [🔄 CI/CD](#-cicd-)
+
 1. [💯 Brand](#-brand-)
    - [✍ Concept](#%EF%B8%8F-concept-)
      - [✅ Do](#-do-)
@@ -772,16 +745,16 @@ A ticket interaction records a prompt, author, and is bounded by `{started, fini
 Ticket workflows record file touch lists and per-file line diffs so work is auditable and easy to continue.
 Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place, and an `important.md` file for compulsory actions that must be completed before the ticket can be finished.
 
-## 🧰 Violations [↑](#-development)
+## 🧰 Breachs [↑](#-development)
 
 Contributor workflows include an automated code-quality report that highlights inline and multi-line comments (including JSDoc blocks), missing license headers, malformed region blocks, and empty regions before changes are shared.
-Comment scanning works uniformly across all supported languages (TypeScript, Go, Python, C#, Shell, Rust) through a single generic implementation in `BaseLanguage.ScanComments`. Each language declares its own string literal flavors (template literals for JS/TS, raw backtick strings for Go, triple-quoted strings for Python, verbatim `@""` strings for C#) so the scanner correctly ignores comment markers inside string contexts. Each language also declares its own skip directives (e.g. `eslint-`/`@ts-` for TypeScript, `nolint` for Go, `noqa`/`type: ignore` for Python, `pragma` for C#) which are excluded from comment violations alongside the built-in `TODO` and `semio-ignore-` directives.
+Comment scanning works uniformly across all supported languages (TypeScript, Go, Python, C#, Shell, Rust) through a single generic implementation in `BaseLanguage.ScanComments`. Each language declares its own string literal flavors (template literals for JS/TS, raw backtick strings for Go, triple-quoted strings for Python, verbatim `@""` strings for C#) so the scanner correctly ignores comment markers inside string contexts. Each language also declares its own skip directives (e.g. `eslint-`/`@ts-` for TypeScript, `nolint` for Go, `noqa`/`type: ignore` for Python, `pragma` for C#) which are excluded from comment breachs alongside the built-in `TODO` and `semio-ignore-` directives.
 It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
-Each reported problem includes a short reason and solution so contributors can resolve violations quickly.
+Each reported problem includes a short reason and solution so contributors can resolve breachs quickly.
 
-The `fix` command applies autofixes for all autofixable violation kinds: it replaces wrong file header artifact IDs with the correct emoji-prefixed path (e.g. `💻 semio/js/src/index.ts`), removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
+The `fix` command applies autofixes for all autofixable statutes: it replaces wrong file header artifact IDs with the correct emoji-prefixed path (e.g. `💻 semio/js/src/index.ts`), removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
 After removing lines, a post-processing step collapses consecutive blank lines so the output stays clean.
-Non-autofixable violations (missing header regions, unnamed region starts, orphan definitions) are reported but left for manual resolution.
+Non-autofixable breachs (missing header regions, unnamed region starts, orphan definitions) are reported but left for manual resolution.
 
 ## 🔌 Port Numbers [↑](#-development-)
 
@@ -807,12 +780,16 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 - `fix` - Run auto-fixes/formatters
 - `analyze` - Run non-mutating checks
 - `preflight` - Run all preflight checks (default build task)
+- `pre-commit` - Run the monorepo pre-commit pipeline (`preflight`)
+- `pre-commit:global:install` - Install a global git `pre-commit` hook that runs this pipeline in this repo
 - `update` - Update dependencies
 - `publish:test` - Publish to test servers
 - `publish` - Publish packages
 - `dev` - Start all dev servers
 - `dev js js storybook` - Start `semio/js` Storybook
 - `dev js js sketchpad` - Start `semio/js` Vite Sketchpad (connector `3000`)
+
+Run `npm run pre-commit:global:install` once per machine to replace project-local Husky hooks with a global git hook path (`~/.config/git/hooks`).
 
 **Workspace-specific commands:**
 
@@ -854,7 +831,7 @@ Press `F5` or use the Run and Debug panel to launch:
 
 - `update` / `publish:test` / `publish` - Root-level publishing commands
 
-# 🪄 [AI](AGENTS.md) [↑](#-development-)
+## 🪄 [AI](AGENTS.md) [↑](#-development-)
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
@@ -1187,7 +1164,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".semio-repo/contributors/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -1215,7 +1192,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".semio-repo/contributors/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -1224,21 +1201,21 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".semio-repo/contributors/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".semio-repo/contributors/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".semio-repo/contributors/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
@@ -1246,14 +1223,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".semio-repo/contributors/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

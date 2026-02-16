@@ -1,0 +1,19 @@
+{
+  "title": "Expose binary commands in VS Code",
+  "status": "closed",
+  "prompt": "",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/238"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
+      "commit": ""
+    }
+  ]
+}

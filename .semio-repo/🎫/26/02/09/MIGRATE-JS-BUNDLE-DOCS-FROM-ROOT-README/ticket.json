@@ -1,0 +1,1310 @@
+{
+  "title": "Migrate JS Bundle Docs From Root README",
+  "status": "closed",
+  "prompt": "Migrate Borders, Background levels, Validation System, Sketchpad, UI System, Platform Compatibility, and JavaScript ecosystem (Resources, Workspaces, Preflight, Channels) content from root README.md into semio/js/README.md Docs section.",
+  "summary": "Appended 10 doc subsections to semio/js/README.md Docs section: Borders, Background levels, Validation System, Sketchpad (with transactions, selection+hover visuals, windows, Kit app artifact creation, state sub-sections), UI System (with UI Levels, Size Constants, Guidelines sub-sections), Platform Compatibility, Resources, Workspaces, Preflight, Channels. Added empty Specs section at end.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/476"
+  },
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-README-MD",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-09 23:32:32",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
+      "prompt": "Migrate Borders, Background levels, Validation System, Sketchpad, UI System, Platform Compatibility, and JavaScript ecosystem (Resources, Workspaces, Preflight, Channels) content from root README.md into semio/js/README.md Docs section.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 2316,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📃semio/js/README.md",
+              "lines": {
+                "added": 2316,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "semio/js/README.md#Docs",
+              "lines": {
+                "added": 2294,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Background levels",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Borders",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Channels",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Platform Compatibility",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Preflight",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Resources",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Sketchpad",
+              "lines": {
+                "added": 42,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Sketchpad#Kit app artifact creation",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Sketchpad#Sketchpad selection + hover visuals",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Sketchpad#Sketchpad state",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Sketchpad#Sketchpad transactions",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Sketchpad#Sketchpad windows",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#UI System",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#UI System#Guidelines",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#UI System#Size Constants",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#UI System#UI Levels",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Validation System",
+              "lines": {
+                "added": 39,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#Workspaces",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/",
+              "lines": {
+                "added": 2093,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#App Plugin Registry",
+              "lines": {
+                "added": 73,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#App Plugin Registry#AppPlugin Port",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#App Plugin Registry#Event Handler Registry",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#App Plugin Registry#Guard Registry",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#App Plugin Registry#Registration Functions",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Architecture - Open-Closed Principle",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Coordinate System",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Coordinate System#Conversion Functions",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Coordinate System#Three.js Coordinate System",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Coordinate System#semio Coordinate System",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)",
+              "lines": {
+                "added": 211,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#App IDs",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Core Enums",
+              "lines": {
+                "added": 56,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "lines": {
+                "added": 46,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Hook Result Types",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Panel System",
+              "lines": {
+                "added": 43,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Tool System",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Diff System",
+              "lines": {
+                "added": 49,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Diff System#Collection Diffs",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Diff System#Diff Operations",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Diff System#Diff Status",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Diff System#Diff Types",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Diff System#Inverse Diffs",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#File Providers",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#File Providers#File Operations",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#File Providers#FileProvider Port",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#File Providers#Provider Types",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Hotkeys",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Hotkeys#Hotkey Hooks",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Hotkeys#Hotkey Overrides",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Hotkeys#Hotkey Paths",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Hotkeys#Hotkey Values",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration",
+              "lines": {
+                "added": 39,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#AppConfig",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#Path Matching",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#Route Segments",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture",
+              "lines": {
+                "added": 1023,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#1. Store (Base Class)",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#1. Store (Base Class)#Abstract Methods",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#1. Store (Base Class)#Responsibilities",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#1. Store (Base Class)#Usage",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#2. AppStore (extends Store)",
+              "lines": {
+                "added": 70,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#2. AppStore (extends Store)#Edit Structure",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#2. AppStore (extends Store)#Hooks and Helpers",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#2. AppStore (extends Store)#Responsibilities",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#2. AppStore (extends Store)#Transaction Model",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#2. AppStore (extends Store)#UI Transaction Context (Sketchpad elements)",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)",
+              "lines": {
+                "added": 50,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Abstract Methods",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Additional Responsibilities",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Edit Structure",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Undo/Redo Behavior",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Usage",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)#Undo/Redo Behavior",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)#Usage",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Architecture",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Best Practices",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command Execution",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command Naming Convention",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command Origin",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command Pattern",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command Pattern#Command Execution Flow",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command Registry",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Command System",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Concrete Implementations",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Concrete Implementations#DesignAppStore",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Concrete Implementations#HomeStore",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Concrete Implementations#KitAppStore",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Concrete Implementations#TypeAppStore",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Files",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Kit app artifact creation",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Machine Files",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Machine Files#sketchpadMachine",
+              "lines": {
+                "added": 56,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Machine Files#uiMachine (legacy)",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Overview",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure",
+              "lines": {
+                "added": 564,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Adding a New App",
+              "lines": {
+                "added": 57,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#App Hooks Registry",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Dynamic Event Dispatch",
+              "lines": {
+                "added": 63,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#File Layout",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Hook Pattern (Triadic)",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Plugin Registration",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps",
+              "lines": {
+                "added": 326,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Design App (Design.tsx)",
+              "lines": {
+                "added": 64,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Docs App (Docs.tsx)",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Feedback App (Feedback.tsx)",
+              "lines": {
+                "added": 103,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Home App (Home.tsx)",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Kit App (Kit.tsx)",
+              "lines": {
+                "added": 44,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Quality App (Quality.tsx)",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Type App (Type.tsx)",
+              "lines": {
+                "added": 35,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Store Architecture",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Styling",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#State ownership",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Store Hierarchy",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Transaction State Management",
+              "lines": {
+                "added": 39,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#XState Hooks",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#XState State Machines",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Sketchpad App Plugin Architecture#Y.js-XState Bridge",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Store Factory Registry",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation",
+              "lines": {
+                "added": 326,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#1. GUID Uniqueness (`guid-unique`)",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#10. Model Name Uniqueness (`model-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#11. Layer Path Uniqueness (`layer-path-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#2. Type Name Uniqueness (`type-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#3. Design Name Uniqueness (`design-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#4. Piece Name Uniqueness (`piece-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#5. Quality Name Uniqueness (`quality-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#6. Port Name Uniqueness (`port-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#7. File Name Uniqueness (`file-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#8. Folder Name Uniqueness (`folder-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#9. Connector Name Uniqueness (`connector-name-unique`)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Architecture",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Architecture#Layer 1: Domain Logic (`semio.ts`)",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Architecture#Layer 2: Platform Integrations",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation",
+              "lines": {
+                "added": 71,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Fix Comparison Notes",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Format",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Implementation",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Test Data",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Updating Metabolism Assets",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Validation Constraints",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Overview",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Uniqueness Requirements Summary",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Usage",
+              "lines": {
+                "added": 51,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Usage#Applying Fixes",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Usage#Custom Validation",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Usage#Custom Validation#Creating New Constraints",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Usage#In Domain Code",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Validation Constraints",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Validation Constraints#Default Constraints",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Validation Types",
+              "lines": {
+                "added": 46,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Validation Types#Core Types",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Validation#Validation Types#Validation Context",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Windows",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Windows#Active Window",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Windows#Window Chrome",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Windows#Window Kind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Windows#Window Layout",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Y.js Integration",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Y.js Integration#Observers",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Y.js Integration#Persistence",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Y.js Integration#Transactions",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#Y.js Integration#Y.js Types",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#YPath and DerivedStore",
+              "lines": {
+                "added": 52,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#YPath and DerivedStore#DerivedStore",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Docs#📁js/semio/#YPath and DerivedStore#YPath",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Specs",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Summary",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Summary#Policies",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/README.md#Summary#Styling",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

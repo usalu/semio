@@ -1,0 +1,266 @@
+{
+  "title": "Consistent Cli Error Messages and Tests",
+  "status": "closed",
+  "prompt": "Fix inconsistent/inaccurate CLI error messages across all commands. Add status guards for lifecycle operations (close on non-open, reopen on non-closed). Extend test suite to cover wrong arguments and wrong lifecycle state for every command.",
+  "summary": "Fixed inconsistent CLI error messages: added status guards to FinishTicket, GoalClose, GoalReopen; extended wrong-args tests for all commands (todo, section delete/extract/integrate, goal change, top-level move/extract/integrate); added TestCliWrongArgs_ErrorMessages with 36 error message verification cases; added wrong-lifecycle checks to E2E ticket/goal lifecycle tests; extended TestCliJsonErrorsToStderr from 4 to 22 cases",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-11 09:05:43",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "81d694cc3df080b478d7aed9e8e74beba56b9eff",
+      "prompt": "Fix inconsistent/inaccurate CLI error messages across all commands. Add status guards for lifecycle operations (close on non-open, reopen on non-closed). Extend test suite to cover wrong arguments and wrong lifecycle state for every command.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 229,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 293,
+                "removed": 64
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter",
+              "lines": {
+                "added": 229,
+                "removed": 62
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets",
+              "lines": {
+                "added": 9,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals",
+              "lines": {
+                "added": 47,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§NewRootWithConfig",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§bindTreeFlags",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§buildTreeFilterFromFlags",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§goalCommand",
+              "lines": {
+                "added": 111,
+                "removed": 62
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§statuteCommand",
+              "lines": {
+                "added": 73,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§commitCommand",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§StreamProjects",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§runProjectList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§matchesQuery",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§bleveFilterItems",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§FinishTicket",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§GoalClose",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§GoalReopen",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§StreamGoals",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§StreamStatutes",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§StreamCommits",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§goalCommand",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§matchesQuery",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Tickets§bleveFilterItems",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§StreamCommits",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§StreamStatutes",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§commitCommand",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§statuteCommand",
+              "lines": {
+                "added": 73,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,240 @@
+{
+  "title": "Fix Repo Binary Not Ignoring Gitignored Folders",
+  "status": "closed",
+  "prompt": "The repo binary is not properly ignoring folders that are in .gitignore. For example, js/storybook-static is gitignored but still shows up as a folder in repo tool output. Investigate and fix the folder listing/tree logic to respect .gitignore rules.",
+  "summary": "Fixed GetFolderChildren() in ./semio-repo/cli/main.go to apply gitignore filtering. The function was missing the GetGitIgnoredSet() call that ToolFolderList, ToolFolderTree, and GetFolderFiles all had. Now folder children are collected as candidates first, checked against git check-ignore, and filtered before being returned.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/260"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FOLDER-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-01-29T09:31:48.512717551Z",
+      "author": "usalu",
+      "system": "",
+      "client": "",
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
+      "prompt": "The repo binary is not properly ignoring folders that are in .gitignore. For example, js/storybook-static is gitignored but still shows up as a folder in repo tool output. Investigate and fix the folder listing/tree logic to respect .gitignore rules.",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio-repo/go",
+              "lines": {
+                "added": 370,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio-repo/go/main.go",
+              "lines": {
+                "added": 406,
+                "removed": 36
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio-repo/go/main.go§Extract",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§Extract",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§Extract",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§GetFolderChildren",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§GetFolderChildren",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§GetGitDiffLines",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§HydrateSectionsWithDefinitions",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§NewTypeScriptLanguage",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§NewTypeScriptLanguage",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§ParseDefinitions",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§ParseDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§ParseSections",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§RepoContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§Section",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§ToolExtract",
+              "lines": {
+                "added": 112,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§buildSchema",
+              "lines": {
+                "added": 94,
+                "removed": 10
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§formatResult",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§formatResult",
+              "lines": {
+                "added": 10,
+                "removed": 2
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§sectionCommand",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§sectionCommand",
+              "lines": {
+                "added": 68,
+                "removed": 13
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio-repo/go/main.go§Extract",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§HydrateSectionsWithDefinitions",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/go/main.go§ToolExtract",
+              "lines": {
+                "added": 112,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

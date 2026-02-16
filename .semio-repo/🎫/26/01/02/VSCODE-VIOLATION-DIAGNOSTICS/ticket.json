@@ -1,0 +1,18 @@
+{
+  "title": "VSCODE-VIOLATION-DIAGNOSTICS",
+  "status": "closed",
+  "prompt": "The vscode extension should show the breach diagnostics of every open file and rerun the targeted analyze command when saved again.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-01-02T19:59:01Z",
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
+      "prompt": "The vscode extension should show the breach diagnostics of every open file and rerun the targeted analyze command when saved again.",
+      "llm": "opus-4-5-20251101"
+    }
+  ]
+}

@@ -1,0 +1,2641 @@
+{
+  "title": "Hierarchical Policy Tree in CLI and VS Code Extension",
+  "status": "closed",
+  "prompt": "All trees of policies are currently flat but it should be in the same tree as the id of the statute. Both in semio repo cli and semio repo vscode extension. The policy list command shows flat policies without statutes. There is no policy tree command. Need to add policy tree command to CLI and ensure VS Code extension shows the same hierarchical structure.",
+  "summary": "Added hierarchical `policy tree` command to CLI, MCP tool `policy_tree`, and VS Code extension command `semio.policyTree`. The CLI `policy tree` renders policies with statutes as nested children in both markdown and text formats. The VS Code extension sidebar already rendered statutes hierarchically under policies. Added `EmojiBreach` constant to fix a pre-existing build error. Added test `TestPolicyTreeCommand`. Updated AGENTS.md SRS and README.md documentation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/447"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-09 07:53:30",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
+      "prompt": "All trees of policies are currently flat but it should be in the same tree as the id of the statute. Both in semio repo cli and semio repo vscode extension. The policy list command shows flat policies without statutes. There is no policy tree command. Need to add policy tree command to CLI and ensure VS Code extension shows the same hierarchical structure.",
+      "llm": "sonnet-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 500,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 532,
+                "removed": 98
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 14,
+                "removed": 14
+              }
+            },
+            {
+              "path": "📃︎AGENTS.md",
+              "lines": {
+                "added": 6,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃︎README.md",
+              "lines": {
+                "added": 139,
+                "removed": 138
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 123,
+                "removed": 57
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 128,
+                "removed": 128
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 35,
+                "removed": 35
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 43,
+                "removed": 43
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "lines": {
+                "added": 18,
+                "removed": 18
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Workspaces",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 29,
+                "removed": 29
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Workspaces",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "to": "README.md#⚖️ License",
+              "lines": {
+                "added": 14,
+                "removed": 14
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)",
+              "to": "README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "from": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "to": "README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#👥 studio [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
+              "to": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "lines": {
+                "added": 14,
+                "removed": 14
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "lines": {
+                "added": 25,
+                "removed": 25
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "lines": {
+                "added": 85,
+                "removed": 85
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🧱 Kits",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#✏ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)",
+              "lines": {
+                "added": 16,
+                "removed": 16
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🎛 [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🎟 Ticket Workflow Signals [↑](#-bundles-)",
+              "lines": {
+                "added": 18,
+                "removed": 18
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🏷️️ Artifact Kind Derivation [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🏷️ Artifact Kind Derivation [↑](#-bundles-)",
+              "lines": {
+                "added": 51,
+                "removed": 51
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)",
+              "lines": {
+                "added": 35,
+                "removed": 35
+              }
+            },
+            {
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️️ Tag [↑](#-gitstyle-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁 [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#⚖️️ Decision Making [↑](#-uses-cases-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🦌 semio.monoceros [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🧱 Kits",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛰 Repo Dev Server [↑](#-bundles-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)",
+              "to": "README.md#🛍 Products [↑](#-overview)",
+              "lines": {
+                "added": 89,
+                "removed": 89
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️️ [Cursor](.cursor) [↑](#-ai-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 17,
+                "removed": 17
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#☁ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#✏️ sketchpad [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#✏ sketchpad [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 20,
+                "removed": 20
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#👥 studio [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🦌 semio.monoceros [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🦏 semio.3dm [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🦏 semio.3dm [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#⌨️️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️️ Principles [↑](#-repo-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
+              "lines": {
+                "added": 189,
+                "removed": 189
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛰️ Repo Dev Server [↑](#-bundles-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️️ Commit [↑](#-gitstyle-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
+              "lines": {
+                "added": 32,
+                "removed": 32
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 96,
+                "removed": 96
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#☁️ cloud [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#⚖️️ License",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "lines": {
+                "added": 14,
+                "removed": 14
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "lines": {
+                "added": 34,
+                "removed": 34
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 17,
+                "removed": 17
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "lines": {
+                "added": 16,
+                "removed": 16
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
+              "lines": {
+                "added": 36,
+                "removed": 36
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁️ [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter",
+              "lines": {
+                "added": 65,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree",
+              "lines": {
+                "added": 84,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Goals",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Missing Tool Functions",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Default Context",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Entity Resolvers",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types",
+              "lines": {
+                "added": 171,
+                "removed": 33
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Header",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies",
+              "lines": {
+                "added": 8,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Schema Builder",
+              "lines": {
+                "added": 8,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets",
+              "lines": {
+                "added": 92,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID",
+              "lines": {
+                "added": 54,
+                "removed": 52
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Entity Rendering",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Header",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎AGENTS.md#Codebase#📄semio-repo/cli/main.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎AGENTS.md#Codebase#📄semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎AGENTS.md#Software Requirements Specification#Business Logic#Tree",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#♻ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#♻ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#♻️ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃︎README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#⚖️ License",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#⚖️️ License",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#✨ [Contributors](https://github.com/usalu/semio/pulse/monthly) [↑](#-overview)",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃︎README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#🌈 Colors [↑](#-brand-)#🥇 Primary [↑](#-colors-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#📄 Typography [↑](#-brand-)",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃︎README.md#💯 Brand [↑](#-overview)#📄 Typography [↑](#-brand-)#🔡 [Typesetting](/assets/fonts/README.md) [↑](#-typography-)",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#◳ Plane [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚓ Connector [↑](#-specs-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🔗 Connection [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📑 Overview",
+              "lines": {
+                "added": 32,
+                "removed": 32
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#✏ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🌳 Monorepo Tree [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🎛 [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🎟 Ticket Workflow Signals [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🏷️ Artifact Kind Derivation [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🏷️️ Artifact Kind Derivation [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁 [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁️ [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛰 Repo Dev Server [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛰️ Repo Dev Server [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/semio/semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🧼 Code Hygiene Hooks [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍 Products [↑](#-overview)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍 Products [↑](#-overview)#☁ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍 Products [↑](#-overview)#✏ sketchpad [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍 Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍️ Products [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍️ Products [↑](#-overview)#☁️ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍️ Products [↑](#-overview)#✏️ sketchpad [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃︎README.md#🛍️ Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️️ Principles [↑](#-repo-)",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🌿 Branch [↑](#-gitstyle-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️️ Tag [↑](#-gitstyle-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#📢 Release [↑](#-gitstyle-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️️ Commit [↑](#-gitstyle-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🦑 GitKraken [↑](#-git-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🧑‍💻 Development [↑](#-overview)#🧰 Breachs [↑](#-development)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🧑‍💻 Development [↑](#-overview)#🪟 Windows Setup (Legacy) [↑](#-development)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#⌨️️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#⚖️️ Decision Making [↑](#-uses-cases-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Header",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
+              "lines": {
+                "added": 87,
+                "removed": 48
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§buildStatuteTree",
+              "lines": {
+                "added": 83,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§bindStreamFlags",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§getStreamOptions",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§policyCommand",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Goals§StreamGoals",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Missing Tool Functions§ToolPolicyTree",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli§ResolveContributorContributions",
+              "lines": {
+                "added": 0,
+                "removed": 26
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli§StreamContributors",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Default Context§Analyze",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Entity Resolvers§Breachs",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§BuildSemanticDiffs",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§ContributorContributionsTree",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§ContributorFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§ContributorFolder",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§ContributorLink",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§DeriveBundleKind",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§Folder",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 20,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsGeneratedFolder",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsNode",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsNode",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsNode",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsValid",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§LineMetrics",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§TicketDate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§BreachPriority",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§policyTree",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp§createMcpServer",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§StreamPolicies",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§emojiPolicy",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§emojiPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§repoPolicy",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§repoPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§sectionPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 8,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamBundles",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamDefinitions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamFiles",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamFolders",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamOptions",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamProjects",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamSections",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§StreamTickets",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§bleveFilterItems",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§matchesQuery",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§queryableItem",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos§ParseTodoComments",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos§ParseTodoMarkdown",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos§TodoCreate",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos§TodoDelete",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos§TodoToTicket",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§TREE_CACHE_TTL",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§TREE_CACHE_TTL",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§bundleKindEmoji",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§bundleKindEmoji",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCache",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCache",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCacheTime",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCacheTime",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestSearchMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyTreeCommand",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "lines": {
+                "added": 0,
+                "removed": 45
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "lines": {
+                "added": 45,
+                "removed": 37
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestCollectEntityProps_MultilineEscaped",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Bundle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Bundle",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Folder",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Folder",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestLifecycleCommands",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestLifecycleCommands",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestMarkdownOutput",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§buildStatuteTree",
+              "lines": {
+                "added": 83,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Missing Tool Functions§ToolPolicyTree",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§policyTree",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§bleveFilterItems",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§matchesQuery",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§queryableItem",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyTreeCommand",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestCollectEntityProps_MultilineEscaped",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "title": "Introduce Interaction as Proper Resource",
+  "status": "closed",
+  "prompt": "Introduce `interaction` as a proper resource. Interactions are aggregated from other resources that have interactions (e.g. tickets and goals). Add it to GraphQL schema. Add `interaction list` to the CLI (not MCP) that lists all interactions. With `--sorted` the list is not streamed but sorted by date. Add `interaction tree` to the CLI (not MCP) showing interactions within the parent tree (goal -\u003e ticket tree extended with interaction items).",
+  "summary": "Introduced InteractionResource as a proper first-class resource. Added InteractionResource struct with source metadata, ListInteractions/StreamInteractions aggregation functions, interaction list/tree CLI commands, interactions GraphQL query, and interactions field on Goal type. Updated schema.graphql accordingly. All tests pass.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-13 21:23:26",
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
+      "prompt": "Introduce `interaction` as a proper resource. Interactions are aggregated from other resources that have interactions (e.g. tickets and goals). Add it to GraphQL schema. Add `interaction list` to the CLI (not MCP) that lists all interactions. With `--sorted` the list is not streamed but sorted by date. Add `interaction tree` to the CLI (not MCP) showing interactions within the parent tree (goal -\u003e ticket tree extended with interaction items).",
+      "llm": "sonnet-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/graphql",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 271,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 273,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/graphql/schema.graphql",
+              "lines": {
+                "added": 627,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/graphql/schema.graphql#Types",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/graphql/schema.graphql#Query",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages",
+              "lines": {
+                "added": 85,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies",
+              "lines": {
+                "added": 11,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder",
+              "lines": {
+                "added": 50,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter",
+              "lines": {
+                "added": 121,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§NewRootWithConfig",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§interactionCommand",
+              "lines": {
+                "added": 119,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§InteractionResource",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§ListInteractions",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§StreamInteractions",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§sketchpadPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§folderPolicy",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§filePolicy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder§buildSchema",
+              "lines": {
+                "added": 50,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Interactions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§folderPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§filePolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/graphql/schema.graphql#Query§Query",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/graphql/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/graphql/schema.graphql#Types§InteractionResource",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§interactionCommand",
+              "lines": {
+                "added": 119,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§StreamInteractions",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§InteractionResource",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Interactions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§ListInteractions",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/graphql/schema.graphql#Types§InteractionResource",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,295 @@
+{
+  "title": "Migrate Bundle Docs to CLI README",
+  "status": "closed",
+  "prompt": "Migrate Code Hygiene, Repo Tooling Sync, Artifact Kind Derivation, Ticket Workflow Signals, Code Report, Monorepo Tree, Section Tree, Shell Language Support, Ticket System, MCP Tool Gateway, and Contributors sections from root README.md into semio-repo/cli/README.md Docs section.",
+  "summary": "Migrated 11 sections",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/473"
+  },
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-README-MD",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-09 23:24:32",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
+      "prompt": "Migrate Code Hygiene, Repo Tooling Sync, Artifact Kind Derivation, Ticket Workflow Signals, Code Report, Monorepo Tree, Section Tree, Shell Language Support, Ticket System, MCP Tool Gateway, and Contributors sections from root README.md into semio-repo/cli/README.md Docs section.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 550,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📃semio-repo/cli/README.md",
+              "lines": {
+                "added": 550,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "semio-repo/cli/README.md#Docs",
+              "lines": {
+                "added": 160,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Artifact Kind Derivation",
+              "lines": {
+                "added": 51,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Code Hygiene Hooks",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Code Report",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Contributors",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#MCP Tool Gateway",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Monorepo Tree",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Repo Tooling Sync",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Section Tree",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Shell Language Support",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Ticket System",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#Ticket Workflow Signals",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#cli.go",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#cli_test.go",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#main.go",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Docs#main_test.go",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs",
+              "lines": {
+                "added": 386,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Artifact Kind Derivation",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#CLI",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Code Hygiene",
+              "lines": {
+                "added": 78,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Contributor",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Goal",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#MCP Tools",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Move, Integrate, Extract",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Repo Dev Server",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Repo Tooling",
+              "lines": {
+                "added": 88,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Sections",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Ticket",
+              "lines": {
+                "added": 46,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Ticket UX",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Tooling",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Specs#Tree",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/README.md#Summary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

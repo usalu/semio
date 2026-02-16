@@ -1,0 +1,86 @@
+{
+  "title": "Fix Small File Breachs",
+  "status": "closed",
+  "prompt": "Fix orphan definitions and missing summary/spec comments in 14 small files across the monorepo",
+  "summary": "Added section regions around orphan definitions and summary+spec comments for all definitions across 14 small files: 4 files got section wrappers (sketchpad/apps/index.ts, vite-env.d.ts, Semio.Tests/Usings.cs, Grasshopper.Tests/Usings.cs), 10 files got summary+spec comments on definitions (vitest.config.ts, tailwind.config.ts, site.tsx, docs/index.tsx, 3 desktop vite configs, icons.ts, 2 eslint configs)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/512"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-11 21:13:15",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix orphan definitions and missing summary/spec comments in 14 small files across the monorepo",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/apps/index.ts",
+              "lines": {
+                "added": 40,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/apps/index.ts#Exports",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/sketchpad/apps/index.ts#Exports",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

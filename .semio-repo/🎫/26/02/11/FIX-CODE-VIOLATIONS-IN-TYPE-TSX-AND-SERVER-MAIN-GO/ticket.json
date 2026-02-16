@@ -1,0 +1,384 @@
+{
+  "title": "Fix Code Breachs in Type Tsx and Server Main Go",
+  "status": "closed",
+  "prompt": "Fix all code breachs in semio/js/sketchpad/Type.tsx (91 breachs) and semio-repo/server/main.go (72 breachs). Add section summaries with MUST keywords, definition summaries, and spec comments with RFC2119 keywords on functions/classes.",
+  "summary": "Fixed all 163 code breachs across semio-repo/server/main.go and semio/js/sketchpad/Type.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/527"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-11 23:49:21",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix all code breachs in semio/js/sketchpad/Type.tsx (91 breachs) and semio-repo/server/main.go (72 breachs). Add section summaries with MUST keywords, definition summaries, and spec comments with RFC2119 keywords on functions/classes.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/server",
+              "lines": {
+                "added": 136,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio-repo/server/main.go",
+              "lines": {
+                "added": 1886,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx",
+              "lines": {
+                "added": 3553,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [
+            {
+              "from": "semio-repo/server/main.go#License",
+              "to": "semio-repo/server/main.go#Header#License",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "semio-repo/server/main.go#Specs",
+              "to": "semio-repo/server/main.go#Header#Specs",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "💻semio-repo/server/main.go#Claims",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Config",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Database",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#DiffParsing",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Discord",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#EventBus",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Header",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Indexing",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Main",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Models",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Package",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Processing",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Server",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Utilities",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Warnings",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#Webhooks",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Commands",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Config",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Footer",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Internal State Management",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Panels",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Details",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Panels#Right#Settings",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Scene",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Type App Plugin Registration",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#XState Hooks",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#XState Hooks#Action Hooks",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio-repo/server/main.go#Header",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/server/main.go#DiffParsing§hunkHeader",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/server/main.go#EventBus§EventHandler",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#XState Hooks#Action Hooks§ActionHookResult",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx§EMPTY_MODEL_TAG_ARRAY",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx§EMPTY_OTHERS",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx§useTypeAppScope",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

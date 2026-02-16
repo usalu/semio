@@ -2075,7 +2075,7 @@ All implementations (TypeScript, Python, C#) produce **identical** validation ou
 
 ##### Test Data
 
-- `assets/semio/kit_invalid.json` - Invalid kit with all validation constraint violations
+- `assets/semio/kit_invalid.json` - Invalid kit with all validation constraint breachs
 - `assets/semio/validation.json` - Expected output (sorted by constraintId, then entityGuid)
 
 ##### Updating Metabolism Assets
@@ -2148,7 +2148,7 @@ semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 
 **Platform Integrations:**
 
-- **VS Code Extension** - Kit validation with Quick Fixes, violation diagnostics with auto-refresh on save
+- **VS Code Extension** - Kit validation with Quick Fixes, breach diagnostics with auto-refresh on save
 - **Sketchpad UI** - In-app validation panel (planned)
 - **CLI** - Command-line validation tool (planned)
 - **Backend** - API validation endpoint (planned)

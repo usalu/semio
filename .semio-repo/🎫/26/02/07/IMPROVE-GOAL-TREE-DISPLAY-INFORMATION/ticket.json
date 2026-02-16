@@ -1,0 +1,952 @@
+{
+  "title": "Improve Goal Tree Display Information",
+  "status": "closed",
+  "prompt": "Improve the goal tree command output to show more and better structured information including slug, status, creation date, due date, and description.",
+  "summary": "Improved goal tree display to show more information: status, createdAt (relative time), due date, and full description. Updated both text and markdown templates. Added `description` field to all three GraphQL query variants in the goal tree command. Fixed backwards-compatible parsing of the old `started`/`finished` flat fields in Interaction JSON unmarshalling so that `createdAt` resolves correctly for goals with legacy interaction format. Added Status and CreatedAt to the goal tree view model.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/436"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-GOAL-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-07 00:05:31",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
+      "prompt": "Improve the goal tree command output to show more and better structured information including slug, status, creation date, due date, and description.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 673,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 1014,
+                "removed": 341
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter",
+              "lines": {
+                "added": 194,
+                "removed": 284
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types",
+              "lines": {
+                "added": 172,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Templates",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree",
+              "lines": {
+                "added": 569,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets",
+              "lines": {
+                "added": 14,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID",
+              "lines": {
+                "added": 3,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types",
+              "lines": {
+                "added": 16,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types",
+              "lines": {
+                "added": 20,
+                "removed": 20
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types",
+              "lines": {
+                "added": 172,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree",
+              "lines": {
+                "added": 569,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [
+            {
+              "from": "💻semio-repo/cli/main.go#Types#Codebase Types§TreeNodeKind",
+              "to": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNode",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "from": "💻semio-repo/cli/main.go#Types#Codebase Types§TreeNode",
+              "to": "💻semio-repo/cli/main.go#Types#Codebase Types§CbTreeNode",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§HasOnlyKinds",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§IsKindVisible",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesContributor",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesDate",
+              "lines": {
+                "added": 54,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesStatus",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesSubKind",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeFilter",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNode",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNodeKind",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Templates§defaultTemplates",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Templates§defaultTemplates",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree",
+              "lines": {
+                "added": 312,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§FilterMonorepoTree",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§RenderMonorepoTree",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§SearchMonorepoTree",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§TreeBuildOptions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§buildSectionTreeNode",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§collapseFilteredKinds",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§filterNode",
+              "lines": {
+                "added": 47,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§pruneUnmatched",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§renderTreeNode",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§sortTreeChildren",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic§renderGoalTreeNodes",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§bindTreeFlags",
+              "lines": {
+                "added": 76,
+                "removed": 83
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§buildTreeFilterFromFlags",
+              "lines": {
+                "added": 95,
+                "removed": 93
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§exportCommand",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§goalCommand",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§policyCommand",
+              "lines": {
+                "added": 0,
+                "removed": 51
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 284
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 20,
+                "removed": 25
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli#Goals§ghUpdateMilestone",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§BuildCodebaseTree",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§BuildCodebaseTree",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§GetBundleForFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§GetBundleInfo",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§GetFileID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§GetFileID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§LoadPolicies",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Codebase§LoadTickets",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleCommitsResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleCommitsResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleContributorResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleContributorResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleContributorsResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleContributorsResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleDefinitionResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleDefinitionResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleDefinitionsResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleDefinitionsResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleSectionResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleSectionResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleSectionsResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleSectionsResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleTicketResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleTicketResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleTicketsResource",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers#Mcp Resources Handlers§handleTicketsResource",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§draftCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§folderList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§folderMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§ticketClose",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§ticketList",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§ticketRead",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Mcp#Handlers§ticketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Policies§headerPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§FilterTicketWorkspaceFiles",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ghAddLabels",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§ghReopenIssue",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§isProjectDir",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§loadProjectsInternal",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§loadProjectsInternal",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§emojiText",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§emojiText",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§CbTreeNode",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§CbTreeNodeKind",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§Codebase",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§Codebase",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§TreeNode",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§TreeNodeKind",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages#Go§ExtraOrphanDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§TicketData",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§TicketDiffSet",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§TicketDiffs",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§TicketFileRenamed",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§UnmarshalJSON",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types§UnmarshalJSON",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§HasOnlyKinds",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§IsKindVisible",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesContributor",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesDate",
+              "lines": {
+                "added": 54,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesStatus",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesSubKind",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeFilter",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNodeKind",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree",
+              "lines": {
+                "added": 312,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§FilterMonorepoTree",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§RenderMonorepoTree",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§SearchMonorepoTree",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§TreeBuildOptions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§buildSectionTreeNode",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§collapseFilteredKinds",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§filterNode",
+              "lines": {
+                "added": 47,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§pruneUnmatched",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§renderTreeNode",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§sortTreeChildren",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§bindTreeFlags",
+              "lines": {
+                "added": 83,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§buildTreeFilterFromFlags",
+              "lines": {
+                "added": 97,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Tickets§isProjectDir",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Codebase Types§CbTreeNodeKind",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

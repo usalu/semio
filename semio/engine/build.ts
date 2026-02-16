@@ -1,37 +1,36 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 📜semio/engine/build.ts
+// [👤semio📚engine📜buildts](semiorepo://file/SEMIO/ENGINE/BUILD.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Build script for the semio engine Python package.
 
 // #endregion 🔖Header
+
+// #region 🔖Build
+
+// [👤semio📚engine💻buildts🔖build](semiorepo://section/SEMIO/ENGINE/BUILD.TS/BUILD)
+// Build script for the engine binary. MUST bundle the engine via PyInstaller.
 
 import { execSync } from "child_process";
 import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
+// Engine build working directory.
+// MUST resolve to the engine folder.
 const cwd = __dirname;
 
 if (!existsSync(join(cwd, "../../.venv"))) {
@@ -47,6 +46,8 @@ if (existsSync(join(cwd, "dist"))) {
   rmSync(join(cwd, "dist"), { recursive: true });
 }
 
+// PyInstaller CLI arguments for bundling the engine binary.
+// MUST include all required metadata and hidden imports.
 const args = [
   "--name",
   "semio-engine",
@@ -74,3 +75,5 @@ if (!process.argv.includes("--skip-post-build")) {
 }
 
 console.log("✅ Build complete");
+
+// #endregion 🔖Build

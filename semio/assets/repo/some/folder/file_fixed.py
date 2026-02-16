@@ -1,10 +1,8 @@
 # region Header
 
-# 💻semio/assets/repo/some/folder/file_fixed.py
+# [💻filefixedpy](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.PY)
 
 # 2025 Test User <test@test.com>
-
-# region License
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -19,17 +17,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# endregion License
-
-# region Specs
-# endregion Specs
+# A fixed Python module for testing.
 
 # endregion Header
 
 # region Functions
-
+# [🔖semio/assets/repo/some/folder/file_fixed.py#Functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.py/FUNCTIONS)
+# Utility functions for fixed values.
+# Functions MUST accept typed parameters.
 
 def fixed_function(value: int) -> int:
+    """Increments a value by one.
+    fixed_function MUST return value plus one.
+    [🛠️semio/assets/repo/some/folder/file_fixed.py#Functions§fixed_function](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.py/FUNCTIONS/FIXED-FUNCTION)
+    """
     return value + 1
 
 

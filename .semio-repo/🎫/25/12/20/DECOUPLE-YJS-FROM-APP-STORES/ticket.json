@@ -1,0 +1,18 @@
+{
+  "title": "Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state persistence. Design, Type, Quality, Docs, Home, and Feedback apps use PlainAppStore/PlainKitDiffAppStore.",
+  "status": "closed",
+  "prompt": "Decouple yjs from all app stores except Kit. All app stores are still entangled with yjs. Only the kit store should use yjs. All other stores should use the state machine for state management.",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2025-12-20T11:52:27.669Z",
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
+      "prompt": "Decouple yjs from all app stores except Kit. All app stores are still entangled with yjs. Only the kit store should use yjs. All other stores should use the state machine for state management.",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

@@ -1,48 +1,27 @@
 # region Header
 
-# 💻semio/engine/engine.py
+# [👤semio📚engine💻enginepy](semiorepo://file/SEMIO/ENGINE/ENGINE.PY)
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
-# region License
-
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as
+# it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
-
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public License
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-# endregion License
-
-# region Specs
-# endregion Specs
 
 # endregion Header
 
-from __future__ import annotations
-
-# region TODOs
-# TODO: Make loguru work on extra uvicorn engine process.
-# TODO: Replace prototype healing with one that makes more for every single property.
-# TODO: Try closest embedding instead of smallest Levenshtein distance.
-# TODO: Automatic derive from Id model.
-# TODO: Automatic emptying.
-# TODO: Automatic updating based on props.
-# TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
-# TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-# TODO: Proper mechanism of nullable fields.
-# TODO: Generalize to non-zip kits.
-# TODO: Think of using memory sqlite for caching.
-# TODO: Get rid of id_ because of bug https://github.com/graphql-python/graphene-sqlalchemy/issues/412
-# endregion TODOs
 # region Imports
+
+# [👤semio📚engine💻enginepy🔖imports](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/IMPORTS)
+# Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
+from __future__ import annotations
 import abc
 import argparse
 import contextlib
@@ -171,6 +150,9 @@ from semio import (
 
 # region Store
 
+# [👤semio📚engine💻enginepy🔖store](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/STORE)
+# Store MUST provide the data access layer for kit operations via code-based routing.
+
 codeGrammar = (
     """
     code: (ENCODED_STRING)? ("/" (design | type))?
@@ -184,6 +166,10 @@ codeGrammar = (
 codeParser = lark.Lark(codeGrammar, start="code")
 
 class OperationBuilder(lark.Transformer):
+    """Lark transformer that builds operation dicts from parsed code grammar trees.
+    Callers MUST pass a valid parse tree from codeParser.
+    [👤semio📚engine💻enginepy🔖store🛠️operationbuilder](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/OPERATION-BUILDER)
+    """
     def code(self, children):
         if len(children) == 0:
             return {"kind": "kits"}
@@ -214,14 +200,20 @@ class OperationBuilder(lark.Transformer):
         }
 
 class StoreKind(enum.Enum):
-    """🏪The kind of the store."""
+    """🏪The kind of the store.
+    Callers MUST use one of the defined store kinds when selecting a backend.
+    [👤semio📚engine💻enginepy🔖store🛠️storekind](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/STORE-KIND)
+    """
 
     DATABASE = "database"
     REST = "rest"
     GRAPHQL = "graphql"
 
 class CommandKind(enum.Enum):
-    """🔧 The kind of the command."""
+    """🔧 The kind of the command.
+    Callers MUST use a valid CommandKind when calling Store.execute.
+    [👤semio📚engine💻enginepy🔖store🛠️commandkind](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/COMMAND-KIND)
+    """
 
     QUERY = "query"
     PUT = "put"
@@ -229,6 +221,10 @@ class CommandKind(enum.Enum):
     DELETE = "delete"
 
 class Store(abc.ABC):
+    """Abstract base class for all store backends.
+    Subclasses MUST implement initialize, get, put, update, and delete methods.
+    [👤semio📚engine💻enginepy🔖store🛠️store](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/STORE)
+    """
     uri: str
 
     def __init__(self, uri: str) -> None:
@@ -277,6 +273,10 @@ class Store(abc.ABC):
         pass
 
 class DatabaseStore(Store, abc.ABC):
+    """Abstract database-backed store using SQLAlchemy engine and session.
+    Subclasses MUST implement the fromUri classmethod to construct from a URI.
+    [👤semio📚engine💻enginepy🔖store🛠️databasestore](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/DATABASE-STORE)
+    """
     engine: sqlalchemy.engine.Engine
 
     def __init__(self, uri: str, engine: sqlalchemy.engine.Engine) -> None:
@@ -553,7 +553,10 @@ class DatabaseStore(Store, abc.ABC):
                 raise FeatureNotYetSupported()
 
 class SSLMode(enum.Enum):
-    """🔒 The security level of the session"""
+    """🔒 The security level of the session
+    Callers MUST select the appropriate SSL mode for the target database security policy.
+    [👤semio📚engine💻enginepy🔖store🛠️sslmode](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/SSL-MODE)
+    """
 
     DISABLE = "disable"
     ALLOW = "allow"
@@ -563,12 +566,19 @@ class SSLMode(enum.Enum):
     VERIFY_FULL = "verify-full"
 
 def cacheDir(remoteUri: str) -> str:
+    """Returns the local cache directory path for a remote kit URI.
+    Callers MUST provide a valid remote URI string.
+    [👤semio📚engine💻enginepy🔖store🛠️cachedir](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/CACHE-DIR)
+    """
     cacheDir = os.path.expanduser("~/.semio/cache")
     encodedUri = encode(remoteUri)
     return os.path.join(cacheDir, encodedUri)
 
 def cache(remoteUri: str) -> str:
-    """📦Cache a remote kit and delete the existing cache if it was already cached."""
+    """📦Cache a remote kit and delete the existing cache if it was already cached.
+    Callers MUST provide a URI starting with http and ending with .zip.
+    [👤semio📚engine💻enginepy🔖store🛠️cache](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/CACHE)
+    """
     if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
         raise OnlyRemoteKitsCanBeCached(remoteUri)
 
@@ -603,6 +613,10 @@ def cache(remoteUri: str) -> str:
     return path
 
 class SqliteStore(DatabaseStore):
+    """SQLite-backed store that persists kit data to a local .semio database file.
+    Callers MUST use fromUri to construct instances with a valid local path.
+    [👤semio📚engine💻enginepy🔖store🛠️sqlitestore](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/SQLITE-STORE)
+    """
     path: pathlib.Path
 
     def __init__(
@@ -650,6 +664,10 @@ class SqliteStore(DatabaseStore):
         os.kill(os.getpid(), signal.SIGTERM)
 
 class PostgresStore(DatabaseStore):
+    """PostgreSQL-backed store for remote database connections.
+    Callers MUST NOT use this class until PostgreSQL support is implemented.
+    [👤semio📚engine💻enginepy🔖store🛠️postgresstore](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/POSTGRES-STORE)
+    """
     @classmethod
     def fromUri(cls, uri: str):
         # TODO: Get connection string from environment variable.
@@ -661,7 +679,10 @@ class PostgresStore(DatabaseStore):
 
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
-    """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created."""
+    """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
+    Callers MUST provide either an absolute local path or an http URL.
+    [👤semio📚engine💻enginepy🔖store🛠️storefactory](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/STORE-FACTORY)
+    """
     if os.path.isabs(uri):
         return SqliteStore.fromUri(uri)
     if uri.startswith("http"):
@@ -674,23 +695,36 @@ def StoreFactory(uri: str) -> Store:
     raise LocalKitUriIsNotAbsolute(uri)
 
 def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
+    """Parses a code string into a store instance and operation dict.
+    Callers MUST provide a valid code string matching the code grammar.
+    [👤semio📚engine💻enginepy🔖store🛠️storeandoperationfromcode](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/STORE-AND-OPERATION-FROM-CODE)
+    """
     codeTree = codeParser.parse(code)
     operation = OperationBuilder().transform(codeTree)
     store = StoreFactory(operation["kitUri"])
     return store, operation
 
 def get(code: str, cache=False) -> typing.Any:
-    """🔍 Get an entity from the store."""
+    """🔍 Get an entity from the store.
+    Callers MUST provide a valid code string with an encoded kit URI.
+    [👤semio📚engine💻enginepy🔖store🛠️get](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/GET)
+    """
     store, operation = storeAndOperationFromCode(code)
     return store.get(operation)
 
 def put(code: str, input: str) -> typing.Any:
-    """📥 Put an entity in the store."""
+    """📥 Put an entity in the store.
+    Callers MUST provide a valid code string and matching input data.
+    [👤semio📚engine💻enginepy🔖store🛠️put](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/PUT)
+    """
     store, operation = storeAndOperationFromCode(code)
     return store.put(operation, input)
 
 def delete(code: str) -> typing.Any:
-    """🗑 Delete an entity from the store."""
+    """🗑 Delete an entity from the store.
+    Callers MUST provide a valid code string referencing an existing entity.
+    [👤semio📚engine💻enginepy🔖store🛠️delete](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/STORE/DELETE)
+    """
     store, operation = storeAndOperationFromCode(code)
     return store.delete(operation)
 
@@ -698,15 +732,30 @@ def delete(code: str) -> typing.Any:
 
 # region Assistant
 
+# [👤semio📚engine💻enginepy🔖assistant](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/ASSISTANT)
+# Assistant MUST provide AI-powered design prediction using OpenAI structured outputs.
+
 def encodeForPrompt(context: str):
+    """Sanitizes a context string for use in AI prompts by replacing delimiters.
+    Callers MUST pass a string that will be embedded in a prompt template.
+    [👤semio📚engine💻enginepy🔖assistant🛠️encodeforprompt](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ASSISTANT/ENCODE-FOR-PROMPT)
+    """
     return context.replace(";", ",").replace("\n", " ")
 
 def replaceDefault(context: str, default: str):
+    """Substitutes an empty context string with the provided default value.
+    Callers MUST provide a non-None default string.
+    [👤semio📚engine💻enginepy🔖assistant🛠️replacedefault](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ASSISTANT/REPLACE-DEFAULT)
+    """
     if context == "":
         return context.replace("", default)
     return context
 
 def encodeType(type: TypeContext):
+    """Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
+    Callers MUST provide a valid TypeContext with populated connectors.
+    [👤semio📚engine💻enginepy🔖assistant🛠️encodetype](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ASSISTANT/ENCODE-TYPE)
+    """
     typeClone = type.model_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
     typeClone.description = (
@@ -720,6 +769,10 @@ def encodeType(type: TypeContext):
     return typeClone
 
 def decodeDesign(design: dict):
+    """Decodes a raw AI response dict into a DesignPrediction model.
+    Callers MUST provide a dict with pieces and connections arrays.
+    [👤semio📚engine💻enginepy🔖assistant🛠️decodedesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ASSISTANT/DECODE-DESIGN)
+    """
     decodedDesign = {
         "pieces": [
             {
@@ -781,9 +834,12 @@ def decodeDesign(design: dict):
     }
     return DesignPrediction.parse(decodedDesign)
 
-# TODO: Replace prototype healing with one that makes more for every single property.
 def healDesign(design: DesignPrediction, types: list[TypeContext]):
-    """🩺 Heal a design by replacing missing type variants with the first variant."""
+    """🩺 Heal a design by replacing missing type variants with the first variant.
+    TODO: Replace prototype healing with one that makes more for every single property.
+    Callers MUST provide a design with pieces referencing types available in the types list.
+    [👤semio📚engine💻enginepy🔖assistant🛠️healdesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ASSISTANT/HEAL-DESIGN)
+    """
     designClone = design.model_copy(deep=True)
     typeD = {}
     connectorD = {}
@@ -1042,7 +1098,10 @@ designResponseFormat = json.loads(
 def predictDesign(
     description: str, types: list[TypeContext], design: DesignInput | None = None
 ) -> DesignPrediction:
-    """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
+    """🔮 Predict a design based on a description, the types that should be used and an optional base design.
+    Callers MUST ensure the openaiClient is initialized before calling.
+    [👤semio📚engine💻enginepy🔖assistant🛠️predictdesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ASSISTANT/PREDICT-DESIGN)
+    """
     if openaiClient is None:
         raise FeatureNotYetSupported("OpenAI client not available")
 
@@ -1144,6 +1203,9 @@ def predictDesign(
 # endregion Assistant
 
 # region Graphql
+
+# [👤semio📚engine💻enginepy🔖graphql](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/GRAPHQL)
+# Graphql MUST map semio domain types to Graphene schema nodes for query and mutation.
 
 GRAPHQLTYPES = {
     "str": graphene.NonNull(graphene.String),
@@ -1253,6 +1315,10 @@ GRAPHQLTYPES = {
 }
 
 class Query(graphene.ObjectType):
+    """GraphQL root query type exposing kit retrieval by URI.
+    Callers MUST provide a valid URI when resolving kit queries.
+    [👤semio📚engine💻enginepy🔖graphql🛠️query](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/GRAPHQL/QUERY)
+    """
     node = RelayNode.Field()
     kit = graphene.Field(KitNode, uri=graphene.String(required=True))
 
@@ -1260,6 +1326,10 @@ class Query(graphene.ObjectType):
         return get(encode(uri))
 
 class Mutation(graphene.ObjectType):
+    """GraphQL root mutation type exposing kit creation.
+    Callers MUST provide a valid KitInput when creating kits.
+    [👤semio📚engine💻enginepy🔖graphql🛠️mutation](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/GRAPHQL/MUTATION)
+    """
     createKit = graphene.Field(KitNode, kit=KitInputNode(required=True))
 
 graphqlSchema = graphene.Schema(
@@ -1271,6 +1341,9 @@ graphqlSchema = graphene.Schema(
 
 # region Rest
 
+# [👤semio📚engine💻enginepy🔖rest](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/REST)
+# Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
+
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
 
 @rest.get("/kits/{encodedKitUri}")
@@ -1278,6 +1351,10 @@ async def kit(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
 ) -> KitOutput:
+    """Retrieves a kit by its encoded URI path.
+    Callers MUST provide a valid encoded kit URI in the URL path.
+    [👤semio📚engine💻enginepy🔖rest🛠️kit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/KIT)
+    """
     try:
         return get(request.url.path.removeprefix("/api/kits/"))
     except ClientError as e:
@@ -1294,6 +1371,10 @@ async def create_kit(
     input: KitInput,
     encodedKitUri: ENCODED_PATH,
 ) -> None:
+    """Creates a new kit at the specified encoded URI.
+    Callers MUST provide a valid KitInput body and encoded URI.
+    [👤semio📚engine💻enginepy🔖rest🛠️createkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/CREATE-KIT)
+    """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
         return None
@@ -1310,6 +1391,10 @@ async def delete_kit(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
 ) -> None:
+    """Deletes an existing kit at the specified encoded URI.
+    Callers MUST provide a valid encoded URI for an existing kit.
+    [👤semio📚engine💻enginepy🔖rest🛠️deletekit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/DELETE-KIT)
+    """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
         return None
@@ -1328,6 +1413,10 @@ async def put_type(
     encodedKitUri: ENCODED_PATH,
     encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
+    """Creates or replaces a type in a kit by encoded URI and type identifier.
+    Callers MUST provide a valid TypeInput body with matching name and variant.
+    [👤semio📚engine💻enginepy🔖rest🛠️puttype](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/PUT-TYPE)
+    """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
         return None
@@ -1345,6 +1434,10 @@ async def delete_type(
     encodedKitUri: ENCODED_PATH,
     encodedTypeNameAndVariant: ENCODED_NAME_AND_VARIANT_PATH,
 ) -> None:
+    """Deletes a type from a kit by encoded URI and type identifier.
+    Callers MUST provide a valid encoded URI and type name with variant.
+    [👤semio📚engine💻enginepy🔖rest🛠️deletetype](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/DELETE-TYPE)
+    """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
         return None
@@ -1363,6 +1456,10 @@ async def put_design(
     encodedKitUri: ENCODED_PATH,
     encodedDesignNameAndVariantAndView: ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH,
 ) -> None:
+    """Creates or replaces a design in a kit by encoded URI and design identifier.
+    Callers MUST provide a valid DesignInput body with matching name, variant, and view.
+    [👤semio📚engine💻enginepy🔖rest🛠️putdesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/PUT-DESIGN)
+    """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
         return None
@@ -1380,6 +1477,10 @@ async def delete_design(
     encodedKitUri: ENCODED_PATH,
     encodedDesignNameAndVariantAndView: ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH,
 ) -> None:
+    """Deletes a design from a kit by encoded URI and design identifier.
+    Callers MUST provide a valid encoded URI and design name with variant and view.
+    [👤semio📚engine💻enginepy🔖rest🛠️deletedesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/DELETE-DESIGN)
+    """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
         return None
@@ -1398,6 +1499,10 @@ async def predict_design(
     types: list[TypeContext] = fastapi.Body(...),
     design: DesignContext | None = None,
 ) -> DesignPrediction:
+    """Predicts a design via the assistant based on a description and available types.
+    Callers MUST provide a description and at least one TypeContext in the request body.
+    [👤semio📚engine💻enginepy🔖rest🛠️predictdesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/PREDICT-DESIGN)
+    """
     try:
         return predictDesign(description, types, design)
     except ClientError as e:
@@ -1412,6 +1517,10 @@ async def predict_design(
 async def prepare_kit(
     request: fastapi.Request, kit: KitInput = fastapi.Body(...)
 ) -> KitContext:
+    """Validates and returns a KitContext from the provided KitInput body.
+    Callers MUST provide a valid KitInput in the request body.
+    [👤semio📚engine💻enginepy🔖rest🛠️preparekit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/PREPARE-KIT)
+    """
     try:
         return kit
     except ClientError as e:
@@ -1423,6 +1532,10 @@ async def prepare_kit(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    """JSON schema generator that strips Context suffixes from type references.
+    Callers MUST use this generator when exporting context model schemas.
+    [👤semio📚engine💻enginepy🔖rest🛠️contextgeneratejsonschema](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/CONTEXT-GENERATE-JSON-SCHEMA)
+    """
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
         changeValues(json_schema, "$ref", lambda x: x.removesuffix("Context"))
@@ -1431,6 +1544,10 @@ class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         return json_schema
 
 class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    """JSON schema generator that strips Output suffixes from type references.
+    Callers MUST use this generator when exporting output model schemas.
+    [👤semio📚engine💻enginepy🔖rest🛠️outputgeneratejsonschema](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/OUTPUT-GENERATE-JSON-SCHEMA)
+    """
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
         changeValues(json_schema, "$ref", lambda x: x.removesuffix("Output"))
@@ -1439,6 +1556,10 @@ class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         return json_schema
 
 class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
+    """JSON schema generator that strips Prediction suffixes from type references.
+    Callers MUST use this generator when exporting prediction model schemas.
+    [👤semio📚engine💻enginepy🔖rest🛠️predictiongeneratejsonschema](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/PREDICTION-GENERATE-JSON-SCHEMA)
+    """
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
         changeValues(json_schema, "$ref", lambda x: x.removesuffix("Prediction"))
@@ -1447,6 +1568,10 @@ class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         return json_schema
 
 def custom_openapi():
+    """Generates a custom OpenAPI schema with /api path prefix and cleaned type names.
+    Callers MUST NOT call this directly; it is assigned to rest.openapi.
+    [👤semio📚engine💻enginepy🔖rest🛠️customopenapi](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/REST/CUSTOM-OPENAPI)
+    """
     if rest.openapi_schema:
         return rest.openapi_schema
     openapi_schema = fastapi.openapi.utils.get_openapi(
@@ -1473,11 +1598,17 @@ rest.openapi = custom_openapi
 
 # region Mcp
 
+# [👤semio📚engine💻enginepy🔖mcp](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/MCP)
+# Mcp MUST expose kit, type, design, validation, and diff tools via Model Context Protocol.
+
 mcp = FastMCP("semio", stateless_http=True, json_response=True)
 
 @mcp.tool()
 def get_kit(uri: str) -> dict:
-    """Get a kit from a URI. The URI can be a file path or a URL."""
+    """Get a kit from a URI. The URI can be a file path or a URL.
+    Callers MUST provide a valid file path or URL as the URI.
+    [👤semio📚engine💻enginepy🔖mcp🛠️getkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/GET-KIT)
+    """
     try:
         result = get(encode(uri))
         return result.model_dump() if hasattr(result, "model_dump") else result
@@ -1486,7 +1617,10 @@ def get_kit(uri: str) -> dict:
 
 @mcp.tool()
 def put_kit(uri: str, kit: dict) -> dict:
-    """Put a kit at a URI. Creates or updates the kit."""
+    """Put a kit at a URI. Creates or updates the kit.
+    Callers MUST provide a valid URI and a dict matching KitInput schema.
+    [👤semio📚engine💻enginepy🔖mcp🛠️putkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/PUT-KIT)
+    """
     try:
         kitInput = KitInput.model_validate(kit)
         put(encode(uri), kitInput)
@@ -1496,7 +1630,10 @@ def put_kit(uri: str, kit: dict) -> dict:
 
 @mcp.tool()
 def mcp_delete_kit(uri: str) -> dict:
-    """Delete a kit at a URI."""
+    """Delete a kit at a URI.
+    Callers MUST provide a URI referencing an existing kit.
+    [👤semio📚engine💻enginepy🔖mcp🛠️mcpdeletekit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/MCP-DELETE-KIT)
+    """
     try:
         delete(encode(uri))
         return {"success": True}
@@ -1505,7 +1642,10 @@ def mcp_delete_kit(uri: str) -> dict:
 
 @mcp.tool()
 def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
-    """Get a type from a kit by name and variant."""
+    """Get a type from a kit by name and variant.
+    Callers MUST provide a valid kit URI and type name.
+    [👤semio📚engine💻enginepy🔖mcp🛠️gettypefromkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/GET-TYPE-FROM-KIT)
+    """
     try:
         code = (
             encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
@@ -1517,7 +1657,10 @@ def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
 
 @mcp.tool()
 def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
-    """Put a type in a kit."""
+    """Put a type in a kit.
+    Callers MUST provide a valid URI, name, variant, and TypeInput-compatible dict.
+    [👤semio📚engine💻enginepy🔖mcp🛠️puttypeinkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/PUT-TYPE-IN-KIT)
+    """
     try:
         code = (
             encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
@@ -1530,7 +1673,10 @@ def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
 
 @mcp.tool()
 def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
-    """Delete a type from a kit."""
+    """Delete a type from a kit.
+    Callers MUST provide a valid kit URI and existing type name.
+    [👤semio📚engine💻enginepy🔖mcp🛠️deletetypefromkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/DELETE-TYPE-FROM-KIT)
+    """
     try:
         code = (
             encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
@@ -1542,7 +1688,10 @@ def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
 
 @mcp.tool()
 def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
-    """Get a design from a kit by name, variant, and view."""
+    """Get a design from a kit by name, variant, and view.
+    Callers MUST provide a valid kit URI and design name.
+    [👤semio📚engine💻enginepy🔖mcp🛠️getdesignfromkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/GET-DESIGN-FROM-KIT)
+    """
     try:
         nameVariantView = name
         if variant:
@@ -1559,7 +1708,10 @@ def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") 
 def put_design_in_kit(
     uri: str, name: str, variant: str, view: str, design_data: dict
 ) -> dict:
-    """Put a design in a kit."""
+    """Put a design in a kit.
+    Callers MUST provide a valid URI, name, variant, view, and DesignInput-compatible dict.
+    [👤semio📚engine💻enginepy🔖mcp🛠️putdesigninkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/PUT-DESIGN-IN-KIT)
+    """
     try:
         nameVariantView = name
         if variant:
@@ -1577,7 +1729,10 @@ def put_design_in_kit(
 def delete_design_from_kit(
     uri: str, name: str, variant: str = "", view: str = ""
 ) -> dict:
-    """Delete a design from a kit."""
+    """Delete a design from a kit.
+    Callers MUST provide a valid kit URI and existing design name.
+    [👤semio📚engine💻enginepy🔖mcp🛠️deletedesignfromkit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/DELETE-DESIGN-FROM-KIT)
+    """
     try:
         nameVariantView = name
         if variant:
@@ -1592,7 +1747,10 @@ def delete_design_from_kit(
 
 @mcp.tool()
 def validate_kit(kit: dict) -> dict:
-    """Validate a kit and return any validation problems."""
+    """Validate a kit and return any validation problems.
+    Callers MUST provide a dict matching the Kit schema.
+    [👤semio📚engine💻enginepy🔖mcp🛠️validatekit](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/VALIDATE-KIT)
+    """
     try:
         result = validateKitDict(kit)
         return (
@@ -1603,7 +1761,10 @@ def validate_kit(kit: dict) -> dict:
 
 @mcp.tool()
 def flatten_design(kit: dict, design_guid: str) -> dict:
-    """Flatten a design by computing absolute planes for all pieces."""
+    """Flatten a design by computing absolute planes for all pieces.
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻enginepy🔖mcp🛠️flattendesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/FLATTEN-DESIGN)
+    """
     try:
         return flattenDesignDict(kit, design_guid)
     except Exception as e:
@@ -1611,7 +1772,10 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
 
 @mcp.tool()
 def get_kit_diff(before: dict, after: dict) -> dict:
-    """Get the diff between two kit states."""
+    """Get the diff between two kit states.
+    Callers MUST provide two valid kit dicts for comparison.
+    [👤semio📚engine💻enginepy🔖mcp🛠️getkitdiff](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/GET-KIT-DIFF)
+    """
     try:
         return getKitDiffDict(before, after)
     except Exception as e:
@@ -1619,7 +1783,10 @@ def get_kit_diff(before: dict, after: dict) -> dict:
 
 @mcp.tool()
 def apply_kit_diff(base: dict, diff: dict) -> dict:
-    """Apply a diff to a kit."""
+    """Apply a diff to a kit.
+    Callers MUST provide a valid base kit dict and a compatible diff dict.
+    [👤semio📚engine💻enginepy🔖mcp🛠️applykitdiff](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/APPLY-KIT-DIFF)
+    """
     try:
         return applyKitDiffDict(base, diff)
     except Exception as e:
@@ -1627,7 +1794,10 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
 
 @mcp.tool()
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
-    """Get the inverse of a diff (for undo operations)."""
+    """Get the inverse of a diff (for undo operations).
+    Callers MUST provide the original kit dict and the applied diff dict.
+    [👤semio📚engine💻enginepy🔖mcp🛠️inversekitdiff](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/INVERSE-KIT-DIFF)
+    """
     try:
         return inverseKitDiffDict(original, applied_diff)
     except Exception as e:
@@ -1637,8 +1807,15 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
 
 # region Engine
 
+# [👤semio📚engine💻enginepy🔖engine](semiorepo://section/SEMIO/ENGINE/ENGINE.PY/ENGINE)
+# Engine MUST mount REST, GraphQL, and MCP sub-applications and manage the server lifecycle.
+
 @contextlib.asynccontextmanager
 async def engineLifespan(app):
+    """Manages the MCP session lifecycle during engine startup and shutdown.
+    Callers MUST use this as the lifespan parameter for the Starlette application.
+    [👤semio📚engine💻enginepy🔖engine🛠️enginelifespan](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/ENGINE-LIFESPAN)
+    """
     async with mcp.session_manager.run():
         yield
 
@@ -1654,6 +1831,10 @@ engine.mount(
 engine.mount("/mcp", mcp.streamable_http_app())
 
 def generateSchemas():
+    """Exports OpenAPI, JSON Schema, SQLite schema, and GraphQL schema files to disk.
+    Callers MUST run this from the engine directory with write access to output paths.
+    [👤semio📚engine💻enginepy🔖engine🛠️generateschemas](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/GENERATE-SCHEMAS)
+    """
     if os.path.exists("temp"):
         for root, dirs, files in os.walk("temp", topdown=False):
             for name in files:
@@ -1728,6 +1909,10 @@ def generateSchemas():
         f.write(str(graphqlSchema))
 
 def start_engine():
+    """Starts the uvicorn server hosting the engine application.
+    Callers MUST invoke this in a separate process to avoid blocking the UI.
+    [👤semio📚engine💻enginepy🔖engine🛠️startengine](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/START-ENGINE)
+    """
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)
     uvicorn.run(
@@ -1740,6 +1925,10 @@ def start_engine():
     )
 
 def restart_engine():
+    """Terminates the running engine process and starts a new one.
+    Callers MUST ensure a PySide6 QApplication instance is running.
+    [👤semio📚engine💻enginepy🔖engine🛠️restartengine](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/RESTART-ENGINE)
+    """
     import PySide6.QtWidgets
 
     ui_instance = PySide6.QtWidgets.QApplication.instance()
@@ -1750,6 +1939,10 @@ def restart_engine():
     ui_instance.engine_process.start()
 
 def run(dev_mode: bool | None = None):
+    """Main entry point that starts the engine with optional dev mode and system tray UI.
+    Callers MUST invoke this from the __main__ block or dev function.
+    [👤semio📚engine💻enginepy🔖engine🛠️run](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/RUN)
+    """
     logger.debug("Starting engine")
     multiprocessing.freeze_support()
 
@@ -1815,9 +2008,16 @@ def run(dev_mode: bool | None = None):
     sys.exit(ui.exec())
 
 def preDev():
-    """Runs before dev()"""
+    """Runs before dev()
+    Callers MUST NOT add blocking operations in this hook.
+    [👤semio📚engine💻enginepy🔖engine🛠️predev](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/PRE-DEV)
+    """
 
 def dev():
+    """Starts the engine in development mode with debugging enabled.
+    Callers MUST have debugpy available when using this entry point.
+    [👤semio📚engine💻enginepy🔖engine🛠️dev](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/ENGINE/DEV)
+    """
     run(dev_mode=True)
 
 if __name__ == "__main__":

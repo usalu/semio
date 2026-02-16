@@ -1,0 +1,18 @@
+{
+  "title": "Create Semio Py",
+  "status": "closed",
+  "prompt": "Migrated from legacy files",
+  "summary": "Bulk close",
+  "goal": "AI-OPTIMIZED-REPO",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-01-29T19:44:03.852402Z",
+      "author": "Migration Script",
+      "system": "",
+      "client": "",
+      "commit": "",
+      "prompt": "Migrated from legacy files"
+    }
+  ]
+}

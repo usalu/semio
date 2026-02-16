@@ -5,16 +5,14 @@
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion Header
@@ -84,6 +82,14 @@ import {
 
 // #region Types
 
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES)
+// Type definitions MUST declare quality app state, selections, and formula structures.
+
+/**
+ * Node in a formula graph with position, kind, and child references.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️formulanode](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/FORMULA-NODE)
+ **/
 export interface FormulaNode {
   id: Guid;
   kind: "function" | "quality" | "variable" | "unit" | "value";
@@ -93,34 +99,69 @@ export interface FormulaNode {
   y?: number;
 }
 
+/**
+ * Selected formula node IDs in the quality app.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-SELECTION)
+ **/
 export interface QualityAppSelection {
   formulaNodes?: Guid[];
 }
 
+/**
+ * Diff for added and removed formula node selections.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappselectionformulanodesdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-SELECTION-FORMULA-NODES-DIFF)
+ **/
 export interface QualityAppSelectionFormulaNodesDiff {
   added?: Guid[];
   removed?: Guid[];
 }
 
+/**
+ * Diff for quality app selection changes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-SELECTION-DIFF)
+ **/
 export interface QualityAppSelectionDiff {
   formulaNodes?: QualityAppSelectionFormulaNodesDiff;
 }
 
+/**
+ * Fullscreen window state for the quality app panels.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappfullscreenwindow](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-FULLSCREEN-WINDOW)
+ **/
 export enum QualityAppFullscreenWindow {
   None = "none",
   Formula = "formula",
   Diagram = "diagram",
 }
 
+/**
+ * Window kind identifiers for quality app layout.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-WINDOW-KIND)
+ **/
 export enum QualityAppWindowKind {
   Formula = "formula",
   Diagram = "diagram",
 }
 
+/**
+ * Hover state tracking the currently hovered formula node.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-HOVER)
+ **/
 export interface QualityAppHover {
   formulaNode?: Guid;
 }
 
+/**
+ * Diff describing partial quality app state changes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-DIFF)
+ **/
 export interface QualityAppDiff {
   selection?: QualityAppSelectionDiff;
   hover?: QualityAppHover;
@@ -133,6 +174,11 @@ export interface QualityAppDiff {
 
 export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> {}
 
+/**
+ * Complete quality app state including selection, hover, formula nodes, and layout.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-STATE)
+ **/
 export interface QualityAppState {
   fullscreenWindow: QualityAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -143,16 +189,31 @@ export interface QualityAppState {
   windowLayout?: any;
 }
 
+/**
+ * Context passed to quality app command handlers.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappcommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-COMMAND-CONTEXT)
+ **/
 export interface QualityAppCommandContext extends KitCommandContext {
   qualityApp: QualityAppState;
   Guid: Guid;
 }
 
+/**
+ * Result returned by quality app command handlers.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappcommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-COMMAND-RESULT)
+ **/
 export interface QualityAppCommandResult {
   diff?: QualityAppDiff;
   qualityDiff?: QualityDiff;
 }
 
+/**
+ * Definition of a formula function with calculation and LaTeX rendering.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️formulafunction](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/FORMULA-FUNCTION)
+ **/
 export interface FormulaFunction {
   name: string;
   category: "numeric" | "branching" | "data" | "text" | "comparison";
@@ -167,6 +228,14 @@ export interface FormulaFunction {
 
 // #region Functions
 
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/FUNCTIONS)
+// Formula function definitions, parsing, and LaTeX conversion utilities MUST be declared here.
+
+/**
+ * Registry of available formula functions keyed by name.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions🪨formulafunctions](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/FUNCTIONS/FORMULA-FUNCTIONS)
+ **/
 export const formulaFunctions: Record<string, FormulaFunction> = {
   Add: {
     name: "Add",
@@ -372,6 +441,13 @@ export const formulaFunctions: Record<string, FormulaFunction> = {
   },
 };
 
+/**
+ * Parses a formula string into an S-expression AST.
+ *
+ * The formula string MUST be a valid S-expression.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions🛠️parseformula](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/FUNCTIONS/PARSE-FORMULA)
+ **/
 export function parseFormula(formula: string): any {
   const tokens = tokenizeFormula(formula);
   const [ast] = parseTokens(tokens, 0);
@@ -437,6 +513,13 @@ function parseTokens(tokens: string[], start: number): [any, number] {
   return [token, start + 1];
 }
 
+/**
+ * Converts a formula AST to a LaTeX string.
+ *
+ * The AST MUST be produced by parseFormula.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions🛠️formulatolatex](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/FUNCTIONS/FORMULA-TO-LATEX)
+ **/
 export function formulaToLatex(ast: any): string {
   if (typeof ast === "string") {
     if (ast.startsWith("'") && ast.endsWith("'")) {
@@ -487,6 +570,9 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
 // #endregion Functions
 
 // #region Commands
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMMANDS)
+// Quality app command handlers MUST modify state through diff objects.
 
 const qualityAppCommands = {
   "semio.qualityApp.toggleFormulaFullscreen": (context: QualityAppCommandContext): QualityAppCommandResult => {
@@ -596,6 +682,9 @@ const qualityAppCommands = {
 // #endregion Commands
 
 // #region Store
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)
+// Quality app store, hooks, and reactive state management MUST be declared here.
 
 class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
   private readonly Guid: QualityAppId;
@@ -755,6 +844,9 @@ if (typeof window !== "undefined") {
 
 // #region Quality App Plugin Registration
 
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖qualityapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/QUALITY-APP-PLUGIN-REGISTRATION)
+// Plugin registration and event handler wiring MUST initialize quality app context.
+
 const qualityAppPlugin: AppPlugin = {
   id: "quality",
   namespace: "QUALITY",
@@ -801,12 +893,24 @@ if (typeof window !== "undefined") {
 
 type QualityAppScope = { guid: string };
 const QualityAppScopeContext = createContext<QualityAppScope | null>(null);
+/**
+ * React context provider scoping quality app state by GUID.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🪨qualityappscopeprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/QUALITY-APP-SCOPE-PROVIDER)
+ **/
 export const QualityAppScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(QualityAppScopeContext.Provider, { value }, props.children as any);
 };
 const useQualityAppScope = () => useContext(QualityAppScopeContext);
 
+/**
+ * Returns the quality app store instance, optionally applying a selector.
+ *
+ * The hook MUST be called within a KitScopeProvider and QualityScopeProvider.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-STORE)
+ **/
 export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, id?: QualityAppId): T | QualityAppStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -820,6 +924,13 @@ export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, 
   return selector ? selector(qualityAppStore) : qualityAppStore;
 }
 
+/**
+ * Returns reactive quality app state, optionally applying a selector.
+ *
+ * The hook MUST be called within a quality app scope.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityapp](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP)
+ **/
 export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: QualityAppId): T | QualityAppState | null {
   const store = useQualityAppStore(identitySelector, id);
   if (!store) return null;
@@ -827,6 +938,13 @@ export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: 
   return useSyncDeep<QualityAppState>(store as any, selectedSelector as (value: QualityAppState) => QualityAppState);
 }
 
+/**
+ * Returns command handlers for the quality app.
+ *
+ * Functions MUST be called with an origin string for tracking.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappcommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-COMMANDS)
+ **/
 export function useQualityAppCommands(id?: QualityAppId) {
   const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
   if (!store) {
@@ -880,6 +998,13 @@ export function useQualityAppCommands(id?: QualityAppId) {
   };
 }
 
+/**
+ * Returns the fullscreen window state with a setter.
+ *
+ * The setter MUST receive a valid QualityAppFullscreenWindow value.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-FULLSCREEN)
+ **/
 export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -894,6 +1019,13 @@ export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow
   return [fullscreen ?? QualityAppFullscreenWindow.None, setFullscreen, canSet];
 }
 
+/**
+ * Returns the current selection state with a setter.
+ *
+ * The setter MUST receive a valid QualityAppSelection object.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-SELECTION)
+ **/
 export function useQualityAppSelection(): HookResult<QualityAppSelection> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -908,6 +1040,13 @@ export function useQualityAppSelection(): HookResult<QualityAppSelection> {
   return [selection ?? {}, setSelection, canSet];
 }
 
+/**
+ * Returns the hover state with a setter.
+ *
+ * The setter MUST receive a QualityAppHover or undefined to clear.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityapphover](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-HOVER)
+ **/
 export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -922,6 +1061,13 @@ export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
   return [hover, setHover, canSet];
 }
 
+/**
+ * Returns the active tool kind with a setter.
+ *
+ * The setter MUST receive a valid ToolKind value.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappactivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-ACTIVE-TOOL)
+ **/
 export function useQualityAppActiveTool(): HookResult<ToolKind> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -936,6 +1082,13 @@ export function useQualityAppActiveTool(): HookResult<ToolKind> {
   return [activeTool ?? ToolKind.SELECTION_NORMAL, setActiveTool, canSet];
 }
 
+/**
+ * Returns the current formula nodes as a read-only hook result.
+ *
+ * The hook MUST be called within a quality app scope.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappformulanodes](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-FORMULA-NODES)
+ **/
 export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
   const qualityScope = useQualityScope();
   const formulaNodes = useQualityApp((s) => s.formulaNodes) as FormulaNode[];
@@ -943,6 +1096,13 @@ export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
   return [formulaNodes ?? [], undefined, canRead];
 }
 
+/**
+ * Returns the panel visibility state with a setter.
+ *
+ * The setter MUST receive a complete PanelVisibility object.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityapppanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-PANEL-VISIBILITY)
+ **/
 export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -957,6 +1117,13 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   return [panelVisibility ?? { toolbar: true, workbench: false, details: false, chat: false, settings: false }, setPanelVisibility, canSet];
 }
 
+/**
+ * Returns the window layout state with a setter.
+ *
+ * The setter MUST provide a valid layout configuration.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🛠️usequalityappwindowlayout](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/USE-QUALITY-APP-WINDOW-LAYOUT)
+ **/
 export function useQualityAppWindowLayout(): HookResult<any> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -973,8 +1140,23 @@ export function useQualityAppWindowLayout(): HookResult<any> {
 
 //#region Action Hooks
 
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS)
+// Memoized action hooks MUST provide formula node interaction callbacks.
+
+/**
+ * Result tuple from an action hook with optional action callback and availability flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️actionhookresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/ACTION-HOOK-RESULT)
+ **/
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
+/**
+ * Action hook to select a formula node by ID.
+ *
+ * The nodeId MUST reference an existing formula node.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityappselectformulanode](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-SELECT-FORMULA-NODE)
+ **/
 export function useQualityAppSelectFormulaNode(): ActionHookResult<[nodeId: string]> {
   const [, setSelection, canSetSelection] = useQualityAppSelection();
   const action = useMemo(() => {
@@ -984,6 +1166,13 @@ export function useQualityAppSelectFormulaNode(): ActionHookResult<[nodeId: stri
   return [action, canSetSelection];
 }
 
+/**
+ * Action hook to hover a formula node by ID.
+ *
+ * The nodeId MUST reference an existing formula node.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityapphoverformulanode](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-HOVER-FORMULA-NODE)
+ **/
 export function useQualityAppHoverFormulaNode(): ActionHookResult<[nodeId: string]> {
   const [, setHover, canSetHover] = useQualityAppHover();
   const action = useMemo(() => {
@@ -993,6 +1182,13 @@ export function useQualityAppHoverFormulaNode(): ActionHookResult<[nodeId: strin
   return [action, canSetHover];
 }
 
+/**
+ * Action hook to clear the current hover state.
+ *
+ * The action MUST reset hover to undefined.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityappclearhover](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-CLEAR-HOVER)
+ **/
 export function useQualityAppClearHover(): ActionHookResult<[]> {
   const [, setHover, canSetHover] = useQualityAppHover();
   const action = useMemo(() => {
@@ -1002,6 +1198,13 @@ export function useQualityAppClearHover(): ActionHookResult<[]> {
   return [action, canSetHover];
 }
 
+/**
+ * Action hook to deselect all formula nodes.
+ *
+ * The action MUST clear the entire selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityappdeselectall](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-DESELECT-ALL)
+ **/
 export function useQualityAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useQualityAppSelection();
   const action = useMemo(() => {
@@ -1011,6 +1214,13 @@ export function useQualityAppDeselectAll(): ActionHookResult<[]> {
   return [action, canSetSelection];
 }
 
+/**
+ * Action hook to toggle a panel's visibility.
+ *
+ * The panelKey MUST be a valid PanelVisibility key.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityapptogglepanel](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-TOGGLE-PANEL)
+ **/
 export function useQualityAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
   const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useQualityAppPanelVisibility();
   const action = useMemo(() => {
@@ -1022,6 +1232,13 @@ export function useQualityAppTogglePanel(): ActionHookResult<[panelKey: keyof Pa
   return [action, canSetPanelVisibility];
 }
 
+/**
+ * Action hook to toggle the formula window fullscreen state.
+ *
+ * The action MUST toggle between Formula and None fullscreen modes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityapptoggleformulafullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-TOGGLE-FORMULA-FULLSCREEN)
+ **/
 export function useQualityAppToggleFormulaFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useQualityAppFullscreen();
   const action = useMemo(() => {
@@ -1031,6 +1248,13 @@ export function useQualityAppToggleFormulaFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
+/**
+ * Action hook to toggle the diagram window fullscreen state.
+ *
+ * The action MUST toggle between Diagram and None fullscreen modes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks🛠️usequalityapptogglediagramfullscreen](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS/USE-QUALITY-APP-TOGGLE-DIAGRAM-FULLSCREEN)
+ **/
 export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useQualityAppFullscreen();
   const action = useMemo(() => {
@@ -1045,6 +1269,9 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
 // #endregion Store
 
 // #region Components
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖components](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS)
+// React components MUST render the quality app formula diagram, details panel, and workbench.
 
 declare global {
   interface Window {
@@ -1260,6 +1487,11 @@ const Formula: FC = () => {
   );
 };
 
+/**
+ * Detail panel component displaying quality property fields.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖components🪨qualitydetails](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS/QUALITY-DETAILS)
+ **/
 export const QualityDetails: FC = () => {
   const quality = useQuality(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityAppCommands();
@@ -1398,6 +1630,11 @@ interface QualityAvatarProps {
   showHoverCard?: boolean;
 }
 
+/**
+ * Draggable avatar component for a quality with optional hover card.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖components🪨qualityavatar](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS/QUALITY-AVATAR)
+ **/
 export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qualityProp, showHoverCard = false }) => {
   const qualityFromStore = qualityId && !qualityProp ? (useQuality(undefined, qualityId) as Quality | null) : null;
   const quality = qualityProp || qualityFromStore;
@@ -1462,6 +1699,11 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
   );
 };
 
+/**
+ * Workbench panel component listing formula function nodes by category.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖components🪨qualityworkbench](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS/QUALITY-WORKBENCH)
+ **/
 export const QualityWorkbench: FC = () => {
   const { t } = useTranslation();
   const kit = useKit(undefined, undefined, true) as Kit | null;
@@ -1928,6 +2170,14 @@ export default App;
 
 // #region Config
 
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/CONFIG)
+// Quality app route, panel, and path matching configuration MUST be exported.
+
+/**
+ * Quality app configuration for routing, panels, and path matching.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/CONFIG/CONFIG)
+ **/
 export const config: AppConfig = {
   id: "quality",
   component: App,

@@ -1,31 +1,29 @@
 // #region 🔖Header
 
-// 💻semio/sketchpad/index.tsx
+// [👤semio🖱️sketchpad💻indextsx](semiorepo://file/SEMIO/SKETCHPAD/INDEX.TSX)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Entry point for the standalone sketchpad web application.
 
 // #endregion 🔖Header
+
+// #region 🔖Entrypoint
+
+// [👤semio🖱️sketchpad💻indextsx🔖entrypoint](semiorepo://section/SEMIO/SKETCHPAD/INDEX.TSX/ENTRYPOINT)
+// Sketchpad application entrypoint registering apps and rendering the root.
+// Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { createRoot } from "react-dom/client";
 import { Sketchpad } from "@semio/js";
@@ -52,3 +50,4 @@ createRoot(document.getElementById("root")!).render(
     <Sketchpad importKitUrls={["/metabolism.zip"]} />
   </div>,
 );
+// #endregion 🔖Entrypoint

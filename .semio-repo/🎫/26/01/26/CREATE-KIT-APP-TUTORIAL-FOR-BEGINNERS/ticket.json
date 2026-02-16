@@ -1,0 +1,202 @@
+{
+  "title": "Create Kit App Tutorial for Beginners",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Created a beginner-friendly tutorial for Kit.tsx in plans/kit-tutorial.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/210"
+  },
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
+      "prompt": "Act as a senior software engineer and mentor explaining Kit.tsx to a brand-new team member who has zero coding experience.",
+      "llm": "gemini-3-flash",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "plans/kit-tutorial.md",
+              "lines": {
+                "added": 111,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets",
+              "lines": {
+                "added": 111,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#✨ Final Summary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🌎 Big Picture Overview",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🌎 Big Picture Overview#What is this file?",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🌎 Big Picture Overview#What problem does it solve?",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🌎 Big Picture Overview#Where does it sit?",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🌎 Big Picture Overview#Why does it exist?",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture \u0026 Relationships",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture \u0026 Relationships#Data Flow",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture \u0026 Relationships#How it connects",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#📋 File Responsibilities",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#📖 Glossary of Terms",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#📦 Imports \u0026 Dependencies Explained",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🔄 Execution Flow",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🚶 Step-by-Step Code Walkthrough",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🚶 Step-by-Step Code Walkthrough#1. Design Family Helpers",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🚶 Step-by-Step Code Walkthrough#2. Internal State Management",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🚶 Step-by-Step Code Walkthrough#3. The KitStore (The Manager)",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🚶 Step-by-Step Code Walkthrough#4. The App Plugin (`kitAppPlugin`)",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🚶 Step-by-Step Code Walkthrough#5. Action Hooks (The Pipes)",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

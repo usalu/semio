@@ -1,31 +1,29 @@
 // #region 🔖Header
 
-// 💻semio/js/index.ts
+// [👤semio📚js💻indexts](semiorepo://file/SEMIO/JS/INDEX.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Barrel export for the core JavaScript workspace modules.
 
 // #endregion 🔖Header
+
+// #region 🔖Exports
+
+// [👤semio📚js💻indexts🔖exports](semiorepo://section/SEMIO/JS/INDEX.TS/EXPORTS)
+// Public API surface re-exporting sketchpad components, semio domain, and shared configs.
+// MUST re-export all public types alongside their runtime counterparts.
 
 import "./i18n";
 
@@ -50,3 +48,5 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";
 export { default as tailwindConfig } from "./tailwind.config";
+
+// #endregion 🔖Exports

@@ -1,0 +1,18 @@
+{
+  "title": "Use Action UI elements for all window buttons",
+  "status": "closed",
+  "prompt": "The buttons for every window should be action ui elements.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2025-12-18T15:27:45.865Z",
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "prompt": "The buttons for every window should be action ui elements.",
+      "llm": "gpt-5.2-codex"
+    }
+  ]
+}

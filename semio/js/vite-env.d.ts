@@ -1,30 +1,29 @@
 // #region 🔖Header
 
-// 💻semio/js/vite-env.d.ts
+// [👤semio📚js💻viteenvdts](semiorepo://file/SEMIO/JS/VITE-ENV.D.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Vite client type declarations for the JavaScript workspace.
 
 // #endregion 🔖Header
+
+// #region 🔖Declarations
+
+// [👤semio📚js💻viteenvdts🔖declarations](semiorepo://section/SEMIO/JS/VITE-ENV.D.TS/DECLARATIONS)
+// Ambient module declarations for non-standard import types.
+// Declarations MUST cover all custom asset import suffixes used in the project.
 
 declare module "*.wasm?url" {
   const value: string;

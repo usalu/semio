@@ -1,3 +1,22 @@
+# region Header
+
+# [👤semio📚py🧪semiobenchmarkpy](semiorepo://file/SEMIO/PY/SEMIO.BENCHMARK.PY)
+
+# 2026 Ueli Saluz <ueli@semio-tech.de>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# endregion Header
+
 import time
 import json
 import os
@@ -21,7 +40,6 @@ def load_kit(filename: str) -> dict:
             if key not in data or data[key] is None:
                 data[key] = []
     
-
     for collection in ["types", "designs", "folders"]:
         if collection in data:
             for item in data[collection]:
@@ -40,10 +58,8 @@ def load_kit(filename: str) -> dict:
                     if "file" not in m or m["file"] is None:
                          m["file"] = ""
                          
-
                     if "url" not in m or m["url"] is None:
                         m["url"] = ""
-
 
                     if "tags" in m and isinstance(m["tags"], list):
                         new_tags = []
@@ -97,7 +113,6 @@ def main():
     
     kit_invalid_obj = Kit.parse(kit_invalid)
     
-
     def test_roundtrip():
         from semio import import_kit, export_kit
 
@@ -109,8 +124,6 @@ def main():
         
     bench("Roundtrip/Metabolism", test_roundtrip)
 
-
-
     diff_forward = load_json("diff_kit_metabolism.json")
     diff_inverse = load_json("diff_kit_metabolism_inverted.json")
     
@@ -120,20 +133,17 @@ def main():
         
     bench("Diff/Metabolism", test_diff_metabolism)
     
-
     d1 = find_design(kit_metabolism, "Nakagin Capsule Tower")
     def test_flatten_nakagin():
         flattenDesignDict(kit_metabolism, d1["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
     
-
     d2 = find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
     def test_flatten_nakagin_slanted():
         flattenDesignDict(kit_metabolism, d2["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
-
 
     d3 = find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
     def test_flatten_nakagin_twisted():
@@ -141,13 +151,11 @@ def main():
         
     bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
 
-
     d4 = find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
     def test_flatten_nakagin_dancing():
         flattenDesignDict(kit_metabolism, d4["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
-
 
     d5 = find_design(kit_metabolism, "Capsule Dream")
     def test_flatten_capsule_dream():
@@ -155,13 +163,11 @@ def main():
         
     bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
     
-
     def test_validate_invalid():
         validateKit(kit_invalid_obj)
         
     bench("Validation/Invalid Kit", test_validate_invalid)
     
-
     def test_validate_metabolism():
         validateKit(kit_obj)
         

@@ -1,27 +1,28 @@
-// #region Header
+// #region 🔖Header
 
-// 💻semio/js/sketchpad/kitSelectionHelper.ts
-
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// [👤semio📚js🗃️sketchpad💻kitselectionhelperts](semiorepo://file/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// Geometry and selection utilities for kit diagram interactions.
+
+// #endregion 🔖Header
 
 // #region Imports
+
+// [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/IMPORTS)
+// Imports MUST include icon width constant and kit selection types.
 
 import { ICON_WIDTH } from "../semio";
 import type { KitAppSelection } from "./Kit";
@@ -30,12 +31,30 @@ import type { KitAppSelection } from "./Kit";
 
 // #region Types
 
+// [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/TYPES)
+// Types MUST define selection value extraction for KitAppSelection dimensions.
+
+/**
+ * Extracts the element type from an array-valued KitAppSelection dimension.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖types🛠️selectionvalue](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/TYPES/SELECTION-VALUE)
+ **/
 export type SelectionValue<K extends keyof KitAppSelection> = NonNullable<KitAppSelection[K]> extends (infer T)[] ? T : never;
 
 // #endregion Types
 
 // #region Generic Utilities
 
+// [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities](semiorepo://section/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES)
+// Generic Utilities MUST provide immutable selection manipulation functions.
+
+/**
+ * Adds a value to the specified selection dimension array.
+ *
+ * MUST return the original selection if the value is already present.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️addtoselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/ADD-TO-SELECTION)
+ **/
 export function addToSelection<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): KitAppSelection {
     const currentArray = (selection[key] || []) as SelectionValue<K>[];
 
@@ -49,6 +68,13 @@ export function addToSelection<K extends keyof KitAppSelection>(selection: KitAp
     };
 }
 
+/**
+ * Removes a value from the specified selection dimension array.
+ *
+ * MUST remove the dimension key entirely when the array becomes empty.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️removefromselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/REMOVE-FROM-SELECTION)
+ **/
 export function removeFromSelection<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): KitAppSelection {
     const currentArray = (selection[key] || []) as SelectionValue<K>[];
     const newArray = currentArray.filter((v) => v !== value);
@@ -64,6 +90,13 @@ export function removeFromSelection<K extends keyof KitAppSelection>(selection: 
     };
 }
 
+/**
+ * Toggles a value in the specified selection dimension array.
+ *
+ * MUST add the value if absent or remove it if present.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️toggleinselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/TOGGLE-IN-SELECTION)
+ **/
 export function toggleInSelection<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): KitAppSelection {
     const currentArray = (selection[key] || []) as SelectionValue<K>[];
 
@@ -74,6 +107,13 @@ export function toggleInSelection<K extends keyof KitAppSelection>(selection: Ki
     }
 }
 
+/**
+ * Replaces an entire selection dimension with the given values.
+ *
+ * MUST remove the dimension key when values are undefined or empty.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️replaceselectiondimension](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/REPLACE-SELECTION-DIMENSION)
+ **/
 export function replaceSelectionDimension<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, values: KitAppSelection[K] | undefined): KitAppSelection {
     if (!values || (Array.isArray(values) && values.length === 0)) {
         const { [key]: _, ...rest } = selection;
@@ -86,19 +126,47 @@ export function replaceSelectionDimension<K extends keyof KitAppSelection>(selec
     };
 }
 
+/**
+ * Removes an entire dimension from the selection.
+ *
+ * MUST return a new selection object without the specified key.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️clearselectiondimension](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/CLEAR-SELECTION-DIMENSION)
+ **/
 export function clearSelectionDimension<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K): KitAppSelection {
     const { [key]: _, ...rest } = selection;
     return rest;
 }
 
+/**
+ * Returns an empty selection with all dimensions cleared.
+ *
+ * MUST return a new empty KitAppSelection object.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️clearselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/CLEAR-SELECTION)
+ **/
 export function clearSelection(): KitAppSelection {
     return {};
 }
 
+/**
+ * Replaces a selection dimension with all available values.
+ *
+ * MUST delegate to replaceSelectionDimension with the full value list.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️selectallindimension](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/SELECT-ALL-IN-DIMENSION)
+ **/
 export function selectAllInDimension<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, allValues: SelectionValue<K>[]): KitAppSelection {
     return replaceSelectionDimension(selection, key, allValues as KitAppSelection[K]);
 }
 
+/**
+ * Checks whether a value is present in the specified selection dimension.
+ *
+ * MUST return false when the dimension is undefined or empty.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities🛠️isselected](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/GENERIC-UTILITIES/IS-SELECTED)
+ **/
 export function isSelected<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): boolean {
     const currentArray = (selection[key] || []) as SelectionValue<K>[];
     return currentArray.includes(value);
@@ -108,30 +176,73 @@ export function isSelected<K extends keyof KitAppSelection>(selection: KitAppSel
 
 // #region Kit Diagram Geometry
 
+// [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry](semiorepo://section/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY)
+// Kit Diagram Geometry MUST provide geometry primitives, shape strategies, and anchor resolution.
+
+/**
+ * Union of diagram node kind identifiers mapped to shape strategies.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramnodekind](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-NODE-KIND)
+ **/
 export type KitDiagramNodeKind = "type" | "design" | "quality" | "port" | "tag" | "concept" | "file" | "folder" | "author";
+/**
+ * Union of supported diagram shape identifiers.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramshapeid](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-SHAPE-ID)
+ **/
 export type KitDiagramShapeId = "circle" | "rectangle" | "triangle" | "long-rectangle";
+/**
+ * Union of cardinal snap sides for anchor point placement.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramsnapside](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-SNAP-SIDE)
+ **/
 export type KitDiagramSnapSide = "top" | "right" | "bottom" | "left";
 
+/**
+ * Width and height dimensions of a diagram node frame.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramframe](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-FRAME)
+ **/
 export interface KitDiagramFrame {
     width: number;
     height: number;
 }
 
+/**
+ * Two-dimensional coordinate point in diagram space.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagrampoint](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-POINT)
+ **/
 export interface KitDiagramPoint {
     x: number;
     y: number;
 }
 
+/**
+ * Named snap point on a shape boundary with directional side.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramsnappoint](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-SNAP-POINT)
+ **/
 export interface KitDiagramSnapPoint extends KitDiagramPoint {
     id: string;
     side: KitDiagramSnapSide;
 }
 
+/**
+ * Optional CSS class and style overrides for shape rendering.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramshaperenderpayload](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-SHAPE-RENDER-PAYLOAD)
+ **/
 export interface KitDiagramShapeRenderPayload {
     className?: string;
     style?: Record<string, string | number>;
 }
 
+/**
+ * Shape strategy providing frame, snap points, and nearest-point resolution.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramshapestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-SHAPE-STRATEGY)
+ **/
 export interface KitDiagramShapeStrategy {
     id: KitDiagramShapeId;
     frame: KitDiagramFrame;
@@ -140,6 +251,11 @@ export interface KitDiagramShapeStrategy {
     resolveNearestPoint: (targetVector: KitDiagramPoint, frame?: Partial<KitDiagramFrame>) => KitDiagramSnapPoint;
 }
 
+/**
+ * Fully resolved anchor with local and absolute positions on a shape.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramresolvedanchor](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-RESOLVED-ANCHOR)
+ **/
 export interface KitDiagramResolvedAnchor {
     strategyId: KitDiagramShapeId;
     frame: KitDiagramFrame;
@@ -148,29 +264,79 @@ export interface KitDiagramResolvedAnchor {
     center: KitDiagramPoint;
 }
 
+/**
+ * Input parameters for computing diagram node geometry.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramnodegeometryinput](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-NODE-GEOMETRY-INPUT)
+ **/
 export interface KitDiagramNodeGeometryInput {
     kind: KitDiagramNodeKind;
     position: KitDiagramPoint;
     frame?: Partial<KitDiagramFrame>;
 }
 
+/**
+ * Pair of resolved anchors for source and target endpoints of a connection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramresolvedanchorpair](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-RESOLVED-ANCHOR-PAIR)
+ **/
 export interface KitDiagramResolvedAnchorPair {
     source: KitDiagramResolvedAnchor;
     target: KitDiagramResolvedAnchor;
 }
 
+/**
+ * Proximity-based anchor result with distance from a target point.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🛠️kitdiagramproximityanchor](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-PROXIMITY-ANCHOR)
+ **/
 export interface KitDiagramProximityAnchor {
     nodeId: string;
     distance: number;
     anchor: KitDiagramResolvedAnchor;
 }
 
+/**
+ * Scale multiplier applied to icon width for diagram node sizing.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramnodescale](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-NODE-SCALE)
+ **/
 export const KIT_DIAGRAM_NODE_SCALE = 2;
+/**
+ * Base pixel size for diagram nodes derived from icon width and scale.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagrambasesize](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-BASE-SIZE)
+ **/
 export const KIT_DIAGRAM_BASE_SIZE = ICON_WIDTH * KIT_DIAGRAM_NODE_SCALE;
+/**
+ * Default frame dimensions for circle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramcircleframe](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-CIRCLE-FRAME)
+ **/
 export const KIT_DIAGRAM_CIRCLE_FRAME: KitDiagramFrame = { width: KIT_DIAGRAM_BASE_SIZE, height: KIT_DIAGRAM_BASE_SIZE };
+/**
+ * Default frame dimensions for rectangle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramrectangleframe](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-RECTANGLE-FRAME)
+ **/
 export const KIT_DIAGRAM_RECTANGLE_FRAME: KitDiagramFrame = { width: Math.round(KIT_DIAGRAM_BASE_SIZE * 1.2), height: Math.round(KIT_DIAGRAM_BASE_SIZE * 0.8) };
+/**
+ * Default frame dimensions for triangle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramtriangleframe](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-TRIANGLE-FRAME)
+ **/
 export const KIT_DIAGRAM_TRIANGLE_FRAME: KitDiagramFrame = { width: KIT_DIAGRAM_BASE_SIZE, height: KIT_DIAGRAM_BASE_SIZE };
+/**
+ * Default frame dimensions for long-rectangle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramlongrectangleframe](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-LONG-RECTANGLE-FRAME)
+ **/
 export const KIT_DIAGRAM_LONG_RECTANGLE_FRAME: KitDiagramFrame = { width: Math.round(KIT_DIAGRAM_BASE_SIZE * 1.6), height: Math.round(KIT_DIAGRAM_BASE_SIZE * 0.72) };
+/**
+ * Half of the largest frame dimension used as collision radius for force layout.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramcollideradius](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-COLLIDE-RADIUS)
+ **/
 export const KIT_DIAGRAM_COLLIDE_RADIUS =
     Math.max(
         KIT_DIAGRAM_CIRCLE_FRAME.width,
@@ -183,6 +349,11 @@ export const KIT_DIAGRAM_COLLIDE_RADIUS =
         KIT_DIAGRAM_LONG_RECTANGLE_FRAME.height,
     ) / 2;
 
+/**
+ * Validates and normalizes a partial frame to a complete frame with positive dimensions.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨normalizekitdiagramframe](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/NORMALIZE-KIT-DIAGRAM-FRAME)
+ **/
 export const normalizeKitDiagramFrame = (frame?: Partial<KitDiagramFrame>, fallback: KitDiagramFrame = KIT_DIAGRAM_CIRCLE_FRAME): KitDiagramFrame => {
     const width = frame?.width ?? fallback.width;
     const height = frame?.height ?? fallback.height;
@@ -192,28 +363,68 @@ export const normalizeKitDiagramFrame = (frame?: Partial<KitDiagramFrame>, fallb
     };
 };
 
+/**
+ * Computes the center point of a diagram frame.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramcenter](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-CENTER)
+ **/
 export const kitDiagramCenter = (frame: Partial<KitDiagramFrame>, fallback: KitDiagramFrame = KIT_DIAGRAM_CIRCLE_FRAME): KitDiagramPoint => {
     const normalizedFrame = normalizeKitDiagramFrame(frame, fallback);
     return { x: normalizedFrame.width / 2, y: normalizedFrame.height / 2 };
 };
 
+/**
+ * Computes the direction vector from one point to another.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramvector](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-VECTOR)
+ **/
 export const kitDiagramVector = (from: KitDiagramPoint, to: KitDiagramPoint): KitDiagramPoint => ({ x: to.x - from.x, y: to.y - from.y });
+/**
+ * Computes the Euclidean length of a vector.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramvectorlength](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-VECTOR-LENGTH)
+ **/
 export const kitDiagramVectorLength = (vector: KitDiagramPoint): number => Math.hypot(vector.x, vector.y);
+/**
+ * Returns a unit-length vector in the same direction or zero vector if length is zero.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramnormalizevector](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-NORMALIZE-VECTOR)
+ **/
 export const kitDiagramNormalizeVector = (vector: KitDiagramPoint): KitDiagramPoint => {
     const length = kitDiagramVectorLength(vector);
     if (length === 0) return { x: 0, y: 0 };
     return { x: vector.x / length, y: vector.y / length };
 };
+/**
+ * Computes the dot product of two vectors.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramdot](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-DOT)
+ **/
 export const kitDiagramDot = (a: KitDiagramPoint, b: KitDiagramPoint): number => a.x * b.x + a.y * b.y;
+/**
+ * Computes the squared Euclidean distance between two points.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramdistancesquared](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-DISTANCE-SQUARED)
+ **/
 export const kitDiagramDistanceSquared = (a: KitDiagramPoint, b: KitDiagramPoint): number => {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     return dx * dx + dy * dy;
 };
+/**
+ * Translates a local point to absolute coordinates by adding an origin offset.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramtoabsolutepoint](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-TO-ABSOLUTE-POINT)
+ **/
 export const kitDiagramToAbsolutePoint = (origin: KitDiagramPoint, localPoint: KitDiagramPoint): KitDiagramPoint => ({
     x: origin.x + localPoint.x,
     y: origin.y + localPoint.y,
 });
+/**
+ * Infers the cardinal snap side of a point relative to the frame center.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagraminfersnapside](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-INFER-SNAP-SIDE)
+ **/
 export const kitDiagramInferSnapSide = (point: KitDiagramPoint, frame: Partial<KitDiagramFrame>, fallback: KitDiagramFrame = KIT_DIAGRAM_CIRCLE_FRAME): KitDiagramSnapSide => {
     const normalizedFrame = normalizeKitDiagramFrame(frame, fallback);
     const center = kitDiagramCenter(normalizedFrame, fallback);
@@ -283,6 +494,11 @@ const rankSnapPointsByVector = (points: KitDiagramSnapPoint[], frame: Partial<Ki
         });
 };
 
+/**
+ * Selects the snap point best aligned with a target vector direction.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨resolvenearestkitdiagramsnappoint](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/RESOLVE-NEAREST-KIT-DIAGRAM-SNAP-POINT)
+ **/
 export const resolveNearestKitDiagramSnapPoint = (points: KitDiagramSnapPoint[], frame: Partial<KitDiagramFrame>, targetVector: KitDiagramPoint, fallback: KitDiagramFrame): KitDiagramSnapPoint => {
     if (points.length === 0) {
         const normalizedFrame = normalizeKitDiagramFrame(frame, fallback);
@@ -305,20 +521,50 @@ const createStrategy = (id: KitDiagramShapeId, frame: KitDiagramFrame, getSnapPo
     },
 });
 
+/**
+ * Shape strategy for circle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramcirclestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-CIRCLE-STRATEGY)
+ **/
 export const kitDiagramCircleStrategy = createStrategy("circle", KIT_DIAGRAM_CIRCLE_FRAME, createCircleSnapPoints, {});
+/**
+ * Shape strategy for rectangle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramrectanglestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-RECTANGLE-STRATEGY)
+ **/
 export const kitDiagramRectangleStrategy = createStrategy("rectangle", KIT_DIAGRAM_RECTANGLE_FRAME, createRectangleSnapPoints, {
     className: "!rounded-none [&_[data-slot=avatar-fallback]]:!rounded-none",
 });
+/**
+ * Shape strategy for triangle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramtrianglestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-TRIANGLE-STRATEGY)
+ **/
 export const kitDiagramTriangleStrategy = createStrategy("triangle", KIT_DIAGRAM_TRIANGLE_FRAME, createTriangleSnapPoints, {
     className: "!rounded-none [&_[data-slot=avatar-fallback]]:!rounded-none",
     style: { clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" },
 });
+/**
+ * Shape strategy for long-rectangle-shaped diagram nodes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramlongrectanglestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-LONG-RECTANGLE-STRATEGY)
+ **/
 export const kitDiagramLongRectangleStrategy = createStrategy("long-rectangle", KIT_DIAGRAM_LONG_RECTANGLE_FRAME, (frame) => createRectangleSnapPoints(frame, KIT_DIAGRAM_LONG_RECTANGLE_FRAME), {
     className: "!rounded-none [&_[data-slot=avatar-fallback]]:!rounded-none",
 });
 
+/**
+ * Fallback shape strategy used when no kind-specific strategy is registered.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramdefaultshapestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-DEFAULT-SHAPE-STRATEGY)
+ **/
 export const KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY = kitDiagramLongRectangleStrategy;
 
+/**
+ * Registry mapping each node kind to its associated shape strategy.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨kitdiagramshapestrategyregistry](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/KIT-DIAGRAM-SHAPE-STRATEGY-REGISTRY)
+ **/
 export const KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY: Record<KitDiagramNodeKind, KitDiagramShapeStrategy> = {
     design: kitDiagramCircleStrategy,
     type: kitDiagramRectangleStrategy,
@@ -331,10 +577,25 @@ export const KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY: Record<KitDiagramNodeKind, Kit
     author: kitDiagramLongRectangleStrategy,
 };
 
+/**
+ * Looks up the shape strategy for a given node kind with fallback to default.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨getkitdiagramshapestrategy](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/GET-KIT-DIAGRAM-SHAPE-STRATEGY)
+ **/
 export const getKitDiagramShapeStrategy = (kind: KitDiagramNodeKind): KitDiagramShapeStrategy => KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY[kind] ?? KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY;
 
+/**
+ * Returns the normalized frame dimensions for a given node kind with optional override.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨getkitdiagramnodeframeforkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/GET-KIT-DIAGRAM-NODE-FRAME-FOR-KIND)
+ **/
 export const getKitDiagramNodeFrameForKind = (kind: KitDiagramNodeKind, override?: Partial<KitDiagramFrame>): KitDiagramFrame => normalizeKitDiagramFrame(override, getKitDiagramShapeStrategy(kind).frame);
 
+/**
+ * Resolves the optimal anchor pair between two diagram nodes for edge routing.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨resolvekitdiagramanchorpair](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/RESOLVE-KIT-DIAGRAM-ANCHOR-PAIR)
+ **/
 export const resolveKitDiagramAnchorPair = (sourceNode: KitDiagramNodeGeometryInput, targetNode: KitDiagramNodeGeometryInput): KitDiagramResolvedAnchorPair => {
     const sourceStrategy = getKitDiagramShapeStrategy(sourceNode.kind);
     const targetStrategy = getKitDiagramShapeStrategy(targetNode.kind);
@@ -396,6 +657,11 @@ export const resolveKitDiagramAnchorPair = (sourceNode: KitDiagramNodeGeometryIn
     };
 };
 
+/**
+ * Finds the closest snap point on a node to a given target point for proximity-based connections.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry🪨resolvekitdiagramproximityanchor](semiorepo://definition/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS/KIT-DIAGRAM-GEOMETRY/RESOLVE-KIT-DIAGRAM-PROXIMITY-ANCHOR)
+ **/
 export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagramNodeGeometryInput, targetPoint: KitDiagramPoint): KitDiagramProximityAnchor => {
     const strategy = getKitDiagramShapeStrategy(node.kind);
     const frame = normalizeKitDiagramFrame(node.frame, strategy.frame);

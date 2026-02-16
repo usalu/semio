@@ -1,0 +1,54 @@
+{
+  "title": "Enforce Uniform Comment and Docstring Format",
+  "status": "closed",
+  "prompt": "Enforce uniform comment/docstring format across all languages: no blank lines in comments/docstrings, fix header format, add missing C# and Rust docstrings, abstract format for all languages, enforce section/definition ordering with identification/summary/specs/todos/docs structure",
+  "summary": "Fixed SectionIdValueToUriPath and DefinitionIdValueToUriPath to apply PathToUriPath on file path portions, ensuring consistent uppercase file paths in section/definition URIs. Updated helper function test expectations. All non-deadlocking tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/556"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-13 17:08:31",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
+      "prompt": "Enforce uniform comment/docstring format across all languages: no blank lines in comments/docstrings, fix header format, add missing C# and Rust docstrings, abstract format for all languages, enforce section/definition ordering with identification/summary/specs/todos/docs structure",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

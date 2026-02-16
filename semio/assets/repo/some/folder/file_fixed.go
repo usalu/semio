@@ -1,41 +1,43 @@
 // #region 🔖Header
 
-// 💻semio/assets/repo/some/folder/file_fixed.go
+// [💻filefixedgo](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.GO)
 
 // 2025 Test User <test@test.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// A fixed Go module for testing.
 
 // #endregion 🔖Header
 
 // #region 🔖Package
+// [🔖semio/assets/repo/some/folder/file_fixed.go#Package](semiorepo://section/semio/assets/repo/some/folder/file_fixed.go/PACKAGE)
+// Package declaration for fixed module.
+// Package MUST be named fixed.
 
 package fixed
 
 // #endregion 🔖Package
 
 // #region 🔖Functions
+// [🔖semio/assets/repo/some/folder/file_fixed.go#Functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.go/FUNCTIONS)
+// Utility functions for fixed values.
+// Functions MUST return valid integers.
 
+// FixedValue returns a constant integer.
+// FixedValue MUST return 2.
+// [🛠️semio/assets/repo/some/folder/file_fixed.go#Functions§FixedValue](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.go/FUNCTIONS/FIXED-VALUE)
 func FixedValue() int {
-	return 2
+return 2
 }
 
 // #endregion 🔖Functions

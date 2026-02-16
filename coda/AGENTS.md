@@ -35,7 +35,6 @@ A `project` MUST have exactly this structure:
 ├── PROJECTFILESANDFOLDERS...
 ```
 
-
 ## format
 
 `format` is a representation of a building design in a specific data format.
@@ -51,7 +50,6 @@ A `target` is a `format` used for validating a design.
 A `target` MUST have exactly this structure:
 It MUST inputable to a `validator`.
 
-
 ## system
 
 A `system` is a computer executable action that can be used to perform a task.
@@ -65,7 +63,6 @@ An `program` is deterministic system that can be used to perform a task.
 A `design software` is a program that can open a `design` and can be used to author a `design`.
 
 Every `design software` MUST have an mcp server that can be used by `agents` to interact with the `design`.
-
 
 #### validator
 
@@ -123,17 +120,9 @@ A `translation` is a task perforemed by a `translator` that translates a `design
 
 A `validation` is a task perforemed by a `validator` that validates a `target` against a `design`.
 
+There is an assistant go binary that calls `translators` (each translator is an agent) and `validators` (each validator is a binary) to check if a design is compliant. The result from a `translator` is directly piped into the `validator`. Every `translator` and `validator` pair is concurrently called. The assistant fans out to all `translators` and as soon as a `translator` returns the assistant calls the `validator` with the result. Then it waits until all `validators` have returned for all `targets`. It aggregates the result to a `report`. If the `report`contains `breachs`, then the `report` is provided to the `changer` (agent) which changes the `design` over the design mcp server. The `changer` iterates as much as it can to fix all the breachs from the `report`. It uses both anylze tools and change tools from the design mcp. Once it thinks it fixed all the breachs, it signals the `assistant`. The `assistant` then calls the `translators` and `validators` again on the changed `design`.
 
-
-
-
-
-
-
-
-There is an assistant go binary that calls `translators` (each translator is an agent) and `validators` (each validator is a binary) to check if a design is compliant. The result from a `translator` is directly piped into the `validator`. Every `translator` and `validator` pair is concurrently called. The assistant fans out to all `translators` and as soon as a `translator` returns the assistant calls the `validator` with the result. Then it waits until all `validators` have returned for all `targets`. It aggregates the result to a `report`. If the `report`contains `violations`, then the `report` is provided to the `changer` (agent) which changes the `design` over the design mcp server. The `changer` iterates as much as it can to fix all the violations from the `report`. It uses both anylze tools and change tools from the design mcp. Once it thinks it fixed all the violations, it signals the `assistant`. The `assistant` then calls the `translators` and `validators` again on the changed `design`.
-
- In general there are `rules` which are validated by the `validators`. Every `rule` consists of `clauses`. A violation appears when one `clause` is not satisfied. There are  `measures`
+In general there are `rules` which are validated by the `validators`. Every `rule` consists of `clauses`. A breach appears when one `clause` is not satisfied. There are `measures`
 
 It should all be within one file `go/assistant/main.go`.
 
@@ -149,28 +138,26 @@ for `RoomProgram`.
 
 Make a detailed architectural plan that I can download.
 
-new design assistant 
+new design assistant
 
 .coda
-	runs
-		RUNTIMESTAMP
-			run.json
-			interactions
-				ITERATION
-					interaction.json
-					targets
-						TARGET
-							trials
-								TRIAL
-									trial.TARGETEXTENSION
-									error.json
-							target.TARGETEXTENSION
-							report.REPORTEXTENSION
-						report.json
-					design.DESIGNEXTENSION
-					fixed.DESIGNEXTENSION
-
-
+runs
+RUNTIMESTAMP
+run.json
+interactions
+ITERATION
+interaction.json
+targets
+TARGET
+trials
+TRIAL
+trial.TARGETEXTENSION
+error.json
+target.TARGETEXTENSION
+report.REPORTEXTENSION
+report.json
+design.DESIGNEXTENSION
+fixed.DESIGNEXTENSION
 
 # MCP Server
 
@@ -207,14 +194,12 @@ start-iteration: "coda://start-iteration"
 translate: "coda://translate"
 fix: "coda://fix"
 
-
 ## Prompts
 
 change <prompt>
 
-
 # Agents
 
-semio-to-blnbo-translation-agent # Responsible for translating semio format to blnbo 
+semio-to-blnbo-translation-agent # Responsible for translating semio format to blnbo
 semio-to-roomprogram-translation-agent # Responsible for translating semio format to roomprogram
-semio-change-agent # Responsible for changing the semio with semio-mcp to fix violations from the report
+semio-change-agent # Responsible for changing the semio with semio-mcp to fix breachs from the report

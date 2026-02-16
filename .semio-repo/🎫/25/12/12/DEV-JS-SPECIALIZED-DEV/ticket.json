@@ -1,0 +1,18 @@
+{
+  "title": "Split semio/js dev scripts",
+  "status": "closed",
+  "prompt": "Split semio/js dev scripts",
+  "goal": "AI-OPTIMIZED-REPO",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.906Z",
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Split semio/js dev scripts",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

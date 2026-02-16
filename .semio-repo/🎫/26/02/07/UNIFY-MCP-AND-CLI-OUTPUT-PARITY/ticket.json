@@ -1,0 +1,21 @@
+{
+  "title": "Unify Mcp and Cli Output Parity",
+  "status": "open",
+  "prompt": "Make MCP tool outputs 100% identical to CLI tool outputs. Extend existing tests to cover all cases. Refactor as needed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/437"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MCP/REPO-MCP-TOOLS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-07 00:07:56",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
+      "prompt": "Make MCP tool outputs 100% identical to CLI tool outputs. Extend existing tests to cover all cases. Refactor as needed.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

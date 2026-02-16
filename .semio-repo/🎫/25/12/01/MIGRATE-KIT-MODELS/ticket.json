@@ -1,0 +1,18 @@
+{
+  "title": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
+  "status": "closed",
+  "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.794Z",
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

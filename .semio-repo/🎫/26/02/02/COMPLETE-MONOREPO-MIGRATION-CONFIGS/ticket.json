@@ -1,0 +1,22 @@
+{
+  "title": "Complete Monorepo Migration Configs",
+  "status": "closed",
+  "prompt": "Find all outdated configs after monorepo restructuring: git configs, formatters, tools, settings, MCP, devcontainer setup, etc.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/299"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-02T14:51:05.478554652Z",
+      "author": "usalu",
+      "system": "",
+      "client": "",
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
+      "prompt": "Find all outdated configs after monorepo restructuring: git configs, formatters, tools, settings, MCP, devcontainer setup, etc.",
+      "llm": "opus-4-5"
+    }
+  ]
+}

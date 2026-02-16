@@ -5,16 +5,14 @@
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion Header
@@ -48,11 +46,24 @@ import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin,
 
 // #region MDX Loader
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER)
+// MDX file loading and section discovery utilities MUST be declared here.
+
+/**
+ * MDX module with default component and optional frontmatter.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️mdxmodule](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/MDX-MODULE)
+ **/
 export interface MDXModule {
   default: React.ComponentType;
   frontmatter?: PageFrontmatter;
 }
 
+/**
+ * Frontmatter metadata for a docs section index page.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️sectionfrontmatter](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/SECTION-FRONTMATTER)
+ **/
 export interface SectionFrontmatter {
   title?: string;
   description?: string;
@@ -63,6 +74,11 @@ export interface SectionFrontmatter {
   };
 }
 
+/**
+ * File info for a loaded MDX file including path, section, and frontmatter.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️mdxfileinfo](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/MDX-FILE-INFO)
+ **/
 export interface MDXFileInfo {
   path: string;
   section: string;
@@ -74,6 +90,11 @@ export interface MDXFileInfo {
   module?: MDXModule;
 }
 
+/**
+ * Metadata for a docs section including label, icon, and sort order.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️sectioninfo](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/SECTION-INFO)
+ **/
 export interface SectionInfo {
   id: string;
   label: string;
@@ -84,6 +105,13 @@ export interface SectionInfo {
 
 const mdxModules = import.meta.glob<MDXModule>("./pages/**/*.mdx", { eager: true });
 
+/**
+ * Loads an MDX file by path from the eager-loaded module map.
+ *
+ * The path MUST be relative to the pages directory without extension.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️loadmdxfile](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/LOAD-MDX-FILE)
+ **/
 export async function loadMDXFile(path: string): Promise<MDXModule | null> {
   const cleanPath = path.replace(/^docs\//, "");
   const possibleKeys = Object.keys(mdxModules).filter((key) => {
@@ -119,6 +147,13 @@ function pathToTitle(filePath: string, frontmatter?: PageFrontmatter): string {
     .join(" ");
 }
 
+/**
+ * Returns all MDX files with resolved frontmatter and section info.
+ *
+ * Index files for sections MUST be excluded from the flat list.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️getallmdxfiles](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/GET-ALL-MDX-FILES)
+ **/
 export function getAllMDXFiles(): MDXFileInfo[] {
   return Object.keys(mdxModules)
     .filter((filePath) => {
@@ -145,12 +180,26 @@ export function getAllMDXFiles(): MDXFileInfo[] {
     });
 }
 
+/**
+ * Returns MDX files filtered by section and sorted by order.
+ *
+ * The section parameter MUST match a top-level page directory.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️getmdxfilesbysection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/GET-MDX-FILES-BY-SECTION)
+ **/
 export function getMDXFilesBySection(section: string): MDXFileInfo[] {
   return getAllMDXFiles()
     .filter((file) => file.section === section)
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 
+/**
+ * Returns all docs sections discovered from the MDX file structure.
+ *
+ * Sections MUST be sorted by their order field.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader🛠️getallsections](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-LOADER/GET-ALL-SECTIONS)
+ **/
 export function getAllSections(): SectionInfo[] {
   const sectionsMap = new Map<string, SectionInfo>();
   Object.keys(mdxModules).forEach((filePath) => {
@@ -186,11 +235,24 @@ export function getAllSections(): SectionInfo[] {
 
 // #region SectionTree
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🔖sectiontree](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/SECTION-TREE)
+// Section tree navigation component MUST render docs file hierarchy.
+
+/**
+ * Props for the SectionTree navigation component.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🔖sectiontree🛠️sectiontreeprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/SECTION-TREE/SECTION-TREE-PROPS)
+ **/
 export interface SectionTreeProps {
   title?: string;
   section?: string;
 }
 
+/**
+ * Section tree component rendering a navigable file tree for a docs section.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🔖sectiontree🪨sectiontree](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/SECTION-TREE/SECTION-TREE)
+ **/
 export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -215,6 +277,11 @@ export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
 
 // #endregion SectionTree
 
+/**
+ * Node representing a heading with ID, text, level, and optional children.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🛠️headingnode](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/HEADING-NODE)
+ **/
 export interface HeadingNode {
   id: string;
   text: string;
@@ -255,6 +322,11 @@ const headingsState = {
 const subscribeHeadings = (callback: () => void) => headingsState.subscribe(callback);
 const getHeadingsSnapshot = () => headingsState.getAll();
 
+/**
+ * Hook providing heading registration and retrieval via external store.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🪨useheadings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/USE-HEADINGS)
+ **/
 export const useHeadings = () => {
   const headings = useSyncExternalStore(subscribeHeadings, getHeadingsSnapshot);
 
@@ -470,6 +542,11 @@ interface HeadingsProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Context provider supplying heading state to descendant components.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🪨headingsprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/HEADINGS-PROVIDER)
+ **/
 export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
   const { headings, registerHeading, clearHeadings } = useHeadings();
   return <HeadingsContext.Provider value={{ headings, registerHeading, clearHeadings }}>{children}</HeadingsContext.Provider>;
@@ -479,6 +556,11 @@ interface MDXProviderProps {
   children: ReactNode;
 }
 
+/**
+ * MDX component provider wrapping children with custom heading and element renderers.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🪨mdxprovider](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/MDX-PROVIDER)
+ **/
 export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
   const components = useMemo(() => createComponents(), []);
   return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
@@ -488,6 +570,14 @@ export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
 
 // #region Registry
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖registry](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/REGISTRY)
+// Docs registry MUST provide page and section lookup for navigation.
+
+/**
+ * Metadata for a docs page including path, section, and ordering.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖registry🛠️docspage](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/REGISTRY/DOCS-PAGE)
+ **/
 export interface DocsPage {
   title: string;
   description?: string;
@@ -632,12 +722,25 @@ class DocsRegistry {
   }
 }
 
+/**
+ * Singleton docs registry instance for page and section lookups.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖registry🪨docsregistry](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/REGISTRY/DOCS-REGISTRY)
+ **/
 export const docsRegistry = new DocsRegistry();
 
 // #endregion Registry
 
 // #region Store
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/STORE)
+// Docs app section state MUST be declared here.
+
+/**
+ * Persisted state for a docs section including expansion and progress.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖store🛠️docssectionstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/STORE/DOCS-SECTION-STATE)
+ **/
 export interface DocsSectionState {
   isExpanded: boolean;
   progress?: number;
@@ -648,28 +751,56 @@ export interface DocsSectionState {
 
 // #region Types
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES)
+// Docs app state, selection, and diff type definitions MUST be declared here.
+
+/**
+ * Current selection state of the docs app.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docsappselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-APP-SELECTION)
+ **/
 export interface DocsAppSelection {
   section?: string;
   page?: string;
 }
 
+/**
+ * Diff for docs app selection section and page changes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docsappselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-APP-SELECTION-DIFF)
+ **/
 export interface DocsAppSelectionDiff {
   section?: { prev?: string; next?: string };
   page?: { prev?: string; next?: string };
 }
 
+/**
+ * Section-level state for expansion, progress, and completed pages.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docsappsectionstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-APP-SECTION-STATE)
+ **/
 export interface DocsAppSectionState {
   isExpanded?: boolean;
   progress?: number;
   completedPages?: string[];
 }
 
+/**
+ * Complete state of the docs app including panels, selection, and section states.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docsappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-APP-STATE)
+ **/
 export interface DocsAppState {
   panelVisibility: PanelVisibility;
   selection?: DocsAppSelection;
   sectionStates?: Record<string, DocsAppSectionState>;
 }
 
+/**
+ * Partial state diff for updating the docs app.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docsappdiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-APP-DIFF)
+ **/
 export interface DocsAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   selection?: DocsAppSelectionDiff;
@@ -678,11 +809,21 @@ export interface DocsAppDiff {
 
 export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> {}
 
+/**
+ * Context passed to docs app command handlers.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docscommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-COMMAND-CONTEXT)
+ **/
 export interface DocsCommandContext {
   docs: DocsAppState;
   origin?: string;
 }
 
+/**
+ * Result returned by docs app command handlers.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖types🛠️docscommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES/DOCS-COMMAND-RESULT)
+ **/
 export interface DocsCommandResult {
   diff?: DocsAppDiff;
 }
@@ -691,6 +832,16 @@ export interface DocsCommandResult {
 
 // #region Docs App Store
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖docsappstore](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/DOCS-APP-STORE)
+// Docs app store MUST extend PlainAppStore with docs-specific state management.
+
+/**
+ * Store managing docs app state including selection, sections, and commands.
+ *
+ * The store MUST apply diffs immutably and record edits for undo and redo.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖docsappstore🛠️docsappstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/DOCS-APP-STORE/DOCS-APP-STORE)
+ **/
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
     const defaultState: DocsAppState = {
@@ -783,6 +934,14 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
 
 // #region Commands
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/COMMANDS)
+// Docs app command handlers MUST modify state through diff objects.
+
+/**
+ * Command handlers for docs app page selection, section toggling, and progress tracking.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖commands🪨docscommands](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/COMMANDS/DOCS-COMMANDS)
+ **/
 export const docsCommands = {
   "semio.docsApp.selectPage": async (context: DocsCommandContext, section: string, page: string): Promise<DocsCommandResult> => {
     return {
@@ -841,6 +1000,9 @@ if (typeof window !== "undefined") {
 
 // #region Docs App Plugin Registration
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖commands🔖docsapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/COMMANDS/DOCS-APP-PLUGIN-REGISTRATION)
+// Plugin registration MUST initialize docs app context and registry.
+
 const docsAppPlugin: AppPlugin = {
   id: "docs",
   namespace: "DOCS",
@@ -871,6 +1033,9 @@ if (typeof window !== "undefined") {
 // #region Windows
 
 // #region Page
+
+// [👤semio📚js🗃️sketchpad💻docstsx🔖canvas](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/CANVAS)
+// Page window MUST render MDX content with navigation and heading extraction.
 
 interface PageCanvasProps {
   MDXContent?: React.ComponentType;
@@ -1093,6 +1258,14 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 
 // #region Footer
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/FOOTER)
+// Footer component MUST manage docs app footer items.
+
+/**
+ * Footer component for the docs app registering footer items.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖footer🪨docsappfooter](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/FOOTER/DOCS-APP-FOOTER)
+ **/
 export const DocsAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -1112,6 +1285,11 @@ export const DocsAppFooter: FC = () => {
 };
 
 // #endregion Footer
+
+// #region 🔖Panels
+
+// [👤semio📚js🗃️sketchpad💻docstsx🔖panels](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/PANELS)
+// Panel components MUST render sidebar content for the docs app.
 
 const Workbench: FC = () => {
   const navigate = useNavigate();
@@ -1168,6 +1346,14 @@ const Settings: FC = () => {
 
 // #region App
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/APP)
+// Docs app root component MUST compose MDX routing, panel sections, and layout.
+
+/**
+ * Window kind identifiers for docs app layout.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖app🛠️docsappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/APP/DOCS-APP-WINDOW-KIND)
+ **/
 export enum DocsAppWindowKind {
   Page = "page",
 }
@@ -1329,6 +1515,14 @@ export default App;
 
 // #region Config
 
+// [👤semio📚js🗃️sketchpad💻docstsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/CONFIG)
+// Docs app route, panel, and path matching configuration MUST be exported.
+
+/**
+ * Docs app configuration for routing, panels, and path matching.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻docstsx🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/CONFIG/CONFIG)
+ **/
 export const config: AppConfig = {
   id: "docs",
   component: App,

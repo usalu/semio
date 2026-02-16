@@ -1,0 +1,675 @@
+{
+  "title": "Fix Code Breachs in Semio Cs and Grasshopper Cs",
+  "status": "closed",
+  "prompt": "Fix all code breachs in semio/net/Semio/Semio.cs (84 breachs) and semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs (114 breachs) by adding summary comments after section markers and before definitions, plus spec comments with RFC2119 keywords on classes, structs, and methods.",
+  "summary": "Fixed all code breachs in semio/net/Semio/Semio.cs (47→0) and semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs (85→0). Added Imports/Namespace section wrappers for orphan definitions, RFC2119-keyword section summaries for 70 sections, and definition summary+spec comments for 29 class definitions across both files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/528"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-12 00:00:53",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix all code breachs in semio/net/Semio/Semio.cs (84 breachs) and semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs (114 breachs) by adding summary comments after section markers and before definitions, plus spec comments with RFC2119 keywords on classes, structs, and methods.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/gh",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio/net",
+              "lines": {
+                "added": 35,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs",
+              "lines": {
+                "added": 90,
+                "removed": 21
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs",
+              "lines": {
+                "added": 52,
+                "removed": 17
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "semio/net/Semio/Semio.cs#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Kit",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Constants",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Coord",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Benchmark",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Piece",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Engine",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Engine#Persistence",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Imports",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Type",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Group",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Attribute",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Location",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#File",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Author",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Design",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Scripting",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Utility",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Bases",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Folder",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Model",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Connector",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Connection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Converters",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#QualityKind",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Tag",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Concept",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Side",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Stat",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Namespace",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Quality",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Layer",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Prop",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Port",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Header#License",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Constants",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Quality",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Design",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Utility#Expressions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Coord",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Type",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Stat",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Author",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Port",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Tag",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Connection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Utility",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Kit#Design Family Helpers",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Plane",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#SemioValidation",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Connector",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Attribute",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Vector",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Model",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Folder",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#ZipRoundtrip",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Prop",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Kit",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#SemioDiff",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Concept",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Kit#Type Family Helpers",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Api",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Side",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Namespace",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Piece",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#KitExporter",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Point",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Location",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Layer",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Benchmark",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#KitImporter",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Imports",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#File",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#QualityKind",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Entitying#Group",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#Header#License",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/net/Semio/Semio.cs#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Namespace",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs#Imports",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/net/Semio/Semio.cs#Namespace",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/net/Semio/Semio.cs#Imports",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

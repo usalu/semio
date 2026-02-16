@@ -1,0 +1,18 @@
+{
+  "title": "Sync C# unit tests with JS fixtures and fix all test failures",
+  "status": "closed",
+  "prompt": "Sync C# unit tests with JS fixtures and fix all test failures",
+  "goal": "R26-03/RUNNING-NET",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.766Z",
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Sync C# unit tests with JS fixtures and fix all test failures",
+      "llm": "sonnet-4"
+    }
+  ]
+}

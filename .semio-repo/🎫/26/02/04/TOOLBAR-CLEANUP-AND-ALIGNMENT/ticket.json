@@ -1,0 +1,2459 @@
+{
+  "title": "Toolbar Cleanup And Alignment",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed toolbar visibility by correcting container width calculation while keeping overflow clipped and dropdown alignment intact.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/338"
+  },
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
+      "prompt": "Fix toolbar: remove scrollbar, align subtools dropdown above trigger, and clean toolbar border.",
+      "llm": "gpt-5-2-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/js",
+              "lines": {
+                "added": 427,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "AGENTS.md",
+              "lines": {
+                "added": 95,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx",
+              "lines": {
+                "added": 439,
+                "removed": 12
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "README.md",
+              "lines": {
+                "added": 2099,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Design App (Design.tsx)",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 .devcontainer/post-create.sh",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "AGENTS.md#Hierarchies#3. Properties#Kit",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Hierarchies#js/semio/sketchpad/",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Hierarchies#js/semio/sketchpad/portColor.ts",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Devcontainer",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Diagrams",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad#Design Editor",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad#Kit Editor",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Ticket UX#Toolbar",
+              "lines": {
+                "added": 36,
+                "removed": 7
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�🎨 Kit Editor Visualization [↑](#-bundles-)",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎭 Playwright Browser Provisioning [↑](#-bundles-)",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎯 Design Diagram Overlap Guard [↑](#-bundles-)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad toolbar tooltree",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧰 Toolbar Layout Discipline [↑](#-bundles-)",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components",
+              "lines": {
+                "added": 432,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Imports",
+              "lines": {
+                "added": 5,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Machine#Types#App State Types",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "AGENTS.md#Hierarchies#js/semio/sketchpad/",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Hierarchies#js/semio/sketchpad/portColor.ts",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad#Design Editor",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎭 Playwright Browser Provisioning [↑](#-bundles-)",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎯 Design Diagram Overlap Guard [↑](#-bundles-)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad toolbar tooltree",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧰 Toolbar Layout Discipline [↑](#-bundles-)",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 267,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarCategoryToggle",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarGroupSection",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarPathState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarRootNode",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsField",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsFields",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSubtoolNode",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsPlaceholderLabels",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsRoot",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeInteraction",
+              "lines": {
+                "added": 18,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeRoot",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubToolId",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubToolId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtool",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtoolLabel",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarRoot",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarSubtool",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§appType",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§canonicalRoots",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§createPlaceholderLabels",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§current",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§current",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§design",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterLabels",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterRoot",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§first",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§footerItems",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getGroupIcon",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarFieldIcon",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarGroupIcon",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§gid",
+              "lines": {
+                "added": 5,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§group",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groups",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groupsById",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§hasChanges",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§id",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isActive",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isFooterExpanded",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isNavbarExpanded",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§items",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§kit",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§kitId",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§location",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§makeSubtools",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§navigate",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§navigation",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextRootId",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextSubtoolId",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§openToolbarRootId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§orderDiff",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§panelOpacity",
+              "lines": {
+                "added": 18,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§panelSizes",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§panelVisibility",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§reactNavigate",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§resolveDefaultToolbarRootId",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§root",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§root",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootLabel",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootValue",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootsFromGroups",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§section",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRoot",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRootAndSubtool",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionLabels",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionRoot",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setOpenToolbarRoot",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setSubTool",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setToolbarPath",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§store",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtool",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtoolLabel",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtools",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toId",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toSettingsFields",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toggleToolbarGroup",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroupOrderMap",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroups",
+              "lines": {
+                "added": 15,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarPath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarRoots",
+              "lines": {
+                "added": 68,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§tutorialStore",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§uniqueSubTools",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§value",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§viewPlaceholderLabels",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Machine#Types#App State Types§KitAppState",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)§PlainAppStore",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)§PlainAppStore",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarCategoryToggle",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarGroupSection",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarPathState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarRootNode",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsField",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsFields",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSubtoolNode",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsPlaceholderLabels",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsRoot",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeRoot",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubToolId",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtool",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtoolLabel",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarRoot",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarSubtool",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§canonicalRoots",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§createPlaceholderLabels",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§current",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterLabels",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterRoot",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§first",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getGroupIcon",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarFieldIcon",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarGroupIcon",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§gid",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§group",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groups",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groupsById",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§hasChanges",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§id",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isActive",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§makeSubtools",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextRootId",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextSubtoolId",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§openToolbarRootId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§orderDiff",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§resolveDefaultToolbarRootId",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootLabel",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootValue",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootsFromGroups",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§section",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRoot",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRootAndSubtool",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionLabels",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionRoot",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setOpenToolbarRoot",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setSubTool",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setToolbarPath",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtool",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtoolLabel",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtools",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toId",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toSettingsFields",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toggleToolbarGroup",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroupOrderMap",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroups",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarPath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarRoots",
+              "lines": {
+                "added": 68,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§uniqueSubTools",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§value",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§viewPlaceholderLabels",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
+      "prompt": "Toolbar is invisible now.",
+      "llm": "gpt-5-2-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/js",
+              "lines": {
+                "added": 427,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx",
+              "lines": {
+                "added": 439,
+                "removed": 12
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components",
+              "lines": {
+                "added": 432,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Imports",
+              "lines": {
+                "added": 5,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Machine#Types#App State Types",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 267,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarCategoryToggle",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarGroupSection",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarPathState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarRootNode",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsField",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsFields",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSubtoolNode",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsPlaceholderLabels",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsRoot",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeInteraction",
+              "lines": {
+                "added": 18,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeRoot",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubToolId",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubToolId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtool",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtoolLabel",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarRoot",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarSubtool",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§appType",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§canonicalRoots",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§createPlaceholderLabels",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§current",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§current",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§design",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterLabels",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterRoot",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§first",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§footerItems",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getGroupIcon",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarFieldIcon",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarGroupIcon",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§gid",
+              "lines": {
+                "added": 5,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§group",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groups",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groupsById",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§hasChanges",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§id",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isActive",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isFooterExpanded",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isNavbarExpanded",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§items",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§kit",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§kitId",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§location",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§makeSubtools",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§navigate",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§navigation",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextRootId",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextSubtoolId",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§openToolbarRootId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§orderDiff",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§panelOpacity",
+              "lines": {
+                "added": 18,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§panelSizes",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§panelVisibility",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§reactNavigate",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§resolveDefaultToolbarRootId",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§root",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§root",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootLabel",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootValue",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootsFromGroups",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§section",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRoot",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRootAndSubtool",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionLabels",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionRoot",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setOpenToolbarRoot",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setSubTool",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setToolbarPath",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§store",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtool",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtoolLabel",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtools",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toId",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toSettingsFields",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toggleToolbarGroup",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroupOrderMap",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroups",
+              "lines": {
+                "added": 15,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarPath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarRoots",
+              "lines": {
+                "added": 68,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§tutorialStore",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§uniqueSubTools",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§value",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§viewPlaceholderLabels",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Machine#Types#App State Types§KitAppState",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)§PlainAppStore",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Plain App Store (No YJS)§PlainAppStore",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarCategoryToggle",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarGroupSection",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarPathState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarRootNode",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsField",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSettingsFields",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§ToolbarSubtoolNode",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsPlaceholderLabels",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§actionsRoot",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeRoot",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubToolId",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtool",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeSubtoolLabel",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarRoot",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§activeToolbarSubtool",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§canonicalRoots",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§createPlaceholderLabels",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§current",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterLabels",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§filterRoot",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§first",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getGroupIcon",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarFieldIcon",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§getToolbarGroupIcon",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§gid",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§group",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groups",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§groupsById",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§hasChanges",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§id",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§isActive",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§makeSubtools",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextRootId",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§nextSubtoolId",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§openToolbarRootId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§orderDiff",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§resolveDefaultToolbarRootId",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootLabel",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootValue",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§rootsFromGroups",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§section",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRoot",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectRootAndSubtool",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionLabels",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§selectionRoot",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setOpenToolbarRoot",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setSubTool",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§setToolbarPath",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtool",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtoolLabel",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§subtools",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toId",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toSettingsFields",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toggleToolbarGroup",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroupOrderMap",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarGroups",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarPath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§toolbarRoots",
+              "lines": {
+                "added": 68,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§uniqueSubTools",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§value",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§viewPlaceholderLabels",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

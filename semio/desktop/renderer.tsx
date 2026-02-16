@@ -1,31 +1,29 @@
 // #region 🔖Header
 
-// 💻semio/desktop/renderer.tsx
+// [👤semio🖱️desktop💻renderertsx](semiorepo://file/SEMIO/DESKTOP/RENDERER.TSX)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Entry point for the Electron renderer process mounting the React app.
 
 // #endregion 🔖Header
+
+// #region 🔖Renderer
+
+// [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://section/SEMIO/DESKTOP/RENDERER.TSX/RENDERER)
+// Electron renderer process that mounts the Sketchpad React app with window controls.
+// MUST resolve the user identity before rendering the sketchpad.
 
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -47,6 +45,8 @@ declare global {
   }
 }
 
+// Invokes a window control action via the preload bridge.
+// MUST fall back gracefully when window controls are unavailable.
 const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   if (window.windowControls) {
     return window.windowControls[action]();
@@ -55,16 +55,22 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   return Promise.resolve();
 };
 
+// Window event handlers for minimize, maximize and close actions.
+// MUST delegate to invokeWindowControl for each action.
 const windowEvents = {
   minimize: () => invokeWindowControl("minimize"),
   maximize: () => invokeWindowControl("maximize"),
   close: () => invokeWindowControl("close"),
 };
 
+// OS bridge for retrieving the current user identity.
+// MUST use the preload-exposed getUserId API.
 const os = {
   getUserId: async () => await window.os.getUserId(),
 };
 
+// Root React component that loads the user identity and renders the sketchpad.
+// MUST show a loading state until the user ID is resolved.
 function App() {
   const [userId, setUserId] = useState<string>("");
 
@@ -92,3 +98,5 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>,
 );
+
+// #endregion 🔖Renderer

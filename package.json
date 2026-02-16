@@ -44,7 +44,8 @@
     "publish:test": "semio-repo/cli/cli preflight publish:test",
     "publish": "semio-repo/cli/cli preflight publish",
     "benchmark": "semio-repo/cli/cli benchmark",
-    "prepare": "husky",
+    "pre-commit": "npm run preflight",
+    "pre-commit:global:install": "mkdir -p \"$HOME/.config/git/hooks\" && cat > \"$HOME/.config/git/hooks/pre-commit\" <<'HOOK'\n#!/usr/bin/env sh\nset -eu\nrepo_root=\"$(git rev-parse --show-toplevel 2>/dev/null || true)\"\nif [ -z \"$repo_root\" ] || [ ! -f \"$repo_root/package.json\" ]; then\n  exit 0\nfi\ncd \"$repo_root\"\nnpm run --if-present pre-commit\nHOOK\nchmod +x \"$HOME/.config/git/hooks/pre-commit\" && git config --global core.hooksPath \"$HOME/.config/git/hooks\"",
     "mcp:inspector": "npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
@@ -52,7 +53,6 @@
     "@nxlv/python": "^21.2.3",
     "@types/node": "^22.19.6",
     "@types/react": "^19.2.8",
-    "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "nx": "^21.4.1",
     "react": "^19.2.3",

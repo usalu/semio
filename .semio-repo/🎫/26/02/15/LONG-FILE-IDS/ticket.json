@@ -1,0 +1,18 @@
+{
+  "title": "Long File Ids",
+  "status": "open",
+  "prompt": "Fix file IDs to include the full parent chain (project, bundle, folder hierarchy). Currently buildFileID and File.GetID() return short IDs like 💻designtsx. They should return long IDs like 👤semio📚js🗃️sketchpad💻designtsx that include the full ancestor chain.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-15 22:51:14",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
+      "prompt": "Fix file IDs to include the full parent chain (project, bundle, folder hierarchy). Currently buildFileID and File.GetID() return short IDs like 💻designtsx. They should return long IDs like 👤semio📚js🗃️sketchpad💻designtsx that include the full ancestor chain.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

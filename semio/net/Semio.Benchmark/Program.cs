@@ -1,3 +1,22 @@
+#region 🔖Header
+
+// [👤semio📚net🛅semiobenchmark💻programcs](semiorepo://file/SEMIO/NET/SEMIO.BENCHMARK/PROGRAM.CS)
+
+// 2026 Ueli Saluz <ueli@semio-tech.de>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#endregion 🔖Header
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -63,13 +82,7 @@ class Program
 
             var tempZipPath = "temp_benchmark_metabolism.zip";
 
-            var schemaPath = Path.Combine("../../sql/sqlite/schema.sql"); // Relative to bin output?
-            // AssetsPath is "../assets/semio" which is relative to execution dir?
-            // "dotnet run" runs from project dir? No, usually bin/Debug/net...
-            // Go benchmark used "../../sql/sqlite/schema.sql" relative to "go/semio/benchmark"
-            // If running from "net" folder: "dotnet run --project Semio.Benchmark..."
-            // The CWD is "net".
-            // So schema is at "../sql/sqlite/semio/schema.sql".
+            var schemaPath = Path.Combine("../../sql/sqlite/schema.sql");
             var schemaSql = System.IO.File.ReadAllText("../sql/sqlite/semio/schema.sql");
 
             ZipRoundtrip.ExportKit(importResult.Kit, importResult.Files, tempZipPath, schemaSql);

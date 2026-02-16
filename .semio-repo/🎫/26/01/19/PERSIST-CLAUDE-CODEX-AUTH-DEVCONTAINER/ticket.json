@@ -1,0 +1,19 @@
+{
+  "title": "persist-claude-codex-auth-devcontainer",
+  "status": "closed",
+  "prompt": "",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/150"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
+      "commit": ""
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+{
+  "title": "Fix Vscode Queries Breachs",
+  "status": "closed",
+  "prompt": "Fix all code breachs in semio-repo/vscode/queries.ts: 12 orphan definitions and 11 missing summary comments. Add a Queries section wrapping all definitions and add summary comments before each definition.",
+  "summary": "Added //#region 🔖Queries section wrapping all 11 exported const definitions with section summary comment. Added individual summary comments before each definition: RepoStructureDocument, RepoCommitsDocument, FolderContentDocument, BundlesDocument, TicketsDocument, PoliciesDocument, ContributorsDocument, AnalyzeDocument, FixDocument, FileContentDocument, GoalsDocument. Fixes 12 orphan-definition and 11 missing-summary breachs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/519"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-11 22:36:16",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix all code breachs in semio-repo/vscode/queries.ts: 12 orphan definitions and 11 missing summary comments. Add a Queries section wrapping all definitions and add summary comments before each definition.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/vscode",
+              "lines": {
+                "added": 44,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio-repo/vscode/queries.ts",
+              "lines": {
+                "added": 277,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/vscode/queries.ts#Header",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/queries.ts#Header#License",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/queries.ts#Header#Specs",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/vscode/queries.ts#Queries",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio-repo/vscode/queries.ts#Header",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/queries.ts#Header#License",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/queries.ts#Header#Specs",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/queries.ts#Queries",
+              "lines": {
+                "added": 246,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [
+            {
+              "from": "💻semio-repo/vscode/queries.ts§AnalyzeDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§AnalyzeDocument",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§PoliciesDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§BundlesDocument",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§ContributorsDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§ContributorsDocument",
+              "lines": {
+                "added": 40,
+                "removed": 40
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§FileContentDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§FileContentDocument",
+              "lines": {
+                "added": 42,
+                "removed": 42
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§FixDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§FixDocument",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§FolderContentDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§FolderContentDocument",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§GoalsDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§GoalsDocument",
+              "lines": {
+                "added": 16,
+                "removed": 16
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§BundlesDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§PoliciesDocument",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§RepoCommitsDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§RepoCommitsDocument",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§RepoStructureDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§RepoStructureDocument",
+              "lines": {
+                "added": 34,
+                "removed": 34
+              }
+            },
+            {
+              "from": "💻semio-repo/vscode/queries.ts§TicketsDocument",
+              "to": "💻semio-repo/vscode/queries.ts#Queries§TicketsDocument",
+              "lines": {
+                "added": 22,
+                "removed": 22
+              }
+            }
+          ],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

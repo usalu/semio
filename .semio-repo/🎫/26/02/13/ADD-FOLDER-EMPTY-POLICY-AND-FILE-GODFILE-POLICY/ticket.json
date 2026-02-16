@@ -1,0 +1,227 @@
+{
+  "title": "Add Folder Empty Policy and File Godfile Policy",
+  "status": "closed",
+  "prompt": "Add a new Folder policy with Illegal/Empty statute (autofixable by removing empty folders). Extend the File policy with Illegal/Use Godfile statute that checks files against .semio-repo/files.json godfile list.",
+  "summary": "Added two new policies to semio-repo CLI: (1) Folder policy with BreachFolderIllegalEmpty (autofixable, removes empty folders) and (2) File policy with BreachFileIllegalUseGodfile (checks files against .semio-repo/files.json). Both policies only run for ScopeRepo, skip excluded dirs (.git, .semio-repo, node_modules, .venv, .nx), and have 8 passing tests. Also created .semio-repo/files.json godfile with 4670 tracked files, added autofix routing in Fix function for folder-level breachs, and fixed a pre-existing build error with interactionResourceType.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/563"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
+      "prompt": "Add a new Folder policy with Illegal/Empty statute (autofixable by removing empty folders). Extend the File policy with Illegal/Use Godfile statute that checks files against .semio-repo/files.json godfile list.",
+      "llm": "sonnet-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 271,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 273,
+                "removed": 2
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter",
+              "lines": {
+                "added": 121,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages",
+              "lines": {
+                "added": 85,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies",
+              "lines": {
+                "added": 11,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder",
+              "lines": {
+                "added": 50,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§NewRootWithConfig",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§interactionCommand",
+              "lines": {
+                "added": 119,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§InteractionResource",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§ListInteractions",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§StreamInteractions",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§filePolicy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§filePolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§folderPolicy",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§folderPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§sketchpadPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Interactions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder§buildSchema",
+              "lines": {
+                "added": 50,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§interactionCommand",
+              "lines": {
+                "added": 119,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§InteractionResource",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§ListInteractions",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§StreamInteractions",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Interactions",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

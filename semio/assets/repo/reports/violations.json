@@ -14,7 +14,7 @@
       "region:empty": 1
     }
   },
-  "violations": [
+  "breachs": [
     {
       "id": "header-1-abc123",
       "summary": "Missing header region in assets/repo/some/folder/file.cs",

@@ -1,0 +1,148 @@
+{
+  "title": "Migrate Devcontainer Docs to Bundle README",
+  "status": "closed",
+  "prompt": "Migrate Devcontainer Persistence, Extension Install, and Playwright Browser Cache sections from root README.md to .devcontainer/README.md bundle docs.",
+  "summary": "Appended three doc sections (Devcontainer Persistence, Devcontainer Extension Install, Playwright Browser Cache) from root README.md to .devcontainer/README.md Docs section",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/474"
+  },
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-09 23:29:05",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
+      "prompt": "Migrate Devcontainer Persistence, Extension Install, and Playwright Browser Cache sections from root README.md to .devcontainer/README.md bundle docs.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio-repo/repo",
+              "lines": {
+                "added": 59,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📃.devcontainer/README.md",
+              "lines": {
+                "added": 59,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": ".devcontainer/README.md#Docs",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#Devcontainer Extension Install",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#Devcontainer Persistence",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#Playwright Browser Cache",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#devcontainer.json",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#post-attach.sh",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#post-create.sh",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Docs#post-start.sh",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Specs",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Specs#Devcontainer",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/README.md#Summary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

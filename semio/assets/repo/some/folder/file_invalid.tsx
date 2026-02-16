@@ -1,15 +1,7 @@
 // #region 🔖Header
 
-// #region 🔖License
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
+// GNU Affero General Public License
 // MIT License
-// https://www.gnu.org/licenses/
-
-// #endregion 🔖License
 
 // #endregion 🔖Header
 
@@ -23,30 +15,14 @@ const unnamedRegionValue = 1;
 
 const missingEnd = 2;
 
-// #endregion
-
-// #region 🔖Alpha
-
 const mismatchName = 3;
 
-// #endregion 🔖Beta
+// #endregion 🔖MissingEnd
 
 // #region 🔖Empty
 
-// #endregion 🔖Empty
-
-// #region 🔖Comments
-
-// inline one
-
-// inline two
-
-/* block comment */
-
-/** jsdoc comment */
-
 const insideComments = 4;
 
-// #endregion 🔖Comments
+// #endregion 🔖Empty
 
 const orphanValue = 5;

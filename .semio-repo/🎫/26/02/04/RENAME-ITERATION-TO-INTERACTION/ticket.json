@@ -1,0 +1,20 @@
+{
+  "title": "Rename Iteration to Interaction",
+  "status": "open",
+  "prompt": "Rename interaction to interaction and standardize structure",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/333"
+  },
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-04T08:57:55.318813171Z",
+      "author": "usalu",
+      "system": "linux",
+      "client": "",
+      "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
+      "prompt": "Rename interaction to interaction and standardize structure",
+      "llm": "gemini-3-pro"
+    }
+  ]
+}

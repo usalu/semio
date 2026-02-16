@@ -1,31 +1,29 @@
 // #region 🔖Header
 
-// 💻semio/desktop/main.ts
+// [👤semio🖱️desktop💻maints](semiorepo://file/SEMIO/DESKTOP/MAIN.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Entry point for the Electron main process managing windows and lifecycle.
 
 // #endregion 🔖Header
+
+// #region 🔖Main Process
+
+// [👤semio🖱️desktop💻maints🔖mainprocess](semiorepo://section/SEMIO/DESKTOP/MAIN.TS/MAIN-PROCESS)
+// Electron main process that creates the browser window and registers IPC handlers.
+// MUST quit on all windows closed except on macOS.
 
 import { app, BrowserWindow, ipcMain } from "electron";
 import started from "electron-squirrel-startup";
@@ -36,6 +34,8 @@ if (started) {
   app.quit();
 }
 
+// Creates the main Electron browser window with preload and vite integration.
+// MUST load the vite dev server URL in development and the built file in production.
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -56,7 +56,6 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
-
 
 };
 
@@ -100,3 +99,5 @@ app.whenReady().then(() => {
     return os.userInfo().username;
   });
 });
+
+// #endregion 🔖Main Process

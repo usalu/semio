@@ -1,0 +1,1116 @@
+{
+  "title": "Move Schema Graphql to Semio Repo Graphql",
+  "status": "closed",
+  "prompt": "Move schema.graphql and queries from semio-repo/cli to semio-repo/graphql. Fix the typo directory semio-repo/grapqhl. Update all references.",
+  "summary": "Also fixed VSCode extension codegen.ts schema path reference.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-SERVER",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-05 10:50:51",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Move schema.graphql and queries from semio-repo/cli to semio-repo/graphql. Fix the typo directory semio-repo/grapqhl. Update all references.",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄semio-repo/cli/gqlgen.yml",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Types",
+              "lines": {
+                "added": 348,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Header",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Inputs",
+              "lines": {
+                "added": 137,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Mutation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Ports",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Query",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/repo/schema.graphql#Scalars",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§GoalChangeInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§TicketOpenInput",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§TodoChangeInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Ports§Node",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Commit",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Interaction",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Policy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Section",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Range",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§TicketClient",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§TicketCloseInput",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§TicketFileContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Todo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/queries/NodesAndEdges.graphql§NodesAndEdges",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorIcons",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§PriorityCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§TodoCreateInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§AnalyzeMetrics",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§TicketSectionContrib",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Statute",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql§DateTime",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§FolderKind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§TicketChangeInput",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Project",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorLink",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§GoalCreateInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Mutation§Mutation",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Query§Query",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Definition",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§FixResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ProjectKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§File",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§BundleKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorContributions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§LineMetrics",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§BreachPriority",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§InteractionDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§ContributorAddInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§AnalyzeResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Bundle",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Folder",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/queries/Nodes.graphql§Nodes",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§TicketReopenInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Contributor",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§TicketBundleContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Inputs§DefinitionKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Location",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/repo/schema.graphql#Types§Breach",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "",
+      "date": "2026-02-05 10:58:20",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Fix: move files to semio-repo/graphql/ directly, not semio-repo/graphql/repo/",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄semio-repo/cli/gqlgen.yml",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "semio-repo/graphql/schema.graphql#Inputs",
+              "lines": {
+                "added": 137,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/schema.graphql#Mutation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/schema.graphql#Ports",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/schema.graphql#Query",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/schema.graphql#Scalars",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/schema.graphql#Types",
+              "lines": {
+                "added": 348,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/graphql/schema.graphql#Header",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📄semio-repo/graphql/queries/Nodes.graphql§Nodes",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorIcons",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§File",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§TicketClient",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§TicketSectionContrib",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§FolderKind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§TicketOpenInput",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§AnalyzeResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§TicketReopenInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Commit",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Folder",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ProjectKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Todo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Project",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorLink",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§GoalCreateInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§TicketCloseInput",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§TicketBundleContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Breach",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§BreachPriority",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql§DateTime",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/queries/NodesAndEdges.graphql§NodesAndEdges",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§DefinitionKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§TodoChangeInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§TicketFileContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Statute",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Bundle",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§FixResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§InteractionDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§LineMetrics",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§PriorityCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Ports§Node",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§AnalyzeMetrics",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§GoalChangeInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Definition",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Interaction",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Policy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§BundleKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§TodoCreateInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Mutation§Mutation",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Query§Query",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Location",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Range",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§ContributorAddInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorContributions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Inputs§TicketChangeInput",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Contributor",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§Section",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/graphql/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "",
+      "date": "2026-02-06 01:40:52",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Fix VSCode extension codegen.ts which still references ../go/schema.graphql",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄semio-repo/vscode/codegen.ts",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄semio-repo/vscode/codegen.ts§config",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄semio-repo/vscode/codegen.ts§config",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

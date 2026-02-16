@@ -1,29 +1,19 @@
 # region Header
 
-# 🧪semio/engine/engine.test.py
+# [👤semio📚engine🧪enginetestpy](semiorepo://file/SEMIO/ENGINE/ENGINE.TEST.PY)
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
-# region License
-
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as
+# it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
-
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public License
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-# endregion License
-
-# region Specs
-# endregion Specs
 
 # endregion Header
 
@@ -52,12 +42,10 @@ KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
 
 # region Fixtures
 
-
 @pytest.fixture
 def kitMetabolismJson() -> dict:
     with open(KIT_METABOLISM_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 @pytest.fixture
 def minimalKitJson() -> dict:
@@ -66,28 +54,23 @@ def minimalKitJson() -> dict:
         "version": "1.0.0",
     }
 
-
 @pytest.fixture
 def tempKitPath() -> pathlib.Path:
     tmpDir = tempfile.mkdtemp()
     yield pathlib.Path(tmpDir)
     shutil.rmtree(tmpDir, ignore_errors=True)
 
-
 @pytest.fixture
 def restClient() -> TestClient:
     return TestClient(engine.rest)
-
 
 @pytest.fixture
 def graphqlClient() -> TestClient:
     return TestClient(engine.engine)
 
-
 # endregion Fixtures
 
 # region Encoding Tests
-
 
 class TestEncoding:
     def test_encode_basic(self):
@@ -111,11 +94,9 @@ class TestEncoding:
         for s in testStrings:
             assert engine.decode(engine.encode(s)) == s
 
-
 # endregion Encoding Tests
 
 # region OperationBuilder Tests
-
 
 class TestOperationBuilder:
     def test_parse_kit_operation(self):
@@ -145,11 +126,9 @@ class TestOperationBuilder:
         assert operation["kind"] == "designs"
         assert "kitUri" in operation
 
-
 # endregion OperationBuilder Tests
 
 # region Store Tests
-
 
 class TestSqliteStore:
     def test_store_factory_absolute_path(self, tempKitPath: pathlib.Path):
@@ -177,11 +156,9 @@ class TestSqliteStore:
         store.initialize()
         assert store.initialized()
 
-
 # endregion Store Tests
 
 # region StoreKind Tests
-
 
 class TestStoreKind:
     def test_store_kind_values(self):
@@ -189,11 +166,9 @@ class TestStoreKind:
         assert engine.StoreKind.REST.value == "rest"
         assert engine.StoreKind.GRAPHQL.value == "graphql"
 
-
 # endregion StoreKind Tests
 
 # region CommandKind Tests
-
 
 class TestCommandKind:
     def test_command_kind_values(self):
@@ -202,11 +177,9 @@ class TestCommandKind:
         assert engine.CommandKind.UPDATE.value == "update"
         assert engine.CommandKind.DELETE.value == "delete"
 
-
 # endregion CommandKind Tests
 
 # region REST API Tests
-
 
 class TestRestApi:
     def test_get_kit_not_found(self, restClient: TestClient, tempKitPath: pathlib.Path):
@@ -215,11 +188,9 @@ class TestRestApi:
         response = restClient.get(f"/kits/{encodedUri}")
         assert response.status_code in [400, 404, 500]
 
-
 # endregion REST API Tests
 
 # region GraphQL Tests
-
 
 class TestGraphQL:
     def test_graphql_schema_exists(self):
@@ -229,11 +200,9 @@ class TestGraphQL:
         assert hasattr(engine.Query, "kit")
         assert hasattr(engine.Query, "node")
 
-
 # endregion GraphQL Tests
 
 # region MCP Tests
-
 
 class TestMcp:
     def test_mcp_instance_exists(self):
@@ -269,11 +238,9 @@ class TestMcp:
         result = engine.inverse_kit_diff(minimalKitJson, diff)
         assert isinstance(result, dict)
 
-
 # endregion MCP Tests
 
 # region Cache Tests
-
 
 class TestCache:
     def test_cache_dir_encoding(self):
@@ -293,11 +260,9 @@ class TestCache:
         with pytest.raises(engine.OnlyRemoteKitsCanBeCached):
             engine.cache(nonZipUri)
 
-
 # endregion Cache Tests
 
 # region SSLMode Tests
-
 
 class TestSSLMode:
     def test_ssl_mode_values(self):
@@ -308,11 +273,9 @@ class TestSSLMode:
         assert engine.SSLMode.VERIFY_CA.value == "verify-ca"
         assert engine.SSLMode.VERIFY_FULL.value == "verify-full"
 
-
 # endregion SSLMode Tests
 
 # region Error Classes Tests
-
 
 class TestErrors:
     def test_kit_not_found_error(self):
@@ -331,11 +294,9 @@ class TestErrors:
         error = engine.LocalKitUriIsNotAbsolute("relative/path")
         assert "relative/path" in str(error)
 
-
 # endregion Error Classes Tests
 
 # region Assistant Tests
-
 
 class TestAssistant:
     def test_encode_for_prompt(self):
@@ -364,11 +325,9 @@ class TestAssistant:
         assert "name" in engine.designResponseFormat
         assert engine.designResponseFormat["name"] == "design"
 
-
 # endregion Assistant Tests
 
 # region Engine Configuration Tests
-
 
 class TestEngineConfiguration:
     def test_engine_app_exists(self):
@@ -383,11 +342,9 @@ class TestEngineConfiguration:
     def test_graphql_schema_exists(self):
         assert engine.graphqlSchema is not None
 
-
 # endregion Engine Configuration Tests
 
 # region Integration Tests
-
 
 class TestIntegration:
     def test_store_initialization_and_semio_check(self, tempKitPath: pathlib.Path):
@@ -401,6 +358,5 @@ class TestIntegration:
         resultStore, resultOperation = engine.storeAndOperationFromCode(code)
         assert resultOperation["kind"] == "kit"
         assert resultOperation["kitUri"] == str(tempKitPath)
-
 
 # endregion Integration Tests

@@ -1,7 +1,8 @@
 #region 🔖Header
-// assets/repo/some/folder/file_invalid.cs
-//
-#region 🔖License
+
+// 💻semio/assets/repo/some/folder/file_invalid.cs
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -15,11 +16,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-#endregion 🔖License
-
-#region 🔖Specs
-#endregion 🔖Specs
 
 #endregion 🔖Header
 

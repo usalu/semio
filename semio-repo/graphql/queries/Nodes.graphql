@@ -23,7 +23,7 @@ query Nodes {
   contributors {
     id
   }
-  violations {
+  breachs {
     id
   }
 }

@@ -1,0 +1,69 @@
+{
+  "title": "Ensure streaming list commands and extend tests",
+  "status": "closed",
+  "prompt": "Make sure all list commands are streaming and extend tests to cover all commands in normal, json and markdown mode.",
+  "summary": "Verified all list commands (bundle, ticket, folder, file, section, definition, policy, contributor, project) use streaming (renderStream). Implemented comprehensive integration tests in main_commands_test.go covering all list commands in Human, JSON, and Markdown formats. Added ticket lifecycle tests (open, list, close) validation in all three formats. All tests passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/306"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      "kind": "",
+      "date": "2026-02-02T19:33:28.636156242Z",
+      "author": "usalu",
+      "system": "",
+      "client": "",
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
+      "prompt": "Make sure all list commands are streaming and extend tests to cover all commands in normal, json and markdown mode.",
+      "llm": "gemini-3-pro",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📄semio-repo/go/main_commands_test.go§TestLifecycleCommands",
+              "lines": {
+                "added": 110,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄semio-repo/go/main_commands_test.go§TestListCommands",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

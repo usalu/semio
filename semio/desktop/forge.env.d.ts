@@ -1,32 +1,30 @@
 
 // #region 🔖Header
 
-// 💻semio/desktop/forge.env.d.ts
+// [👤semio🖱️desktop💻forgeenvdts](semiorepo://file/SEMIO/DESKTOP/FORGE.ENV.D.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Type declarations for Electron Forge environment variables.
 
 // #endregion 🔖Header
+
+// #region 🔖Electron Fuses
+
+// [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://section/SEMIO/DESKTOP/FORGE.ENV.D.TS/ELECTRON-FUSES)
+// Type declarations for Electron Forge fuse options.
+// Consumers MUST use these enums for configuring fuse settings.
 
 declare module "@electron/fuses" {
   export enum FuseVersion {
@@ -41,3 +39,5 @@ declare module "@electron/fuses" {
     OnlyLoadAppFromAsar = "OnlyLoadAppFromAsar",
   }
 }
+
+// #endregion 🔖Electron Fuses

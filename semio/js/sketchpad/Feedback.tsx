@@ -5,16 +5,14 @@
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion Header
@@ -35,6 +33,9 @@ import { Canvas, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKi
 // #endregion Imports
 
 // #region Feedback App Plugin Registration
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖feedbackapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/FEEDBACK-APP-PLUGIN-REGISTRATION)
+// MUST register the Feedback app plugin with default state and event handlers.
 
 const createDefaultFeedbackState = (): FeedbackAppState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -129,6 +130,9 @@ if (typeof window !== "undefined") {
 
 // #region Triadic Hooks
 
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS)
+// MUST provide triadic hooks for accessing and mutating Feedback app state.
+
 const DEFAULT_FORM_DATA: FeedbackFormData = {
   kind: "bug",
   title: "",
@@ -138,6 +142,13 @@ const DEFAULT_FORM_DATA: FeedbackFormData = {
   email: undefined,
 };
 
+/**
+ * Triadic hook for feedback form data state.
+ *
+ * MUST return current form data, setter, and writability flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks🛠️usefeedbackformdata](semiorepo://definition/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS/USE-FEEDBACK-FORM-DATA)
+ **/
 export function useFeedbackFormData(): HookResult<FeedbackFormData> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.formData ?? DEFAULT_FORM_DATA);
@@ -152,6 +163,13 @@ export function useFeedbackFormData(): HookResult<FeedbackFormData> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+/**
+ * Triadic hook for feedback submission loading state.
+ *
+ * MUST return current submitting flag, setter, and writability flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks🛠️usefeedbackissubmitting](semiorepo://definition/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS/USE-FEEDBACK-IS-SUBMITTING)
+ **/
 export function useFeedbackIsSubmitting(): HookResult<boolean> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.isSubmitting ?? false);
@@ -166,6 +184,13 @@ export function useFeedbackIsSubmitting(): HookResult<boolean> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+/**
+ * Triadic hook for feedback submission completion state.
+ *
+ * MUST return current submitted flag, setter, and writability flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks🛠️usefeedbackissubmitted](semiorepo://definition/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS/USE-FEEDBACK-IS-SUBMITTED)
+ **/
 export function useFeedbackIsSubmitted(): HookResult<boolean> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.isSubmitted ?? false);
@@ -180,6 +205,13 @@ export function useFeedbackIsSubmitted(): HookResult<boolean> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+/**
+ * Triadic hook for feedback error state.
+ *
+ * MUST return current error message, setter, and writability flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks🛠️usefeedbackerror](semiorepo://definition/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS/USE-FEEDBACK-ERROR)
+ **/
 export function useFeedbackError(): HookResult<string | undefined> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.error);
@@ -194,6 +226,13 @@ export function useFeedbackError(): HookResult<string | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+/**
+ * Triadic hook for resetting the feedback form to defaults.
+ *
+ * MUST return reset callback and availability flag.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks🛠️usefeedbackreset](semiorepo://definition/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS/USE-FEEDBACK-RESET)
+ **/
 export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   const actor = useSketchpadActor();
   const canResetEvent = useMemo(() => ({ type: "FEEDBACK.RESET_FORM" as const }), []);
@@ -212,6 +251,9 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
 // #region Components
 
 // #region Form
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖components🔖form](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/COMPONENTS/FORM)
+// MUST render feedback form for submitting bug reports and ideas.
 
 const FeedbackForm: FC = () => {
   const { t } = useTranslation();
@@ -431,6 +473,9 @@ const FeedbackForm: FC = () => {
 
 // #region App
 
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/APP)
+// MUST integrate feedback app with toolbar and layout canvas.
+
 const FeedbackToolbar: FC = () => {
   const { t } = useTranslation();
   const submitLabel = useLabel("semio.sketchpad.app.feedback.form.submit");
@@ -490,6 +535,14 @@ export default Feedback;
 
 // #region Config
 
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/CONFIG)
+// MUST define app configuration for the Feedback app.
+
+/**
+ * Feedback app configuration with routing, component, and panel definitions.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻feedbacktsx🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/CONFIG/CONFIG)
+ **/
 export const config: AppConfig = {
   id: "feedback",
   component: Feedback,
@@ -502,6 +555,9 @@ export const config: AppConfig = {
 // #endregion Config
 
 // #region Global Footer Item
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖globalfooteritem](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/GLOBAL-FOOTER-ITEM)
+// MUST re-export the feedback icon for the footer item.
 
 export { FeedbackIcon };
 

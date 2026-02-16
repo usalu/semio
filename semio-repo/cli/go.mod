@@ -2,6 +2,10 @@ module github.com/usalu/semio/semio-repo/cli
 
 go 1.24.0
 
+require github.com/usalu/semio/semio-repo/go v0.0.0
+
+replace github.com/usalu/semio/semio-repo/go => ../go
+
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/blevesearch/bleve/v2 v2.5.7
