@@ -1,6 +1,8 @@
 // #region Header
 
-// js/semio/sketchpad/Kit.tsx
+// [👤semio📚js🗃️sketchpad💻kittsx](semiorepo://file/SEMIO/JS/SKETCHPAD/KIT.TSX)
+
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -15,45 +17,50 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Kit editor app for managing types, designs and qualities.
+
 // #endregion Header
 
 // #region Imports
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/IMPORTS)
+// Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
+
 import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import {
-  AddIcon,
-  AlertCircleIcon,
-  AwardIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  CodeIcon,
-  DiagramIcon,
-  DocumentIcon,
-  FileCodeIcon,
-  FileImageIcon,
-  FileJsonIcon,
-  FileSpreadsheetIcon,
-  FileTypeIcon,
-  FileVideoIcon,
-  FolderIcon,
-  HandIcon,
-  HashIcon,
-  IntersectIcon,
-  LayoutIcon,
-  LightbulbIcon,
-  MonitorIcon,
-  MoonIcon,
-  MousePointerIcon,
-  PortIcon,
-  RemoveIcon,
-  SceneIcon,
-  SortAscendingIcon,
-  SortDescendingIcon,
-  SunIcon,
-  TutorialIcon,
-  TypeIcon,
-  UserIcon,
+    AddIcon,
+    AlertCircleIcon,
+    AwardIcon,
+    CheckIcon,
+    ChevronDownIcon,
+    ChevronRightIcon,
+    CodeIcon,
+    DiagramIcon,
+    DocumentIcon,
+    FileCodeIcon,
+    FileImageIcon,
+    FileJsonIcon,
+    FileSpreadsheetIcon,
+    FileTypeIcon,
+    FileVideoIcon,
+    FolderIcon,
+    HandIcon,
+    HashIcon,
+    IntersectIcon,
+    LayoutIcon,
+    LightbulbIcon,
+    MonitorIcon,
+    MoonIcon,
+    MousePointerIcon,
+    PortIcon,
+    RemoveIcon,
+    SceneIcon,
+    SortAscendingIcon,
+    SortDescendingIcon,
+    SunIcon,
+    TutorialIcon,
+    TypeIcon,
+    UserIcon,
 } from "@semio/assets";
 import { useSelector } from "@xstate/react";
 import { formatDistanceToNow } from "date-fns";
@@ -67,138 +74,140 @@ import i18n, { useLabel } from "../i18n";
 import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
-  AppWindowConfig,
-  Canvas,
-  createDefaultKitAppState,
-  createKitDiagramForceSelector,
-  createKitExpandedRowsSelector,
-  createKitFilterSearchSelector,
-  createKitFullscreenSelector,
-  createKitHoverSelector,
-  createKitOthersSelector,
-  createKitSelectionSelector,
-  createKitSortColumnSelector,
-  createKitSortDirectionSelector,
-  createKitWindowLayoutSelector,
-  defaultPanelVisibility,
-  KitAppFullscreenWindow,
-  KitDiffAppStore as KitDiffStore,
-  KitScopeProvider,
-  LayoutCanvas,
-  registerKitAppStoreFactory as registerKitStoreFactory,
-  useAddFooterItem,
-  useAddPanelSection,
-  useAppType,
-  useDesignScope,
-  useDevice,
-  useExpertise,
-  useFocus,
-  useHasKit,
-  useIsInKitScope,
-  useIsMobile,
-  useKit,
-  useKitAppXState,
-  useKitCommands,
-  useKitScope,
-  useLanguage,
-  useMode,
-  useNavigation,
-  useOrigin,
-  useRemoveFooterItem,
-  useRemovePanelSection,
-  useSketchpadActor,
-  useSketchpadCommands,
-  useSketchpadStore,
-  useSyncDeep,
-  useTheme,
-  useTypeScope,
-  Window
+    AppWindowConfig,
+    Canvas,
+    createDefaultKitAppState,
+    createKitDiagramForceSelector,
+    createKitExpandedRowsSelector,
+    createKitFilterSearchSelector,
+    createKitFullscreenSelector,
+    createKitHoverSelector,
+    createKitOthersSelector,
+    createKitSelectionSelector,
+    createKitSortColumnSelector,
+    createKitSortDirectionSelector,
+    createKitWindowLayoutSelector,
+    defaultPanelVisibility,
+    KitAppFullscreenWindow,
+    KitDiffAppStore as KitDiffStore,
+    KitScopeProvider,
+    LayoutCanvas,
+    registerKitAppStoreFactory as registerKitStoreFactory,
+    useAddFooterItem,
+    useAddPanelSection,
+    useAppType,
+    useDesignScope,
+    useDevice,
+    useExpertise,
+    useFocus,
+    useHasKit,
+    useIsInKitScope,
+    useIsMobile,
+    useKit,
+    useKitAppXState,
+    useKitCommands,
+    useKitScope,
+    useLanguage,
+    useMode,
+    useNavigation,
+    useOrigin,
+    useRemoveFooterItem,
+    useRemovePanelSection,
+    useSketchpadActor,
+    useSketchpadCommands,
+    useSketchpadStore,
+    useSyncDeep,
+    useTheme,
+    useTypeScope,
+    Window
 } from "./Sketchpad";
 import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "./elements";
 import {
-  Action,
-  applyNodeChanges,
-  BaseEdge,
-  Button,
-  Diagram,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-  forceX,
-  forceY,
-  getBezierPath,
-  Handle,
-  Input,
-  NotFound,
-  Position,
-  ReactFlowProvider,
-  Scrollable,
-  Select,
-  SelectContent,
-  SelectionMode,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Slider,
-  Table,
-  TableAvatar,
-  Textarea,
-  Toggle,
-  ToggleGroup,
-  ToolbarDivider,
-  ToolbarGroup,
-  Transaction,
-  TransactionProvider,
-  TreeContent,
-  TreeItem,
-  useInternalNode,
-  useReactFlow
+    Action,
+    applyNodeChanges,
+    BaseEdge,
+    Button,
+    Diagram,
+    forceCollide,
+    forceLink,
+    forceManyBody,
+    forceSimulation,
+    forceX,
+    forceY,
+    getBezierPath,
+    Handle,
+    Input,
+    NotFound,
+    Position,
+    ReactFlowProvider,
+    Scrollable,
+    Select,
+    SelectContent,
+    SelectionMode,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    Slider,
+    Table,
+    TableAvatar,
+    Textarea,
+    Toggle,
+    ToggleGroup,
+    ToolbarDivider,
+    ToolbarGroup,
+    Transaction,
+    TransactionProvider,
+    Tree,
+    TreeContent,
+    TreeItem,
+    TreeStateProvider,
+    useInternalNode,
+    useReactFlow
 } from "./elements";
 import {
-  addToSelection,
-  clearSelectionDimension,
-  getKitDiagramNodeFrameForKind,
-  getKitDiagramShapeStrategy,
-  KIT_DIAGRAM_COLLIDE_RADIUS,
-  KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY,
-  kitDiagramInferSnapSide,
-  kitDiagramToAbsolutePoint,
-  kitDiagramVector,
-  normalizeKitDiagramFrame,
-  removeFromSelection,
-  replaceSelectionDimension,
-  resolveKitDiagramAnchorPair,
-  resolveKitDiagramProximityAnchor,
-  toggleInSelection,
-  type KitDiagramNodeKind,
-  type KitDiagramShapeRenderPayload,
-  type SelectionValue,
-} from "./kitSelectionHelpers";
+    addToSelection,
+    clearSelectionDimension,
+    getKitDiagramNodeFrameForKind,
+    getKitDiagramShapeStrategy,
+    KIT_DIAGRAM_COLLIDE_RADIUS,
+    KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY,
+    kitDiagramInferSnapSide,
+    kitDiagramToAbsolutePoint,
+    kitDiagramVector,
+    normalizeKitDiagramFrame,
+    removeFromSelection,
+    replaceSelectionDimension,
+    resolveKitDiagramAnchorPair,
+    resolveKitDiagramProximityAnchor,
+    toggleInSelection,
+    type KitDiagramNodeKind,
+    type KitDiagramShapeRenderPayload,
+    type SelectionValue,
+} from "./kitSelectionHelper";
 import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import {
-  AppConfig,
-  AppPlugin,
-  applySelectionComposition,
-  conditionalHookResult,
-  createField,
-  createPanelDefinition,
-  createSingleKeyTransactionHandlers,
-  Expertise,
-  Field,
-  isSelectionToolKind,
-  Mode,
-  PanelKind,
-  parseWindowLayout,
-  registerAppPlugin,
-  registerEventHandler,
-  registerKitAppHooks,
-  registerSingleKeyAppEventHandlers,
-  resolveSelectionCompositionKind,
-  stringifyWindowLayout,
-  Theme,
-  toSelectionToolKind,
-  ToolKind,
+    AppConfig,
+    applySelectionComposition,
+    AppPlugin,
+    conditionalHookResult,
+    createField,
+    createPanelDefinition,
+    createSingleKeyTransactionHandlers,
+    Expertise,
+    Field,
+    isSelectionToolKind,
+    Mode,
+    PanelKind,
+    parseWindowLayout,
+    registerAppPlugin,
+    registerEventHandler,
+    registerKitAppHooks,
+    registerSingleKeyAppEventHandlers,
+    resolveSelectionCompositionKind,
+    stringifyWindowLayout,
+    Theme,
+    ToolKind,
+    toSelectionToolKind,
 } from "./shared";
 
 // #endregion Imports
@@ -372,6 +381,8 @@ export interface KitAppSelectionDiff {
 export enum KitAppWindowKind {
   Table = "table",
   Diagram = "diagram",
+  Settings = "settings",
+  Chat = "chat",
 }
 /**
  * Presence state for a Kit app user including cursor and camera.
@@ -462,7 +473,17 @@ export interface KitAppDiff {
   diagramForce?: Partial<DiagramForceSettings>;
   activeTool?: ToolKind;
 }
+/**
+ * Edit record extending KitDiffAppEdit with Kit app selection diff.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappedit](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-EDIT)
+ **/
 export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
+/**
+ * Complete runtime state for a Kit app instance.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🛠️kitappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-STATE)
+ **/
 export interface KitAppState {
   fullscreenWindow: KitAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -709,18 +730,12 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     if (!yPanelVisibility) {
       return {
         toolbar: false,
-        workbench: false,
         details: false,
-        chat: false,
-        settings: false,
       };
     }
     return {
       toolbar: yPanelVisibility.get("toolbar") ?? false,
-      workbench: yPanelVisibility.get("workbench") ?? false,
       details: yPanelVisibility.get("details") ?? false,
-      chat: yPanelVisibility.get("chat") ?? false,
-      settings: yPanelVisibility.get("settings") ?? false,
     };
   }
 
@@ -1166,7 +1181,7 @@ const kitAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: () => ({
-      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: true, details: false },
       selection: undefined,
       hover: undefined,
       fullscreenWindow: KitAppFullscreenWindow.None,
@@ -1332,7 +1347,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   const kitGuid = kitScope?.guid ?? id?.kit;
 
   const defaultState: KitAppState = {
-    panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+    panelVisibility: { toolbar: true, details: false },
     selection: undefined,
     hover: undefined,
     activeTool: ToolKind.SELECTION_NORMAL,
@@ -1879,10 +1894,9 @@ export function useKitAppClearSelection(): ActionHookResult<[]> {
 
 // #region Selection Helper Hooks
 
-/**
- * Hook factory for dimension-specific selection operations.
- * Creates add/remove/toggle/replace hooks for a specific selection dimension.
- */
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS)
+// Selection helper hooks MUST provide entity-specific add, remove, toggle, select-single, select-all, and clear operations.
+
 function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensionKey: K) {
   function useAdd(): ActionHookResult<[value: SelectionValue<K>]> {
     const [selection, setSelection] = useKitAppSelection();
@@ -3110,9 +3124,16 @@ export function useKitAppClearAuthors(): ActionHookResult<[]> {
 
 // #region Global Selection Hooks
 
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖globalselectionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/GLOBAL-SELECTION-HOOKS)
+// Global selection hooks MUST provide select-all across all artifact kinds.
+
 /**
- * Selects all artifacts in all dimensions (respects current filter).
- */
+ * Returns an action to select all entities across all artifact kinds.
+ *
+ * MUST return a callback that adds all artifact GUIDs to selection.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks🔖selectionhelperhooks🔖globalselectionhooks🛠️usekitappselectall](semiorepo://definition/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS/SELECTION-HELPER-HOOKS/GLOBAL-SELECTION-HOOKS/USE-KIT-APP-SELECT-ALL)
+ **/
 export function useKitAppSelectAll(): ActionHookResult<[]> {
   const kit = useKit() as Kit | undefined;
   const [, setSelection] = useKitAppSelection();
@@ -3306,7 +3327,7 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
-  const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_PANEL" as const, kitGuid, panel: "workbench" as keyof PanelVisibility }), [kitGuid]);
+  const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_PANEL" as const, kitGuid, panel: "toolbar" as keyof PanelVisibility }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
     if (!canAct) return undefined;
@@ -4258,7 +4279,11 @@ export const commands = {
 
 // #region Canvas
 
+// [🔖semio/js/sketchpad/Kit.tsx#Canvas](semiorepo://section/semio/js/sketchpad/Kit.tsx/CANVAS)
+
 // #region Windows
+
+// [🔖semio/js/sketchpad/Kit.tsx#Windows](semiorepo://section/semio/js/sketchpad/Kit.tsx/WINDOWS)
 
 // #region Table
 
@@ -4957,26 +4982,6 @@ const AppContent: FC = () => {
       removeSection("details", "semio.sketchpad.app.kit.properties");
     };
   }, [addSection, removeSection, appType, selection]);
-
-  useEffect(() => {
-    if (appType !== "kit") return;
-    addSection("settings", {
-      id: "semio.sketchpad.app.kit.settings",
-      specificity: 10,
-      order: 0,
-      content: () => <KitEditorSettingsContent />,
-    });
-    addSection("settings", {
-      id: "semio.sketchpad.settings",
-      specificity: 0,
-      order: 0,
-      content: () => <SketchpadSettingsContent />,
-    });
-    return () => {
-      removeSection("settings", "semio.sketchpad.app.kit.settings");
-      removeSection("settings", "semio.sketchpad.settings");
-    };
-  }, [appType, addSection, removeSection]);
 
   useEffect(() => {
     if (!selectParam) return;
@@ -7826,7 +7831,7 @@ const MultiWindowApp: FC = () => {
       },
       content: () => (
         <KitScopeProvider guid={kitGuid}>
-            <KitToolbarSelection />
+          <KitToolbarSelection />
         </KitScopeProvider>
       ),
     });
@@ -7897,6 +7902,18 @@ const MultiWindowApp: FC = () => {
                 title: "table",
                 componentState: {},
               },
+              {
+                type: "component",
+                componentName: KitAppWindowKind.Settings,
+                title: "settings",
+                componentState: {},
+              },
+              {
+                type: "component",
+                componentName: KitAppWindowKind.Chat,
+                title: "chat",
+                componentState: {},
+              },
             ],
           },
           {
@@ -7931,6 +7948,33 @@ const MultiWindowApp: FC = () => {
           id: KitAppWindowKind.Diagram,
           label: "diagram",
           component: () => <DiagramWindow />,
+        },
+        {
+          id: KitAppWindowKind.Settings,
+          label: "settings",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <KitEditorSettingsContent />
+                <SketchpadSettingsContent />
+              </Tree>
+            </TreeStateProvider>
+          ),
+        },
+        {
+          id: KitAppWindowKind.Chat,
+          label: "chat",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <TreeItem>
+                  <TreeContent>
+                    <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
+                  </TreeContent>
+                </TreeItem>
+              </Tree>
+            </TreeStateProvider>
+          ),
         },
       ],
       defaultLayout,
@@ -8102,7 +8146,11 @@ export const KitToolbarSelection: FC = () => {
 
 // #region Panels
 
+// [🔖semio/js/sketchpad/Kit.tsx#Panels](semiorepo://section/semio/js/sketchpad/Kit.tsx/PANELS)
+
 // #region Right
+
+// [🔖semio/js/sketchpad/Kit.tsx#Right](semiorepo://section/semio/js/sketchpad/Kit.tsx/RIGHT)
 
 // #region Details
 
@@ -9055,8 +9103,6 @@ export const config: AppConfig = {
   getPanels: (): PanelDefinition[] => [
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

@@ -141,43 +141,6 @@ async function expectFullyInViewport(locator: Locator, page: Page, xRange: [numb
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
 }
 
-async function openSettingsPanel(page: Page) {
-  const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
-  const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
-
-  if (!isRightPanelVisible) {
-    const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
-    const hasToggle = await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false);
-    if (hasToggle) {
-      await rightPanelToggle.click();
-      await page.waitForTimeout(500);
-    }
-  }
-
-  await expect(rightSidePanel)
-    .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
-}
-
-async function getSettingsSections(page: Page): Promise<string[]> {
-  const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
-
-  try {
-    await expect(rightSidePanel).toBeVisible({ timeout: 15000 });
-  } catch {
-    console.log("Warning: Right sidepanel not visible after 15s, returning empty sections");
-    return [];
-  }
-
-  const sections = await rightSidePanel.locator('[role="button"][id^="semio.sketchpad"]').all();
-  const sectionIds: string[] = [];
-  for (const section of sections) {
-    const id = await section.getAttribute("id");
-    if (id) sectionIds.push(id);
-  }
-  return sectionIds;
-}
-
 async function openDetailsPanel(page: Page) {
   const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
   const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
@@ -216,15 +179,9 @@ async function getDetailsSections(page: Page): Promise<string[]> {
 
 const PANEL_GROUPS: Record<string, string> = {
   leftSidePanel: "leftSidePanel",
-  workbench: "leftSidePanel",
   tools: "leftSidePanel",
-  hudPanel: "hudPanel",
-  hud: "hudPanel",
-  stats: "hudPanel",
   rightSidePanel: "rightSidePanel",
   details: "rightSidePanel",
-  chat: "rightSidePanel",
-  settings: "rightSidePanel",
 };
 
 async function openPanel(page: Page, panelKey: string): Promise<boolean> {
@@ -605,6 +562,28 @@ async function getDesignPieces(page: Page, designGuid?: string): Promise<Array<{
   }, designGuid);
 }
 
+async function getDesignPieceCenters(page: Page): Promise<Record<string, { u: number; v: number } | null>> {
+  return await page.evaluate(() => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return {};
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return {};
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return {};
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+    if (!design) return {};
+    const result: Record<string, { u: number; v: number } | null> = {};
+    for (const piece of design.pieces ?? []) {
+      result[piece.guid] = piece.center ?? null;
+    }
+    return result;
+  });
+}
+
 async function togglePanelAndVerify(page: Page, panelToggleId: string, panelKey: string, appName: string): Promise<boolean> {
   const toggle = page.locator(`[id="${panelToggleId}"]`);
   const isToggleVisible = await toggle.isVisible({ timeout: 5000 }).catch(() => false);
@@ -676,6 +655,13 @@ async function verifyToggleWorks(page: Page, toggleId: string, panelKey: string,
   }
 }
 
+async function verifyToggleIconVisible(page: Page, toggleId: string, appName: string): Promise<boolean> {
+  const iconLocator = page.locator(`[id="${toggleId}"] svg, [id="${toggleId}"] img, [id="${toggleId}"] [class*="icon"], [id="${toggleId}"] > *`).first();
+  const isVisible = await iconLocator.isVisible({ timeout: 5000 }).catch(() => false);
+  console.log(`[${appName}] Toggle ${toggleId} icon visible: ${isVisible}`);
+  return isVisible;
+}
+
 test.describe("sketchpad", () => {
   test("Home", async ({ page }) => {
     test.setTimeout(180000);
@@ -702,15 +688,7 @@ test.describe("sketchpad", () => {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Home");
     }
 
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Home] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Home");
-    }
-
-    console.log(`[Home] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Home] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
     // #endregion 🔖Panel Toggles
 
     // #region 🔖Toolbar and Filter Toggles
@@ -907,15 +885,7 @@ test.describe("sketchpad", () => {
       }
     }
 
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Kit] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Kit");
-    }
-
-    console.log(`[Kit] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Kit] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
     console.log("[Kit] Checking for diagram nodes...");
     const diagramContainer = page.locator('[data-testid="kit-diagram"]');
@@ -1536,14 +1506,7 @@ test.describe("sketchpad", () => {
     if (hasRightSidePanel) {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Type");
     }
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Type] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Type");
-    }
-    console.log(`[Type] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Type] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
     console.log("[Type] Testing toolbar zone structure");
     await page.waitForTimeout(2000);
@@ -1558,6 +1521,10 @@ test.describe("sketchpad", () => {
     const hasTypeSelectionGroup = await typeSelectionGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Type] Selection group toggle visible: ${hasTypeSelectionGroup}`);
     expect(hasTypeSelectionGroup).toBe(true);
+    const typeLassoGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.lasso"]');
+    const hasTypeLassoGroup = await typeLassoGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Lasso group toggle visible: ${hasTypeLassoGroup}`);
+    expect(hasTypeLassoGroup).toBe(false);
 
     const typeCreateGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.create"]');
     const hasTypeCreateGroup = await typeCreateGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
@@ -1574,19 +1541,16 @@ test.describe("sketchpad", () => {
     }
     await expect(typeSettingsZone).toBeVisible({ timeout: 3000 });
 
-    const typeNormalToggle = page.locator('[id="selection-normal"]');
-    const hasTypeNormal = await typeNormalToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Type] Normal selection toggle visible: ${hasTypeNormal}`);
-    const typeAdditiveToggle = page.locator('[id="selection-additive"]');
+    const typeAdditiveToggle = page.locator('[id="semio.sketchpad.app.type.tools.select.additive"]');
     const hasTypeAdditive = await typeAdditiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Type] Additive selection toggle visible: ${hasTypeAdditive}`);
-    const typeSubtractiveToggle = page.locator('[id="selection-subtractive"]');
+    const typeSubtractiveToggle = page.locator('[id="semio.sketchpad.app.type.tools.select.subtractive"]');
     const hasTypeSubtractive = await typeSubtractiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Type] Subtractive selection toggle visible: ${hasTypeSubtractive}`);
-    const typeIntersectToggle = page.locator('[id="selection-intersect"]');
+    const typeIntersectToggle = page.locator('[id="semio.sketchpad.app.type.tools.select.intersect"]');
     const hasTypeIntersect = await typeIntersectToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Type] Intersect selection toggle visible: ${hasTypeIntersect}`);
-    expect(hasTypeNormal || hasTypeAdditive || hasTypeSubtractive || hasTypeIntersect).toBe(true);
+    expect(hasTypeAdditive || hasTypeSubtractive || hasTypeIntersect).toBe(true);
 
     if (hasTypeAdditive) {
       console.log("[Type] Testing additive toggle activation");
@@ -1595,13 +1559,8 @@ test.describe("sketchpad", () => {
       const additiveState = await typeAdditiveToggle.getAttribute("data-state").catch(() => null) ?? await typeAdditiveToggle.getAttribute("aria-checked").catch(() => null);
       console.log(`[Type] Additive state after click: ${additiveState}`);
       expect(additiveState === "on" || additiveState === "true").toBe(true);
-      if (hasTypeNormal) {
-        await typeNormalToggle.click();
-        await page.waitForTimeout(300);
-      } else {
-        await typeAdditiveToggle.click();
-        await page.waitForTimeout(300);
-      }
+      await typeAdditiveToggle.click();
+      await page.waitForTimeout(300);
     }
 
     console.log("[Type] Activating create group to verify connector tool");
@@ -1613,7 +1572,7 @@ test.describe("sketchpad", () => {
     }
     await expect(typeSettingsZone).toBeVisible({ timeout: 3000 });
 
-    const connectorToolToggle = page.locator(`[id="${"connector"}"]`);
+    const connectorToolToggle = page.locator('[id="semio.sketchpad.app.type.tools.connector"]');
     const hasConnectorTool = await connectorToolToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Type] Connector tool toggle visible: ${hasConnectorTool}`);
 
@@ -1639,8 +1598,8 @@ test.describe("sketchpad", () => {
     }
 
     console.log("[Type] Testing group mutual exclusivity - selection settings hidden when create active");
-    const normalStillVisible = await typeNormalToggle.isVisible({ timeout: 1000 }).catch(() => false);
-    expect(normalStillVisible).toBe(false);
+    const additiveStillVisible = await typeAdditiveToggle.isVisible({ timeout: 1000 }).catch(() => false);
+    expect(additiveStillVisible).toBe(false);
 
     console.log("[Type] Switching back to selection group");
     await typeSelectionGroupToggle.click();
@@ -1649,7 +1608,7 @@ test.describe("sketchpad", () => {
       await typeSelectionGroupToggle.click();
       await page.waitForTimeout(500);
     }
-    const selectionSettingsBack = await typeNormalToggle.isVisible({ timeout: 3000 }).catch(() => false) || await typeAdditiveToggle.isVisible({ timeout: 1000 }).catch(() => false);
+    const selectionSettingsBack = await typeAdditiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Type] Selection settings visible after switch back: ${selectionSettingsBack}`);
 
     console.log("[Type] Toolbar and tools test complete");
@@ -1705,10 +1664,6 @@ test.describe("sketchpad", () => {
       const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
       await expect(leftToggle).toBeVisible({ timeout: 5000 });
       console.log("[Design Test] Left toggle is visible");
-
-      const hudToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-      await expect(hudToggle).toBeVisible({ timeout: 5000 });
-      console.log("[Design Test] HUD toggle is visible");
 
       const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
       await expect(rightToggle).toBeVisible({ timeout: 5000 });
@@ -1869,6 +1824,23 @@ test.describe("sketchpad", () => {
         console.log(`[Design] Left sidepanel has types/pieces section: ${hasTypesSection}`);
       }
     }
+
+    const workbenchWindowEl = page.locator('#workbench').first();
+    const isWorkbenchVisible = await workbenchWindowEl.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Design] Workbench window visible: ${isWorkbenchVisible}`);
+    if (isWorkbenchVisible) {
+      const addTypePieceButton = workbenchWindowEl.locator('[id="semio.sketchpad.app.design.panel.workbench.types.addPiece"]').first();
+      const hasAddTypePieceButton = await addTypePieceButton.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Design] Type add-piece action visible: ${hasAddTypePieceButton}`);
+      if (hasAddTypePieceButton) {
+        const pieceCountBeforeAdd = await diagramContainer.locator(".react-flow__node").count();
+        await addTypePieceButton.click();
+        await page.waitForTimeout(500);
+        const pieceCountAfterAdd = await diagramContainer.locator(".react-flow__node").count();
+        console.log(`[Design] Piece count after type + click: before=${pieceCountBeforeAdd}, after=${pieceCountAfterAdd}`);
+        expect(pieceCountAfterAdd).toBeGreaterThan(pieceCountBeforeAdd);
+      }
+    }
     const rightSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasRightSidePanel = await rightSidePanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Design] Right sidepanel toggle visible: ${hasRightSidePanel}`);
@@ -1876,14 +1848,7 @@ test.describe("sketchpad", () => {
     if (hasRightSidePanel) {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Design");
     }
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Design] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Design");
-    }
-    console.log(`[Design] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Design] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
     console.log("[Design] Testing toolbar zone structure");
     const designToolbar = page.locator('[id="semio.sketchpad.toolbar"]');
@@ -1925,7 +1890,9 @@ test.describe("sketchpad", () => {
     const designHandToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.navigation.hand"]');
     const hasDesignHand = await designHandToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Design] Hand toggle visible: ${hasDesignHand}`);
-    expect(hasDesignAdditive || hasDesignSubtractive || hasDesignIntersect).toBe(true);
+
+
+    expect(hasDesignAdditive || hasDesignSubtractive || hasDesignIntersect || hasDesignRectangular || hasDesignHand).toBe(true);
 
     if (hasDesignAdditive) {
       console.log("[Design] Testing additive toggle activation");
@@ -1975,7 +1942,6 @@ test.describe("sketchpad", () => {
     }
 
     if (hasDesignHand) {
-      console.log("[Design] Testing hand toggle activation and deactivation");
       await designHandToggle.dispatchEvent("click");
       await page.waitForTimeout(300);
       const handState = await designHandToggle.getAttribute("data-state").catch(() => null) ?? await designHandToggle.getAttribute("aria-checked").catch(() => null);
@@ -1993,6 +1959,132 @@ test.describe("sketchpad", () => {
     expect(designSettingsHidden).toBe(true);
 
     console.log("[Design] Toolbar and selection tools test complete");
+
+    // #region 🔖Filters
+    console.log("[Design] Testing design filter toggles");
+    const designFilterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasDesignFilterGroup = await designFilterGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Filter group toggle visible: ${hasDesignFilterGroup}`);
+    expect(hasDesignFilterGroup).toBe(true);
+    const designFilterSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    const filterSettingsInitiallyVisible = await designFilterSettingsZone.isVisible({ timeout: 1000 }).catch(() => false);
+    if (!filterSettingsInitiallyVisible) {
+      await designFilterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    if (!(await designFilterSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await designFilterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(designFilterSettingsZone).toBeVisible({ timeout: 3000 });
+    const designPiecesToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showPieces"]');
+    const designConnectionsToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showConnections"]');
+    const designPortsToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showPorts"]');
+    const hasDesignPiecesToggle = await designPiecesToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasDesignConnectionsToggle = await designConnectionsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasDesignPortsToggle = await designPortsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Pieces toggle visible: ${hasDesignPiecesToggle}, Connections toggle visible: ${hasDesignConnectionsToggle}, Ports toggle visible: ${hasDesignPortsToggle}`);
+    expect(hasDesignPiecesToggle).toBe(true);
+    expect(hasDesignConnectionsToggle).toBe(true);
+    expect(hasDesignPortsToggle).toBe(true);
+    const piecesInitialState = await designPiecesToggle.getAttribute("data-state");
+    const connectionsInitialState = await designConnectionsToggle.getAttribute("data-state");
+    const portsInitialState = await designPortsToggle.getAttribute("data-state");
+    console.log(`[Design] Initial filter states - pieces: ${piecesInitialState}, connections: ${connectionsInitialState}, ports: ${portsInitialState}`);
+    expect(piecesInitialState).toBe("on");
+    expect(connectionsInitialState).toBe("on");
+    expect(portsInitialState).toBe("on");
+    const nodeCountBeforeFilter = await diagramContainer.locator(".react-flow__node").count();
+    const edgeCountBeforeFilter = await diagramContainer.locator(".react-flow__edge").count();
+    const portCountBeforeFilter = await diagramContainer.locator(".react-flow__handle").count();
+    console.log(`[Design] Before filter: nodes=${nodeCountBeforeFilter}, edges=${edgeCountBeforeFilter}`);
+    expect(nodeCountBeforeFilter).toBeGreaterThan(0);
+    expect(edgeCountBeforeFilter).toBeGreaterThan(0);
+    expect(portCountBeforeFilter).toBeGreaterThan(0);
+    console.log("[Design] Testing pieces filter toggle off");
+    await designPiecesToggle.click();
+    await page.waitForTimeout(1000);
+    const piecesStateAfterOff = await designPiecesToggle.getAttribute("data-state");
+    console.log(`[Design] Pieces state after toggle off: ${piecesStateAfterOff}`);
+    expect(piecesStateAfterOff).toBe("off");
+    expect(page.url()).toContain("filter=connections");
+    expect(page.url()).toContain("filter=ports");
+    expect(page.url()).not.toContain("filter=pieces");
+    const visibleNodesAfterPiecesOff = await diagramContainer.locator(".react-flow__node").count();
+    console.log(`[Design] Visible nodes after pieces off: ${visibleNodesAfterPiecesOff}`);
+    expect(visibleNodesAfterPiecesOff).toBeLessThanOrEqual(nodeCountBeforeFilter);
+    console.log("[Design] Testing pieces filter toggle back on");
+    await designPiecesToggle.click();
+    await page.waitForTimeout(1000);
+    const piecesStateAfterOn = await designPiecesToggle.getAttribute("data-state");
+    console.log(`[Design] Pieces state after toggle on: ${piecesStateAfterOn}`);
+    expect(piecesStateAfterOn).toBe("on");
+    const visibleNodesAfterPiecesOn = await diagramContainer.locator(".react-flow__node").count();
+    console.log(`[Design] Nodes after pieces back on: ${visibleNodesAfterPiecesOn}`);
+    expect(visibleNodesAfterPiecesOn).toBe(nodeCountBeforeFilter);
+    console.log("[Design] Testing connections filter toggle off");
+    await designConnectionsToggle.click();
+    await page.waitForTimeout(1000);
+    const connectionsStateAfterOff = await designConnectionsToggle.getAttribute("data-state");
+    console.log(`[Design] Connections state after toggle off: ${connectionsStateAfterOff}`);
+    expect(connectionsStateAfterOff).toBe("off");
+    expect(page.url()).toContain("filter=pieces");
+    expect(page.url()).toContain("filter=ports");
+    expect(page.url()).not.toContain("filter=connections");
+    const visibleEdgesAfterConnectionsOff = await diagramContainer.locator(".react-flow__edge").count();
+    console.log(`[Design] Visible edges after connections off: ${visibleEdgesAfterConnectionsOff}`);
+    expect(visibleEdgesAfterConnectionsOff).toBeLessThanOrEqual(edgeCountBeforeFilter);
+    console.log("[Design] Testing connections filter toggle back on");
+    await designConnectionsToggle.click();
+    await page.waitForTimeout(1000);
+    const connectionsStateAfterOn = await designConnectionsToggle.getAttribute("data-state");
+    console.log(`[Design] Connections state after toggle on: ${connectionsStateAfterOn}`);
+    expect(connectionsStateAfterOn).toBe("on");
+    const visibleEdgesAfterConnectionsOn = await diagramContainer.locator(".react-flow__edge").count();
+    console.log(`[Design] Visible edges after connections back on: ${visibleEdgesAfterConnectionsOn}`);
+    expect(visibleEdgesAfterConnectionsOn).toBe(edgeCountBeforeFilter);
+    console.log("[Design] Testing ports filter toggle off");
+    await designPortsToggle.click();
+    await page.waitForTimeout(1000);
+    const portsStateAfterOff = await designPortsToggle.getAttribute("data-state");
+    console.log(`[Design] Ports state after toggle off: ${portsStateAfterOff}`);
+    expect(portsStateAfterOff).toBe("off");
+    expect(page.url()).toContain("filter=pieces");
+    expect(page.url()).toContain("filter=connections");
+    expect(page.url()).not.toContain("filter=ports");
+    const visiblePortsAfterPortsOff = await diagramContainer.locator(".react-flow__handle").count();
+    console.log(`[Design] Visible ports after ports off: ${visiblePortsAfterPortsOff}`);
+    expect(visiblePortsAfterPortsOff).toBeLessThanOrEqual(portCountBeforeFilter);
+    console.log("[Design] Testing ports filter toggle back on");
+    await designPortsToggle.click();
+    await page.waitForTimeout(1000);
+    const portsStateAfterOn = await designPortsToggle.getAttribute("data-state");
+    console.log(`[Design] Ports state after toggle on: ${portsStateAfterOn}`);
+    expect(portsStateAfterOn).toBe("on");
+    const visiblePortsAfterPortsOn = await diagramContainer.locator(".react-flow__handle").count();
+    console.log(`[Design] Visible ports after ports back on: ${visiblePortsAfterPortsOn}`);
+    expect(visiblePortsAfterPortsOn).toBe(portCountBeforeFilter);
+    expect(page.url()).not.toContain("filter=");
+    console.log("[Design] Testing filter state via DesignFilterContext");
+    const filterState = await page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      if (!store) return null;
+      const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+      if (kitGuids.length === 0) return null;
+      const url = window.location.hash;
+      const hasFilterParams = url.includes("filter=");
+      return { hasFilterParams };
+    });
+    console.log(`[Design] Filter state check: ${JSON.stringify(filterState)}`);
+    expect(filterState?.hasFilterParams).toBe(false);
+    console.log("[Design] Testing deactivate filter group hides filter settings");
+    await designFilterGroupToggle.click();
+    await page.waitForTimeout(500);
+    const filterSettingsHidden = !(await designFilterSettingsZone.isVisible({ timeout: 1000 }).catch(() => false));
+    console.log(`[Design] Filter settings zone hidden after deactivation: ${filterSettingsHidden}`);
+    expect(filterSettingsHidden).toBe(true);
+    console.log("[Design] Filter toggle tests complete");
+    // #endregion 🔖Filters
 
     console.log("[Design Test] Verifying design properties details section");
     await openDetailsPanel(page);
@@ -2126,7 +2218,21 @@ test.describe("sketchpad", () => {
 
         const selectionPieces = afterClickDesignAppState?.designApp?.selection?.pieces || [];
         console.log("[Design] Selection pieces:", selectionPieces);
-        expect(selectionPieces.length).toBeGreaterThanOrEqual(0);
+        await openDetailsPanel(page);
+        const detailsTabButton = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+        if (await detailsTabButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await detailsTabButton.click();
+          await page.waitForTimeout(400);
+        }
+        const selectedPieceSection = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.piece.properties"]').first();
+        const selectedPieceIdInput = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.piece.id"]').first();
+        const hasSelectedPieceSection = await selectedPieceSection.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasSelectedPieceIdInput = await selectedPieceIdInput.isVisible({ timeout: 5000 }).catch(() => false);
+        console.log("[Design] Selected piece details visible:", hasSelectedPieceSection || hasSelectedPieceIdInput);
+        expect(hasSelectedPieceSection || hasSelectedPieceIdInput).toBe(true);
+        const hasGeneralDesignNameInput = await page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.design.name"]').first().isVisible({ timeout: 1000 }).catch(() => false);
+        console.log("[Design] General design details visible during piece selection:", hasGeneralDesignNameInput);
+        expect(hasGeneralDesignNameInput).toBe(false);
       }
     }
     console.log("[Design] Browser errors after selection click:", errors.length, "total errors");
@@ -2183,7 +2289,7 @@ test.describe("sketchpad", () => {
       }
     };
 
-    const allPanels = ["workbench", "toolbar", "details", "chat", "settings"];
+    const allPanels = ["toolbar", "details"];
     const independenceResults: Record<string, { toggled: boolean; independent: boolean }> = {};
 
     for (const panelKey of allPanels) {
@@ -2211,30 +2317,17 @@ test.describe("sketchpad", () => {
       console.log("[Design] Scene canvas not visible, skipping drag and drop tests");
     }
 
-    const leftSidePanelToggleDnD = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
-    const hasLeftSidePanelToggleDnD = await leftSidePanelToggleDnD.isVisible({ timeout: 10000 }).catch(() => false);
-    if (hasLeftSidePanelToggleDnD) {
-      await leftSidePanelToggleDnD.click();
-      await page.waitForTimeout(1000);
-    }
-    console.log("[Design] Left sidepanel toggle clicked for drag and drop");
+    const workbenchWindowDnD = page.locator('#workbench').first();
+    const isWorkbenchWindowVisibleDnD = await workbenchWindowDnD.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Design] Workbench window visible: ${isWorkbenchWindowVisibleDnD}`);
 
-    const leftSidePanelDnD = page.locator('[data-panel="leftSidePanel"]').first();
-    const isLeftSidePanelVisibleDnD = await leftSidePanelDnD.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Design] Left sidepanel visible: ${isLeftSidePanelVisibleDnD}`);
-
-    const workbenchPanelElDnD = isLeftSidePanelVisibleDnD ? leftSidePanelDnD : page.locator('[data-panel="workbench"]').first();
-    if (!isLeftSidePanelVisibleDnD) {
-      console.log("[Design] Falling back to workbench panel for drag and drop");
-    }
-
-    const typeAvatarsDnD = workbenchPanelElDnD.locator('[data-slot="avatar"]');
+    const typeAvatarsDnD = workbenchWindowDnD.locator('[data-slot="avatar"]');
     let typeCountDnD = await typeAvatarsDnD.count();
-    console.log(`[Design] Found ${typeCountDnD} avatars in workbench panel`);
+    console.log(`[Design] Found ${typeCountDnD} avatars in workbench window`);
 
     if (typeCountDnD === 0) {
       console.log("[Design] No avatars found initially. Expanding collapsed sections...");
-      const collapsedSectionsDnD = workbenchPanelElDnD.locator('[data-state="closed"]');
+      const collapsedSectionsDnD = workbenchWindowDnD.locator('[data-state="closed"]');
       const collapsedCountDnD = await collapsedSectionsDnD.count();
       console.log(`[Design] Found ${collapsedCountDnD} closed sections`);
 
@@ -2310,28 +2403,6 @@ test.describe("sketchpad", () => {
     console.log("[Design] Testing diagram node drag to update piece center");
 
     if (hasDiagram) {
-      const getPieceCenters = async (): Promise<Record<string, { u: number; v: number } | null>> => {
-        return await page.evaluate(() => {
-          const store = (window as any).__SEMIO_STORE__;
-          if (!store) return {};
-          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
-          if (kitGuids.length === 0) return {};
-          const kitStore = store.kit(kitGuids[0]);
-          if (!kitStore) return {};
-          const kit = kitStore.snapshot();
-          const url = window.location.pathname;
-          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
-          const designGuid = designGuidMatch?.[1];
-          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
-          if (!design) return {};
-          const result: Record<string, { u: number; v: number } | null> = {};
-          for (const piece of design.pieces ?? []) {
-            result[piece.guid] = piece.center ?? null;
-          }
-          return result;
-        });
-      };
-
       const pieceNodesDrag = diagramContainer.locator(".react-flow__node");
       const pieceNodeCountDrag = await pieceNodesDrag.count();
       console.log(`[Design] Found ${pieceNodeCountDrag} piece nodes for drag test`);
@@ -2351,10 +2422,21 @@ test.describe("sketchpad", () => {
         if (pieceNodeBoxDrag) {
           const pieceGuidDrag = await firstPieceNodeDrag.getAttribute("data-id");
           console.log(`[Design] Testing drag on piece node: ${pieceGuidDrag}`);
+          const nodePositionsBeforeDrag = await page.evaluate(() => {
+            const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
+            const positions: Record<string, { x: number; y: number }> = {};
+            for (const node of nodes) {
+              const id = node.getAttribute("data-id");
+              if (!id) continue;
+              const rect = node.getBoundingClientRect();
+              positions[id] = { x: rect.x, y: rect.y };
+            }
+            return positions;
+          });
 
-          const centersBeforeDrag = await getPieceCenters();
-          const pieceGuidFromData = pieceGuidDrag?.replace(/^piece-\d+-/, "") ?? "";
-          const centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
+          const centersBeforeDrag = await getDesignPieceCenters(page);
+          let pieceGuidFromData = pieceGuidDrag?.replace(/^piece-\d+-/, "") ?? "";
+          let centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
           console.log(`[Design] Piece center before drag: u=${centerBeforeDrag?.u}, v=${centerBeforeDrag?.v}`);
 
           const nodeCenterXDrag = pieceNodeBoxDrag.x + pieceNodeBoxDrag.width / 2;
@@ -2363,6 +2445,7 @@ test.describe("sketchpad", () => {
           const dragOffsetY = 50;
           const targetXDrag = nodeCenterXDrag + dragOffsetX;
           const targetYDrag = nodeCenterYDrag + dragOffsetY;
+          const warningCountBeforeFirstDrag = warnings.length;
 
           console.log(`[Design] Dragging piece node from (${nodeCenterXDrag}, ${nodeCenterYDrag}) to (${targetXDrag}, ${targetYDrag})`);
 
@@ -2375,32 +2458,116 @@ test.describe("sketchpad", () => {
           await page.mouse.move(targetXDrag, targetYDrag, { steps: 5 });
           await page.waitForTimeout(100);
           await page.mouse.up();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(2000);
 
-          console.log("[Design] Drag DEBUG warnings:", warnings.filter(w => w.includes("onNodeDrag")).slice(-10));
-
-          const centersAfterDrag = await getPieceCenters();
-          const centerAfterDrag = centersAfterDrag[pieceGuidFromData];
-          console.log(`[Design] Piece center after drag: u=${centerAfterDrag?.u}, v=${centerAfterDrag?.v}`);
-
-          if (centerBeforeDrag && centerAfterDrag) {
-            const ICON_WIDTH = 50;
-            const expectedDeltaU = dragOffsetX / ICON_WIDTH;
-            const expectedDeltaV = -dragOffsetY / ICON_WIDTH;
-
-            const actualDeltaU = centerAfterDrag.u - centerBeforeDrag.u;
-            const actualDeltaV = centerAfterDrag.v - centerBeforeDrag.v;
-
-            console.log(`[Design] Expected delta: u=${expectedDeltaU}, v=${expectedDeltaV}`);
-            console.log(`[Design] Actual delta: u=${actualDeltaU}, v=${actualDeltaV}`);
-
-            const centerChanged = Math.abs(actualDeltaU) > 0.1 || Math.abs(actualDeltaV) > 0.1;
-            console.log(`[Design] Piece center changed after drag: ${centerChanged}`);
-
-            expect(centerChanged).toBe(true);
-          } else {
-            console.log("[Design] Could not compare centers - centerBeforeDrag or centerAfterDrag is null/undefined");
+          const dragWarningsAfterFirstDrag = warnings.slice(warningCountBeforeFirstDrag).filter((w) => w.includes("onNodeDrag"));
+          console.log("[Design] Drag DEBUG warnings:", dragWarningsAfterFirstDrag.slice(-10));
+          const dragStartMessage = dragWarningsAfterFirstDrag.find((warning) => warning.includes("onNodeDragStart CALLED: node.id="));
+          const draggedNodeIdMatch = dragStartMessage?.match(/node\.id=([^\s]+)/);
+          const draggedNodeId = draggedNodeIdMatch?.[1] ?? pieceGuidDrag ?? "";
+          const draggedPieceGuidFromEvent = draggedNodeId.replace(/^piece-\d+-/, "");
+          if (draggedPieceGuidFromEvent) {
+            pieceGuidFromData = draggedPieceGuidFromEvent;
           }
+          centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
+          console.log(`[Design] Actual dragged node from event: ${draggedNodeId}`);
+          console.log(`[Design] Actual dragged piece center before drag: u=${centerBeforeDrag?.u}, v=${centerBeforeDrag?.v}`);
+
+          const draggedNodeLocator = page.locator(`.react-flow__node[data-id="${draggedNodeId}"]`).first();
+          const pieceNodeBoxAfterDrag = await draggedNodeLocator.boundingBox();
+          const beforeDraggedNodePosition = nodePositionsBeforeDrag[draggedNodeId];
+          const nodeMovedInViewport = pieceNodeBoxAfterDrag && beforeDraggedNodePosition && (Math.abs(pieceNodeBoxAfterDrag.x - beforeDraggedNodePosition.x) > 5 || Math.abs(pieceNodeBoxAfterDrag.y - beforeDraggedNodePosition.y) > 5);
+          const firstViewportDeltaX = pieceNodeBoxAfterDrag && beforeDraggedNodePosition ? pieceNodeBoxAfterDrag.x - beforeDraggedNodePosition.x : 0;
+          const firstViewportDeltaY = pieceNodeBoxAfterDrag && beforeDraggedNodePosition ? pieceNodeBoxAfterDrag.y - beforeDraggedNodePosition.y : 0;
+          console.log(`[Design] Piece node moved in viewport: ${nodeMovedInViewport}`);
+          console.log(`[Design] First drag viewport delta: dx=${firstViewportDeltaX}, dy=${firstViewportDeltaY}`);
+          const centersAfterDrag = await getDesignPieceCenters(page);
+          const centerAfterDrag = centersAfterDrag[pieceGuidFromData];
+          const pieceCenterChanged = centerBeforeDrag && centerAfterDrag
+            ? Math.abs(centerAfterDrag.u - centerBeforeDrag.u) > TOLERANCE || Math.abs(centerAfterDrag.v - centerBeforeDrag.v) > TOLERANCE
+            : centerBeforeDrag !== centerAfterDrag;
+          const dragUpdateMessage = dragWarningsAfterFirstDrag.find((warning) => warning.includes("onNodeDragStop updating"));
+          const dragUpdateDispatched = !!dragUpdateMessage;
+          const firstUpdatedPieceIdMatch = dragUpdateMessage?.match(/"id":"([^"]+)"/);
+          const firstUpdatedPieceId = firstUpdatedPieceIdMatch?.[1] ?? pieceGuidFromData;
+          const firstDragUpdateUMatch = dragUpdateMessage?.match(/"u":(-?\d+(?:\.\d+)?)/);
+          const firstDragUpdateVMatch = dragUpdateMessage?.match(/"v":(-?\d+(?:\.\d+)?)/);
+          const firstDragUpdateU = firstDragUpdateUMatch ? parseFloat(firstDragUpdateUMatch[1]) : null;
+          const firstDragUpdateV = firstDragUpdateVMatch ? parseFloat(firstDragUpdateVMatch[1]) : null;
+          const persistedCenterBeforeDrag = centersBeforeDrag[pieceGuidFromData];
+          const persistedCenterAfterDrag = centersAfterDrag[pieceGuidFromData];
+          const centerDeltaU = persistedCenterBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.u - persistedCenterBeforeDrag.u : 0;
+          const centerDeltaV = persistedCenterBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.v - persistedCenterBeforeDrag.v : 0;
+          console.log(`[Design] Piece center after drag: u=${centerAfterDrag?.u}, v=${centerAfterDrag?.v}`);
+          console.log(`[Design] Persisted piece center after drag (${firstUpdatedPieceId}): u=${persistedCenterAfterDrag?.u}, v=${persistedCenterAfterDrag?.v}`);
+          console.log(`[Design] Piece center changed: ${pieceCenterChanged}`);
+          console.log(`[Design] Piece center delta after right/down drag: du=${centerDeltaU}, dv=${centerDeltaV}`);
+          console.log(`[Design] First drag update payload center: u=${firstDragUpdateU}, v=${firstDragUpdateV}`);
+          console.log(`[Design] Piece update dispatched during drag: ${dragUpdateDispatched}`);
+          expect(nodeMovedInViewport).toBe(true);
+          expect(Math.abs(firstViewportDeltaX)).toBeGreaterThan(10);
+          expect(Math.abs(firstViewportDeltaY)).toBeGreaterThan(5);
+          expect(dragUpdateDispatched).toBe(true);
+          expect(firstDragUpdateU).not.toBeNull();
+          expect(firstDragUpdateV).not.toBeNull();
+          expect(firstDragUpdateU).toBeGreaterThan(0.01);
+          expect(firstDragUpdateV).toBeLessThan(-0.01);
+
+          const pieceNodeBoxSecondDrag = await draggedNodeLocator.boundingBox();
+          expect(pieceNodeBoxSecondDrag).not.toBeNull();
+          const secondCenterXDrag = pieceNodeBoxSecondDrag!.x + pieceNodeBoxSecondDrag!.width / 2;
+          const secondCenterYDrag = pieceNodeBoxSecondDrag!.y + pieceNodeBoxSecondDrag!.height / 2;
+          const secondDragOffsetX = -70;
+          const secondDragOffsetY = -35;
+          const secondTargetXDrag = secondCenterXDrag + secondDragOffsetX;
+          const secondTargetYDrag = secondCenterYDrag + secondDragOffsetY;
+
+          console.log(`[Design] Dragging piece node back from (${secondCenterXDrag}, ${secondCenterYDrag}) to (${secondTargetXDrag}, ${secondTargetYDrag})`);
+          const warningCountBeforeSecondDrag = warnings.length;
+          await page.mouse.move(secondCenterXDrag, secondCenterYDrag);
+          await page.waitForTimeout(50);
+          await page.mouse.down();
+          await page.waitForTimeout(50);
+          await page.mouse.move(secondTargetXDrag, secondTargetYDrag, { steps: 10 });
+          await page.waitForTimeout(100);
+          await page.mouse.up();
+          await page.waitForTimeout(2000);
+          const pieceNodeBoxAfterSecondDrag = await draggedNodeLocator.boundingBox();
+          const secondNodeMovedInViewport = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag && (Math.abs(pieceNodeBoxAfterSecondDrag.x - pieceNodeBoxAfterDrag.x) > 5 || Math.abs(pieceNodeBoxAfterSecondDrag.y - pieceNodeBoxAfterDrag.y) > 5);
+          const secondViewportDeltaX = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag ? pieceNodeBoxAfterSecondDrag.x - pieceNodeBoxAfterDrag.x : 0;
+          const secondViewportDeltaY = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag ? pieceNodeBoxAfterSecondDrag.y - pieceNodeBoxAfterDrag.y : 0;
+          console.log(`[Design] Piece node moved in viewport on second drag: ${secondNodeMovedInViewport}`);
+          console.log(`[Design] Second drag viewport delta: dx=${secondViewportDeltaX}, dy=${secondViewportDeltaY}`);
+
+          const centersAfterSecondDrag = await getDesignPieceCenters(page);
+          const centerAfterSecondDrag = centersAfterSecondDrag[pieceGuidFromData];
+          const secondDeltaU = centerAfterDrag && centerAfterSecondDrag ? centerAfterSecondDrag.u - centerAfterDrag.u : 0;
+          const secondDeltaV = centerAfterDrag && centerAfterSecondDrag ? centerAfterSecondDrag.v - centerAfterDrag.v : 0;
+          const dragWarningsAfterSecondDrag = warnings.slice(warningCountBeforeSecondDrag).filter((w) => w.includes("onNodeDrag"));
+          const secondDragUpdateMessage = dragWarningsAfterSecondDrag.find((warning) => warning.includes("onNodeDragStop updating"));
+          const secondUpdatedPieceIdMatch = secondDragUpdateMessage?.match(/"id":"([^"]+)"/);
+          const secondUpdatedPieceId = secondUpdatedPieceIdMatch?.[1] ?? firstUpdatedPieceId;
+          const secondDragUpdateDispatched = !!secondDragUpdateMessage;
+          const secondDragUpdateUMatch = secondDragUpdateMessage?.match(/"u":(-?\d+(?:\.\d+)?)/);
+          const secondDragUpdateVMatch = secondDragUpdateMessage?.match(/"v":(-?\d+(?:\.\d+)?)/);
+          const secondDragUpdateU = secondDragUpdateUMatch ? parseFloat(secondDragUpdateUMatch[1]) : null;
+          const secondDragUpdateV = secondDragUpdateVMatch ? parseFloat(secondDragUpdateVMatch[1]) : null;
+          const persistedCenterAfterSecondDrag = centersAfterSecondDrag[pieceGuidFromData];
+          const secondPersistedDeltaU = persistedCenterAfterDrag && persistedCenterAfterSecondDrag ? persistedCenterAfterSecondDrag.u - persistedCenterAfterDrag.u : 0;
+          const secondPersistedDeltaV = persistedCenterAfterDrag && persistedCenterAfterSecondDrag ? persistedCenterAfterSecondDrag.v - persistedCenterAfterDrag.v : 0;
+          console.log(`[Design] Piece center after left/up drag: u=${centerAfterSecondDrag?.u}, v=${centerAfterSecondDrag?.v}`);
+          console.log(`[Design] Piece center delta after left/up drag: du=${secondDeltaU}, dv=${secondDeltaV}`);
+          console.log(`[Design] Persisted piece center after left/up drag (${secondUpdatedPieceId}): u=${persistedCenterAfterSecondDrag?.u}, v=${persistedCenterAfterSecondDrag?.v}`);
+          console.log(`[Design] Persisted piece center delta after left/up drag: du=${secondPersistedDeltaU}, dv=${secondPersistedDeltaV}`);
+          console.log(`[Design] Second drag update payload center: u=${secondDragUpdateU}, v=${secondDragUpdateV}`);
+          console.log(`[Design] Second drag update dispatched: ${secondDragUpdateDispatched}`);
+          expect(secondDragUpdateU).not.toBeNull();
+          expect(secondDragUpdateV).not.toBeNull();
+          expect(secondDragUpdateDispatched).toBe(true);
+          expect(secondDragUpdateU).toBeLessThan(firstDragUpdateU);
+          expect(secondDragUpdateV).toBeGreaterThan(firstDragUpdateV);
+          expect(secondDeltaU).toBeLessThan(-0.01);
+          expect(secondDeltaV).toBeGreaterThan(0.01);
         } else {
           console.log("[Design] Could not get bounding box for first piece node");
         }
@@ -2460,14 +2627,7 @@ test.describe("sketchpad", () => {
     if (hasRightSidePanel) {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Docs");
     }
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Docs] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Docs");
-    }
-    console.log(`[Docs] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Docs] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
     await page.goto("/docs/manuals/sketchpad");
     await page.waitForLoadState("networkidle");
@@ -2705,16 +2865,14 @@ test.describe("sketchpad", () => {
     await page.waitForTimeout(2000);
 
     const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
-    const hudToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
     const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
 
     const hasLeft = await leftToggle.isVisible({ timeout: 5000 }).catch(() => false);
-    const hasHud = await hudToggle.isVisible({ timeout: 3000 }).catch(() => false);
     const hasRight = await rightToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Panels] Home toggles: left=${hasLeft}, hud=${hasHud}, right=${hasRight}`);
+    console.log(`[Panels] Home toggles: left=${hasLeft}, right=${hasRight}`);
 
     const ensureAllClosed = async () => {
-      for (const [key, toggle] of [["leftSidePanel", leftToggle], ["hudPanel", hudToggle], ["rightSidePanel", rightToggle]] as const) {
+      for (const [key, toggle] of [["leftSidePanel", leftToggle], ["rightSidePanel", rightToggle]] as const) {
         const panel = page.locator(`[data-panel="${key}"]`).first();
         if (await panel.isVisible().catch(() => false)) {
           const t = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${key}"]`);
@@ -2727,7 +2885,7 @@ test.describe("sketchpad", () => {
     };
 
     const ensureAllOpen = async () => {
-      for (const key of ["leftSidePanel", "hudPanel", "rightSidePanel"] as const) {
+      for (const key of ["leftSidePanel", "rightSidePanel"] as const) {
         const panel = page.locator(`[data-panel="${key}"]`).first();
         if (!(await panel.isVisible().catch(() => false))) {
           const t = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${key}"]`);
@@ -2741,24 +2899,22 @@ test.describe("sketchpad", () => {
 
     const getPanelVisibleState = async () => ({
       left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
-      hud: await page.locator('[data-panel="hudPanel"]').first().isVisible().catch(() => false),
       right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
     });
 
     await ensureAllClosed();
     await page.waitForTimeout(300);
     let state = await getPanelVisibleState();
-    console.log(`[Panels] Home all closed: left=${state.left}, hud=${state.hud}, right=${state.right}`);
+    console.log(`[Panels] Home all closed: left=${state.left}, right=${state.right}`);
     if (hasLeft) expect(state.left).toBe(false);
-    if (hasHud) expect(state.hud).toBe(false);
     if (hasRight) expect(state.right).toBe(false);
 
     await ensureAllOpen();
     await page.waitForTimeout(500);
     state = await getPanelVisibleState();
-    console.log(`[Panels] Home all open: left=${state.left}, hud=${state.hud}, right=${state.right}`);
-    const availableToggles = [hasLeft, hasHud, hasRight].filter(Boolean).length;
-    const homeOpenCount = [state.left, state.hud, state.right].filter(Boolean).length;
+    console.log(`[Panels] Home all open: left=${state.left}, right=${state.right}`);
+    const availableToggles = [hasLeft, hasRight].filter(Boolean).length;
+    const homeOpenCount = [state.left, state.right].filter(Boolean).length;
     console.log(`[Panels] Home open panel count: ${homeOpenCount} / ${availableToggles} available`);
     expect(homeOpenCount).toBe(availableToggles);
 
@@ -2791,23 +2947,9 @@ test.describe("sketchpad", () => {
       await page.waitForTimeout(300);
     }
     state = await getPanelVisibleState();
-    console.log(`[Panels] Home left+right: left=${state.left}, hud=${state.hud}, right=${state.right}`);
+    console.log(`[Panels] Home left+right: left=${state.left}, right=${state.right}`);
     if (hasLeft) expect(state.left).toBe(true);
     if (hasRight) expect(state.right).toBe(true);
-    if (hasHud) expect(state.hud).toBe(false);
-
-    console.log("[Panels] Home: Testing hud-only combination");
-    await ensureAllClosed();
-    await page.waitForTimeout(300);
-    if (hasHud) {
-      await hudToggle.click();
-      await page.waitForTimeout(300);
-    }
-    state = await getPanelVisibleState();
-    console.log(`[Panels] Home hud-only: left=${state.left}, hud=${state.hud}, right=${state.right}`);
-    if (hasLeft) expect(state.left).toBe(false);
-    if (hasHud) expect(state.hud).toBe(true);
-    if (hasRight) expect(state.right).toBe(false);
 
     await ensureAllClosed();
     await page.waitForTimeout(300);
@@ -2849,7 +2991,6 @@ test.describe("sketchpad", () => {
 
     const kitState = async () => ({
       left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
-      hud: await page.locator('[data-panel="hudPanel"]').first().isVisible().catch(() => false),
       right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
     });
 
@@ -2860,9 +3001,9 @@ test.describe("sketchpad", () => {
     await ensureAllOpen();
     await page.waitForTimeout(500);
     let ks = await kitState();
-    console.log(`[Panels] Kit all open: left=${ks.left}, hud=${ks.hud}, right=${ks.right}`);
-    const kitAvailableToggles = [hasLeft, hasHud, hasRight].filter(Boolean).length;
-    const kitOpenCount = [ks.left, ks.hud, ks.right].filter(Boolean).length;
+    console.log(`[Panels] Kit all open: left=${ks.left}, right=${ks.right}`);
+    const kitAvailableToggles = [hasLeft, hasRight].filter(Boolean).length;
+    const kitOpenCount = [ks.left, ks.right].filter(Boolean).length;
     console.log(`[Panels] Kit open panel count: ${kitOpenCount} / ${kitAvailableToggles} available`);
     expect(kitOpenCount).toBeGreaterThanOrEqual(Math.min(kitAvailableToggles, 1));
 
@@ -2896,7 +3037,7 @@ test.describe("sketchpad", () => {
       const settingsVisible = await kitSettingsZone.isVisible({ timeout: 3000 }).catch(() => false);
       console.log(`[Panels] Kit selection group settings visible: ${settingsVisible}`);
       ks = await kitState();
-      console.log(`[Panels] Kit panels after selection group: left=${ks.left}, hud=${ks.hud}, right=${ks.right}`);
+      console.log(`[Panels] Kit panels after selection group: left=${ks.left}, right=${ks.right}`);
       expect(kitOpenCount).toBeGreaterThanOrEqual(Math.min(kitAvailableToggles, 1));
     }
 
@@ -2927,7 +3068,7 @@ test.describe("sketchpad", () => {
       }
     }
     ks = await kitState();
-    console.log(`[Panels] Kit after rapid toggle: left=${ks.left}, hud=${ks.hud}, right=${ks.right}`);
+    console.log(`[Panels] Kit after rapid toggle: left=${ks.left}, right=${ks.right}`);
 
     await ensureAllClosed();
     console.log("[Panels] Kit panel combinations complete");
@@ -2945,7 +3086,6 @@ test.describe("sketchpad", () => {
 
     const designState = async () => ({
       left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
-      hud: await page.locator('[data-panel="hudPanel"]').first().isVisible().catch(() => false),
       right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
     });
 
@@ -2956,8 +3096,8 @@ test.describe("sketchpad", () => {
     await ensureAllOpen();
     await page.waitForTimeout(500);
     let ds = await designState();
-    console.log(`[Panels] Design all open: left=${ds.left}, hud=${ds.hud}, right=${ds.right}`);
-    const designOpenCount = [ds.left, ds.hud, ds.right].filter(Boolean).length;
+    console.log(`[Panels] Design all open: left=${ds.left}, right=${ds.right}`);
+    const designOpenCount = [ds.left, ds.right].filter(Boolean).length;
     console.log(`[Panels] Design open count: ${designOpenCount}`);
     expect(designOpenCount).toBeGreaterThanOrEqual(1);
 
@@ -2977,17 +3117,10 @@ test.describe("sketchpad", () => {
     console.log(`[Panels] Design canvas visible with all panels: ${hasCanvas}`);
 
     if (ds.left) {
-      console.log("[Panels] Design: Checking left panel (workbench) content");
+      console.log("[Panels] Design: Checking left panel (tools) content");
       const leftPanel = page.locator('[data-panel="leftSidePanel"]').first();
       const leftContent = await leftPanel.locator('[data-slot="avatar"], [role="treeitem"], button').count().catch(() => 0);
       console.log(`[Panels] Design left panel content items: ${leftContent}`);
-    }
-
-    if (ds.hud) {
-      console.log("[Panels] Design: Checking HUD panel content with all panels visible");
-      const hudPanel = page.locator('[data-panel="hudPanel"]').first();
-      const hudContent = await hudPanel.locator('button, [role="treeitem"], [role="button"]').count().catch(() => 0);
-      console.log(`[Panels] Design HUD panel content items: ${hudContent}`);
     }
 
     if (ds.right) {
@@ -3033,13 +3166,13 @@ test.describe("sketchpad", () => {
       }
     }
 
-    console.log("[Panels] Design: Testing close right, keep left+hud");
+    console.log("[Panels] Design: Testing close right, keep left");
     if (ds.right) {
       await rightToggle.click();
       await page.waitForTimeout(300);
     }
     ds = await designState();
-    console.log(`[Panels] Design left+hud: left=${ds.left}, hud=${ds.hud}, right=${ds.right}`);
+    console.log(`[Panels] Design left only: left=${ds.left}, right=${ds.right}`);
     expect(ds.right).toBe(false);
     if (hasDiagramDesign) {
       const pieceCountAfter = await designDiagram.locator(".react-flow__node").count();
@@ -3051,7 +3184,7 @@ test.describe("sketchpad", () => {
     await rightToggle.click();
     await page.waitForTimeout(300);
     ds = await designState();
-    console.log(`[Panels] Design after reopen right: left=${ds.left}, hud=${ds.hud}, right=${ds.right}`);
+    console.log(`[Panels] Design after reopen right: left=${ds.left}, right=${ds.right}`);
 
     await ensureAllClosed();
     console.log("[Panels] Design panel combinations complete");
@@ -3068,7 +3201,6 @@ test.describe("sketchpad", () => {
 
     const typeState = async () => ({
       left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
-      hud: await page.locator('[data-panel="hudPanel"]').first().isVisible().catch(() => false),
       right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
     });
 
@@ -3079,8 +3211,8 @@ test.describe("sketchpad", () => {
     await ensureAllOpen();
     await page.waitForTimeout(500);
     let ts = await typeState();
-    console.log(`[Panels] Type all open: left=${ts.left}, hud=${ts.hud}, right=${ts.right}`);
-    const typeOpenCount = [ts.left, ts.hud, ts.right].filter(Boolean).length;
+    console.log(`[Panels] Type all open: left=${ts.left}, right=${ts.right}`);
+    const typeOpenCount = [ts.left, ts.right].filter(Boolean).length;
     console.log(`[Panels] Type open count: ${typeOpenCount}`);
     expect(typeOpenCount).toBeGreaterThanOrEqual(1);
 
@@ -3111,7 +3243,7 @@ test.describe("sketchpad", () => {
       const selSettingsVisible = await typeSettingsZone.isVisible({ timeout: 3000 }).catch(() => false);
       console.log(`[Panels] Type selection settings visible with panels: ${selSettingsVisible}`);
       ts = await typeState();
-      console.log(`[Panels] Type panels during selection: left=${ts.left}, hud=${ts.hud}, right=${ts.right}`);
+      console.log(`[Panels] Type panels during selection: left=${ts.left}, right=${ts.right}`);
 
       await typeCreateGroup.click();
       await page.waitForTimeout(500);
@@ -3122,8 +3254,8 @@ test.describe("sketchpad", () => {
       const createSettingsVisible = await typeSettingsZone.isVisible({ timeout: 3000 }).catch(() => false);
       console.log(`[Panels] Type create settings visible with panels: ${createSettingsVisible}`);
       ts = await typeState();
-      console.log(`[Panels] Type panels during create: left=${ts.left}, hud=${ts.hud}, right=${ts.right}`);
-      expect([ts.left, ts.hud, ts.right].filter(Boolean).length).toBeGreaterThanOrEqual(1);
+      console.log(`[Panels] Type panels during create: left=${ts.left}, right=${ts.right}`);
+      expect([ts.left, ts.right].filter(Boolean).length).toBeGreaterThanOrEqual(1);
     }
 
     console.log("[Panels] Type: Testing panel toggle while toolbar group active");
@@ -3161,16 +3293,17 @@ test.describe("sketchpad", () => {
     await ensureAllOpen();
     await page.waitForTimeout(500);
     const homeState = await getPanelVisibleState();
-    console.log(`[Panels] Home panels before navigation: left=${homeState.left}, hud=${homeState.hud}, right=${homeState.right}`);
+    console.log(`[Panels] Home panels before navigation: left=${homeState.left}, right=${homeState.right}`);
 
     const zipPath = path.resolve(__dirname, "../assets/semio/metabolism.zip");
     const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
     await expect(fileInput).toBeAttached({ timeout: 10000 });
     await fileInput.setInputFiles(zipPath);
     await fileInput.evaluate((el) => el.dispatchEvent(new Event("change", { bubbles: true })));
-    await page.waitForTimeout(10000);
+    await page.waitForTimeout(15000);
     const metabolismText = page.getByText("Metabolism", { exact: true }).first();
     await metabolismText.waitFor({ state: "visible", timeout: 60000 });
+    await page.waitForTimeout(1000);
     const tableRow = page.locator("tr[data-row-id]").filter({ hasText: "Metabolism" }).first();
     const isRowVisible = await tableRow.isVisible().catch(() => false);
     if (isRowVisible) {
@@ -3178,16 +3311,16 @@ test.describe("sketchpad", () => {
     } else {
       await metabolismText.dblclick({ force: true });
     }
-    await page.waitForURL(/.*kits\/.+/, { timeout: 30000 });
+    await page.waitForURL(/.*kits\/.+/, { timeout: 60000 });
     await page.waitForTimeout(3000);
 
     const kitAfterNavState = await getPanelVisibleState();
-    console.log(`[Panels] Kit panels after navigation: left=${kitAfterNavState.left}, hud=${kitAfterNavState.hud}, right=${kitAfterNavState.right}`);
+    console.log(`[Panels] Kit panels after navigation: left=${kitAfterNavState.left}, right=${kitAfterNavState.right}`);
 
     await page.goBack();
     await page.waitForTimeout(3000);
     const homeAfterBackState = await getPanelVisibleState();
-    console.log(`[Panels] Home panels after going back: left=${homeAfterBackState.left}, hud=${homeAfterBackState.hud}, right=${homeAfterBackState.right}`);
+    console.log(`[Panels] Home panels after going back: left=${homeAfterBackState.left}, right=${homeAfterBackState.right}`);
 
     console.log("[Panels] Cross-app panel persistence test complete");
     // #endregion 🔖Cross-App Panel Persistence
@@ -3209,8 +3342,7 @@ test.describe("sketchpad", () => {
 
     const homeLeftTabs = await getTabCountPerPanel("leftSidePanel");
     const homeRightTabs = await getTabCountPerPanel("rightSidePanel");
-    const homeHudTabs = await getTabCountPerPanel("hudPanel");
-    console.log(`[Panels] Home tab counts: left=${homeLeftTabs}, right=${homeRightTabs}, hud=${homeHudTabs}`);
+    console.log(`[Panels] Home tab counts: left=${homeLeftTabs}, right=${homeRightTabs}`);
 
     await ensureAllClosed();
     console.log("[Panels] Panel content verification complete");
@@ -3265,28 +3397,28 @@ test.describe("sketchpad", () => {
     await page.waitForTimeout(300);
 
     const beforeShortcut = await getPanelVisibleState();
-    console.log(`[Panels] Before keyboard shortcut: left=${beforeShortcut.left}, hud=${beforeShortcut.hud}, right=${beforeShortcut.right}`);
+    console.log(`[Panels] Before keyboard shortcut: left=${beforeShortcut.left}, right=${beforeShortcut.right}`);
 
     await page.keyboard.press("Control+j");
     await page.waitForTimeout(500);
     const afterCtrlJ = await getPanelVisibleState();
-    console.log(`[Panels] After Ctrl+J: left=${afterCtrlJ.left}, hud=${afterCtrlJ.hud}, right=${afterCtrlJ.right}`);
+    console.log(`[Panels] After Ctrl+J: left=${afterCtrlJ.left}, right=${afterCtrlJ.right}`);
     const ctrlJToggled = afterCtrlJ.left !== beforeShortcut.left;
     console.log(`[Panels] Ctrl+J toggled left panel: ${ctrlJToggled}`);
 
     await page.keyboard.press("Control+l");
     await page.waitForTimeout(500);
     const afterCtrlL = await getPanelVisibleState();
-    console.log(`[Panels] After Ctrl+L: left=${afterCtrlL.left}, hud=${afterCtrlL.hud}, right=${afterCtrlL.right}`);
+    console.log(`[Panels] After Ctrl+L: left=${afterCtrlL.left}, right=${afterCtrlL.right}`);
     const ctrlLToggled = afterCtrlL.right !== afterCtrlJ.right;
     console.log(`[Panels] Ctrl+L toggled right panel: ${ctrlLToggled}`);
 
     await page.keyboard.press("Control+k");
     await page.waitForTimeout(500);
     const afterCtrlK = await getPanelVisibleState();
-    console.log(`[Panels] After Ctrl+K: left=${afterCtrlK.left}, hud=${afterCtrlK.hud}, right=${afterCtrlK.right}`);
-    const ctrlKToggled = afterCtrlK.hud !== afterCtrlL.hud;
-    console.log(`[Panels] Ctrl+K toggled HUD panel: ${ctrlKToggled}`);
+    console.log(`[Panels] After Ctrl+K: left=${afterCtrlK.left}, right=${afterCtrlK.right}`);
+    const ctrlKToggled = false;
+    console.log(`[Panels] Ctrl+K toggled HUD panel: ${ctrlKToggled} (HUD panel removed)`);
 
     await ensureAllClosed();
     console.log("[Panels] Keyboard shortcuts test complete");

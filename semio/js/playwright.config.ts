@@ -43,8 +43,8 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        channel: "chrome",
         launchOptions: {
+          executablePath: "/usr/bin/google-chrome-stable",
           args: [
             "--disable-gpu",
             "--disable-dev-shm-usage",

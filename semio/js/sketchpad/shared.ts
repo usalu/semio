@@ -19,7 +19,7 @@
 
 // #region Imports
 
-import { ChatIcon, CodeIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
+import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
 import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
@@ -258,7 +258,6 @@ export const EMPTY_STRING_ARRAY: readonly string[] = Object.freeze([]);
  **/
 export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
   toolbar: true,
-  workbench: false,
   details: false,
   chat: false,
   settings: false,
@@ -412,11 +411,11 @@ export type AppKind = string;
 export type Device = "desktop" | "tablet" | MobileDevice;
 
 /**
- * Union of all panel identifier strings including side and HUD panels.
+ * Union of all panel identifier strings including side panels.
  *
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️panelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/PANEL-KEY)
  **/
-export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "console" | "chat" | "settings" | "toolbar" | "leftSidePanel" | "rightSidePanel" | "hudPanel";
+export type PanelKey = "details" | "tools" | "stats" | "console" | "toolbar" | "leftSidePanel" | "rightSidePanel";
 
 /**
  * Union of left and right side panel keys.
@@ -424,13 +423,6 @@ export type PanelKey = "details" | "workbench" | "tools" | "hud" | "stats" | "co
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️sidepanelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/SIDE-PANEL-KEY)
  **/
 export type SidePanelKey = "leftSidePanel" | "rightSidePanel";
-
-/**
- * The HUD panel key literal type.
- *
- *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️hudpanelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/HUD-PANEL-KEY)
- **/
-export type HudPanelKey = "hudPanel";
 
 /**
  * A string alias for a hotkey path identifier.
@@ -645,6 +637,9 @@ export enum WindowKind {
   SCENE = "scene",
   DIAGRAM = "diagram",
   CUSTOM = "custom",
+  SETTINGS = "settings",
+  CHAT = "chat",
+  WORKBENCH = "workbench",
 }
 
 /**
@@ -660,19 +655,15 @@ export enum PanelPosition {
 }
 
 /**
- * Panel kinds: workbench, tools, toolbar, HUD, stats, details, chat, settings, params, or console.
+ * Panel kinds: tools, toolbar, stats, details, params, or console.
  *
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️panelkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/PANEL-KIND)
  **/
 export enum PanelKind {
-  WORKBENCH = "workbench",
   TOOLS = "tools",
   TOOLBAR = "toolbar",
-  HUD = "hud",
   STATS = "stats",
   DETAILS = "details",
-  CHAT = "chat",
-  SETTINGS = "settings",
   PARAMS = "params",
   CONSOLE = "console",
 }
@@ -832,31 +823,16 @@ export interface PanelKindConfig {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🪨panelkindconfigs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-KIND-CONFIGS)
  **/
 export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
-  [PanelKind.WORKBENCH]: {
-    icon: WorkbenchIcon,
-    position: PanelPosition.LEFT,
-    group: "workbench",
-    isGroupable: true,
-    hotkey: "ctrl+j",
-  },
   [PanelKind.TOOLS]: {
     icon: ToolsIcon,
     position: PanelPosition.LEFT,
-    group: "workbench",
+    group: "left",
     isGroupable: true,
     hotkey: "ctrl+j",
   },
   [PanelKind.TOOLBAR]: {
     icon: ToolbarIcon,
     position: PanelPosition.BOTTOM,
-  },
-  [PanelKind.HUD]: {
-    icon: HudIcon,
-    position: PanelPosition.MIDDLE,
-    group: "hud",
-    isGroupable: true,
-    isTransparent: true,
-    hotkey: "ctrl+k",
   },
   [PanelKind.STATS]: {
     icon: StatsIcon,
@@ -868,20 +844,6 @@ export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
   },
   [PanelKind.DETAILS]: {
     icon: DetailsIcon,
-    position: PanelPosition.RIGHT,
-    group: "right",
-    isGroupable: true,
-    hotkey: "ctrl+l",
-  },
-  [PanelKind.CHAT]: {
-    icon: ChatIcon,
-    position: PanelPosition.RIGHT,
-    group: "right",
-    isGroupable: true,
-    hotkey: "ctrl+l",
-  },
-  [PanelKind.SETTINGS]: {
-    icon: SettingsIcon,
     position: PanelPosition.RIGHT,
     group: "right",
     isGroupable: true,
@@ -924,18 +886,6 @@ export interface SidePanelTab {
 }
 
 /**
- * A tab entry for the HUD panel with ID, icon, order, and content.
- *
- *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️hudpaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/HUD-PANEL-TAB)
- **/
-export interface HudPanelTab {
-  id: string;
-  icon: ComponentType<{ size?: number }>;
-  order?: number;
-  content: ReactNode | (() => ReactNode);
-}
-
-/**
  * Visibility flags for left and right side panels.
  *
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️sidepanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/SIDE-PANEL-VISIBILITY)
@@ -943,15 +893,6 @@ export interface HudPanelTab {
 export interface SidePanelVisibility {
   left: boolean;
   right: boolean;
-}
-
-/**
- * Visibility flag for the HUD panel.
- *
- *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️hudpanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/HUD-PANEL-VISIBILITY)
- **/
-export interface HudPanelVisibility {
-  visible: boolean;
 }
 
 /**
@@ -963,16 +904,14 @@ export interface PanelVisibility {
   toolbar?: boolean;
   leftSidePanel?: boolean;
   rightSidePanel?: boolean;
-  hudPanel?: boolean;
-  workbench?: boolean;
   tools?: boolean;
   hud?: boolean;
   stats?: boolean;
   details?: boolean;
-  chat?: boolean;
-  settings?: boolean;
   params?: boolean;
   console?: boolean;
+  chat?: boolean;
+  settings?: boolean;
 }
 
 /**
@@ -982,17 +921,15 @@ export interface PanelVisibility {
  **/
 export interface PanelSizes {
   toolbarHeight: number;
-  workbenchWidth: number;
   toolsWidth: number;
   hudWidth: number;
   statsWidth: number;
   detailsWidth: number;
-  chatWidth: number;
-  settingsWidth: number;
   consoleHeight: number;
   leftSidePanelWidth: number;
   rightSidePanelWidth: number;
-  hudPanelWidth: number;
+  chatWidth: number;
+  settingsWidth: number;
 }
 
 /**
@@ -1037,32 +974,19 @@ export interface SidePanelTabs {
 }
 
 /**
- * Array of HUD panel tabs.
- *
- *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️hudpaneltabs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/HUD-PANEL-TABS)
- **/
-export interface HudPanelTabs {
-  tabs: HudPanelTab[];
-}
-
-/**
  * Collections of panel sections and tabs organized by panel kind.
  *
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelsections](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-SECTIONS)
  **/
 export interface PanelSections {
   details: PanelSection[];
-  workbench: PanelSection[];
   tools: PanelSection[];
   hud: PanelSection[];
   stats: PanelSection[];
   console: PanelSection[];
-  chat: PanelSection[];
-  settings: PanelSection[];
   toolbar: PanelSection[];
   leftSidePanel: SidePanelTab[];
   rightSidePanel: SidePanelTab[];
-  hudPanel: HudPanelTab[];
 }
 
 /**
@@ -1140,7 +1064,7 @@ export function enrichPanelDefinition(panel: PanelDefinition): EnrichedPanelDefi
  **/
 export interface PanelConfig {
   id: string;
-  key: "workbench" | "details" | "settings" | "tools" | "hud" | "stats" | "toolbar" | "chat" | "console";
+  key: "workbench" | "details" | "tools" | "hud" | "stats" | "toolbar" | "console";
   label: string;
   order?: number;
   defaultOpen?: boolean;

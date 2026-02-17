@@ -532,20 +532,18 @@ export interface LayoutProps {
   bottomPanel?: BottomPanelProps;
   leftSidePanel?: SidePanelProps;
   rightSidePanel?: SidePanelProps;
-  hudPanel?: HudPanelProps;
   canvas: React.ReactNode;
   toolbar?: React.ReactNode;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, hudPanel, canvas, toolbar, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, canvas, toolbar, className = "" }) => (
   <div className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}>
     {navbar && <div className="flex-shrink-0">{navbar}</div>}
     <div className="flex flex-1 min-h-0 relative">
       {leftSidePanel && leftSidePanel.visible && <SidePanel {...leftSidePanel} position="left" />}
       <div className="flex flex-col flex-1 min-w-0 relative">
         <div className="flex flex-1 min-h-0 relative">
-          {hudPanel && hudPanel.visible && <HudPanel {...hudPanel} />}
           <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
           {rightSidePanel && rightSidePanel.visible && <SidePanel {...rightSidePanel} position="right" />}
         </div>
@@ -5079,127 +5077,7 @@ export { SidePanel };
 
 // #endregion SidePanel
 
-// #region HudPanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/HUD-PANEL)
-// Floating heads-up display panel with tabs.
-// Consumers MUST provide HudPanelTabConfig entries.
-
-/**
- * Configuration interface for a HUD panel tab.
- *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel🛠️hudpaneltabconfig](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/HUD-PANEL/HUD-PANEL-TAB-CONFIG)
- **/
-export interface HudPanelTabConfig {
-  id: string;
-  icon: React.ComponentType<{ size?: number }>;
-  order?: number;
-  content: React.ReactNode | (() => React.ReactNode);
-}
-
-/**
- * Props interface for the HudPanel component.
- *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel🛠️hudpanelprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/HUD-PANEL/HUD-PANEL-PROPS)
- **/
-export interface HudPanelProps {
-  visible?: boolean;
-  size?: number;
-  onSizeChange?: (size: number) => void;
-  tabs: HudPanelTabConfig[];
-  activeTabId?: string;
-  onActiveTabChange?: (tabId: string) => void;
-  minSize?: number;
-  maxSize?: number;
-  zIndex?: 10 | 20 | 30 | 40;
-  className?: string;
-}
-
-const HudPanel: React.FC<HudPanelProps> = ({ visible = true, size = 400, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 800, zIndex = 20, className = "" }) => {
-  const [isResizeHovered, setIsResizeHovered] = React.useState(false);
-  const [isResizing, setIsResizing] = React.useState(false);
-  const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
-
-  const currentActiveTab = activeTabId ?? internalActiveTab;
-  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-
-  const handleTabChange = (tabId: string) => {
-    if (onActiveTabChange) {
-      onActiveTabChange(tabId);
-    } else {
-      setInternalActiveTab(tabId);
-    }
-  };
-
-  if (!visible || tabs.length === 0) return null;
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    const startX = e.clientX;
-    const startSize = size;
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = e.clientX - startX;
-      const newSize = startSize + delta;
-      if (newSize >= minSize && newSize <= maxSize) {
-        onSizeChange?.(newSize);
-      }
-    };
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
-  const positionStyle = {
-    top: "var(--spacing-double)",
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: `${size}px`,
-    zIndex,
-  };
-
-  return (
-    <LevelProvider level="panel">
-      <div data-panel="hudPanel" className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col max-h-[50vh]", className)} style={positionStyle}>
-        <div className="flex items-center justify-center h-medium border-b shrink-0 overflow-x-auto">
-          {sortedTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.id === activeTab?.id;
-            return (
-              <Tooltip key={tab.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    id={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn("flex items-center justify-center h-full px-small border-r last:border-r-0 cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
-                  >
-                    <Icon size={16} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <DescriptionTooltipContent id={tab.id} />
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
-        <Scrollable className="flex-1 min-h-0">
-          <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
-        </Scrollable>
-        {onSizeChange && <div className="absolute top-0 bottom-0 right-0 w-single cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
-      </div>
-    </LevelProvider>
-  );
-};
-
-export { HudPanel };
-
-// #endregion HudPanel
 
 // #endregion Panel Components
 

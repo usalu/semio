@@ -22,6 +22,7 @@
 import {
   AddIcon,
   AwardIcon,
+  ChatIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   CodeIcon,
@@ -32,6 +33,7 @@ import {
   MoonIcon,
   MousePointerIcon,
   RemoteKitIcon,
+  SettingsIcon,
   SortAscendingIcon,
   SortDescendingIcon,
   SunIcon,
@@ -47,15 +49,16 @@ import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, TreeContent, TreeItem } from "./elements";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeStateProvider } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, Theme } from "./shared";
+import { applySelectionComposition, createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, resolveSelectionCompositionKind, Theme, ToolKind } from "./shared";
 import {
   AppWindowConfig,
   Canvas,
   LayoutCanvas,
   useAddFooterItem,
   useAddPanelSection,
+  useAddSidePanelTab,
   useAppType,
   useDevice,
   useExpertise,
@@ -73,6 +76,7 @@ import {
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useRemoveSidePanelTab,
   useSketchpadActor,
   useSketchpadCommands,
   useTheme,
@@ -819,52 +823,6 @@ const HomeTableContent: FC = () => {
     };
   }, [appType, addSection, removeSection, selection.length]);
 
-  useEffect(() => {
-    if (appType !== "home") return;
-
-    addSection("chat", {
-      id: "semio.sketchpad.app.home.chat",
-      specificity: 0,
-      order: 0,
-      content: () => {
-        return <ChatPlaceholder />;
-      },
-    });
-
-    return () => {
-      removeSection("chat", "semio.sketchpad.app.home.chat");
-    };
-  }, [appType, addSection, removeSection]);
-
-  useEffect(() => {
-    if (appType !== "home") {
-      return;
-    }
-
-    addSection("settings", {
-      id: "semio.sketchpad.app.home.settings",
-      specificity: 20,
-      order: 0,
-      content: () => {
-        return <SettingsContent />;
-      },
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.settings",
-      specificity: 0,
-      order: 0,
-      content: () => {
-        return <SettingsContent />;
-      },
-    });
-
-    return () => {
-      removeSection("settings", "semio.sketchpad.app.home.settings");
-      removeSection("settings", "semio.sketchpad.settings");
-    };
-  }, [appType, addSection, removeSection]);
-
   const selectedKind = searchParams.get("kind") as KitKind | null;
   const selectedName = searchParams.get("name");
   const selectedVersion = searchParams.get("version");
@@ -1281,33 +1239,35 @@ const HomeTableContent: FC = () => {
   };
 
   const handleRowClick = (kitId: string, e: React.MouseEvent) => {
-    if (e.shiftKey) {
+    const compositionKind = resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+      shiftKey: e.shiftKey,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+    });
+    const useRangeSelection = e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey;
+    if (useRangeSelection && lastClickedIdRef.current) {
       const currentIndex = rows.findIndex((r) => r.kit?.guid === kitId);
-      if (lastClickedIdRef.current) {
-        const lastIndex = rows.findIndex((r) => r.kit?.guid === lastClickedIdRef.current);
-        if (lastIndex !== -1 && currentIndex !== -1) {
-          const start = Math.min(lastIndex, currentIndex);
-          const end = Math.max(lastIndex, currentIndex);
-          const rangeIds = rows
-            .slice(start, end + 1)
-            .map((r) => r.kit?.guid)
-            .filter((id): id is string => id !== undefined);
-          homeCommands.selectKits("semio.sketchpad.app.home.canvas.table.selectKitsRange", rangeIds);
+      const lastIndex = rows.findIndex((r) => r.kit?.guid === lastClickedIdRef.current);
+      if (lastIndex !== -1 && currentIndex !== -1) {
+        const start = Math.min(lastIndex, currentIndex);
+        const end = Math.max(lastIndex, currentIndex);
+        const rangeIds = rows
+          .slice(start, end + 1)
+          .map((r) => r.kit?.guid)
+          .filter((id): id is string => id !== undefined);
+        const newSelection = applySelectionComposition(selection, rangeIds, compositionKind);
+        homeCommands.clearSelection();
+        for (const id of newSelection) {
+          homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.selectKitsRange", id);
         }
-      } else {
-        homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKitShift", kitId);
-        lastClickedIdRef.current = kitId;
       }
-      // Don't update lastClickedIdRef for shift-clicks - keep the anchor stable
-    } else if (e.metaKey || e.ctrlKey) {
-      if (selection.includes(kitId)) {
-        homeCommands.removeKitFromSelection("semio.sketchpad.app.home.canvas.table.removeKitCtrl", kitId);
-      } else {
-        homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.addKitCtrl", kitId);
-      }
-      // Don't update lastClickedIdRef for ctrl/cmd clicks
     } else {
-      homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKit", kitId);
+      const newSelection = applySelectionComposition(selection, [kitId], compositionKind);
+      homeCommands.clearSelection();
+      for (const id of newSelection) {
+        homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.selectKit", id);
+      }
       lastClickedIdRef.current = kitId;
     }
   };
@@ -1696,6 +1656,45 @@ const Home: FC = () => {
     };
   }, [appType, addSection, removeSection]);
 
+  // Add Settings and Chat as side panel tabs
+  const addSidePanelTab = useAddSidePanelTab();
+  const removeSidePanelTab = useRemoveSidePanelTab();
+
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.home.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <SettingsContent />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.home.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <ChatPlaceholder />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.home.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.home.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
+
   const defaultLayout = useMemo(
     () => ({
       root: {
@@ -1790,8 +1789,6 @@ export const config: AppConfig = {
   getPanels: (): PanelDefinition[] => [
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts) => pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === "kits"),
   order: 0,

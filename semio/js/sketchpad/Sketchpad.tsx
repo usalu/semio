@@ -1,6 +1,6 @@
 // #region Header
 
-// js/semio/sketchpad/Sketchpad.tsx
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx](semiorepo://file/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -15,14 +15,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// Main sketchpad container managing app tabs, panels and window layout.
 
-// #region Imports
+// #endregion 🔖Header
+
+// #region 🔖Imports
+
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/IMPORTS)
+// External and internal module imports.
 
 import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
 import {
     AddIcon,
     AwardIcon,
+    ChatIcon,
     DocumentIcon,
     MessageCircle as FeedbackIcon,
     FocusIcon,
@@ -39,6 +45,7 @@ import {
     NavigateUpIcon,
     RemoteKitIcon,
     SearchIcon,
+    SettingsIcon,
     TemporaryKitIcon,
     TutorialIcon,
     TypeIcon,
@@ -202,7 +209,6 @@ import {
     getEventHandler,
     getValueAtPath,
     HookResult,
-    HudPanelTab,
     KitAppId,
     KitCommandContext,
     KitCommandResult,
@@ -274,6 +280,18 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
 
 // #region Store
 
+// [🔖semio/js/sketchpad/Sketchpad.tsx#Store](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/STORE)
+
+// #region 🔖Store
+
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE)
+// Reactive stores backed by Yjs for collaborative state management.
+
+/**
+ * Identity selector that returns the value unchanged.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖store🛠️identityselector](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/STORE/IDENTITY-SELECTOR)
+ **/
 export function identitySelector<T>(value: T): T {
   return value;
 }
@@ -1162,7 +1180,9 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
 // #region File Provider
 
-// #region Memory File Provider
+// [🔖semio/js/sketchpad/Sketchpad.tsx#File Provider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/FILE-PROVIDER)
+
+// #region 🔖Memory File Provider
 
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖memoryfileprovider](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/FILE-PROVIDER/MEMORY-FILE-PROVIDER)
 // In-memory file storage provider for temporary or test scenarios.
@@ -8110,7 +8130,9 @@ export const kitCommands = {
 
 // #region Machine
 
-// #region Types
+// [🔖semio/js/sketchpad/Sketchpad.tsx#Machine](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/MACHINE)
+
+// #region 🔖Types
 
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE)
 // Type definitions for app state, machine input, and context structures.
@@ -8122,10 +8144,7 @@ export const kitCommands = {
  **/
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: false,
-  workbench: false,
   details: false,
-  chat: false,
-  settings: false,
 };
 
 // #region App State Types
@@ -8640,13 +8659,10 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
     ? JSON.parse(panelSizesStr)
     : {
         toolbarHeight: 52,
-        workbenchWidth: 230,
         toolsWidth: 230,
         hudWidth: 230,
         statsWidth: 230,
         detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
         consoleHeight: 200,
       };
 
@@ -8849,17 +8865,15 @@ function createDefaultSketchpadState(id?: string): SketchpadState {
     },
     panelSizes: {
       toolbarHeight: 52,
-      workbenchWidth: 230,
       toolsWidth: 230,
       hudWidth: 230,
       statsWidth: 230,
       detailsWidth: 230,
-      chatWidth: 230,
-      settingsWidth: 230,
       consoleHeight: 200,
       leftSidePanelWidth: 280,
       rightSidePanelWidth: 280,
-      hudPanelWidth: 400,
+      chatWidth: 280,
+      settingsWidth: 280,
     },
     isFullscreen: false,
     isMobile: false,
@@ -9220,7 +9234,7 @@ export const sketchpadMachine = setup({
     designApps: {},
     qualityApps: {},
     feedbackApp: {
-      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: true, details: false },
       formData: {
         kind: "bug" as const,
         title: "",
@@ -10353,7 +10367,10 @@ export const SketchpadActorContext = createContext<SketchpadActorRef | null>(nul
 
 // #region Apps
 
-// #region Design
+// [🔖semio/js/sketchpad/Sketchpad.tsx#Apps](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/APPS)
+// App-specific hooks for design, type, kit, and sketchpad views.
+
+// #region 🔖Design
 
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS)
 // Design app hooks for piece and connection selection, hover, and diff state.
@@ -11622,10 +11639,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
 
 const initialDocsPanelVisibility: PanelVisibility = {
   toolbar: false,
-  workbench: false,
   details: false,
-  chat: false,
-  settings: false,
   tools: false,
   hud: false,
   stats: false,
@@ -11790,7 +11804,11 @@ let homeAppModuleCache: any;
 let kitAppModuleCache: any;
 let typeAppModuleCache: any;
 let qualityAppModuleCache: any;
-
+/**
+ * Central store managing Yjs-backed sketchpad state with reactive subscriptions.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖sketchpad🛠️sketchpadstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS/SKETCHPAD/SKETCHPAD-STORE)
+ **/
 export class SketchpadStore {
   private static _modulesLoaded = false;
   public static _loadModules() {
@@ -11946,13 +11964,10 @@ export class SketchpadStore {
           "panelSizes",
           JSON.stringify({
             toolbarHeight: 52,
-            workbenchWidth: 230,
             toolsWidth: 230,
             hudWidth: 230,
             statsWidth: 230,
             detailsWidth: 230,
-            chatWidth: 230,
-            settingsWidth: 230,
             consoleHeight: 200,
           }),
         );
@@ -12034,13 +12049,10 @@ export class SketchpadStore {
       ? JSON.parse(panelSizesStr)
       : {
           toolbarHeight: 52,
-          workbenchWidth: 230,
           toolsWidth: 230,
           hudWidth: 230,
           statsWidth: 230,
           detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
           consoleHeight: 200,
         };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
@@ -14267,6 +14279,14 @@ export const devCommands = {
 
 // #region Apps Registry
 
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖appsregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS-REGISTRY)
+// Dynamic app panel loader for registering app-specific panels.
+
+/**
+ * Loads panel configurations for a given app by dynamic import.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖appsregistry🛠️loadapppanels](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS-REGISTRY/LOAD-APP-PANELS)
+ **/
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
   try {
     const module = await import(`./apps/${appId}/panels.ts`);
@@ -14476,17 +14496,13 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
 export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sections, setSections] = useState<PanelSections>({
     details: [],
-    workbench: [],
     tools: [],
     hud: [],
     stats: [],
     console: [],
-    chat: [],
-    settings: [],
     toolbar: [],
     leftSidePanel: [],
     rightSidePanel: [],
-    hudPanel: [],
   });
 
   const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
@@ -14558,23 +14574,14 @@ interface SidePanelTabsState {
   right: SidePanelTab[];
 }
 
-interface HudPanelTabsState {
-  tabs: HudPanelTab[];
-}
-
 interface SidePanelTabContextValue {
   sidePanelTabs: SidePanelTabsState;
-  hudPanelTabs: HudPanelTabsState;
   addSidePanelTab: (position: "left" | "right", tab: SidePanelTab) => void;
   removeSidePanelTab: (position: "left" | "right", tabId: string) => void;
-  addHudPanelTab: (tab: HudPanelTab) => void;
-  removeHudPanelTab: (tabId: string) => void;
   activeLeftTabId: string | undefined;
   activeRightTabId: string | undefined;
-  activeHudTabId: string | undefined;
   setActiveLeftTabId: (tabId: string) => void;
   setActiveRightTabId: (tabId: string) => void;
-  setActiveHudTabId: (tabId: string) => void;
 }
 
 const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null);
@@ -14586,10 +14593,8 @@ const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null)
  **/
 export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sidePanelTabs, setSidePanelTabs] = useState<SidePanelTabsState>({ left: [], right: [] });
-  const [hudPanelTabs, setHudPanelTabs] = useState<HudPanelTabsState>({ tabs: [] });
   const [activeLeftTabId, setActiveLeftTabId] = useState<string | undefined>(undefined);
   const [activeRightTabId, setActiveRightTabId] = useState<string | undefined>(undefined);
-  const [activeHudTabId, setActiveHudTabId] = useState<string | undefined>(undefined);
 
   const addSidePanelTab = useCallback((position: "left" | "right", tab: SidePanelTab) => {
     setSidePanelTabs((prev) => {
@@ -14602,30 +14607,17 @@ export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) 
     setSidePanelTabs((prev) => ({ ...prev, [position]: prev[position].filter((t) => t.id !== tabId) }));
   }, []);
 
-  const addHudPanelTab = useCallback((tab: HudPanelTab) => {
-    setHudPanelTabs((prev) => ({ tabs: [...prev.tabs.filter((t) => t.id !== tab.id), tab].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) }));
-  }, []);
-
-  const removeHudPanelTab = useCallback((tabId: string) => {
-    setHudPanelTabs((prev) => ({ tabs: prev.tabs.filter((t) => t.id !== tabId) }));
-  }, []);
-
   const contextValue = useMemo(
     () => ({
       sidePanelTabs,
-      hudPanelTabs,
       addSidePanelTab,
       removeSidePanelTab,
-      addHudPanelTab,
-      removeHudPanelTab,
       activeLeftTabId,
       activeRightTabId,
-      activeHudTabId,
       setActiveLeftTabId,
       setActiveRightTabId,
-      setActiveHudTabId,
     }),
-    [sidePanelTabs, hudPanelTabs, addSidePanelTab, removeSidePanelTab, addHudPanelTab, removeHudPanelTab, activeLeftTabId, activeRightTabId, activeHudTabId],
+    [sidePanelTabs, addSidePanelTab, removeSidePanelTab, activeLeftTabId, activeRightTabId],
   );
 
   return <SidePanelTabContext.Provider value={contextValue}>{children}</SidePanelTabContext.Provider>;
@@ -14640,17 +14632,6 @@ export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => 
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useSidePanelTabs must be used within SidePanelTabProvider");
   return context.sidePanelTabs[position];
-};
-
-/**
- * Hook returning HUD panel tabs.
- *
- *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨usehudpaneltabs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-HUD-PANEL-TABS)
- **/
-export const useHudPanelTabs = (): HudPanelTab[] => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useHudPanelTabs must be used within SidePanelTabProvider");
-  return context.hudPanelTabs.tabs;
 };
 
 /**
@@ -14676,28 +14657,6 @@ export const useRemoveSidePanelTab = () => {
 };
 
 /**
- * Hook returning a callback to add a HUD panel tab.
- *
- *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useaddhudpaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ADD-HUD-PANEL-TAB)
- **/
-export const useAddHudPanelTab = () => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useAddHudPanelTab must be used within SidePanelTabProvider");
-  return context.addHudPanelTab;
-};
-
-/**
- * Hook returning a callback to remove a HUD panel tab.
- *
- *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useremovehudpaneltab](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-REMOVE-HUD-PANEL-TAB)
- **/
-export const useRemoveHudPanelTab = () => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useRemoveHudPanelTab must be used within SidePanelTabProvider");
-  return context.removeHudPanelTab;
-};
-
-/**
  * Hook returning the active left tab ID with setter.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useactivelefttabid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ACTIVE-LEFT-TAB-ID)
@@ -14717,17 +14676,6 @@ export const useActiveRightTabId = (): [string | undefined, (tabId: string) => v
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useActiveRightTabId must be used within SidePanelTabProvider");
   return [context.activeRightTabId, context.setActiveRightTabId];
-};
-
-/**
- * Hook returning the active HUD tab ID with setter.
- *
- *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖sidepaneltabs🪨useactivehudtabid](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/SIDE-PANEL-TABS/USE-ACTIVE-HUD-TAB-ID)
- **/
-export const useActiveHudTabId = (): [string | undefined, (tabId: string) => void] => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useActiveHudTabId must be used within SidePanelTabProvider");
-  return [context.activeHudTabId, context.setActiveHudTabId];
 };
 
 // #endregion SidePanel Tabs
@@ -16375,15 +16323,14 @@ const PanelToggles: FC = ({}) => {
   const appCommands = useAppCommands();
   const leftTabs = useSidePanelTabs("left");
   const rightTabs = useSidePanelTabs("right");
-  const hudTabs = useHudPanelTabs();
 
   const hasLeftTabs = leftTabs.length > 0;
   const hasRightTabs = rightTabs.length > 0;
-  const hasHudTabs = hudTabs.length > 0;
 
   const isLeftOpen = visiblePanels.leftSidePanel ?? false;
   const isRightOpen = visiblePanels.rightSidePanel ?? false;
-  const isHudOpen = visiblePanels.hudPanel ?? false;
+  const isChatOpen = visiblePanels.chat ?? false;
+  const isSettingsOpen = visiblePanels.settings ?? false;
 
   const handleLeftToggle = useCallback(
     (pressed: boolean) => {
@@ -16392,43 +16339,61 @@ const PanelToggles: FC = ({}) => {
     [appCommands],
   );
 
-  const handleHudToggle = useCallback(
-    (pressed: boolean) => {
-      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel");
-    },
-    [appCommands],
-  );
-
   const handleRightToggle = useCallback(
     (pressed: boolean) => {
+      if (pressed) {
+        // Close chat and settings when opening right panel
+        if (isChatOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
+        if (isSettingsOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
+      }
       appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
     },
-    [appCommands],
+    [appCommands, isChatOpen, isSettingsOpen],
+  );
+
+  const handleChatToggle = useCallback(
+    (pressed: boolean) => {
+      if (pressed) {
+        // Close right panel and settings when opening chat
+        if (isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+        if (isSettingsOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
+      }
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
+    },
+    [appCommands, isRightOpen, isSettingsOpen],
+  );
+
+  const handleSettingsToggle = useCallback(
+    (pressed: boolean) => {
+      if (pressed) {
+        // Close right panel and chat when opening settings
+        if (isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+        if (isChatOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
+      }
+      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
+    },
+    [appCommands, isRightOpen, isChatOpen],
   );
 
   const LeftIcon = leftTabs[0]?.icon;
-  const HudIcon = hudTabs[0]?.icon;
   const RightIcon = rightTabs[0]?.icon;
 
-  if (!hasLeftTabs && !hasHudTabs && !hasRightTabs) return null;
+  if (!hasLeftTabs && !hasRightTabs) return null;
 
   return (
-    <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
+    <div className="flex items-stretch gap-single">
       {hasLeftTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="border-0">
-          {LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />}
-        </Toggle>
+        <div className="flex items-stretch border border-element overflow-hidden h-medium">
+          <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />
+        </div>
       )}
-      {hasHudTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.hudPanel" pressed={isHudOpen} onPressedChange={handleHudToggle} className="border-0">
-          {HudIcon ? <HudIcon size={16} /> : <FocusIcon size={16} />}
-        </Toggle>
-      )}
-      {hasRightTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="border-0">
-          {RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />}
-        </Toggle>
-      )}
+      <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
+        {hasRightTabs && (
+          <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
+        )}
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.settings" pressed={isSettingsOpen} onPressedChange={handleSettingsToggle} className="border-0" icon={<SettingsIcon size={16} />} />
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.chat" pressed={isChatOpen} onPressedChange={handleChatToggle} className="border-0" icon={<ChatIcon size={16} />} />
+      </div>
     </div>
   );
 };
@@ -17331,39 +17296,27 @@ const LayoutWrapper: FC = () => {
   const appType = useAppType();
   const panelSizes = usePanelSizes();
   const footerItems = useFooterItems();
-  const workbenchSections = usePanelSections("workbench");
   const toolsSections = usePanelSections("tools");
   const toolbarSections = usePanelSections("toolbar");
-  const hudSections = usePanelSections("hud");
   const statsSections = usePanelSections("stats");
   const detailsSections = usePanelSections("details");
-  const chatSections = usePanelSections("chat");
-  const settingsSections = usePanelSections("settings");
   const consoleSections = usePanelSections("console");
 
   const leftSidePanelTabs = useSidePanelTabs("left");
   const rightSidePanelTabs = useSidePanelTabs("right");
-  const hudPanelTabs = useHudPanelTabs();
   const [activeLeftTabId, setActiveLeftTabId] = useActiveLeftTabId();
   const [activeRightTabId, setActiveRightTabId] = useActiveRightTabId();
-  const [activeHudTabId, setActiveHudTabId] = useActiveHudTabId();
 
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
-  const addHudPanelTab = useAddHudPanelTab();
-  const removeHudPanelTab = useRemoveHudPanelTab();
   const panelConfigs = usePanelConfigs();
 
   // Create mapping from PanelKind to sections
   const sectionsByKind: Record<PanelKind, PanelSection[]> = {
-    [PanelKind.WORKBENCH]: workbenchSections,
     [PanelKind.TOOLS]: toolsSections,
     [PanelKind.TOOLBAR]: toolbarSections,
-    [PanelKind.HUD]: hudSections,
     [PanelKind.STATS]: statsSections,
     [PanelKind.DETAILS]: detailsSections,
-    [PanelKind.CHAT]: chatSections,
-    [PanelKind.SETTINGS]: settingsSections,
     [PanelKind.PARAMS]: [],
     [PanelKind.CONSOLE]: consoleSections,
   };
@@ -17391,9 +17344,6 @@ const LayoutWrapper: FC = () => {
       } else if (config.position === PanelPosition.RIGHT) {
         addSidePanelTab("right", tab);
         registeredIds.push(panel.id);
-      } else if (config.position === PanelPosition.MIDDLE) {
-        addHudPanelTab(tab);
-        registeredIds.push(panel.id);
       }
     });
 
@@ -17406,7 +17356,6 @@ const LayoutWrapper: FC = () => {
 
         if (config.position === PanelPosition.LEFT) removeSidePanelTab("left", id);
         else if (config.position === PanelPosition.RIGHT) removeSidePanelTab("right", id);
-        else if (config.position === PanelPosition.MIDDLE) removeHudPanelTab(id);
       });
     };
   }, [
@@ -17414,16 +17363,10 @@ const LayoutWrapper: FC = () => {
     panelConfigs,
     addSidePanelTab,
     removeSidePanelTab,
-    addHudPanelTab,
-    removeHudPanelTab,
-    workbenchSections,
     toolsSections,
     toolbarSections,
-    hudSections,
     statsSections,
     detailsSections,
-    chatSections,
-    settingsSections,
     consoleSections,
   ]);
 
@@ -17711,7 +17654,6 @@ const LayoutWrapper: FC = () => {
   const [activeDragData, setActiveDragData] = useState<any>(null);
   const [activeToolbarGroup, setActiveToolbarGroup] = useState<string | null>(null);
 
-  // Group toolbar sections
   const toolbarGroups = useMemo(() => {
     const groups: Record<string, PanelSection[]> = {};
     toolbarSections.forEach((section) => {
@@ -17721,8 +17663,8 @@ const LayoutWrapper: FC = () => {
         groups[gid].push(section);
       }
     });
-    // Sort sections within user defined groups
-    Object.keys(groups).forEach((key) => {
+
+    Object.keys(groups).forEach(key => {
       groups[key].sort((a, b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
     });
     return groups;
@@ -17735,7 +17677,7 @@ const LayoutWrapper: FC = () => {
   }, [toolbarGroups]);
 
   const toggleToolbarGroup = useCallback((id: string) => {
-    setActiveToolbarGroup((prev) => {
+    setActiveToolbarGroup(prev => {
       return prev === id ? null : id;
     });
   }, []);
@@ -17874,29 +17816,61 @@ const LayoutWrapper: FC = () => {
                 : undefined
             }
             rightSidePanel={
-              rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
+              panelVisibility.chat
                 ? {
                     position: "right" as const,
                     visible: true,
-                    size: panelSizes.rightSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                    tabs: rightSidePanelTabs,
-                    activeTabId: activeRightTabId,
-                    onActiveTabChange: setActiveRightTabId,
+                    size: panelSizes.chatWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "chatWidth", size),
+                    tabs: [
+                      {
+                        id: "chat",
+                        icon: ChatIcon,
+                        order: 0,
+                        content: () => {
+                          const chatTab = rightSidePanelTabs.find(t => t.id.includes("chat"));
+                          return chatTab ? (typeof chatTab.content === "function" ? chatTab.content() : chatTab.content) : (
+                            <div className="p-double text-muted-foreground">Chat not available</div>
+                          );
+                        },
+                      },
+                    ],
+                    activeTabId: "chat",
+                    onActiveTabChange: () => {},
                   }
-                : undefined
-            }
-            hudPanel={
-              hudPanelTabs.length > 0 && panelVisibility.hudPanel
-                ? {
-                    visible: true,
-                    size: panelSizes.hudPanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "hudPanelWidth", size),
-                    tabs: hudPanelTabs,
-                    activeTabId: activeHudTabId,
-                    onActiveTabChange: setActiveHudTabId,
-                  }
-                : undefined
+                : panelVisibility.settings
+                  ? {
+                      position: "right" as const,
+                      visible: true,
+                      size: panelSizes.settingsWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "settingsWidth", size),
+                      tabs: [
+                        {
+                          id: "settings",
+                          icon: SettingsIcon,
+                          order: 0,
+                          content: () => {
+                            const settingsTab = rightSidePanelTabs.find(t => t.id.includes("settings"));
+                            return settingsTab ? (typeof settingsTab.content === "function" ? settingsTab.content() : settingsTab.content) : (
+                              <div className="p-double text-muted-foreground">Settings not available</div>
+                            );
+                          },
+                        },
+                      ],
+                      activeTabId: "settings",
+                      onActiveTabChange: () => {},
+                    }
+                  : rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
+                    ? {
+                        position: "right" as const,
+                        visible: true,
+                        size: panelSizes.rightSidePanelWidth,
+                        onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                        tabs: rightSidePanelTabs,
+                        activeTabId: activeRightTabId,
+                        onActiveTabChange: setActiveRightTabId,
+                      }
+                    : undefined
             }
             toolbar={
               panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "quality" || appType === "docs" ? (

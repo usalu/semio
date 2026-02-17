@@ -1400,7 +1400,6 @@ enum PanelKind {
   WORKBENCH,
   TOOLS,
   TOOLBAR,
-  HUD,
   STATS,
   DETAILS,
   CHAT,
@@ -1427,7 +1426,6 @@ interface PanelVisibility {
   toolbar?: boolean;
   workbench?: boolean;
   tools?: boolean;
-  hud?: boolean;
   stats?: boolean;
   details?: boolean;
   chat?: boolean;
@@ -1449,7 +1447,7 @@ interface PanelSection {
 
 - **LEFT**: Workbench, Tools (grouped)
 - **RIGHT**: Details, Chat, Settings (grouped)
-- **MIDDLE**: HUD, Stats (grouped, transparent)
+- **MIDDLE**: Stats (transparent)
 - **BOTTOM**: Toolbar
 
 #### Tool System

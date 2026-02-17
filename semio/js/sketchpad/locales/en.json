@@ -3010,12 +3010,60 @@
               "normal": "Canvas",
               "beginner": "Canvas"
             }
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showPieces": {
+              "label": {
+                "normal": "Pieces",
+                "beginner": "Toggle visibility of design pieces"
+              }
+            },
+            "showConnections": {
+              "label": {
+                "normal": "Connections",
+                "beginner": "Toggle visibility of connections between pieces"
+              }
+            },
+            "showPorts": {
+              "label": {
+                "normal": "Ports",
+                "beginner": "Toggle visibility of ports on pieces"
+              }
+            },
+            "addPiece": {
+              "label": {
+                "normal": "Add Piece",
+                "beginner": "Add a new piece to the design"
+              }
+            }
           }
         },
         "type": {
           "label": {
             "normal": "Type",
             "beginner": "Type"
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showConnectors": {
+              "label": {
+                "normal": "Connectors",
+                "beginner": "Connectors"
+              }
+            },
+            "showModels": {
+              "label": {
+                "normal": "Models",
+                "beginner": "Models"
+              }
+            }
           },
           "footer": {
             "label": {
@@ -3488,26 +3536,52 @@
               "normal": {
                 "label": {
                   "normal": "Normal",
-                  "beginner": "Create Normal"
+                  "beginner": "Normal selection"
                 }
               },
               "additive": {
                 "label": {
                   "normal": "Additive",
-                  "beginner": "Create Additive"
+                  "beginner": "Additive selection - add to existing selection"
                 }
               },
               "subtractive": {
                 "label": {
                   "normal": "Subtractive",
-                  "beginner": "Create Subtractive"
+                  "beginner": "Subtractive selection - remove from existing selection"
                 }
               },
               "intersect": {
                 "label": {
                   "normal": "Intersect",
-                  "beginner": "Create Intersect"
+                  "beginner": "Intersect selection - select only overlapping items"
                 }
+              }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rectangular",
+                  "beginner": "Rectangular lasso selection"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freeform",
+                  "beginner": "Freeform lasso selection"
+                }
+              }
+            },
+            "hand": {
+              "label": {
+                "normal": "Hand",
+                "beginner": "Hand tool - pan and navigate"
+              }
+            },
+            "connector": {
+              "label": {
+                "normal": "Connector",
+                "beginner": "Connector creation tool"
               }
             }
           },
@@ -3527,6 +3601,28 @@
             "label": {
               "normal": "Define measurement qualities",
               "beginner": "Define measurement qualities"
+            }
+          },
+          "tools": {
+            "select": {
+              "additive": {
+                "label": {
+                  "normal": "Additive",
+                  "beginner": "Additive selection - add to existing selection"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtractive",
+                  "beginner": "Subtractive selection - remove from existing selection"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Intersect",
+                  "beginner": "Intersect selection - select only overlapping items"
+                }
+              }
             }
           },
           "defaultName": {
@@ -4084,6 +4180,7 @@
         "parent": {
           "hand": "Hand",
           "selection": "Selection",
+          "lasso": "Lasso",
           "filter": "Filter",
           "create": "Create",
           "view": "View",
@@ -4093,6 +4190,7 @@
         "subtool": {
           "select": "Select",
           "hand": "Hand",
+          "lasso": "Lasso",
           "additive": "Additive",
           "subtractive": "Subtractive",
           "intersect": "Intersect",

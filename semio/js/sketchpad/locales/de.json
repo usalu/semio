@@ -2765,6 +2765,36 @@
               "normal": "Leinwand",
               "beginner": "Leinwand"
             }
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showPieces": {
+              "label": {
+                "normal": "Bauteile",
+                "beginner": "Sichtbarkeit von Bauteilen umschalten"
+              }
+            },
+            "showConnections": {
+              "label": {
+                "normal": "Verbindungen",
+                "beginner": "Sichtbarkeit von Verbindungen zwischen Bauteilen umschalten"
+              }
+            },
+            "showPorts": {
+              "label": {
+                "normal": "Anschlüsse",
+                "beginner": "Sichtbarkeit von Anschlüssen an Bauteilen umschalten"
+              }
+            },
+            "addPiece": {
+              "label": {
+                "normal": "Bauteil hinzufügen",
+                "beginner": "Ein neues Bauteil zum Entwurf hinzufügen"
+              }
+            }
           }
         },
         "docs": {
@@ -3039,6 +3069,24 @@
           "label": {
             "normal": "Typ",
             "beginner": "Typ"
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showConnectors": {
+              "label": {
+                "normal": "Connectors",
+                "beginner": "Connectors"
+              }
+            },
+            "showModels": {
+              "label": {
+                "normal": "Darstellungen",
+                "beginner": "Darstellungen"
+              }
+            }
           },
           "defaultName": {
             "label": {
@@ -3511,26 +3559,52 @@
               "normal": {
                 "label": {
                   "normal": "Normal",
-                  "beginner": "Normale Auswahl erstellen"
+                  "beginner": "Normale Auswahl"
                 }
               },
               "additive": {
                 "label": {
                   "normal": "Additiv",
-                  "beginner": "Additive Auswahl erstellen"
+                  "beginner": "Additive Auswahl - zur bestehenden Auswahl hinzufügen"
                 }
               },
               "subtractive": {
                 "label": {
                   "normal": "Subtraktiv",
-                  "beginner": "Subtraktive Auswahl erstellen"
+                  "beginner": "Subtraktive Auswahl - von bestehender Auswahl entfernen"
                 }
               },
               "intersect": {
                 "label": {
                   "normal": "Schnittmenge",
-                  "beginner": "Schnittmengen-Auswahl erstellen"
+                  "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
                 }
+              }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rechteckig",
+                  "beginner": "Rechteckige Lasso-Auswahl"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freihand",
+                  "beginner": "Freihand-Lasso-Auswahl"
+                }
+              }
+            },
+            "hand": {
+              "label": {
+                "normal": "Hand",
+                "beginner": "Hand-Werkzeug - Schwenken und Navigieren"
+              }
+            },
+            "connector": {
+              "label": {
+                "normal": "Konnektor",
+                "beginner": "Konnektor-Erstellungswerkzeug"
               }
             }
           },
@@ -3550,6 +3624,28 @@
             "label": {
               "normal": "Messqualitaeten definieren",
               "beginner": "Messqualitaeten definieren"
+            }
+          },
+          "tools": {
+            "select": {
+              "additive": {
+                "label": {
+                  "normal": "Additiv",
+                  "beginner": "Additive Auswahl - zur bestehenden Auswahl hinzufügen"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtraktiv",
+                  "beginner": "Subtraktive Auswahl - von bestehender Auswahl entfernen"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Schnittmenge",
+                  "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
+                }
+              }
             }
           },
           "defaultName": {
@@ -4015,6 +4111,12 @@
               "beginner": "Hand"
             }
           },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
+            }
+          },
           "filter": {
             "label": {
               "normal": "Filter",
@@ -4057,6 +4159,12 @@
             "label": {
               "normal": "Hand",
               "beginner": "Hand"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
             }
           },
           "additive": {

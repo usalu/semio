@@ -28,7 +28,6 @@ import {
   Canvas,
   LayoutCanvas,
   PlainAppStore,
-  createDefaultLayout,
   registerDocsAppStoreFactory,
   useAddFooterItem,
   useAddPanelSection,
@@ -39,7 +38,7 @@ import {
   useSettings,
   useSketchpadCommands,
 } from "./Sketchpad";
-import { Aside, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
+import { Aside, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, Tree, TreeContent, TreeItem, TreeStateProvider } from "./elements";
 import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports
@@ -845,7 +844,7 @@ export interface DocsCommandResult {
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
     const defaultState: DocsAppState = {
-      panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: false, details: false },
       selection: undefined,
       sectionStates: {},
     };
@@ -1012,7 +1011,7 @@ const docsAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): DocsAppState => ({
-      panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: false, details: false },
       selection: undefined,
       sectionStates: {},
     }),
@@ -1355,7 +1354,10 @@ const Settings: FC = () => {
  *  * [👤semio📚js🗃️sketchpad💻docstsx🔖app🛠️docsappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/APP/DOCS-APP-WINDOW-KIND)
  **/
 export enum DocsAppWindowKind {
+  Workbench = "workbench",
   Page = "page",
+  Settings = "settings",
+  Chat = "chat",
 }
 
 const App: FC = () => {
@@ -1378,7 +1380,49 @@ const App: FC = () => {
     return fromLocation.trim() || "index";
   }, [routePath, location.pathname]);
 
-  const defaultLayout = useMemo(() => createDefaultLayout([DocsAppWindowKind.Page], "row", [100], ["page"]), []);
+  const defaultLayout = useMemo(() => ({
+    root: {
+      type: "row",
+      content: [
+        {
+          type: "stack",
+          size: "25%",
+          content: [
+            {
+              type: "component",
+              componentName: DocsAppWindowKind.Workbench,
+              title: "workbench",
+              componentState: {},
+            },
+          ],
+        },
+        {
+          type: "stack",
+          size: "75%",
+          content: [
+            {
+              type: "component",
+              componentName: DocsAppWindowKind.Page,
+              title: "page",
+              componentState: {},
+            },
+            {
+              type: "component",
+              componentName: DocsAppWindowKind.Settings,
+              title: "settings",
+              componentState: {},
+            },
+            {
+              type: "component",
+              componentName: DocsAppWindowKind.Chat,
+              title: "chat",
+              componentState: {},
+            },
+          ],
+        },
+      ],
+    },
+  }), []);
   const storedWindowLayout = useMemo(() => parseWindowLayout(settings?.apps?.docs?.windowLayout), [settings]);
   const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
   const lastLayoutRef = useRef<any>(null);
@@ -1386,37 +1430,13 @@ const App: FC = () => {
   useEffect(() => {
     if (appType !== "docs") return;
 
-    const WorkbenchWrapper = () => <Workbench />;
-    const OverviewWrapper = () => <Overview />;
     const DetailsWrapper = () => <Details />;
-    const SettingsWrapper = () => <Settings />;
-
-    addSection("workbench", {
-      id: "semio.sketchpad.app.docs.docs",
-      specificity: 20,
-      order: 1,
-      content: WorkbenchWrapper,
-    });
-
-    addSection("workbench", {
-      id: "semio.sketchpad.app.docs.overview",
-      specificity: 20,
-      order: 2,
-      content: OverviewWrapper,
-    });
 
     addSection("details", {
       id: "semio.sketchpad.app.docs.page",
       specificity: 20,
       order: 1,
       content: DetailsWrapper,
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.app.docs.settings",
-      specificity: 20,
-      order: 1,
-      content: SettingsWrapper,
     });
 
     addSection("toolbar", {
@@ -1428,10 +1448,7 @@ const App: FC = () => {
     });
 
     return () => {
-      removeSection("workbench", "semio.sketchpad.app.docs.docs");
-      removeSection("workbench", "semio.sketchpad.app.docs.overview");
       removeSection("details", "semio.sketchpad.app.docs.page");
-      removeSection("settings", "semio.sketchpad.app.docs.settings");
       removeSection("toolbar", "semio.sketchpad.app.docs.toolbar.empty");
     };
   }, [appType, addSection, removeSection]);
@@ -1466,6 +1483,18 @@ const App: FC = () => {
     () => ({
       windowKinds: [
         {
+          id: DocsAppWindowKind.Workbench,
+          label: "workbench",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <Workbench />
+                <Overview />
+              </Tree>
+            </TreeStateProvider>
+          ),
+        },
+        {
           id: DocsAppWindowKind.Page,
           label: "page",
           component: () => {
@@ -1473,6 +1502,32 @@ const App: FC = () => {
             if (error || !mdxModule) return <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />;
             return <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />;
           },
+        },
+        {
+          id: DocsAppWindowKind.Settings,
+          label: "settings",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <Settings />
+              </Tree>
+            </TreeStateProvider>
+          ),
+        },
+        {
+          id: DocsAppWindowKind.Chat,
+          label: "chat",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <TreeItem>
+                  <TreeContent>
+                    <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
+                  </TreeContent>
+                </TreeItem>
+              </Tree>
+            </TreeStateProvider>
+          ),
         },
       ],
       defaultLayout,
@@ -1528,17 +1583,9 @@ export const config: AppConfig = {
   component: App,
   routeSegments: [{ path: "docs" }, { path: "*" }],
   getPanels: (getLabelFn: (key: string) => string, getHotkeyFn: (id: string) => string) => [
-    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show", getHotkeyFn("semio.sketchpad.navbar.panelToggle.workbench.show"), {
-      labelKey: "semio.sketchpad.navbar.panelToggle.workbench.show",
-      manualPath: "/docs/manuals/sketchpad#workbench",
-    }),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show", getHotkeyFn("semio.sketchpad.navbar.panelToggle.details.show"), {
       labelKey: "semio.sketchpad.navbar.panelToggle.details.show",
       manualPath: "/docs/manuals/sketchpad#details",
-    }),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show", getHotkeyFn("semio.sketchpad.navbar.panelToggle.settings.show"), {
-      labelKey: "semio.sketchpad.navbar.panelToggle.settings.show",
-      manualPath: "/docs/manuals/sketchpad#settings",
     }),
   ],
   matchesPath: (pathParts) => pathParts.length > 0 && pathParts[0] === "docs",

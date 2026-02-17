@@ -21,7 +21,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
-import { Footer, HudPanel, Layout, Level, LevelProvider, Navbar, Page, SidePanel, Window, getLevelBgClass } from "../../../sketchpad/elements";
+import { Footer, Layout, Level, LevelProvider, Navbar, Page, SidePanel, Window, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region 🔖Layout
 const meta = {
@@ -290,25 +290,3 @@ export const SidePanelDefault: Story = {
   },
 };
 // #endregion 🔖SidePanel
-
-// #region 🔖HudPanel
-export const HudPanelDefault: Story = {
-  args: { canvas: null },
-  render: () => {
-    const [size, setSize] = useState(400);
-    return (
-      <div className="relative h-[400px] w-[800px] border bg-base">
-        <HudPanel
-          size={size}
-          onSizeChange={setSize}
-          tabs={[
-            { id: "stats", icon: Info, order: 0, content: <div className="p-2">Stats: 5 types, 3 designs, 12 pieces</div> },
-            { id: "layers", icon: Layers, order: 1, content: <div className="p-2">Layer controls</div> },
-          ]}
-        />
-      </div>
-    );
-  },
-};
-// #endregion 🔖HudPanel
-

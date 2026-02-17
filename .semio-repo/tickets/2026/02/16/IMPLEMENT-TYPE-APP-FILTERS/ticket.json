@@ -1,0 +1,288 @@
+{
+  "title": "Implement Type App Filters",
+  "status": "closed",
+  "prompt": "Implement filter in the type app similar to the design app but with different elements according to the Type app. e.g. Filter connector",
+  "summary": "Successfully implemented filter toggles in Type app toolbar with Type-specific elements (Connectors and Models). Filters follow the same pattern as Design and Kit apps, using URL state for persistence.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/583"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-16T13:06:56.144246218Z",
+  "finished": "2026-02-16T13:16:38.420719754Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-16 13:06:56",
+        "finished": "2026-02-16 13:16:38"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "prompt": "Implement filter in the type app similar to the design app but with different elements according to the Type app. e.g. Filter connector",
+      "llm": "sonnet-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 194,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx",
+              "lines": {
+                "added": 233,
+                "removed": 39
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App",
+              "lines": {
+                "added": 47,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App#Toolbar Filters",
+              "lines": {
+                "added": 42,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Config",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Imports",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools",
+              "lines": {
+                "added": 142,
+                "removed": 36
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/sketchpad/Type.tsx#App#Toolbar Filters",
+              "lines": {
+                "added": 42,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App#Toolbar Filters§TypeKind",
+              "lines": {
+                "added": 35,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App#Toolbar Filters§TypeKindToggles",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App§TypeApp",
+              "lines": {
+                "added": 46,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App§TypeApp",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Config§config",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§HandTool",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§LassoFreeformTool",
+              "lines": {
+                "added": 5,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§LassoRectangularTool",
+              "lines": {
+                "added": 5,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeConnectorSettings",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeConnectorSettings",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeHandSettings",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeLassoSettings",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeSelectSettings",
+              "lines": {
+                "added": 0,
+                "removed": 22
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeSelectSettings",
+              "lines": {
+                "added": 36,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 10,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App#Toolbar Filters§TypeKind",
+              "lines": {
+                "added": 35,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#App#Toolbar Filters§TypeKindToggles",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§HandTool",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§LassoFreeformTool",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§LassoRectangularTool",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeHandSettings",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Type.tsx#Tools§TypeLassoSettings",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

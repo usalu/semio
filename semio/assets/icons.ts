@@ -83,6 +83,7 @@ export {
   ArrowRight as NavigateForwardIcon,
   ArrowUp as NavigateUpIcon,
   Pause as PauseIcon,
+  Puzzle as PieceIcon,
   Play as PlayIcon, Plug as PortIcon, Circle as RecordIcon,
   Cloud as RemoteKitIcon,
   Minus as RemoveIcon,

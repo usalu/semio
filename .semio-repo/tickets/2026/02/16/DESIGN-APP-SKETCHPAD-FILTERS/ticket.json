@@ -1,0 +1,23 @@
+{
+  "title": "Design App Sketchpad Filters",
+  "status": "open",
+  "prompt": "Get the filters in design app sketchpad working. Extend tests to cover filter functionality.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/595"
+  },
+  "goal": "🎯r26021",
+  "started": "2026-02-16T18:35:17.034393005Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-16 18:35:17"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "prompt": "Get the filters in design app sketchpad working. Extend tests to cover filter functionality.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

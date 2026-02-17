@@ -1,6 +1,6 @@
 // #region Header
 
-// js/semio/sketchpad/Design.tsx
+// [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/SEMIO/JS/SKETCHPAD/DESIGN.TSX)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -15,9 +15,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// Design app providing diagram and scene windows for editing designs.
 
-// #region Internal State Management
+// #endregion 🔖Header
+
+// #region 🔖Imports
+
+// [👤semio📚js🗃️sketchpad💻designtsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/IMPORTS)
+// Imports for Design app MUST include all shared sketchpad, React, and UI dependencies.
 
 import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
@@ -30,6 +35,7 @@ import {
     createPanelDefinition,
     Expertise,
     fieldToHookResult,
+    isSelectionToolKind,
     Mode,
     PanelKind,
     readonlyHookResult,
@@ -37,10 +43,9 @@ import {
     registerEventHandler,
     registerKeyedAppEventHandlers,
     resolveSelectionCompositionKind,
-    toSelectionToolKind,
     Theme,
     ToolKind,
-    isSelectionToolKind,
+    toSelectionToolKind,
 } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 import {
@@ -77,10 +82,11 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, PieceIcon, PortIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
@@ -151,14 +157,15 @@ import {
     Textarea,
     Toggle,
     ToggleGroup,
-    ToolbarDivider,
     ToolbarGroup,
     TransactionProvider,
+    Tree,
     TreeContent,
     TreeItem,
     TreeSection,
+    TreeStateProvider,
     useReactFlow,
-    ViewportPortal,
+    ViewportPortal
 } from "./elements";
 import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
 import { getKitAppHooks, registerDesignAppHooks, registerDesignAppStoreFactory } from "./shared";
@@ -209,7 +216,6 @@ import {
     useKitTypes,
     useOrigin,
     usePiece,
-    usePieces,
     usePiecesFromIds,
     usePiecesMetadataMap,
     usePieceStatus,
@@ -298,8 +304,11 @@ export enum DesignAppFullscreenWindow {
  *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-WINDOW-KIND)
  **/
 export enum DesignAppWindowKind {
+  Workbench = "workbench",
   Diagram = "diagram",
   Scene = "scene",
+  Settings = "settings",
+  Chat = "chat",
 }
 /**
  * Presence state for a Design app user including cursor, camera, and diagram viewport.
@@ -351,7 +360,17 @@ export interface DesignAppDiff {
   selectedModelTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
-export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
+/**
+ * Edit record extending KitDiffAppEdit with Design app selection diff.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappedit](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-EDIT)
+ **/
+export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> { }
+/**
+ * Complete runtime state for a Design app instance.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️designappstate](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-APP-STATE)
+ **/
 export interface DesignAppState {
   fullscreenWindow: DesignAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -914,7 +933,11 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.updatePiece": (context: DesignAppCommandContext, pieceGuid: Guid, pieceDiff: PieceDiff): DesignAppCommandResult => {
+  "semio.designApp.updatePiece": (context: DesignAppCommandContext, pieceGuidOrUpdate: Guid | { piece: PieceId | Guid; diff: PieceDiff }, pieceDiffArg?: PieceDiff): DesignAppCommandResult => {
+    const pieceDiff = (typeof pieceGuidOrUpdate === "object" && "diff" in pieceGuidOrUpdate ? pieceGuidOrUpdate.diff : pieceDiffArg) ?? {};
+    const pieceGuid = typeof pieceGuidOrUpdate === "object" && "piece" in pieceGuidOrUpdate
+      ? (typeof pieceGuidOrUpdate.piece === "string" ? pieceGuidOrUpdate.piece : pieceGuidOrUpdate.piece.guid)
+      : pieceGuidOrUpdate;
     return {
       kitDiff: {
         designs: {
@@ -932,7 +955,17 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.updatePieces": (context: DesignAppCommandContext, updates: { piece: PieceId; diff: PieceDiff }[]): DesignAppCommandResult => {
+  "semio.designApp.updatePieces": (
+    context: DesignAppCommandContext,
+    updates: Array<{ piece: PieceId | Guid; diff: PieceDiff } | { id: Guid; diff: PieceDiff }>,
+  ): DesignAppCommandResult => {
+    const normalizedUpdates = updates.map((update) => {
+      const pieceValue = "id" in update ? update.id : update.piece;
+      return {
+        piece: { guid: typeof pieceValue === "string" ? pieceValue : pieceValue.guid },
+        diff: update.diff,
+      };
+    });
     return {
       kitDiff: {
         designs: {
@@ -941,7 +974,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
               design: { guid: context.design.guid },
               diff: {
                 pieces: {
-                  updated: updates,
+                  updated: normalizedUpdates,
                 },
               },
             },
@@ -1181,7 +1214,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
   constructor(parent: SketchpadStore, id: DesignAppId, initialState?: DesignAppState) {
     const defaultState: DesignAppState = {
       fullscreenWindow: initialState?.fullscreenWindow || DesignAppFullscreenWindow.None,
-      panelVisibility: initialState?.panelVisibility || { toolbar: true, workbench: false, details: true, chat: false, settings: false },
+      panelVisibility: initialState?.panelVisibility || { toolbar: true, details: true },
       activeTool: initialState?.activeTool || ToolKind.SELECTION_NORMAL,
       selection: initialState?.selection,
       hover: initialState?.hover,
@@ -1388,7 +1421,7 @@ const designAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): DesignAppState => ({
-      panelVisibility: { toolbar: true, workbench: false, details: true, chat: false, settings: false },
+      panelVisibility: { toolbar: true, details: true },
       selection: undefined,
       hover: undefined,
       presence: undefined,
@@ -1536,6 +1569,11 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
   return <>{children}</>;
 };
 
+// #region 🔖Hooks
+
+// [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖hooks](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/HOOKS)
+// Hooks MUST provide the Design app initialization lifecycle within the React component tree.
+
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1553,7 +1591,7 @@ function useDesignAppInitialize() {
       kitGuid,
       designGuid,
       state: {
-        panelVisibility: { toolbar: true, workbench: false, details: true, chat: false, settings: false },
+        panelVisibility: { toolbar: true, details: true },
         selection: undefined,
         hover: undefined,
         focusedPiece: undefined,
@@ -1605,6 +1643,13 @@ export function useDesignAppActor(): any {
   return useContext(DesignAppActorContext);
 }
 
+/**
+ * Selects derived state from the Design app store.
+ *
+ * MUST resolve the DesignStore from the orchestrator and apply the selector.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖components🛠️usedesignstore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/COMPONENTS/USE-DESIGN-STORE)
+ **/
 export function useDesignStore<T = DesignStore>(selector?: (store: DesignStore) => T, id?: DesignAppId): T | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -1615,7 +1660,7 @@ export function useDesignStore<T = DesignStore>(selector?: (store: DesignStore) 
     return null;
   }
   const designAppStore = store.designApp(resolvedKitId, resolvedDesignId);
-  return (selector ? selector(designAppStore) : designAppStore) as T;
+  return selector ? selector(designAppStore) : (designAppStore as any);
 }
 
 export { useDesignStore as useDesignAppStore };
@@ -1646,7 +1691,7 @@ export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: De
 const EMPTY_SELECTION: DesignAppSelection = {};
 const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
 const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
-const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: true, chat: false, settings: false };
+const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, details: true };
 
 type GranularSelectorFactory<T> = (kitGuid: Guid, designGuid: Guid) => (state: any) => T | undefined;
 
@@ -3545,6 +3590,16 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
 
 // #region Footer
 
+// [👤semio📚js🗃️sketchpad💻designtsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FOOTER)
+// Footer MUST render dynamic Design app footer items showing selection and transaction state.
+
+/**
+ * Footer component that renders dynamic Design app footer status items.
+ *
+ * MUST register and unregister footer items based on selection and transaction state.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖footer🪨designappfooter](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FOOTER/DESIGN-APP-FOOTER)
+ **/
 export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -3659,92 +3714,289 @@ export const DesignAppFooter: FC = () => {
 
 // #endregion Footer
 
+// #region Filters
+
+// [👤semio📚js🗃️sketchpad💻designtsx🔖filters](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FILTERS)
+// Design filter context MUST provide visibility state for pieces, connections, and ports via URL search params.
+
+type DesignFilterKind = "pieces" | "connections" | "ports";
+
+interface DesignFilterState {
+  showPieces: boolean;
+  showConnections: boolean;
+  showPorts: boolean;
+}
+
+const DesignFilterContext = createContext<DesignFilterState>({ showPieces: true, showConnections: true, showPorts: true });
+
+const DesignFilterProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [searchParams] = useSearchParams();
+  const filterState = useMemo<DesignFilterState>(() => {
+    const kinds = searchParams.getAll("filter") as DesignFilterKind[];
+    if (kinds.length === 0) return { showPieces: true, showConnections: true, showPorts: true };
+    return {
+      showPieces: kinds.includes("pieces"),
+      showConnections: kinds.includes("connections"),
+      showPorts: kinds.includes("ports"),
+    };
+  }, [searchParams]);
+  return <DesignFilterContext.Provider value={filterState}>{children}</DesignFilterContext.Provider>;
+};
+
+const useDesignFilters = () => useContext(DesignFilterContext);
+
+// #endregion Filters
+
 // #region Tools
 
-export const SelectionTool: Tool<DesignAppState> = {
+// [👤semio📚js🗃️sketchpad💻designtsx🔖tools](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS)
+// Tools MUST define all Design app tool configurations for selection, lasso, and hand modes.
+
+/**
+ * Tool configuration for normal selection mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨selectionnormaltool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/SELECTION-NORMAL-TOOL)
+ **/
+export const SelectionNormalTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_NORMAL,
   icon: <SelectToolIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
-export const DesignAppTools: Tool<DesignAppState>[] = [SelectionTool];
+/**
+ * Tool configuration for additive selection mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨selectionadditivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/SELECTION-ADDITIVE-TOOL)
+ **/
+export const SelectionAdditiveTool: Tool<DesignAppState> = {
+  id: ToolKind.SELECTION_ADDITIVE,
+  icon: <AddIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
 
+/**
+ * Tool configuration for subtractive selection mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨selectionsubtractivetool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/SELECTION-SUBTRACTIVE-TOOL)
+ **/
+export const SelectionSubtractiveTool: Tool<DesignAppState> = {
+  id: ToolKind.SELECTION_SUBTRACTIVE,
+  icon: <RemoveIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+/**
+ * Tool configuration for rectangular lasso selection mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨lassorectangulartool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/LASSO-RECTANGULAR-TOOL)
+ **/
+export const LassoRectangularTool: Tool<DesignAppState> = {
+  id: ToolKind.LASSO_RECTANGULAR,
+  icon: <DiagramIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+/**
+ * Tool configuration for freeform lasso selection mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨lassofreeformtool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/LASSO-FREEFORM-TOOL)
+ **/
+export const LassoFreeformTool: Tool<DesignAppState> = {
+  id: ToolKind.LASSO_FREEFORM,
+  icon: <SceneIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+/**
+ * Tool configuration for hand/pan mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨handtool](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/HAND-TOOL)
+ **/
+export const HandTool: Tool<DesignAppState> = {
+  id: ToolKind.HAND,
+  icon: <HandIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+/**
+ * Array of all Design app tool configurations.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designapptools](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-APP-TOOLS)
+ **/
+export const DesignAppTools: Tool<DesignAppState>[] = [SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool, HandTool];
+
+/**
+ * Settings component for the selection tool group with additive and subtractive toggles.
+ *
+ * MUST render toggle buttons for each selection sub-mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designselectsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-SELECT-SETTINGS)
+ **/
 export const DesignSelectSettings: FC = () => {
-    const [activeTool, setActiveTool] = useDesignAppActiveTool();
-    const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.additive");
-    const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.subtractive");
-    const intersectLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.intersect");
-    const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.select.shape.rectangular");
-    const lassoLabel = useLabel("semio.sketchpad.app.design.tools.select.shape.lasso");
-    const handLabel = useLabel("semio.sketchpad.app.design.tools.select.navigation.hand");
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
+  const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.additive");
+  const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.subtractive");
+  const intersectLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.intersect");
+  const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.select.shape.rectangular");
+  const lassoLabel = useLabel("semio.sketchpad.app.design.tools.select.shape.lasso");
+  const handLabel = useLabel("semio.sketchpad.app.design.tools.select.navigation.hand");
 
-    return (
-       <ToolbarGroup>
-         <ToolbarGroup>
-           <Toggle 
-              id="semio.sketchpad.app.design.tools.select.mode.additive"
-              icon={<AddIcon className="size-tiny" />}
-              text={additiveLabel}
-              pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
-              onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
-           />
-           <Toggle 
-              id="semio.sketchpad.app.design.tools.select.mode.subtractive"
-              icon={<RemoveIcon className="size-tiny" />}
-              text={subtractiveLabel}
-              pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
-              onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
-           />
-           <Toggle 
-              id="semio.sketchpad.app.design.tools.select.mode.intersect"
-              icon={<IntersectIcon className="size-tiny" />}
-              text={intersectLabel}
-              pressed={activeTool === ToolKind.SELECTION_INTERSECT}
-              onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
-           />
-         </ToolbarGroup>
-         
-         <ToolbarDivider />
+  return (
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.mode.additive"
+        icon={<AddIcon className="size-tiny" />}
+        text={additiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.mode.subtractive"
+        icon={<RemoveIcon className="size-tiny" />}
+        text={subtractiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.mode.intersect"
+        icon={<IntersectIcon className="size-tiny" />}
+        text={intersectLabel}
+        pressed={activeTool === ToolKind.SELECTION_INTERSECT}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.shape.rectangular"
+        icon={<DiagramIcon className="size-tiny" />}
+        text={rectangularLabel}
+        pressed={activeTool === ToolKind.LASSO_RECTANGULAR}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.LASSO_RECTANGULAR : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.shape.lasso"
+        icon={<SceneIcon className="size-tiny" />}
+        text={lassoLabel}
+        pressed={activeTool === ToolKind.LASSO_FREEFORM}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.LASSO_FREEFORM : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.navigation.hand"
+        icon={<HandIcon className="size-tiny" />}
+        text={handLabel}
+        pressed={activeTool === ToolKind.HAND}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.HAND : ToolKind.SELECTION_NORMAL)}
+      />
+    </div>
+  );
+};
 
-         <ToolbarGroup>
-            <Toggle 
-              id="semio.sketchpad.app.design.tools.select.shape.rectangular"
-              icon={<DiagramIcon className="size-tiny" />}
-              text={rectangularLabel}
-              pressed={activeTool === ToolKind.LASSO_RECTANGULAR}
-              onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.LASSO_RECTANGULAR : ToolKind.SELECTION_NORMAL)}
-            />
-            <Toggle 
-              id="semio.sketchpad.app.design.tools.select.shape.lasso"
-              icon={<SceneIcon className="size-tiny" />}
-              text={lassoLabel}
-              pressed={activeTool === ToolKind.LASSO_FREEFORM}
-              onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.LASSO_FREEFORM : ToolKind.SELECTION_NORMAL)}
-            />
-         </ToolbarGroup>
+/**
+ * Settings component for the hand tool that activates hand mode.
+ *
+ * MUST activate the hand tool on mount.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designhandsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-HAND-SETTINGS)
+ **/
+export const DesignHandSettings: FC = () => {
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
 
-         <ToolbarDivider />
+  useEffect(() => {
+    if (activeTool !== ToolKind.HAND && setActiveTool) {
+      setActiveTool(ToolKind.HAND);
+    }
+  }, [setActiveTool]);
 
-         <ToolbarGroup>
-           <Toggle 
-              id="semio.sketchpad.app.design.tools.select.navigation.hand"
-              icon={<HandIcon className="size-tiny" />}
-              text={handLabel}
-              pressed={activeTool === ToolKind.HAND}
-              onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.HAND : ToolKind.SELECTION_NORMAL)}
-           />
-         </ToolbarGroup>
-       </ToolbarGroup>
-    );
+  return null;
+};
+
+/**
+ * Settings component for the lasso tool with rectangular and freeform toggles.
+ *
+ * MUST render toggle group for lasso sub-modes.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖tools🪨designlassosettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS/DESIGN-LASSO-SETTINGS)
+ **/
+export const DesignLassoSettings: FC = () => {
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
+  const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.lasso.rectangular");
+  const freeformLabel = useLabel("semio.sketchpad.app.design.tools.lasso.freeform");
+
+  return (
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <ToggleGroup
+        items={[
+          { value: String(ToolKind.LASSO_RECTANGULAR), icon: <DiagramIcon className="size-tiny" />, text: rectangularLabel, id: "semio.sketchpad.app.design.tools.lasso.rectangular" },
+          { value: String(ToolKind.LASSO_FREEFORM), icon: <SceneIcon className="size-tiny" />, text: freeformLabel, id: "semio.sketchpad.app.design.tools.lasso.freeform" }
+        ]}
+        value={activeTool !== undefined ? [String(activeTool)] : []}
+        onValueChange={(vals: string[]) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as unknown as ToolKind)}
+        kind="single"
+      />
+    </div>
+  );
+};
+
+// #endregion Tools
+
+// #region Toolbar
+
+// [👤semio📚js🗃️sketchpad💻designtsx🔖toolbar](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLBAR)
+// Toolbar components MUST provide filter functionality for the Design app.
+
+/**
+ * Filter toolbar component for the Design app with toggles for pieces, connections, and ports visibility.
+ *
+ * MUST render toggle buttons to filter design elements. MUST use URL state for filter persistence.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖toolbar🪨designtoolbarfilters](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLBAR/DESIGN-TOOLBAR-FILTERS)
+ **/
+const DesignToolbarFilters: FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedFiltersFromUrl = useMemo(() => searchParams.getAll("filter") as DesignFilterKind[], [searchParams]);
+  const selectedFilters = useMemo(() => new Set(selectedFiltersFromUrl), [selectedFiltersFromUrl]);
+  const toggleFilter = (kind: DesignFilterKind) => {
+    const allKinds: DesignFilterKind[] = ["pieces", "connections", "ports"];
+    const newParams = new URLSearchParams(searchParams);
+    const filters = newParams.getAll("filter") as DesignFilterKind[];
+    if (filters.length === 0) {
+      newParams.delete("filter");
+      allKinds.filter((k) => k !== kind).forEach((k) => newParams.append("filter", k));
+    } else if (filters.includes(kind)) {
+      const remaining = filters.filter((k) => k !== kind);
+      newParams.delete("filter");
+      remaining.forEach((k) => newParams.append("filter", k));
+    } else {
+      const updated = [...filters, kind];
+      newParams.delete("filter");
+      if (updated.length < allKinds.length) {
+        updated.forEach((k) => newParams.append("filter", k));
+      }
+    }
+    setSearchParams(newParams);
+  };
+  const isActive = (kind: DesignFilterKind) => selectedFiltersFromUrl.length === 0 || selectedFilters.has(kind);
+  const labelPieces = useLabel("semio.sketchpad.app.design.toolbar.showPieces");
+  const labelConnections = useLabel("semio.sketchpad.app.design.toolbar.showConnections");
+  const labelPorts = useLabel("semio.sketchpad.app.design.toolbar.showPorts");
+  return (
+    <ToolbarGroup>
+      <Toggle pressed={isActive("pieces")} onPressedChange={() => toggleFilter("pieces")} id="semio.sketchpad.app.design.toolbar.showPieces" icon={<PieceIcon className="size-tiny" />} text={labelPieces} />
+      <Toggle pressed={isActive("connections")} onPressedChange={() => toggleFilter("connections")} id="semio.sketchpad.app.design.toolbar.showConnections" icon={<ConnectionIcon className="size-tiny" />} text={labelConnections} />
+      <Toggle pressed={isActive("ports")} onPressedChange={() => toggleFilter("ports")} id="semio.sketchpad.app.design.toolbar.showPorts" icon={<PortIcon className="size-tiny" />} text={labelPorts} />
+    </ToolbarGroup>
+  );
 };
 
 
+
+// #endregion Toolbar
 
 // #endregion Tools
 
 // #region Panels
 
-// #region WindowLibrary
+// [🔖semio/js/sketchpad/Design.tsx#Panels](semiorepo://section/semio/js/sketchpad/Design.tsx/PANELS)
+
+// #region 🔖WindowLibrary
 
 // [👤semio📚js🗃️sketchpad💻designtsx🔖panels](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS)
 // WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
@@ -5258,7 +5510,9 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
 // #region Canvas
 
-// #region Hover Intent Context
+// [🔖semio/js/sketchpad/Design.tsx#Canvas](semiorepo://section/semio/js/sketchpad/Design.tsx/CANVAS)
+
+// #region 🔖Hover Intent Context
 
 // [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖hoverintentcontext](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/HOVER-INTENT-CONTEXT)
 // Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
@@ -5726,6 +5980,7 @@ type PieceNodeInnerProps = {
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connectors, isSelected, diff, isDesignPiece, selectedConnector, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const renderData = usePieceRenderData(piece.guid);
   const { fill, stroke, opacity: colorOpacity, isHovered } = renderData;
+  const { showPorts } = useDesignFilters();
 
   const diffedPiece = piece;
 
@@ -5823,7 +6078,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connec
           <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 6} className="stroke-[var(--foreground)] stroke-2 fill-transparent" />
         </svg>
       )}
-      {connectors?.map((connector: Connector, connectorIndex: number) => (
+      {showPorts && connectors?.map((connector: Connector, connectorIndex: number) => (
         <ConnectorHandle
           key={`${id}-port-${connectorIndex}-${connector.guid}`}
           connector={connector}
@@ -5994,6 +6249,7 @@ type DesignNodeInnerProps = {
 
 const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors, isSelected, diff, selectedConnector, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
   const isHovered = useIsPieceHovered();
+  const { showPorts } = useDesignFilters();
 
   const onPortClick = (connector: Connector) => {
     const currentSelectedConnector = selectedConnector;
@@ -6075,7 +6331,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors
           {piece.guid}
         </text>
       </svg>
-      {connectors?.map((connector: Connector, connectorIndex: number) => (
+      {showPorts && connectors?.map((connector: Connector, connectorIndex: number) => (
         <ConnectorHandle
           key={`${id}-port-${connectorIndex}-${connector.guid}`}
           connector={connector}
@@ -6674,12 +6930,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     return selectedTypeConnector?.port?.guid;
   }, [selectedConnector, design, kitTypes]);
 
+  const designFilters = useDesignFilters();
+
   const { baseNodes, edges } = useMemo(() => {
     if (!design) return { baseNodes: [], edges: [] };
     const minimalKit = { types: kitTypes, designs: kitDesigns } as Kit;
     const result = designToNodesAndEdges(design, metadata, minimalKit) ?? { nodes: [], edges: [] };
-    return { baseNodes: result.nodes, edges: result.edges };
-  }, [design, metadata, kitTypes, kitDesigns]);
+    const filteredNodes = designFilters.showPieces ? result.nodes : result.nodes.map((n) => ({ ...n, hidden: true }));
+    const filteredEdges = designFilters.showConnections ? result.edges : result.edges.map((e) => ({ ...e, hidden: true }));
+    return { baseNodes: filteredNodes, edges: filteredEdges };
+  }, [design, metadata, kitTypes, kitDesigns, designFilters.showPieces, designFilters.showConnections]);
 
   const [nodes, setNodes] = useState<typeof baseNodes>(baseNodes);
 
@@ -7021,8 +7281,25 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   activeToolRef.current = activeTool;
 
   const onNodeClick = useCallback(
-    (e: React.MouseEvent, node: DiagramNode) => { },
-    [],
+    (e: React.MouseEvent, node: DiagramNode) => {
+      if (!setSelection) return;
+      const pieceGuid = getPieceIdFromNode(node);
+      if (!pieceGuid) return;
+      const compositionKind = resolveSelectionCompositionKind(activeToolRef.current, {
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+      });
+      const currentPieces = selectionRef.current?.pieces || [];
+      const newPieces = applySelectionComposition(currentPieces, [pieceGuid], compositionKind);
+      setSelection({
+        ...(selectionRef.current || {}),
+        pieces: newPieces,
+        connections: compositionKind === "replace" ? [] : (selectionRef.current?.connections || []),
+      });
+    },
+    [setSelection],
   );
 
   const kitRef = useRef(kit);
@@ -7041,13 +7318,33 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   const onEdgeClick = useCallback(
-    (e: React.MouseEvent, edge: DiagramEdge) => { },
-    [],
+    (e: React.MouseEvent, edge: DiagramEdge) => {
+      if (!setSelection) return;
+      const connectionGuid = (edge as any).data?.SemioConnection?.guid || edge.id.split("-").pop();
+      if (!connectionGuid) return;
+      const compositionKind = resolveSelectionCompositionKind(activeToolRef.current, {
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+      });
+      const currentConnections = selectionRef.current?.connections || [];
+      const newConnections = applySelectionComposition(currentConnections, [connectionGuid], compositionKind);
+      setSelection({
+        ...(selectionRef.current || {}),
+        pieces: compositionKind === "replace" ? [] : (selectionRef.current?.pieces || []),
+        connections: newConnections,
+      });
+    },
+    [setSelection],
   );
 
   const onPaneClick = useCallback(
-    (e: React.MouseEvent) => { },
-    [],
+    (e: React.MouseEvent) => {
+      if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (deselectAll) deselectAll();
+    },
+    [deselectAll],
   );
 
   const onDoubleClick = useCallback(
@@ -8195,6 +8492,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const [clearHover] = useDesignAppClearHover();
   const [focusPiece] = useDesignAppFocusPiece();
   const { currentHoveredPieceGuidRef } = useHoverIntent();
+  const [activeTool] = useDesignAppActiveTool();
 
   const { fill } = useDesignAppPieceColor(undefined, piece.guid);
 
@@ -8229,15 +8527,19 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const onSelect = useCallback(
     (e?: ThreeEvent<MouseEvent>) => {
       if (!setSelection) return;
-      const compositionKind = resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+      const compositionKind = resolveSelectionCompositionKind(activeTool, {
         shiftKey: e?.shiftKey === true,
         altKey: e?.altKey === true,
         ctrlKey: e?.ctrlKey === true,
         metaKey: e?.metaKey === true,
       });
-      setSelection({ ...(selection || {}), pieces: applySelectionComposition(selection?.pieces, [piece.guid], compositionKind) });
+      setSelection({
+        ...(selection || {}),
+        pieces: applySelectionComposition(selection?.pieces, [piece.guid], compositionKind),
+        connections: compositionKind === "replace" ? [] : (selection?.connections || []),
+      });
     },
-    [selection, setSelection, piece.guid],
+    [selection, setSelection, piece.guid, activeTool],
   );
 
   const onDoubleClick = useCallback(
@@ -8369,6 +8671,7 @@ const ModelDesign: FC = () => {
   const [others] = useDesignAppOthers();
   const design = useDesign();
   const flatDesign = design as Design;
+  const { showPieces } = useDesignFilters();
 
   const [selectPieces] = useDesignAppSelectPieces();
 
@@ -8438,7 +8741,7 @@ const ModelDesign: FC = () => {
     <>
       <Select box multiple onChange={onChange}>
         <group>
-          {flatDesign?.pieces?.map((piece: Piece) => (
+          {showPieces && flatDesign?.pieces?.map((piece: Piece) => (
             <PieceScopeProvider key={piece.guid} guid={piece.guid}>
               <ModelPiece />
             </PieceScopeProvider>
@@ -8595,7 +8898,14 @@ const DesignAppScene: FC = () => {
 
 // #endregion Canvas
 
-export interface AppProps {}
+// #region 🔖Windows
+// [👤semio📚js🗃️sketchpad💻designtsx🔖windows](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/WINDOWS)
+// Window components MUST wrap diagram and scene views with hover and transaction providers.
+
+/** Props interface for the Design app root component.
+ * [👤semio📚js🗃️sketchpad💻designtsx🔖windows🛠️appprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/WINDOWS/APP-PROPS)
+**/
+export interface AppProps { }
 
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
   return (
@@ -8676,7 +8986,19 @@ const App: FC<AppProps> = () => {
         content: [
           {
             type: "stack",
-            size: "50%",
+            size: "25%",
+            content: [
+              {
+                type: "component",
+                componentName: DesignAppWindowKind.Workbench,
+                title: "workbench",
+                componentState: {},
+              },
+            ],
+          },
+          {
+            type: "stack",
+            size: "37.5%",
             content: [
               {
                 type: "component",
@@ -8684,11 +9006,23 @@ const App: FC<AppProps> = () => {
                 title: "diagram",
                 componentState: {},
               },
+              {
+                type: "component",
+                componentName: DesignAppWindowKind.Settings,
+                title: "settings",
+                componentState: {},
+              },
+              {
+                type: "component",
+                componentName: DesignAppWindowKind.Chat,
+                title: "chat",
+                componentState: {},
+              },
             ],
           },
           {
             type: "stack",
-            size: "50%",
+            size: "37.5%",
             content: [
               {
                 type: "component",
@@ -8749,6 +9083,18 @@ const App: FC<AppProps> = () => {
     return {
       windowKinds: [
         {
+          id: DesignAppWindowKind.Workbench,
+          label: "workbench",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden">
+                <PiecesWorkbenchContent />
+                <WindowLibrary />
+              </Tree>
+            </TreeStateProvider>
+          ),
+        },
+        {
           id: DesignAppWindowKind.Diagram,
           label: "diagram",
           component: (props: any) => <DiagramWindow reactFlowInstanceRef={reactFlowInstanceRef} />,
@@ -8757,6 +9103,32 @@ const App: FC<AppProps> = () => {
           id: DesignAppWindowKind.Scene,
           label: "scene",
           component: (props: any) => <SceneWindow />,
+        },
+        {
+          id: DesignAppWindowKind.Settings,
+          label: "settings",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <DesignSettingsContent />
+              </Tree>
+            </TreeStateProvider>
+          ),
+        },
+        {
+          id: DesignAppWindowKind.Chat,
+          label: "chat",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <TreeItem>
+                  <TreeContent>
+                    <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
+                  </TreeContent>
+                </TreeItem>
+              </Tree>
+            </TreeStateProvider>
+          ),
         },
       ],
       defaultLayout,
@@ -9245,123 +9617,6 @@ const App: FC<AppProps> = () => {
     );
   };
 
-  useEffect(() => {
-    if (appType !== "design") return;
-
-    addSection("workbench", {
-      id: "semio.sketchpad.app.kit.pieces",
-      specificity: 20,
-      order: 0,
-      content: () => <PiecesWorkbenchContent />,
-    });
-
-    addSection("workbench", {
-      id: "semio.sketchpad.app.design.windows",
-      specificity: 20,
-      order: 1,
-      content: () => <WindowLibrary />,
-    });
-
-    return () => {
-      removeSection("workbench", "semio.sketchpad.app.kit.pieces");
-      removeSection("workbench", "semio.sketchpad.app.design.windows");
-    };
-  }, [appType, kitGuid, workbenchTypes?.length, workbenchDesigns?.length, addSection, removeSection]);
-
-  const hudPieces = usePieces();
-
-  useEffect(() => {
-    if (appType !== "design") return;
-    addSection("hud", {
-      id: "semio.sketchpad.app.design.hud.pieces",
-      specificity: 20,
-      order: 0,
-      content: () => (
-        <>
-          {hudPieces.map((piece: Piece) => {
-            const typeGuid = piece.type && typeof piece.type === "object" && "guid" in piece.type ? piece.type.guid : typeof piece.type === "string" ? piece.type : null;
-            const typeObj = typeGuid ? (workbenchTypes || []).find((t: Type) => t.guid === typeGuid) : null;
-            return (
-              <TreeItem
-                key={piece.guid}
-                label={
-                  <div className="flex items-center gap-single min-w-0">
-                    <span className="truncate">{typeObj?.name || piece.guid.substring(0, 8)}</span>
-                  </div>
-                }
-              />
-            );
-          })}
-        </>
-      ),
-    });
-    return () => {
-      removeSection("hud", "semio.sketchpad.app.design.hud.pieces");
-    };
-  }, [appType, hudPieces, workbenchTypes, addSection, removeSection]);
-
-  useEffect(() => {
-    addSection("settings", {
-      id: "semio.sketchpad.app.design.settings",
-      specificity: 30,
-      order: 0,
-      content: () => (
-        <>
-          <TreeItem>
-            <TreeContent>
-              <div className="flex flex-col gap-single">
-                <label>
-                  {useLabel("semio.sketchpad.app.design.proximityConnectDistance")}: {appSettings.design?.proximityConnectDistance}
-                </label>
-                <div className="w-full flex items-center" style={{ height: "20px" }}>
-                  <div className="w-full relative" style={{ height: "4px", backgroundColor: "var(--border-element-color)" }}>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: `${((appSettings.design?.proximityConnectDistance || 10) / 20) * 100}%`,
-                        top: "50%",
-                        transform: "translate(-50%, -50%)",
-                        width: "16px",
-                        height: "16px",
-                        backgroundColor: "var(--foreground)",
-                        border: "1px solid var(--border-element-color)",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              {useLabel("semio.sketchpad.app.design.gridSize")}: {appSettings.design?.gridSize || 24}px
-            </TreeContent>
-          </TreeItem>
-        </>
-      ),
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.app.kit.settings",
-      specificity: 10,
-      order: 0,
-      content: () => <DesignSettingsContent />,
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.settings",
-      specificity: 0,
-      order: 0,
-      content: () => <DesignSettingsContent />,
-    });
-
-    return () => {
-      removeSection("settings", "semio.sketchpad.app.design.settings");
-      removeSection("settings", "semio.sketchpad.app.kit.settings");
-      removeSection("settings", "semio.sketchpad.settings");
-    };
-  }, [addSection, removeSection, appSettings.design?.proximityConnectDistance, appSettings.design?.gridSize]);
-
   return (
     <ReactFlowProvider>
       <Canvas id="semio.sketchpad.app.design.canvas">
@@ -9485,7 +9740,7 @@ const DesignApp: FC = () => {
   useEffect(() => {
     if (appType !== "design") return;
 
-    console.log("[DEBUG] Design.tsx registering toolbar section");
+    console.log("[DEBUG] Design.tsx registering toolbar sections");
 
     addSection("toolbar", {
       id: "semio.sketchpad.app.design.tools.select",
@@ -9499,24 +9754,39 @@ const DesignApp: FC = () => {
       content: <DesignSelectSettings />,
     });
 
-    console.log("[DEBUG] Design.tsx toolbar section registered");
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.design.toolbar.filters",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "filter",
+        labelId: "semio.sketchpad.toolbar.parent.filter",
+        order: 20,
+      },
+      content: <DesignToolbarFilters />,
+    });
+
+    console.log("[DEBUG] Design.tsx toolbar sections registered");
 
     return () => {
-      console.log("[DEBUG] Design.tsx cleaning up toolbar section");
+      console.log("[DEBUG] Design.tsx cleaning up toolbar sections");
       removeSection("toolbar", "semio.sketchpad.app.design.tools.select");
+      removeSection("toolbar", "semio.sketchpad.app.design.toolbar.filters");
     };
   }, [appType, addSection, removeSection]);
 
   return (
-    <DesignAppTransactionProvider>
-      <HoverIntentProvider>
-        <TransactionPiecesProvider>
-          <HoverPiecesProvider>
-            <App />
-          </HoverPiecesProvider>
-        </TransactionPiecesProvider>
-      </HoverIntentProvider>
-    </DesignAppTransactionProvider>
+    <DesignFilterProvider>
+      <DesignAppTransactionProvider>
+        <HoverIntentProvider>
+          <TransactionPiecesProvider>
+            <HoverPiecesProvider>
+              <App />
+            </HoverPiecesProvider>
+          </TransactionPiecesProvider>
+        </HoverIntentProvider>
+      </DesignAppTransactionProvider>
+    </DesignFilterProvider>
   );
 };
 
@@ -9524,6 +9794,14 @@ const DesignApp: FC = () => {
 
 // #region Config
 
+// [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/CONFIG)
+// Config MUST export the Design app configuration with route segments, panel definitions, and path matching.
+
+/**
+ * Exported Design app configuration including routes, panels, and path matching.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/CONFIG/CONFIG)
+ **/
 export const config: AppConfig = {
   id: "design",
   component: DesignApp,
@@ -9540,14 +9818,10 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (): PanelDefinition[] => [
-    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
     createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-    createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

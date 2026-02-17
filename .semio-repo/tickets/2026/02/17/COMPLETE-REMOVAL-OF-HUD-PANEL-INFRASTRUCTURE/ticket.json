@@ -1,0 +1,23 @@
+{
+  "title": "Complete Removal of HUD Panel Infrastructure",
+  "status": "open",
+  "prompt": "Complete removal of all HUD Panel infrastructure from Sketchpad. Remove HudPanel component, interfaces, types, hooks, panel registration logic, tests, and stories. Fixes remaining compilation errors from previous partial HUD removal.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/603"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-17T14:34:16.698709781Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-17 14:34:16"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5381e7e37855734d6f0ff5e8679db01b8ad00a12",
+      "prompt": "Complete removal of all HUD Panel infrastructure from Sketchpad. Remove HudPanel component, interfaces, types, hooks, panel registration logic, tests, and stories. Fixes remaining compilation errors from previous partial HUD removal.",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}
