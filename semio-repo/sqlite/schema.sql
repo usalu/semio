@@ -33,47 +33,28 @@
 
 CREATE TABLE IF NOT EXISTS repo (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    path TEXT NOT NULL,
-    exported_at TEXT NOT NULL
 );
-
--- #endregion 🔖Repo
-
--- #region 🔖Bundle
-
+CREATE TABLE IF NOT EXISTS folder (
+    id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL REFERENCES repo(id) ON DELETE CASCADE,
+    parent_id TEXT REFERENCES folder(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    bundle_id TEXT REFERENCES bundle(id) ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS file (
+    id TEXT PRIMARY KEY,
+    parent_folder_id TEXT NOT NULL REFERENCES folder(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    extension TEXT NOT NULL,
+);
 CREATE TABLE IF NOT EXISTS bundle (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    root TEXT NOT NULL,
-    source_root TEXT,
-    project_type TEXT,
-    uri TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS bundle_tag (
-    bundle_id TEXT NOT NULL REFERENCES bundle(id) ON DELETE CASCADE,
-    tag TEXT NOT NULL,
-    PRIMARY KEY (bundle_id, tag)
+    kind TEXT,
+    folder_id TEXT NOT NULL REFERENCES folder(id) ON DELETE CASCADE
 );
 
 -- #endregion 🔖Bundle
 
--- #region 🔖Folder
-
-CREATE TABLE IF NOT EXISTS folder (
-    id TEXT PRIMARY KEY,
-    path TEXT NOT NULL UNIQUE,
-    uri TEXT NOT NULL,
-    name TEXT NOT NULL,
-    parent_id TEXT REFERENCES folder(id) ON DELETE SET NULL,
-    bundle_id TEXT REFERENCES bundle(id) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_folder_parent ON folder(parent_id);
-CREATE INDEX IF NOT EXISTS idx_folder_bundle ON folder(bundle_id);
-
--- #endregion 🔖Folder
 
 -- #region 🔖File
 

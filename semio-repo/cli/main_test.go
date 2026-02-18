@@ -11934,6 +11934,78 @@ func TestRenderMonorepoTree(t *testing.T) {
 			t.Errorf("markdown tree must not contain ascii connectors, got: %s", output)
 		}
 	})
+
+	t.Run("text tree shows only own ID segment not full parent chain", func(t *testing.T) {
+		parentGoalData := map[string]interface{}{
+			"id":     "parentgoal",
+			"title":  "Parent Goal",
+			"status": "open",
+		}
+		childGoalData := map[string]interface{}{
+			"id":       "parentgoal/childgoal",
+			"title":    "Child Goal",
+			"status":   "open",
+			"parentId": "🎯parentgoal",
+		}
+		grandchildGoalData := map[string]interface{}{
+			"id":       "parentgoal/childgoal/grandchildgoal",
+			"title":    "Grandchild Goal",
+			"status":   "open",
+			"parentId": "🎯parentgoal🎯childgoal",
+		}
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://goals", Children: []*TreeNode{
+					{Kind: TreeNodeGoal, ID: "parentgoal", Label: "Parent Goal", Data: parentGoalData, Children: []*TreeNode{
+						{Kind: TreeNodeGoal, ID: "childgoal", Label: "Child Goal", Data: childGoalData, Children: []*TreeNode{
+							{Kind: TreeNodeGoal, ID: "grandchildgoal", Label: "Grandchild Goal", Data: grandchildGoalData},
+						}},
+					}},
+				}},
+			},
+		}
+		output := RenderMonorepoTree(tree)
+		lines := strings.Split(strings.TrimRight(output, "\n"), "\n")
+		for _, line := range lines {
+			if strings.Contains(line, "🎯parentgoal🎯childgoal") {
+				t.Errorf("tree text should not contain full hierarchical ID, got line: %s", line)
+			}
+			if strings.Contains(line, "🎯parentgoal🎯") {
+				t.Errorf("tree text should not contain parent prefix in child line, got line: %s", line)
+			}
+		}
+		childFound := false
+		grandchildFound := false
+		for _, line := range lines {
+			if strings.Contains(line, "🎯childgoal") && !strings.Contains(line, "🎯parentgoal🎯childgoal") {
+				childFound = true
+			}
+			if strings.Contains(line, "🎯grandchildgoal") && !strings.Contains(line, "🎯childgoal🎯grandchildgoal") {
+				grandchildFound = true
+			}
+		}
+		if !childFound {
+			t.Errorf("tree text should contain short child ID 🎯childgoal, got:\n%s", output)
+		}
+		if !grandchildFound {
+			t.Errorf("tree text should contain short grandchild ID 🎯grandchildgoal, got:\n%s", output)
+		}
+	})
+
+	t.Run("text tree preserves parentId on data after rendering", func(t *testing.T) {
+		data := map[string]interface{}{
+			"id":       "parent/child",
+			"title":    "Child",
+			"status":   "open",
+			"parentId": "🎯parent",
+		}
+		node := &TreeNode{Kind: TreeNodeGoal, ID: "child", Label: "Child", Data: data}
+		var sb strings.Builder
+		renderTreeNodeText(&sb, node, "", true, true)
+		if data["parentId"] != "🎯parent" {
+			t.Errorf("renderTreeNodeText should restore parentId, got: %v", data["parentId"])
+		}
+	})
 }
 
 func TestBuildMonorepoTree(t *testing.T) {
@@ -13664,22 +13736,25 @@ func TestFilePolicyRegistered(t *testing.T) {
 
 func TestValidateHookEvent(t *testing.T) {
 	cases := []struct {
-		name    string
-		input   string
-		valid   bool
-		expect  HookEvent
+		name   string
+		input  string
+		valid  bool
+		expect HookEvent
 	}{
-		{"commit starting", "commit.starting", true, HookCommitStarting},
-		{"commit ended", "commit.ended", true, HookCommitEnded},
+		{"git commit starting", "git.commit.starting", true, HookGitCommitStarting},
+		{"git commit ended", "git.commit.ended", true, HookGitCommitEnded},
 		{"agent starting", "agent.starting", true, HookAgentStarting},
 		{"agent ended", "agent.ended", true, HookAgentEnded},
-		{"prompt submit", "prompt.submit", true, HookPromptSubmit},
-		{"compacting", "compacting", true, HookCompacting},
-		{"tool calling", "tool.calling", true, HookToolCalling},
-		{"tool ended", "tool.ended", true, HookToolEnded},
-		{"code reading", "code.reading", true, HookCodeReading},
-		{"code edited", "code.edited", true, HookCodeEdited},
-		{"notification", "notification", true, HookNotification},
+		{"agent prompt submitting", "agent.prompt.submitting", true, HookAgentPromptSubmitting},
+		{"agent compacting", "agent.compacting", true, HookAgentCompacting},
+		{"agent tool starting", "agent.tool.starting", true, HookAgentToolStarting},
+		{"agent tool ended", "agent.tool.ended", true, HookAgentToolEnded},
+		{"agent tool plan updating", "agent.tool.plan.updating", true, HookAgentToolPlanUpdating},
+		{"agent tool code searching", "agent.tool.code.searching", true, HookAgentToolCodeSearching},
+		{"agent tool code editing", "agent.tool.code.editing", true, HookAgentToolCodeEditing},
+		{"agent tool code edited", "agent.tool.code.edited", true, HookAgentToolCodeEdited},
+		{"agent tool terminal starting", "agent.tool.terminal.starting", true, HookAgentToolTerminalStarting},
+		{"agent tool terminal ended", "agent.tool.terminal.ended", true, HookAgentToolTerminalEnded},
 		{"invalid", "invalid.event", false, ""},
 		{"empty", "", false, ""},
 	}
@@ -13708,17 +13783,20 @@ func TestHookEventKind(t *testing.T) {
 		event  HookEvent
 		expect HookKind
 	}{
-		{"commit starting is git", HookCommitStarting, HookKindGit},
-		{"commit ended is git", HookCommitEnded, HookKindGit},
+		{"git commit starting is git", HookGitCommitStarting, HookKindGit},
+		{"git commit ended is git", HookGitCommitEnded, HookKindGit},
 		{"agent starting is agent", HookAgentStarting, HookKindAgent},
 		{"agent ended is agent", HookAgentEnded, HookKindAgent},
-		{"prompt submit is agent", HookPromptSubmit, HookKindAgent},
-		{"compacting is agent", HookCompacting, HookKindAgent},
-		{"tool calling is agent", HookToolCalling, HookKindAgent},
-		{"tool ended is agent", HookToolEnded, HookKindAgent},
-		{"code reading is agent", HookCodeReading, HookKindAgent},
-		{"code edited is agent", HookCodeEdited, HookKindAgent},
-		{"notification is agent", HookNotification, HookKindAgent},
+		{"agent prompt submitting is agent", HookAgentPromptSubmitting, HookKindAgent},
+		{"agent compacting is agent", HookAgentCompacting, HookKindAgent},
+		{"agent tool starting is agent", HookAgentToolStarting, HookKindAgent},
+		{"agent tool ended is agent", HookAgentToolEnded, HookKindAgent},
+		{"agent tool plan updating is agent", HookAgentToolPlanUpdating, HookKindAgent},
+		{"agent tool code searching is agent", HookAgentToolCodeSearching, HookKindAgent},
+		{"agent tool code editing is agent", HookAgentToolCodeEditing, HookKindAgent},
+		{"agent tool code edited is agent", HookAgentToolCodeEdited, HookKindAgent},
+		{"agent tool terminal starting is agent", HookAgentToolTerminalStarting, HookKindAgent},
+		{"agent tool terminal ended is agent", HookAgentToolTerminalEnded, HookKindAgent},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -13771,13 +13849,16 @@ func TestRunHookAgentEvents(t *testing.T) {
 	}{
 		{"agent starting", HookAgentStarting, true},
 		{"agent ended", HookAgentEnded, true},
-		{"prompt submit", HookPromptSubmit, true},
-		{"compacting", HookCompacting, true},
-		{"tool ended", HookToolEnded, true},
-		{"code reading", HookCodeReading, true},
-		{"code edited", HookCodeEdited, true},
-		{"notification", HookNotification, true},
-		{"commit ended", HookCommitEnded, true},
+		{"agent prompt submitting", HookAgentPromptSubmitting, true},
+		{"agent compacting", HookAgentCompacting, true},
+		{"agent tool ended", HookAgentToolEnded, true},
+		{"agent tool code searching", HookAgentToolCodeSearching, true},
+		{"agent tool code editing", HookAgentToolCodeEditing, true},
+		{"agent tool code edited", HookAgentToolCodeEdited, true},
+		{"agent tool plan updating", HookAgentToolPlanUpdating, true},
+		{"agent tool terminal starting", HookAgentToolTerminalStarting, true},
+		{"agent tool terminal ended", HookAgentToolTerminalEnded, true},
+		{"git commit ended", HookGitCommitEnded, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -13785,6 +13866,7 @@ func TestRunHookAgentEvents(t *testing.T) {
 				Event:     tc.event,
 				Client:    "copilot-chat",
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
+				RepoRoot:  t.TempDir(),
 			}
 			result := RunHook(hctx)
 			if result.Allowed != tc.allowed {
@@ -13796,9 +13878,10 @@ func TestRunHookAgentEvents(t *testing.T) {
 
 func TestRunHookToolBlocking(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookToolCalling,
+		Event:     HookAgentToolStarting,
 		Client:    "copilot-chat",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  t.TempDir(),
 		ToolName:  "run_in_terminal",
 		ToolArgs:  "git checkout main",
 	}
@@ -13813,9 +13896,10 @@ func TestRunHookToolBlocking(t *testing.T) {
 
 func TestRunHookToolAllowed(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookToolCalling,
+		Event:     HookAgentToolStarting,
 		Client:    "cursor-chat",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  t.TempDir(),
 		ToolName:  "read_file",
 		ToolArgs:  "/workspaces/semio/semio-repo/cli/main.go",
 	}
@@ -13830,6 +13914,7 @@ func TestRunHookUnknownEvent(t *testing.T) {
 		Event:     HookEvent("unknown.event"),
 		Client:    "copilot-chat",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  t.TempDir(),
 	}
 	result := RunHook(hctx)
 	if result.Allowed {
@@ -13839,12 +13924,13 @@ func TestRunHookUnknownEvent(t *testing.T) {
 
 func TestAllHookEventsCompleteness(t *testing.T) {
 	expected := []HookEvent{
-		HookCommitStarting, HookCommitEnded,
+		HookGitCommitStarting, HookGitCommitEnded,
 		HookAgentStarting, HookAgentEnded,
-		HookPromptSubmit, HookCompacting,
-		HookToolCalling, HookToolEnded,
-		HookCodeReading, HookCodeEdited,
-		HookNotification,
+		HookAgentPromptSubmitting, HookAgentCompacting,
+		HookAgentToolStarting, HookAgentToolEnded,
+		HookAgentToolPlanUpdating,
+		HookAgentToolCodeSearching, HookAgentToolCodeEditing, HookAgentToolCodeEdited,
+		HookAgentToolTerminalStarting, HookAgentToolTerminalEnded,
 	}
 	if len(AllHookEvents) != len(expected) {
 		t.Errorf("expected %d events, got %d", len(expected), len(AllHookEvents))
@@ -13874,10 +13960,21 @@ func TestHookCommandCLI(t *testing.T) {
 		args    []string
 		wantErr bool
 	}{
-		{"valid agent starting", []string{"agent.starting", "copilot-chat"}, false},
-		{"valid prompt submit", []string{"prompt.submit", "cursor-chat"}, false},
-		{"valid notification", []string{"notification", "windsurf-chat"}, false},
-		{"invalid event", []string{"invalid.event"}, true},
+		{"neutral agent starting", []string{"agent.starting", "copilot-chat"}, false},
+		{"neutral agent prompt submitting", []string{"agent.prompt.submitting", "cursor-chat"}, false},
+		{"neutral agent tool terminal starting", []string{"agent.tool.terminal.starting", "windsurf-chat"}, false},
+		{"native copilot SessionStart", []string{"SessionStart", "copilot-chat"}, false},
+		{"native copilot PreToolUse", []string{"PreToolUse", "copilot-chat"}, false},
+		{"native copilot PreCompact", []string{"PreCompact", "copilot-chat"}, false},
+		{"native cursor sessionStart", []string{"sessionStart", "cursor-chat"}, false},
+		{"native cursor beforeReadFile", []string{"beforeReadFile", "cursor-chat"}, false},
+		{"native windsurf pre_user_prompt", []string{"pre_user_prompt", "windsurf-chat"}, false},
+		{"native windsurf pre_read_code", []string{"pre_read_code", "windsurf-chat"}, false},
+		{"native claude SessionStart", []string{"SessionStart", "claude-code"}, false},
+		{"native claude PreToolUse", []string{"PreToolUse", "claude-code"}, false},
+		{"native droid PreToolUse", []string{"PreToolUse", "droid"}, false},
+		{"invalid event no client", []string{"invalid.event"}, true},
+		{"invalid native no client", []string{"UnknownEvent", "copilot-chat"}, true},
 		{"no args", []string{}, true},
 	}
 	for _, tc := range cases {
@@ -13899,9 +13996,10 @@ func TestHookCommandCLI(t *testing.T) {
 
 func TestHookCommandToolBlocking(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookToolCalling,
+		Event:     HookAgentToolStarting,
 		Client:    "copilot-chat",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  t.TempDir(),
 		ToolName:  "terminal",
 		ToolArgs:  "git stash pop",
 	}
@@ -13922,6 +14020,7 @@ func TestHookCommandJSONOutput(t *testing.T) {
 		Event:     HookAgentStarting,
 		Client:    "copilot-chat",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  t.TempDir(),
 	}
 	result := RunHook(hctx)
 	out, err := json.Marshal(result)
@@ -13945,18 +14044,285 @@ func TestGenerateCopilotConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(content, "hook agent.starting copilot-chat") {
-		t.Error("expected agent.starting hook in copilot config")
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
 	}
-	if !strings.Contains(content, "hook tool.calling copilot-chat") {
-		t.Error("expected tool.calling hook in copilot config")
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected hooks key in copilot config")
 	}
-	if !strings.Contains(content, "git checkout") {
-		t.Error("expected blocked operations in copilot config")
+	for _, key := range []string{"SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "PreCompact", "SubagentStart", "SubagentStop", "Stop"} {
+		arr, ok := hooks[key].([]interface{})
+		if !ok || len(arr) == 0 {
+			t.Errorf("expected %s array in copilot hooks", key)
+			continue
+		}
+		entry, ok := arr[0].(map[string]interface{})
+		if !ok {
+			t.Errorf("expected object entry for %s", key)
+			continue
+		}
+		if entry["type"] != "command" {
+			t.Errorf("expected type=command for %s, got %v", key, entry["type"])
+		}
+		cmd, _ := entry["command"].(string)
+		if !strings.Contains(cmd, "copilot-chat") {
+			t.Errorf("expected copilot-chat in command for %s, got %s", key, cmd)
+		}
+		if !strings.Contains(cmd, "hook "+key) {
+			t.Errorf("expected native event %s in command, got %s", key, cmd)
+		}
+		timeout, ok := entry["timeout"].(float64)
+		if !ok || timeout != 30 {
+			t.Errorf("expected timeout=30 for %s, got %v", key, entry["timeout"])
+		}
 	}
-	if !strings.Contains(content, "git stash") {
-		t.Error("expected git stash in blocked operations")
+}
+
+func TestExtractToolNameFromStdin(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{"vscode tool_name", `{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"ls"}}`, "run_in_terminal"},
+		{"claude code tool_name", `{"tool_name":"Bash","tool_input":{"command":"git checkout main"}}`, "Bash"},
+		{"no tool_name", `{"tool_input":{"command":"ls"}}`, ""},
+		{"empty object", `{}`, ""},
+		{"invalid json", `not json`, ""},
+		{"empty input", ``, ""},
 	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractToolNameFromStdin(json.RawMessage(tc.input))
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestExtractHookEventNameFromStdin(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{"PreToolUse", `{"hookEventName":"PreToolUse","tool_name":"editFiles"}`, "PreToolUse"},
+		{"PostToolUse", `{"hookEventName":"PostToolUse","tool_name":"editFiles"}`, "PostToolUse"},
+		{"SessionStart", `{"hookEventName":"SessionStart","source":"new"}`, "SessionStart"},
+		{"no hookEventName", `{"tool_name":"Bash"}`, ""},
+		{"empty", `{}`, ""},
+		{"invalid json", `bad`, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractHookEventNameFromStdin(json.RawMessage(tc.input))
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestVSCodeEventFromHookEvent(t *testing.T) {
+	cases := []struct {
+		name       string
+		event      HookEvent
+		parentInfo string
+		expect     string
+	}{
+		{"agent.tool.starting", HookAgentToolStarting, "", "PreToolUse"},
+		{"agent.tool.ended", HookAgentToolEnded, "", "PostToolUse"},
+		{"agent.starting", HookAgentStarting, "", "SessionStart"},
+		{"agent.starting subagent", HookAgentStarting, "subagent", "SubagentStart"},
+		{"agent.ended", HookAgentEnded, "", "Stop"},
+		{"agent.ended subagent", HookAgentEnded, "subagent", "SubagentStop"},
+		{"agent.prompt.submitting", HookAgentPromptSubmitting, "", "UserPromptSubmit"},
+		{"agent.compacting", HookAgentCompacting, "", "PreCompact"},
+		{"agent.tool.code.searching", HookAgentToolCodeSearching, "", "PreToolUse"},
+		{"agent.tool.code.editing", HookAgentToolCodeEditing, "", "PreToolUse"},
+		{"agent.tool.code.edited", HookAgentToolCodeEdited, "", "PostToolUse"},
+		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, "", "PreToolUse"},
+		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, "", "PostToolUse"},
+		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, "", "PreToolUse"},
+		{"unknown", HookEvent("unknown.x"), "", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := vsCodeEventFromHookEvent(tc.event, tc.parentInfo)
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestFormatVSCodeHookOutput(t *testing.T) {
+	t.Run("PreToolUse allow", func(t *testing.T) {
+		out := formatVSCodeHookOutput("PreToolUse", HookResult{Allowed: true})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput")
+		}
+		if hso["permissionDecision"] != "allow" {
+			t.Errorf("expected permissionDecision=allow, got %v", hso["permissionDecision"])
+		}
+		if hso["hookEventName"] != "PreToolUse" {
+			t.Errorf("expected hookEventName=PreToolUse, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("PreToolUse deny", func(t *testing.T) {
+		out := formatVSCodeHookOutput("PreToolUse", HookResult{Allowed: false, Message: "blocked: git checkout"})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput")
+		}
+		if hso["permissionDecision"] != "deny" {
+			t.Errorf("expected permissionDecision=deny, got %v", hso["permissionDecision"])
+		}
+		if hso["permissionDecisionReason"] != "blocked: git checkout" {
+			t.Errorf("expected reason in output, got %v", hso["permissionDecisionReason"])
+		}
+	})
+	t.Run("SessionStart with message", func(t *testing.T) {
+		out := formatVSCodeHookOutput("SessionStart", HookResult{Allowed: true, Message: "agent.starting acknowledged"})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput")
+		}
+		if hso["additionalContext"] != "agent.starting acknowledged" {
+			t.Errorf("expected additionalContext, got %v", hso["additionalContext"])
+		}
+	})
+	t.Run("Stop always has hookSpecificOutput", func(t *testing.T) {
+		out := formatVSCodeHookOutput("Stop", HookResult{Allowed: true})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput for Stop")
+		}
+		if hso["hookEventName"] != "Stop" {
+			t.Errorf("expected hookEventName=Stop, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("UserPromptSubmit always has hookSpecificOutput", func(t *testing.T) {
+		out := formatVSCodeHookOutput("UserPromptSubmit", HookResult{Allowed: true})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput for UserPromptSubmit")
+		}
+		if hso["hookEventName"] != "UserPromptSubmit" {
+			t.Errorf("expected hookEventName=UserPromptSubmit, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("PostToolUse always has hookSpecificOutput", func(t *testing.T) {
+		out := formatVSCodeHookOutput("PostToolUse", HookResult{Allowed: true})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+		hso, ok := parsed["hookSpecificOutput"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hookSpecificOutput for PostToolUse")
+		}
+		if hso["hookEventName"] != "PostToolUse" {
+			t.Errorf("expected hookEventName=PostToolUse, got %v", hso["hookEventName"])
+		}
+	})
+	t.Run("unknown event empty output", func(t *testing.T) {
+		out := formatVSCodeHookOutput("", HookResult{Allowed: true, Message: "test"})
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON, got: %v", err)
+		}
+	})
+}
+
+func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
+	t.Run("PreToolUse allow produces VS Code JSON", func(t *testing.T) {
+		hctx := HookContext{
+			Event:     HookAgentToolStarting,
+			Client:    "copilot-chat",
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+			ToolName:  "read_file",
+			ToolArgs:  "/tmp/file.ts",
+			RepoRoot:  t.TempDir(),
+		}
+		result := RunHook(hctx)
+		if !result.Allowed {
+			t.Fatal("expected allowed")
+		}
+		out := formatVSCodeHookOutput("PreToolUse", result)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON: %v", err)
+		}
+		hso := parsed["hookSpecificOutput"].(map[string]interface{})
+		if hso["permissionDecision"] != "allow" {
+			t.Errorf("expected allow, got %v", hso["permissionDecision"])
+		}
+	})
+	t.Run("PreToolUse blocked produces VS Code deny JSON", func(t *testing.T) {
+		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git checkout main"}}`)
+		hctx := HookContext{
+			Event:     HookAgentToolStarting,
+			Client:    "copilot-chat",
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+			ToolName:  "run_in_terminal",
+			Input:     payload,
+			RepoRoot:  t.TempDir(),
+		}
+		result := RunHook(hctx)
+		if result.Allowed {
+			t.Fatal("expected blocked")
+		}
+		hookEventName := extractHookEventNameFromStdin(payload)
+		out := formatVSCodeHookOutput(hookEventName, result)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+			t.Fatalf("expected valid JSON: %v", err)
+		}
+		hso := parsed["hookSpecificOutput"].(map[string]interface{})
+		if hso["permissionDecision"] != "deny" {
+			t.Errorf("expected deny, got %v", hso["permissionDecision"])
+		}
+		reason, _ := hso["permissionDecisionReason"].(string)
+		if !strings.Contains(reason, "blocked") {
+			t.Errorf("expected blocked reason, got: %s", reason)
+		}
+	})
+	t.Run("tool_name extracted from stdin", func(t *testing.T) {
+		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git stash"}}`)
+		toolName := extractToolNameFromStdin(payload)
+		if toolName != "run_in_terminal" {
+			t.Errorf("expected run_in_terminal, got %s", toolName)
+		}
+		cmd := extractCommandFromStdin(payload)
+		if cmd != "git stash" {
+			t.Errorf("expected git stash, got %s", cmd)
+		}
+	})
 }
 
 func TestGenerateCursorConfig(t *testing.T) {
@@ -13964,14 +14330,36 @@ func TestGenerateCursorConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(content, "alwaysApply: true") {
-		t.Error("expected alwaysApply in cursor config")
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
 	}
-	if !strings.Contains(content, "hook agent.starting cursor-chat") {
-		t.Error("expected agent.starting hook in cursor config")
+	version, ok := config["version"].(float64)
+	if !ok || version != 1 {
+		t.Errorf("expected version=1, got %v", config["version"])
 	}
-	if !strings.Contains(content, "file.read.pre") {
-		t.Error("expected file.read.pre reference in cursor config")
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected hooks key in cursor config")
+	}
+	for _, key := range []string{"sessionStart", "sessionEnd", "subagentStart", "subagentStop", "stop", "beforeSubmitPrompt", "preCompact", "preToolUse", "postToolUse", "postToolUseFailure", "beforeMCPExecution", "afterMCPExecution", "beforeReadFile", "afterFileEdit", "beforeShellExecution", "afterShellExecution", "afterAgentResponse", "afterAgentThought", "beforeTabFileRead", "afterTabFileEdit"} {
+		arr, ok := hooks[key].([]interface{})
+		if !ok || len(arr) == 0 {
+			t.Errorf("expected %s array in cursor hooks", key)
+			continue
+		}
+		entry, ok := arr[0].(map[string]interface{})
+		if !ok {
+			t.Errorf("expected object entry for %s", key)
+			continue
+		}
+		cmd, _ := entry["command"].(string)
+		if !strings.Contains(cmd, "cursor-chat") {
+			t.Errorf("expected cursor-chat in command for %s, got %s", key, cmd)
+		}
+		if !strings.Contains(cmd, "hook "+key) {
+			t.Errorf("expected native event %s in command, got %s", key, cmd)
+		}
 	}
 }
 
@@ -13980,53 +14368,96 @@ func TestGenerateWindsurfConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(content, "hook agent.starting windsurf-chat") {
-		t.Error("expected agent.starting hook in windsurf config")
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
 	}
-	if !strings.Contains(content, "pre_read_code") {
-		t.Error("expected pre_read_code reference in windsurf config")
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected hooks key in windsurf config")
 	}
-	if !strings.Contains(content, "pre_write_code") {
-		t.Error("expected pre_write_code reference in windsurf config")
+	for _, key := range []string{"pre_user_prompt", "post_cascade_response", "post_setup_worktree", "pre_mcp_tool_use", "post_mcp_tool_use", "pre_read_code", "post_read_code", "pre_write_code", "post_write_code", "pre_run_command"} {
+		arr, ok := hooks[key].([]interface{})
+		if !ok || len(arr) == 0 {
+			t.Errorf("expected %s array in windsurf hooks", key)
+			continue
+		}
+		entry, ok := arr[0].(map[string]interface{})
+		if !ok {
+			t.Errorf("expected object entry for %s", key)
+			continue
+		}
+		cmd, _ := entry["command"].(string)
+		if !strings.Contains(cmd, "windsurf-chat") {
+			t.Errorf("expected windsurf-chat in command for %s, got %s", key, cmd)
+		}
+		if !strings.Contains(cmd, "hook "+key) {
+			t.Errorf("expected native event %s in command, got %s", key, cmd)
+		}
 	}
 }
 
 func TestGenerateClaudeCodeConfig(t *testing.T) {
-	content, err := generateClaudeCodeConfig("/tmp/test-repo")
+	tmpDir := t.TempDir()
+	claudeDir := filepath.Join(tmpDir, ".claude")
+	if err := os.MkdirAll(claudeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	existingSettings := `{"permissions":{"allow":["Bash(*)"],"deny":[]}}`
+	if err := os.WriteFile(filepath.Join(claudeDir, "settings.json"), []byte(existingSettings), 0644); err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateClaudeCodeConfig(tmpDir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var config map[string]interface{}
 	if err := json.Unmarshal([]byte(content), &config); err != nil {
 		t.Fatalf("expected valid JSON, got error: %v", err)
+	}
+	if _, ok := config["permissions"]; !ok {
+		t.Error("expected existing permissions to be preserved")
 	}
 	hooks, ok := config["hooks"].(map[string]interface{})
 	if !ok {
 		t.Fatal("expected hooks key in claude code config")
 	}
-	for _, key := range []string{"PreToolUse", "PostToolUse", "PreCompact", "Notification", "SessionStart", "SessionStop", "SubagentStart", "SubagentStop", "PromptSubmit"} {
-		if _, ok := hooks[key]; !ok {
-			t.Errorf("expected %s in claude code hooks", key)
+	for _, key := range []string{"PreToolUse", "PostToolUse", "PostToolUseFailure", "UserPromptSubmit", "PreCompact", "SessionStart", "SessionEnd", "SubagentStart", "SubagentStop", "Stop", "TaskCompleted", "Notification"} {
+		arr, ok := hooks[key].([]interface{})
+		if !ok || len(arr) == 0 {
+			t.Errorf("expected %s array in claude code hooks", key)
+			continue
 		}
-	}
-}
-
-func TestGenerateCodexConfig(t *testing.T) {
-	content, err := generateCodexConfig("/tmp/test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(content), &config); err != nil {
-		t.Fatalf("expected valid JSON, got error: %v", err)
-	}
-	hooks, ok := config["hooks"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected hooks key in codex config")
-	}
-	for _, key := range []string{"agent.starting", "agent.ended", "prompt.submit", "tool.calling", "code.reading", "notification"} {
-		if _, ok := hooks[key]; !ok {
-			t.Errorf("expected %s in codex hooks", key)
+		entry, ok := arr[0].(map[string]interface{})
+		if !ok {
+			t.Errorf("expected object entry for %s", key)
+			continue
+		}
+		matcher, ok := entry["matcher"]
+		if !ok {
+			t.Errorf("expected matcher in %s entry", key)
+		} else if matcher != "" {
+			t.Errorf("expected empty matcher in %s entry, got %v", key, matcher)
+		}
+		innerHooks, ok := entry["hooks"].([]interface{})
+		if !ok || len(innerHooks) == 0 {
+			t.Errorf("expected inner hooks array for %s", key)
+			continue
+		}
+		inner, ok := innerHooks[0].(map[string]interface{})
+		if !ok {
+			t.Errorf("expected inner hook object for %s", key)
+			continue
+		}
+		if inner["type"] != "command" {
+			t.Errorf("expected type=command for %s, got %v", key, inner["type"])
+		}
+		cmd, _ := inner["command"].(string)
+		if !strings.Contains(cmd, "claude-code") {
+			t.Errorf("expected claude-code in command for %s, got %s", key, cmd)
+		}
+		if !strings.Contains(cmd, "hook "+key) {
+			t.Errorf("expected native event %s in command, got %s", key, cmd)
 		}
 	}
 }
@@ -14044,15 +14475,15 @@ func TestConfigureGitHooks(t *testing.T) {
 	if err != nil {
 		t.Fatal("pre-commit hook not created")
 	}
-	if !strings.Contains(string(preCommit), "hook commit.starting") {
-		t.Error("pre-commit hook does not call hook commit.starting")
+	if !strings.Contains(string(preCommit), "hook git.commit.starting") {
+		t.Error("pre-commit hook does not call hook git.commit.starting")
 	}
 	postCommit, err := os.ReadFile(filepath.Join(gitDir, "hooks", "post-commit"))
 	if err != nil {
 		t.Fatal("post-commit hook not created")
 	}
-	if !strings.Contains(string(postCommit), "hook commit.ended") {
-		t.Error("post-commit hook does not call hook commit.ended")
+	if !strings.Contains(string(postCommit), "hook git.commit.ended") {
+		t.Error("post-commit hook does not call hook git.commit.ended")
 	}
 	info, _ := os.Stat(filepath.Join(gitDir, "hooks", "pre-commit"))
 	if info.Mode()&0111 == 0 {
@@ -14062,7 +14493,7 @@ func TestConfigureGitHooks(t *testing.T) {
 
 func TestGetClientHookMappings(t *testing.T) {
 	mappings := getClientHookMappings()
-	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "codex", "droid", "antigravity-chat"}
+	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid"}
 	if len(mappings) != len(expectedClients) {
 		t.Errorf("expected %d mappings, got %d", len(expectedClients), len(mappings))
 	}
@@ -14129,7 +14560,10 @@ func TestHookLogging(t *testing.T) {
 	if !strings.HasSuffix(name, "_agent-starting.json") {
 		t.Errorf("expected filename to end with _agent-starting.json, got: %s", name)
 	}
-	if len(name) != len("260218230207_agent-starting.json") {
+	if !strings.Contains(name, "_claude-code_") {
+		t.Errorf("expected filename to contain _claude-code_, got: %s", name)
+	}
+	if len(name) != len("260218230207_claude-code_agent-starting.json") {
 		t.Errorf("unexpected filename length for %q", name)
 	}
 	data, err := os.ReadFile(filepath.Join(logDir, name))
@@ -14155,12 +14589,12 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 	tmpDir := t.TempDir()
 	logDir := filepath.Join(tmpDir, ".semio-repo", "📜")
 	hctx := HookContext{
-		Event:    HookToolCalling,
-		Client:   "claude-code",
+		Event:     HookAgentToolStarting,
+		Client:    "claude-code",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot: tmpDir,
-		ToolName: "bash",
-		ToolArgs: "git checkout main",
+		RepoRoot:  tmpDir,
+		ToolName:  "bash",
+		ToolArgs:  "git checkout main",
 	}
 	result := RunHook(hctx)
 	if result.Allowed {
@@ -14187,8 +14621,8 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 	if !strings.Contains(entry.Result.Message, "blocked") {
 		t.Errorf("expected blocked message in log, got: %s", entry.Result.Message)
 	}
-	if !strings.HasSuffix(entries[0].Name(), "_tool-calling.json") {
-		t.Errorf("expected filename to end with _tool-calling.json, got: %s", entries[0].Name())
+	if !strings.HasSuffix(entries[0].Name(), "_agent-tool-starting.json") {
+		t.Errorf("expected filename to end with _agent-tool-starting.json, got: %s", entries[0].Name())
 	}
 }
 
@@ -14197,7 +14631,7 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	logDir := filepath.Join(tmpDir, ".semio-repo", "📜")
 	payload := json.RawMessage(`{"session_id":"abc123","tool_name":"Bash","tool_input":{"command":"ls"}}`)
 	hctx := HookContext{
-		Event:     HookToolCalling,
+		Event:     HookAgentToolStarting,
 		Client:    "claude-code",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		RepoRoot:  tmpDir,
@@ -14241,7 +14675,7 @@ func TestHookLoggingStdinInput(t *testing.T) {
 func TestHookCommandStdinPiped(t *testing.T) {
 	tmpDir := t.TempDir()
 	payload := `{"session_id":"sess1","tool_name":"Read","tool_input":{"file_path":"/tmp/x"}}`
-	cmd := exec.Command("./cli", "hook", "tool.ended", "claude-code", "--tool-name", "Read")
+	cmd := exec.Command("./cli", "hook", "agent.tool.ended", "claude-code", "--tool-name", "Read")
 	cmd.Stdin = strings.NewReader(payload)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("SEMIO_REPO=%s", tmpDir))
 	cmd.Dir = filepath.Dir(os.Args[0])
@@ -14259,6 +14693,269 @@ func TestHookCommandStdinPiped(t *testing.T) {
 	data, _ := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
 	if !strings.Contains(string(data), "sess1") {
 		t.Errorf("expected stdin payload in log, got: %s", string(data))
+	}
+}
+
+func TestExtractCommandFromStdin(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{"claude code tool_input.command", `{"tool_name":"Bash","tool_input":{"command":"git checkout main"}}`, "git checkout main"},
+		{"cursor beforeShellExecution", `{"command":"git stash pop"}`, "git stash pop"},
+		{"windsurf tool_info.command_line", `{"tool_info":{"command_line":"git reset --hard"}}`, "git reset --hard"},
+		{"no command", `{"tool_name":"ReadFile","tool_input":{"path":"/tmp"}}`, ""},
+		{"empty object", `{}`, ""},
+		{"invalid json", `not json`, ""},
+		{"empty input", ``, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extractCommandFromStdin(json.RawMessage(tc.input))
+			if result != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestExtractCommandFromStdinBlocking(t *testing.T) {
+	payload := json.RawMessage(`{"tool_name":"Bash","tool_input":{"command":"git checkout main"}}`)
+	hctx := HookContext{
+		Event:     HookAgentToolStarting,
+		Client:    "claude-code",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Input:     payload,
+		RepoRoot:  t.TempDir(),
+	}
+	result := RunHook(hctx)
+	if result.Allowed {
+		t.Error("expected stdin-based git checkout to be blocked")
+	}
+	if !strings.Contains(result.Message, "blocked") {
+		t.Errorf("expected blocked message, got: %s", result.Message)
+	}
+}
+
+func TestGenerateDroidConfig(t *testing.T) {
+	content, err := generateDroidConfig("/tmp/test-repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	testNativeHookConfig(t, content, "droid")
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
+	}
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected hooks key in droid config")
+	}
+	for _, key := range []string{"PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop", "SubagentStop", "PreCompact", "SessionStart", "SessionEnd", "Notification"} {
+		cmd, ok := hooks[key].(string)
+		if !ok || cmd == "" {
+			t.Errorf("expected string command for %s in droid config", key)
+			continue
+		}
+		if !strings.Contains(cmd, "droid") {
+			t.Errorf("expected droid in command for %s, got %s", key, cmd)
+		}
+		if !strings.Contains(cmd, "hook "+key) {
+			t.Errorf("expected native event %s in command, got %s", key, cmd)
+		}
+	}
+}
+
+func testNativeHookConfig(t *testing.T, content string, clientName string) {
+	t.Helper()
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
+	}
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected hooks key in %s native config", clientName)
+	}
+	for _, event := range []string{"SessionStart", "SessionEnd", "Stop", "UserPromptSubmit", "PreCompact", "PreToolUse", "PostToolUse"} {
+		cmd, ok := hooks[event].(string)
+		if !ok || cmd == "" {
+			t.Errorf("expected string command for %s in %s native config", event, clientName)
+			continue
+		}
+		if !strings.Contains(cmd, clientName) {
+			t.Errorf("expected %s in command for %s, got %s", clientName, event, cmd)
+		}
+		if !strings.Contains(cmd, "hook "+event) {
+			t.Errorf("expected native event %s in command, got %s", event, cmd)
+		}
+	}
+}
+
+func TestClassifyTool(t *testing.T) {
+	cases := []struct {
+		name     string
+		toolName string
+		expect   ToolKind
+	}{
+		{"manage_todo_list", "manage_todo_list", ToolKindPlan},
+		{"Task", "Task", ToolKindPlan},
+		{"todo_tool", "todo_tool", ToolKindPlan},
+		{"read_file", "read_file", ToolKindCodeSearch},
+		{"grep_search", "grep_search", ToolKindCodeSearch},
+		{"file_search", "file_search", ToolKindCodeSearch},
+		{"semantic_search", "semantic_search", ToolKindCodeSearch},
+		{"list_dir", "list_dir", ToolKindCodeSearch},
+		{"get_errors", "get_errors", ToolKindCodeSearch},
+		{"Read", "Read", ToolKindCodeSearch},
+		{"replace_string_in_file", "replace_string_in_file", ToolKindCodeEdit},
+		{"create_file", "create_file", ToolKindCodeEdit},
+		{"multi_replace_string_in_file", "multi_replace_string_in_file", ToolKindCodeEdit},
+		{"Edit", "Edit", ToolKindCodeEdit},
+		{"Write", "Write", ToolKindCodeEdit},
+		{"run_in_terminal", "run_in_terminal", ToolKindTerminal},
+		{"get_terminal_output", "get_terminal_output", ToolKindTerminal},
+		{"Bash", "Bash", ToolKindTerminal},
+		{"runSubagent", "runSubagent", ToolKindGeneric},
+		{"runTests", "runTests", ToolKindGeneric},
+		{"tool_search_tool_regex", "tool_search_tool_regex", ToolKindGeneric},
+		{"empty", "", ToolKindGeneric},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := classifyTool(tc.toolName)
+			if result != tc.expect {
+				t.Errorf("expected %s, got %s", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestResolveHookEvent(t *testing.T) {
+	cases := []struct {
+		name       string
+		eventStr   string
+		client     string
+		toolName   string
+		expectEvt  HookEvent
+		expectPar  string
+		expectErr  bool
+	}{
+		{"neutral agent.starting", "agent.starting", "copilot-chat", "", HookAgentStarting, "", false},
+		{"neutral agent.tool.code.editing", "agent.tool.code.editing", "copilot-chat", "", HookAgentToolCodeEditing, "", false},
+		{"copilot SessionStart", "SessionStart", "copilot-chat", "", HookAgentStarting, "", false},
+		{"copilot Stop", "Stop", "copilot-chat", "", HookAgentEnded, "", false},
+		{"copilot SubagentStart", "SubagentStart", "copilot-chat", "", HookAgentStarting, "subagent", false},
+		{"copilot SubagentStop", "SubagentStop", "copilot-chat", "", HookAgentEnded, "subagent", false},
+		{"copilot UserPromptSubmit", "UserPromptSubmit", "copilot-chat", "", HookAgentPromptSubmitting, "", false},
+		{"copilot PreCompact", "PreCompact", "copilot-chat", "", HookAgentCompacting, "", false},
+		{"copilot PreToolUse generic", "PreToolUse", "copilot-chat", "runSubagent", HookAgentToolStarting, "", false},
+		{"copilot PreToolUse read_file", "PreToolUse", "copilot-chat", "read_file", HookAgentToolCodeSearching, "", false},
+		{"copilot PreToolUse create_file", "PreToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditing, "", false},
+		{"copilot PreToolUse run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalStarting, "", false},
+		{"copilot PreToolUse manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", HookAgentToolPlanUpdating, "", false},
+		{"copilot PostToolUse create_file", "PostToolUse", "copilot-chat", "create_file", HookAgentToolCodeEdited, "", false},
+		{"copilot PostToolUse run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalEnded, "", false},
+		{"copilot PostToolUse generic", "PostToolUse", "copilot-chat", "runSubagent", HookAgentToolEnded, "", false},
+		{"cursor sessionStart", "sessionStart", "cursor-chat", "", HookAgentStarting, "", false},
+		{"cursor sessionEnd", "sessionEnd", "cursor-chat", "", HookAgentEnded, "", false},
+		{"cursor subagentStart", "subagentStart", "cursor-chat", "", HookAgentStarting, "subagent", false},
+		{"cursor beforeReadFile", "beforeReadFile", "cursor-chat", "", HookAgentToolCodeSearching, "", false},
+		{"cursor afterFileEdit", "afterFileEdit", "cursor-chat", "", HookAgentToolCodeEdited, "", false},
+		{"cursor beforeShellExecution", "beforeShellExecution", "cursor-chat", "", HookAgentToolTerminalStarting, "", false},
+		{"cursor afterShellExecution", "afterShellExecution", "cursor-chat", "", HookAgentToolTerminalEnded, "", false},
+		{"cursor beforeMCPExecution", "beforeMCPExecution", "cursor-chat", "", HookAgentToolStarting, "", false},
+		{"cursor afterMCPExecution", "afterMCPExecution", "cursor-chat", "", HookAgentToolEnded, "", false},
+		{"windsurf pre_user_prompt", "pre_user_prompt", "windsurf-chat", "", HookAgentPromptSubmitting, "", false},
+		{"windsurf post_cascade_response", "post_cascade_response", "windsurf-chat", "", HookAgentEnded, "", false},
+		{"windsurf post_setup_worktree", "post_setup_worktree", "windsurf-chat", "", HookAgentStarting, "", false},
+		{"windsurf pre_read_code", "pre_read_code", "windsurf-chat", "", HookAgentToolCodeSearching, "", false},
+		{"windsurf pre_write_code", "pre_write_code", "windsurf-chat", "", HookAgentToolCodeEditing, "", false},
+		{"windsurf post_write_code", "post_write_code", "windsurf-chat", "", HookAgentToolCodeEdited, "", false},
+		{"windsurf pre_run_command", "pre_run_command", "windsurf-chat", "", HookAgentToolTerminalStarting, "", false},
+		{"windsurf post_run_command", "post_run_command", "windsurf-chat", "", HookAgentToolTerminalEnded, "", false},
+		{"windsurf pre_mcp_tool_use", "pre_mcp_tool_use", "windsurf-chat", "", HookAgentToolStarting, "", false},
+		{"windsurf post_mcp_tool_use", "post_mcp_tool_use", "windsurf-chat", "", HookAgentToolEnded, "", false},
+		{"claude SessionStart", "SessionStart", "claude-code", "", HookAgentStarting, "", false},
+		{"claude SessionEnd", "SessionEnd", "claude-code", "", HookAgentEnded, "", false},
+		{"claude SubagentStart", "SubagentStart", "claude-code", "", HookAgentStarting, "subagent", false},
+		{"claude SubagentStop", "SubagentStop", "claude-code", "", HookAgentEnded, "subagent", false},
+		{"claude TaskCompleted", "TaskCompleted", "claude-code", "", HookAgentToolPlanUpdating, "", false},
+		{"claude PreToolUse Bash", "PreToolUse", "claude-code", "Bash", HookAgentToolTerminalStarting, "", false},
+		{"claude PostToolUse Bash", "PostToolUse", "claude-code", "Bash", HookAgentToolTerminalEnded, "", false},
+		{"claude PreToolUse Read", "PreToolUse", "claude-code", "Read", HookAgentToolCodeSearching, "", false},
+		{"claude PreToolUse Edit", "PreToolUse", "claude-code", "Edit", HookAgentToolCodeEditing, "", false},
+		{"claude PostToolUse Edit", "PostToolUse", "claude-code", "Edit", HookAgentToolCodeEdited, "", false},
+		{"droid PreToolUse", "PreToolUse", "droid", "Bash", HookAgentToolTerminalStarting, "", false},
+		{"codex PreToolUse", "PreToolUse", "codex", "Read", HookAgentToolCodeSearching, "", false},
+		{"antigravity PreToolUse", "PreToolUse", "antigravity-chat", "Task", HookAgentToolPlanUpdating, "", false},
+		{"unknown client defaults to claude-compatible", "SessionStart", "unknown-client", "", HookAgentStarting, "", false},
+		{"invalid copilot event", "UnknownEvent", "copilot-chat", "", "", "", true},
+		{"invalid cursor event", "UnknownEvent", "cursor-chat", "", "", "", true},
+		{"invalid windsurf event", "UnknownEvent", "windsurf-chat", "", "", "", true},
+		{"invalid claude event", "UnknownEvent", "claude-code", "", "", "", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			event, parent, err := ResolveHookEvent(tc.eventStr, tc.client, tc.toolName, nil)
+			if tc.expectErr {
+				if err == nil {
+					t.Errorf("expected error, got event=%s parent=%s", event, parent)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if event != tc.expectEvt {
+				t.Errorf("expected event %s, got %s", tc.expectEvt, event)
+			}
+			if parent != tc.expectPar {
+				t.Errorf("expected parent %q, got %q", tc.expectPar, parent)
+			}
+		})
+	}
+}
+
+func TestResolvePreToolUse(t *testing.T) {
+	cases := []struct {
+		kind   ToolKind
+		expect HookEvent
+	}{
+		{ToolKindPlan, HookAgentToolPlanUpdating},
+		{ToolKindCodeSearch, HookAgentToolCodeSearching},
+		{ToolKindCodeEdit, HookAgentToolCodeEditing},
+		{ToolKindTerminal, HookAgentToolTerminalStarting},
+		{ToolKindGeneric, HookAgentToolStarting},
+	}
+	for _, tc := range cases {
+		t.Run(string(tc.kind), func(t *testing.T) {
+			result := resolvePreToolUse(tc.kind)
+			if result != tc.expect {
+				t.Errorf("expected %s, got %s", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestResolvePostToolUse(t *testing.T) {
+	cases := []struct {
+		kind   ToolKind
+		expect HookEvent
+	}{
+		{ToolKindCodeEdit, HookAgentToolCodeEdited},
+		{ToolKindTerminal, HookAgentToolTerminalEnded},
+		{ToolKindGeneric, HookAgentToolEnded},
+		{ToolKindPlan, HookAgentToolEnded},
+		{ToolKindCodeSearch, HookAgentToolEnded},
+	}
+	for _, tc := range cases {
+		t.Run(string(tc.kind), func(t *testing.T) {
+			result := resolvePostToolUse(tc.kind)
+			if result != tc.expect {
+				t.Errorf("expected %s, got %s", tc.expect, result)
+			}
+		})
 	}
 }
 

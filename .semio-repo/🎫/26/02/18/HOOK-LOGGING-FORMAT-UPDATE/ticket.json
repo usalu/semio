@@ -1,0 +1,38 @@
+{
+  "title": "Hook Logging Format Update",
+  "status": "closed",
+  "prompt": "All hooks should log all information to `./semio-repo/📜/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}_{{client}}_{{hook-kind}}.json` e.g. `./semio-repo/📜/260218230207_vscode-chat_agent-started.json`. Currently the logHook function creates filenames like `YYMMDDHHMMSS_event-name.json` but it should include the client name and use hook-kind instead of event name.",
+  "summary": "Updated hook logging format to include client name in filename. Changed from `YYMMDDHHMMSS_event-name.json` to `YYMMDDHHMMSS_client_hook-kind.json` format. Updated logHook function and corresponding test. All hook tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/614"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 09:09:03",
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "All hooks should log all information to `./semio-repo/📜/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}_{{client}}_{{hook-kind}}.json` e.g. `./semio-repo/📜/260218230207_vscode-chat_agent-started.json`. Currently the logHook function creates filenames like `YYMMDDHHMMSS_event-name.json` but it should include the client name and use hook-kind instead of event name.",
+      "llm": "sonnet-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 09:23:40",
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ]
+}

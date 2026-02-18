@@ -94,14 +94,7 @@
     {
       "label": "semio/net build",
       "type": "shell",
-      "command": "npx nx build semio/net",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "semio/grasshopper build",
-      "type": "shell",
-      "command": "npx nx build semio/grasshopper",
+      "command": "npx nx build @semio/net",
       "group": "build",
       "problemMatcher": []
     },
@@ -115,21 +108,21 @@
     {
       "label": "semio/logo build",
       "type": "shell",
-      "command": "npx nx build semio/logo",
+      "command": "npx nx build @semio/logo",
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "semio/icons build",
       "type": "shell",
-      "command": "npx nx build semio/icons",
+      "command": "npx nx build @semio/icons",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "semio/yak build",
+      "label": "semio/sketchpad build",
       "type": "shell",
-      "command": "npx nx build semio/yak",
+      "command": "npx nx build semio/sketchpad",
       "group": "build",
       "problemMatcher": []
     },
@@ -247,14 +240,7 @@
     {
       "label": "semio/net test",
       "type": "shell",
-      "command": "npx nx test semio/net",
-      "group": "test",
-      "problemMatcher": []
-    },
-    {
-      "label": "semio/grasshopper test",
-      "type": "shell",
-      "command": "npx nx test semio/grasshopper",
+      "command": "npx nx test @semio/net",
       "group": "test",
       "problemMatcher": []
     },
@@ -351,14 +337,7 @@
     {
       "label": "semio/net preflight",
       "type": "shell",
-      "command": "npx nx preflight semio/net",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "semio/grasshopper preflight",
-      "type": "shell",
-      "command": "npx nx preflight semio/grasshopper",
+      "command": "npx nx preflight @semio/net",
       "group": "build",
       "problemMatcher": []
     },
@@ -366,6 +345,27 @@
       "label": "semio/assets preflight",
       "type": "shell",
       "command": "npx nx preflight semio/assets",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "semio/logo preflight",
+      "type": "shell",
+      "command": "npx nx preflight @semio/logo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "semio/icons preflight",
+      "type": "shell",
+      "command": "npx nx preflight @semio/icons",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "semio/sketchpad preflight",
+      "type": "shell",
+      "command": "npx nx preflight semio/sketchpad",
       "group": "build",
       "problemMatcher": []
     },
@@ -424,6 +424,13 @@
       "group": "build",
       "problemMatcher": []
     },
+    {
+      "label": "semio/sketchpad publish",
+      "type": "shell",
+      "command": "npx nx publish semio/sketchpad",
+      "group": "build",
+      "problemMatcher": []
+    },
     // ========================================
     // UPDATE
     // ========================================
@@ -475,9 +482,9 @@
     },
     {
       "label": "semio-repo/vscode dev",
-      "type": "npm",
-      "script": "dev",
-      "path": "js/vscode",
+      "type": "shell",
+      "command": "npx nx dev semio-repo",
+      "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
         "fileLocation": "relative",
@@ -495,7 +502,6 @@
           "endsPattern": ".*built in.*"
         }
       },
-      "isBackground": true,
       "presentation": {
         "reveal": "always",
         "panel": "dedicated"
@@ -653,9 +659,32 @@
     {
       "label": "semio/logo dev",
       "type": "shell",
-      "command": "npx nx dev semio/logo",
+      "command": "npx nx dev @semio/logo",
       "group": "none",
       "problemMatcher": []
+    },
+    {
+      "label": "semio/sketchpad dev",
+      "type": "shell",
+      "isBackground": true,
+      "command": "npx nx dev semio/sketchpad",
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "http://localhost:5173/"
+        }
+      },
+      "group": "none"
     },
     // ========================================
     // MCP

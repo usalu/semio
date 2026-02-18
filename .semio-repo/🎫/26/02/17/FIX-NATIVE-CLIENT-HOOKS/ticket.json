@@ -1,0 +1,64 @@
+{
+  "title": "Fix Native Client Hooks",
+  "status": "closed",
+  "prompt": "Fix all hook configs to use native hook formats for Copilot, Claude Code, Cursor, Windsurf, and Droid. Current configs use markdown instructions that agents ignore. Need proper JSON hook configs.",
+  "summary": "Claude Code hooks fixed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/608"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-17 23:46:07",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
+      "prompt": "Fix all hook configs to use native hook formats for Copilot, Claude Code, Cursor, Windsurf, and Droid. Current configs use markdown instructions that agents ignore. Need proper JSON hook configs.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-17 23:55:32",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
+      "files": [
+        {
+          "path": "🛅github📃copilotinstructionsmd"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-18 09:06:07",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "Claude Code hooks are not working. The .claude/hooks.json file has the wrong format (strings instead of {type,command} objects, wrong event names, $TOOL_NAME env vars instead of stdin JSON) and Claude Code only reads hooks from .claude/settings.json not hooks.json. Need to: (1) run configure to write proper hooks into .claude/settings.json, (2) delete .claude/hooks.json, (3) verify the hook CLI correctly parses stdin JSON from Claude Code format.",
+      "llm": "sonnet-4-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 09:10:03",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        }
+      ]
+    }
+  ]
+}

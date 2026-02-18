@@ -168,20 +168,7 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/net"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/grasshopper build",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/grasshopper"
+        "@semio/net"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -194,7 +181,7 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/logo"
+        "@semio/logo"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -207,20 +194,20 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/icons"
+        "@semio/icons"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "semio/yak build",
+      "name": "semio/sketchpad build",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/yak"
+        "semio/sketchpad"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -295,14 +282,14 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "semio/yak publish",
+      "name": "semio/sketchpad publish",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "publish",
-        "semio/yak"
+        "semio/sketchpad"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -487,10 +474,29 @@
       "runtimeArgs": [
         "nx",
         "dev",
-        "semio/logo"
+        "@semio/logo"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "semio/sketchpad dev",
+      "preLaunchTask": "semio/sketchpad dev",
+      "type": "chrome",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "semio/sketchpad"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:5173)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "Go dev",

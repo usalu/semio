@@ -1,0 +1,187 @@
+{
+  "title": "Refactor Common Agent Hooks",
+  "status": "closed",
+  "prompt": "Reroute all AI platform hooks to semio-repo common agent hooks with new event layout: git.commit.starting/ended, agent.starting/ended/prompt.submitting/compacting/tool.starting/ended/plan.updating/code.searching/code.edited/terminal.starting/ended",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/624"
+  },
+  "goal": "DEVOPS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 17:32:57",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "Reroute all AI platform hooks to semio-repo common agent hooks with new event layout: git.commit.starting/ended, agent.starting/ended/prompt.submitting/compacting/tool.starting/ended/plan.updating/code.searching/code.edited/terminal.starting/ended",
+      "llm": "opus-4-6"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771436943907364226-6084957153885724951",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:48:56Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T17:49:04Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:50:33Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:51:28Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:51:35Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:52:02Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T17:52:08Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:53:32Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:56:34Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T17:56:41Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T17:58:12Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:00:25Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ],
+  "summary": "Refactored all AI platform hooks to common agent events. 15 old events renamed to 13 new hierarchical events. Updated all config generators and instruction docs. Fixed RunHook rootDir isolation. All 30 hook tests pass.",
+  "files": [
+    "semio-repo/cli/main.go",
+    "semio-repo/cli/main_test.go",
+    ".github/hooks/semio-repo.json",
+    ".github/copilot-instructions.md",
+    ".cursor/hooks.json",
+    ".cursor/rules/hooks.mdc",
+    ".windsurf/hooks.json",
+    ".claude/settings.json",
+    ".factory/settings.json"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Fix VSCode Launch Configs",
+  "status": "closed",
+  "summary": "Fixed incorrect VSCode launch.json and tasks.json configs: fixed semio-repo/vscode dev task from npm type with wrong path js/vscode to shell npx nx dev semio-repo; fixed nx project refs for semio/logo (@semio/logo, root at semio/assets/logo), semio/icons (@semio/icons, root at semio/assets/icons), semio/net (@semio/net, root at semio/net/Semio); removed non-existent semio/grasshopper and semio/yak projects; added missing semio/sketchpad (build, preflight, dev, publish) configs.",
+  "prompt": "Fix incorrect VSCode launch.json and tasks.json configs: wrong semio-repo/vscode dev task type/path, wrong nx project paths for semio/logo (assets/logo), semio/icons (assets/icons), semio/net (net/Semio), remove non-existent grasshopper/yak projects, add missing semio/sketchpad.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/609"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 08:54:32",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "Fix incorrect VSCode launch.json and tasks.json configs: wrong semio-repo/vscode dev task type/path, wrong nx project paths for semio/logo (assets/logo), semio/icons (assets/icons), semio/net (net/Semio), remove non-existent grasshopper/yak projects, add missing semio/sketchpad.",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

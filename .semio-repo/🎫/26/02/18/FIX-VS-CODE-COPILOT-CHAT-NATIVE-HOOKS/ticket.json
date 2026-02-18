@@ -1,0 +1,56 @@
+{
+  "title": "Fix VS Code Copilot Chat Native Hooks",
+  "status": "closed",
+  "prompt": "VS Code hooks are not calling semio-repo hooks. Need to fix the hook output format to produce VS Code-compatible JSON, extract tool_name from stdin, and use proper hookSpecificOutput with permissionDecision for PreToolUse events.",
+  "summary": "Fixed 'Cannot read properties of undefined (reading hookSpecificOutput)' in VS Code Copilot Chat v0.37.6. Root cause: formatVSCodeHookOutput returned {} for UserPromptSubmit/PostToolUse/Stop/SubagentStop/PreCompact events. VS Code _toHookResult strips continue/stopReason/systemMessage leaving empty object → output=undefined. The UserPromptSubmit onSuccess callback accesses d.hookSpecificOutput without null-checking d. Fix: always include hookSpecificOutput for all VS Code hook events. Updated tests. All hook tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/615"
+  },
+  "goal": "HOOKS-VSCODE/FIX-HOOKS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 09:21:18",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "VS Code hooks are not calling semio-repo hooks. Need to fix the hook output format to produce VS Code-compatible JSON, extract tool_name from stdin, and use proper hookSpecificOutput with permissionDecision for PreToolUse events.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 09:25:48",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-02-18 13:29:38",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "VS Code Copilot Chat hook UserPromptSubmit crashes with 'Cannot read properties of undefined (reading hookSpecificOutput)'. Root cause: formatVSCodeHookOutput returns {} for UserPromptSubmit/PreCompact/Stop events. VS Code Copilot v0.37.6 _toHookResult strips continue/stopReason/systemMessage fields, leaving empty object, sets output=undefined. Then UserPromptSubmit onSuccess callback does d.hookSpecificOutput?.additionalContext without null-checking d, causing TypeError. Fix: always include hookSpecificOutput for all VS Code hook events.",
+      "llm": "sonnet-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 13:34:27",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ]
+}

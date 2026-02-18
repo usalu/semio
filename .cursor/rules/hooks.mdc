@@ -13,18 +13,18 @@ You MUST call the semio-repo CLI hook command at every lifecycle event:
 - On session end: `./semio-repo/cli/cli hook agent.ended cursor-chat`
 
 ## Prompt
-- On prompt submit: `./semio-repo/cli/cli hook prompt.submit cursor-chat`
+- On prompt submitting: `./semio-repo/cli/cli hook agent.prompt.submitting cursor-chat`
 
 ## Context Compaction
-- Before compacting: `./semio-repo/cli/cli hook compacting cursor-chat`
+- Before compacting: `./semio-repo/cli/cli hook agent.compacting cursor-chat`
 
 ## Tool Calls
-- Before calling any tool (except code reading/editing): `./semio-repo/cli/cli hook tool.calling cursor-chat --tool-name "<tool>" --tool-args "<args>"`
-- After tool completes: `./semio-repo/cli/cli hook tool.ended cursor-chat --tool-name "<tool>"`
+- Before calling any tool (except code searching/editing): `./semio-repo/cli/cli hook agent.tool.starting cursor-chat --tool-name "<tool>" --tool-args "<args>"`
+- After tool completes: `./semio-repo/cli/cli hook agent.tool.ended cursor-chat --tool-name "<tool>"`
 
 ## Code Operations
-- Before reading code (file.read.pre): `./semio-repo/cli/cli hook code.reading cursor-chat --file "<path>"`
-- After editing code (file.edit.post): `./semio-repo/cli/cli hook code.edited cursor-chat --file "<path>"`
+- Before searching code (file.read.pre): `./semio-repo/cli/cli hook agent.tool.code.searching cursor-chat --file "<path>"`
+- After editing code (file.edit.post): `./semio-repo/cli/cli hook agent.tool.code.edited cursor-chat --file "<path>"`
 
 ## Notifications
 - On notification: `./semio-repo/cli/cli hook notification cursor-chat`

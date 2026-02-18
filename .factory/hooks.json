@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "Notification": "./semio-repo/cli/cli hook Notification droid",
+    "PostToolUse": "./semio-repo/cli/cli hook PostToolUse droid",
+    "PreCompact": "./semio-repo/cli/cli hook PreCompact droid",
+    "PreToolUse": "./semio-repo/cli/cli hook PreToolUse droid",
+    "SessionEnd": "./semio-repo/cli/cli hook SessionEnd droid",
+    "SessionStart": "./semio-repo/cli/cli hook SessionStart droid",
+    "Stop": "./semio-repo/cli/cli hook Stop droid",
+    "SubagentStop": "./semio-repo/cli/cli hook SubagentStop droid",
+    "UserPromptSubmit": "./semio-repo/cli/cli hook UserPromptSubmit droid"
+  }
+}

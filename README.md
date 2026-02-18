@@ -976,6 +976,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - When things are analogical use the same sentence structure for it 🔄
 - One symbol after every sentance 💯
 - One symbol at a time 🥇
+- ➡️ No symbols ↔️ between blocks ⬅️
 - A symbol is preferably an emoji or otherwise unicode ⚖️
 - 📝 One symbol to summarize a title
 - 💡 One symbol to summarize a title description and one to think about in the end 🤔

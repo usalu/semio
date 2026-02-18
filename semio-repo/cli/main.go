@@ -624,6 +624,10 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 
 func main() {
 	if err := Execute(defaultEngineFactory); err != nil {
+		var exitErr ExitError
+		if errors.As(err, &exitErr) {
+			os.Exit(exitErr.Code)
+		}
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -4755,7 +4759,6 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	return searchTreeInMemory(root, query)
 }
 
-
 func levenshtein(a, b string) int {
 	la, lb := len(a), len(b)
 	if la == 0 {
@@ -4976,7 +4979,14 @@ func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLa
 		if entityKind == "" {
 			entityKind = string(node.Kind)
 		}
+		origParentId, hadParentId := node.Data["parentId"]
+		node.Data["parentId"] = ""
 		result := renderEntityHuman(entityKind, node.Data, false)
+		if hadParentId {
+			node.Data["parentId"] = origParentId
+		} else {
+			delete(node.Data, "parentId")
+		}
 		if result != "" {
 			label = result
 		}
@@ -7411,6 +7421,7 @@ type Ticket struct {
 	Goal          string            `json:"goal,omitempty" yaml:"goal,omitempty"`
 	Parent        string            `json:"parent,omitempty" yaml:"parent,omitempty"`
 	Interactions  []Interaction     `json:"interactions" yaml:"interactions"`
+	Sessions      []TicketSession   `json:"sessions,omitempty" yaml:"sessions,omitempty"`
 	FolderPath    string            `json:"-" yaml:"-"`
 	JsonPath      string            `json:"-" yaml:"-"`
 	TicketPath    string            `json:"-" yaml:"-"`
@@ -10712,6 +10723,64 @@ type Interaction struct {
 	Prompt string            `json:"prompt,omitempty" yaml:"prompt,omitempty"`
 	LLM    string            `json:"llm,omitempty" yaml:"llm,omitempty"`
 	Files  []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
+}
+
+// TicketSessionRename holds the data fields for a ticket session rename record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionrename](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionRename)
+type TicketSessionRename struct {
+	From string `json:"from" yaml:"from"`
+	To   string `json:"to" yaml:"to"`
+}
+
+// TicketSessionDiffStats holds the data fields for a ticket session diff stats record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessiondiffstats](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionDiffStats)
+type TicketSessionDiffStats struct {
+	Deleted  []string              `json:"deleted,omitempty" yaml:"deleted,omitempty"`
+	Renamed  []TicketSessionRename `json:"renamed,omitempty" yaml:"renamed,omitempty"`
+	Modified []string              `json:"modified,omitempty" yaml:"modified,omitempty"`
+	Created  []string              `json:"created,omitempty" yaml:"created,omitempty"`
+}
+
+// TicketSessionDiff holds the data fields for a ticket session diff record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessiondiff](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionDiff)
+type TicketSessionDiff struct {
+	Projects TicketSessionDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
+	Bundles  TicketSessionDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+	Folders  TicketSessionDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
+	Files    TicketSessionDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
+}
+
+// TicketSessionReads holds the data fields for a ticket session reads record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionreads](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionReads)
+type TicketSessionReads struct {
+	Projects []string `json:"projects,omitempty" yaml:"projects,omitempty"`
+	Bundles  []string `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+	Folders  []string `json:"folders,omitempty" yaml:"folders,omitempty"`
+	Files    []string `json:"files,omitempty" yaml:"files,omitempty"`
+}
+
+// TicketSessionInteraction holds the data fields for a ticket session interaction record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessioninteraction](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionInteraction)
+type TicketSessionInteraction struct {
+	Kind      string             `json:"kind,omitempty" yaml:"kind,omitempty"`
+	Timestamp string             `json:"timestamp" yaml:"timestamp"`
+	Commit    string             `json:"commit,omitempty" yaml:"commit,omitempty"`
+	LLM       string             `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Prompt    string             `json:"prompt,omitempty" yaml:"prompt,omitempty"`
+	Query     string             `json:"query,omitempty" yaml:"query,omitempty"`
+	Context   string             `json:"context,omitempty" yaml:"context,omitempty"`
+	Reads     TicketSessionReads `json:"reads,omitempty" yaml:"reads,omitempty"`
+	Diff      TicketSessionDiff  `json:"diff,omitempty" yaml:"diff,omitempty"`
+}
+
+// TicketSession holds the data fields for a ticket session record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsession](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSession)
+type TicketSession struct {
+	ID           string                     `json:"id" yaml:"id"`
+	Contributor  string                     `json:"contributor,omitempty" yaml:"contributor,omitempty"`
+	System       string                     `json:"system,omitempty" yaml:"system,omitempty"`
+	Client       string                     `json:"client,omitempty" yaml:"client,omitempty"`
+	Interactions []TicketSessionInteraction `json:"interactions,omitempty" yaml:"interactions,omitempty"`
 }
 
 // UnmarshalJSON MUST handle both legacy and current JSON layouts.
@@ -32652,33 +32721,39 @@ func runNx(target string, args ...string) error {
 type HookEvent string
 
 const (
-	HookCommitStarting HookEvent = "commit.starting"
-	HookCommitEnded    HookEvent = "commit.ended"
-	HookAgentStarting  HookEvent = "agent.starting"
-	HookAgentEnded     HookEvent = "agent.ended"
-	HookPromptSubmit   HookEvent = "prompt.submit"
-	HookCompacting     HookEvent = "compacting"
-	HookToolCalling    HookEvent = "tool.calling"
-	HookToolEnded      HookEvent = "tool.ended"
-	HookCodeReading    HookEvent = "code.reading"
-	HookCodeEdited     HookEvent = "code.edited"
-	HookNotification   HookEvent = "notification"
+	HookGitCommitStarting        HookEvent = "git.commit.starting"
+	HookGitCommitEnded           HookEvent = "git.commit.ended"
+	HookAgentStarting            HookEvent = "agent.starting"
+	HookAgentEnded               HookEvent = "agent.ended"
+	HookAgentPromptSubmitting    HookEvent = "agent.prompt.submitting"
+	HookAgentCompacting          HookEvent = "agent.compacting"
+	HookAgentToolStarting        HookEvent = "agent.tool.starting"
+	HookAgentToolEnded           HookEvent = "agent.tool.ended"
+	HookAgentToolPlanUpdating    HookEvent = "agent.tool.plan.updating"
+	HookAgentToolCodeSearching    HookEvent = "agent.tool.code.searching"
+	HookAgentToolCodeEditing      HookEvent = "agent.tool.code.editing"
+	HookAgentToolCodeEdited       HookEvent = "agent.tool.code.edited"
+	HookAgentToolTerminalStarting HookEvent = "agent.tool.terminal.starting"
+	HookAgentToolTerminalEnded   HookEvent = "agent.tool.terminal.ended"
 )
 
 // AllHookEvents lists every valid hook event slug.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️allhookevents](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/AllHookEvents)
 var AllHookEvents = []HookEvent{
-	HookCommitStarting,
-	HookCommitEnded,
+	HookGitCommitStarting,
+	HookGitCommitEnded,
 	HookAgentStarting,
 	HookAgentEnded,
-	HookPromptSubmit,
-	HookCompacting,
-	HookToolCalling,
-	HookToolEnded,
-	HookCodeReading,
-	HookCodeEdited,
-	HookNotification,
+	HookAgentPromptSubmitting,
+	HookAgentCompacting,
+	HookAgentToolStarting,
+	HookAgentToolEnded,
+	HookAgentToolPlanUpdating,
+	HookAgentToolCodeSearching,
+	HookAgentToolCodeEditing,
+	HookAgentToolCodeEdited,
+	HookAgentToolTerminalStarting,
+	HookAgentToolTerminalEnded,
 }
 
 // HookKind categorizes a hook as either a git hook or an agent hook.
@@ -32694,7 +32769,7 @@ const (
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookeventkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookEventKind)
 func HookEventKind(e HookEvent) HookKind {
 	switch e {
-	case HookCommitStarting, HookCommitEnded:
+	case HookGitCommitStarting, HookGitCommitEnded:
 		return HookKindGit
 	default:
 		return HookKindAgent
@@ -32754,7 +32829,386 @@ func IsToolBlocked(toolName string, toolArgs string) (bool, string) {
 	return false, ""
 }
 
-// logHook writes the hook context and result to ./semio-repo/📜/YYMMDDHHMMSS_event-name.json.
+// extractCommandFromStdin parses native client JSON from stdin and extracts the command string for blocking checks.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extractcommandfromstdin](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractCommandFromStdin)
+func extractCommandFromStdin(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	if toolInput, ok := data["tool_input"]; ok {
+		if m, ok := toolInput.(map[string]interface{}); ok {
+			if cmd, ok := m["command"].(string); ok {
+				return cmd
+			}
+		}
+	}
+	if cmd, ok := data["command"].(string); ok {
+		return cmd
+	}
+	if toolInfo, ok := data["tool_info"]; ok {
+		if m, ok := toolInfo.(map[string]interface{}); ok {
+			if cmd, ok := m["command_line"].(string); ok {
+				return cmd
+			}
+		}
+	}
+	return ""
+}
+
+// extractToolNameFromStdin parses native client JSON from stdin and extracts the tool_name field.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extracttoolnamefromstdin](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractToolNameFromStdin)
+func extractToolNameFromStdin(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	if tn, ok := data["tool_name"].(string); ok {
+		return tn
+	}
+	return ""
+}
+
+// extractHookEventNameFromStdin parses native client JSON from stdin and extracts the hookEventName field.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extracthookeventnamefromstdin](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractHookEventNameFromStdin)
+func extractHookEventNameFromStdin(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	if hen, ok := data["hookEventName"].(string); ok {
+		return hen
+	}
+	return ""
+}
+
+// ToolKind classifies a tool invocation for routing native client events to neutral hook events.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️toolkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/ToolKind)
+type ToolKind string
+
+const (
+	ToolKindPlan       ToolKind = "plan"
+	ToolKindCodeSearch ToolKind = "code_search"
+	ToolKindCodeEdit   ToolKind = "code_edit"
+	ToolKindTerminal   ToolKind = "terminal"
+	ToolKindGeneric    ToolKind = "generic"
+)
+
+// classifyTool categorizes a tool name into a ToolKind for inlet routing.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️classifytool](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/classifyTool)
+func classifyTool(toolName string) ToolKind {
+	lower := strings.ToLower(toolName)
+	switch lower {
+	case "manage_todo_list", "task", "todo_tool":
+		return ToolKindPlan
+	case "read_file", "grep_search", "file_search", "semantic_search", "list_dir",
+		"get_errors", "read", "readfile", "searchfiles", "grepsearch", "listdir",
+		"list_code_usages", "get_search_view_results":
+		return ToolKindCodeSearch
+	case "replace_string_in_file", "create_file", "multi_replace_string_in_file",
+		"edit", "write", "editfile", "createfile", "multiedit", "create_directory":
+		return ToolKindCodeEdit
+	case "run_in_terminal", "get_terminal_output", "bash", "terminal":
+		return ToolKindTerminal
+	default:
+		return ToolKindGeneric
+	}
+}
+
+// resolvePreToolUse maps a ToolKind to the correct neutral event for pre-tool-use.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolvepretoolusse](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolvePreToolUse)
+func resolvePreToolUse(kind ToolKind) HookEvent {
+	switch kind {
+	case ToolKindPlan:
+		return HookAgentToolPlanUpdating
+	case ToolKindCodeSearch:
+		return HookAgentToolCodeSearching
+	case ToolKindCodeEdit:
+		return HookAgentToolCodeEditing
+	case ToolKindTerminal:
+		return HookAgentToolTerminalStarting
+	default:
+		return HookAgentToolStarting
+	}
+}
+
+// resolvePostToolUse maps a ToolKind to the correct neutral event for post-tool-use.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolveposttoolusse](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolvePostToolUse)
+func resolvePostToolUse(kind ToolKind) HookEvent {
+	switch kind {
+	case ToolKindCodeEdit:
+		return HookAgentToolCodeEdited
+	case ToolKindTerminal:
+		return HookAgentToolTerminalEnded
+	default:
+		return HookAgentToolEnded
+	}
+}
+
+// resolveCopilotEvent maps a VS Code / Copilot Chat native event to a neutral HookEvent.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolvecopilotevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveCopilotEvent)
+func resolveCopilotEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
+	switch nativeEvent {
+	case "SessionStart":
+		return HookAgentStarting, "", nil
+	case "Stop":
+		return HookAgentEnded, "", nil
+	case "SubagentStart":
+		return HookAgentStarting, "subagent", nil
+	case "SubagentStop":
+		return HookAgentEnded, "subagent", nil
+	case "UserPromptSubmit":
+		return HookAgentPromptSubmitting, "", nil
+	case "PreCompact":
+		return HookAgentCompacting, "", nil
+	case "PreToolUse":
+		return resolvePreToolUse(kind), "", nil
+	case "PostToolUse":
+		return resolvePostToolUse(kind), "", nil
+	default:
+		return "", "", fmt.Errorf("unknown native event %q for copilot-chat", nativeEvent)
+	}
+}
+
+// resolveCursorEvent maps a Cursor native event to a neutral HookEvent.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolvecursorevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveCursorEvent)
+func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
+	switch nativeEvent {
+	case "sessionStart":
+		return HookAgentStarting, "", nil
+	case "sessionEnd":
+		return HookAgentEnded, "", nil
+	case "subagentStart":
+		return HookAgentStarting, "subagent", nil
+	case "subagentStop":
+		return HookAgentEnded, "subagent", nil
+	case "stop":
+		return HookAgentEnded, "", nil
+	case "beforeSubmitPrompt":
+		return HookAgentPromptSubmitting, "", nil
+	case "preCompact":
+		return HookAgentCompacting, "", nil
+	case "preToolUse":
+		return resolvePreToolUse(kind), "", nil
+	case "postToolUse", "postToolUseFailure":
+		return resolvePostToolUse(kind), "", nil
+	case "beforeMCPExecution":
+		return HookAgentToolStarting, "", nil
+	case "afterMCPExecution":
+		return HookAgentToolEnded, "", nil
+	case "beforeReadFile", "beforeTabFileRead":
+		return HookAgentToolCodeSearching, "", nil
+	case "afterFileEdit", "afterTabFileEdit":
+		return HookAgentToolCodeEdited, "", nil
+	case "beforeShellExecution":
+		return HookAgentToolTerminalStarting, "", nil
+	case "afterShellExecution":
+		return HookAgentToolTerminalEnded, "", nil
+	case "afterAgentResponse", "afterAgentThought":
+		return HookAgentEnded, "", nil
+	default:
+		return "", "", fmt.Errorf("unknown native event %q for cursor-chat", nativeEvent)
+	}
+}
+
+// resolveWindsurfEvent maps a Windsurf native event to a neutral HookEvent.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolvewindsurfevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveWindsurfEvent)
+func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
+	switch nativeEvent {
+	case "pre_user_prompt":
+		return HookAgentPromptSubmitting, "", nil
+	case "post_cascade_response":
+		return HookAgentEnded, "", nil
+	case "post_setup_worktree":
+		return HookAgentStarting, "", nil
+	case "pre_mcp_tool_use":
+		return HookAgentToolStarting, "", nil
+	case "post_mcp_tool_use":
+		return HookAgentToolEnded, "", nil
+	case "pre_read_code":
+		return HookAgentToolCodeSearching, "", nil
+	case "post_read_code":
+		return HookAgentToolEnded, "", nil
+	case "pre_write_code":
+		return HookAgentToolCodeEditing, "", nil
+	case "post_write_code":
+		return HookAgentToolCodeEdited, "", nil
+	case "pre_run_command":
+		return HookAgentToolTerminalStarting, "", nil
+	case "post_run_command":
+		return HookAgentToolTerminalEnded, "", nil
+	default:
+		return "", "", fmt.Errorf("unknown native event %q for windsurf-chat", nativeEvent)
+	}
+}
+
+// resolveClaudeCompatibleEvent maps a Claude Code / Droid / Codex / Antigravity native event to a neutral HookEvent.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolveclaudecompatibleevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveClaudeCompatibleEvent)
+func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
+	switch nativeEvent {
+	case "SessionStart":
+		return HookAgentStarting, "", nil
+	case "SessionEnd":
+		return HookAgentEnded, "", nil
+	case "SubagentStart":
+		return HookAgentStarting, "subagent", nil
+	case "SubagentStop":
+		return HookAgentEnded, "subagent", nil
+	case "Stop":
+		return HookAgentEnded, "", nil
+	case "UserPromptSubmit":
+		return HookAgentPromptSubmitting, "", nil
+	case "PreCompact":
+		return HookAgentCompacting, "", nil
+	case "TaskCompleted":
+		return HookAgentToolPlanUpdating, "", nil
+	case "Notification", "TeammateIdle", "PermissionRequest":
+		return HookAgentToolStarting, "", nil
+	case "PreToolUse":
+		return resolvePreToolUse(kind), "", nil
+	case "PostToolUse", "PostToolUseFailure":
+		return resolvePostToolUse(kind), "", nil
+	default:
+		return "", "", fmt.Errorf("unknown native event %q", nativeEvent)
+	}
+}
+
+// ResolveHookEvent resolves an event string (neutral or native) to a neutral HookEvent.
+// Inlet adapter: native client events are resolved based on client and tool classification.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolvehookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/ResolveHookEvent)
+func ResolveHookEvent(eventStr string, client string, toolName string, input json.RawMessage) (HookEvent, string, error) {
+	if event, err := ValidateHookEvent(eventStr); err == nil {
+		return event, "", nil
+	}
+	kind := classifyTool(toolName)
+	switch client {
+	case "copilot-chat":
+		return resolveCopilotEvent(eventStr, kind)
+	case "cursor-chat":
+		return resolveCursorEvent(eventStr, kind)
+	case "windsurf-chat":
+		return resolveWindsurfEvent(eventStr, kind)
+	case "claude-code", "codex", "antigravity-chat", "droid":
+		return resolveClaudeCompatibleEvent(eventStr, kind)
+	default:
+		return resolveClaudeCompatibleEvent(eventStr, kind)
+	}
+}
+
+// vsCodeEventFromHookEvent maps a neutral HookEvent back to the VS Code hookEventName (outlet adapter).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️vscodeeventfromhookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/vsCodeEventFromHookEvent)
+func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	switch event {
+	case HookAgentToolStarting:
+		return "PreToolUse"
+	case HookAgentToolEnded:
+		return "PostToolUse"
+	case HookAgentStarting:
+		if parentInfo != "" {
+			return "SubagentStart"
+		}
+		return "SessionStart"
+	case HookAgentEnded:
+		if parentInfo != "" {
+			return "SubagentStop"
+		}
+		return "Stop"
+	case HookAgentPromptSubmitting:
+		return "UserPromptSubmit"
+	case HookAgentCompacting:
+		return "PreCompact"
+	case HookAgentToolPlanUpdating:
+		return "PreToolUse"
+	case HookAgentToolCodeSearching:
+		return "PreToolUse"
+	case HookAgentToolCodeEditing:
+		return "PreToolUse"
+	case HookAgentToolCodeEdited:
+		return "PostToolUse"
+	case HookAgentToolTerminalStarting:
+		return "PreToolUse"
+	case HookAgentToolTerminalEnded:
+		return "PostToolUse"
+	default:
+		return ""
+	}
+}
+
+// formatVSCodeHookOutput produces VS Code-compatible JSON output for hook results.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️formatvscodehookoutput](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/formatVSCodeHookOutput)
+func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
+	output := map[string]interface{}{}
+	switch hookEventName {
+	case "PreToolUse":
+		if !result.Allowed {
+			output["hookSpecificOutput"] = map[string]interface{}{
+				"hookEventName":            "PreToolUse",
+				"permissionDecision":       "deny",
+				"permissionDecisionReason": result.Message,
+			}
+		} else {
+			output["hookSpecificOutput"] = map[string]interface{}{
+				"hookEventName":      "PreToolUse",
+				"permissionDecision": "allow",
+			}
+		}
+	case "PostToolUse":
+		hso := map[string]interface{}{"hookEventName": "PostToolUse"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	case "SessionStart":
+		hso := map[string]interface{}{"hookEventName": "SessionStart"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	case "SubagentStart":
+		hso := map[string]interface{}{"hookEventName": "SubagentStart"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	case "UserPromptSubmit":
+		hso := map[string]interface{}{"hookEventName": "UserPromptSubmit"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	case "Stop":
+		hso := map[string]interface{}{"hookEventName": "Stop"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	case "SubagentStop":
+		hso := map[string]interface{}{"hookEventName": "SubagentStop"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	case "PreCompact":
+		hso := map[string]interface{}{"hookEventName": "PreCompact"}
+		if result.Message != "" {
+			hso["additionalContext"] = result.Message
+		}
+		output["hookSpecificOutput"] = hso
+	}
+	out, _ := json.Marshal(output)
+	return string(out)
+}
+
+// logHook writes the hook context and result to ./semio-repo/📜/YYMMDDHHMMSS_client_hook-kind.json.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️loghook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/logHook)
 func logHook(hctx HookContext, result HookResult) {
 	repoRoot := hctx.RepoRoot
@@ -32770,44 +33224,64 @@ func logHook(hctx HookContext, result HookResult) {
 		return
 	}
 	ts := time.Now().UTC().Format("060102150405")
-	eventSlug := strings.ReplaceAll(string(hctx.Event), ".", "-")
+	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
+	clientSlug := strings.ReplaceAll(hctx.Client, ".", "-")
 	entry := HookLogEntry{Context: hctx, Result: result}
 	data, err := json.MarshalIndent(entry, "", "  ")
 	if err != nil {
 		return
 	}
-	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s.json", ts, eventSlug)), data, 0644)
+	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s_%s.json", ts, clientSlug, hookKind)), data, 0644)
 }
 
 // dispatchHook routes the hook event to its handler and returns the result.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️dispatchhook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/dispatchHook)
 func dispatchHook(hctx HookContext) HookResult {
 	switch hctx.Event {
-	case HookCommitStarting:
+	case HookGitCommitStarting:
 		return runCommitStartingHook(hctx)
-	case HookCommitEnded:
-		return HookResult{Allowed: true, Message: "commit.ended acknowledged"}
-	case HookToolCalling:
+	case HookGitCommitEnded:
+		return HookResult{Allowed: true, Message: "git.commit.ended acknowledged"}
+	case HookAgentToolStarting:
 		if blocked, reason := IsToolBlocked(hctx.ToolName, hctx.ToolArgs); blocked {
 			return HookResult{Allowed: false, Message: reason}
+		}
+		if cmd := extractCommandFromStdin(hctx.Input); cmd != "" {
+			if blocked, reason := IsToolBlocked("", cmd); blocked {
+				return HookResult{Allowed: false, Message: reason}
+			}
 		}
 		return HookResult{Allowed: true}
 	case HookAgentStarting:
 		return HookResult{Allowed: true, Message: "agent.starting acknowledged"}
 	case HookAgentEnded:
 		return HookResult{Allowed: true, Message: "agent.ended acknowledged"}
-	case HookPromptSubmit:
-		return HookResult{Allowed: true, Message: "prompt.submit acknowledged"}
-	case HookCompacting:
-		return HookResult{Allowed: true, Message: "compacting acknowledged"}
-	case HookToolEnded:
+	case HookAgentPromptSubmitting:
+		return HookResult{Allowed: true, Message: "agent.prompt.submitting acknowledged"}
+	case HookAgentCompacting:
+		return HookResult{Allowed: true, Message: "agent.compacting acknowledged"}
+	case HookAgentToolEnded:
 		return HookResult{Allowed: true}
-	case HookCodeReading:
+	case HookAgentToolPlanUpdating:
+		return HookResult{Allowed: true, Message: "agent.tool.plan.updating acknowledged"}
+	case HookAgentToolCodeSearching:
 		return HookResult{Allowed: true}
-	case HookCodeEdited:
+	case HookAgentToolCodeEditing:
 		return HookResult{Allowed: true}
-	case HookNotification:
-		return HookResult{Allowed: true, Message: "notification acknowledged"}
+	case HookAgentToolCodeEdited:
+		return HookResult{Allowed: true}
+	case HookAgentToolTerminalStarting:
+		if blocked, reason := IsToolBlocked(hctx.ToolName, hctx.ToolArgs); blocked {
+			return HookResult{Allowed: false, Message: reason}
+		}
+		if cmd := extractCommandFromStdin(hctx.Input); cmd != "" {
+			if blocked, reason := IsToolBlocked("", cmd); blocked {
+				return HookResult{Allowed: false, Message: reason}
+			}
+		}
+		return HookResult{Allowed: true}
+	case HookAgentToolTerminalEnded:
+		return HookResult{Allowed: true}
 	default:
 		return HookResult{Allowed: false, Message: fmt.Sprintf("unknown hook event: %s", hctx.Event)}
 	}
@@ -32816,9 +33290,257 @@ func dispatchHook(hctx HookContext) HookResult {
 // RunHook executes the hook logic for the given context and logs the invocation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️runhook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/RunHook)
 func RunHook(hctx HookContext) HookResult {
+	if hctx.RepoRoot != "" {
+		SetRootDir(hctx.RepoRoot)
+	}
 	result := dispatchHook(hctx)
 	logHook(hctx, result)
+	trackHookInOpenTicket(hctx)
 	return result
+}
+
+func latestOpenTicket() (*Ticket, error) {
+	tickets, err := ListTickets(nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var latest *Ticket
+	for i := range tickets {
+		if tickets[i].Status != TicketStatusOpen {
+			continue
+		}
+		if latest == nil {
+			copyTicket := tickets[i]
+			latest = &copyTicket
+			continue
+		}
+		if tickets[i].GetDateStarted().After(latest.GetDateStarted()) {
+			copyTicket := tickets[i]
+			latest = &copyTicket
+		}
+	}
+	if latest == nil {
+		return nil, nil
+	}
+	return latest, nil
+}
+
+func appendUniqueString(values []string, value string) []string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return values
+	}
+	for _, current := range values {
+		if current == value {
+			return values
+		}
+	}
+	return append(values, value)
+}
+
+func extractSessionIDFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"sessionId", "session_id", "conversationId", "conversation_id", "requestId", "request_id"} {
+		if value, ok := data[key].(string); ok {
+			value = strings.TrimSpace(value)
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func generateHookSessionID() string {
+	return fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
+}
+
+func parseHookToolArgs(toolArgs string) map[string]interface{} {
+	trimmed := strings.TrimSpace(toolArgs)
+	if trimmed == "" {
+		return nil
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(trimmed), &data); err != nil {
+		return nil
+	}
+	return data
+}
+
+func extractPromptFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"prompt", "message", "text", "query"} {
+		if value, ok := data[key].(string); ok {
+			value = strings.TrimSpace(value)
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func extractLLMFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"llm", "model"} {
+		if value, ok := data[key].(string); ok {
+			value = strings.TrimSpace(value)
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func normalizeHookPath(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return ""
+	}
+	if filepath.IsAbs(path) {
+		path = GetRelativePath(path)
+	}
+	path = NormalizePath(path)
+	return strings.TrimPrefix(path, "./")
+}
+
+func applyHookPathToReads(reads *TicketSessionReads, path string) {
+	normalized := normalizeHookPath(path)
+	if normalized == "" {
+		return
+	}
+	reads.Files = appendUniqueString(reads.Files, normalized)
+	parts := strings.Split(normalized, "/")
+	if len(parts) >= 1 {
+		reads.Projects = appendUniqueString(reads.Projects, parts[0])
+		reads.Folders = appendUniqueString(reads.Folders, parts[0])
+	}
+	if len(parts) >= 2 {
+		reads.Bundles = appendUniqueString(reads.Bundles, parts[0]+"/"+parts[1])
+		reads.Folders = appendUniqueString(reads.Folders, parts[0]+"/"+parts[1])
+	}
+}
+
+func applyHookPathToDiff(diff *TicketSessionDiff, path string) {
+	normalized := normalizeHookPath(path)
+	if normalized == "" {
+		return
+	}
+	diff.Files.Modified = appendUniqueString(diff.Files.Modified, normalized)
+	parts := strings.Split(normalized, "/")
+	if len(parts) >= 1 {
+		diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, parts[0])
+		diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, parts[0])
+	}
+	if len(parts) >= 2 {
+		diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, parts[0]+"/"+parts[1])
+		diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, parts[0]+"/"+parts[1])
+	}
+}
+
+func hasTicketSessionReadData(reads TicketSessionReads) bool {
+	return len(reads.Projects) > 0 || len(reads.Bundles) > 0 || len(reads.Folders) > 0 || len(reads.Files) > 0
+}
+
+func hasTicketSessionDiffData(diff TicketSessionDiff) bool {
+	stats := []TicketSessionDiffStats{diff.Projects, diff.Bundles, diff.Folders, diff.Files}
+	for _, item := range stats {
+		if len(item.Deleted) > 0 || len(item.Renamed) > 0 || len(item.Modified) > 0 || len(item.Created) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func ensureTicketSession(ticket *Ticket, sessionID string, client string) int {
+	for i := range ticket.Sessions {
+		if ticket.Sessions[i].ID == sessionID {
+			if ticket.Sessions[i].Client == "" {
+				ticket.Sessions[i].Client = client
+			}
+			return i
+		}
+	}
+	ticket.Sessions = append(ticket.Sessions, TicketSession{
+		ID:          sessionID,
+		Contributor: GetGitAuthorGithub(),
+		System:      GetSystem(),
+		Client:      client,
+	})
+	return len(ticket.Sessions) - 1
+}
+
+func trackHookInOpenTicket(hctx HookContext) {
+	ticket, err := latestOpenTicket()
+	if err != nil || ticket == nil {
+		return
+	}
+	sessionID := extractSessionIDFromInput(hctx.Input)
+	if sessionID == "" {
+		if len(ticket.Sessions) > 0 {
+			sessionID = ticket.Sessions[len(ticket.Sessions)-1].ID
+		} else {
+			sessionID = generateHookSessionID()
+		}
+	}
+	sessionIndex := ensureTicketSession(ticket, sessionID, hctx.Client)
+	interaction := TicketSessionInteraction{
+		Kind:      string(hctx.Event),
+		Timestamp: hctx.Timestamp,
+		Commit:    GetGitCommit(),
+		LLM:       extractLLMFromInput(hctx.Input),
+		Prompt:    extractPromptFromInput(hctx.Input),
+	}
+	if interaction.Timestamp == "" {
+		interaction.Timestamp = time.Now().UTC().Format(time.RFC3339)
+	}
+	if hctx.Event == HookAgentPromptSubmitting && interaction.Prompt == "" {
+		interaction.Prompt = strings.TrimSpace(hctx.ToolArgs)
+	}
+	if hctx.Event == HookAgentToolCodeSearching {
+		applyHookPathToReads(&interaction.Reads, hctx.FilePath)
+	}
+	if hctx.Event == HookAgentToolCodeEditing || hctx.Event == HookAgentToolCodeEdited {
+		applyHookPathToDiff(&interaction.Diff, hctx.FilePath)
+	}
+	toolArgs := parseHookToolArgs(hctx.ToolArgs)
+	if len(toolArgs) > 0 {
+		if value, ok := toolArgs["query"].(string); ok {
+			interaction.Query = strings.TrimSpace(value)
+		}
+		if value, ok := toolArgs["context"].(string); ok {
+			interaction.Context = strings.TrimSpace(value)
+		}
+	}
+	if interaction.Query == "" && strings.EqualFold(hctx.ToolName, "mcp0_tree") {
+		interaction.Query = strings.TrimSpace(hctx.ToolArgs)
+	}
+	if interaction.Prompt == "" && interaction.Query == "" && interaction.Context == "" && !hasTicketSessionReadData(interaction.Reads) && !hasTicketSessionDiffData(interaction.Diff) {
+		if hctx.Event != HookAgentStarting && hctx.Event != HookAgentEnded {
+			return
+		}
+	}
+	ticket.Sessions[sessionIndex].Interactions = append(ticket.Sessions[sessionIndex].Interactions, interaction)
+	_ = SaveTicket(ticket)
 }
 
 func runCommitStartingHook(hctx HookContext) HookResult {
@@ -32867,27 +33589,34 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "hook <event> <client>",
 		Short: "Run a lifecycle hook (git or agent)",
 		Long: `Run a lifecycle hook for a given event and client.
+Accepts neutral semio-repo events or native client events (inlet adapter resolves to neutral).
 
 🦑 Git hooks:
-  commit.starting    Run before a git commit (pre-commit)
-  commit.ended       Run after a git commit (post-commit)
+  git.commit.starting          Run before a git commit (pre-commit)
+  git.commit.ended             Run after a git commit (post-commit)
 
-🤖 Agent hooks:
-  agent.starting     Agent session or subagent started
-  agent.ended        Agent session or subagent stopped
-  prompt.submit      User submitted a prompt
-  compacting         Context compaction event
-  tool.calling       Tool invocation starting (supports blocking)
-  tool.ended         Tool invocation completed
-  code.reading       Code read operation
-  code.edited        Code edit operation
-  notification       General notification event`,
+🤖 Neutral agent hooks:
+  agent.starting               Agent session started
+  agent.ended                  Agent session stopped
+  agent.prompt.submitting      User submitting a prompt
+  agent.compacting             Context compaction event
+  agent.tool.starting          Tool starting (generic, excludes plan, code, terminal)
+  agent.tool.ended             Tool completed (generic, excludes plan, code, terminal)
+  agent.tool.plan.updating     Plan/task list updating
+  agent.tool.code.searching    Code search/read operation
+  agent.tool.code.editing      Code edit starting
+  agent.tool.code.edited       Code edit completed
+  agent.tool.terminal.starting Terminal command starting (supports blocking)
+  agent.tool.terminal.ended    Terminal command completed
+
+🏢 Native client events (resolved by inlet adapter):
+  copilot-chat:    SessionStart, Stop, SubagentStart, SubagentStop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse
+  cursor-chat:     sessionStart, sessionEnd, stop, subagentStart, subagentStop, beforeSubmitPrompt, preCompact, preToolUse, postToolUse, beforeReadFile, afterFileEdit, beforeShellExecution, afterShellExecution, beforeMCPExecution, afterMCPExecution
+  windsurf-chat:   pre_user_prompt, post_cascade_response, post_setup_worktree, pre_mcp_tool_use, post_mcp_tool_use, pre_read_code, post_read_code, pre_write_code, post_write_code, pre_run_command, post_run_command
+  claude-code/droid/codex/antigravity: SessionStart, SessionEnd, SubagentStart, SubagentStop, Stop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse, PostToolUseFailure, TaskCompleted, Notification`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			event, err := ValidateHookEvent(args[0])
-			if err != nil {
-				return err
-			}
+			eventStr := args[0]
 			client := ""
 			if len(args) > 1 {
 				client = args[1]
@@ -32907,6 +33636,18 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 					input = json.RawMessage(data)
 				}
 			}
+			if toolName == "" {
+				if tn := extractToolNameFromStdin(input); tn != "" {
+					toolName = tn
+				}
+			}
+			event, resolvedParent, err := ResolveHookEvent(eventStr, client, toolName, input)
+			if err != nil {
+				return err
+			}
+			if parentInfo == "" {
+				parentInfo = resolvedParent
+			}
 			hctx := HookContext{
 				Event:      event,
 				Client:     client,
@@ -32919,27 +33660,34 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 				Input:      input,
 			}
 			result := RunHook(hctx)
+			if client == "copilot-chat" {
+				hookEventName := extractHookEventNameFromStdin(input)
+				if hookEventName == "" {
+					hookEventName = vsCodeEventFromHookEvent(event, parentInfo)
+				}
+				out := formatVSCodeHookOutput(hookEventName, result)
+				fmt.Fprintln(cmd.OutOrStdout(), out)
+				return nil
+			}
 			if config.IsJSON() {
 				out, _ := json.Marshal(result)
 				fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			} else {
-				if !result.Allowed {
-					return fmt.Errorf("hook denied: %s", result.Message)
-				}
-				if result.Message != "" {
-					fmt.Fprintln(cmd.OutOrStdout(), result.Message)
-				}
+				return nil
 			}
 			if !result.Allowed {
-				return &ExitError{Code: 1}
+				fmt.Fprintln(cmd.ErrOrStderr(), result.Message)
+				return ExitError{Code: 2}
+			}
+			if result.Message != "" {
+				fmt.Fprintln(cmd.OutOrStdout(), result.Message)
 			}
 			return nil
 		},
 	}
-	cmd.Flags().String("tool-name", "", "Tool name for tool.calling/tool.ended events")
-	cmd.Flags().String("tool-args", "", "Tool arguments for tool.calling/tool.ended events")
-	cmd.Flags().String("file", "", "File path for code.reading/code.edited events")
-	cmd.Flags().String("parent", "", "Parent agent info for agent.starting/agent.ended events")
+	cmd.Flags().String("tool-name", "", "Tool name for tool-related events")
+	cmd.Flags().String("tool-args", "", "Tool arguments for tool-related events")
+	cmd.Flags().String("file", "", "File path for code events")
+	cmd.Flags().String("parent", "", "Parent agent info for agent events")
 	return cmd
 }
 
@@ -32948,7 +33696,7 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 // #region 🔖Configure
 
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Configure)
-// Configure command auto-generates pre-commit and agent hook configs for all supported clients.
+// Configure command auto-generates native hook configs for all supported clients.
 
 // ClientHookMapping maps client names to their native event configuration format.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure✂️clienthookmapping](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Configure/ClientHookMapping)
@@ -33018,7 +33766,7 @@ if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
   exit 0
 fi
 cd "$repo_root"
-./semio-repo/cli/cli hook commit.starting
+./semio-repo/cli/cli hook git.commit.starting
 `
 	if err := os.WriteFile(preCommitPath, []byte(preCommitScript), 0755); err != nil {
 		return err
@@ -33031,7 +33779,7 @@ if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
   exit 0
 fi
 cd "$repo_root"
-./semio-repo/cli/cli hook commit.ended
+./semio-repo/cli/cli hook git.commit.ended
 `
 	if err := os.WriteFile(postCommitPath, []byte(postCommitScript), 0755); err != nil {
 		return err
@@ -33041,234 +33789,231 @@ cd "$repo_root"
 
 func getClientHookMappings() []ClientHookMapping {
 	return []ClientHookMapping{
-		{Client: "copilot-chat", ConfigPath: ".github/copilot-instructions.md", Generator: generateCopilotConfig},
-		{Client: "cursor-chat", ConfigPath: ".cursor/rules/hooks.mdc", Generator: generateCursorConfig},
-		{Client: "windsurf-chat", ConfigPath: ".windsurfrules", Generator: generateWindsurfConfig},
-		{Client: "claude-code", ConfigPath: ".claude/hooks.json", Generator: generateClaudeCodeConfig},
-		{Client: "codex", ConfigPath: ".codex/hooks.json", Generator: generateCodexConfig},
-		{Client: "droid", ConfigPath: ".droid/hooks.json", Generator: generateDroidConfig},
-		{Client: "antigravity-chat", ConfigPath: ".antigravity/hooks.json", Generator: generateAntigravityConfig},
+		{Client: "copilot-chat", ConfigPath: ".github/hooks/semio-repo.json", Generator: generateCopilotConfig},
+		{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json", Generator: generateCursorConfig},
+		{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json", Generator: generateWindsurfConfig},
+		{Client: "claude-code", ConfigPath: ".claude/settings.json", Generator: generateClaudeCodeConfig},
+		{Client: "droid", ConfigPath: ".factory/hooks.json", Generator: generateDroidConfig},
 	}
 }
 
 func generateCopilotConfig(repoRoot string) (string, error) {
 	c := "./semio-repo/cli/cli"
-	bt := "`"
-	var b strings.Builder
-	b.WriteString("# Copilot Chat Hook Instructions\n\n")
-	b.WriteString("## Lifecycle Hooks\n\n")
-	b.WriteString("You MUST call the semio-repo CLI hook command at every lifecycle event:\n\n")
-	b.WriteString("### Agent Lifecycle\n")
-	fmt.Fprintf(&b, "- On session start: %s%s hook agent.starting copilot-chat%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- On session end: %s%s hook agent.ended copilot-chat%s\n\n", bt, c, bt)
-	b.WriteString("### Prompt\n")
-	fmt.Fprintf(&b, "- On prompt submit: %s%s hook prompt.submit copilot-chat%s\n\n", bt, c, bt)
-	b.WriteString("### Context Compaction\n")
-	fmt.Fprintf(&b, "- Before compacting: %s%s hook compacting copilot-chat%s\n\n", bt, c, bt)
-	b.WriteString("### Tool Calls\n")
-	fmt.Fprintf(&b, "- Before calling any tool (except code reading/editing): %s%s hook tool.calling copilot-chat --tool-name \"<tool>\" --tool-args \"<args>\"%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- After tool completes: %s%s hook tool.ended copilot-chat --tool-name \"<tool>\"%s\n\n", bt, c, bt)
-	b.WriteString("### Code Operations\n")
-	fmt.Fprintf(&b, "- Before reading code: %s%s hook code.reading copilot-chat --file \"<path>\"%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- After editing code: %s%s hook code.edited copilot-chat --file \"<path>\"%s\n\n", bt, c, bt)
-	b.WriteString("### Notifications\n")
-	fmt.Fprintf(&b, "- On notification: %s%s hook notification copilot-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Blocked Operations\n")
-	b.WriteString("The following operations are ALWAYS denied by the hook system:\n")
-	fmt.Fprintf(&b, "- %sgit checkout%s\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit stash%s (including pop, drop, apply)\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit reset --hard%s\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit clean -fd%s\n\n", bt, bt)
-	b.WriteString("You MUST NOT execute these commands under any circumstances.\n")
-	return b.String(), nil
+	entry := func(cmd string) map[string]interface{} {
+		return map[string]interface{}{"type": "command", "command": cmd, "timeout": 30}
+	}
+	config := map[string]interface{}{
+		"hooks": map[string]interface{}{
+			"SessionStart": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook SessionStart copilot-chat", c)),
+			},
+			"Stop": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook Stop copilot-chat", c)),
+			},
+			"SubagentStart": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook SubagentStart copilot-chat", c)),
+			},
+			"SubagentStop": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook SubagentStop copilot-chat", c)),
+			},
+			"UserPromptSubmit": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook UserPromptSubmit copilot-chat", c)),
+			},
+			"PreCompact": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook PreCompact copilot-chat", c)),
+			},
+			"PreToolUse": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook PreToolUse copilot-chat", c)),
+			},
+			"PostToolUse": []map[string]interface{}{
+				entry(fmt.Sprintf("%s hook PostToolUse copilot-chat", c)),
+			},
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out) + "\n", nil
 }
 
 func generateCursorConfig(repoRoot string) (string, error) {
 	c := "./semio-repo/cli/cli"
-	bt := "`"
-	var b strings.Builder
-	b.WriteString("---\ndescription: Semio repo lifecycle hooks for Cursor\nglobs:\nalwaysApply: true\n---\n\n")
-	b.WriteString("# Lifecycle Hooks\n\n")
-	b.WriteString("You MUST call the semio-repo CLI hook command at every lifecycle event:\n\n")
-	b.WriteString("## Agent Lifecycle\n")
-	fmt.Fprintf(&b, "- On session start: %s%s hook agent.starting cursor-chat%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- On session end: %s%s hook agent.ended cursor-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Prompt\n")
-	fmt.Fprintf(&b, "- On prompt submit: %s%s hook prompt.submit cursor-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Context Compaction\n")
-	fmt.Fprintf(&b, "- Before compacting: %s%s hook compacting cursor-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Tool Calls\n")
-	fmt.Fprintf(&b, "- Before calling any tool (except code reading/editing): %s%s hook tool.calling cursor-chat --tool-name \"<tool>\" --tool-args \"<args>\"%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- After tool completes: %s%s hook tool.ended cursor-chat --tool-name \"<tool>\"%s\n\n", bt, c, bt)
-	b.WriteString("## Code Operations\n")
-	fmt.Fprintf(&b, "- Before reading code (file.read.pre): %s%s hook code.reading cursor-chat --file \"<path>\"%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- After editing code (file.edit.post): %s%s hook code.edited cursor-chat --file \"<path>\"%s\n\n", bt, c, bt)
-	b.WriteString("## Notifications\n")
-	fmt.Fprintf(&b, "- On notification: %s%s hook notification cursor-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Blocked Operations\n")
-	b.WriteString("The following operations are ALWAYS denied:\n")
-	fmt.Fprintf(&b, "- %sgit checkout%s\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit stash%s (including pop, drop, apply)\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit reset --hard%s\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit clean -fd%s\n", bt, bt)
-	return b.String(), nil
+	config := map[string]interface{}{
+		"version": 1,
+		"hooks": map[string]interface{}{
+			"sessionStart": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook sessionStart cursor-chat", c)},
+			},
+			"sessionEnd": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook sessionEnd cursor-chat", c)},
+			},
+			"subagentStart": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook subagentStart cursor-chat", c)},
+			},
+			"subagentStop": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook subagentStop cursor-chat", c)},
+			},
+			"stop": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook stop cursor-chat", c)},
+			},
+			"beforeSubmitPrompt": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook beforeSubmitPrompt cursor-chat", c)},
+			},
+			"preCompact": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook preCompact cursor-chat", c)},
+			},
+			"preToolUse": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook preToolUse cursor-chat", c)},
+			},
+			"postToolUse": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook postToolUse cursor-chat", c)},
+			},
+			"postToolUseFailure": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook postToolUseFailure cursor-chat", c)},
+			},
+			"beforeMCPExecution": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook beforeMCPExecution cursor-chat", c)},
+			},
+			"afterMCPExecution": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook afterMCPExecution cursor-chat", c)},
+			},
+			"beforeReadFile": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook beforeReadFile cursor-chat", c)},
+			},
+			"afterFileEdit": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook afterFileEdit cursor-chat", c)},
+			},
+			"beforeShellExecution": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook beforeShellExecution cursor-chat", c)},
+			},
+			"afterShellExecution": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook afterShellExecution cursor-chat", c)},
+			},
+			"afterAgentResponse": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook afterAgentResponse cursor-chat", c)},
+			},
+			"afterAgentThought": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook afterAgentThought cursor-chat", c)},
+			},
+			"beforeTabFileRead": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook beforeTabFileRead cursor-chat", c)},
+			},
+			"afterTabFileEdit": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook afterTabFileEdit cursor-chat", c)},
+			},
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out) + "\n", nil
 }
 
 func generateWindsurfConfig(repoRoot string) (string, error) {
 	c := "./semio-repo/cli/cli"
-	bt := "`"
-	var b strings.Builder
-	b.WriteString("# Semio Repo Lifecycle Hooks for Windsurf\n\n")
-	b.WriteString("You MUST call the semio-repo CLI hook command at every lifecycle event:\n\n")
-	b.WriteString("## Agent Lifecycle\n")
-	fmt.Fprintf(&b, "- On session start: %s%s hook agent.starting windsurf-chat%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- On session end: %s%s hook agent.ended windsurf-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Prompt\n")
-	fmt.Fprintf(&b, "- On prompt submit: %s%s hook prompt.submit windsurf-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Context Compaction\n")
-	fmt.Fprintf(&b, "- Before compacting: %s%s hook compacting windsurf-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Tool Calls\n")
-	fmt.Fprintf(&b, "- Before calling any tool (except code reading/editing): %s%s hook tool.calling windsurf-chat --tool-name \"<tool>\" --tool-args \"<args>\"%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- After tool completes: %s%s hook tool.ended windsurf-chat --tool-name \"<tool>\"%s\n\n", bt, c, bt)
-	b.WriteString("## Code Operations\n")
-	fmt.Fprintf(&b, "- Before reading code (pre_read_code): %s%s hook code.reading windsurf-chat --file \"<path>\"%s\n", bt, c, bt)
-	fmt.Fprintf(&b, "- After editing code (pre_write_code): %s%s hook code.edited windsurf-chat --file \"<path>\"%s\n\n", bt, c, bt)
-	b.WriteString("## Notifications\n")
-	fmt.Fprintf(&b, "- On notification: %s%s hook notification windsurf-chat%s\n\n", bt, c, bt)
-	b.WriteString("## Blocked Operations\n")
-	b.WriteString("The following operations are ALWAYS denied:\n")
-	fmt.Fprintf(&b, "- %sgit checkout%s\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit stash%s (including pop, drop, apply)\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit reset --hard%s\n", bt, bt)
-	fmt.Fprintf(&b, "- %sgit clean -fd%s\n", bt, bt)
-	return b.String(), nil
+	config := map[string]interface{}{
+		"hooks": map[string]interface{}{
+			"pre_user_prompt": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook pre_user_prompt windsurf-chat", c), "show_output": false},
+			},
+			"post_cascade_response": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook post_cascade_response windsurf-chat", c), "show_output": false},
+			},
+			"post_setup_worktree": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook post_setup_worktree windsurf-chat", c), "show_output": false},
+			},
+			"pre_mcp_tool_use": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook pre_mcp_tool_use windsurf-chat", c), "show_output": false},
+			},
+			"post_mcp_tool_use": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook post_mcp_tool_use windsurf-chat", c), "show_output": false},
+			},
+			"pre_read_code": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook pre_read_code windsurf-chat", c), "show_output": false},
+			},
+			"post_read_code": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook post_read_code windsurf-chat", c), "show_output": false},
+			},
+			"pre_write_code": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook pre_write_code windsurf-chat", c), "show_output": false},
+			},
+			"post_write_code": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook post_write_code windsurf-chat", c), "show_output": false},
+			},
+			"pre_run_command": []map[string]interface{}{
+				{"command": fmt.Sprintf("%s hook pre_run_command windsurf-chat", c), "show_output": true},
+			},
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out) + "\n", nil
 }
 
 func generateClaudeCodeConfig(repoRoot string) (string, error) {
-	cliPath := "./semio-repo/cli/cli"
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"PreToolUse": []map[string]interface{}{
-				{
-					"matcher":  ".*",
-					"hooks":    []string{fmt.Sprintf("%s hook tool.calling claude-code --tool-name \"$TOOL_NAME\" --tool-args \"$TOOL_INPUT\"", cliPath)},
-					"blocking": true,
-				},
-			},
-			"PostToolUse": []map[string]interface{}{
-				{
-					"matcher": ".*",
-					"hooks":   []string{fmt.Sprintf("%s hook tool.ended claude-code --tool-name \"$TOOL_NAME\"", cliPath)},
-				},
-			},
-			"PreCompact": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook compacting claude-code", cliPath)},
-				},
-			},
-			"Notification": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook notification claude-code", cliPath)},
-				},
-			},
-			"SessionStart": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook agent.starting claude-code", cliPath)},
-				},
-			},
-			"SessionStop": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook agent.ended claude-code", cliPath)},
-				},
-			},
-			"SubagentStart": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook agent.starting claude-code --parent \"subagent\"", cliPath)},
-				},
-			},
-			"SubagentStop": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook agent.ended claude-code --parent \"subagent\"", cliPath)},
-				},
-			},
-			"PromptSubmit": []map[string]interface{}{
-				{
-					"hooks": []string{fmt.Sprintf("%s hook prompt.submit claude-code", cliPath)},
-				},
-			},
-		},
+	c := "./semio-repo/cli/cli"
+	existing := make(map[string]interface{})
+	settingsPath := filepath.Join(repoRoot, ".claude", "settings.json")
+	if data, err := os.ReadFile(settingsPath); err == nil {
+		_ = json.Unmarshal(data, &existing)
 	}
-	out, err := json.MarshalIndent(config, "", "  ")
+	hookEntry := func(cmd string) []map[string]interface{} {
+		return []map[string]interface{}{
+			{
+				"matcher": "",
+				"hooks": []map[string]interface{}{
+					{"type": "command", "command": cmd},
+				},
+			},
+		}
+	}
+	existing["hooks"] = map[string]interface{}{
+		"SessionStart":       hookEntry(fmt.Sprintf("%s hook SessionStart claude-code", c)),
+		"SessionEnd":         hookEntry(fmt.Sprintf("%s hook SessionEnd claude-code", c)),
+		"SubagentStart":      hookEntry(fmt.Sprintf("%s hook SubagentStart claude-code", c)),
+		"SubagentStop":       hookEntry(fmt.Sprintf("%s hook SubagentStop claude-code", c)),
+		"Stop":               hookEntry(fmt.Sprintf("%s hook Stop claude-code", c)),
+		"UserPromptSubmit":   hookEntry(fmt.Sprintf("%s hook UserPromptSubmit claude-code", c)),
+		"PreCompact":         hookEntry(fmt.Sprintf("%s hook PreCompact claude-code", c)),
+		"PreToolUse":         hookEntry(fmt.Sprintf("%s hook PreToolUse claude-code", c)),
+		"PostToolUse":        hookEntry(fmt.Sprintf("%s hook PostToolUse claude-code", c)),
+		"PostToolUseFailure": hookEntry(fmt.Sprintf("%s hook PostToolUseFailure claude-code", c)),
+		"PermissionRequest":  hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
+		"TaskCompleted":      hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
+		"Notification":       hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
+		"TeammateIdle":       hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
+	}
+	out, err := json.MarshalIndent(existing, "", "  ")
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
-}
-
-func generateCodexConfig(repoRoot string) (string, error) {
-	cliPath := "./semio-repo/cli/cli"
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"agent.starting":  fmt.Sprintf("%s hook agent.starting codex", cliPath),
-			"agent.ended":     fmt.Sprintf("%s hook agent.ended codex", cliPath),
-			"prompt.submit":   fmt.Sprintf("%s hook prompt.submit codex", cliPath),
-			"compacting":      fmt.Sprintf("%s hook compacting codex", cliPath),
-			"tool.calling":    fmt.Sprintf("%s hook tool.calling codex --tool-name \"$TOOL\" --tool-args \"$ARGS\"", cliPath),
-			"tool.ended":      fmt.Sprintf("%s hook tool.ended codex --tool-name \"$TOOL\"", cliPath),
-			"code.reading":    fmt.Sprintf("%s hook code.reading codex --file \"$FILE\"", cliPath),
-			"code.edited":     fmt.Sprintf("%s hook code.edited codex --file \"$FILE\"", cliPath),
-			"notification":    fmt.Sprintf("%s hook notification codex", cliPath),
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
+	return string(out) + "\n", nil
 }
 
 func generateDroidConfig(repoRoot string) (string, error) {
-	cliPath := "./semio-repo/cli/cli"
+	c := "./semio-repo/cli/cli"
 	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"agent.starting":  fmt.Sprintf("%s hook agent.starting droid", cliPath),
-			"agent.ended":     fmt.Sprintf("%s hook agent.ended droid", cliPath),
-			"prompt.submit":   fmt.Sprintf("%s hook prompt.submit droid", cliPath),
-			"compacting":      fmt.Sprintf("%s hook compacting droid", cliPath),
-			"tool.calling":    fmt.Sprintf("%s hook tool.calling droid --tool-name \"$TOOL\" --tool-args \"$ARGS\"", cliPath),
-			"tool.ended":      fmt.Sprintf("%s hook tool.ended droid --tool-name \"$TOOL\"", cliPath),
-			"code.reading":    fmt.Sprintf("%s hook code.reading droid --file \"$FILE\"", cliPath),
-			"code.edited":     fmt.Sprintf("%s hook code.edited droid --file \"$FILE\"", cliPath),
-			"notification":    fmt.Sprintf("%s hook notification droid", cliPath),
+		"hooks": map[string]string{
+			"SessionStart":     fmt.Sprintf("%s hook SessionStart droid", c),
+			"SessionEnd":       fmt.Sprintf("%s hook SessionEnd droid", c),
+			"SubagentStop":     fmt.Sprintf("%s hook SubagentStop droid", c),
+			"Stop":             fmt.Sprintf("%s hook Stop droid", c),
+			"UserPromptSubmit": fmt.Sprintf("%s hook UserPromptSubmit droid", c),
+			"PreCompact":       fmt.Sprintf("%s hook PreCompact droid", c),
+			"PreToolUse":       fmt.Sprintf("%s hook PreToolUse droid", c),
+			"PostToolUse":      fmt.Sprintf("%s hook PostToolUse droid", c),
+			"Notification":     fmt.Sprintf("%s hook Notification droid", c),
 		},
 	}
 	out, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
-}
-
-func generateAntigravityConfig(repoRoot string) (string, error) {
-	cliPath := "./semio-repo/cli/cli"
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"agent.starting":  fmt.Sprintf("%s hook agent.starting antigravity-chat", cliPath),
-			"agent.ended":     fmt.Sprintf("%s hook agent.ended antigravity-chat", cliPath),
-			"prompt.submit":   fmt.Sprintf("%s hook prompt.submit antigravity-chat", cliPath),
-			"compacting":      fmt.Sprintf("%s hook compacting antigravity-chat", cliPath),
-			"tool.calling":    fmt.Sprintf("%s hook tool.calling antigravity-chat --tool-name \"$TOOL\" --tool-args \"$ARGS\"", cliPath),
-			"tool.ended":      fmt.Sprintf("%s hook tool.ended antigravity-chat --tool-name \"$TOOL\"", cliPath),
-			"code.reading":    fmt.Sprintf("%s hook code.reading antigravity-chat --file \"$FILE\"", cliPath),
-			"code.edited":     fmt.Sprintf("%s hook code.edited antigravity-chat --file \"$FILE\"", cliPath),
-			"notification":    fmt.Sprintf("%s hook notification antigravity-chat", cliPath),
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
+	return string(out) + "\n", nil
 }
 
 // #endregion 🔖Configure

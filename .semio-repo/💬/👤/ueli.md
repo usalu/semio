@@ -33,15 +33,22 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 #### 🧰semiorepo⌨️cli
 
 We want to develop a general hook system that works accross all ai tools (claude code, vscode agent, cursor agent, windsurf agent, droid). One go binary exposes general hooks that can be reused accross platforms. How would you design the system? It needs to be compatible with the following apis:
-https://code.claude.com/docs/en/hooks-guide
 https://code.visualstudio.com/docs/copilot/customization/hooks
-https://cursor.com/en/docs/agent/hooks
 https://docs.windsurf.com/windsurf/cascade/hooks#hook-events
+https://cursor.com/en/docs/agent/hooks
+https://code.claude.com/docs/en/hooks-guide
 https://docs.factory.ai/cli/configuration/hooks-guide
 
 ## Change
 
 ## Later
+
+semio repo:
+Write scripts to handle all git interactions and make them available as vscode launch (create archive branch `{{contributor}}/<{{YY}}/{{MM}}/{{DD}}`, checkout to `main` squash merge `{{contributor}}/latest>` into `main`), etc
+- Merge (prioritize me)
+- Merge (prioritize main)
+- Pull # fast forwards `{{contributor}}/latest>` to `main`
+
 
 sketchpad:
 
@@ -65,14 +72,390 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 ## 🧰semiorepo⌨️cli
 
-All hooks should log all information to `./semio-repo/📜/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}{{hook-kind}}.json` e.g. `./semio-repo/📜/260218230207_agent-started.json`.
+### 🧰semiorepo⌨️cli🔖identification
+
+---
+
+All ids are designed to be displayed as tree.
+The --text option should not show the full ids but only the tree part of the ids.
+e.g. this:
+```bash
+ $ ./semio-repo/cli/cli tree --only-goal --text
+[🎯Goals](semiorepo://goals)
+├── 🎯aioptimizedrepo AI-optimized Repo open created 2 weeks ago AI-optimized Repo goal
+│   ├── 🎯aioptimizedrepo🎯consistentrepohistory Consistent Repo History open Goal for Consistent Repo History
+│   ├── 🎯aioptimizedrepo🎯repoclient Repo Client open Goal for Repo Client
+│   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary Repo Binary open Goal for Repo Binary
+│   │   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli Repo CLI open Goal for Repo CLI
+│   │   │   │   └── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
+```
+should be:
+```bash
+ $ ./semio-repo/cli/cli tree --only-goal --text
+[🎯Goals](semiorepo://goals)
+├── 🎯aioptimizedrepo AI-optimized Repo open created 2 weeks ago AI-optimized Repo goal
+│   ├── 🎯consistentrepohistory Consistent Repo History open Goal for Consistent Repo History
+│   ├── 🎯repoclient Repo Client open Goal for Repo Client
+│   │   ├── 🎯repobinary Repo Binary open Goal for Repo Binary
+│   │   │   ├── 🎯repocli Repo CLI open Goal for Repo CLI
+│   │   │   │   └── 🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
+```
+---
+
+### 🧰semiorepo⌨️cli🔖hooks
+
+ticket
+```md
+- .semio-repo # folder
+  - 🎫 # folder
+    - {{YY}} # folder
+      - {{MM}} # folder
+        - {{DD}} # folder
+          - ticket.json
+```
+
+Agent hooks are matched with session id to tickets.
+
+
+
+
+---
+
+semio repo cli:
+The hooks from vscode-chat are not working and not calling the hooks from semio repo. The hooks MUST be only configured by `./semio-repo/cli/cli configure`.
+
+---
+vscode 
+
+```json
+{
+  "input": {
+    "timestamp": "2026-02-18T09:25:46.649Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "34ec4d3a-862a-4732-82b3-01532df2aca2",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/34ec4d3a-862a-4732-82b3-01532df2aca2.jsonl",
+    "tool_name": "manage_todo_list",
+    "tool_input": {
+      "todoList": [
+        {
+          "id": 1,
+          "status": "completed",
+          "title": "Read test patterns for hooks"
+        },
+        {
+          "id": 2,
+          "status": "completed",
+          "title": "Add formatVSCodeHookOutput function"
+        },
+        {
+          "id": 3,
+          "status": "completed",
+          "title": "Extract tool_name from stdin JSON"
+        },
+        {
+          "id": 4,
+          "status": "completed",
+          "title": "Modify hookCommand for copilot-chat output"
+        },
+        {
+          "id": 5,
+          "status": "completed",
+          "title": "Update generateCopilotConfig"
+        },
+        {
+          "id": 6,
+          "status": "completed",
+          "title": "Update tests for VS Code output"
+        },
+        {
+          "id": 7,
+          "status": "completed",
+          "title": "Run configure and rebuild CLI"
+        },
+        {
+          "id": 8,
+          "status": "completed",
+          "title": "Run all hook tests"
+        },
+        {
+          "id": 9,
+          "status": "completed",
+          "title": "Close ticket"
+        }
+      ]
+    },
+    "tool_response": "Successfully wrote todo list",
+    "tool_use_id": "toolu_vrtx_01YQjTvPuR25jrTCD8mg1baT__vscode-1771370659744",
+    "cwd": "/workspaces/semio"
+  }
+}
+```
+
+---
+
+All mcp tools that have 
+
+All hooks should always include all possible information and have no matchers in the plattform configs. Only the semio repo cli then can drop information when mapping to the native semio repo hook events. Make sure configure cli command is correctly setting everything up.
+
+All hooks should log all information to `./semio-repo/📜/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}_{{client}}_{{hook-kind}}.json` e.g. `./semio-repo/📜/260218230207_vscode-chat_agent-started.json`.
 
 The cli should be extended by hooks.
 A hook is a go function that runs on a certain event on the lifecycle of development. That go function receives one argument a context which has event information and also a handle to interact with the codebase (all CRUDs for all semio repo entities - projects, bundles, folder, files, sections, definitions, goals, tickets, policies, statutes, breaches, commits, contributors, interactions, etc)
 There are two kind of hooks: 🦑 git hooks and 🤖 agent hooks
-For git hooks use pre-commit (get rid of all old husky setup).
-For agent hooks the events defined MUST be mapped to client native events.
-The following hooks should be implemented:
+For git hooks use pre-commit.
+For agent hooks the events MUST be mapped to client (vscode-chat, windsurf-chat, cursor-chat, claude-code, droid) native events.
+
+The hook architecture MUST work with a shared common implementation.
+inlet adapter -> neutral hook implementation -> outlet adapter
+The mapping is not a 1-to-1 mapping.
+E.g. vscode PreToolUse and PostToolUse can be agent.plan.updating, code.searching or terminal in the neutral hook impkementation
+
+Platforms:
+VSCode: `.github/hooks/semio-repo.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `SubagentStart`, `SubagentStop`, `Stop`
+Windsurf: `.windsurf/hooks.json` with `pre_read_code`, `post_read_code`, `pre_write_code`, `post_write_code`, `pre_run_command`, `pre_mcp_tool_use`, `post_mcp_tool_use`, `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree`
+Cursor: `.cursor/hooks.json` with `sessionStart`, `sessionEnd`, `preToolUse`, `postToolUse`, `postToolUseFailure`, `subagentStart`, `subagentStop`, `beforeShellExecution`, `afterShellExecution`, `beforeMCPExecution`, `afterMCPExecution`, `beforeReadFile`, `afterFileEdit`, `beforeSubmitPrompt`, `preCompact`, `stop`, `afterAgentResponse`, `afterAgentThought`, `beforeTabFileRead`, `afterTabFileEdit`
+Claude Code: `.claude/settings.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `Notification`, `SubagentStart`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `PreCompact`, `SessionEnd`
+Droid: `.factory/hooks.json` with `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Notification`, `Stop`, `SubagentStop`, `PreCompact`, `SessionStart`, `SessionEnd`
+
+The api for hooks maps to native events:
+```bash
+./semio-repo/cli/cli hook PreCompact vscode-chat
+./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat
+./semio-repo/cli/cli hook SubagentStart droid
+…
+```
+
+You MUST make sure that the hooks return exactly this information (additionally make sure to add raw as a field where you add the raw input json and leave it for logging for now):
+
+Events
+```yaml
+git:
+  commit:
+    starting: # pre-commit
+      message: {{COMMITMESSAGE}} 
+    ended: # post-commit
+      sha: {{COMMITSHA}}
+      message: {{COMMITMESSAGE}}
+agent:
+  starting:
+    session: {{ID}}
+    timestamp: {{TIMESTAMP}}
+    client: {{CLIENT}}
+    parent: {{PARENT}}
+  ended:
+    session: {{ID}}
+    timestamp: {{TIMESTAMP}}
+    client: {{CLIENT}}
+  prompt:
+    submitting:
+      session: {{ID}}
+      timestamp: {{TIMESTAMP}}
+      client: {{CLIENT}}
+      prompt: {{PROMPT}}
+  compacting:
+    session: {{ID}}
+    timestamp: {{TIMESTAMP}}
+    client: {{CLIENT}}
+    chat: {{CHAT}}
+  tool:
+    starting: # all tools but excluding task, code, terminal
+      session: {{ID}}
+      timestamp: {{TIMESTAMP}}
+      client: {{CLIENT}}
+      name: {{NAME}} # name of the tool
+      input: {{INPUT}}
+    ended: # excluding task, code and terminal
+      session: {{ID}}
+      timestamp: {{TIMESTAMP}}
+      client: {{CLIENT}}
+      name: {{NAME}} # name of the tool
+      input: {{INPUT}}
+      response: {{RESPONSE}}
+    plan: # A list of tasks - usually TODO lists in the native clients
+      updating: # Planning involves changing the task list
+        session: {{ID}}
+        timestamp: {{TIMESTAMP}}
+        client: {{CLIENT}}
+        steps:
+          - name: {{STEPNAME}}
+          - status: {{STATUS}} # completed, in progress, pending
+    code:
+      searching: # All searches such as file read, grep,
+        session: {{ID}}
+        timestamp: {{TIMESTAMP}}
+        client: {{CLIENT}}
+        query: {{QUERY}} # regex, glob, file path, etc
+        include: [{{INCLUDEPATTERN}}] # file glob patterns, line numbers, etc
+        exclude: [{{EXCLUDEPATTERN}}]
+      editing:
+        session: {{ID}}
+        timestamp: {{TIMESTAMP}}
+        client: {{CLIENT}}
+        path: {{FILEPATH}}
+        old: {{OLDSTRING}}
+        new: {{NEWSTRING}}
+        all: {{REPLACEALLSTRINGS}} # false: just first, true: replace all occurrences
+      edited:
+        session: {{ID}}
+        timestamp: {{TIMESTAMP}}
+        client: {{CLIENT}}
+        path: {{FILEPATH}}
+        old: {{OLDSTRING}}
+        new: {{NEWSTRING}}
+    terminal:
+      starting:
+        session: {{ID}}
+        timestamp: {{TIMESTAMP}}
+        client: {{CLIENT}}
+        command: {{COMMAND}}
+      ended:
+        session: {{ID}}
+        timestamp: {{TIMESTAMP}}
+        client: {{CLIENT}}
+        command: {{COMMAND}}
+        pid: {{PID}} # process id, execution id, etc
+        terminated: {{HASTERMINATED}} # true: stopped, false: still running
+        stdout: {{STDOUT}}
+        stderr: {{STDERR}}
+```
+
+Hooks:
+```yaml
+git:
+  commit:
+    starting: pre-commit (stage: pre-commit)
+    ended: pre-commit (stage: post-commit)
+agent:
+  starting:
+    vscode-chat: SessionStart | SubagentStart (optionally include parent agent info)
+    windsurf-chat: pre_user_prompt (best-effort: first prompt of a session; include parent agent info if known)
+    cursor-chat: sessionStart | subagentStart (optionally include parent agent info)
+    claude-code: SessionStart | SubagentStart (optionally include parent agent info)
+    droid: SessionStart (optionally include parent agent info)
+  ended:
+    vscode-chat: Stop | SubagentStop (optionally include parent agent info)
+    windsurf-chat: post_cascade_response (best-effort: last response in session; include parent agent info if known)
+    cursor-chat: stop | subagentStop | sessionEnd (optionally include parent agent info)
+    claude-code: Stop | SubagentStop | SessionEnd (optionally include parent agent info)
+    droid: Stop | SubagentStop | SessionEnd (optionally include parent agent info)
+  prompt:
+    submit:
+      vscode-chat: UserPromptSubmit
+      windsurf-chat: pre_user_prompt
+      cursor-chat: beforeSubmitPrompt
+      claude-code: UserPromptSubmit
+      droid: UserPromptSubmit
+  compacting:
+    vscode-chat: PreCompact
+    windsurf-chat: pre_user_prompt where prompt triggers/requests compaction (emulated; no native compact event)
+    cursor-chat: preCompact
+    claude-code: PreCompact
+    droid: PreCompact
+  tool:
+    starting: # excluding task, code and terminal
+      vscode-chat: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
+      windsurf-chat: pre_mcp_tool_use (MCP tools only; exclude code/terminal hooks)
+      cursor-chat: preToolUse (exclude code.reading/code.edited + terminal.starting/ended) | beforeMCPExecution (MCP)
+      claude-code: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
+      droid: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
+    ended: # excluding task, code and terminal
+      vscode-chat: PostToolUse (with return info; exclude code/terminal)
+      windsurf-chat: post_mcp_tool_use (with return info; MCP tools only; exclude code/terminal)
+      cursor-chat: postToolUse | postToolUseFailure (with return info; exclude code/terminal) | afterMCPExecution (MCP)
+      claude-code: PostToolUse | PostToolUseFailure (with return info; exclude code/terminal)
+      droid: PostToolUse (with return info; exclude code/terminal)
+    plan: # A list of tasks/steps/todos
+      updating: # Planning involves changing the task list
+        vscode-chat: PreToolUse where tool_name == "manage_todo_list"
+        windsurf-chat: pre_write_code where file_path matches plan.md / planning-mode plan file
+        cursor-chat: preToolUse where tool_name in ["todo_tool","manage_todo_list"]
+        claude-code: PreToolUse matcher == "Task" (or tool_name == "Task")
+        droid: PreToolUse matcher == "Task"
+    code:
+      searching:
+        vscode-chat: PreToolUse where tool_name indicates search (file search tools)
+        windsurf-chat: pre_read_code
+        cursor-chat: beforeReadFile
+        claude-code: PreToolUse (matcher == "Read" / file-read tool)
+        droid: PreToolUse (matcher == "Read" / file-read tool)
+      editing:
+        vscode-chat: PreToolUse where tool_name indicates edit/write/create (file write tools)
+        windsurf-chat: pre_write_code
+        cursor-chat: beforeFileEdit
+        claude-code: PreToolUse (matcher == "Edit" or "Write") + PostToolUse | PostToolUseFailure
+        droid: PreToolUse (matcher == "Edit" or "Write") + PostToolUse
+      edited:
+        vscode-chat: PostToolUse where tool_name indicates edit/write/create (file write tools)
+        windsurf-chat: post_write_code
+        cursor-chat: afterFileEdit
+        claude-code: PostToolUse (matcher == "Edit" or "Write") + PostToolUse | PostToolUseFailure
+        droid: PostToolUse (matcher == "Edit" or "Write") + PostToolUse
+    terminal:
+      starting:
+        vscode-chat: PreToolUse where tool_name indicates terminal execution e.g. "tool_name": "run_in_terminal"
+        windsurf-chat: pre_run_command
+        cursor-chat: beforeShellExecution
+        claude-code: PreToolUse matcher == "Bash"
+        droid: PreToolUse matcher == "Bash"
+      ended:
+        vscode-chat: PostToolUse for that terminal tool invocation e.g. "tool_name": "run_in_terminal"
+        windsurf-chat: post_run_command
+        cursor-chat: afterShellExecution
+        claude-code: PostToolUse | PostToolUseFailure (matcher "Bash") | Stop (if terminal run ends the turn)
+        droid: PostToolUse (matcher "Bash") | Stop (if terminal run ends the turn)
+```
+
+`ticket.json`
+```yaml
+title: Tree Text Short IDs
+description: >-
+  Fixed renderTreeNodeText to temporarily clear parentId before calling
+  renderEntityHuman so tree text output shows only the own ID segment instead of
+  full hierarchical chains. Added tests for nested goal short IDs and parentId
+  restoration.
+github:
+  issue: 'https://github.com/usalu/semio/issues/612'
+goal: 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters
+sessions: # Create a new session when semio repo mcp ticket open is called
+  - id: 38b90183-005d-45cf-879d-c16b27c099ce # native session id from client
+    contributor: usalu # find contributor with git config
+    system: linux
+    client: copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag, vscode extension command: use session id.
+    query: hooks copilot vscode # Last semio repo mcp tree tool input
+      context: - [🎯Goals](semiorepo://goals)\n  - [🎯hooksvscode🎯fixhooks🎫fixvscodecopilotchatnativehooks](semiorepo://ticket/26/02/18/FIX-VS-CODE-COPILOT-CHAT-NATIVE-HOOKS) - `Fix VS Code Copilot Chat Native Hooks` - `closed` - `closed 3 hours ago` - `Fixed VS Code Copilot Chat native hooks to produce VS Code-compatible JSON output. Added formatVSCodeHookOutput for proper hookSpecificOutput with permissionDecision for PreToolUse (allow/deny). Added extractToolNameFromStdin and extractHookEventNameFromStdin to parse VS Code stdin JSON. Added vsCodeEventFromHookEvent for event mapping. Updated hookCommand to detect copilot-chat client and output VS Code JSON instead of plain text. For blocked tools, uses permissionDecision:deny with exit code 0 (not exit code 2). Added timeout:30 to all copilot hook entries. Regenerated .github/hooks/semio-repo.json via configure. All 37 hook tests pass.`\n # From succesfull semio-repo tree output
+    plan:
+      steps:
+        - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
+          completed: {{TIMESTAMP}} # this means status completed
+        - name: Implement hook-to-ticket session integration for interactions, reads, and diffs
+          started: {{TIMESTAMP}} # this means status in progress
+        - name: Add/update tests and run relevant test suite # no completed or started means status pending
+        - name: Update ticket artifacts and summarize changes
+    diff: # Derive codebase diffs from agent hooks
+        projects:
+          deleted: ""
+          renamed:
+            - from: ""
+              to: ""
+          modified:
+            {{STATS}}
+          created: ""
+        bundle:
+          …
+    agents:
+      - timestamp: 2026-02-18T13:20:47Z
+        commit: 503dcda1bc1de15727d922200c8d579a230ddf0c
+        llm: opus-4-6
+        prompt: vscode copliot hooks have the following error:\nCannot read properties of undefined (reading 'hookSpecificOutput') # From agent.prompt.submit
+       
+        reads: # Derive from code read hooks
+          projects: [{{ID}}]
+          bundles:  [{{ID}}]
+          …
+      
+```
+
+
 - git
   - commit
     - starting # pre-commit
@@ -81,17 +464,23 @@ The following hooks should be implemented:
   - starting # session.start or subagent.start with optionally the parent agent information
   - ended # agent stop or subagent.stop with optionally the parent agent information
   - prompt
-    - submit
+    - submit droid: UserPromptSubmit
   - compacting # compact.pre
-  - tool # both for regular tools (except code reading and editing) and also mcp tools
-    - calling # tool.pre
-    - ended # tool.post
-  - code
-    - reading # tool.pre with proper tool in vscode, file.read.pre in cursor, pre_read_code in Windsurf, etc
-    - edited  # tool.pre with proper tool in vscode, file.edit.post in cursor, pre_write_code in Windsurf, etc
-- notification
+  - tool # both for regular tools (except code reading and edited, terminal starting and ended) and also mcp tools
+    - starting # tool.pre
+    - ended # with return information, tool.post cursor: postToolUse or postToolUseFailure
+    - task
+      - plan # vscode-chat: "toolName": "manage_todo_list" with non-completed
+      - starting # vscode-chat: "toolName": "manage_todo_list" and compare 
+      - ended # vscode-chat: "toolName": "manage_todo_list" and compare if the, claude-code: TaskCompleted
+    - code
+      - reading # vscode-chat: tool.pre with proper tool, cursor-chat: beforeReadFile, windsurf-chat: pre_read_code, claude-code: PreToolUse"
+      - edited  # vscode-chat: tool.pre with proper tool, cursor-chat: afterFileEdit, windsurf-chat: pre_write_code, 
+    - terminal
+      - starting #  claude-code: "tool_name": "Bash", windsurf: pre_run_command, cursor-chat: beforeShellExecution
+      - ended # terminal.stop
 
-Tool calling should implement a block decision. e.g. `git checkout` or `git stash` should be always denied.
+Tool calling should implement a block decision. e.g. `git checkout`, `git stash`, `git reset`, `git commit` should be always denied.
 
 Support:
 ```bash

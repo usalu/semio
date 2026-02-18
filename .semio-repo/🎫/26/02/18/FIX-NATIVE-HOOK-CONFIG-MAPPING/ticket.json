@@ -1,0 +1,55 @@
+{
+  "title": "Fix Native Hook Config Mapping",
+  "status": "open",
+  "prompt": "Fix all native hook config files to pass native event names instead of pre-resolved neutral events. Add missing Cursor/Claude events. Regenerate all configs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/628"
+  },
+  "goal": "HOOK-MAPPING/FIX-NATIVE-HOOK-CONFIGS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 19:04:58",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "Fix all native hook config files to pass native event names instead of pre-resolved neutral events. Add missing Cursor/Claude events. Regenerate all configs.",
+      "llm": "opus-4-6"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "167906cd-0550-4387-96af-2cc20cb48fe3",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "interactions": [
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T19:09:02Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:09:40Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

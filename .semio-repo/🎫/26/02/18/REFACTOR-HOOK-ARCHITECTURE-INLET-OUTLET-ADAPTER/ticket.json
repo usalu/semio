@@ -1,0 +1,192 @@
+{
+  "title": "Refactor Hook Architecture Inlet-Outlet Adapter",
+  "status": "open",
+  "prompt": "Refactor the hook architecture to use inlet adapter -\u003e neutral implementation -\u003e outlet adapter pattern. CLI should accept native client events (VSCode PreToolUse, Windsurf pre_read_code, etc.) and resolve them to neutral events based on client + stdin context. The native configs should fire native events, not neutral events.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/625"
+  },
+  "goal": "DEVOPS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 18:22:15",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "Refactor the hook architecture to use inlet adapter -\u003e neutral implementation -\u003e outlet adapter pattern. CLI should accept native client events (VSCode PreToolUse, Windsurf pre_read_code, etc.) and resolve them to neutral events based on client + stdin context. The native configs should fire native events, not neutral events.",
+      "llm": "opus-4-6"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "167906cd-0550-4387-96af-2cc20cb48fe3",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:37:48Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-18T18:44:09Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "prompt": "semio cli configure:\nThere are hook configs that dont exist e.g. .antigravity has no hook support, .droid is a duplicate of .factory, .codex has no hook support. Etc.\nPlatforms:\nVSCode: `.github/hooks/semio-repo.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `SubagentStart`, `SubagentStop`, `Stop`\nWindsurf: `.windsurf/hooks.json` with `pre_read_code`, `post_read_code`, `pre_write_code`, `post_write_code`, `pre_run_command`, `pre_mcp_tool_use`, `post_mcp_tool_use`, `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree`\nCursor: `.cursor/hooks.json` with `sessionStart`, `sessionEnd`, `preToolUse`, `postToolUse`, `postToolUseFailure`, `subagentStart`, `subagentStop`, `beforeShellExecution`, `afterShellExecution`, `beforeMCPExecution`, `afterMCPExecution`, `beforeReadFile`, `afterFileEdit`, `beforeSubmitPrompt`, `preCompact`, `stop`, `afterAgentResponse`, `afterAgentThought`, `beforeTabFileRead`, `afterTabFileEdit`\nClaude Code: `.claude/settings.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `Notification`, `SubagentStart`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `PreCompact`, `SessionEnd`\nDroid: `.factory/hooks.json` with `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Notification`, `Stop`, `SubagentStop`, `PreCompact`, `SessionStart`, `SessionEnd`",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:45:42Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:46:01Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:46:23Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:46:53Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:47:30Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:47:47Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:48:04Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:48:27Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "2f1e87c2-af13-4067-9aa6-15f0af84010c",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T18:51:54Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "8a40542e-eef5-4a5a-82ae-63137d6bd78e",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T18:56:39Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

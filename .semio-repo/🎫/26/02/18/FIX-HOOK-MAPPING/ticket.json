@@ -1,0 +1,108 @@
+{
+  "title": "Fix Hook Mapping",
+  "status": "closed",
+  "prompt": "fix hooks",
+  "summary": "All platform hook config generators now include ALL available events with NO matchers. Added native format generators for codex/droid/antigravity with all 13 agent events. configure command now writes 10 client configs + git hooks. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/619"
+  },
+  "goal": "HOOKS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-18 14:23:05",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "prompt": "fix hooks",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 16:31:38",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771431447667100276-9019629670202507817",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T16:17:20Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T16:17:27Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T16:19:06Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T16:19:31Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T16:19:51Z",
+          "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

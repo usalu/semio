@@ -1,4 +1,160 @@
 {
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook Notification claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook PermissionRequest claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook PostToolUse claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook PostToolUseFailure claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook PreCompact claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook PreToolUse claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook SessionEnd claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook SessionStart claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook Stop claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook SubagentStart claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook SubagentStop claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook TaskCompleted claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook TeammateIdle claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "./semio-repo/cli/cli hook UserPromptSubmit claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Read(net/Semio.Grasshopper/Semio.Grasshopper.cs)",
@@ -22,12 +178,12 @@
       "Read(js\\js\\components/**)",
       "Edit(js\\js\\components/**)"
     ],
+    "ask": [],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)",
       "Bash(git checkout)"
-    ],
-    "ask": []
+    ]
   }
 }
