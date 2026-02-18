@@ -1493,7 +1493,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 
 // #region 🔖ActionGroup
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖actiongroup](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/ActionGroup)
 // Compact action button group with dropdown support.
 // Consumers MUST provide action items for the group.
 
@@ -3222,7 +3222,7 @@ export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
 // #region 🔖Accordion
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖accordion](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Accordion)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components)
 // Collapsible accordion built on Radix primitives.
 // Consumers MUST use AccordionItem children.
 
@@ -4469,7 +4469,7 @@ export const FileTree = Tree.Files;
 
 // #region 🔖Breadcrumb
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖breadcrumb](semiorepo://section/semio/js/sketchpad/elements.tsx/Navigation%20Components/Breadcrumb)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Navigation%20Components)
 // Breadcrumb trail for hierarchical page navigation.
 // Consumers MUST provide BreadcrumbItemData entries.
 
@@ -4718,7 +4718,7 @@ export { PageNavigation };
 
 // #region 🔖Panel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/Panel)
 // Resizable dockable panel with sections and collapse support.
 // Consumers MUST set resizeSide for the handle.
 
@@ -5251,7 +5251,7 @@ export { HudPanel };
 
 // #region 🔖Window
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components)
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖window](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components/Window)
 // Draggable, resizable floating window with dashed border.
 // Consumers MUST provide a WindowConfig object.
 

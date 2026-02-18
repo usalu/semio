@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "agent.ended": "./semio-repo/cli/cli hook agent.ended droid",
+    "agent.starting": "./semio-repo/cli/cli hook agent.starting droid",
+    "code.edited": "./semio-repo/cli/cli hook code.edited droid --file \"$FILE\"",
+    "code.reading": "./semio-repo/cli/cli hook code.reading droid --file \"$FILE\"",
+    "compacting": "./semio-repo/cli/cli hook compacting droid",
+    "notification": "./semio-repo/cli/cli hook notification droid",
+    "prompt.submit": "./semio-repo/cli/cli hook prompt.submit droid",
+    "tool.calling": "./semio-repo/cli/cli hook tool.calling droid --tool-name \"$TOOL\" --tool-args \"$ARGS\"",
+    "tool.ended": "./semio-repo/cli/cli hook tool.ended droid --tool-name \"$TOOL\""
+  }
+}

@@ -236,7 +236,7 @@
                             "value": "1",
                             "name": "Building Class 1",
                             "description": "Either free standing building with a height up to 7m and not more than two usage units with a total gross floor area of not more than 400m², or a land or forest usage building.",
-                            "measures": {
+                            "instructions": {
                                 "higher": [
                                     {
                                         "id": "change-building-usage",
@@ -371,5 +371,5 @@
                 }
             ]
         }
-    ],
+    ]
 }

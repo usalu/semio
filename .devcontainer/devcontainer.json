@@ -87,6 +87,8 @@
     "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
     "source=${localWorkspaceFolderBasename}-config-openai,target=/home/vscode/.config/openai,type=volume",
     "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume",
+    "source=${localWorkspaceFolderBasename}-cursor-server,target=/home/vscode/.cursor-server,type=volume",
+    "source=${localWorkspaceFolderBasename}-antigravity-server,target=/home/vscode/.antigravity-server,type=volume",
     "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
     "source=${localWorkspaceFolderBasename}-windsurf-server,target=/home/vscode/.windsurf-server,type=volume",
     "source=${localWorkspaceFolderBasename}-ms-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"

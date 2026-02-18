@@ -575,6 +575,35 @@ func TestFilterTicketWorkspaceFiles(t *testing.T) {
 	}
 }
 
+func TestNormalizeTicketFileInput(t *testing.T) {
+	absRoot := GetRootDir()
+	filePath := filepath.ToSlash(filepath.Join("semio-repo", "cli", "main.go"))
+	absPath := filepath.Join(absRoot, filePath)
+	fileID := FileHeaderId(filePath)
+	fileUri := "semiorepo://file/" + PathToUriPath(filePath)
+	filesUri := "semiorepo://files/" + PathToUriPath(filepath.Dir(filePath))
+	fileUriForFiles := filesUri + "/" + PathToUriPath(filepath.Base(filePath))
+	cases := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"path", filePath, filePath},
+		{"abs path", absPath, filePath},
+		{"file uri", fileUri, filePath},
+		{"files uri", fileUriForFiles, filePath},
+		{"id", fileID, filePath},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeTicketFileInput(tc.input)
+			if got != tc.want {
+				t.Fatalf("expected %s, got %s", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestNodesAndEdgesQuick(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
@@ -6140,10 +6169,10 @@ func TestSpecExactIDs(t *testing.T) {
 		{"day 15", "day", map[string]interface{}{"parentId": "🎆26🌙02", "dd": "15"}, "🎆26🌙02☀️15"},
 		{"hours", "hours", map[string]interface{}{"parentId": "🎆26🌙02☀️15"}, "🎆26🌙02☀️15⏰"},
 		{"hour 14", "hour", map[string]interface{}{"parentId": "🎆26🌙02☀️15", "hh": "14"}, "🎆26🌙02☀️15⏰14"},
-		{"minutes", "minutes", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14"}, "🎆26🌙02☀️15⏰14⏳"},
-		{"minute 33", "minute", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14", "mm": "33"}, "🎆26🌙02☀️15⏰14⏳33"},
-		{"seconds", "seconds", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14⏳33"}, "🎆26🌙02☀️15⏰14⏳33⏱️"},
-		{"second 38", "second", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14⏳33", "ss": "38"}, "🎆26🌙02☀️15⏰14⏳33⏱️38"},
+		{"minutes", "minutes", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14"}, "🎆26🌙02☀️15⏰14⌚"},
+		{"minute 33", "minute", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14", "mm": "33"}, "🎆26🌙02☀️15⏰14⌚33"},
+		{"seconds", "seconds", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14⌚33"}, "🎆26🌙02☀️15⏰14⌚33⏱️"},
+		{"second 38", "second", map[string]interface{}{"parentId": "🎆26🌙02☀️15⏰14⌚33", "ss": "38"}, "🎆26🌙02☀️15⏰14⌚33⏱️38"},
 		{"projects", "projects", map[string]interface{}{"parentId": ""}, "🏗️"},
 		{"project semio-repo", "project", map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"}, "🧰semiorepo"},
 		{"bundles", "bundles", map[string]interface{}{"parentId": "👤semio"}, "👤semio📦"},
@@ -6179,22 +6208,22 @@ func TestSpecExactIDs(t *testing.T) {
 			"parentId": "💻👮godfiles",
 			"affected": "👤semio📚js🗃️sketchpad💻designstorets",
 			"lineId":   "📌3872📌3875",
-			"secondId": "🎆26🌙02☀️14⏰19⏳07⏱️12",
-		}, "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets🔍📌3872📌3875🎆26🌙02☀️14⏰19⏳07⏱️12"},
+			"secondId": "🎆26🌙02☀️14⏰19⌚07⏱️12",
+		}, "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets🔍📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"},
 		{"contributor", "contributor", map[string]interface{}{"github": "usalu"}, "🧑‍💻usalu"},
 		{"commit", "commit", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": "🧑‍💻usalu"}, "🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
 		{"interaction started", "interaction", map[string]interface{}{
-			"secondId":      "🎆26🌙02☀️14⏰19⏳07⏱️12",
+			"secondId":      "🎆26🌙02☀️14⏰19⌚07⏱️12",
 			"contributorId": "🧑‍💻usalu",
 			"entityId":      "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism",
 			"kind":          "started",
-		}, "🎆26🌙02☀️14⏰19⏳07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱"},
+		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱"},
 		{"interaction finished", "interaction", map[string]interface{}{
-			"secondId":      "🎆26🌙02☀️14⏰19⏳07⏱️12",
+			"secondId":      "🎆26🌙02☀️14⏰19⌚07⏱️12",
 			"contributorId": "🧑‍💻usalu",
 			"entityId":      "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism",
 			"kind":          "finished",
-		}, "🎆26🌙02☀️14⏰19⏳07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅"},
+		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7294,6 +7323,9 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		t.Errorf("expected 'ticket is already open' error, got: %s", reopenOpenErr)
 	}
 
+	fileID := FileHeaderId(fileRel)
+	fileURI := "semiorepo://file/" + PathToUriPath(fileRel)
+	absFile := filepath.Join(GetRootDir(), fileRel)
 	closeOut, closeErr, err := executeCommand(
 		"ticket", "close",
 		"--no-github",
@@ -7303,6 +7335,9 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"--slug", slug,
 		"--summary", "E2E summary",
 		"--files", fileRel,
+		"--files", fileID,
+		"--files", fileURI,
+		"--files", absFile,
 	)
 	if err != nil {
 		t.Fatalf("ticket close flags failed: %v\nStdout: %s\nStderr: %s", err, closeOut, closeErr)
@@ -11912,24 +11947,24 @@ func TestBuildMonorepoTree(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	InvalidateProjectCache()
 
+	ctx := context.Background()
+	treeNoSections := BuildMonorepoTree(ctx)
+	treeSections := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
+
 	t.Run("builds tree with categories", func(t *testing.T) {
-		ctx := context.Background()
-		tree := BuildMonorepoTree(ctx)
-		if tree == nil {
+		if treeNoSections == nil {
 			t.Fatal("tree should not be nil")
 		}
-		if len(tree.Children) == 0 {
+		if len(treeNoSections.Children) == 0 {
 			t.Fatal("tree should have categories")
 		}
-
 		categoryIDs := make(map[string]bool)
-		for _, c := range tree.Children {
+		for _, c := range treeNoSections.Children {
 			if c.Kind != TreeNodeCategory {
 				t.Errorf("top-level children should be categories, got %s", c.Kind)
 			}
 			categoryIDs[c.ID] = true
 		}
-
 		expected := []string{"folders", "projects", "goals", "drafts", "policies", "contributors", "commits"}
 		for _, id := range expected {
 			if !categoryIDs[id] {
@@ -11939,10 +11974,8 @@ func TestBuildMonorepoTree(t *testing.T) {
 	})
 
 	t.Run("folders category has folder and file hierarchy", func(t *testing.T) {
-		ctx := context.Background()
-		tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
 		var foldersNode *TreeNode
-		for _, c := range tree.Children {
+		for _, c := range treeSections.Children {
 			if c.ID == "folders" {
 				foldersNode = c
 				break
@@ -11990,10 +12023,8 @@ func TestBuildMonorepoTree(t *testing.T) {
 	})
 
 	t.Run("projects category has children", func(t *testing.T) {
-		ctx := context.Background()
-		tree := BuildMonorepoTree(ctx)
 		var projectsNode *TreeNode
-		for _, c := range tree.Children {
+		for _, c := range treeNoSections.Children {
 			if c.ID == "projects" {
 				projectsNode = c
 				break
@@ -12023,10 +12054,8 @@ func TestBuildMonorepoTree(t *testing.T) {
 	})
 
 	t.Run("policies category uses entitykind grouping", func(t *testing.T) {
-		ctx := context.Background()
-		tree := BuildMonorepoTree(ctx)
 		var policiesNode *TreeNode
-		for _, c := range tree.Children {
+		for _, c := range treeNoSections.Children {
 			if c.ID == "policies" {
 				policiesNode = c
 				break
@@ -12063,8 +12092,6 @@ func TestBuildMonorepoTree(t *testing.T) {
 	})
 
 	t.Run("with sections includes sections", func(t *testing.T) {
-		ctx := context.Background()
-		tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
 		hasSections := false
 		var walk func(*TreeNode)
 		walk = func(n *TreeNode) {
@@ -12076,15 +12103,13 @@ func TestBuildMonorepoTree(t *testing.T) {
 				walk(c)
 			}
 		}
-		walk(tree)
+		walk(treeSections)
 		if !hasSections {
 			t.Error("tree with IncludeSections should have section nodes")
 		}
 	})
 
 	t.Run("without sections excludes sections", func(t *testing.T) {
-		ctx := context.Background()
-		tree := BuildMonorepoTree(ctx)
 		var walk func(*TreeNode)
 		walk = func(n *TreeNode) {
 			if n.Kind == TreeNodeSection {
@@ -12095,7 +12120,7 @@ func TestBuildMonorepoTree(t *testing.T) {
 				walk(c)
 			}
 		}
-		walk(tree)
+		walk(treeNoSections)
 	})
 }
 
@@ -13634,3 +13659,607 @@ func TestFilePolicyRegistered(t *testing.T) {
 		t.Error("file policy should contain BreachFileIllegalUseGodfile kind")
 	}
 }
+
+// #region 🔖Hook Tests
+
+func TestValidateHookEvent(t *testing.T) {
+	cases := []struct {
+		name    string
+		input   string
+		valid   bool
+		expect  HookEvent
+	}{
+		{"commit starting", "commit.starting", true, HookCommitStarting},
+		{"commit ended", "commit.ended", true, HookCommitEnded},
+		{"agent starting", "agent.starting", true, HookAgentStarting},
+		{"agent ended", "agent.ended", true, HookAgentEnded},
+		{"prompt submit", "prompt.submit", true, HookPromptSubmit},
+		{"compacting", "compacting", true, HookCompacting},
+		{"tool calling", "tool.calling", true, HookToolCalling},
+		{"tool ended", "tool.ended", true, HookToolEnded},
+		{"code reading", "code.reading", true, HookCodeReading},
+		{"code edited", "code.edited", true, HookCodeEdited},
+		{"notification", "notification", true, HookNotification},
+		{"invalid", "invalid.event", false, ""},
+		{"empty", "", false, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			event, err := ValidateHookEvent(tc.input)
+			if tc.valid {
+				if err != nil {
+					t.Fatalf("expected valid event, got error: %v", err)
+				}
+				if event != tc.expect {
+					t.Errorf("expected %s, got %s", tc.expect, event)
+				}
+			} else {
+				if err == nil {
+					t.Fatal("expected error for invalid event")
+				}
+			}
+		})
+	}
+}
+
+func TestHookEventKind(t *testing.T) {
+	cases := []struct {
+		name   string
+		event  HookEvent
+		expect HookKind
+	}{
+		{"commit starting is git", HookCommitStarting, HookKindGit},
+		{"commit ended is git", HookCommitEnded, HookKindGit},
+		{"agent starting is agent", HookAgentStarting, HookKindAgent},
+		{"agent ended is agent", HookAgentEnded, HookKindAgent},
+		{"prompt submit is agent", HookPromptSubmit, HookKindAgent},
+		{"compacting is agent", HookCompacting, HookKindAgent},
+		{"tool calling is agent", HookToolCalling, HookKindAgent},
+		{"tool ended is agent", HookToolEnded, HookKindAgent},
+		{"code reading is agent", HookCodeReading, HookKindAgent},
+		{"code edited is agent", HookCodeEdited, HookKindAgent},
+		{"notification is agent", HookNotification, HookKindAgent},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := HookEventKind(tc.event)
+			if result != tc.expect {
+				t.Errorf("expected %s, got %s", tc.expect, result)
+			}
+		})
+	}
+}
+
+func TestIsToolBlocked(t *testing.T) {
+	cases := []struct {
+		name     string
+		toolName string
+		toolArgs string
+		blocked  bool
+	}{
+		{"git checkout blocked", "run_in_terminal", "git checkout main", true},
+		{"git stash blocked", "bash", "git stash", true},
+		{"git stash pop blocked", "shell", "git stash pop", true},
+		{"git stash drop blocked", "terminal", "git stash drop", true},
+		{"git stash apply blocked", "run", "git stash apply", true},
+		{"git reset hard blocked", "exec", "git reset --hard", true},
+		{"git clean fd blocked", "terminal", "git clean -fd", true},
+		{"git checkout in args blocked", "", "git checkout feature/branch", true},
+		{"regular tool allowed", "read_file", "/path/to/file.ts", false},
+		{"git commit allowed", "terminal", "git commit -m test", false},
+		{"git push allowed", "terminal", "git push origin main", false},
+		{"git pull allowed", "terminal", "git pull", false},
+		{"git add allowed", "terminal", "git add .", false},
+		{"empty allowed", "", "", false},
+		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			blocked, _ := IsToolBlocked(tc.toolName, tc.toolArgs)
+			if blocked != tc.blocked {
+				t.Errorf("expected blocked=%v, got blocked=%v", tc.blocked, blocked)
+			}
+		})
+	}
+}
+
+func TestRunHookAgentEvents(t *testing.T) {
+	cases := []struct {
+		name    string
+		event   HookEvent
+		allowed bool
+	}{
+		{"agent starting", HookAgentStarting, true},
+		{"agent ended", HookAgentEnded, true},
+		{"prompt submit", HookPromptSubmit, true},
+		{"compacting", HookCompacting, true},
+		{"tool ended", HookToolEnded, true},
+		{"code reading", HookCodeReading, true},
+		{"code edited", HookCodeEdited, true},
+		{"notification", HookNotification, true},
+		{"commit ended", HookCommitEnded, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:     tc.event,
+				Client:    "copilot-chat",
+				Timestamp: time.Now().UTC().Format(time.RFC3339),
+			}
+			result := RunHook(hctx)
+			if result.Allowed != tc.allowed {
+				t.Errorf("expected allowed=%v, got allowed=%v: %s", tc.allowed, result.Allowed, result.Message)
+			}
+		})
+	}
+}
+
+func TestRunHookToolBlocking(t *testing.T) {
+	hctx := HookContext{
+		Event:     HookToolCalling,
+		Client:    "copilot-chat",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		ToolName:  "run_in_terminal",
+		ToolArgs:  "git checkout main",
+	}
+	result := RunHook(hctx)
+	if result.Allowed {
+		t.Error("expected tool to be blocked")
+	}
+	if !strings.Contains(result.Message, "blocked") {
+		t.Errorf("expected blocked message, got: %s", result.Message)
+	}
+}
+
+func TestRunHookToolAllowed(t *testing.T) {
+	hctx := HookContext{
+		Event:     HookToolCalling,
+		Client:    "cursor-chat",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		ToolName:  "read_file",
+		ToolArgs:  "/workspaces/semio/semio-repo/cli/main.go",
+	}
+	result := RunHook(hctx)
+	if !result.Allowed {
+		t.Errorf("expected tool to be allowed, got: %s", result.Message)
+	}
+}
+
+func TestRunHookUnknownEvent(t *testing.T) {
+	hctx := HookContext{
+		Event:     HookEvent("unknown.event"),
+		Client:    "copilot-chat",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+	result := RunHook(hctx)
+	if result.Allowed {
+		t.Error("expected unknown event to be denied")
+	}
+}
+
+func TestAllHookEventsCompleteness(t *testing.T) {
+	expected := []HookEvent{
+		HookCommitStarting, HookCommitEnded,
+		HookAgentStarting, HookAgentEnded,
+		HookPromptSubmit, HookCompacting,
+		HookToolCalling, HookToolEnded,
+		HookCodeReading, HookCodeEdited,
+		HookNotification,
+	}
+	if len(AllHookEvents) != len(expected) {
+		t.Errorf("expected %d events, got %d", len(expected), len(AllHookEvents))
+	}
+	for _, e := range expected {
+		found := false
+		for _, a := range AllHookEvents {
+			if a == e {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("missing event: %s", e)
+		}
+	}
+}
+
+func TestHookCommandCLI(t *testing.T) {
+	factory := func(cfg Config) (*Engine, error) {
+		return nil, nil
+	}
+	config := &Config{Format: "json"}
+	cmd := hookCommand(factory, config)
+	cases := []struct {
+		name    string
+		args    []string
+		wantErr bool
+	}{
+		{"valid agent starting", []string{"agent.starting", "copilot-chat"}, false},
+		{"valid prompt submit", []string{"prompt.submit", "cursor-chat"}, false},
+		{"valid notification", []string{"notification", "windsurf-chat"}, false},
+		{"invalid event", []string{"invalid.event"}, true},
+		{"no args", []string{}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			cmd.SetOut(&buf)
+			cmd.SetErr(&buf)
+			cmd.SetArgs(tc.args)
+			err := cmd.Execute()
+			if tc.wantErr && err == nil {
+				t.Error("expected error")
+			}
+			if !tc.wantErr && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestHookCommandToolBlocking(t *testing.T) {
+	hctx := HookContext{
+		Event:     HookToolCalling,
+		Client:    "copilot-chat",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		ToolName:  "terminal",
+		ToolArgs:  "git stash pop",
+	}
+	result := RunHook(hctx)
+	if result.Allowed {
+		t.Error("expected tool to be blocked")
+	}
+	if !strings.Contains(result.Message, "blocked") {
+		t.Errorf("expected blocked message, got: %s", result.Message)
+	}
+	if !strings.Contains(result.Message, "git stash") {
+		t.Errorf("expected git stash in message, got: %s", result.Message)
+	}
+}
+
+func TestHookCommandJSONOutput(t *testing.T) {
+	hctx := HookContext{
+		Event:     HookAgentStarting,
+		Client:    "copilot-chat",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+	result := RunHook(hctx)
+	out, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("expected valid JSON marshaling, got: %v", err)
+	}
+	var parsed HookResult
+	if err := json.Unmarshal(out, &parsed); err != nil {
+		t.Fatalf("expected valid JSON round-trip, got: %v", err)
+	}
+	if !parsed.Allowed {
+		t.Error("expected allowed=true")
+	}
+	if parsed.Message == "" {
+		t.Error("expected non-empty message")
+	}
+}
+
+func TestGenerateCopilotConfig(t *testing.T) {
+	content, err := generateCopilotConfig("/tmp/test-repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(content, "hook agent.starting copilot-chat") {
+		t.Error("expected agent.starting hook in copilot config")
+	}
+	if !strings.Contains(content, "hook tool.calling copilot-chat") {
+		t.Error("expected tool.calling hook in copilot config")
+	}
+	if !strings.Contains(content, "git checkout") {
+		t.Error("expected blocked operations in copilot config")
+	}
+	if !strings.Contains(content, "git stash") {
+		t.Error("expected git stash in blocked operations")
+	}
+}
+
+func TestGenerateCursorConfig(t *testing.T) {
+	content, err := generateCursorConfig("/tmp/test-repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(content, "alwaysApply: true") {
+		t.Error("expected alwaysApply in cursor config")
+	}
+	if !strings.Contains(content, "hook agent.starting cursor-chat") {
+		t.Error("expected agent.starting hook in cursor config")
+	}
+	if !strings.Contains(content, "file.read.pre") {
+		t.Error("expected file.read.pre reference in cursor config")
+	}
+}
+
+func TestGenerateWindsurfConfig(t *testing.T) {
+	content, err := generateWindsurfConfig("/tmp/test-repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(content, "hook agent.starting windsurf-chat") {
+		t.Error("expected agent.starting hook in windsurf config")
+	}
+	if !strings.Contains(content, "pre_read_code") {
+		t.Error("expected pre_read_code reference in windsurf config")
+	}
+	if !strings.Contains(content, "pre_write_code") {
+		t.Error("expected pre_write_code reference in windsurf config")
+	}
+}
+
+func TestGenerateClaudeCodeConfig(t *testing.T) {
+	content, err := generateClaudeCodeConfig("/tmp/test-repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
+	}
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected hooks key in claude code config")
+	}
+	for _, key := range []string{"PreToolUse", "PostToolUse", "PreCompact", "Notification", "SessionStart", "SessionStop", "SubagentStart", "SubagentStop", "PromptSubmit"} {
+		if _, ok := hooks[key]; !ok {
+			t.Errorf("expected %s in claude code hooks", key)
+		}
+	}
+}
+
+func TestGenerateCodexConfig(t *testing.T) {
+	content, err := generateCodexConfig("/tmp/test-repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
+	}
+	hooks, ok := config["hooks"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected hooks key in codex config")
+	}
+	for _, key := range []string{"agent.starting", "agent.ended", "prompt.submit", "tool.calling", "code.reading", "notification"} {
+		if _, ok := hooks[key]; !ok {
+			t.Errorf("expected %s in codex hooks", key)
+		}
+	}
+}
+
+func TestConfigureGitHooks(t *testing.T) {
+	tmpDir := t.TempDir()
+	gitDir := filepath.Join(tmpDir, ".git")
+	if err := os.MkdirAll(gitDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := configureGitHooks(tmpDir); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	preCommit, err := os.ReadFile(filepath.Join(gitDir, "hooks", "pre-commit"))
+	if err != nil {
+		t.Fatal("pre-commit hook not created")
+	}
+	if !strings.Contains(string(preCommit), "hook commit.starting") {
+		t.Error("pre-commit hook does not call hook commit.starting")
+	}
+	postCommit, err := os.ReadFile(filepath.Join(gitDir, "hooks", "post-commit"))
+	if err != nil {
+		t.Fatal("post-commit hook not created")
+	}
+	if !strings.Contains(string(postCommit), "hook commit.ended") {
+		t.Error("post-commit hook does not call hook commit.ended")
+	}
+	info, _ := os.Stat(filepath.Join(gitDir, "hooks", "pre-commit"))
+	if info.Mode()&0111 == 0 {
+		t.Error("pre-commit hook is not executable")
+	}
+}
+
+func TestGetClientHookMappings(t *testing.T) {
+	mappings := getClientHookMappings()
+	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "codex", "droid", "antigravity-chat"}
+	if len(mappings) != len(expectedClients) {
+		t.Errorf("expected %d mappings, got %d", len(expectedClients), len(mappings))
+	}
+	for _, ec := range expectedClients {
+		found := false
+		for _, m := range mappings {
+			if m.Client == ec {
+				found = true
+				if m.ConfigPath == "" {
+					t.Errorf("empty config path for client %s", ec)
+				}
+				if m.Generator == nil {
+					t.Errorf("nil generator for client %s", ec)
+				}
+				break
+			}
+		}
+		if !found {
+			t.Errorf("missing mapping for client: %s", ec)
+		}
+	}
+}
+
+func TestBlockedToolPatterns(t *testing.T) {
+	if len(BlockedToolPatterns) < 5 {
+		t.Errorf("expected at least 5 blocked patterns, got %d", len(BlockedToolPatterns))
+	}
+	expectedPatterns := []string{"git checkout", "git stash", "git reset --hard", "git clean -fd"}
+	for _, ep := range expectedPatterns {
+		found := false
+		for _, bp := range BlockedToolPatterns {
+			if bp == ep {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("missing blocked pattern: %s", ep)
+		}
+	}
+}
+
+func TestHookLogging(t *testing.T) {
+	tmpDir := t.TempDir()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "📜")
+	hctx := HookContext{
+		Event:     HookAgentStarting,
+		Client:    "claude-code",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  tmpDir,
+	}
+	result := RunHook(hctx)
+	if !result.Allowed {
+		t.Fatalf("expected allowed=true, got: %s", result.Message)
+	}
+	entries, err := os.ReadDir(logDir)
+	if err != nil {
+		t.Fatalf("expected log dir to exist: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 log file, got %d", len(entries))
+	}
+	name := entries[0].Name()
+	if !strings.HasSuffix(name, "_agent-starting.json") {
+		t.Errorf("expected filename to end with _agent-starting.json, got: %s", name)
+	}
+	if len(name) != len("260218230207_agent-starting.json") {
+		t.Errorf("unexpected filename length for %q", name)
+	}
+	data, err := os.ReadFile(filepath.Join(logDir, name))
+	if err != nil {
+		t.Fatalf("cannot read log file: %v", err)
+	}
+	var entry HookLogEntry
+	if err := json.Unmarshal(data, &entry); err != nil {
+		t.Fatalf("expected valid JSON log entry, got: %v", err)
+	}
+	if entry.Context.Event != HookAgentStarting {
+		t.Errorf("expected event agent.starting in log, got: %s", entry.Context.Event)
+	}
+	if entry.Context.Client != "claude-code" {
+		t.Errorf("expected client claude-code in log, got: %s", entry.Context.Client)
+	}
+	if !entry.Result.Allowed {
+		t.Error("expected allowed=true in logged result")
+	}
+}
+
+func TestHookLoggingToolBlocked(t *testing.T) {
+	tmpDir := t.TempDir()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "📜")
+	hctx := HookContext{
+		Event:    HookToolCalling,
+		Client:   "claude-code",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: tmpDir,
+		ToolName: "bash",
+		ToolArgs: "git checkout main",
+	}
+	result := RunHook(hctx)
+	if result.Allowed {
+		t.Error("expected blocked tool to be denied")
+	}
+	entries, err := os.ReadDir(logDir)
+	if err != nil {
+		t.Fatalf("expected log dir to exist: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 log file, got %d", len(entries))
+	}
+	data, err := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
+	if err != nil {
+		t.Fatalf("cannot read log file: %v", err)
+	}
+	var entry HookLogEntry
+	if err := json.Unmarshal(data, &entry); err != nil {
+		t.Fatalf("expected valid JSON log entry: %v", err)
+	}
+	if entry.Result.Allowed {
+		t.Error("expected allowed=false in logged result for blocked tool")
+	}
+	if !strings.Contains(entry.Result.Message, "blocked") {
+		t.Errorf("expected blocked message in log, got: %s", entry.Result.Message)
+	}
+	if !strings.HasSuffix(entries[0].Name(), "_tool-calling.json") {
+		t.Errorf("expected filename to end with _tool-calling.json, got: %s", entries[0].Name())
+	}
+}
+
+func TestHookLoggingStdinInput(t *testing.T) {
+	tmpDir := t.TempDir()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "📜")
+	payload := json.RawMessage(`{"session_id":"abc123","tool_name":"Bash","tool_input":{"command":"ls"}}`)
+	hctx := HookContext{
+		Event:     HookToolCalling,
+		Client:    "claude-code",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:  tmpDir,
+		ToolName:  "Bash",
+		ToolArgs:  `{"command":"ls"}`,
+		Input:     payload,
+	}
+	RunHook(hctx)
+	entries, err := os.ReadDir(logDir)
+	if err != nil {
+		t.Fatalf("expected log dir to exist: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 log file, got %d", len(entries))
+	}
+	data, err := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
+	if err != nil {
+		t.Fatalf("cannot read log file: %v", err)
+	}
+	var entry HookLogEntry
+	if err := json.Unmarshal(data, &entry); err != nil {
+		t.Fatalf("expected valid JSON log entry: %v", err)
+	}
+	var gotInput, wantInput interface{}
+	if err := json.Unmarshal(entry.Context.Input, &gotInput); err != nil {
+		t.Fatalf("expected valid JSON in logged input: %v", err)
+	}
+	if err := json.Unmarshal(payload, &wantInput); err != nil {
+		t.Fatalf("bad test payload: %v", err)
+	}
+	gotBytes, _ := json.Marshal(gotInput)
+	wantBytes, _ := json.Marshal(wantInput)
+	if string(gotBytes) != string(wantBytes) {
+		t.Errorf("expected input %s in log, got: %s", wantBytes, gotBytes)
+	}
+	if entry.Context.ToolName != "Bash" {
+		t.Errorf("expected tool name Bash in log, got: %s", entry.Context.ToolName)
+	}
+}
+
+func TestHookCommandStdinPiped(t *testing.T) {
+	tmpDir := t.TempDir()
+	payload := `{"session_id":"sess1","tool_name":"Read","tool_input":{"file_path":"/tmp/x"}}`
+	cmd := exec.Command("./cli", "hook", "tool.ended", "claude-code", "--tool-name", "Read")
+	cmd.Stdin = strings.NewReader(payload)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("SEMIO_REPO=%s", tmpDir))
+	cmd.Dir = filepath.Dir(os.Args[0])
+	out, err := cmd.CombinedOutput()
+	_ = out
+	_ = err
+	logDir := filepath.Join(tmpDir, ".semio-repo", "📜")
+	entries, readErr := os.ReadDir(logDir)
+	if readErr != nil {
+		t.Skip("cli binary not available for subprocess test")
+	}
+	if len(entries) == 0 {
+		t.Fatal("expected at least one log file after piped hook invocation")
+	}
+	data, _ := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
+	if !strings.Contains(string(data), "sess1") {
+		t.Errorf("expected stdin payload in log, got: %s", string(data))
+	}
+}
+
+// #endregion 🔖Hook Tests

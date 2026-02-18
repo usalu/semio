@@ -50,6 +50,10 @@ const (
 	Tolerance = 0.0001
 )
 
+// AssetsPath holds the data fields for a AssetsPath record.
+// [👤semio📚go💻semiogo🔖constants🪨assetspath](semiorepo://definition/semio/go/semio.go/Constants/AssetsPath)
+const AssetsPath = "../assets/semio"
+
 // #endregion 🔖Constants
 
 // #region 🔖Utils

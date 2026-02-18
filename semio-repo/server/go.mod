@@ -2,7 +2,10 @@ module github.com/usalu/semio/semio-repo/server
 
 go 1.24.0
 
-require modernc.org/sqlite v1.45.0
+require (
+	github.com/usalu/semio/semio-repo/go v0.0.0-00010101000000-000000000000
+	modernc.org/sqlite v1.45.0
+)
 
 replace github.com/usalu/semio/semio-repo/go => ../go
 

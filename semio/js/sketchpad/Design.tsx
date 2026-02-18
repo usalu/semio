@@ -3867,7 +3867,7 @@ export const DesignLassoSettings: FC = () => {
 
 // #region 🔖WindowLibrary
 
-// [👤semio📚js🗃️sketchpad💻designtsx🔖panels](semiorepo://section/semio/js/sketchpad/Design.tsx/Panels)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖windowlibrary](semiorepo://section/semio/js/sketchpad/Design.tsx/Panels/WindowLibrary)
 // WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
 interface WindowTemplate {
@@ -5383,7 +5383,7 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
 // #region 🔖Hover Intent Context
 
-// [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖hoverintentcontext](semiorepo://section/semio/js/sketchpad/Design.tsx/Canvas/Hover%20Intent%20Context)
+// [👤semio📚js🗃️sketchpad💻designtsx🔖canvas](semiorepo://section/semio/js/sketchpad/Design.tsx/Canvas)
 // Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
 
 interface HoverIntentContextValue {

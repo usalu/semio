@@ -40,7 +40,7 @@ import { Mode } from "./shared";
 
 // #region 🔖Tutorial Controls
 
-// [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/Components)
+// [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components🔖tutorialcontrols](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/Components/Tutorial%20Controls)
 // Tutorial playback controls MUST render in the footer during active tutorials.
 
 /**
@@ -826,7 +826,7 @@ const useTutorialContext = () => {
 
 // #region 🔖Tutorial Entities
 
-// [👤semio📚js🗃️sketchpad💻tutorialstsx🔖types🔖tutorialentities](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/Types/Tutorial%20Entities)
+// [👤semio📚js🗃️sketchpad💻tutorialstsx🔖types](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/Types)
 // Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
 /**

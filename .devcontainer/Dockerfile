@@ -6,6 +6,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     wget \
+    socat \
+    netcat-openbsd \
+    iproute2 \
+    net-tools \
+    lsof \
+    psmisc \
+    procps \
+    openssh-client \
+    vim \
+    dnsutils \
+    iputils-ping \
+    file \
+    xz-utils \
     unzip \
     zip \
     jq \
@@ -52,6 +65,8 @@ RUN mkdir -p /home/vscode/.local/bin \
     /home/vscode/.config/antigravity \
     /home/vscode/.config/openai \
     /home/vscode/.codeium \
+    /home/vscode/.cursor-server \
+    /home/vscode/.antigravity-server \
     /home/vscode/.vscode-server \
     /home/vscode/.windsurf-server \
     /home/vscode/.cache/ms-playwright

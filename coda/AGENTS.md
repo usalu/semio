@@ -15,23 +15,23 @@ A `project` MUST have exactly this structure:
 ```
 ├── .coda
 │   ├── mcp-servers
-│   │   └── MCPSERVERID.exe
+│   │   └── {{MCPSERVERID}}{{(.exe)?}}
 │   ├── validators
-│   │   └── VALIDATORID.exe
+│   │   └── {{VALIDATORID}}{{(.exe)?}}
 │   ├── runs
-│   │   └── RUNTIMESTAMP
+│   │   └── {{RUNTIMESTAMP}} e.g. `2026-02-10_11-47-02`
 │   │       ├── run.json
 │   │       └── iterations
-│   │           └── ITERATIONINDEX
+│   │           └── {{ITERATIONINDEX}} e.g. `001`
 │   │               ├── iteration.json
 │   │               ├── targets
-│   │               │   └── TARGETID
+│   │               │   └── {{TARGETID}} e.g. `berlin-building-code-v1`
 │   │               │       ├── trials
-│   │               │       │   └── TRIAL
+│   │               │       │   └── {{TRIAL}} e.g. `01`
 ├── .github
 │   └── agents
 │       └── coda-main-agent.agent.md
-│       └── DESIGNID-to-TARGETID-translator-agent.agent.md
+│       └── {{DESIGNID}}-to-{{TARGETID}}-translator-agent.agent.md
 ├── PROJECTFILESANDFOLDERS...
 ```
 

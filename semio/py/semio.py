@@ -391,7 +391,7 @@ class Semio(sqlmodel.SQLModel, table=True):
 
 # region Primitives
 
-# [👤semio📚py💻semiopy🔖modeling🔖primitives](semiorepo://section/semio/py/semio.py/Modeling/Primitives)
+# [👤semio📚py💻semiopy🔖modeling](semiorepo://section/semio/py/semio.py/Modeling)
 # Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
 class SModel(sqlmodel.SQLModel, abc.ABC):
@@ -640,7 +640,7 @@ class TableEntityNode(TableNode):
 
 # region Attribute
 
-# [👤semio📚py💻semiopy🔖domain](semiorepo://section/semio/py/semio.py/Domain)
+# [👤semio📚py💻semiopy🔖domain🔖attribute](semiorepo://section/semio/py/semio.py/Domain/Attribute)
 # Attribute entity with key-value pairs and definitions.
 
 class AttributeKeyField(RealField, abc.ABC):
@@ -2994,7 +2994,7 @@ class PortInputNode(InputNode):
 
 # region CompatiblePort
 
-# [👤semio📚py💻semiopy🔖domain🔖connector](semiorepo://section/semio/py/semio.py/Domain/Connector)
+# [👤semio📚py💻semiopy🔖domain🔖connector🔖compatibleport](semiorepo://section/semio/py/semio.py/Domain/Connector/CompatiblePort)
 # Compatible port entity for specifying allowed port pairings on connectors.
 
 class CompatiblePortNameField(RealField, abc.ABC):

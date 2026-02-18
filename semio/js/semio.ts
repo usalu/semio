@@ -10740,7 +10740,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #region 🔖Validation core types
 
-// [👤semio📚js💻semiots🔖kit🔖validation](semiorepo://section/semio/js/semio.ts/Kit/Validation)
+// [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes](semiorepo://section/semio/js/semio.ts/Kit/Validation/Validation%20core%20types)
 // Core validation types and interfaces MUST be defined here.
 
 /**

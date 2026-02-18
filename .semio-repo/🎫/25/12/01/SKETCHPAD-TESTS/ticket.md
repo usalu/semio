@@ -96,6 +96,7 @@ The tests still fail because:
 ## Log
 
 ## Summary
+
 # Summary
 
 Extend/adjust/refactor code to comply with sketchpad tests

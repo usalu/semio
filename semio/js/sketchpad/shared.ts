@@ -39,7 +39,7 @@ import { Guid, Kit, KitDiff } from "../semio";
 
 // #region 🔖YPath Types
 
-// [👤semio📚js🗃️sketchpad💻sharedts🔖types](semiorepo://section/semio/js/sketchpad/shared.ts/Types)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖ypathtypes](semiorepo://section/semio/js/sketchpad/shared.ts/Types/YPath%20Types)
 // MUST define path segment and path types for navigating Y.js document structures.
 
 /**
@@ -641,7 +641,7 @@ export enum PanelKind {
 
 // #region 🔖File Provider
 
-// [👤semio📚js🗃️sketchpad💻sharedts🔖ports](semiorepo://section/semio/js/sketchpad/shared.ts/Ports)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider](semiorepo://section/semio/js/sketchpad/shared.ts/Ports/File%20Provider)
 // MUST define file storage provider interfaces for upload, download, and delete operations.
 
 /**
@@ -1786,7 +1786,7 @@ export interface ResizablePanelProps {
 
 // #region 🔖XState Types
 
-// [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes](semiorepo://section/semio/js/sketchpad/shared.ts/XState%20Integration/XState%20Types)
+// [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration](semiorepo://section/semio/js/sketchpad/shared.ts/XState%20Integration)
 // MUST define XState machine context and event type interfaces for sketchpad, kit, and app machines.
 
 /**

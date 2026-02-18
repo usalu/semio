@@ -1982,7 +1982,7 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 
 // #region 🔖Details
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right](semiorepo://section/semio/js/sketchpad/Type.tsx/Panels/Right)
+// [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details](semiorepo://section/semio/js/sketchpad/Type.tsx/Panels/Right/Details)
 // Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
 /**

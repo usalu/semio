@@ -28,6 +28,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	"database/sql"
@@ -588,6 +590,8 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(listCommand(factory, &config))
 	root.AddCommand(queryCommand(factory, &config))
 	root.AddCommand(exportCommand(factory, &config))
+	root.AddCommand(hookCommand(factory, &config))
+	root.AddCommand(configureCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(preflightCmd)
 	root.AddCommand(updateCmd)
@@ -803,7 +807,7 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 			buildOpts := TreeBuildOptions{
 				IncludeSections: true,
 			}
-			tree := BuildMonorepoTree(ctx, buildOpts)
+			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
 			tree = FilterMonorepoTree(tree, &filter)
 
@@ -858,7 +862,7 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 					filter.OnlyKinds[TreeNodeDefinition] ||
 					filter.Query != "",
 			}
-			tree := BuildMonorepoTree(ctx, buildOpts)
+			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
 			tree = FilterMonorepoTree(tree, &filter)
 			var nodes []*TreeNode
@@ -1029,17 +1033,15 @@ func queryCommand(factory EngineFactory, config *Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			query := strings.Join(args, " ")
-			tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
-			idx, err := ensureCacheIndexed(ctx, tree)
-			if err != nil {
-				return err
-			}
-			defer idx.Close()
-			ids, err := queryCacheIndex(idx, query, 100000)
-			if err != nil {
-				return err
-			}
-			for _, id := range ids {
+			tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{IncludeSections: true})
+			matched := searchTreeInMemory(tree, query)
+			var nodes []*TreeNode
+			flattenTreeNodes(matched, &nodes)
+			for _, n := range nodes {
+				id := n.ID
+				if id == "" {
+					id = n.Label
+				}
 				fmt.Fprintln(cmd.OutOrStdout(), id)
 			}
 			return nil
@@ -2765,37 +2767,12 @@ func getBundlesWithOpenTickets() map[string]bool {
 		if t.Status != TicketStatusOpen {
 			continue
 		}
-
 		for _, iter := range t.Interactions {
-			if iter.Diff != nil {
-				for _, entry := range iter.Diff.Bundles.Added {
-					bundlesWithOpenTickets[entry.Path] = true
-				}
-				for _, entry := range iter.Diff.Bundles.Modified {
-					bundlesWithOpenTickets[entry.Path] = true
-				}
-				for _, entry := range iter.Diff.Bundles.Deleted {
-					bundlesWithOpenTickets[entry.Path] = true
-				}
-			}
-
-			if iter.Diff != nil {
-				fileSets := [][]TicketFile{iter.Diff.Files.Added, iter.Diff.Files.Deleted, iter.Diff.Files.Modified}
-				for _, files := range fileSets {
-					for _, f := range files {
-						parts := strings.Split(f.Path, "/")
-						if len(parts) >= 2 && strings.HasPrefix(parts[0], "@") {
-							bundleName := parts[0] + "/" + parts[1]
-							bundlesWithOpenTickets[bundleName] = true
-						}
-					}
-				}
-				for _, f := range iter.Diff.Files.Renamed {
-					parts := strings.Split(f.To, "/")
-					if len(parts) >= 2 && strings.HasPrefix(parts[0], "@") {
-						bundleName := parts[0] + "/" + parts[1]
-						bundlesWithOpenTickets[bundleName] = true
-					}
+			for _, f := range iter.Files {
+				parts := strings.Split(f.Path, "/")
+				if len(parts) >= 2 && strings.HasPrefix(parts[0], "@") {
+					bundleName := parts[0] + "/" + parts[1]
+					bundlesWithOpenTickets[bundleName] = true
 				}
 			}
 		}
@@ -4765,27 +4742,7 @@ func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query stri
 	if query == "" {
 		return root
 	}
-	idx, err := ensureCacheIndexed(ctx, root)
-	if err != nil {
-		return SearchMonorepoTree(root, query)
-	}
-	defer idx.Close()
-	ids, err := queryCacheIndex(idx, query, 100000)
-	if err != nil || len(ids) == 0 {
-		if err != nil {
-			return SearchMonorepoTree(root, query)
-		}
-		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
-	}
-	matchedIDs := make(map[string]bool)
-	for _, id := range ids {
-		matchedIDs[id] = true
-	}
-	pruned := pruneUnmatched(root, matchedIDs)
-	if pruned == nil {
-		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
-	}
-	return pruned
+	return searchTreeInMemory(root, query)
 }
 
 // SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
@@ -4795,23 +4752,89 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	if query == "" {
 		return root
 	}
+	return searchTreeInMemory(root, query)
+}
 
-	mapping := bleve.NewIndexMapping()
-	index, err := bleve.NewMemOnly(mapping)
-	if err != nil {
+
+func levenshtein(a, b string) int {
+	la, lb := len(a), len(b)
+	if la == 0 {
+		return lb
+	}
+	if lb == 0 {
+		return la
+	}
+	prev := make([]int, lb+1)
+	curr := make([]int, lb+1)
+	for j := 0; j <= lb; j++ {
+		prev[j] = j
+	}
+	for i := 1; i <= la; i++ {
+		curr[0] = i
+		for j := 1; j <= lb; j++ {
+			cost := 0
+			if a[i-1] != b[j-1] {
+				cost = 1
+			}
+			ins := curr[j-1] + 1
+			del := prev[j] + 1
+			sub := prev[j-1] + cost
+			m := ins
+			if del < m {
+				m = del
+			}
+			if sub < m {
+				m = sub
+			}
+			curr[j] = m
+		}
+		prev, curr = curr, prev
+	}
+	return prev[lb]
+}
+
+func fuzzyContains(text, term string) bool {
+	if strings.Contains(text, term) {
+		return true
+	}
+	maxDist := 1
+	if len(term) > 5 {
+		maxDist = 2
+	}
+	words := strings.Fields(text)
+	for _, w := range words {
+		if levenshtein(w, term) <= maxDist {
+			return true
+		}
+		if len(w) >= len(term) {
+			for i := 0; i <= len(w)-len(term)+maxDist && i <= len(w)-1; i++ {
+				end := i + len(term) + maxDist
+				if end > len(w) {
+					end = len(w)
+				}
+				sub := w[i:end]
+				if levenshtein(sub, term) <= maxDist {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
+	terms := strings.Fields(strings.ToLower(query))
+	if len(terms) == 0 {
 		return root
 	}
-	defer index.Close()
-
-	nodeIndex := make(map[string]*TreeNode)
-	var indexNodes func(node *TreeNode)
-	indexNodes = func(node *TreeNode) {
+	matchedIDs := make(map[string]bool)
+	var walk func(node *TreeNode)
+	walk = func(node *TreeNode) {
 		if node.Kind != TreeNodeCategory {
 			docID := node.ID
 			if docID == "" {
 				docID = node.Label
 			}
-			text := strings.Join([]string{
+			text := strings.ToLower(strings.Join([]string{
 				node.Label,
 				node.ID,
 				node.SubKind,
@@ -4820,33 +4843,26 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 				node.Status,
 				node.Contributor,
 				string(node.Kind),
-			}, " ")
-			doc := map[string]interface{}{"text": text}
-			index.Index(docID, doc)
-			nodeIndex[docID] = node
+			}, " "))
+			allMatch := true
+			for _, term := range terms {
+				if !fuzzyContains(text, term) {
+					allMatch = false
+					break
+				}
+			}
+			if allMatch {
+				matchedIDs[docID] = true
+			}
 		}
 		for _, c := range node.Children {
-			indexNodes(c)
+			walk(c)
 		}
 	}
-	indexNodes(root)
-
-	searchRequest := bleve.NewSearchRequest(bleve.NewMatchQuery(query))
-	searchRequest.Size = len(nodeIndex)
-	results, err := index.Search(searchRequest)
-	if err != nil {
-		return root
-	}
-
-	matchedIDs := make(map[string]bool)
-	for _, hit := range results.Hits {
-		matchedIDs[hit.ID] = true
-	}
-
+	walk(root)
 	if len(matchedIDs) == 0 {
 		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
 	}
-
 	pruned := pruneUnmatched(root, matchedIDs)
 	if pruned == nil {
 		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
@@ -5397,6 +5413,96 @@ func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error)
 }
 
 // #endregion 🔖Query Cache
+
+// #region 🔖Tree Cache
+
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖treecache](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Tree%20Cache)
+// Gzip-compressed JSON cache of the full TreeNode tree under .semio-repo/cache. Uses same git fingerprint as Query Cache for invalidation. Saves ~95% of tree build time on cache hit.
+
+func getTreeCachePath() string {
+	return filepath.Join(getCacheDir(), "tree.json.gz")
+}
+
+func getTreeCacheMetaPath() string {
+	return filepath.Join(getCacheDir(), "tree-meta.json")
+}
+
+func saveTreeCache(tree *TreeNode, meta *cacheMeta) error {
+	dir := getCacheDir()
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	data, err := json.Marshal(tree)
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	gz, err := gzip.NewWriterLevel(&buf, gzip.BestSpeed)
+	if err != nil {
+		return err
+	}
+	if _, err := gz.Write(data); err != nil {
+		gz.Close()
+		return err
+	}
+	if err := gz.Close(); err != nil {
+		return err
+	}
+	if err := os.WriteFile(getTreeCachePath(), buf.Bytes(), 0644); err != nil {
+		return err
+	}
+	metaData, err := json.MarshalIndent(meta, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(getTreeCacheMetaPath(), metaData, 0644)
+}
+
+func loadTreeCache() (*TreeNode, *cacheMeta, error) {
+	metaData, err := os.ReadFile(getTreeCacheMetaPath())
+	if err != nil {
+		return nil, nil, err
+	}
+	var meta cacheMeta
+	if err := json.Unmarshal(metaData, &meta); err != nil {
+		return nil, nil, err
+	}
+	if meta.SchemaVersion != cacheSchemaVersion {
+		return nil, nil, fmt.Errorf("schema version mismatch")
+	}
+	compressed, err := os.ReadFile(getTreeCachePath())
+	if err != nil {
+		return nil, nil, err
+	}
+	gz, err := gzip.NewReader(bytes.NewReader(compressed))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer gz.Close()
+	data, err := io.ReadAll(gz)
+	if err != nil {
+		return nil, nil, err
+	}
+	var tree TreeNode
+	if err := json.Unmarshal(data, &tree); err != nil {
+		return nil, nil, err
+	}
+	return &tree, &meta, nil
+}
+
+func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
+	repoRoot := GetRootDir()
+	fp, newMeta := computeCompositeFingerprint(repoRoot)
+	cached, cachedMeta, err := loadTreeCache()
+	if err == nil && cachedMeta.Fingerprint == fp {
+		return cached
+	}
+	tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
+	saveTreeCache(tree, newMeta)
+	return tree
+}
+
+// #endregion 🔖Tree Cache
 
 // #endregion 🔖Tree Logic
 
@@ -6042,7 +6148,7 @@ func toolResultFromEvents(events []Event, data interface{}) ToolResult {
 
 func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
 	ctx := context.Background()
-	tree := BuildMonorepoTree(ctx, TreeBuildOptions{})
+	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
 	filter := TreeFilter{OnlyKinds: map[TreeNodeKind]bool{nodeKind: true}}
 	tree = FilterMonorepoTree(tree, &filter)
 	var nodes []*TreeNode
@@ -6064,7 +6170,7 @@ func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
 
 func toolResultFromTreeRender(nodeKind TreeNodeKind) ToolResult {
 	ctx := context.Background()
-	tree := BuildMonorepoTree(ctx, TreeBuildOptions{})
+	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
 	filter := TreeFilter{OnlyKinds: map[TreeNodeKind]bool{nodeKind: true}}
 	tree = FilterMonorepoTree(tree, &filter)
 	text := RenderMonorepoTreeMarkdown(tree)
@@ -6797,7 +6903,7 @@ const (
 	EmojiMonth                = "🌙"
 	EmojiDay                  = "☀️"
 	EmojiHour                 = "⏰"
-	EmojiMinute               = "⏳"
+	EmojiMinute               = "⌚"
 	EmojiSecond               = "⏱️"
 	EmojiGoal                 = "🎯"
 	EmojiTicket               = "🎫"
@@ -6827,7 +6933,7 @@ var (
 	EmojiMonths       = "🌙"
 	EmojiDays         = "☀️"
 	EmojiHours        = "⏰"
-	EmojiMinutes      = "⏳"
+	EmojiMinutes      = "⌚"
 	EmojiSeconds      = "⏱️"
 	EmojiTickets      = "🎫"
 	EmojiGoals        = "🎯"
@@ -7456,35 +7562,20 @@ func (t *Ticket) GetDateFinished() *time.Time {
 	return nil
 }
 
-// GetFiles MUST return the stored value without modification.
-// GetFiles returns the files of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getfiles](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetFiles)
-func (t *Ticket) GetFiles() *TicketDiffs {
-	result := newTicketDiffs()
+// GetInteractionFiles MUST return the stored value without modification.
+// GetInteractionFiles returns all unique InteractionFile entries across all interactions.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getinteractionfiles](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetInteractionFiles)
+func (t *Ticket) GetInteractionFiles() []InteractionFile {
+	seen := make(map[string]struct{})
+	var result []InteractionFile
 	for _, interaction := range t.Interactions {
-		if interaction.Diff == nil {
-			continue
+		for _, f := range interaction.Files {
+			if _, ok := seen[f.Path]; ok {
+				continue
+			}
+			seen[f.Path] = struct{}{}
+			result = append(result, f)
 		}
-		result.Bundles.Added = append(result.Bundles.Added, interaction.Diff.Bundles.Added...)
-		result.Bundles.Modified = append(result.Bundles.Modified, interaction.Diff.Bundles.Modified...)
-		result.Bundles.Deleted = append(result.Bundles.Deleted, interaction.Diff.Bundles.Deleted...)
-		result.Bundles.Renamed = append(result.Bundles.Renamed, interaction.Diff.Bundles.Renamed...)
-		result.Folders.Added = append(result.Folders.Added, interaction.Diff.Folders.Added...)
-		result.Folders.Modified = append(result.Folders.Modified, interaction.Diff.Folders.Modified...)
-		result.Folders.Deleted = append(result.Folders.Deleted, interaction.Diff.Folders.Deleted...)
-		result.Folders.Renamed = append(result.Folders.Renamed, interaction.Diff.Folders.Renamed...)
-		result.Files.Added = append(result.Files.Added, interaction.Diff.Files.Added...)
-		result.Files.Modified = append(result.Files.Modified, interaction.Diff.Files.Modified...)
-		result.Files.Deleted = append(result.Files.Deleted, interaction.Diff.Files.Deleted...)
-		result.Files.Renamed = append(result.Files.Renamed, interaction.Diff.Files.Renamed...)
-		result.Sections.Added = append(result.Sections.Added, interaction.Diff.Sections.Added...)
-		result.Sections.Modified = append(result.Sections.Modified, interaction.Diff.Sections.Modified...)
-		result.Sections.Deleted = append(result.Sections.Deleted, interaction.Diff.Sections.Deleted...)
-		result.Sections.Renamed = append(result.Sections.Renamed, interaction.Diff.Sections.Renamed...)
-		result.Definitions.Added = append(result.Definitions.Added, interaction.Diff.Definitions.Added...)
-		result.Definitions.Modified = append(result.Definitions.Modified, interaction.Diff.Definitions.Modified...)
-		result.Definitions.Deleted = append(result.Definitions.Deleted, interaction.Diff.Definitions.Deleted...)
-		result.Definitions.Renamed = append(result.Definitions.Renamed, interaction.Diff.Definitions.Renamed...)
 	}
 	return result
 }
@@ -10601,18 +10692,26 @@ func GetSystem() string {
 	}
 }
 
+// InteractionFile holds a file reference with path, id and uri.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interactionfile](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/InteractionFile)
+type InteractionFile struct {
+	Path string `json:"path" yaml:"path"`
+	ID   string `json:"id,omitempty" yaml:"id,omitempty"`
+	URI  string `json:"uri,omitempty" yaml:"uri,omitempty"`
+}
+
 // Interaction holds the data fields for a interaction record.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interaction](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Interaction)
 type Interaction struct {
-	Kind   string       `json:"kind" yaml:"kind"`
-	Date   string       `json:"date" yaml:"date"`
-	Author string       `json:"author" yaml:"author"`
-	System string       `json:"system" yaml:"system"`
-	Client string       `json:"client" yaml:"client"`
-	Commit string       `json:"commit" yaml:"commit"`
-	Prompt string       `json:"prompt,omitempty" yaml:"prompt,omitempty"`
-	LLM    string       `json:"llm,omitempty" yaml:"llm,omitempty"`
-	Diff   *TicketDiffs `json:"diff,omitempty" yaml:"diff,omitempty"`
+	Kind   string            `json:"kind" yaml:"kind"`
+	Date   string            `json:"date" yaml:"date"`
+	Author string            `json:"author" yaml:"author"`
+	System string            `json:"system" yaml:"system"`
+	Client string            `json:"client" yaml:"client"`
+	Commit string            `json:"commit" yaml:"commit"`
+	Prompt string            `json:"prompt,omitempty" yaml:"prompt,omitempty"`
+	LLM    string            `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Files  []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
 // UnmarshalJSON MUST handle both legacy and current JSON layouts.
@@ -16120,34 +16219,10 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 
 	for _, ticket := range ctx.Tickets {
 		ticketID := ticket.GetID()
-		fileDiffs := ticket.GetFiles().Files
-		if fileDiffs.Added != nil || fileDiffs.Modified != nil || fileDiffs.Deleted != nil || fileDiffs.Renamed != nil {
-			for _, entry := range fileDiffs.Modified {
+		interactionFiles := ticket.GetInteractionFiles()
+		if len(interactionFiles) > 0 {
+			for _, entry := range interactionFiles {
 				bundleName := ctx.GetBundleForFile(entry.Path)
-				if bundleName != "" {
-					if _, ok := ticketSets[bundleName]; ok {
-						ticketSets[bundleName][ticketID] = struct{}{}
-					}
-				}
-			}
-			for _, entry := range fileDiffs.Added {
-				bundleName := ctx.GetBundleForFile(entry.Path)
-				if bundleName != "" {
-					if _, ok := ticketSets[bundleName]; ok {
-						ticketSets[bundleName][ticketID] = struct{}{}
-					}
-				}
-			}
-			for _, entry := range fileDiffs.Deleted {
-				bundleName := ctx.GetBundleForFile(entry.Path)
-				if bundleName != "" {
-					if _, ok := ticketSets[bundleName]; ok {
-						ticketSets[bundleName][ticketID] = struct{}{}
-					}
-				}
-			}
-			for _, entry := range fileDiffs.Renamed {
-				bundleName := ctx.GetBundleForFile(entry.To)
 				if bundleName != "" {
 					if _, ok := ticketSets[bundleName]; ok {
 						ticketSets[bundleName][ticketID] = struct{}{}
@@ -16520,26 +16595,8 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 		bundleFiles := make(map[string]int)
 		var paths []string
-		files := ticket.GetFiles().Files
-		if files.Added != nil {
-			for _, f := range files.Added {
-				paths = append(paths, f.Path)
-			}
-		}
-		if files.Modified != nil {
-			for _, f := range files.Modified {
-				paths = append(paths, f.Path)
-			}
-		}
-		if files.Deleted != nil {
-			for _, f := range files.Deleted {
-				paths = append(paths, f.Path)
-			}
-		}
-		if files.Renamed != nil {
-			for _, f := range files.Renamed {
-				paths = append(paths, f.To)
-			}
+		for _, f := range ticket.GetInteractionFiles() {
+			paths = append(paths, f.Path)
 		}
 		for _, path := range paths {
 			bundleName := ctx.GetBundleForFile(path)
@@ -17579,6 +17636,69 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 	return strings.TrimRight(before, "\n") + "\n\n" + sectionHeading + "\n\n" + newContent + rest
 }
 
+// #region 🔖Ticket File Resolution
+
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖ticketfileresolution](semiorepo://section/semio-repo/cli/main.go/Types/Tickets/Ticket%20File%20Resolution)
+// Ticket file input normalization for close operations.
+// Specs: Accept repo-relative paths, absolute paths, semiorepo file URIs, and file artifact IDs.
+// Docs: Used by ticket close to map file identifiers to repo paths.
+
+func normalizeTicketFileInput(filePath string) string {
+	normalized := strings.TrimSpace(filePath)
+	if normalized == "" {
+		return ""
+	}
+	if strings.HasPrefix(normalized, "semiorepo://file/") {
+		path := PathFromUriPath(strings.TrimPrefix(normalized, "semiorepo://file/"))
+		return normalizeRepoPath(path)
+	}
+	if strings.HasPrefix(normalized, "semiorepo://files/") {
+		path := PathFromUriPath(strings.TrimPrefix(normalized, "semiorepo://files/"))
+		return normalizeRepoPath(path)
+	}
+	if strings.HasPrefix(normalized, "file://") {
+		path := strings.TrimPrefix(normalized, "file://")
+		return normalizeRepoPath(path)
+	}
+	uri := IdToUri(normalized)
+	if strings.HasPrefix(uri, "semiorepo://file/") {
+		path := PathFromUriPath(strings.TrimPrefix(uri, "semiorepo://file/"))
+		return normalizeRepoPath(path)
+	}
+	ctx := NewCodebaseContext()
+	ctx.LoadBundles()
+	if err := ctx.LoadFiles(); err == nil {
+		for _, file := range ctx.Files {
+			if FileHeaderId(file) == normalized {
+				return normalizeRepoPath(file)
+			}
+		}
+	}
+	return normalizeRepoPath(normalized)
+}
+
+func normalizeTicketFileInputs(files []string) []string {
+	if len(files) == 0 {
+		return files
+	}
+	filtered := make([]string, 0, len(files))
+	seen := make(map[string]struct{}, len(files))
+	for _, filePath := range files {
+		normalized := normalizeTicketFileInput(filePath)
+		if normalized == "" {
+			continue
+		}
+		if _, ok := seen[normalized]; ok {
+			continue
+		}
+		seen[normalized] = struct{}{}
+		filtered = append(filtered, normalized)
+	}
+	return filtered
+}
+
+// #endregion 🔖Ticket File Resolution
+
 // FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
 // FilterTicketWorkspaceFiles returns the subset of ticket workspace files matching the criteria.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️filterticketworkspacefiles](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FilterTicketWorkspaceFiles)
@@ -18180,20 +18300,9 @@ func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
 	if len(opts.IncludeKinds) == 0 && len(opts.ExcludeKinds) == 0 {
 		return true
 	}
-
-	diffs := t.GetFiles()
 	allFiles := map[string]bool{}
-	for _, f := range diffs.Files.Added {
+	for _, f := range t.GetInteractionFiles() {
 		allFiles[f.Path] = true
-	}
-	for _, f := range diffs.Files.Modified {
-		allFiles[f.Path] = true
-	}
-	for _, f := range diffs.Files.Deleted {
-		allFiles[f.Path] = true
-	}
-	for _, f := range diffs.Files.Renamed {
-		allFiles[f.To] = true
 	}
 
 	if len(allFiles) == 0 {
@@ -19578,6 +19687,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
 	}
+	files = normalizeTicketFileInputs(files)
 	if !bulk {
 		if summary == "" {
 			return fmt.Errorf("summary is required to finish a ticket")
@@ -19677,6 +19787,29 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 	if len(ticket.Interactions) > 0 {
 		closeClient = ticket.Interactions[len(ticket.Interactions)-1].Client
 	}
+	var interactionFiles []InteractionFile
+	if tickFilesResult != nil {
+		seen := make(map[string]struct{})
+		addFile := func(path string) {
+			if _, ok := seen[path]; ok {
+				return
+			}
+			seen[path] = struct{}{}
+			interactionFiles = append(interactionFiles, InteractionFile{Path: path})
+		}
+		for _, f := range tickFilesResult.Files.Added {
+			addFile(f.Path)
+		}
+		for _, f := range tickFilesResult.Files.Modified {
+			addFile(f.Path)
+		}
+		for _, f := range tickFilesResult.Files.Deleted {
+			addFile(f.Path)
+		}
+		for _, f := range tickFilesResult.Files.Renamed {
+			addFile(f.To)
+		}
+	}
 	ticket.Interactions = append(ticket.Interactions, Interaction{
 		Kind:   string(repopkg.EventTicketClose),
 		Author: GetGitAuthorGithub(),
@@ -19684,25 +19817,16 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 		Client: closeClient,
 		Commit: GetGitCommit(),
 		Date:   nowStr,
-		Diff:   tickFilesResult,
+		Files:  interactionFiles,
 	})
 	if err := SaveTicket(ticket); err != nil {
 		return err
 	}
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	fileList := files
-	if tickFilesResult != nil && len(fileList) == 0 {
-		for _, f := range tickFilesResult.Files.Added {
+	if len(fileList) == 0 {
+		for _, f := range interactionFiles {
 			fileList = append(fileList, f.Path)
-		}
-		for _, f := range tickFilesResult.Files.Modified {
-			fileList = append(fileList, f.Path)
-		}
-		for _, f := range tickFilesResult.Files.Deleted {
-			fileList = append(fileList, f.Path)
-		}
-		for _, f := range tickFilesResult.Files.Renamed {
-			fileList = append(fileList, f.To)
 		}
 	}
 	repopkg.Emit(repopkg.EventTicketClose, "repo-cli", repopkg.TicketClosePayload{
@@ -19845,36 +19969,38 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 // ToolTicketList performs the tool ticket list operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketList)
 func ToolTicketList(year, month, day *int) ToolResult {
-	if year != nil || month != nil || day != nil {
-		tickets, err := ListTickets(year, month, day)
-		if err != nil {
-			return toolErrorResult(err)
+	if year == nil && month == nil && day == nil {
+		result := toolResultFromTreeList(TreeNodeTicket)
+		tickets, err := ListTickets(nil, nil, nil)
+		if err == nil {
+			result.Data = tickets
 		}
-		var events []Event
-		for _, t := range tickets {
-			created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+t.Year, t.Month, t.Day)
-			if started := t.GetDateStarted(); !started.IsZero() {
-				created = started.Format(time.RFC3339)
-			}
-			dates := map[string]interface{}{"created": created}
-			if finished := t.GetDateFinished(); finished != nil {
-				dates["finished"] = finished.Format(time.RFC3339)
-			}
-			flat := map[string]interface{}{
-				"slug":   t.Slug,
-				"year":   t.Year,
-				"month":  t.Month,
-				"day":    t.Day,
-				"title":  t.Title,
-				"status": t.Status,
-				"date":   dates,
-			}
-			data, _ := json.Marshal(map[string]interface{}{"ticket": flat})
-			events = append(events, Event{Kind: KindResult, Command: "ticket list", Data: data})
-		}
-		return toolResultFromEvents(events, tickets)
+		return result
 	}
-	return toolResultFromTreeList(TreeNodeTicket)
+	tickets, err := ListTickets(year, month, day)
+	if err != nil {
+		return toolErrorResult(err)
+	}
+	var sb strings.Builder
+	for _, t := range tickets {
+		created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+t.Year, t.Month, t.Day)
+		if started := t.GetDateStarted(); !started.IsZero() {
+			created = started.Format(time.RFC3339)
+		}
+		data := map[string]interface{}{
+			"slug":      t.Slug,
+			"year":      t.Year,
+			"month":     t.Month,
+			"day":       t.Day,
+			"title":     t.Title,
+			"status":    t.Status,
+			"createdAt": created,
+		}
+		sb.WriteString(renderEntityMarkdown("ticket", data) + "\n")
+	}
+	output := NewOutput()
+	output.Plain(sb.String())
+	return ToolResult{Output: *output, Data: tickets}
 }
 
 // ToolTicketRead MUST complete the operation successfully.
@@ -20056,7 +20182,12 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 // ToolGoalList performs the tool goal list operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoallist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalList)
 func ToolGoalList() ToolResult {
-	return toolResultFromTreeList(TreeNodeGoal)
+	result := toolResultFromTreeList(TreeNodeGoal)
+	goals, err := ListGoals()
+	if err == nil {
+		result.Data = goals
+	}
+	return result
 }
 
 // ToolGoalClose MUST complete the operation successfully.
@@ -21558,24 +21689,8 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, llm, client, commit, createdAt, finishedAt); err != nil {
 			return 0, err
 		}
-		fileDiffs := t.GetFiles().Files
-		for _, entry := range fileDiffs.Modified {
+		for _, entry := range t.GetInteractionFiles() {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
-				return 0, err
-			}
-		}
-		for _, entry := range fileDiffs.Added {
-			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
-				return 0, err
-			}
-		}
-		for _, entry := range fileDiffs.Deleted {
-			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
-				return 0, err
-			}
-		}
-		for _, entry := range fileDiffs.Renamed {
-			if _, err := ticketFileStmt.Exec(ticketID, entry.To); err != nil {
 				return 0, err
 			}
 		}
@@ -30433,7 +30548,7 @@ func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	query, _, _ := getStringArg(args, "query")
 	filter := TreeFilter{Query: query}
 	buildOpts := TreeBuildOptions{IncludeSections: query != ""}
-	tree := BuildMonorepoTree(ctx, buildOpts)
+	tree := BuildMonorepoTreeCached(ctx, buildOpts)
 	tree = searchMonorepoTreeWithCache(ctx, tree, query)
 	tree = FilterMonorepoTree(tree, &filter)
 	return textResult(RenderMonorepoTreeMarkdown(tree)), nil
@@ -31183,6 +31298,7 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	if len(ticket.Interactions) == 0 {
 		return nil, fmt.Errorf("no interactions found for ticket")
 	}
+	files = normalizeTicketFileInputs(files)
 	files = FilterTicketWorkspaceFiles(ticket, files)
 	files = filterConsideredFiles(files)
 	files = filterGitIgnored(files)
@@ -32203,7 +32319,9 @@ func ToolFix(scopeRaw string) ToolResult {
 // ToolPolicyList performs the tool policy list operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicylist](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolPolicyList)
 func ToolPolicyList() ToolResult {
-	return toolResultFromTreeList(TreeNodePolicy)
+	result := toolResultFromTreeList(TreeNodePolicy)
+	result.Data = GetRegisteredPolicies()
+	return result
 }
 
 // ToolPolicyTree MUST complete the operation successfully.
@@ -32523,6 +32641,637 @@ func runNx(target string, args ...string) error {
 }
 
 // #endregion 🔖Preflight Command
+
+// #region 🔖Hooks
+
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Hooks)
+// Hook event types, context, handler, and blocked tool patterns for git and agent lifecycle hooks.
+
+// HookEvent represents a lifecycle event kind for hooks.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookEvent)
+type HookEvent string
+
+const (
+	HookCommitStarting HookEvent = "commit.starting"
+	HookCommitEnded    HookEvent = "commit.ended"
+	HookAgentStarting  HookEvent = "agent.starting"
+	HookAgentEnded     HookEvent = "agent.ended"
+	HookPromptSubmit   HookEvent = "prompt.submit"
+	HookCompacting     HookEvent = "compacting"
+	HookToolCalling    HookEvent = "tool.calling"
+	HookToolEnded      HookEvent = "tool.ended"
+	HookCodeReading    HookEvent = "code.reading"
+	HookCodeEdited     HookEvent = "code.edited"
+	HookNotification   HookEvent = "notification"
+)
+
+// AllHookEvents lists every valid hook event slug.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️allhookevents](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/AllHookEvents)
+var AllHookEvents = []HookEvent{
+	HookCommitStarting,
+	HookCommitEnded,
+	HookAgentStarting,
+	HookAgentEnded,
+	HookPromptSubmit,
+	HookCompacting,
+	HookToolCalling,
+	HookToolEnded,
+	HookCodeReading,
+	HookCodeEdited,
+	HookNotification,
+}
+
+// HookKind categorizes a hook as either a git hook or an agent hook.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookKind)
+type HookKind string
+
+const (
+	HookKindGit   HookKind = "git"
+	HookKindAgent HookKind = "agent"
+)
+
+// HookEventKind returns the hook kind for the given event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookeventkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookEventKind)
+func HookEventKind(e HookEvent) HookKind {
+	switch e {
+	case HookCommitStarting, HookCommitEnded:
+		return HookKindGit
+	default:
+		return HookKindAgent
+	}
+}
+
+// HookContext carries event metadata and a codebase handle for hook handlers.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookcontext](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookContext)
+type HookContext struct {
+	Event      HookEvent         `json:"event"`
+	Client     string            `json:"client"`
+	Timestamp  string            `json:"timestamp"`
+	RepoRoot   string            `json:"repoRoot"`
+	ToolName   string            `json:"toolName,omitempty"`
+	ToolArgs   string            `json:"toolArgs,omitempty"`
+	FilePath   string            `json:"filePath,omitempty"`
+	ParentInfo string            `json:"parentInfo,omitempty"`
+	Extra      map[string]string `json:"extra,omitempty"`
+	Input      json.RawMessage   `json:"input,omitempty"`
+}
+
+// HookResult represents the outcome of a hook invocation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresult](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResult)
+type HookResult struct {
+	Allowed bool   `json:"allowed"`
+	Message string `json:"message,omitempty"`
+}
+
+// HookLogEntry pairs the invocation context with its result for audit logging.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogentry](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogEntry)
+type HookLogEntry struct {
+	Context HookContext `json:"context"`
+	Result  HookResult  `json:"result"`
+}
+
+// BlockedToolPatterns lists shell command patterns that MUST always be denied.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️blockedtoolpatterns](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/BlockedToolPatterns)
+var BlockedToolPatterns = []string{
+	"git checkout",
+	"git stash",
+	"git stash pop",
+	"git stash drop",
+	"git stash apply",
+	"git reset --hard",
+	"git clean -fd",
+}
+
+// IsToolBlocked checks whether a tool invocation matches a blocked pattern.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️istoolblocked](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/IsToolBlocked)
+func IsToolBlocked(toolName string, toolArgs string) (bool, string) {
+	combined := strings.TrimSpace(toolName + " " + toolArgs)
+	for _, pattern := range BlockedToolPatterns {
+		if strings.Contains(strings.ToLower(combined), strings.ToLower(pattern)) {
+			return true, fmt.Sprintf("blocked: %q matches denied pattern %q", combined, pattern)
+		}
+	}
+	return false, ""
+}
+
+// logHook writes the hook context and result to ./semio-repo/📜/YYMMDDHHMMSS_event-name.json.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️loghook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/logHook)
+func logHook(hctx HookContext, result HookResult) {
+	repoRoot := hctx.RepoRoot
+	if repoRoot == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return
+		}
+		repoRoot = findRepoRoot(cwd)
+	}
+	logDir := filepath.Join(repoRoot, ".semio-repo", "📜")
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return
+	}
+	ts := time.Now().UTC().Format("060102150405")
+	eventSlug := strings.ReplaceAll(string(hctx.Event), ".", "-")
+	entry := HookLogEntry{Context: hctx, Result: result}
+	data, err := json.MarshalIndent(entry, "", "  ")
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s.json", ts, eventSlug)), data, 0644)
+}
+
+// dispatchHook routes the hook event to its handler and returns the result.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️dispatchhook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/dispatchHook)
+func dispatchHook(hctx HookContext) HookResult {
+	switch hctx.Event {
+	case HookCommitStarting:
+		return runCommitStartingHook(hctx)
+	case HookCommitEnded:
+		return HookResult{Allowed: true, Message: "commit.ended acknowledged"}
+	case HookToolCalling:
+		if blocked, reason := IsToolBlocked(hctx.ToolName, hctx.ToolArgs); blocked {
+			return HookResult{Allowed: false, Message: reason}
+		}
+		return HookResult{Allowed: true}
+	case HookAgentStarting:
+		return HookResult{Allowed: true, Message: "agent.starting acknowledged"}
+	case HookAgentEnded:
+		return HookResult{Allowed: true, Message: "agent.ended acknowledged"}
+	case HookPromptSubmit:
+		return HookResult{Allowed: true, Message: "prompt.submit acknowledged"}
+	case HookCompacting:
+		return HookResult{Allowed: true, Message: "compacting acknowledged"}
+	case HookToolEnded:
+		return HookResult{Allowed: true}
+	case HookCodeReading:
+		return HookResult{Allowed: true}
+	case HookCodeEdited:
+		return HookResult{Allowed: true}
+	case HookNotification:
+		return HookResult{Allowed: true, Message: "notification acknowledged"}
+	default:
+		return HookResult{Allowed: false, Message: fmt.Sprintf("unknown hook event: %s", hctx.Event)}
+	}
+}
+
+// RunHook executes the hook logic for the given context and logs the invocation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️runhook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/RunHook)
+func RunHook(hctx HookContext) HookResult {
+	result := dispatchHook(hctx)
+	logHook(hctx, result)
+	return result
+}
+
+func runCommitStartingHook(hctx HookContext) HookResult {
+	repoRoot := hctx.RepoRoot
+	if repoRoot == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return HookResult{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}
+		}
+		repoRoot = findRepoRoot(cwd)
+	}
+	SetRootDir(repoRoot)
+	fmt.Println("Running pre-commit hooks...")
+	if err := runPreflightFix(); err != nil {
+		return HookResult{Allowed: false, Message: fmt.Sprintf("pre-commit fix failed: %v", err)}
+	}
+	if err := runPreflightAnalyze(); err != nil {
+		return HookResult{Allowed: false, Message: fmt.Sprintf("pre-commit analyze failed: %v", err)}
+	}
+	return HookResult{Allowed: true, Message: "pre-commit checks passed"}
+}
+
+// ValidateHookEvent checks if the given string is a valid hook event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️validatehookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/ValidateHookEvent)
+func ValidateHookEvent(s string) (HookEvent, error) {
+	for _, e := range AllHookEvents {
+		if string(e) == s {
+			return e, nil
+		}
+	}
+	return "", fmt.Errorf("invalid hook event %q, valid events: %s", s, strings.Join(hookEventStrings(), ", "))
+}
+
+func hookEventStrings() []string {
+	result := make([]string, len(AllHookEvents))
+	for i, e := range AllHookEvents {
+		result[i] = string(e)
+	}
+	return result
+}
+
+// hookCommand creates the `hook <event> <client>` cobra command.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookcommand](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/hookCommand)
+func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "hook <event> <client>",
+		Short: "Run a lifecycle hook (git or agent)",
+		Long: `Run a lifecycle hook for a given event and client.
+
+🦑 Git hooks:
+  commit.starting    Run before a git commit (pre-commit)
+  commit.ended       Run after a git commit (post-commit)
+
+🤖 Agent hooks:
+  agent.starting     Agent session or subagent started
+  agent.ended        Agent session or subagent stopped
+  prompt.submit      User submitted a prompt
+  compacting         Context compaction event
+  tool.calling       Tool invocation starting (supports blocking)
+  tool.ended         Tool invocation completed
+  code.reading       Code read operation
+  code.edited        Code edit operation
+  notification       General notification event`,
+		Args: cobra.RangeArgs(1, 2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			event, err := ValidateHookEvent(args[0])
+			if err != nil {
+				return err
+			}
+			client := ""
+			if len(args) > 1 {
+				client = args[1]
+			}
+			toolName, _ := cmd.Flags().GetString("tool-name")
+			toolArgs, _ := cmd.Flags().GetString("tool-args")
+			filePath, _ := cmd.Flags().GetString("file")
+			parentInfo, _ := cmd.Flags().GetString("parent")
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				cwd, _ := os.Getwd()
+				repoRoot = findRepoRoot(cwd)
+			}
+			var input json.RawMessage
+			if stat, err := os.Stdin.Stat(); err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
+				if data, err := io.ReadAll(os.Stdin); err == nil && len(data) > 0 {
+					input = json.RawMessage(data)
+				}
+			}
+			hctx := HookContext{
+				Event:      event,
+				Client:     client,
+				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				RepoRoot:   repoRoot,
+				ToolName:   toolName,
+				ToolArgs:   toolArgs,
+				FilePath:   filePath,
+				ParentInfo: parentInfo,
+				Input:      input,
+			}
+			result := RunHook(hctx)
+			if config.IsJSON() {
+				out, _ := json.Marshal(result)
+				fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			} else {
+				if !result.Allowed {
+					return fmt.Errorf("hook denied: %s", result.Message)
+				}
+				if result.Message != "" {
+					fmt.Fprintln(cmd.OutOrStdout(), result.Message)
+				}
+			}
+			if !result.Allowed {
+				return &ExitError{Code: 1}
+			}
+			return nil
+		},
+	}
+	cmd.Flags().String("tool-name", "", "Tool name for tool.calling/tool.ended events")
+	cmd.Flags().String("tool-args", "", "Tool arguments for tool.calling/tool.ended events")
+	cmd.Flags().String("file", "", "File path for code.reading/code.edited events")
+	cmd.Flags().String("parent", "", "Parent agent info for agent.starting/agent.ended events")
+	return cmd
+}
+
+// #endregion 🔖Hooks
+
+// #region 🔖Configure
+
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Configure)
+// Configure command auto-generates pre-commit and agent hook configs for all supported clients.
+
+// ClientHookMapping maps client names to their native event configuration format.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure✂️clienthookmapping](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Configure/ClientHookMapping)
+type ClientHookMapping struct {
+	Client     string
+	ConfigPath string
+	Generator  func(repoRoot string) (string, error)
+}
+
+// configureCommand creates the `configure` cobra command.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure✂️configurecommand](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Configure/configureCommand)
+func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "configure",
+		Short: "Auto-configure repo hooks for all supported clients",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				cwd, _ := os.Getwd()
+				repoRoot = findRepoRoot(cwd)
+			}
+			var errs []error
+			for _, mapping := range getClientHookMappings() {
+				content, err := mapping.Generator(repoRoot)
+				if err != nil {
+					errs = append(errs, fmt.Errorf("%s: %w", mapping.Client, err))
+					continue
+				}
+				targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+				if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+					errs = append(errs, fmt.Errorf("%s: mkdir: %w", mapping.Client, err))
+					continue
+				}
+				if err := os.WriteFile(targetPath, []byte(content), 0644); err != nil {
+					errs = append(errs, fmt.Errorf("%s: write: %w", mapping.Client, err))
+					continue
+				}
+				fmt.Printf("✓ %s → %s\n", mapping.Client, mapping.ConfigPath)
+			}
+			if err := configureGitHooks(repoRoot); err != nil {
+				errs = append(errs, fmt.Errorf("git hooks: %w", err))
+			} else {
+				fmt.Println("✓ git hooks configured")
+			}
+			if len(errs) > 0 {
+				for _, e := range errs {
+					fmt.Fprintf(os.Stderr, "✗ %v\n", e)
+				}
+				return fmt.Errorf("%d configuration(s) failed", len(errs))
+			}
+			return nil
+		},
+	}
+	return cmd
+}
+
+func configureGitHooks(repoRoot string) error {
+	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	if err := os.MkdirAll(hooksDir, 0755); err != nil {
+		return err
+	}
+	preCommitPath := filepath.Join(hooksDir, "pre-commit")
+	preCommitScript := `#!/usr/bin/env sh
+set -eu
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
+  exit 0
+fi
+cd "$repo_root"
+./semio-repo/cli/cli hook commit.starting
+`
+	if err := os.WriteFile(preCommitPath, []byte(preCommitScript), 0755); err != nil {
+		return err
+	}
+	postCommitPath := filepath.Join(hooksDir, "post-commit")
+	postCommitScript := `#!/usr/bin/env sh
+set -eu
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
+  exit 0
+fi
+cd "$repo_root"
+./semio-repo/cli/cli hook commit.ended
+`
+	if err := os.WriteFile(postCommitPath, []byte(postCommitScript), 0755); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getClientHookMappings() []ClientHookMapping {
+	return []ClientHookMapping{
+		{Client: "copilot-chat", ConfigPath: ".github/copilot-instructions.md", Generator: generateCopilotConfig},
+		{Client: "cursor-chat", ConfigPath: ".cursor/rules/hooks.mdc", Generator: generateCursorConfig},
+		{Client: "windsurf-chat", ConfigPath: ".windsurfrules", Generator: generateWindsurfConfig},
+		{Client: "claude-code", ConfigPath: ".claude/hooks.json", Generator: generateClaudeCodeConfig},
+		{Client: "codex", ConfigPath: ".codex/hooks.json", Generator: generateCodexConfig},
+		{Client: "droid", ConfigPath: ".droid/hooks.json", Generator: generateDroidConfig},
+		{Client: "antigravity-chat", ConfigPath: ".antigravity/hooks.json", Generator: generateAntigravityConfig},
+	}
+}
+
+func generateCopilotConfig(repoRoot string) (string, error) {
+	c := "./semio-repo/cli/cli"
+	bt := "`"
+	var b strings.Builder
+	b.WriteString("# Copilot Chat Hook Instructions\n\n")
+	b.WriteString("## Lifecycle Hooks\n\n")
+	b.WriteString("You MUST call the semio-repo CLI hook command at every lifecycle event:\n\n")
+	b.WriteString("### Agent Lifecycle\n")
+	fmt.Fprintf(&b, "- On session start: %s%s hook agent.starting copilot-chat%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- On session end: %s%s hook agent.ended copilot-chat%s\n\n", bt, c, bt)
+	b.WriteString("### Prompt\n")
+	fmt.Fprintf(&b, "- On prompt submit: %s%s hook prompt.submit copilot-chat%s\n\n", bt, c, bt)
+	b.WriteString("### Context Compaction\n")
+	fmt.Fprintf(&b, "- Before compacting: %s%s hook compacting copilot-chat%s\n\n", bt, c, bt)
+	b.WriteString("### Tool Calls\n")
+	fmt.Fprintf(&b, "- Before calling any tool (except code reading/editing): %s%s hook tool.calling copilot-chat --tool-name \"<tool>\" --tool-args \"<args>\"%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- After tool completes: %s%s hook tool.ended copilot-chat --tool-name \"<tool>\"%s\n\n", bt, c, bt)
+	b.WriteString("### Code Operations\n")
+	fmt.Fprintf(&b, "- Before reading code: %s%s hook code.reading copilot-chat --file \"<path>\"%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- After editing code: %s%s hook code.edited copilot-chat --file \"<path>\"%s\n\n", bt, c, bt)
+	b.WriteString("### Notifications\n")
+	fmt.Fprintf(&b, "- On notification: %s%s hook notification copilot-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Blocked Operations\n")
+	b.WriteString("The following operations are ALWAYS denied by the hook system:\n")
+	fmt.Fprintf(&b, "- %sgit checkout%s\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit stash%s (including pop, drop, apply)\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit reset --hard%s\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit clean -fd%s\n\n", bt, bt)
+	b.WriteString("You MUST NOT execute these commands under any circumstances.\n")
+	return b.String(), nil
+}
+
+func generateCursorConfig(repoRoot string) (string, error) {
+	c := "./semio-repo/cli/cli"
+	bt := "`"
+	var b strings.Builder
+	b.WriteString("---\ndescription: Semio repo lifecycle hooks for Cursor\nglobs:\nalwaysApply: true\n---\n\n")
+	b.WriteString("# Lifecycle Hooks\n\n")
+	b.WriteString("You MUST call the semio-repo CLI hook command at every lifecycle event:\n\n")
+	b.WriteString("## Agent Lifecycle\n")
+	fmt.Fprintf(&b, "- On session start: %s%s hook agent.starting cursor-chat%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- On session end: %s%s hook agent.ended cursor-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Prompt\n")
+	fmt.Fprintf(&b, "- On prompt submit: %s%s hook prompt.submit cursor-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Context Compaction\n")
+	fmt.Fprintf(&b, "- Before compacting: %s%s hook compacting cursor-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Tool Calls\n")
+	fmt.Fprintf(&b, "- Before calling any tool (except code reading/editing): %s%s hook tool.calling cursor-chat --tool-name \"<tool>\" --tool-args \"<args>\"%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- After tool completes: %s%s hook tool.ended cursor-chat --tool-name \"<tool>\"%s\n\n", bt, c, bt)
+	b.WriteString("## Code Operations\n")
+	fmt.Fprintf(&b, "- Before reading code (file.read.pre): %s%s hook code.reading cursor-chat --file \"<path>\"%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- After editing code (file.edit.post): %s%s hook code.edited cursor-chat --file \"<path>\"%s\n\n", bt, c, bt)
+	b.WriteString("## Notifications\n")
+	fmt.Fprintf(&b, "- On notification: %s%s hook notification cursor-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Blocked Operations\n")
+	b.WriteString("The following operations are ALWAYS denied:\n")
+	fmt.Fprintf(&b, "- %sgit checkout%s\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit stash%s (including pop, drop, apply)\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit reset --hard%s\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit clean -fd%s\n", bt, bt)
+	return b.String(), nil
+}
+
+func generateWindsurfConfig(repoRoot string) (string, error) {
+	c := "./semio-repo/cli/cli"
+	bt := "`"
+	var b strings.Builder
+	b.WriteString("# Semio Repo Lifecycle Hooks for Windsurf\n\n")
+	b.WriteString("You MUST call the semio-repo CLI hook command at every lifecycle event:\n\n")
+	b.WriteString("## Agent Lifecycle\n")
+	fmt.Fprintf(&b, "- On session start: %s%s hook agent.starting windsurf-chat%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- On session end: %s%s hook agent.ended windsurf-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Prompt\n")
+	fmt.Fprintf(&b, "- On prompt submit: %s%s hook prompt.submit windsurf-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Context Compaction\n")
+	fmt.Fprintf(&b, "- Before compacting: %s%s hook compacting windsurf-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Tool Calls\n")
+	fmt.Fprintf(&b, "- Before calling any tool (except code reading/editing): %s%s hook tool.calling windsurf-chat --tool-name \"<tool>\" --tool-args \"<args>\"%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- After tool completes: %s%s hook tool.ended windsurf-chat --tool-name \"<tool>\"%s\n\n", bt, c, bt)
+	b.WriteString("## Code Operations\n")
+	fmt.Fprintf(&b, "- Before reading code (pre_read_code): %s%s hook code.reading windsurf-chat --file \"<path>\"%s\n", bt, c, bt)
+	fmt.Fprintf(&b, "- After editing code (pre_write_code): %s%s hook code.edited windsurf-chat --file \"<path>\"%s\n\n", bt, c, bt)
+	b.WriteString("## Notifications\n")
+	fmt.Fprintf(&b, "- On notification: %s%s hook notification windsurf-chat%s\n\n", bt, c, bt)
+	b.WriteString("## Blocked Operations\n")
+	b.WriteString("The following operations are ALWAYS denied:\n")
+	fmt.Fprintf(&b, "- %sgit checkout%s\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit stash%s (including pop, drop, apply)\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit reset --hard%s\n", bt, bt)
+	fmt.Fprintf(&b, "- %sgit clean -fd%s\n", bt, bt)
+	return b.String(), nil
+}
+
+func generateClaudeCodeConfig(repoRoot string) (string, error) {
+	cliPath := "./semio-repo/cli/cli"
+	config := map[string]interface{}{
+		"hooks": map[string]interface{}{
+			"PreToolUse": []map[string]interface{}{
+				{
+					"matcher":  ".*",
+					"hooks":    []string{fmt.Sprintf("%s hook tool.calling claude-code --tool-name \"$TOOL_NAME\" --tool-args \"$TOOL_INPUT\"", cliPath)},
+					"blocking": true,
+				},
+			},
+			"PostToolUse": []map[string]interface{}{
+				{
+					"matcher": ".*",
+					"hooks":   []string{fmt.Sprintf("%s hook tool.ended claude-code --tool-name \"$TOOL_NAME\"", cliPath)},
+				},
+			},
+			"PreCompact": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook compacting claude-code", cliPath)},
+				},
+			},
+			"Notification": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook notification claude-code", cliPath)},
+				},
+			},
+			"SessionStart": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook agent.starting claude-code", cliPath)},
+				},
+			},
+			"SessionStop": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook agent.ended claude-code", cliPath)},
+				},
+			},
+			"SubagentStart": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook agent.starting claude-code --parent \"subagent\"", cliPath)},
+				},
+			},
+			"SubagentStop": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook agent.ended claude-code --parent \"subagent\"", cliPath)},
+				},
+			},
+			"PromptSubmit": []map[string]interface{}{
+				{
+					"hooks": []string{fmt.Sprintf("%s hook prompt.submit claude-code", cliPath)},
+				},
+			},
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func generateCodexConfig(repoRoot string) (string, error) {
+	cliPath := "./semio-repo/cli/cli"
+	config := map[string]interface{}{
+		"hooks": map[string]interface{}{
+			"agent.starting":  fmt.Sprintf("%s hook agent.starting codex", cliPath),
+			"agent.ended":     fmt.Sprintf("%s hook agent.ended codex", cliPath),
+			"prompt.submit":   fmt.Sprintf("%s hook prompt.submit codex", cliPath),
+			"compacting":      fmt.Sprintf("%s hook compacting codex", cliPath),
+			"tool.calling":    fmt.Sprintf("%s hook tool.calling codex --tool-name \"$TOOL\" --tool-args \"$ARGS\"", cliPath),
+			"tool.ended":      fmt.Sprintf("%s hook tool.ended codex --tool-name \"$TOOL\"", cliPath),
+			"code.reading":    fmt.Sprintf("%s hook code.reading codex --file \"$FILE\"", cliPath),
+			"code.edited":     fmt.Sprintf("%s hook code.edited codex --file \"$FILE\"", cliPath),
+			"notification":    fmt.Sprintf("%s hook notification codex", cliPath),
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func generateDroidConfig(repoRoot string) (string, error) {
+	cliPath := "./semio-repo/cli/cli"
+	config := map[string]interface{}{
+		"hooks": map[string]interface{}{
+			"agent.starting":  fmt.Sprintf("%s hook agent.starting droid", cliPath),
+			"agent.ended":     fmt.Sprintf("%s hook agent.ended droid", cliPath),
+			"prompt.submit":   fmt.Sprintf("%s hook prompt.submit droid", cliPath),
+			"compacting":      fmt.Sprintf("%s hook compacting droid", cliPath),
+			"tool.calling":    fmt.Sprintf("%s hook tool.calling droid --tool-name \"$TOOL\" --tool-args \"$ARGS\"", cliPath),
+			"tool.ended":      fmt.Sprintf("%s hook tool.ended droid --tool-name \"$TOOL\"", cliPath),
+			"code.reading":    fmt.Sprintf("%s hook code.reading droid --file \"$FILE\"", cliPath),
+			"code.edited":     fmt.Sprintf("%s hook code.edited droid --file \"$FILE\"", cliPath),
+			"notification":    fmt.Sprintf("%s hook notification droid", cliPath),
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func generateAntigravityConfig(repoRoot string) (string, error) {
+	cliPath := "./semio-repo/cli/cli"
+	config := map[string]interface{}{
+		"hooks": map[string]interface{}{
+			"agent.starting":  fmt.Sprintf("%s hook agent.starting antigravity-chat", cliPath),
+			"agent.ended":     fmt.Sprintf("%s hook agent.ended antigravity-chat", cliPath),
+			"prompt.submit":   fmt.Sprintf("%s hook prompt.submit antigravity-chat", cliPath),
+			"compacting":      fmt.Sprintf("%s hook compacting antigravity-chat", cliPath),
+			"tool.calling":    fmt.Sprintf("%s hook tool.calling antigravity-chat --tool-name \"$TOOL\" --tool-args \"$ARGS\"", cliPath),
+			"tool.ended":      fmt.Sprintf("%s hook tool.ended antigravity-chat --tool-name \"$TOOL\"", cliPath),
+			"code.reading":    fmt.Sprintf("%s hook code.reading antigravity-chat --file \"$FILE\"", cliPath),
+			"code.edited":     fmt.Sprintf("%s hook code.edited antigravity-chat --file \"$FILE\"", cliPath),
+			"notification":    fmt.Sprintf("%s hook notification antigravity-chat", cliPath),
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+// #endregion 🔖Configure
 
 // #region 🔖Update Command
 
@@ -33531,27 +34280,10 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 	}
 
 	for _, t := range tickets {
-		diffs := t.GetFiles()
-		if diffs == nil {
-			continue
+		for _, f := range t.GetInteractionFiles() {
+			bn := GetBundleNameForPath(f.Path)
+			processPath(f.Path, bn, nil)
 		}
-		iter := func(set TicketDiffSet) {
-			for _, f := range set.Added {
-				bn := GetBundleNameForPath(f.Path)
-				processPath(f.Path, bn, f.Lines)
-			}
-			for _, f := range set.Modified {
-				bn := GetBundleNameForPath(f.Path)
-				processPath(f.Path, bn, f.Lines)
-			}
-			for _, f := range set.Renamed {
-				bn := GetBundleNameForPath(f.To)
-				processPath(f.To, bn, f.Lines)
-			}
-		}
-		iter(diffs.Files)
-		iter(diffs.Sections)
-		iter(diffs.Definitions)
 	}
 
 	resBundles := []*ContributorBundle{}

@@ -276,7 +276,7 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
 
 // #region 🔖Store
 
-// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖store](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/Store)
 // Reactive stores backed by Yjs for collaborative state management.
 
 /**
@@ -1176,7 +1176,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
 // #region 🔖Memory File Provider
 
-// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/File%20Provider)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖fileprovider🔖memoryfileprovider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/File%20Provider/Memory%20File%20Provider)
 // In-memory file storage provider for temporary or test scenarios.
 
 /**
@@ -8123,7 +8123,7 @@ export const kitCommands = {
 
 // #region 🔖Types
 
-// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/Machine/Types)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/Machine)
 // Type definitions for app state, machine input, and context structures.
 
 /**
@@ -10358,7 +10358,7 @@ export const SketchpadActorContext = createContext<SketchpadActorRef | null>(nul
 
 // #region 🔖Design
 
-// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps🔖design](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/Apps/Design)
+// [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖apps](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/Store/Apps)
 // Design app hooks for piece and connection selection, hover, and diff state.
 
 /**

@@ -259,7 +259,7 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
 
 // #region 🔖Form
 
-// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖components🔖form](semiorepo://section/semio/js/sketchpad/Feedback.tsx/Components/Form)
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖components](semiorepo://section/semio/js/sketchpad/Feedback.tsx/Components)
 // MUST render feedback form for submitting bug reports and ideas.
 
 const FeedbackForm: FC = () => {

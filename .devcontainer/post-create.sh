@@ -55,8 +55,8 @@ mkdir -p "$WORKSPACE/node_modules/.cache/ms-playwright"
 PLAYWRIGHT_BROWSERS_PATH="$WORKSPACE/node_modules/.cache/ms-playwright" npx playwright install --with-deps chromium
 #endregion 🔖Playwright
 #region 🔖GitHooks
-echo "Setting up git hooks..."
-npm run prepare || true
+echo "Configuring git hooks and agent hook configs..."
+./semio-repo/cli/cli configure || true
 #endregion 🔖GitHooks
 #region 🔖VSCode
 echo "Building semio VSCode extension..."

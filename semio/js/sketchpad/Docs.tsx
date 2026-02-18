@@ -243,7 +243,7 @@ export function getAllSections(): SectionInfo[] {
 
 // #region 🔖SectionTree
 
-// [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider](semiorepo://section/semio/js/sketchpad/Docs.tsx/MDX%20Provider)
+// [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🔖sectiontree](semiorepo://section/semio/js/sketchpad/Docs.tsx/MDX%20Provider/SectionTree)
 // Section tree navigation component MUST render docs file hierarchy.
 
 /**
@@ -1058,7 +1058,7 @@ if (typeof window !== "undefined") {
 
 // #region 🔖Page
 
-// [👤semio📚js🗃️sketchpad💻docstsx🔖canvas🔖windows🔖page](semiorepo://section/semio/js/sketchpad/Docs.tsx/Canvas/Windows/Page)
+// [👤semio📚js🗃️sketchpad💻docstsx🔖canvas🔖windows](semiorepo://section/semio/js/sketchpad/Docs.tsx/Canvas/Windows)
 // Page window MUST render MDX content with navigation and heading extraction.
 
 interface PageCanvasProps {

@@ -286,7 +286,7 @@ export { useHome };
 
 // #region 🔖Table
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖windows](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas/Windows)
 // Table window MUST display kit entries in tabular form.
 
 export { };
@@ -307,7 +307,7 @@ export { };
 
 // #region 🔖Details
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas/Panels/Right)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas/Panels)
 // Details panel MUST show properties of selected kits.
 
 /**

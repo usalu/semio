@@ -234,7 +234,7 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 // [🔖semio/js/sketchpad/Kit.tsx#Internal State Management](semiorepo://section/semio/js/sketchpad/Kit.tsx/INTERNAL-STATE-MANAGEMENT)
 // #region Constants
 
-// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management)
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖constants](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management/Constants)
 // Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
 
 const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concepts", "files", "folders", "authors"];
@@ -4313,7 +4313,7 @@ export const commands = {
 
 // #region 🔖Table
 
-// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖table](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management/Canvas/Windows/Table)
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management/Canvas)
 // Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
 type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "tags" | "concepts" | "files" | "folders" | "authors";
@@ -8255,7 +8255,7 @@ export const KitToolbarHand: FC = () => {
 
 // #region 🔖Details
 
-// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management/Canvas/Panels/Right)
+// [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management/Canvas/Panels)
 // Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
 
 /**

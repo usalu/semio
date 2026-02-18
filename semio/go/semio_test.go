@@ -26,8 +26,6 @@ import (
 	"testing"
 )
 
-const AssetsPath = "../assets/semio"
-
 func loadJSON(t *testing.T, filename string, v interface{}) {
 	path := filepath.Join(AssetsPath, filename)
 	data, err := os.ReadFile(path)
