@@ -30,9 +30,21 @@
 -- #region 🔖Tables
 
 -- #region 🔖Repo
-
+CREATE TABLE IF NOT EXISTS contributor (
+    id TEXT PRIMARY KEY,
+    github TEXT NOT NULL UNIQUE,
+    name TEXT,
+    avatar_url TEXT,
+    avatar_round_url TEXT,
+    github_icon_url TEXT
+);
+CREATE TABLE IF NOT EXISTS commit (
+    sha TEXT PRIMARY KEY,
+    message 
+);
 CREATE TABLE IF NOT EXISTS repo (
     id TEXT PRIMARY KEY,
+    sha TEXT NOT NULL REFERENCES commit(sha) ON DELETE CASCADE,
 );
 CREATE TABLE IF NOT EXISTS folder (
     id TEXT PRIMARY KEY,

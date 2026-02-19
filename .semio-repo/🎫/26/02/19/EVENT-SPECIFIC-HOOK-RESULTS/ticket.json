@@ -1,0 +1,120 @@
+{
+  "title": "Event-Specific Hook Results",
+  "status": "open",
+  "prompt": "Refactor HookResult to use specific structs for each event type and ensure comprehensive testing with real data.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/633"
+  },
+  "goal": "HOOKS/SPECIFIC-RESULTS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-19 11:29:01",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "prompt": "Refactor HookResult to use specific structs for each event type and ensure comprehensive testing with real data.",
+      "llm": "opus-4-6"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771501899315908494-8286802428106323392",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:51:34Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:51:44Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "d765d480-15c8-4844-a961-ce3f9b38c1f9",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T11:54:47Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "ab58fc89-0aee-45cb-814c-86a57f6bad1e",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T12:13:26Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T12:13:32Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "You MUST make sure that the agent events are exactly like this. There are shared information (agent level, message level).\n\nEvents\n```yaml\ngit:\n  commit:\n    starting: # pre-commit\n      message: {{COMMITMESSAGE}} \n    ended: # post-commit\n      sha: {{COMMITSHA}}\n      message: {{COMMITMESSAGE}}\nagent:\n  started:\n    session: {{ID}}\n    timestamp: {{TIMESTAMP}}\n    client: {{CLIENT}}\n    llm: {{LLM}}\n    transcript: {{TRANSSCRIPTPATH}}\n    parent: {{PARENT}}\n  ended:\n    session: {{ID}}\n    timestamp: {{TIMESTAMP}}\n    client: {{CLIENT}}\n    llm: {{LLM}}\n    transcript: {{TRANSSCRIPTPATH}}\n    message: {{MESSAGEID}}\n    parent: {{PARENTMESSAGEID}}\n  prompt:\n    submitting:\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      llm: {{LLM}}\n      message: {{MESSAGEID}}\n      parent: {{PARENTMESSAGEID}}\n      prompt: {{PROMPT}}\n  compacting:\n    session: {{ID}}\n    timestamp: {{TIMESTAMP}}\n    client: {{CLIENT}}\n    llm: {{LLM}}\n    transcript: {{TRANSSCRIPTPATH}}\n    message: {{MESSAGEID}}\n    parent: {{PARENTMESSAGEID}}\n    chat: {{CHAT}}\n  tool:\n    starting: # all tools but excluding task, code, terminal\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      llm: {{LLM}}\n      transcript: {{TRANSSCRIPTPATH}}\n      message: {{MESSAGEID}}\n      parent: {{PARENTMESSAGEID}}\n      name: {{NAME}} # name of the tool\n      input: {{INPUT}}\n    ended: # excluding task, code and terminal\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      llm: {{LLM}}\n      transcript: {{TRANSSCRIPTPATH}}\n      message: {{MESSAGEID}}\n      parent: {{PARENTMESSAGEID}}\n      name: {{NAME}} # name of the tool\n      input: {{INPUT}}\n      response: {{RESPONSE}}\n    plan: # A list of tasks - usually TODO lists in the native clients\n      updating: # Planning involves changing the task list\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        llm: {{LLM}}\n        transcript: {{TRANSSCRIPTPATH}}\n        message: {{MESSAGEID}}\n        parent: {{PARENTMESSAGEID}}\n        steps:\n          - name: {{STEPNAME}}\n          - status: {{STATUS}} # completed, in progress, pending\n    searching: # All searches such as file read, grep, websearch\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      llm: {{LLM}}\n      transcript: {{TRANSSCRIPTPATH}}\n      message: {{MESSAGEID}}\n      parent: {{PARENTMESSAGEID}}\n      query: {{QUERY}} # regex, glob, file path, url, etc\n      include: [{{INCLUDEPATTERN}}] # file glob patterns, line numbers, etc\n      exclude: [{{EXCLUDEPATTERN}}]\n    code:\n      editing:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        llm: {{LLM}}\n        transcript: {{TRANSSCRIPTPATH}}\n        message: {{MESSAGEID}}\n        parent: {{PARENTMESSAGEID}}\n        path: {{FILEPATH}}\n        old: {{OLDSTRING}}\n        new: {{NEWSTRING}}\n        all: {{REPLACEALLSTRINGS}} # false: just first, true: replace all occurrences\n      edited:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        llm: {{LLM}}\n        transcript: {{TRANSSCRIPTPATH}}\n        message: {{MESSAGEID}}\n        parent: {{PARENTMESSAGEID}}\n        path: {{FILEPATH}}\n        old: {{OLDSTRING}}\n        new: {{NEWSTRING}}\n    terminal:\n      starting:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        llm: {{LLM}}\n        transcript: {{TRANSSCRIPTPATH}}\n        message: {{MESSAGEID}}\n        parent: {{PARENTMESSAGEID}}\n        command: {{COMMAND}}\n      ended:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        llm: {{LLM}}\n        transcript: {{TRANSSCRIPTPATH}}\n        message: {{MESSAGEID}}\n        parent: {{PARENTMESSAGEID}}\n        command: {{COMMAND}}\n        pid: {{PID}} # process id, execution id, etc\n        terminated: {{HASTERMINATED}} # true: stopped, false: still running\n        stdout: {{STDOUT}}\n        stderr: {{STDERR}}\n```",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T13:02:04Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

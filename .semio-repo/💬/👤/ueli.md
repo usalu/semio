@@ -123,6 +123,10 @@ Agent hooks are matched with session id to tickets.
 
 semio repo cli:
 The hooks from vscode-chat are not working and not calling the hooks from semio repo. The hooks MUST be only configured by `./semio-repo/cli/cli configure`.
+---
+semio repo hook:
+In vscode this command was blocked allthough it shouldnt be blocked. Only some git commands should be blocked.
+cd /workspaces/semio && ./semio-repo/cli/cli tree "hooks events inlet adapter cli" 2>&1 | head -200
 
 ---
 vscode 
@@ -237,37 +241,58 @@ git:
       sha: {{COMMITSHA}}
       message: {{COMMITMESSAGE}}
 agent:
-  starting:
+  started:
     session: {{ID}}
     timestamp: {{TIMESTAMP}}
     client: {{CLIENT}}
+    llm: {{LLM}}
+    transcript: {{TRANSSCRIPTPATH}}
     parent: {{PARENT}}
   ended:
     session: {{ID}}
     timestamp: {{TIMESTAMP}}
     client: {{CLIENT}}
+    llm: {{LLM}}
+    transcript: {{TRANSSCRIPTPATH}}
+    message: {{MESSAGEID}}
+    parent: {{PARENTMESSAGEID}}
   prompt:
     submitting:
       session: {{ID}}
       timestamp: {{TIMESTAMP}}
       client: {{CLIENT}}
+      llm: {{LLM}}
+      message: {{MESSAGEID}}
+      parent: {{PARENTMESSAGEID}}
       prompt: {{PROMPT}}
   compacting:
     session: {{ID}}
     timestamp: {{TIMESTAMP}}
     client: {{CLIENT}}
+    llm: {{LLM}}
+    transcript: {{TRANSSCRIPTPATH}}
+    message: {{MESSAGEID}}
+    parent: {{PARENTMESSAGEID}}
     chat: {{CHAT}}
   tool:
     starting: # all tools but excluding task, code, terminal
       session: {{ID}}
       timestamp: {{TIMESTAMP}}
       client: {{CLIENT}}
+      llm: {{LLM}}
+      transcript: {{TRANSSCRIPTPATH}}
+      message: {{MESSAGEID}}
+      parent: {{PARENTMESSAGEID}}
       name: {{NAME}} # name of the tool
       input: {{INPUT}}
     ended: # excluding task, code and terminal
       session: {{ID}}
       timestamp: {{TIMESTAMP}}
       client: {{CLIENT}}
+      llm: {{LLM}}
+      transcript: {{TRANSSCRIPTPATH}}
+      message: {{MESSAGEID}}
+      parent: {{PARENTMESSAGEID}}
       name: {{NAME}} # name of the tool
       input: {{INPUT}}
       response: {{RESPONSE}}
@@ -276,21 +301,33 @@ agent:
         session: {{ID}}
         timestamp: {{TIMESTAMP}}
         client: {{CLIENT}}
+        llm: {{LLM}}
+        transcript: {{TRANSSCRIPTPATH}}
+        message: {{MESSAGEID}}
+        parent: {{PARENTMESSAGEID}}
         steps:
           - name: {{STEPNAME}}
           - status: {{STATUS}} # completed, in progress, pending
+    searching: # All searches such as file read, grep, websearch
+      session: {{ID}}
+      timestamp: {{TIMESTAMP}}
+      client: {{CLIENT}}
+      llm: {{LLM}}
+      transcript: {{TRANSSCRIPTPATH}}
+      message: {{MESSAGEID}}
+      parent: {{PARENTMESSAGEID}}
+      query: {{QUERY}} # regex, glob, file path, url, etc
+      include: [{{INCLUDEPATTERN}}] # file glob patterns, line numbers, etc
+      exclude: [{{EXCLUDEPATTERN}}]
     code:
-      searching: # All searches such as file read, grep,
-        session: {{ID}}
-        timestamp: {{TIMESTAMP}}
-        client: {{CLIENT}}
-        query: {{QUERY}} # regex, glob, file path, etc
-        include: [{{INCLUDEPATTERN}}] # file glob patterns, line numbers, etc
-        exclude: [{{EXCLUDEPATTERN}}]
       editing:
         session: {{ID}}
         timestamp: {{TIMESTAMP}}
         client: {{CLIENT}}
+        llm: {{LLM}}
+        transcript: {{TRANSSCRIPTPATH}}
+        message: {{MESSAGEID}}
+        parent: {{PARENTMESSAGEID}}
         path: {{FILEPATH}}
         old: {{OLDSTRING}}
         new: {{NEWSTRING}}
@@ -299,6 +336,10 @@ agent:
         session: {{ID}}
         timestamp: {{TIMESTAMP}}
         client: {{CLIENT}}
+        llm: {{LLM}}
+        transcript: {{TRANSSCRIPTPATH}}
+        message: {{MESSAGEID}}
+        parent: {{PARENTMESSAGEID}}
         path: {{FILEPATH}}
         old: {{OLDSTRING}}
         new: {{NEWSTRING}}
@@ -307,11 +348,19 @@ agent:
         session: {{ID}}
         timestamp: {{TIMESTAMP}}
         client: {{CLIENT}}
+        llm: {{LLM}}
+        transcript: {{TRANSSCRIPTPATH}}
+        message: {{MESSAGEID}}
+        parent: {{PARENTMESSAGEID}}
         command: {{COMMAND}}
       ended:
         session: {{ID}}
         timestamp: {{TIMESTAMP}}
         client: {{CLIENT}}
+        llm: {{LLM}}
+        transcript: {{TRANSSCRIPTPATH}}
+        message: {{MESSAGEID}}
+        parent: {{PARENTMESSAGEID}}
         command: {{COMMAND}}
         pid: {{PID}} # process id, execution id, etc
         terminated: {{HASTERMINATED}} # true: stopped, false: still running
@@ -326,7 +375,7 @@ git:
     starting: pre-commit (stage: pre-commit)
     ended: pre-commit (stage: post-commit)
 agent:
-  starting:
+  started:
     vscode-chat: SessionStart | SubagentStart (optionally include parent agent info)
     windsurf-chat: pre_user_prompt (best-effort: first prompt of a session; include parent agent info if known)
     cursor-chat: sessionStart | subagentStart (optionally include parent agent info)
@@ -371,13 +420,20 @@ agent:
         cursor-chat: preToolUse where tool_name in ["todo_tool","manage_todo_list"]
         claude-code: PreToolUse matcher == "Task" (or tool_name == "Task")
         droid: PreToolUse matcher == "Task"
-    code:
-      searching:
-        vscode-chat: PreToolUse where tool_name indicates search (file search tools)
-        windsurf-chat: pre_read_code
+    search:
+      starting:
+        vscode-chat: PreToolUse where tool_name indicates search (file, folder, web, … search tools)
+        windsurf-chat: pre_read_code or pre_run_command or pre_mcp_tool_use
         cursor-chat: beforeReadFile
         claude-code: PreToolUse (matcher == "Read" / file-read tool)
         droid: PreToolUse (matcher == "Read" / file-read tool)
+      ended:
+        vscode-chat: PostToolUse where tool_name indicates search (file, folder, web, … search tools)
+        windsurf-chat: post_read_code or post_run_command or post_mcp_tool_use
+        cursor-chat: afterReadFile
+        claude-code: PostToolUse (matcher == "Read" / file-read tool)
+        droid: PostToolUse (matcher == "Read" / file-read tool)
+    code:
       editing:
         vscode-chat: PreToolUse where tool_name indicates edit/write/create (file write tools)
         windsurf-chat: pre_write_code
@@ -421,8 +477,8 @@ sessions: # Create a new session when semio repo mcp ticket open is called
     contributor: usalu # find contributor with git config
     system: linux
     client: copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag, vscode extension command: use session id.
-    query: hooks copilot vscode # Last semio repo mcp tree tool input
-      context: - [🎯Goals](semiorepo://goals)\n  - [🎯hooksvscode🎯fixhooks🎫fixvscodecopilotchatnativehooks](semiorepo://ticket/26/02/18/FIX-VS-CODE-COPILOT-CHAT-NATIVE-HOOKS) - `Fix VS Code Copilot Chat Native Hooks` - `closed` - `closed 3 hours ago` - `Fixed VS Code Copilot Chat native hooks to produce VS Code-compatible JSON output. Added formatVSCodeHookOutput for proper hookSpecificOutput with permissionDecision for PreToolUse (allow/deny). Added extractToolNameFromStdin and extractHookEventNameFromStdin to parse VS Code stdin JSON. Added vsCodeEventFromHookEvent for event mapping. Updated hookCommand to detect copilot-chat client and output VS Code JSON instead of plain text. For blocked tools, uses permissionDecision:deny with exit code 0 (not exit code 2). Added timeout:30 to all copilot hook entries. Regenerated .github/hooks/semio-repo.json via configure. All 37 hook tests pass.`\n # From succesfull semio-repo tree output
+    transcript: /home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/2f1e87c2-af13-4067-9aa6-15f0af84010c.jsonl
+    query: hooks copilot vscode # Last semio repo mcp tree or cli tool input
     plan:
       steps:
         - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
@@ -431,7 +487,7 @@ sessions: # Create a new session when semio repo mcp ticket open is called
           started: {{TIMESTAMP}} # this means status in progress
         - name: Add/update tests and run relevant test suite # no completed or started means status pending
         - name: Update ticket artifacts and summarize changes
-    diff: # Derive codebase diffs from agent hooks
+    diff: # Derive diff at the end of a session
         projects:
           deleted: ""
           renamed:

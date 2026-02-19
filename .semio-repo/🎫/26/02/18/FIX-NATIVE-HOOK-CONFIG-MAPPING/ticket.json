@@ -1,7 +1,8 @@
 {
   "title": "Fix Native Hook Config Mapping",
-  "status": "open",
+  "status": "closed",
   "prompt": "Fix all native hook config files to pass native event names instead of pre-resolved neutral events. Add missing Cursor/Claude events. Regenerate all configs.",
+  "summary": "Fixed native hook config mapping",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/628"
   },
@@ -16,6 +17,14 @@
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
       "prompt": "Fix all native hook config files to pass native event names instead of pre-resolved neutral events. Add missing Cursor/Claude events. Regenerate all configs.",
       "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-18 19:17:32",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f"
     }
   ],
   "sessions": [
@@ -41,6 +50,258 @@
           "kind": "agent.starting",
           "timestamp": "2026-02-18T19:09:40Z",
           "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:11:07Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:11:10Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=tickets hooks events",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:11:22Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:11:36Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:11:54Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:12:09Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events tickets",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:12:23Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events tickets",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:13:02Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events tickets",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:14:01Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events semio-repo cli",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:14:18Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=tickets hook events cli",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:14:38Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events semio-repo cli",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:14:55Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:14:59Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=tickets hook events",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:15:09Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:15:24Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:15:33Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events tickets",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-18T19:15:41Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:16:21Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=tickets hook events",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:16:57Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=tickets hooks events",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-18T19:17:15Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "query": "query=hooks events cli semio-repo",
           "reads": {},
           "diff": {
             "projects": {},

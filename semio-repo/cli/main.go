@@ -32723,14 +32723,14 @@ type HookEvent string
 const (
 	HookGitCommitStarting        HookEvent = "git.commit.starting"
 	HookGitCommitEnded           HookEvent = "git.commit.ended"
-	HookAgentStarting            HookEvent = "agent.starting"
+	HookAgentStarted            HookEvent = "agent.started"
 	HookAgentEnded               HookEvent = "agent.ended"
 	HookAgentPromptSubmitting    HookEvent = "agent.prompt.submitting"
 	HookAgentCompacting          HookEvent = "agent.compacting"
 	HookAgentToolStarting        HookEvent = "agent.tool.starting"
 	HookAgentToolEnded           HookEvent = "agent.tool.ended"
 	HookAgentToolPlanUpdating    HookEvent = "agent.tool.plan.updating"
-	HookAgentToolCodeSearching    HookEvent = "agent.tool.code.searching"
+	HookAgentToolSearching    HookEvent = "agent.tool.searching"
 	HookAgentToolCodeEditing      HookEvent = "agent.tool.code.editing"
 	HookAgentToolCodeEdited       HookEvent = "agent.tool.code.edited"
 	HookAgentToolTerminalStarting HookEvent = "agent.tool.terminal.starting"
@@ -32742,14 +32742,14 @@ const (
 var AllHookEvents = []HookEvent{
 	HookGitCommitStarting,
 	HookGitCommitEnded,
-	HookAgentStarting,
+	HookAgentStarted,
 	HookAgentEnded,
 	HookAgentPromptSubmitting,
 	HookAgentCompacting,
 	HookAgentToolStarting,
 	HookAgentToolEnded,
 	HookAgentToolPlanUpdating,
-	HookAgentToolCodeSearching,
+	HookAgentToolSearching,
 	HookAgentToolCodeEditing,
 	HookAgentToolCodeEdited,
 	HookAgentToolTerminalStarting,
@@ -32791,11 +32791,152 @@ type HookContext struct {
 	Input      json.RawMessage   `json:"input,omitempty"`
 }
 
-// HookResult represents the outcome of a hook invocation.
+// HookPlanStep represents a single step in a plan/task list update event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookplanstep](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookPlanStep)
+type HookPlanStep struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+
+// HookResult represents the outcome of a hook invocation with event-specific data.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresult](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResult)
-type HookResult struct {
+type HookResult interface {
+	IsAllowed() bool
+	GetMessage() string
+}
+
+// HookResultBase provides common fields for all hook results.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultbase](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultBase)
+type HookResultBase struct {
 	Allowed bool   `json:"allowed"`
 	Message string `json:"message,omitempty"`
+	Raw     any    `json:"raw,omitempty"`
+}
+
+func (h HookResultBase) IsAllowed() bool    { return h.Allowed }
+func (h HookResultBase) GetMessage() string { return h.Message }
+
+// HookResultAgentBase provides shared fields for all agent hook results.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentBase)
+type HookResultAgentBase struct {
+	HookResultBase
+	Session    string `json:"session,omitempty"`
+	Timestamp  string `json:"timestamp,omitempty"`
+	Client     string `json:"client,omitempty"`
+	LLM        string `json:"llm,omitempty"`
+	Transcript string `json:"transcript,omitempty"`
+	MessageID  string `json:"message,omitempty"`
+	Parent     string `json:"parent,omitempty"`
+}
+
+// HookResultAgentStarted represents the result of an agent started event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentStarted)
+type HookResultAgentStarted struct {
+	HookResultAgentBase
+}
+
+// HookResultAgentEnded represents the result of an agent ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentEnded)
+type HookResultAgentEnded struct {
+	HookResultAgentBase
+}
+
+// HookResultAgentPromptSubmitting represents the result of an agent prompt submitting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentpromptsubmitting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentPromptSubmitting)
+type HookResultAgentPromptSubmitting struct {
+	HookResultAgentBase
+	Prompt string `json:"prompt,omitempty"`
+}
+
+// HookResultAgentCompacting represents the result of an agent compacting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentcompacting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentCompacting)
+type HookResultAgentCompacting struct {
+	HookResultAgentBase
+	Chat string `json:"chat,omitempty"`
+}
+
+// HookResultAgentToolStarting represents the result of an agent tool starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolStarting)
+type HookResultAgentToolStarting struct {
+	HookResultAgentBase
+	Name  string          `json:"name,omitempty"`
+	Input json.RawMessage `json:"input,omitempty"`
+}
+
+// HookResultAgentToolEnded represents the result of an agent tool ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolEnded)
+type HookResultAgentToolEnded struct {
+	HookResultAgentBase
+	Name     string          `json:"name,omitempty"`
+	Input    json.RawMessage `json:"input,omitempty"`
+	Response json.RawMessage `json:"response,omitempty"`
+}
+
+// HookResultAgentToolPlanUpdating represents the result of an agent tool plan updating event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolplanupdating](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolPlanUpdating)
+type HookResultAgentToolPlanUpdating struct {
+	HookResultAgentBase
+	Steps []HookPlanStep `json:"steps,omitempty"`
+}
+
+// HookResultAgentToolSearching represents the result of an agent tool searching event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearching](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearching)
+type HookResultAgentToolSearching struct {
+	HookResultAgentBase
+	Query   string   `json:"query,omitempty"`
+	Include []string `json:"include,omitempty"`
+	Exclude []string `json:"exclude,omitempty"`
+}
+
+// HookResultAgentToolCodeEditing represents the result of an agent tool code editing event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeediting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditing)
+type HookResultAgentToolCodeEditing struct {
+	HookResultAgentBase
+	Path string `json:"path,omitempty"`
+	Old  string `json:"old,omitempty"`
+	New  string `json:"new,omitempty"`
+	All  bool   `json:"all,omitempty"`
+}
+
+// HookResultAgentToolCodeEdited represents the result of an agent tool code edited event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeedited](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEdited)
+type HookResultAgentToolCodeEdited struct {
+	HookResultAgentBase
+	Path string `json:"path,omitempty"`
+	Old  string `json:"old,omitempty"`
+	New  string `json:"new,omitempty"`
+}
+
+// HookResultAgentToolTerminalStarting represents the result of an agent tool terminal starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolterminalstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTerminalStarting)
+type HookResultAgentToolTerminalStarting struct {
+	HookResultAgentBase
+	Command string `json:"command,omitempty"`
+}
+
+// HookResultAgentToolTerminalEnded represents the result of an agent tool terminal ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolterminalended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTerminalEnded)
+type HookResultAgentToolTerminalEnded struct {
+	HookResultAgentBase
+	Command    string `json:"command,omitempty"`
+	PID        string `json:"pid,omitempty"`
+	Terminated bool   `json:"terminated,omitempty"`
+	Stdout     string `json:"stdout,omitempty"`
+	Stderr     string `json:"stderr,omitempty"`
+}
+
+// HookResultGitCommitStarting represents the result of a git commit starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultgitcommitstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultGitCommitStarting)
+type HookResultGitCommitStarting struct {
+	HookResultBase
+	Message string `json:"message,omitempty"` // Override generic message if needed, but Base Message is fine for output
+}
+
+// HookResultGitCommitEnded represents the result of a git commit ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultgitcommitended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultGitCommitEnded)
+type HookResultGitCommitEnded struct {
+	HookResultBase
+	SHA string `json:"sha,omitempty"`
 }
 
 // HookLogEntry pairs the invocation context with its result for audit logging.
@@ -32817,13 +32958,56 @@ var BlockedToolPatterns = []string{
 	"git clean -fd",
 }
 
+// shellSegmentRE splits a command string by common shell operators.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️shellsegmentre](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/shellSegmentRE)
+var shellSegmentRE = regexp.MustCompile(`&&|\|\||;|\|`)
+
+// splitCommandSegments splits a shell command string by operators (&&, ||, ;, |) into individual segments.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️splitcommandsegments](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/splitCommandSegments)
+func splitCommandSegments(cmd string) []string {
+	var segments []string
+	for _, part := range shellSegmentRE.Split(cmd, -1) {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			segments = append(segments, part)
+		}
+	}
+	return segments
+}
+
+// isCommandSegmentBlocked checks whether a single command segment starts with a blocked pattern.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️iscommandsegmentblocked](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/isCommandSegmentBlocked)
+func isCommandSegmentBlocked(segment string) (bool, string) {
+	segment = strings.TrimSpace(segment)
+	if segment == "" {
+		return false, ""
+	}
+	lower := strings.ToLower(segment)
+	for _, pattern := range BlockedToolPatterns {
+		patternLower := strings.ToLower(pattern)
+		if strings.HasPrefix(lower, patternLower) {
+			rest := lower[len(patternLower):]
+			if rest == "" || rest[0] == ' ' || rest[0] == '\t' {
+				return true, fmt.Sprintf("blocked: %q matches denied pattern %q", segment, pattern)
+			}
+		}
+	}
+	return false, ""
+}
+
 // IsToolBlocked checks whether a tool invocation matches a blocked pattern.
+// Uses segment-start matching: only blocks if a command segment STARTS WITH a blocked pattern,
+// preventing false positives from grep/echo commands that mention blocked patterns in arguments.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️istoolblocked](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/IsToolBlocked)
 func IsToolBlocked(toolName string, toolArgs string) (bool, string) {
-	combined := strings.TrimSpace(toolName + " " + toolArgs)
-	for _, pattern := range BlockedToolPatterns {
-		if strings.Contains(strings.ToLower(combined), strings.ToLower(pattern)) {
-			return true, fmt.Sprintf("blocked: %q matches denied pattern %q", combined, pattern)
+	for _, segment := range splitCommandSegments(toolArgs) {
+		if blocked, reason := isCommandSegmentBlocked(segment); blocked {
+			return blocked, reason
+		}
+	}
+	for _, segment := range splitCommandSegments(toolName) {
+		if blocked, reason := isCommandSegmentBlocked(segment); blocked {
+			return blocked, reason
 		}
 	}
 	return false, ""
@@ -32912,12 +33096,15 @@ func classifyTool(toolName string) ToolKind {
 		return ToolKindPlan
 	case "read_file", "grep_search", "file_search", "semantic_search", "list_dir",
 		"get_errors", "read", "readfile", "searchfiles", "grepsearch", "listdir",
-		"list_code_usages", "get_search_view_results":
+		"list_code_usages", "get_search_view_results",
+		"geterrors", "getsearchviewresults", "listcodeusages":
 		return ToolKindCodeSearch
 	case "replace_string_in_file", "create_file", "multi_replace_string_in_file",
-		"edit", "write", "editfile", "createfile", "multiedit", "create_directory":
+		"edit", "write", "editfile", "createfile", "multiedit", "create_directory",
+		"editfiles", "createdirectory":
 		return ToolKindCodeEdit
-	case "run_in_terminal", "get_terminal_output", "bash", "terminal":
+	case "run_in_terminal", "get_terminal_output", "bash", "terminal",
+		"runinterminal", "getterminaloutput", "createandlaunchtask":
 		return ToolKindTerminal
 	default:
 		return ToolKindGeneric
@@ -32931,7 +33118,7 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 	case ToolKindPlan:
 		return HookAgentToolPlanUpdating
 	case ToolKindCodeSearch:
-		return HookAgentToolCodeSearching
+		return HookAgentToolSearching
 	case ToolKindCodeEdit:
 		return HookAgentToolCodeEditing
 	case ToolKindTerminal:
@@ -32959,11 +33146,11 @@ func resolvePostToolUse(kind ToolKind) HookEvent {
 func resolveCopilotEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "SessionStart":
-		return HookAgentStarting, "", nil
+		return HookAgentStarted, "", nil
 	case "Stop":
 		return HookAgentEnded, "", nil
 	case "SubagentStart":
-		return HookAgentStarting, "subagent", nil
+		return HookAgentStarted, "subagent", nil
 	case "SubagentStop":
 		return HookAgentEnded, "subagent", nil
 	case "UserPromptSubmit":
@@ -32984,11 +33171,11 @@ func resolveCopilotEvent(nativeEvent string, kind ToolKind) (HookEvent, string, 
 func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "sessionStart":
-		return HookAgentStarting, "", nil
+		return HookAgentStarted, "", nil
 	case "sessionEnd":
 		return HookAgentEnded, "", nil
 	case "subagentStart":
-		return HookAgentStarting, "subagent", nil
+		return HookAgentStarted, "subagent", nil
 	case "subagentStop":
 		return HookAgentEnded, "subagent", nil
 	case "stop":
@@ -33006,7 +33193,7 @@ func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, e
 	case "afterMCPExecution":
 		return HookAgentToolEnded, "", nil
 	case "beforeReadFile", "beforeTabFileRead":
-		return HookAgentToolCodeSearching, "", nil
+		return HookAgentToolSearching, "", nil
 	case "afterFileEdit", "afterTabFileEdit":
 		return HookAgentToolCodeEdited, "", nil
 	case "beforeShellExecution":
@@ -33029,13 +33216,13 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 	case "post_cascade_response":
 		return HookAgentEnded, "", nil
 	case "post_setup_worktree":
-		return HookAgentStarting, "", nil
+		return HookAgentStarted, "", nil
 	case "pre_mcp_tool_use":
 		return HookAgentToolStarting, "", nil
 	case "post_mcp_tool_use":
 		return HookAgentToolEnded, "", nil
 	case "pre_read_code":
-		return HookAgentToolCodeSearching, "", nil
+		return HookAgentToolSearching, "", nil
 	case "post_read_code":
 		return HookAgentToolEnded, "", nil
 	case "pre_write_code":
@@ -33056,11 +33243,11 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "SessionStart":
-		return HookAgentStarting, "", nil
+		return HookAgentStarted, "", nil
 	case "SessionEnd":
 		return HookAgentEnded, "", nil
 	case "SubagentStart":
-		return HookAgentStarting, "subagent", nil
+		return HookAgentStarted, "subagent", nil
 	case "SubagentStop":
 		return HookAgentEnded, "subagent", nil
 	case "Stop":
@@ -33112,7 +33299,7 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 		return "PreToolUse"
 	case HookAgentToolEnded:
 		return "PostToolUse"
-	case HookAgentStarting:
+	case HookAgentStarted:
 		if parentInfo != "" {
 			return "SubagentStart"
 		}
@@ -33128,7 +33315,7 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 		return "PreCompact"
 	case HookAgentToolPlanUpdating:
 		return "PreToolUse"
-	case HookAgentToolCodeSearching:
+	case HookAgentToolSearching:
 		return "PreToolUse"
 	case HookAgentToolCodeEditing:
 		return "PreToolUse"
@@ -33147,13 +33334,15 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️formatvscodehookoutput](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/formatVSCodeHookOutput)
 func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	output := map[string]interface{}{}
+	allowed := result.IsAllowed()
+	message := result.GetMessage()
 	switch hookEventName {
 	case "PreToolUse":
-		if !result.Allowed {
+		if !allowed {
 			output["hookSpecificOutput"] = map[string]interface{}{
 				"hookEventName":            "PreToolUse",
 				"permissionDecision":       "deny",
-				"permissionDecisionReason": result.Message,
+				"permissionDecisionReason": message,
 			}
 		} else {
 			output["hookSpecificOutput"] = map[string]interface{}{
@@ -33163,44 +33352,44 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 		}
 	case "PostToolUse":
 		hso := map[string]interface{}{"hookEventName": "PostToolUse"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	case "SessionStart":
 		hso := map[string]interface{}{"hookEventName": "SessionStart"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	case "SubagentStart":
 		hso := map[string]interface{}{"hookEventName": "SubagentStart"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	case "UserPromptSubmit":
 		hso := map[string]interface{}{"hookEventName": "UserPromptSubmit"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	case "Stop":
 		hso := map[string]interface{}{"hookEventName": "Stop"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	case "SubagentStop":
 		hso := map[string]interface{}{"hookEventName": "SubagentStop"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	case "PreCompact":
 		hso := map[string]interface{}{"hookEventName": "PreCompact"}
-		if result.Message != "" {
-			hso["additionalContext"] = result.Message
+		if message != "" {
+			hso["additionalContext"] = message
 		}
 		output["hookSpecificOutput"] = hso
 	}
@@ -33234,56 +33423,151 @@ func logHook(hctx HookContext, result HookResult) {
 	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s_%s.json", ts, clientSlug, hookKind)), data, 0644)
 }
 
-// dispatchHook routes the hook event to its handler and returns the result.
+// dispatchHook routes the hook event to its handler and returns the specific result.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️dispatchhook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/dispatchHook)
 func dispatchHook(hctx HookContext) HookResult {
+	var raw any
+	if len(hctx.Input) > 0 {
+		raw = hctx.Input
+	}
+	sessionID := extractSessionIDFromInput(hctx.Input)
+	llm := extractLLMFromInput(hctx.Input)
+	transcript := extractTranscriptFromInput(hctx.Input)
+	messageID := extractMessageIDFromInput(hctx.Input)
+	parentMsgID := extractParentMessageIDFromInput(hctx.Input)
+	if parentMsgID == "" {
+		parentMsgID = hctx.ParentInfo
+	}
+	agentBase := func(msg string) HookResultAgentBase {
+		return HookResultAgentBase{
+			HookResultBase: HookResultBase{Allowed: true, Message: msg, Raw: raw},
+			Session:        sessionID,
+			Timestamp:      hctx.Timestamp,
+			Client:         hctx.Client,
+			LLM:            llm,
+			Transcript:     transcript,
+			MessageID:      messageID,
+			Parent:         parentMsgID,
+		}
+	}
 	switch hctx.Event {
 	case HookGitCommitStarting:
-		return runCommitStartingHook(hctx)
+		res := runCommitStartingHook(hctx)
+		res.Raw = raw
+		res.Message = extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot)
+		if res.Message == "" && !res.Allowed {
+			res.Message = "pre-commit checks failed"
+		}
+		return res
 	case HookGitCommitEnded:
-		return HookResult{Allowed: true, Message: "git.commit.ended acknowledged"}
+		return HookResultGitCommitEnded{
+			HookResultBase: HookResultBase{Allowed: true, Message: extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot), Raw: raw},
+			SHA:            extractCommitSHAFromInput(hctx.Input),
+		}
+	case HookAgentStarted:
+		parent := hctx.ParentInfo
+		if parent == "" {
+			parent = extractParentFromInput(hctx.Input)
+		}
+		ab := agentBase("agent.started acknowledged")
+		ab.Parent = parent
+		return HookResultAgentStarted{HookResultAgentBase: ab}
+	case HookAgentEnded:
+		return HookResultAgentEnded{HookResultAgentBase: agentBase("agent.ended acknowledged")}
+	case HookAgentPromptSubmitting:
+		return HookResultAgentPromptSubmitting{
+			HookResultAgentBase: agentBase("agent.prompt.submitting acknowledged"),
+			Prompt:              extractPromptFromInput(hctx.Input),
+		}
+	case HookAgentCompacting:
+		return HookResultAgentCompacting{
+			HookResultAgentBase: agentBase("agent.compacting acknowledged"),
+			Chat:                extractChatFromInput(hctx.Input),
+		}
 	case HookAgentToolStarting:
 		if blocked, reason := IsToolBlocked(hctx.ToolName, hctx.ToolArgs); blocked {
-			return HookResult{Allowed: false, Message: reason}
+			return HookResultBase{Allowed: false, Message: reason, Raw: raw}
 		}
 		if cmd := extractCommandFromStdin(hctx.Input); cmd != "" {
 			if blocked, reason := IsToolBlocked("", cmd); blocked {
-				return HookResult{Allowed: false, Message: reason}
+				return HookResultBase{Allowed: false, Message: reason, Raw: raw}
 			}
 		}
-		return HookResult{Allowed: true}
-	case HookAgentStarting:
-		return HookResult{Allowed: true, Message: "agent.starting acknowledged"}
-	case HookAgentEnded:
-		return HookResult{Allowed: true, Message: "agent.ended acknowledged"}
-	case HookAgentPromptSubmitting:
-		return HookResult{Allowed: true, Message: "agent.prompt.submitting acknowledged"}
-	case HookAgentCompacting:
-		return HookResult{Allowed: true, Message: "agent.compacting acknowledged"}
+		toolName := hctx.ToolName
+		if tn := extractToolNameFromStdin(hctx.Input); tn != "" && toolName == "" {
+			toolName = tn
+		}
+		return HookResultAgentToolStarting{
+			HookResultAgentBase: agentBase(""),
+			Name:                toolName,
+			Input:               extractToolInputFromStdin(hctx.Input),
+		}
 	case HookAgentToolEnded:
-		return HookResult{Allowed: true}
+		toolName := hctx.ToolName
+		if tn := extractToolNameFromStdin(hctx.Input); tn != "" && toolName == "" {
+			toolName = tn
+		}
+		return HookResultAgentToolEnded{
+			HookResultAgentBase: agentBase(""),
+			Name:                toolName,
+			Input:               extractToolInputFromStdin(hctx.Input),
+			Response:            extractToolResponseFromStdin(hctx.Input),
+		}
 	case HookAgentToolPlanUpdating:
-		return HookResult{Allowed: true, Message: "agent.tool.plan.updating acknowledged"}
-	case HookAgentToolCodeSearching:
-		return HookResult{Allowed: true}
+		return HookResultAgentToolPlanUpdating{
+			HookResultAgentBase: agentBase("agent.tool.plan.updating acknowledged"),
+			Steps:               extractPlanStepsFromInput(hctx.Input, hctx.ToolArgs),
+		}
+	case HookAgentToolSearching:
+		query, include, exclude := extractCodeSearchFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolSearching{
+			HookResultAgentBase: agentBase(""),
+			Query:               query,
+			Include:             include,
+			Exclude:             exclude,
+		}
 	case HookAgentToolCodeEditing:
-		return HookResult{Allowed: true}
+		path, old, new_, all := extractCodeEditFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolCodeEditing{
+			HookResultAgentBase: agentBase(""),
+			Path:                path,
+			Old:                 old,
+			New:                 new_,
+			All:                 all,
+		}
 	case HookAgentToolCodeEdited:
-		return HookResult{Allowed: true}
+		path, old, new_, _ := extractCodeEditFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolCodeEdited{
+			HookResultAgentBase: agentBase(""),
+			Path:                path,
+			Old:                 old,
+			New:                 new_,
+		}
 	case HookAgentToolTerminalStarting:
 		if blocked, reason := IsToolBlocked(hctx.ToolName, hctx.ToolArgs); blocked {
-			return HookResult{Allowed: false, Message: reason}
+			return HookResultBase{Allowed: false, Message: reason, Raw: raw}
 		}
 		if cmd := extractCommandFromStdin(hctx.Input); cmd != "" {
 			if blocked, reason := IsToolBlocked("", cmd); blocked {
-				return HookResult{Allowed: false, Message: reason}
+				return HookResultBase{Allowed: false, Message: reason, Raw: raw}
 			}
 		}
-		return HookResult{Allowed: true}
+		return HookResultAgentToolTerminalStarting{
+			HookResultAgentBase: agentBase(""),
+			Command:             extractTerminalCommandFromInput(hctx.Input, hctx.ToolArgs),
+		}
 	case HookAgentToolTerminalEnded:
-		return HookResult{Allowed: true}
+		command, pid, terminated, stdout, stderr := extractTerminalEndedFromInput(hctx.Input)
+		return HookResultAgentToolTerminalEnded{
+			HookResultAgentBase: agentBase(""),
+			Command:             command,
+			PID:                 pid,
+			Terminated:          terminated,
+			Stdout:              stdout,
+			Stderr:              stderr,
+		}
 	default:
-		return HookResult{Allowed: false, Message: fmt.Sprintf("unknown hook event: %s", hctx.Event)}
+		return HookResultBase{Allowed: false, Message: fmt.Sprintf("unknown hook event: %s", hctx.Event), Raw: raw}
 	}
 }
 
@@ -33411,6 +33695,367 @@ func extractLLMFromInput(input json.RawMessage) string {
 	return ""
 }
 
+func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
+	if len(input) == 0 {
+		return nil
+	}
+	var data map[string]json.RawMessage
+	if err := json.Unmarshal(input, &data); err != nil {
+		return nil
+	}
+	if ti, ok := data["tool_input"]; ok {
+		return ti
+	}
+	return nil
+}
+
+func extractToolResponseFromStdin(input json.RawMessage) json.RawMessage {
+	if len(input) == 0 {
+		return nil
+	}
+	var data map[string]json.RawMessage
+	if err := json.Unmarshal(input, &data); err != nil {
+		return nil
+	}
+	for _, key := range []string{"tool_output", "tool_response", "output", "response", "result"} {
+		if val, ok := data[key]; ok {
+			return val
+		}
+	}
+	return nil
+}
+
+func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPlanStep {
+	var toolInput map[string]interface{}
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+				toolInput = ti
+			}
+		}
+	}
+	if toolInput == nil && toolArgs != "" {
+		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
+	}
+	if toolInput == nil {
+		return nil
+	}
+	var items []interface{}
+	if todoList, ok := toolInput["todoList"].([]interface{}); ok {
+		items = todoList
+	} else if steps, ok := toolInput["steps"].([]interface{}); ok {
+		items = steps
+	} else if tasks, ok := toolInput["tasks"].([]interface{}); ok {
+		items = tasks
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	var steps []HookPlanStep
+	for _, item := range items {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		name := ""
+		for _, k := range []string{"title", "name", "description"} {
+			if v, ok := m[k].(string); ok && v != "" {
+				name = v
+				break
+			}
+		}
+		status := ""
+		if v, ok := m["status"].(string); ok {
+			status = v
+		}
+		if name != "" {
+			steps = append(steps, HookPlanStep{Name: name, Status: status})
+		}
+	}
+	return steps
+}
+
+func extractCodeSearchFromInput(input json.RawMessage, toolArgs string) (query string, include []string, exclude []string) {
+	var toolInput map[string]interface{}
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+				toolInput = ti
+			}
+		}
+	}
+	if toolInput == nil && toolArgs != "" {
+		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
+	}
+	if toolInput == nil {
+		return "", nil, nil
+	}
+	for _, k := range []string{"query", "pattern", "filePath", "path", "file_path"} {
+		if v, ok := toolInput[k].(string); ok && v != "" {
+			query = v
+			break
+		}
+	}
+	for _, k := range []string{"includePattern", "include", "glob"} {
+		if v, ok := toolInput[k].(string); ok && v != "" {
+			include = append(include, v)
+		} else if arr, ok := toolInput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					include = append(include, s)
+				}
+			}
+		}
+	}
+	for _, k := range []string{"excludePattern", "exclude"} {
+		if v, ok := toolInput[k].(string); ok && v != "" {
+			exclude = append(exclude, v)
+		} else if arr, ok := toolInput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					exclude = append(exclude, s)
+				}
+			}
+		}
+	}
+	return query, include, exclude
+}
+
+func extractCodeEditFromInput(input json.RawMessage, toolArgs string) (path string, old string, new_ string, all bool) {
+	var toolInput map[string]interface{}
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+				toolInput = ti
+			}
+		}
+	}
+	if toolInput == nil && toolArgs != "" {
+		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
+	}
+	if toolInput == nil {
+		return "", "", "", false
+	}
+	for _, k := range []string{"filePath", "path", "file_path", "file"} {
+		if v, ok := toolInput[k].(string); ok && v != "" {
+			path = v
+			break
+		}
+	}
+	for _, k := range []string{"oldString", "old", "old_string", "search"} {
+		if v, ok := toolInput[k].(string); ok {
+			old = v
+			break
+		}
+	}
+	for _, k := range []string{"newString", "new", "new_string", "replace"} {
+		if v, ok := toolInput[k].(string); ok {
+			new_ = v
+			break
+		}
+	}
+	if v, ok := toolInput["all"].(bool); ok {
+		all = v
+	} else if v, ok := toolInput["replaceAll"].(bool); ok {
+		all = v
+	}
+	return path, old, new_, all
+}
+
+func extractTerminalCommandFromInput(input json.RawMessage, toolArgs string) string {
+	cmd := extractCommandFromStdin(input)
+	if cmd != "" {
+		return cmd
+	}
+	if toolArgs != "" {
+		var args map[string]interface{}
+		if err := json.Unmarshal([]byte(toolArgs), &args); err == nil {
+			if c, ok := args["command"].(string); ok {
+				return c
+			}
+		}
+	}
+	return ""
+}
+
+func extractTerminalEndedFromInput(input json.RawMessage) (command string, pid string, terminated bool, stdout string, stderr string) {
+	if len(input) == 0 {
+		return "", "", false, "", ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return "", "", false, "", ""
+	}
+	toolInput := data
+	if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+		toolInput = ti
+	}
+	for _, k := range []string{"command", "command_line"} {
+		if v, ok := toolInput[k].(string); ok && v != "" {
+			command = v
+			break
+		}
+	}
+	if ti, ok := data["tool_info"].(map[string]interface{}); ok {
+		if v, ok := ti["command_line"].(string); ok && v != "" {
+			command = v
+		}
+	}
+	for _, k := range []string{"pid", "process_id", "execution_id", "id"} {
+		if v, ok := data[k].(string); ok && v != "" {
+			pid = v
+			break
+		}
+		if v, ok := data[k].(float64); ok {
+			pid = fmt.Sprintf("%d", int64(v))
+			break
+		}
+	}
+	for _, k := range []string{"terminated", "has_terminated", "exited", "stopped"} {
+		if v, ok := data[k].(bool); ok {
+			terminated = v
+			break
+		}
+	}
+	for _, k := range []string{"stdout", "output", "tool_output"} {
+		if v, ok := data[k].(string); ok {
+			stdout = v
+			break
+		}
+	}
+	for _, k := range []string{"stderr", "error_output"} {
+		if v, ok := data[k].(string); ok {
+			stderr = v
+			break
+		}
+	}
+	return command, pid, terminated, stdout, stderr
+}
+
+func extractChatFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"chat", "conversation", "context", "messages"} {
+		if value, ok := data[key].(string); ok {
+			return strings.TrimSpace(value)
+		}
+		if arr, ok := data[key].([]interface{}); ok {
+			bytes, err := json.Marshal(arr)
+			if err == nil {
+				return string(bytes)
+			}
+		}
+	}
+	return ""
+}
+
+func extractCommitMessageFromInput(input json.RawMessage, repoRoot string) string {
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			for _, key := range []string{"message", "commit_message", "commitMessage"} {
+				if v, ok := data[key].(string); ok && v != "" {
+					return strings.TrimSpace(v)
+				}
+			}
+		}
+	}
+	commitMsgFile := filepath.Join(repoRoot, ".git", "COMMIT_EDITMSG")
+	if data, err := os.ReadFile(commitMsgFile); err == nil {
+		msg := strings.TrimSpace(string(data))
+		if msg != "" {
+			return msg
+		}
+	}
+	return ""
+}
+
+func extractCommitSHAFromInput(input json.RawMessage) string {
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			for _, key := range []string{"sha", "commit_sha", "commitSha", "hash"} {
+				if v, ok := data[key].(string); ok && v != "" {
+					return strings.TrimSpace(v)
+				}
+			}
+		}
+	}
+	return GetGitCommit()
+}
+
+func extractParentFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"parent", "parentInfo", "parent_info", "source"} {
+		if v, ok := data[key].(string); ok && v != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+
+func extractTranscriptFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"transcript", "transcript_path", "transcriptPath", "log_path", "logPath"} {
+		if v, ok := data[key].(string); ok && v != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+
+func extractMessageIDFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"messageId", "message_id", "turnId", "turn_id", "requestId", "request_id"} {
+		if v, ok := data[key].(string); ok && v != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+
+func extractParentMessageIDFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"parentMessageId", "parent_message_id", "parentTurnId", "parent_turn_id"} {
+		if v, ok := data[key].(string); ok && v != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+
 func normalizeHookPath(path string) string {
 	path = strings.TrimSpace(path)
 	if path == "" {
@@ -33516,7 +34161,7 @@ func trackHookInOpenTicket(hctx HookContext) {
 	if hctx.Event == HookAgentPromptSubmitting && interaction.Prompt == "" {
 		interaction.Prompt = strings.TrimSpace(hctx.ToolArgs)
 	}
-	if hctx.Event == HookAgentToolCodeSearching {
+	if hctx.Event == HookAgentToolSearching {
 		applyHookPathToReads(&interaction.Reads, hctx.FilePath)
 	}
 	if hctx.Event == HookAgentToolCodeEditing || hctx.Event == HookAgentToolCodeEdited {
@@ -33535,7 +34180,7 @@ func trackHookInOpenTicket(hctx HookContext) {
 		interaction.Query = strings.TrimSpace(hctx.ToolArgs)
 	}
 	if interaction.Prompt == "" && interaction.Query == "" && interaction.Context == "" && !hasTicketSessionReadData(interaction.Reads) && !hasTicketSessionDiffData(interaction.Diff) {
-		if hctx.Event != HookAgentStarting && hctx.Event != HookAgentEnded {
+		if hctx.Event != HookAgentStarted && hctx.Event != HookAgentEnded {
 			return
 		}
 	}
@@ -33543,24 +34188,24 @@ func trackHookInOpenTicket(hctx HookContext) {
 	_ = SaveTicket(ticket)
 }
 
-func runCommitStartingHook(hctx HookContext) HookResult {
+func runCommitStartingHook(hctx HookContext) HookResultGitCommitStarting {
 	repoRoot := hctx.RepoRoot
 	if repoRoot == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
-			return HookResult{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}
+			return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}}
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
 	SetRootDir(repoRoot)
 	fmt.Println("Running pre-commit hooks...")
 	if err := runPreflightFix(); err != nil {
-		return HookResult{Allowed: false, Message: fmt.Sprintf("pre-commit fix failed: %v", err)}
+		return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-commit fix failed: %v", err)}}
 	}
 	if err := runPreflightAnalyze(); err != nil {
-		return HookResult{Allowed: false, Message: fmt.Sprintf("pre-commit analyze failed: %v", err)}
+		return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-commit analyze failed: %v", err)}}
 	}
-	return HookResult{Allowed: true, Message: "pre-commit checks passed"}
+	return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: true, Message: "pre-commit checks passed"}}
 }
 
 // ValidateHookEvent checks if the given string is a valid hook event.
@@ -33596,14 +34241,14 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
   git.commit.ended             Run after a git commit (post-commit)
 
 🤖 Neutral agent hooks:
-  agent.starting               Agent session started
+  agent.started                Agent session started
   agent.ended                  Agent session stopped
   agent.prompt.submitting      User submitting a prompt
   agent.compacting             Context compaction event
   agent.tool.starting          Tool starting (generic, excludes plan, code, terminal)
   agent.tool.ended             Tool completed (generic, excludes plan, code, terminal)
   agent.tool.plan.updating     Plan/task list updating
-  agent.tool.code.searching    Code search/read operation
+  agent.tool.searching         Code search/read operation
   agent.tool.code.editing      Code edit starting
   agent.tool.code.edited       Code edit completed
   agent.tool.terminal.starting Terminal command starting (supports blocking)
@@ -33674,12 +34319,13 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
 				fmt.Fprintln(cmd.OutOrStdout(), string(out))
 				return nil
 			}
-			if !result.Allowed {
-				fmt.Fprintln(cmd.ErrOrStderr(), result.Message)
+			if !result.IsAllowed() {
+				fmt.Fprintln(cmd.ErrOrStderr(), result.GetMessage())
 				return ExitError{Code: 2}
 			}
-			if result.Message != "" {
-				fmt.Fprintln(cmd.OutOrStdout(), result.Message)
+			msg := result.GetMessage()
+			if msg != "" {
+				fmt.Fprintln(cmd.OutOrStdout(), msg)
 			}
 			return nil
 		},

@@ -1,0 +1,93 @@
+{
+  "title": "Fix Hook Blocking False Positives and VS Code Terminal Blocking",
+  "status": "closed",
+  "prompt": "The IsToolBlocked function uses naive substring matching on the full command string, causing false positives. For example, `grep \"git checkout\" file.go` is blocked because the pattern \"git checkout\" appears in the grep arguments. The user reports all terminal commands are blocked in VSCode. Fix IsToolBlocked to only block when the command or a command segment actually STARTS WITH a blocked pattern (e.g., `git checkout`), not when it contains it anywhere. Also check VS Code Copilot Chat hook output format per the docs and ensure classifyTool handles VS Code tool names.",
+  "summary": "Fixed IsToolBlocked false positives: replaced naive substring matching with segment-start matching. Commands like grep with git checkout in pattern are no longer blocked. Added splitCommandSegments and isCommandSegmentBlocked helpers. Added VS Code camelCase tool names to classifyTool. Added 7 false-positive test cases and 2 new unit test functions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/632"
+  },
+  "goal": "HOOKS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-19 11:08:36",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "prompt": "The IsToolBlocked function uses naive substring matching on the full command string, causing false positives. For example, `grep \"git checkout\" file.go` is blocked because the pattern \"git checkout\" appears in the grep arguments. The user reports all terminal commands are blocked in VSCode. Fix IsToolBlocked to only block when the command or a command segment actually STARTS WITH a blocked pattern (e.g., `git checkout`), not when it contains it anywhere. Also check VS Code Copilot Chat hook output format per the docs and ensure classifyTool handles VS Code tool names.",
+      "llm": "sonnet-4-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-19 11:20:40",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771499861523055968-2498965125901788278",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:17:34Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:17:53Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:18:10Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:18:32Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

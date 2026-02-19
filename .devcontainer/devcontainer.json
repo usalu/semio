@@ -161,6 +161,7 @@
         "openai.chatgpt",
         // #endregion 🔖Extensions Ai
         // #region 🔖Extensions Utility
+        "mermaidchart.vscode-mermaid-chart",
         "gruntfuggly.todo-tree",
         "jebbs.plantuml",
         "jock.svg"

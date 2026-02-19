@@ -50,6 +50,174 @@
           }
         }
       ]
+    },
+    {
+      "id": "8a40542e-eef5-4a5a-82ae-63137d6bd78e",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-18T19:17:56Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "d765d480-15c8-4844-a961-ce3f9b38c1f9",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T10:37:20Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T10:37:32Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "You MUST make sure that the hooks return exactly this information (additionally make sure to add raw as a field where you add the raw input json and leave it for logging for now):\n\nEvents\n``yaml\ngit:\n  commit:\n    starting: # pre-commit\n      message: {{COMMITMESSAGE}} \n    ended: # post-commit\n      sha: {{COMMITSHA}}\n      message: {{COMMITMESSAGE}}\nagent:\n  starting:\n    session: {{ID}}\n    timestamp: {{TIMESTAMP}}\n    client: {{CLIENT}}\n    parent: {{PARENT}}\n  ended:\n    session: {{ID}}\n    timestamp: {{TIMESTAMP}}\n    client: {{CLIENT}}\n  prompt:\n    submitting:\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      prompt: {{PROMPT}}\n  compacting:\n    session: {{ID}}\n    timestamp: {{TIMESTAMP}}\n    client: {{CLIENT}}\n    chat: {{CHAT}}\n  tool:\n    starting: # all tools but excluding task, code, terminal\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      name: {{NAME}} # name of the tool\n      input: {{INPUT}}\n    ended: # excluding task, code and terminal\n      session: {{ID}}\n      timestamp: {{TIMESTAMP}}\n      client: {{CLIENT}}\n      name: {{NAME}} # name of the tool\n      input: {{INPUT}}\n      response: {{RESPONSE}}\n    plan: # A list of tasks - usually TODO lists in the native clients\n      updating: # Planning involves changing the task list\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        steps:\n          - name: {{STEPNAME}}\n          - status: {{STATUS}} # completed, in progress, pending\n    code:\n      searching: # All searches such as file read, grep,\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        query: {{QUERY}} # regex, glob, file path, etc\n        include: [{{INCLUDEPATTERN}}] # file glob patterns, line numbers, etc\n        exclude: [{{EXCLUDEPATTERN}}]\n      editing:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        path: {{FILEPATH}}\n        old: {{OLDSTRING}}\n        new: {{NEWSTRING}}\n        all: {{REPLACEALLSTRINGS}} # false: just first, true: replace all occurrences\n      edited:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        path: {{FILEPATH}}\n        old: {{OLDSTRING}}\n        new: {{NEWSTRING}}\n    terminal:\n      starting:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        command: {{COMMAND}}\n      ended:\n        session: {{ID}}\n        timestamp: {{TIMESTAMP}}\n        client: {{CLIENT}}\n        command: {{COMMAND}}\n        pid: {{PID}} # process id, execution id, etc\n        terminated: {{HASTERMINATED}} # true: stopped, false: still running\n        stdout: {{STDOUT}}\n        stderr: {{STDERR}}\n``",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T10:46:29Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T10:46:48Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "Try Again",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T11:05:02Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T11:28:33Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "- Not a general HookResult but for each event a specfic one.\n- Make sure that every single mapping is tested. Take the sample data from the existing `.semio-repo/📜/**`",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "66919c2d-e095-443f-a773-3a1ab8c21de9",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T10:47:27Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T10:47:30Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "e51a2976-3fee-42db-a5cf-7b2f0a4c5b84",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "interactions": [
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T10:48:18Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "semio repo hook:\nIn vscode this command was blocked allthough it shouldnt be blocked. Only some git commands should be blocked.\ncd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli tree \"hooks events inlet adapter cli\" 2\u003e\u00261 | head -200",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T11:21:13Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
     }
   ]
 }

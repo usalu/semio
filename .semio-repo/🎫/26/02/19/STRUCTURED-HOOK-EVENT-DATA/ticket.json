@@ -1,0 +1,191 @@
+{
+  "title": "Structured Hook Event Data",
+  "status": "closed",
+  "prompt": "Refactor HookResult to return event-specific data matching the YAML schema and add raw field",
+  "summary": "Refactored HookResult to return structured event-specific data matching the YAML schema. Added HookPlanStep struct, 15 extraction functions, populateEventData dispatcher, and 30+ tests. Each event type now returns its specific fields (session, timestamp, client, parent, sha, prompt, chat, name, input, response, steps, query, include, exclude, path, old, new, all, command, pid, terminated, stdout, stderr) plus a raw field with the original input JSON.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/631"
+  },
+  "goal": "HOOKS/EVENTDATA",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-19 10:49:29",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "prompt": "Refactor HookResult to return event-specific data matching the YAML schema and add raw field",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-19 11:04:39",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771498567144824300-2423067097344366247",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T10:56:00Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T10:56:18Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T10:56:39Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T10:57:04Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:00:22Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:00:37Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:00:57Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.starting",
+          "timestamp": "2026-02-19T11:01:18Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-123",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T11:02:18Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "Fix the bug",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T11:02:36Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "Fix the bug",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "git.commit.ended",
+          "timestamp": "2026-02-19T11:03:45Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "feat: hooks",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

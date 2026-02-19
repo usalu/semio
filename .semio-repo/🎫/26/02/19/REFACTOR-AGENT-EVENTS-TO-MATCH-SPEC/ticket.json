@@ -1,0 +1,498 @@
+{
+  "title": "Refactor Agent Events to Match Spec",
+  "status": "closed",
+  "prompt": "Refactor all agent hook events to match the new YAML spec: rename agent.starting→agent.started, agent.tool.code.searching→agent.tool.searching, add missing fields (llm, transcript, message, parent) to all event result types",
+  "summary": "Refactored all agent hook events to match spec: renamed agent.starting to agent.started and agent.tool.code.searching to agent.tool.searching, created HookResultAgentBase with shared fields (session, timestamp, client, llm, transcript, message, parent), updated all 12 agent result types, added extraction functions, fixed JSON tag shadowing, all tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/634"
+  },
+  "goal": "HOOKS/AGENT-EVENTS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-19 12:19:51",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "prompt": "Refactor all agent hook events to match the new YAML spec: rename agent.starting→agent.started, agent.tool.code.searching→agent.tool.searching, add missing fields (llm, transcript, message, parent) to all event result types",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-19 13:01:36",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771504450067964956-1801760914655672196",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:34:04Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:34:21Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:34:39Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:35:03Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:36:42Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:37:02Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:37:22Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:37:46Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:38:19Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:38:36Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:38:54Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:39:18Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:39:52Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:40:10Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:40:27Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:40:50Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:42:31Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:42:51Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:43:11Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:43:34Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:44:51Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "099974c8-470d-4737-ba74-166bd93ca158",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:46:57Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-19T12:47:04Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "prompt": "I need you to do a thorough research task. Read the following files and report back with a detailed comparison:\n\n1. Read `/workspaces/semio/semio-repo/cli/main.go` and find:\n   - All HookEvent constants (search for `HookEvent =` or the const block defining them)\n   - The HookResultAgentBase struct\n   - All HookResultAgent* structs (there should be ~12)\n   - The dispatchHook function (specifically the agent event cases and the agentBase helper)\n   - The extraction functions: extractTranscriptFromInput, extractMessageIDFromInput, extractParentMessageIDFromInput\n\n2. Read `/workspaces/semio/.semio-repo/🎫/26/02/19/REFACTOR-AGENT-EVENTS-TO-MATCH-SPEC/ticket.md`\n\nReport back:\n- List every HookEvent constant name and its string value\n- List every field in HookResultAgentBase with its JSON tag\n- List every HookResultAgent* struct and its fields (beyond the embedded base)\n- Show the agentBase helper function\n- Show the extraction functions\n- Report the current state of the ticket.md file\n\nUse grep_search to find the relevant sections, then read_file to get the full content.",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:47:11Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-19T12:48:52Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:53:21Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:53:41Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:54:01Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:54:24Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:54:56Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:55:13Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:55:31Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:55:54Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:58:26Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:58:44Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:59:01Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-19T12:59:25Z",
+          "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}
