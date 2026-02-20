@@ -1,0 +1,133 @@
+{
+  "title": "E2E Ticket Positional",
+  "status": "open",
+  "prompt": "E2E prompt positional",
+  "goal": "TEST-GOAL",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-20 06:59:23",
+      "author": "usalu",
+      "system": "linux",
+      "client": "cursor-chat",
+      "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+      "prompt": "E2E prompt positional",
+      "llm": "sonnet-4-5"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1771570788292490064-1236627462710501213",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-20T06:59:42Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-20T06:59:59Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-20T07:00:23Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-20T07:00:40Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-20T07:00:57Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "372c099f-a49d-4973-983c-4b6d2bf28298",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "interactions": [
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-20T08:15:01Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-20T08:15:07Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "prompt": "xtend the cli by a general project specs, docs and todo generation system.\n\n```bash\n./semio-repo/cli/cli project \u003cproject-name\u003e generate \u003ckind\u003e\n\n./semio-repo/cli/cli project semio generate specs\n./semio-repo/cli/cli project semio-repo generate docs\n./semio-repo/cli/cli project coda generate todos\n```\n\n---\n\n`DOCS.md`\n```md\n# 📚 Docs\n\n## [{{ENTITYID}}]({{ENTITYURI}})\n\n{{ENTITYDOCS}}\n```\n\n`SPECS.MD`\n```md\n# 💯 Specs\n\n## [{{ENTITYID}}]({{ENTITYURI}})\n\n{{ENTITYSPECS}}\n```\n\n`TODOS.md`\n```md\n# 🔳 TODOs\n\n## [{{ENTITYID}}]({{ENTITYURI}})\n\n### TODO: {{TODOTITLE}}\n{{TODODESCRIPTION}}\n```\n\nYou MUST implement, test and run it for all projects.\n\nThe information is sourced from the code.",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        },
+        {
+          "kind": "agent.ended",
+          "timestamp": "2026-02-20T09:11:47Z",
+          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
+          "reads": {},
+          "diff": {
+            "projects": {},
+            "bundles": {},
+            "folders": {},
+            "files": {}
+          }
+        }
+      ]
+    }
+  ]
+}

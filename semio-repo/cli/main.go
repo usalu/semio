@@ -592,6 +592,9 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(exportCommand(factory, &config))
 	root.AddCommand(hookCommand(factory, &config))
 	root.AddCommand(configureCommand(factory, &config))
+	root.AddCommand(mermaidCommand(factory, &config))
+	root.AddCommand(projectCommand(factory, &config))
+	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(preflightCmd)
 	root.AddCommand(updateCmd)
@@ -638,16 +641,16 @@ func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "sync",
 		Short: "Synchronize monorepo artifacts",
 	}
-	sync.AddCommand(syncGithubCommand(factory, config))
+	sync.AddCommand(syncManagementCommand(factory, config))
 	return sync
 }
 
-func syncGithubCommand(factory EngineFactory, config *Config) *cobra.Command {
+func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "github",
-		Short: "Synchronize local state with GitHub",
+		Use:   "management",
+		Short: "Synchronize local state with management provider",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			query := `mutation SyncGithub { syncGithub }`
+			query := `mutation SyncManagement { syncManagement }`
 			return runGraphQL(cmd, factory, config, query, nil)
 		},
 	}
@@ -1510,7 +1513,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			draft, _ := cmd.Flags().GetString("draft")
 			goal, _ := cmd.Flags().GetString("goal")
 			parent, _ := cmd.Flags().GetString("parent")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 			issue, _ := cmd.Flags().GetString("issue")
 
 			remainingArgs := args
@@ -1547,7 +1550,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"prompt":   prompt,
 				"client":   strings.ToUpper(strings.ReplaceAll(client, "-", "_")),
 				"noIssue":  noIssue,
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 			}
 			if llm != "" {
 				input["llm"] = llm
@@ -1584,10 +1587,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("prompt", "", "Ticket prompt")
 	openCmd.Flags().String("llm", "", "LLM")
 	openCmd.Flags().String("client", "", "Client")
-	openCmd.Flags().Bool("no-issue", false, "Skip GitHub issue")
+	openCmd.Flags().Bool("no-issue", false, "Skip management provider issue")
 	openCmd.Flags().String("draft", "", "Draft ID")
 	openCmd.Flags().String("goal", "", "Goal ID")
-	openCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
+	openCmd.Flags().Bool("no-management", false, "Skip management provider operations")
 	openCmd.Flags().String("parent", "", "Parent ticket slug")
 	openCmd.Flags().String("issue", "", "Link to existing GitHub issue URL instead of creating new one")
 	addLLMFlags(openCmd)
@@ -1601,7 +1604,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			day, _ := cmd.Flags().GetInt("day")
 			slug, _ := cmd.Flags().GetString("slug")
 			summary, _ := cmd.Flags().GetString("summary")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 			files, _ := cmd.Flags().GetStringSlice("files")
 			title, _ := cmd.Flags().GetString("title")
 			closeAll, _ := cmd.Flags().GetBool("all")
@@ -1642,7 +1645,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			input := map[string]interface{}{
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 				"all":      closeAll,
 			}
 			if !closeAll {
@@ -1673,7 +1676,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	closeCmd.Flags().Int("month", 0, "Ticket month")
 	closeCmd.Flags().Int("day", 0, "Ticket day")
 	closeCmd.Flags().String("slug", "", "Ticket slug")
-	closeCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
+	closeCmd.Flags().Bool("no-management", false, "Skip management provider operations")
 	closeCmd.Flags().String("summary", "", "Summary")
 	closeCmd.Flags().StringSlice("files", nil, "Files")
 	closeCmd.Flags().String("title", "", "Title")
@@ -1684,7 +1687,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			year, _ := cmd.Flags().GetInt("year")
 			month, _ := cmd.Flags().GetInt("month")
 			day, _ := cmd.Flags().GetInt("day")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 			slug, _ := cmd.Flags().GetString("slug")
 			prompt, _ := cmd.Flags().GetString("prompt")
 			title, _ := cmd.Flags().GetString("title")
@@ -1730,7 +1733,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			input := map[string]interface{}{
 				"year":     year,
 				"month":    month,
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 				"day":      day,
 				"slug":     slug,
 				"prompt":   prompt,
@@ -1762,7 +1765,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	reopenCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
+	reopenCmd.Flags().Bool("no-management", false, "Skip management provider operations")
 	reopenCmd.Flags().Int("year", 0, "Ticket year")
 	reopenCmd.Flags().Int("month", 0, "Ticket month")
 	reopenCmd.Flags().Int("day", 0, "Ticket day")
@@ -1805,7 +1808,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			prompt, _ := cmd.Flags().GetString("prompt")
 			goal, _ := cmd.Flags().GetString("goal")
 			parent, _ := cmd.Flags().GetString("parent")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 
 			client, _ := extractClientFromArgs(cmd, []string{})
 			llm, _ := extractLLMFromArgs(cmd, []string{})
@@ -1815,7 +1818,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"month":    m,
 				"day":      d,
 				"slug":     slug,
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 			}
 			if cmd.Flags().Changed("title") {
 				input["title"] = title
@@ -1852,7 +1855,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	changeCmd.Flags().String("title", "", "New title")
 	changeCmd.Flags().String("prompt", "", "New prompt")
 	changeCmd.Flags().String("goal", "", "New goal ID")
-	changeCmd.Flags().Bool("no-github", false, "Skip GitHub sync")
+	changeCmd.Flags().Bool("no-management", false, "Skip management provider sync")
 	addLLMFlags(changeCmd)
 	addClientFlags(changeCmd)
 
@@ -1876,11 +1879,11 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			description, _ := cmd.Flags().GetString("description")
 			dueDate, _ := cmd.Flags().GetString("due-date")
 			parent, _ := cmd.Flags().GetString("parent")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 
 			input := map[string]interface{}{
 				"id":       id,
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 			}
 			if cmd.Flags().Changed("title") {
 				input["title"] = title
@@ -1912,7 +1915,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	changeCmd.Flags().String("description", "", "New description")
 	changeCmd.Flags().String("due-date", "", "New due date (YYYY-MM-DD)")
 	changeCmd.Flags().String("parent", "", "New parent goal ID")
-	changeCmd.Flags().Bool("no-github", false, "Skip GitHub sync")
+	changeCmd.Flags().Bool("no-management", false, "Skip management provider sync")
 
 	openCmd := &cobra.Command{
 		Use:   "open [title] [description] [prompt] [client] [llm]",
@@ -1922,7 +1925,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			description, _ := cmd.Flags().GetString("description")
 			prompt, _ := cmd.Flags().GetString("prompt")
 			dueDate, _ := cmd.Flags().GetString("due-date")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 
 			remainingArgs := args
 			if title == "" && len(remainingArgs) > 0 {
@@ -1967,7 +1970,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"dueDate":     dueDate,
 				"llm":         llm,
 				"client":      client,
-				"noGithub":    noGithub,
+				"noManagement":    noManagement,
 			}
 			parent, _ := cmd.Flags().GetString("parent")
 			if parent != "" {
@@ -2002,7 +2005,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("due-date", "", "Goal due date (e.g., 2026-02-15)")
 	openCmd.Flags().String("llm", "", "LLM")
 	openCmd.Flags().String("client", "", "Client")
-	openCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
+	openCmd.Flags().Bool("no-management", false, "Skip management provider synchronization")
 	openCmd.Flags().String("parent", "", "Parent goal ID")
 	openCmd.Flags().String("bundle", "", "Bundle name associated with this goal")
 	openCmd.Flags().String("milestone", "", "Link to existing GitHub milestone URL instead of creating new one")
@@ -2027,11 +2030,11 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if summary == "" {
 				return fmt.Errorf("missing summary")
 			}
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 			input := map[string]interface{}{
 				"id":       id,
 				"summary":  summary,
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 			}
 			variables := map[string]interface{}{"input": input}
 			query := `mutation GoalClose($input: GoalCloseInput!) {
@@ -2043,7 +2046,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	closeCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
+	closeCmd.Flags().Bool("no-management", false, "Skip management provider synchronization")
 
 	reopenCmd := &cobra.Command{
 		Use:   "reopen [id] [prompt] [client] [llm]",
@@ -2055,7 +2058,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			description, _ := cmd.Flags().GetString("description")
 			dueDate, _ := cmd.Flags().GetString("due-date")
 			parent, _ := cmd.Flags().GetString("parent")
-			noGithub, _ := cmd.Flags().GetBool("no-github")
+			noManagement, _ := cmd.Flags().GetBool("no-management")
 
 			if len(args) > 0 {
 				id = args[0]
@@ -2091,7 +2094,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"prompt":   prompt,
 				"client":   client,
 				"llm":      llm,
-				"noGithub": noGithub,
+				"noManagement": noManagement,
 			}
 			if title != "" {
 				input["title"] = title
@@ -2116,7 +2119,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	reopenCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
+	reopenCmd.Flags().Bool("no-management", false, "Skip management provider synchronization")
 	reopenCmd.Flags().String("prompt", "", "Prompt")
 	reopenCmd.Flags().String("title", "", "New title")
 	reopenCmd.Flags().String("description", "", "New description")
@@ -2457,8 +2460,27 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "project",
-		Short: "Manage projects",
+		Use:                "project",
+		Short:              "Manage projects",
+		DisableFlagParsing: false,
+		Args:               cobra.ArbitraryArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 3 && args[1] == "generate" {
+				projectName := args[0]
+				kind := args[2]
+				switch kind {
+				case "specs":
+					return GenerateProjectSpecs(projectName)
+				case "docs":
+					return GenerateProjectDocs(projectName)
+				case "todos":
+					return GenerateProjectTodos(projectName)
+				default:
+					return fmt.Errorf("unknown generate kind %q (use specs, docs, or todos)", kind)
+				}
+			}
+			return cmd.Help()
+		},
 	}
 
 	listCmd := &cobra.Command{
@@ -2482,6 +2504,578 @@ func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.AddCommand(treeCmd)
 
 	return cmd
+}
+
+func ExtractMarkdownSection(content string, sectionName string) string {
+	lines := strings.Split(content, "\n")
+	headerRe := regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
+	inSection := false
+	sectionLevel := 0
+	var result []string
+	for _, line := range lines {
+		if match := headerRe.FindStringSubmatch(line); match != nil {
+			level := len(match[1])
+			name := strings.TrimSpace(match[2])
+			if !inSection && name == sectionName && level == 1 {
+				inSection = true
+				sectionLevel = level
+				continue
+			}
+			if inSection && level <= sectionLevel {
+				break
+			}
+		}
+		if inSection {
+			result = append(result, line)
+		}
+	}
+	text := strings.TrimSpace(strings.Join(result, "\n"))
+	return text
+}
+
+func isLicenseText(text string) bool {
+	lower := strings.ToLower(text)
+	return strings.Contains(lower, "gnu") ||
+		strings.Contains(lower, "license") ||
+		strings.Contains(lower, "free software") ||
+		strings.Contains(lower, "warranty") ||
+		strings.Contains(lower, "redistribute") ||
+		strings.Contains(lower, "copyright")
+}
+
+func isHeaderMetaLine(text string) bool {
+	if strings.HasPrefix(text, "[") && strings.Contains(text, "](") {
+		return true
+	}
+	if strings.HasPrefix(text, "#region") || strings.HasPrefix(text, "#endregion") ||
+		strings.HasPrefix(text, "region ") || text == "region" ||
+		strings.HasPrefix(text, "endregion") {
+		return true
+	}
+	if len(text) > 0 && text[0] >= '0' && text[0] <= '9' {
+		return true
+	}
+	if strings.HasPrefix(text, "💻") || strings.HasPrefix(text, "🧰") || strings.HasPrefix(text, "🔬") {
+		return true
+	}
+	return false
+}
+
+func ExtractFileHeaderSummary(filePath string) string {
+	absPath := filepath.Join(rootDir, filePath)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return ""
+	}
+	lang := GetLanguage(filePath)
+	if lang == nil || !lang.SupportsHeaders() {
+		return ""
+	}
+	prefix := lang.CommentPrefix()
+	sections := lang.ParseSections(content)
+	var headerSection *Section
+	for i := range sections {
+		if strings.ToLower(sections[i].Name) == "header" {
+			headerSection = &sections[i]
+			break
+		}
+	}
+	if headerSection == nil {
+		return ""
+	}
+	lines := strings.Split(content, "\n")
+	type commentBlock struct {
+		lines []string
+	}
+	var blocks []commentBlock
+	var currentBlock []string
+	inBlock := false
+	for i := headerSection.StartLine; i < headerSection.EndLine && i <= len(lines); i++ {
+		line := strings.TrimSpace(lines[i-1])
+		if line == "" {
+			if inBlock {
+				blocks = append(blocks, commentBlock{lines: currentBlock})
+				currentBlock = nil
+				inBlock = false
+			}
+			continue
+		}
+		if !strings.HasPrefix(line, prefix) {
+			continue
+		}
+		inBlock = true
+		commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+		currentBlock = append(currentBlock, commentText)
+	}
+	if len(currentBlock) > 0 {
+		blocks = append(blocks, commentBlock{lines: currentBlock})
+	}
+	for _, block := range blocks {
+		allMeta := true
+		anyLicense := false
+		hasSpec := false
+		for _, l := range block.lines {
+			if !isHeaderMetaLine(l) {
+				allMeta = false
+			}
+			if isLicenseText(l) {
+				anyLicense = true
+			}
+			if isSpecText(l) {
+				hasSpec = true
+			}
+		}
+		if allMeta || anyLicense || hasSpec {
+			continue
+		}
+		return strings.TrimSpace(strings.Join(block.lines, "\n"))
+	}
+	return ""
+}
+
+func ExtractFileHeaderSpecs(filePath string) string {
+	absPath := filepath.Join(rootDir, filePath)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return ""
+	}
+	lang := GetLanguage(filePath)
+	if lang == nil || !lang.SupportsHeaders() {
+		return ""
+	}
+	prefix := lang.CommentPrefix()
+	sections := lang.ParseSections(content)
+	var headerSection *Section
+	for i := range sections {
+		if strings.ToLower(sections[i].Name) == "header" {
+			headerSection = &sections[i]
+			break
+		}
+	}
+	if headerSection == nil {
+		return ""
+	}
+	lines := strings.Split(content, "\n")
+	type commentBlock struct {
+		lines []string
+	}
+	var blocks []commentBlock
+	var currentBlock []string
+	inBlock := false
+	for i := headerSection.StartLine; i < headerSection.EndLine && i <= len(lines); i++ {
+		line := strings.TrimSpace(lines[i-1])
+		if line == "" {
+			if inBlock {
+				blocks = append(blocks, commentBlock{lines: currentBlock})
+				currentBlock = nil
+				inBlock = false
+			}
+			continue
+		}
+		if !strings.HasPrefix(line, prefix) {
+			continue
+		}
+		inBlock = true
+		commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+		currentBlock = append(currentBlock, commentText)
+	}
+	if len(currentBlock) > 0 {
+		blocks = append(blocks, commentBlock{lines: currentBlock})
+	}
+	var specsLines []string
+	for _, block := range blocks {
+		hasSpec := false
+		for _, l := range block.lines {
+			if isSpecText(l) {
+				hasSpec = true
+				break
+			}
+		}
+		if hasSpec {
+			specsLines = append(specsLines, block.lines...)
+		}
+	}
+	return strings.TrimSpace(strings.Join(specsLines, "\n"))
+}
+
+func ExtractSectionLeadComments(content string, section Section, prefix string) (specs string, summary string) {
+	lines := strings.Split(content, "\n")
+	lowerName := strings.ToLower(section.Name)
+	if lowerName == "header" || lowerName == "license" {
+		return "", ""
+	}
+	var specLines []string
+	var summaryLines []string
+	for i := section.StartLine; i < section.EndLine && i <= len(lines); i++ {
+		line := strings.TrimSpace(lines[i-1])
+		if line == "" {
+			continue
+		}
+		if !strings.HasPrefix(line, prefix) {
+			break
+		}
+		commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+		if isHeaderMetaLine(commentText) {
+			continue
+		}
+		if strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://") {
+			continue
+		}
+		if isLicenseText(commentText) {
+			continue
+		}
+		if isSpecText(commentText) {
+			specLines = append(specLines, commentText)
+		} else {
+			summaryLines = append(summaryLines, commentText)
+		}
+	}
+	return strings.TrimSpace(strings.Join(specLines, "\n")), strings.TrimSpace(strings.Join(summaryLines, "\n"))
+}
+
+func ExtractDefinitionDocstring(content string, def Definition, prefix string) (specs string, summary string) {
+	lines := strings.Split(content, "\n")
+	for i := def.StartLine - 2; i >= 0; i-- {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			break
+		}
+		if !strings.HasPrefix(line, prefix) {
+			break
+		}
+		commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+		if strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://") {
+			continue
+		}
+		if isSpecText(commentText) {
+			specs = commentText + "\n" + specs
+		} else {
+			summary = commentText + "\n" + summary
+		}
+	}
+	return strings.TrimSpace(specs), strings.TrimSpace(summary)
+}
+
+func findProjectByName(name string) *Project {
+	projects := LoadProjects()
+	for i := range projects {
+		if projects[i].Name == name {
+			return &projects[i]
+		}
+	}
+	return nil
+}
+
+func walkProjectFiles(project *Project) []File {
+	var files []File
+	for _, bundle := range project.Bundles {
+		bundleRoot := filepath.Join(rootDir, bundle.Root)
+		err := filepath.WalkDir(bundleRoot, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if d.IsDir() {
+				name := d.Name()
+				if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" || name == "build" || name == "target" || name == "__pycache__" {
+					return fs.SkipDir
+				}
+				return nil
+			}
+			relPath, _ := filepath.Rel(rootDir, path)
+			relPath = NormalizePath(relPath)
+			if isGitIgnored(path) || IsGenerated(path) {
+				return nil
+			}
+			kind := DeriveFileKind(d.Name())
+			bundleID := bundle.GetID()
+			files = append(files, File{
+				ID:        buildFileID(relPath, &bundleID),
+				Path:      relPath,
+				URI:       "semiorepo://file/" + PathToUriPath(relPath),
+				Name:      d.Name(),
+				Extension: filepath.Ext(d.Name()),
+				BundleID:  &bundleID,
+				Kind:      kind,
+			})
+			return nil
+		})
+		_ = err
+	}
+	return files
+}
+
+type EntityEntry struct {
+	ID   string
+	URI  string
+	Text string
+}
+
+func GenerateProjectSpecs(projectName string) error {
+	project := findProjectByName(projectName)
+	if project == nil {
+		return fmt.Errorf("project %q not found", projectName)
+	}
+	var entries []EntityEntry
+	projectReadmePath := filepath.Join(rootDir, project.Root, "README.md")
+	if content, err := ReadTextFile(projectReadmePath); err == nil {
+		specs := ExtractMarkdownSection(content, "Specs")
+		if specs != "" {
+			p := &Project{Name: project.Name, Root: project.Root, Kind: project.Kind}
+			entries = append(entries, EntityEntry{ID: p.GetID(), URI: p.GetURI(), Text: specs})
+		}
+	}
+	for _, bundle := range project.Bundles {
+		readmePath := filepath.Join(rootDir, bundle.Root, "README.md")
+		if content, err := ReadTextFile(readmePath); err == nil {
+			specs := ExtractMarkdownSection(content, "Specs")
+			if specs != "" {
+				entries = append(entries, EntityEntry{ID: bundle.GetID(), URI: bundle.GetURI(), Text: specs})
+			}
+		}
+		folderReadmes := findFolderReadmes(bundle.Root)
+		for _, frp := range folderReadmes {
+			if content, err := ReadTextFile(filepath.Join(rootDir, frp)); err == nil {
+				specs := ExtractMarkdownSection(content, "Specs")
+				if specs != "" {
+					folderPath := filepath.Dir(frp)
+					f := &Folder{Path: folderPath, Name: filepath.Base(folderPath)}
+					entries = append(entries, EntityEntry{ID: f.GetID(), URI: f.GetURI(), Text: specs})
+				}
+			}
+		}
+	}
+	files := walkProjectFiles(project)
+	for _, file := range files {
+		if file.Kind != FileKindCode && file.Kind != FileKindScript {
+			continue
+		}
+		headerSpecs := ExtractFileHeaderSpecs(file.Path)
+		if headerSpecs != "" {
+			entries = append(entries, EntityEntry{ID: file.ID, URI: file.URI, Text: headerSpecs})
+		}
+		absPath := filepath.Join(rootDir, file.Path)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
+		}
+		lang := GetLanguage(file.Path)
+		if lang == nil {
+			continue
+		}
+		sections := lang.ParseSections(content)
+		prefix := lang.CommentPrefix()
+		var walkSections func(secs []Section)
+		walkSections = func(secs []Section) {
+			for _, s := range secs {
+				if strings.ToLower(s.Name) == "header" {
+					walkSections(s.Children)
+					continue
+				}
+				specs, _ := ExtractSectionLeadComments(content, s, prefix)
+				if specs != "" {
+					s.FilePath = file.Path
+					entries = append(entries, EntityEntry{ID: s.GetID(), URI: s.GetURI(), Text: specs})
+				}
+				walkSections(s.Children)
+			}
+		}
+		walkSections(sections)
+		if lang.SupportsDefinitions() {
+			lines := strings.Split(content, "\n")
+			defs := lang.ParseDefinitions(content, lines)
+			for _, dr := range defs {
+				def := Definition{
+					Name:      dr.Name,
+					Kind:      DeriveDefinitionKind(dr.Kind),
+					FilePath:  file.Path,
+					StartLine: dr.Start,
+					EndLine:   dr.End,
+				}
+				specs, _ := ExtractDefinitionDocstring(content, def, prefix)
+				if specs != "" {
+					entries = append(entries, EntityEntry{ID: def.GetID(), URI: def.GetURI(), Text: specs})
+				}
+			}
+		}
+	}
+	var sb strings.Builder
+	sb.WriteString("# \U0001F4AF Specs\n")
+	for _, e := range entries {
+		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
+		sb.WriteString(e.Text + "\n")
+	}
+	outputPath := filepath.Join(rootDir, project.Root, "SPECS.md")
+	return WriteTextFile(outputPath, sb.String())
+}
+
+func GenerateProjectDocs(projectName string) error {
+	project := findProjectByName(projectName)
+	if project == nil {
+		return fmt.Errorf("project %q not found", projectName)
+	}
+	var entries []EntityEntry
+	projectReadmePath := filepath.Join(rootDir, project.Root, "README.md")
+	if content, err := ReadTextFile(projectReadmePath); err == nil {
+		docs := ExtractMarkdownSection(content, "Docs")
+		if docs != "" {
+			p := &Project{Name: project.Name, Root: project.Root, Kind: project.Kind}
+			entries = append(entries, EntityEntry{ID: p.GetID(), URI: p.GetURI(), Text: docs})
+		}
+	}
+	for _, bundle := range project.Bundles {
+		readmePath := filepath.Join(rootDir, bundle.Root, "README.md")
+		if content, err := ReadTextFile(readmePath); err == nil {
+			docs := ExtractMarkdownSection(content, "Docs")
+			if docs != "" {
+				entries = append(entries, EntityEntry{ID: bundle.GetID(), URI: bundle.GetURI(), Text: docs})
+			}
+		}
+		folderReadmes := findFolderReadmes(bundle.Root)
+		for _, frp := range folderReadmes {
+			if content, err := ReadTextFile(filepath.Join(rootDir, frp)); err == nil {
+				docs := ExtractMarkdownSection(content, "Docs")
+				if docs != "" {
+					folderPath := filepath.Dir(frp)
+					f := &Folder{Path: folderPath, Name: filepath.Base(folderPath)}
+					entries = append(entries, EntityEntry{ID: f.GetID(), URI: f.GetURI(), Text: docs})
+				}
+			}
+		}
+	}
+	files := walkProjectFiles(project)
+	for _, file := range files {
+		if file.Kind != FileKindCode && file.Kind != FileKindScript {
+			continue
+		}
+		summary := ExtractFileHeaderSummary(file.Path)
+		if summary != "" {
+			entries = append(entries, EntityEntry{ID: file.ID, URI: file.URI, Text: summary})
+		}
+		absPath := filepath.Join(rootDir, file.Path)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
+		}
+		lang := GetLanguage(file.Path)
+		if lang == nil {
+			continue
+		}
+		sections := lang.ParseSections(content)
+		prefix := lang.CommentPrefix()
+		var walkSections func(secs []Section)
+		walkSections = func(secs []Section) {
+			for _, s := range secs {
+				if strings.ToLower(s.Name) == "header" {
+					walkSections(s.Children)
+					continue
+				}
+				_, summaryText := ExtractSectionLeadComments(content, s, prefix)
+				if summaryText != "" {
+					s.FilePath = file.Path
+					entries = append(entries, EntityEntry{ID: s.GetID(), URI: s.GetURI(), Text: summaryText})
+				}
+				walkSections(s.Children)
+			}
+		}
+		walkSections(sections)
+		if lang.SupportsDefinitions() {
+			lines := strings.Split(content, "\n")
+			defs := lang.ParseDefinitions(content, lines)
+			for _, dr := range defs {
+				def := Definition{
+					Name:      dr.Name,
+					Kind:      DeriveDefinitionKind(dr.Kind),
+					FilePath:  file.Path,
+					StartLine: dr.Start,
+					EndLine:   dr.End,
+				}
+				_, summaryText := ExtractDefinitionDocstring(content, def, prefix)
+				if summaryText != "" {
+					entries = append(entries, EntityEntry{ID: def.GetID(), URI: def.GetURI(), Text: summaryText})
+				}
+			}
+		}
+	}
+	var sb strings.Builder
+	sb.WriteString("# \U0001F4DA Docs\n")
+	for _, e := range entries {
+		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
+		sb.WriteString(e.Text + "\n")
+	}
+	outputPath := filepath.Join(rootDir, project.Root, "DOCS.md")
+	return WriteTextFile(outputPath, sb.String())
+}
+
+func GenerateProjectTodos(projectName string) error {
+	project := findProjectByName(projectName)
+	if project == nil {
+		return fmt.Errorf("project %q not found", projectName)
+	}
+	var entries []EntityEntry
+	for _, bundle := range project.Bundles {
+		bundleRoot := filepath.Join(rootDir, bundle.Root)
+		todos, _ := ScanTodos(bundleRoot)
+		for _, todo := range todos {
+			if todo.Location != nil && isGitIgnored(todo.Location.FilePath) {
+				continue
+			}
+			if todo.Location != nil && IsGenerated(todo.Location.FilePath) {
+				continue
+			}
+			title := todo.Name
+			desc := todo.Description
+			parentPath := todo.ParentID
+			relParent, _ := filepath.Rel(rootDir, parentPath)
+			relParent = NormalizePath(relParent)
+			entityID := relParent
+			entityURI := "semiorepo://file/" + PathToUriPath(relParent)
+			if todo.Location != nil {
+				relLoc, _ := filepath.Rel(rootDir, todo.Location.FilePath)
+				relLoc = NormalizePath(relLoc)
+				entityID = relLoc
+				entityURI = "semiorepo://file/" + PathToUriPath(relLoc)
+			}
+			text := "### TODO: " + title
+			if desc != "" {
+				text += "\n" + desc
+			}
+			entries = append(entries, EntityEntry{ID: entityID, URI: entityURI, Text: text})
+		}
+	}
+	var sb strings.Builder
+	sb.WriteString("# \U0001F533 TODOs\n")
+	for _, e := range entries {
+		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
+		sb.WriteString(e.Text + "\n")
+	}
+	outputPath := filepath.Join(rootDir, project.Root, "TODOS.md")
+	return WriteTextFile(outputPath, sb.String())
+}
+
+func findFolderReadmes(bundleRoot string) []string {
+	var readmes []string
+	absRoot := filepath.Join(rootDir, bundleRoot)
+	filepath.WalkDir(absRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			name := d.Name()
+			if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" || name == "build" || name == "target" || name == "__pycache__" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if d.Name() == "README.md" {
+			relPath, _ := filepath.Rel(rootDir, path)
+			relPath = NormalizePath(relPath)
+			if relPath != NormalizePath(filepath.Join(bundleRoot, "README.md")) {
+				readmes = append(readmes, relPath)
+			}
+		}
+		return nil
+	})
+	return readmes
 }
 
 func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -6210,6 +6804,339 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 	return renderStream(cmd, config, stream)
 }
 
+// #region 🔖Mermaid
+
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Mermaid)
+// Mermaid diagram generation for LOC visualizations as treemap-beta strings.
+
+// mermaidEscapeLabel MUST escape double quotes in mermaid labels.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidescapelabel](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidEscapeLabel)
+func mermaidEscapeLabel(s string) string {
+	return strings.ReplaceAll(s, "\"", "'")
+}
+
+// mermaidProjectEmoji MUST return the correct emoji for the project kind.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidprojectemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidProjectEmoji)
+func mermaidProjectEmoji(kind ProjectKind) string {
+	switch kind {
+	case ProjectKindInfrastructure:
+		return EmojiProjectInfra
+	case ProjectKindResearch:
+		return EmojiProjectResearch
+	default:
+		return EmojiProjectUser
+	}
+}
+
+// mermaidBundleEmoji MUST return the correct emoji for the bundle kind.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidbundleemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidBundleEmoji)
+func mermaidBundleEmoji(kind BundleKind) string {
+	switch kind {
+	case BundleKindSchema:
+		return EmojiBundleSchema
+	case BundleKindBinary:
+		return EmojiBundleBinary
+	case BundleKindUI:
+		return EmojiBundleUI
+	case BundleKindSite:
+		return EmojiBundleSite
+	case BundleKindAssets:
+		return EmojiBundleAssets
+	default:
+		return EmojiBundleLibrary
+	}
+}
+
+// mermaidFileEmoji MUST return the correct emoji for the file kind.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidfileemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidFileEmoji)
+func mermaidFileEmoji(kind string) string {
+	switch kind {
+	case FileKindTest:
+		return EmojiFileTest
+	case FileKindScript:
+		return EmojiFileScript
+	case FileKindDocs:
+		return EmojiFileDocs
+	case FileKindConfig:
+		return EmojiFileConfig
+	case FileKindResource:
+		return EmojiFileResource
+	case FileKindLicense:
+		return EmojiFileLicense
+	default:
+		return EmojiFileCode
+	}
+}
+
+// MermaidLocByProjectsBundlesFoldersFiles MUST generate a treemap-beta mermaid diagram of LOC grouped by project, bundle, folder, and file.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbyprojectsbundlesfoldersfiles](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByProjectsBundlesFoldersFiles)
+func MermaidLocByProjectsBundlesFoldersFiles() string {
+	projects := LoadProjects()
+	ctx := context.Background()
+	fileCh := make(chan File)
+	go func() { StreamFiles(ctx, "", fileCh) }()
+	var allFiles []File
+	for f := range fileCh {
+		if f.Ignored || f.Generated {
+			continue
+		}
+		allFiles = append(allFiles, f)
+	}
+	type fileEntry struct {
+		Name string
+		Kind string
+		LOC  int
+	}
+	type folderEntry struct {
+		Name  string
+		Files []fileEntry
+	}
+	type bundleEntry struct {
+		Name    string
+		Kind    BundleKind
+		Folders map[string]*folderEntry
+	}
+	type projectEntry struct {
+		Name    string
+		Kind    ProjectKind
+		Bundles map[string]*bundleEntry
+	}
+	projectMap := make(map[string]*projectEntry)
+	for _, p := range projects {
+		pe := &projectEntry{Name: p.Name, Kind: p.Kind, Bundles: make(map[string]*bundleEntry)}
+		for _, b := range p.Bundles {
+			pe.Bundles[b.Name] = &bundleEntry{Name: b.Name, Kind: b.Kind, Folders: make(map[string]*folderEntry)}
+		}
+		projectMap[p.Name] = pe
+	}
+	for _, f := range allFiles {
+		bundle := GetBundleByPath(f.Path)
+		if bundle == nil {
+			continue
+		}
+		absPath := filepath.Join(GetRootDir(), f.Path)
+		loc := CountLinesInFile(absPath)
+		if loc == 0 {
+			continue
+		}
+		bundleRoot := NormalizePath(bundle.Root)
+		relPath := strings.TrimPrefix(NormalizePath(f.Path), bundleRoot+"/")
+		folderName := filepath.Dir(relPath)
+		if folderName == "." {
+			folderName = ""
+		}
+		parts := strings.SplitN(bundle.Name, "/", 2)
+		projectName := parts[0]
+		pe, ok := projectMap[projectName]
+		if !ok {
+			continue
+		}
+		be, ok := pe.Bundles[bundle.Name]
+		if !ok {
+			continue
+		}
+		fe, ok := be.Folders[folderName]
+		if !ok {
+			fe = &folderEntry{Name: folderName}
+			be.Folders[folderName] = fe
+		}
+		fe.Files = append(fe.Files, fileEntry{Name: f.Name, Kind: f.Kind, LOC: loc})
+	}
+	var sb strings.Builder
+	sb.WriteString("treemap-beta\n")
+	sb.WriteString("\"Lines of Code\"\n")
+	var projectNames []string
+	for name := range projectMap {
+		projectNames = append(projectNames, name)
+	}
+	sort.Strings(projectNames)
+	for _, pName := range projectNames {
+		pe := projectMap[pName]
+		projectLOC := 0
+		for _, be := range pe.Bundles {
+			for _, fe := range be.Folders {
+				for _, f := range fe.Files {
+					projectLOC += f.LOC
+				}
+			}
+		}
+		if projectLOC == 0 {
+			continue
+		}
+		emoji := mermaidProjectEmoji(pe.Kind)
+		sb.WriteString(fmt.Sprintf("    \"%s%s\"\n", emoji, mermaidEscapeLabel(Flat(pe.Name))))
+		var bundleNames []string
+		for name := range pe.Bundles {
+			bundleNames = append(bundleNames, name)
+		}
+		sort.Strings(bundleNames)
+		for _, bName := range bundleNames {
+			be := pe.Bundles[bName]
+			bundleLOC := 0
+			for _, fe := range be.Folders {
+				for _, f := range fe.Files {
+					bundleLOC += f.LOC
+				}
+			}
+			if bundleLOC == 0 {
+				continue
+			}
+			bParts := strings.SplitN(bName, "/", 2)
+			bundleLabel := bParts[0]
+			if len(bParts) > 1 {
+				bundleLabel = bParts[1]
+			}
+			bEmoji := mermaidBundleEmoji(be.Kind)
+			sb.WriteString(fmt.Sprintf("        \"%s%s\"\n", bEmoji, mermaidEscapeLabel(Flat(bundleLabel))))
+			var folderNames []string
+			for name := range be.Folders {
+				folderNames = append(folderNames, name)
+			}
+			sort.Strings(folderNames)
+			for _, fName := range folderNames {
+				fe := be.Folders[fName]
+				folderLOC := 0
+				for _, f := range fe.Files {
+					folderLOC += f.LOC
+				}
+				if folderLOC == 0 {
+					continue
+				}
+				if fName == "" {
+					for _, f := range fe.Files {
+						fEmoji := mermaidFileEmoji(f.Kind)
+						sb.WriteString(fmt.Sprintf("            \"%s%s\": %d\n", fEmoji, mermaidEscapeLabel(f.Name), f.LOC))
+					}
+				} else {
+					sb.WriteString(fmt.Sprintf("            \"%s%s\"\n", EmojiFolderOrg, mermaidEscapeLabel(filepath.Base(fName))))
+					sort.Slice(fe.Files, func(i, j int) bool { return fe.Files[i].Name < fe.Files[j].Name })
+					for _, f := range fe.Files {
+						fEmoji := mermaidFileEmoji(f.Kind)
+						sb.WriteString(fmt.Sprintf("                \"%s%s\": %d\n", fEmoji, mermaidEscapeLabel(f.Name), f.LOC))
+					}
+				}
+			}
+		}
+	}
+	return sb.String()
+}
+
+// MermaidLocByContributors MUST generate a treemap-beta mermaid diagram of LOC grouped by contributor.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbycontributors](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByContributors)
+func MermaidLocByContributors() string {
+	bundles := GetProjects()
+	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
+	authorLines := make(map[string]int)
+	for _, file := range files {
+		absPath := filepath.Join(GetRootDir(), file)
+		stdout, _, exitCode := ExecCommand("git", []string{"blame", "--line-porcelain", absPath}, GetRootDir())
+		if exitCode != 0 {
+			continue
+		}
+		for _, line := range strings.Split(stdout, "\n") {
+			if strings.HasPrefix(line, "author ") {
+				author := strings.TrimPrefix(line, "author ")
+				authorLines[author]++
+			}
+		}
+	}
+	var sb strings.Builder
+	sb.WriteString("treemap-beta\n")
+	sb.WriteString("\"Lines of Code by Contributor\"\n")
+	type authorEntry struct {
+		Name string
+		LOC  int
+	}
+	var authors []authorEntry
+	for name, loc := range authorLines {
+		authors = append(authors, authorEntry{Name: name, LOC: loc})
+	}
+	sort.Slice(authors, func(i, j int) bool { return authors[i].LOC > authors[j].LOC })
+	for _, a := range authors {
+		sb.WriteString(fmt.Sprintf("    \"%s\": %d\n", mermaidEscapeLabel(a.Name), a.LOC))
+	}
+	return sb.String()
+}
+
+// MermaidLocByLanguage MUST generate a treemap-beta mermaid diagram of LOC grouped by programming language.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbylanguage](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByLanguage)
+func MermaidLocByLanguage() string {
+	ctx := context.Background()
+	fileCh := make(chan File)
+	go func() { StreamFiles(ctx, "", fileCh) }()
+	langLines := make(map[string]int)
+	for f := range fileCh {
+		if f.Ignored || f.Generated {
+			continue
+		}
+		lang := GetLanguage(f.Path)
+		if lang == nil {
+			continue
+		}
+		absPath := filepath.Join(GetRootDir(), f.Path)
+		loc := CountLinesInFile(absPath)
+		if loc == 0 {
+			continue
+		}
+		langLines[lang.Name()] += loc
+	}
+	var sb strings.Builder
+	sb.WriteString("treemap-beta\n")
+	sb.WriteString("\"Lines of Code by Language\"\n")
+	type langEntry struct {
+		Name string
+		LOC  int
+	}
+	var langs []langEntry
+	for name, loc := range langLines {
+		langs = append(langs, langEntry{Name: name, LOC: loc})
+	}
+	sort.Slice(langs, func(i, j int) bool { return langs[i].LOC > langs[j].LOC })
+	for _, l := range langs {
+		sb.WriteString(fmt.Sprintf("    \"%s\": %d\n", mermaidEscapeLabel(l.Name), l.LOC))
+	}
+	return sb.String()
+}
+
+// mermaidCommand MUST return a cobra.Command with loc-by subcommands for mermaid diagram generation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidcommand](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidCommand)
+func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{
+		Use:   "mermaid <visualization>",
+		Short: "Generate mermaid diagram strings",
+	}
+	root.AddCommand(&cobra.Command{
+		Use:   "loc-by-projects-bundles-folders-files",
+		Short: "LOC treemap grouped by project, bundle, folder, file",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByProjectsBundlesFoldersFiles())
+			return nil
+		},
+	})
+	root.AddCommand(&cobra.Command{
+		Use:   "loc-by-contributors",
+		Short: "LOC treemap grouped by contributor (via git blame)",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByContributors())
+			return nil
+		},
+	})
+	root.AddCommand(&cobra.Command{
+		Use:   "loc-by-language",
+		Short: "LOC treemap grouped by programming language",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByLanguage())
+			return nil
+		},
+	})
+	return root
+}
+
+// #endregion 🔖Mermaid
+
 // #endregion 🔖CLI Renderers
 
 // #endregion 🔖Cli Adapter
@@ -7417,7 +8344,7 @@ type Ticket struct {
 	Status        TicketStatus      `json:"status" yaml:"status"`
 	Prompt        string            `json:"prompt" yaml:"prompt"`
 	Summary       string            `json:"summary,omitempty" yaml:"summary,omitempty"`
-	GitHub        *TicketGithubData `json:"github,omitempty" yaml:"github,omitempty"`
+	Management        *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
 	Goal          string            `json:"goal,omitempty" yaml:"goal,omitempty"`
 	Parent        string            `json:"parent,omitempty" yaml:"parent,omitempty"`
 	Interactions  []Interaction     `json:"interactions" yaml:"interactions"`
@@ -8263,7 +9190,7 @@ type TicketOpenInput struct {
 	Draft    string `json:"draft,omitempty"`
 	Goal     string `json:"goal"`
 	Parent   string `json:"parent,omitempty"`
-	NoGithub bool   `json:"noGithub,omitempty"`
+	NoManagement bool   `json:"noManagement,omitempty"`
 	Issue    string `json:"issue,omitempty"`
 }
 
@@ -8293,7 +9220,7 @@ type GoalCreateInput struct {
 	DueDate     string `json:"dueDate"`
 	LLM         string `json:"llm"`
 	Client      string `json:"client"`
-	NoGithub    bool   `json:"noGithub,omitempty"`
+	NoManagement    bool   `json:"noManagement,omitempty"`
 	Parent      string `json:"parent,omitempty"`
 	Milestone   string `json:"milestone,omitempty"`
 }
@@ -8306,7 +9233,7 @@ type GoalChangeInput struct {
 	Description *string `json:"description,omitempty"`
 	DueDate     *string `json:"dueDate,omitempty"`
 	Parent      *string `json:"parent,omitempty"`
-	NoGithub    bool    `json:"noGithub,omitempty"`
+	NoManagement    bool    `json:"noManagement,omitempty"`
 }
 
 // GoalCloseInput holds the data fields for a goal close input record.
@@ -8314,7 +9241,7 @@ type GoalChangeInput struct {
 type GoalCloseInput struct {
 	ID       string `json:"id"`
 	Summary  string `json:"summary"`
-	NoGithub bool   `json:"noGithub,omitempty"`
+	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // GoalReopenInput holds the data fields for a goal reopen input record.
@@ -8328,14 +9255,14 @@ type GoalReopenInput struct {
 	Description *string `json:"description,omitempty"`
 	DueDate     *string `json:"dueDate,omitempty"`
 	Parent      *string `json:"parent,omitempty"`
-	NoGithub    bool    `json:"noGithub,omitempty"`
+	NoManagement    bool    `json:"noManagement,omitempty"`
 }
 
 // GoalDeleteInput holds the data fields for a goal delete input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goaldeleteinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalDeleteInput)
 type GoalDeleteInput struct {
 	ID       string `json:"id"`
-	NoGithub bool   `json:"noGithub,omitempty"`
+	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // TicketDeleteInput holds the data fields for a ticket delete input record.
@@ -8345,7 +9272,7 @@ type TicketDeleteInput struct {
 	Month    int    `json:"month"`
 	Day      int    `json:"day"`
 	Slug     string `json:"slug"`
-	NoGithub bool   `json:"noGithub,omitempty"`
+	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // TicketCloseInput holds the data fields for a ticket close input record.
@@ -8358,7 +9285,7 @@ type TicketCloseInput struct {
 	Summary  string   `json:"summary"`
 	Files    []string `json:"files"`
 	Title    *string  `json:"title,omitempty"`
-	NoGithub bool     `json:"noGithub,omitempty"`
+	NoManagement bool     `json:"noManagement,omitempty"`
 	All      bool     `json:"all,omitempty"`
 }
 
@@ -8376,7 +9303,7 @@ type TicketReopenInput struct {
 	Draft    string  `json:"draft,omitempty"`
 	Goal     string  `json:"goal,omitempty"`
 	Parent   string  `json:"parent,omitempty"`
-	NoGithub bool    `json:"noGithub,omitempty"`
+	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
 // TicketChangeInput holds the data fields for a ticket change input record.
@@ -8392,7 +9319,7 @@ type TicketChangeInput struct {
 	Client   *string `json:"client,omitempty"`
 	Goal     *string `json:"goal,omitempty"`
 	Parent   *string `json:"parent,omitempty"`
-	NoGithub bool    `json:"noGithub,omitempty"`
+	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
 // ContributorAddInput holds the data fields for a contributor add input record.
@@ -8454,6 +9381,736 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 // #endregion 🔖GraphQL Input Types
 
 // #endregion 🔖GraphQL Types
+
+// #region 🔖Providers
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers](semiorepo://section/semio-repo/cli/main.go/Providers)
+// Composable provider interfaces and implementations for source control, management, sandbox, language, and editor integrations.
+
+// #region 🔖Provider Interfaces
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces](semiorepo://section/semio-repo/cli/main.go/Providers/Provider%20Interfaces)
+// Provider interfaces define contracts for composable integrations.
+
+// SourceControlProvider defines the interface for source control operations (GitHub, GitLab, BitBucket, ...).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️sourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/SourceControlProvider)
+type SourceControlProvider interface {
+	Kind() string
+	RepoURL() (string, error)
+	Configure(repoRoot string) error
+}
+
+// ManagementIssue holds the data fields for a management issue record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementissue](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementIssue)
+type ManagementIssue struct {
+	URL       string `json:"url"`
+	State     string `json:"state"`
+	Title     string `json:"title"`
+	Body      string `json:"body"`
+	Milestone *struct {
+		Number int    `json:"number"`
+		Title  string `json:"title"`
+	} `json:"milestone"`
+	Labels []struct {
+		Name string `json:"name"`
+	} `json:"labels"`
+}
+
+// ManagementMilestone holds the data fields for a management milestone record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementmilestone](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementMilestone)
+type ManagementMilestone struct {
+	Number      int    `json:"number"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	DueOn       string `json:"due_on"`
+	State       string `json:"state"`
+}
+
+// ManagementLabel holds the data fields for a management label record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementlabel](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementLabel)
+type ManagementLabel struct {
+	Name string `json:"name"`
+}
+
+// ManagementProvider defines the interface for issue/milestone management operations (GitHub, Jira, Trello, Linear, ...).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementProvider)
+type ManagementProvider interface {
+	Kind() string
+	Configure(repoRoot string) error
+	CreateIssue(title, body string, milestone *int) (string, error)
+	CloseIssue(issueURL string) error
+	ReopenIssue(issueURL string) error
+	DeleteIssue(issueURLOrNumber string) error
+	UpdateIssueTitle(issueURL, title string) error
+	UpdateIssueBody(issueURL, body string) error
+	GetIssueDetails(issueURL string) (*ManagementIssue, error)
+	GetIssueNodeID(issueURL string) (string, error)
+	GetIssueParentURL(issueURL string) (string, error)
+	AddComment(issueURL, comment string) error
+	AddLabels(issueURL string, labels []string) error
+	RemoveLabels(issueURL string, labels []string) error
+	AddIssueToProject(issueURL string)
+	AssignIssueToCurrentUser(issueURL string)
+	AddSubIssue(parentIssueURL, childIssueURL string) error
+	UpdateIssueMilestone(issueURL, milestoneTitle string) error
+	ClearIssueMilestone(issueURL string) error
+	CreateMilestone(title, description string) (int, error)
+	UpdateMilestone(number int, title, description, state, dueOn string) error
+	DeleteMilestone(number int) error
+	GetMilestone(number int) (*ManagementMilestone, error)
+	GetMilestoneTitle(number int) (string, error)
+	FindMilestoneByTitle(title string) (*ManagementMilestone, error)
+	ListIssuesForLabelSync() ([]ManagementIssue, error)
+	ListOpenIssuesWithLabel(label string) ([]string, error)
+	ListRepoLabels() ([]ManagementLabel, error)
+	CreateRepoLabel(name string) error
+	DeleteRepoLabel(name string) error
+	SyncRepoLabelCatalog(validLabels map[string]bool) error
+	CreateGoalIssue(title, description string, milestone *int) (string, error)
+	UpdateGoalIssue(issueURL, title, description string) error
+	GetCurrentUser() string
+}
+
+// SandboxProvider defines the interface for sandbox/container operations (Devcontainer, Podman, ...).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️sandboxprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/SandboxProvider)
+type SandboxProvider interface {
+	Kind() string
+	Configure(repoRoot string) error
+}
+
+// EditorHookMapping holds the data fields for an editor hook mapping record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️editorhookmapping](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/EditorHookMapping)
+type EditorHookMapping struct {
+	Client     string
+	ConfigPath string
+}
+
+// EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️editorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/EditorProvider)
+type EditorProvider interface {
+	Kind() string
+	Configure(repoRoot string) error
+	ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error)
+	FormatHookOutput(hookEventName string, result HookResult) string
+	NativeEventFromHookEvent(event HookEvent, parentInfo string) string
+	GenerateHookConfig(repoRoot string) (string, error)
+	HookMapping() EditorHookMapping
+}
+
+// #endregion 🔖Provider Interfaces
+
+// #region 🔖GitHub Management Provider
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider](semiorepo://section/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider)
+// GitHub implementation of ManagementProvider using the gh CLI.
+
+// GitHubManagementProvider holds the data fields for a github management provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️githubmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider/GitHubManagementProvider)
+type GitHubManagementProvider struct{}
+
+func (p *GitHubManagementProvider) Kind() string { return "github" }
+
+func (p *GitHubManagementProvider) Configure(repoRoot string) error { return nil }
+
+func (p *GitHubManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
+	return ghCreateIssue(title, body, milestone)
+}
+
+func (p *GitHubManagementProvider) CloseIssue(issueURL string) error {
+	return ghCloseIssue(issueURL)
+}
+
+func (p *GitHubManagementProvider) ReopenIssue(issueURL string) error {
+	return ghReopenIssue(issueURL)
+}
+
+func (p *GitHubManagementProvider) DeleteIssue(issueURLOrNumber string) error {
+	return ghDeleteIssue(issueURLOrNumber)
+}
+
+func (p *GitHubManagementProvider) UpdateIssueTitle(issueURL, title string) error {
+	return ghUpdateIssueTitle(issueURL, title)
+}
+
+func (p *GitHubManagementProvider) UpdateIssueBody(issueURL, body string) error {
+	return ghUpdateIssueBody(issueURL, body)
+}
+
+func (p *GitHubManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
+	issue, err := ghGetIssueDetails(issueURL)
+	if err != nil {
+		return nil, err
+	}
+	mi := &ManagementIssue{URL: issue.URL, State: issue.State, Title: issue.Title, Body: issue.Body}
+	if issue.Milestone != nil {
+		mi.Milestone = &struct {
+			Number int    `json:"number"`
+			Title  string `json:"title"`
+		}{Number: issue.Milestone.Number, Title: issue.Milestone.Title}
+	}
+	for _, l := range issue.Labels {
+		mi.Labels = append(mi.Labels, struct {
+			Name string `json:"name"`
+		}{Name: l.Name})
+	}
+	return mi, nil
+}
+
+func (p *GitHubManagementProvider) GetIssueNodeID(issueURL string) (string, error) {
+	return ghGetIssueNodeID(issueURL)
+}
+
+func (p *GitHubManagementProvider) GetIssueParentURL(issueURL string) (string, error) {
+	return ghGetIssueParentURL(issueURL)
+}
+
+func (p *GitHubManagementProvider) AddComment(issueURL, comment string) error {
+	return ghAddComment(issueURL, comment)
+}
+
+func (p *GitHubManagementProvider) AddLabels(issueURL string, labels []string) error {
+	return ghAddLabels(issueURL, labels)
+}
+
+func (p *GitHubManagementProvider) RemoveLabels(issueURL string, labels []string) error {
+	return ghRemoveLabels(issueURL, labels)
+}
+
+func (p *GitHubManagementProvider) AddIssueToProject(issueURL string) {
+	ghAddIssueToProject(issueURL)
+}
+
+func (p *GitHubManagementProvider) AssignIssueToCurrentUser(issueURL string) {
+	ghAssignIssueToCurrentUser(issueURL)
+}
+
+func (p *GitHubManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
+	return ghAddSubIssue(parentIssueURL, childIssueURL)
+}
+
+func (p *GitHubManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
+	return ghUpdateIssueMilestone(issueURL, milestoneTitle)
+}
+
+func (p *GitHubManagementProvider) ClearIssueMilestone(issueURL string) error {
+	return ghClearIssueMilestone(issueURL)
+}
+
+func (p *GitHubManagementProvider) CreateMilestone(title, description string) (int, error) {
+	return ghCreateMilestone(title, description)
+}
+
+func (p *GitHubManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
+	return ghUpdateMilestone(number, title, description, state, dueOn)
+}
+
+func (p *GitHubManagementProvider) DeleteMilestone(number int) error {
+	return ghDeleteMilestone(number)
+}
+
+func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
+	m, err := ghGetMilestone(number)
+	if err != nil {
+		return nil, err
+	}
+	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
+}
+
+func (p *GitHubManagementProvider) GetMilestoneTitle(number int) (string, error) {
+	return ghGetMilestoneTitle(number)
+}
+
+func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
+	m, err := ghFindMilestoneByTitle(title)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, nil
+	}
+	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
+}
+
+func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
+	issues, err := ghListIssuesForLabelSync()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]ManagementIssue, len(issues))
+	for i, issue := range issues {
+		result[i] = ManagementIssue{URL: issue.URL, State: issue.State, Title: issue.Title, Body: issue.Body}
+		for _, l := range issue.Labels {
+			result[i].Labels = append(result[i].Labels, struct {
+				Name string `json:"name"`
+			}{Name: l.Name})
+		}
+	}
+	return result, nil
+}
+
+func (p *GitHubManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
+	return ghListOpenIssuesWithLabel(label)
+}
+
+func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
+	labels, err := ghListRepoLabels()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]ManagementLabel, len(labels))
+	for i, l := range labels {
+		result[i] = ManagementLabel{Name: l.Name}
+	}
+	return result, nil
+}
+
+func (p *GitHubManagementProvider) CreateRepoLabel(name string) error {
+	return ghCreateRepoLabel(name)
+}
+
+func (p *GitHubManagementProvider) DeleteRepoLabel(name string) error {
+	return ghDeleteRepoLabel(name)
+}
+
+func (p *GitHubManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
+	return ghSyncRepoLabelCatalog(validLabels)
+}
+
+func (p *GitHubManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
+	return ghCreateGoalIssue(title, description, milestone)
+}
+
+func (p *GitHubManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
+	return ghUpdateGoalIssue(issueURL, title, description)
+}
+
+func (p *GitHubManagementProvider) GetCurrentUser() string {
+	return ghGetCurrentUser()
+}
+
+// NullManagementProvider is a no-op implementation of ManagementProvider.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️nullmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider/NullManagementProvider)
+type NullManagementProvider struct{}
+
+func (p *NullManagementProvider) Kind() string                          { return "none" }
+func (p *NullManagementProvider) Configure(repoRoot string) error       { return nil }
+func (p *NullManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
+	return "", nil
+}
+func (p *NullManagementProvider) CloseIssue(issueURL string) error              { return nil }
+func (p *NullManagementProvider) ReopenIssue(issueURL string) error             { return nil }
+func (p *NullManagementProvider) DeleteIssue(issueURLOrNumber string) error     { return nil }
+func (p *NullManagementProvider) UpdateIssueTitle(issueURL, title string) error { return nil }
+func (p *NullManagementProvider) UpdateIssueBody(issueURL, body string) error   { return nil }
+func (p *NullManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
+	return nil, nil
+}
+func (p *NullManagementProvider) GetIssueNodeID(issueURL string) (string, error)      { return "", nil }
+func (p *NullManagementProvider) GetIssueParentURL(issueURL string) (string, error)   { return "", nil }
+func (p *NullManagementProvider) AddComment(issueURL, comment string) error           { return nil }
+func (p *NullManagementProvider) AddLabels(issueURL string, labels []string) error    { return nil }
+func (p *NullManagementProvider) RemoveLabels(issueURL string, labels []string) error { return nil }
+func (p *NullManagementProvider) AddIssueToProject(issueURL string)                   {}
+func (p *NullManagementProvider) AssignIssueToCurrentUser(issueURL string)            {}
+func (p *NullManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
+	return nil
+}
+func (p *NullManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
+	return nil
+}
+func (p *NullManagementProvider) ClearIssueMilestone(issueURL string) error { return nil }
+func (p *NullManagementProvider) CreateMilestone(title, description string) (int, error) {
+	return 0, nil
+}
+func (p *NullManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
+	return nil
+}
+func (p *NullManagementProvider) DeleteMilestone(number int) error { return nil }
+func (p *NullManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
+	return nil, nil
+}
+func (p *NullManagementProvider) GetMilestoneTitle(number int) (string, error)                { return "", nil }
+func (p *NullManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
+	return nil, nil
+}
+func (p *NullManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
+	return nil, nil
+}
+func (p *NullManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
+	return nil, nil
+}
+func (p *NullManagementProvider) ListRepoLabels() ([]ManagementLabel, error) { return nil, nil }
+func (p *NullManagementProvider) CreateRepoLabel(name string) error           { return nil }
+func (p *NullManagementProvider) DeleteRepoLabel(name string) error           { return nil }
+func (p *NullManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
+	return nil
+}
+func (p *NullManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
+	return "", nil
+}
+func (p *NullManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
+	return nil
+}
+func (p *NullManagementProvider) GetCurrentUser() string { return "" }
+
+// #endregion 🔖GitHub Management Provider
+
+// #region 🔖GitHub Source Control Provider
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubsourcecontrolprovider](semiorepo://section/semio-repo/cli/main.go/Providers/GitHub%20Source%20Control%20Provider)
+// GitHub implementation of SourceControlProvider using the gh CLI.
+
+// GitHubSourceControlProvider holds the data fields for a github source control provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubsourcecontrolprovider✂️githubsourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Source%20Control%20Provider/GitHubSourceControlProvider)
+type GitHubSourceControlProvider struct{}
+
+func (p *GitHubSourceControlProvider) Kind() string { return "github" }
+
+func (p *GitHubSourceControlProvider) RepoURL() (string, error) {
+	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func (p *GitHubSourceControlProvider) Configure(repoRoot string) error { return nil }
+
+// #endregion 🔖GitHub Source Control Provider
+
+// #region 🔖Devcontainer Sandbox Provider
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider](semiorepo://section/semio-repo/cli/main.go/Providers/Devcontainer%20Sandbox%20Provider)
+// Devcontainer implementation of SandboxProvider.
+
+// DevcontainerSandboxProvider holds the data fields for a devcontainer sandbox provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider✂️devcontainersandboxprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Devcontainer%20Sandbox%20Provider/DevcontainerSandboxProvider)
+type DevcontainerSandboxProvider struct{}
+
+func (p *DevcontainerSandboxProvider) Kind() string { return "devcontainer" }
+
+func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return nil }
+
+// #endregion 🔖Devcontainer Sandbox Provider
+
+// #region 🔖Editor Providers
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders](semiorepo://section/semio-repo/cli/main.go/Providers/Editor%20Providers)
+// Editor provider implementations for Copilot, Cursor, Windsurf, Claude Code, Droid, Codex, Antigravity.
+
+// CopilotEditorProvider holds the data fields for a copilot editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️copiloteditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/CopilotEditorProvider)
+type CopilotEditorProvider struct{}
+
+func (p *CopilotEditorProvider) Kind() string { return "copilot-chat" }
+
+func (p *CopilotEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+func (p *CopilotEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveCopilotEvent(nativeEvent, toolKind)
+}
+
+func (p *CopilotEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	return formatVSCodeHookOutput(hookEventName, result)
+}
+
+func (p *CopilotEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return vsCodeEventFromHookEvent(event, parentInfo)
+}
+
+func (p *CopilotEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateCopilotConfig(repoRoot)
+}
+
+func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "copilot-chat", ConfigPath: ".github/hooks/semio-repo.json"}
+}
+
+// CursorEditorProvider holds the data fields for a cursor editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️cursoreditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/CursorEditorProvider)
+type CursorEditorProvider struct{}
+
+func (p *CursorEditorProvider) Kind() string { return "cursor-chat" }
+
+func (p *CursorEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+func (p *CursorEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveCursorEvent(nativeEvent, toolKind)
+}
+
+func (p *CursorEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+func (p *CursorEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+func (p *CursorEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateCursorConfig(repoRoot)
+}
+
+func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json"}
+}
+
+// WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️windsurfeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/WindsurfEditorProvider)
+type WindsurfEditorProvider struct{}
+
+func (p *WindsurfEditorProvider) Kind() string { return "windsurf-chat" }
+
+func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveWindsurfEvent(nativeEvent, toolKind)
+}
+
+func (p *WindsurfEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+func (p *WindsurfEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+func (p *WindsurfEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateWindsurfConfig(repoRoot)
+}
+
+func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json"}
+}
+
+// ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️claudecodeeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/ClaudeCodeEditorProvider)
+type ClaudeCodeEditorProvider struct{}
+
+func (p *ClaudeCodeEditorProvider) Kind() string { return "claude-code" }
+
+func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+func (p *ClaudeCodeEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
+}
+
+func (p *ClaudeCodeEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+func (p *ClaudeCodeEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+func (p *ClaudeCodeEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateClaudeCodeConfig(repoRoot)
+}
+
+func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "claude-code", ConfigPath: ".claude/settings.json"}
+}
+
+// DroidEditorProvider holds the data fields for a droid editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️droideditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/DroidEditorProvider)
+type DroidEditorProvider struct{}
+
+func (p *DroidEditorProvider) Kind() string { return "droid" }
+
+func (p *DroidEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+func (p *DroidEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
+}
+
+func (p *DroidEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+func (p *DroidEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+func (p *DroidEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateDroidConfig(repoRoot)
+}
+
+func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "droid", ConfigPath: ".factory/hooks.json"}
+}
+
+// CodexEditorProvider holds the data fields for a codex editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️codexeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/CodexEditorProvider)
+type CodexEditorProvider struct{}
+
+func (p *CodexEditorProvider) Kind() string { return "codex" }
+
+func (p *CodexEditorProvider) Configure(repoRoot string) error { return nil }
+
+func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
+}
+
+func (p *CodexEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+func (p *CodexEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error) { return "", nil }
+
+func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "codex", ConfigPath: ""}
+}
+
+// AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️antigravityeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/AntigravityEditorProvider)
+type AntigravityEditorProvider struct{}
+
+func (p *AntigravityEditorProvider) Kind() string { return "antigravity-chat" }
+
+func (p *AntigravityEditorProvider) Configure(repoRoot string) error { return nil }
+
+func (p *AntigravityEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
+}
+
+func (p *AntigravityEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+func (p *AntigravityEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+func (p *AntigravityEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return "", nil
+}
+
+func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
+}
+
+// #endregion 🔖Editor Providers
+
+// #region 🔖Provider Registry
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry](semiorepo://section/semio-repo/cli/main.go/Providers/Provider%20Registry)
+// Registry functions for accessing all available providers.
+
+// AllEditorProviders returns all registered editor providers.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️alleditorproviders](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/AllEditorProviders)
+func AllEditorProviders() []EditorProvider {
+	return []EditorProvider{
+		&CopilotEditorProvider{},
+		&CursorEditorProvider{},
+		&WindsurfEditorProvider{},
+		&ClaudeCodeEditorProvider{},
+		&DroidEditorProvider{},
+		&CodexEditorProvider{},
+		&AntigravityEditorProvider{},
+	}
+}
+
+// GetEditorProvider returns the editor provider for the given client slug.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️geteditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/GetEditorProvider)
+func GetEditorProvider(client string) EditorProvider {
+	for _, p := range AllEditorProviders() {
+		if p.Kind() == client {
+			return p
+		}
+	}
+	return nil
+}
+
+// DefaultManagementProvider returns the default management provider (GitHub).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultManagementProvider)
+func DefaultManagementProvider() ManagementProvider {
+	return &GitHubManagementProvider{}
+}
+
+// DefaultSourceControlProvider returns the default source control provider (GitHub).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultsourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultSourceControlProvider)
+func DefaultSourceControlProvider() SourceControlProvider {
+	return &GitHubSourceControlProvider{}
+}
+
+// DefaultSandboxProvider returns the default sandbox provider (Devcontainer).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultsandboxprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultSandboxProvider)
+func DefaultSandboxProvider() SandboxProvider {
+	return &DevcontainerSandboxProvider{}
+}
+
+var mgmtProvider ManagementProvider = DefaultManagementProvider()
+
+func GetManagementProvider() ManagementProvider { return mgmtProvider }
+
+// #endregion 🔖Provider Registry
+
+// #endregion 🔖Providers
 
 // #region 🔖Types
 
@@ -10983,9 +12640,9 @@ type TicketFile struct {
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
-// TicketGithubData holds the data fields for a ticket github data record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketgithubdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketGithubData)
-type TicketGithubData struct {
+// TicketManagementData holds the data fields for a ticket github data record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketgithubdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketManagementData)
+type TicketManagementData struct {
 	Issue string `json:"issue,omitempty"`
 }
 
@@ -11023,7 +12680,7 @@ type TicketData struct {
 	Interactions []Interaction     `json:"interactions"`
 	Status       TicketStatus      `json:"status"`
 	Summary      string            `json:"summary,omitempty"`
-	GitHub       *TicketGithubData `json:"github,omitempty"`
+	Management       *TicketManagementData `json:"github,omitempty"`
 	Goal         string            `json:"goal,omitempty"`
 	Parent       string            `json:"parent,omitempty"`
 }
@@ -11041,7 +12698,7 @@ type Goal struct {
 	Client       string          `json:"client"`
 	LLM          string          `json:"llm"`
 	Parent       string          `json:"parent,omitempty"`
-	GitHub       *GoalGithubData `json:"github,omitempty"`
+	Management       *GoalManagementData `json:"github,omitempty"`
 	Interactions []Interaction   `json:"interactions"`
 
 	ID   string `json:"-"`
@@ -11069,9 +12726,9 @@ type GoalDates struct {
 	Due string `json:"due,omitempty"`
 }
 
-// GoalGithubData holds the data fields for a goal github data record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goalgithubdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GoalGithubData)
-type GoalGithubData struct {
+// GoalManagementData holds the data fields for a goal github data record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goalgithubdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GoalManagementData)
+type GoalManagementData struct {
 	Milestone string `json:"milestone,omitempty"`
 	Issue     string `json:"issue,omitempty"`
 }
@@ -17282,7 +18939,7 @@ func shouldSkipTicket(prompt string) bool {
 // OpenTicket MUST complete the operation and return consistent results.
 // OpenTicket performs the open ticket operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️openticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/OpenTicket)
-func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
+func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -17295,17 +18952,17 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 			return nil, err
 		}
 		if latest.GetStatus() == TicketStatusClosed {
-			return latest, ReopenTicket(latest, prompt, llm, client, draft, goal, parent, noGithub)
+			return latest, ReopenTicket(latest, prompt, llm, client, draft, goal, parent, noManagement)
 		}
 		return latest, nil
 	}
-	return CreateTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
+	return CreateTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 }
 
 // OpenGoal MUST complete the operation and return consistent results.
 // OpenGoal performs the open goal operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️opengoal](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/OpenGoal)
-func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub bool) (*Goal, error) {
+func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagement bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
 		Title:       title,
@@ -17314,7 +18971,7 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub 
 		DueDate:     dueDate,
 		Client:      client,
 		LLM:         llm,
-		NoGithub:    noGithub,
+		NoManagement:    noManagement,
 	}
 	return ctx.GoalCreate(input)
 }
@@ -17367,7 +19024,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 // CreateTicket MUST persist the new entity and return a reference to it.
 // CreateTicket creates a new ticket and persists it.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️createticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/CreateTicket)
-func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
+func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	if goal == "" {
 		return nil, fmt.Errorf("ticket goal is required")
@@ -17470,12 +19127,12 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 		}},
 	}
 
-	skipIssue := noIssue || noGithub || strings.Contains(prompt, "NOISSUE")
+	skipIssue := noIssue || noManagement || strings.Contains(prompt, "NOISSUE")
 	if !skipIssue {
 		if issue != "" {
 
-			ticket.GitHub = &TicketGithubData{Issue: issue}
-			ghAddIssueToProject(issue)
+			ticket.Management = &TicketManagementData{Issue: issue}
+			GetManagementProvider().AddIssueToProject(issue)
 		} else {
 
 			issueBody := formatPromptHeading(prompt)
@@ -17485,9 +19142,9 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 				milestone, _ = getRootGoalMilestone(goal)
 			}
 
-			issueURL, err := ghCreateIssue(title, issueBody, milestone)
+			issueURL, err := GetManagementProvider().CreateIssue(title, issueBody, milestone)
 			if err == nil && issueURL != "" {
-				ticket.GitHub = &TicketGithubData{Issue: issueURL}
+				ticket.Management = &TicketManagementData{Issue: issueURL}
 			} else if err != nil {
 				fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
 			}
@@ -19752,7 +21409,7 @@ func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 // FinishTicket MUST return a non-nil error when the operation fails.
 // FinishTicket performs the finish ticket operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️finishticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FinishTicket)
-func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool, bulk bool) error {
+func FinishTicket(ticket *Ticket, summary string, files []string, noManagement bool, bulk bool) error {
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
 	}
@@ -19790,8 +21447,8 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 		}
 	}
 
-	if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
-		issueURL := ticket.GitHub.Issue
+	if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
+		issueURL := ticket.Management.Issue
 
 		if !bulk {
 
@@ -19824,7 +21481,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 				labelList = append(labelList, l)
 			}
 			if len(labelList) > 0 {
-				if err := ghAddLabels(issueURL, labelList); err != nil {
+				if err := GetManagementProvider().AddLabels(issueURL, labelList); err != nil {
 					fmt.Printf("Warning: Failed to add labels to GitHub issue: %v\n", err)
 				}
 			}
@@ -19835,12 +21492,12 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 				comment += "\n\n#✍Changes\n\n" + metricsComment
 			}
 
-			if err := ghAddComment(issueURL, comment); err != nil {
+			if err := GetManagementProvider().AddComment(issueURL, comment); err != nil {
 				fmt.Printf("Warning: Failed to add summary and metrics comment to GitHub issue: %v\n", err)
 			}
 		}
 
-		if err := ghCloseIssue(issueURL); err != nil {
+		if err := GetManagementProvider().CloseIssue(issueURL); err != nil {
 			fmt.Printf("Warning: Failed to close GitHub issue: %v\n", err)
 		}
 	}
@@ -19908,7 +21565,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 // ReopenTicket MUST return a non-nil error when the operation fails.
 // ReopenTicket performs the reopen ticket operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️reopenticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ReopenTicket)
-func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noGithub bool) error {
+func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noManagement bool) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
@@ -19982,14 +21639,14 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	ticket.Interactions = append(ticket.Interactions, interaction)
 	ticket.Status = TicketStatusOpen
 
-	if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
-		issueURL := ticket.GitHub.Issue
-		if err := ghReopenIssue(issueURL); err != nil {
+	if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
+		issueURL := ticket.Management.Issue
+		if err := GetManagementProvider().ReopenIssue(issueURL); err != nil {
 			fmt.Printf("Warning: Failed to reopen GitHub issue: %v\n", err)
 		}
-		ghAddIssueToProject(issueURL)
+		GetManagementProvider().AddIssueToProject(issueURL)
 		comment := formatPromptHeading(prompt)
-		if err := ghAddComment(issueURL, comment); err != nil {
+		if err := GetManagementProvider().AddComment(issueURL, comment); err != nil {
 			fmt.Printf("Warning: Failed to add prompt comment to GitHub issue: %v\n", err)
 		}
 	}
@@ -20008,8 +21665,8 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 // ToolTicketOpen MUST complete the operation successfully.
 // ToolTicketOpen performs the tool ticket open operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketopen](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketOpen)
-func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) ToolResult {
-	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
+func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
+	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	if err != nil {
 		return toolErrorResult(err)
 	}
@@ -20110,7 +21767,7 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 // ToolTicketClose MUST complete the operation successfully.
 // ToolTicketClose performs the tool ticket close operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketclose](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketClose)
-func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noGithub bool) ToolResult {
+func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noManagement bool) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		return toolErrorResult(err)
@@ -20119,13 +21776,13 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 		if err := UpdateTicketTitle(ticket, title); err != nil {
 			return toolErrorResult(err)
 		}
-		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
-			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, title); err != nil {
+		if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
+			if err := GetManagementProvider().UpdateIssueTitle(ticket.Management.Issue, title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
 	}
-	if err := FinishTicket(ticket, summary, files, noGithub, false); err != nil {
+	if err := FinishTicket(ticket, summary, files, noManagement, false); err != nil {
 		return toolErrorResult(err)
 	}
 	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+ticket.Year, ticket.Month, ticket.Day)
@@ -20151,7 +21808,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 // ToolTicketReopen MUST complete the operation successfully.
 // ToolTicketReopen performs the tool ticket reopen operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketReopen)
-func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noGithub bool) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -20161,13 +21818,13 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 		if err := UpdateTicketTitle(ticket, title); err != nil {
 			return toolErrorResult(err)
 		}
-		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
-			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, title); err != nil {
+		if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
+			if err := GetManagementProvider().UpdateIssueTitle(ticket.Management.Issue, title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, prompt, llm, client, draft, goal, parent, noGithub); err != nil {
+	if err := ReopenTicket(ticket, prompt, llm, client, draft, goal, parent, noManagement); err != nil {
 		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🔓 Ticket reopened: %s", ticket.Slug))
@@ -20216,7 +21873,7 @@ func ToolDraftDelete(slug string) ToolResult {
 // ToolGoalCreate MUST complete the operation successfully.
 // ToolGoalCreate performs the tool goal create operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalCreate)
-func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noGithub bool, parent, milestone string) ToolResult {
+func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noManagement bool, parent, milestone string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
 		Title:       title,
@@ -20225,7 +21882,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 		DueDate:     dueDate,
 		LLM:         llm,
 		Client:      client,
-		NoGithub:    noGithub,
+		NoManagement:    noManagement,
 		Parent:      parent,
 		Milestone:   milestone,
 	})
@@ -20262,12 +21919,12 @@ func ToolGoalList() ToolResult {
 // ToolGoalClose MUST complete the operation successfully.
 // ToolGoalClose performs the tool goal close operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalclose](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalClose)
-func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
+func ToolGoalClose(id, summary string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
 		ID:       id,
 		Summary:  summary,
-		NoGithub: noGithub,
+		NoManagement: noManagement,
 	})
 	if err != nil {
 		return toolErrorResult(err)
@@ -20285,7 +21942,7 @@ func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 // ToolGoalReopen MUST complete the operation successfully.
 // ToolGoalReopen performs the tool goal reopen operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalReopen)
-func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noGithub bool) ToolResult {
+func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	var titlePtr, descriptionPtr, dueDatePtr *string
 	if title != "" {
@@ -20305,7 +21962,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 		Title:       titlePtr,
 		Description: descriptionPtr,
 		DueDate:     dueDatePtr,
-		NoGithub:    noGithub,
+		NoManagement:    noManagement,
 	})
 	if err != nil {
 		return toolErrorResult(err)
@@ -21952,7 +23609,7 @@ type RepoContext interface {
 	Extract(sourceFile, sourceSection, targetFile *string) (*File, error)
 	ContributorAdd(input ContributorAddInput) (*Contributor, error)
 	ContributorRemove(github string) error
-	SyncGithub() (bool, error)
+	SyncManagement() (bool, error)
 }
 
 // #endregion 🔖GraphQL Context Port
@@ -22006,18 +23663,21 @@ func NewDefaultContext(rootDir string) RepoContext {
 }
 
 type repoContext struct {
-	rootDir string
-	bundles []Bundle
+	rootDir            string
+	bundles            []Bundle
+	managementProvider ManagementProvider
 }
 
 // NewRepoContext MUST initialize all required fields and return a valid repo context.
 // NewRepoContext creates and returns a new repo context instance.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️newrepocontext](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/NewRepoContext)
 func NewRepoContext(rootDir string) RepoContext {
-	ctx := &repoContext{rootDir: rootDir}
+	ctx := &repoContext{rootDir: rootDir, managementProvider: DefaultManagementProvider()}
 	ctx.bundles = LoadBundles()
 	return ctx
 }
+
+func (c *repoContext) ManagementProv() ManagementProvider { return c.managementProvider }
 
 // GetRootDir MUST retrieve the requested value or return an error.
 // GetRootDir retrieves and returns the root dir.
@@ -22323,40 +23983,40 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 		}},
 	}
 
-	if !input.NoGithub {
+	if !input.NoManagement {
 		if isRootGoal(&goal) {
 			if input.Milestone != "" {
-				goal.GitHub = &GoalGithubData{Milestone: input.Milestone}
+				goal.Management = &GoalManagementData{Milestone: input.Milestone}
 			} else {
-				milestoneNumber, err := ghCreateMilestone(input.Title, input.Description)
+				milestoneNumber, err := c.managementProvider.CreateMilestone(input.Title, input.Description)
 				if err != nil {
 					return nil, err
 				}
 				if input.DueDate != "" {
-					_ = ghUpdateMilestone(milestoneNumber, "", "", "", input.DueDate)
+					_ = c.managementProvider.UpdateMilestone(milestoneNumber, "", "", "", input.DueDate)
 				}
 				repoUrl, _ := getGhRepoUrl()
-				goal.GitHub = &GoalGithubData{
+				goal.Management = &GoalManagementData{
 					Milestone: fmt.Sprintf("%s/milestone/%d", repoUrl, milestoneNumber),
 				}
 			}
 		} else if isFirstGenGoal(&goal) {
 			milestone, _ := getRootGoalMilestone(id)
-			issueURL, err := ghCreateGoalIssue(input.Title, input.Description, milestone)
+			issueURL, err := c.managementProvider.CreateGoalIssue(input.Title, input.Description, milestone)
 			if err != nil {
 				return nil, err
 			}
-			goal.GitHub = &GoalGithubData{Issue: issueURL}
+			goal.Management = &GoalManagementData{Issue: issueURL}
 		} else {
-			issueURL, err := ghCreateGoalIssue(input.Title, input.Description, nil)
+			issueURL, err := c.managementProvider.CreateGoalIssue(input.Title, input.Description, nil)
 			if err != nil {
 				return nil, err
 			}
-			goal.GitHub = &GoalGithubData{Issue: issueURL}
+			goal.Management = &GoalManagementData{Issue: issueURL}
 			parentID := getParentGoalID(id)
 			parentGoal, parentErr := ReadGoal(parentID)
-			if parentErr == nil && parentGoal.GitHub != nil && parentGoal.GitHub.Issue != "" {
-				if err := ghAddSubIssue(parentGoal.GitHub.Issue, issueURL); err != nil {
+			if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
+				if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
 					fmt.Printf("Warning: Failed to link sub-issue to parent goal %s: %v\n", parentID, err)
 				}
 			}
@@ -22494,16 +24154,16 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 		}
 	}
 
-	if goal.GitHub != nil && !input.NoGithub {
-		if isRootGoal(&goal) && goal.GitHub.Milestone != "" {
-			number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+	if goal.Management != nil && !input.NoManagement {
+		if isRootGoal(&goal) && goal.Management.Milestone != "" {
+			number, err := parseMilestoneNumber(goal.Management.Milestone)
 			if err == nil {
-				if err := ghUpdateMilestone(number, goal.Title, goal.Description, goal.Status, goal.Dates.Due); err != nil {
+				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, goal.Status, goal.Dates.Due); err != nil {
 					return nil, err
 				}
 			}
-		} else if !isRootGoal(&goal) && goal.GitHub.Issue != "" {
-			if err := ghUpdateGoalIssue(goal.GitHub.Issue, goal.Title, goal.Description); err != nil {
+		} else if !isRootGoal(&goal) && goal.Management.Issue != "" {
+			if err := c.managementProvider.UpdateGoalIssue(goal.Management.Issue, goal.Title, goal.Description); err != nil {
 				return nil, err
 			}
 		}
@@ -22551,16 +24211,16 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 		Date:   nowStr,
 	})
 
-	if goal.GitHub != nil && !input.NoGithub {
-		if isRootGoal(&goal) && goal.GitHub.Milestone != "" {
-			number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+	if goal.Management != nil && !input.NoManagement {
+		if isRootGoal(&goal) && goal.Management.Milestone != "" {
+			number, err := parseMilestoneNumber(goal.Management.Milestone)
 			if err == nil {
-				if err := ghUpdateMilestone(number, goal.Title, goal.Description, "closed", ""); err != nil {
+				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, "closed", ""); err != nil {
 					return nil, err
 				}
 			}
-		} else if !isRootGoal(&goal) && goal.GitHub.Issue != "" {
-			if err := ghCloseIssue(goal.GitHub.Issue); err != nil {
+		} else if !isRootGoal(&goal) && goal.Management.Issue != "" {
+			if err := c.managementProvider.CloseIssue(goal.Management.Issue); err != nil {
 				return nil, err
 			}
 		}
@@ -22629,16 +24289,16 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	goal.LLM = input.LLM
 	goal.Client = input.Client
 
-	if goal.GitHub != nil && !input.NoGithub {
-		if isRootGoal(&goal) && goal.GitHub.Milestone != "" {
-			number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+	if goal.Management != nil && !input.NoManagement {
+		if isRootGoal(&goal) && goal.Management.Milestone != "" {
+			number, err := parseMilestoneNumber(goal.Management.Milestone)
 			if err == nil {
-				if err := ghUpdateMilestone(number, goal.Title, goal.Description, "open", goal.Dates.Due); err != nil {
+				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, "open", goal.Dates.Due); err != nil {
 					return nil, err
 				}
 			}
-		} else if !isRootGoal(&goal) && goal.GitHub.Issue != "" {
-			if err := ghReopenIssue(goal.GitHub.Issue); err != nil {
+		} else if !isRootGoal(&goal) && goal.Management.Issue != "" {
+			if err := c.managementProvider.ReopenIssue(goal.Management.Issue); err != nil {
 				return nil, err
 			}
 		}
@@ -22668,8 +24328,8 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 			return nil, err
 		}
 
-		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !input.NoGithub {
-			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, *input.Title); err != nil {
+		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
+			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
@@ -22740,18 +24400,18 @@ func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 		return false, err
 	}
 
-	if !input.NoGithub && goal.GitHub != nil {
-		if isRootGoal(&goal) && goal.GitHub.Milestone != "" {
-			number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+	if !input.NoManagement && goal.Management != nil {
+		if isRootGoal(&goal) && goal.Management.Milestone != "" {
+			number, err := parseMilestoneNumber(goal.Management.Milestone)
 			if err == nil {
-				if err := ghDeleteMilestone(number); err != nil {
+				if err := c.managementProvider.DeleteMilestone(number); err != nil {
 					return false, err
 				}
 			}
-		} else if !isRootGoal(&goal) && goal.GitHub.Issue != "" {
-			parts := strings.Split(goal.GitHub.Issue, "/")
+		} else if !isRootGoal(&goal) && goal.Management.Issue != "" {
+			parts := strings.Split(goal.Management.Issue, "/")
 			number := parts[len(parts)-1]
-			if err := ghDeleteIssue(number); err != nil {
+			if err := c.managementProvider.DeleteIssue(number); err != nil {
 				return false, err
 			}
 		}
@@ -22772,11 +24432,11 @@ func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 		return false, err
 	}
 
-	if !input.NoGithub && ticket.GitHub != nil {
-		if ticket.GitHub.Issue != "" {
-			parts := strings.Split(ticket.GitHub.Issue, "/")
+	if !input.NoManagement && ticket.Management != nil {
+		if ticket.Management.Issue != "" {
+			parts := strings.Split(ticket.Management.Issue, "/")
 			number := parts[len(parts)-1]
-			if err := ghDeleteIssue(number); err != nil {
+			if err := c.managementProvider.DeleteIssue(number); err != nil {
 				return false, err
 			}
 		}
@@ -24526,7 +26186,7 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 // TicketOpen performs the ticket open operation on the repo context.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketOpen)
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoGithub, input.Issue)
+	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue)
 }
 
 // TicketProgress MUST return a non-nil error when the operation fails.
@@ -24554,7 +26214,7 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 			if t.Status == TicketStatusOpen {
 				ticket := t
 				fmt.Printf("Closing ticket %s...\n", ticket.Slug)
-				if err := FinishTicket(&ticket, "Bulk close", []string{}, input.NoGithub, true); err != nil {
+				if err := FinishTicket(&ticket, "Bulk close", []string{}, input.NoManagement, true); err != nil {
 					fmt.Printf("Warning: Failed to close ticket %s: %v\n", ticket.Slug, err)
 					continue
 				}
@@ -24562,14 +26222,14 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 			}
 		}
 
-		if !input.NoGithub {
-			issueURLs, err := ghListOpenIssuesWithLabel("ticket")
+		if !input.NoManagement {
+			issueURLs, err := c.managementProvider.ListOpenIssuesWithLabel("ticket")
 			if err != nil {
 				fmt.Printf("Warning: Failed to list GitHub issues with 'ticket' label: %v\n", err)
 			} else {
 				for _, issueURL := range issueURLs {
 					fmt.Printf("Closing GitHub issue %s...\n", issueURL)
-					if err := ghCloseIssue(issueURL); err != nil {
+					if err := c.managementProvider.CloseIssue(issueURL); err != nil {
 						fmt.Printf("Warning: Failed to close GitHub issue %s: %v\n", issueURL, err)
 					}
 				}
@@ -24587,13 +26247,13 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 			return nil, err
 		}
 
-		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !input.NoGithub {
-			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, *input.Title); err != nil {
+		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
+			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
 	}
-	if err := FinishTicket(ticket, input.Summary, input.Files, input.NoGithub, false); err != nil {
+	if err := FinishTicket(ticket, input.Summary, input.Files, input.NoManagement, false); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -24613,13 +26273,13 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 			return nil, err
 		}
 
-		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !input.NoGithub {
-			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, *input.Title); err != nil {
+		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
+			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.Client, input.Draft, input.Goal, input.Parent, input.NoGithub); err != nil {
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.Client, input.Draft, input.Goal, input.Parent, input.NoManagement); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -24850,12 +26510,12 @@ func updateGoalMilestone(goal *Goal, number int) (int, error) {
 	if err != nil {
 		return number, err
 	}
-	if goal.GitHub == nil {
-		goal.GitHub = &GoalGithubData{}
+	if goal.Management == nil {
+		goal.Management = &GoalManagementData{}
 	}
 	milestoneUrl := fmt.Sprintf("%s/milestone/%d", repoUrl, number)
-	if goal.GitHub.Milestone != milestoneUrl {
-		goal.GitHub.Milestone = milestoneUrl
+	if goal.Management.Milestone != milestoneUrl {
+		goal.Management.Milestone = milestoneUrl
 		if err := SaveGoal(*goal); err != nil {
 			return number, err
 		}
@@ -24863,7 +26523,7 @@ func updateGoalMilestone(goal *Goal, number int) (int, error) {
 	return number, nil
 }
 
-func ensureGoalMilestone(goal *Goal) (*ghMilestone, error) {
+func ensureGoalMilestone(goal *Goal) (*ManagementMilestone, error) {
 	if goal == nil {
 		return nil, nil
 	}
@@ -24873,14 +26533,14 @@ func ensureGoalMilestone(goal *Goal) (*ghMilestone, error) {
 	if !isRootGoal(goal) {
 		return nil, nil
 	}
-	if goal.GitHub != nil && goal.GitHub.Milestone != "" {
-		if n, err := parseMilestoneNumber(goal.GitHub.Milestone); err == nil && n > 0 {
-			if milestone, err := ghGetMilestone(n); err == nil {
+	if goal.Management != nil && goal.Management.Milestone != "" {
+		if n, err := parseMilestoneNumber(goal.Management.Milestone); err == nil && n > 0 {
+			if milestone, err := GetManagementProvider().GetMilestone(n); err == nil {
 				return milestone, nil
 			}
 		}
 	}
-	found, err := ghFindMilestoneByTitle(goal.Title)
+	found, err := GetManagementProvider().FindMilestoneByTitle(goal.Title)
 	if err != nil {
 		return nil, err
 	}
@@ -24890,27 +26550,27 @@ func ensureGoalMilestone(goal *Goal) (*ghMilestone, error) {
 		}
 		return found, nil
 	}
-	n, err := ghCreateMilestone(goal.Title, goal.Description)
+	n, err := GetManagementProvider().CreateMilestone(goal.Title, goal.Description)
 	if err != nil {
 		return nil, err
 	}
 	if goal.Dates.Due != "" {
-		_ = ghUpdateMilestone(n, "", "", "", goal.Dates.Due)
+		_ = GetManagementProvider().UpdateMilestone(n, "", "", "", goal.Dates.Due)
 	}
 	if _, err := updateGoalMilestone(goal, n); err != nil {
 		return nil, err
 	}
-	milestone, err := ghGetMilestone(n)
+	milestone, err := GetManagementProvider().GetMilestone(n)
 	if err != nil {
-		return &ghMilestone{Number: n, Title: goal.Title, Description: goal.Description}, nil
+		return &ManagementMilestone{Number: n, Title: goal.Title, Description: goal.Description}, nil
 	}
 	return milestone, nil
 }
 
-// SyncGithub MUST return a non-nil error when the operation fails.
-// SyncGithub performs the sync github operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SyncGithub)
-func (c *repoContext) SyncGithub() (bool, error) {
+// SyncManagement MUST return a non-nil error when the operation fails.
+// SyncManagement performs the sync github operation on the repo context.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SyncManagement)
+func (c *repoContext) SyncManagement() (bool, error) {
 	fmt.Println("Syncing local tickets and goals with GitHub...")
 
 	projects := LoadProjects()
@@ -24923,7 +26583,7 @@ func (c *repoContext) SyncGithub() (bool, error) {
 		}
 	}
 	validLabels["semio-repo"] = true
-	if err := ghSyncRepoLabelCatalog(validLabels); err != nil {
+	if err := c.managementProvider.SyncRepoLabelCatalog(validLabels); err != nil {
 		fmt.Printf("Warning: Failed to sync GitHub label catalog: %v\n", err)
 	}
 
@@ -24938,9 +26598,9 @@ func (c *repoContext) SyncGithub() (bool, error) {
 		for _, goal := range goals {
 			if isRootGoal(goal) {
 
-				if goal.GitHub != nil && goal.GitHub.Issue != "" {
+				if goal.Management != nil && goal.Management.Issue != "" {
 					fmt.Printf("Migrating root goal %s: removing issue reference\n", goal.ID)
-					goal.GitHub.Issue = ""
+					goal.Management.Issue = ""
 				}
 				milestone, err := ensureGoalMilestone(goal)
 				if err != nil {
@@ -24950,52 +26610,52 @@ func (c *repoContext) SyncGithub() (bool, error) {
 					if goal.Status == "closed" {
 						status = "closed"
 					}
-					if err := ghUpdateMilestone(milestone.Number, goal.Title, goal.Description, status, goal.Dates.Due); err != nil {
+					if err := c.managementProvider.UpdateMilestone(milestone.Number, goal.Title, goal.Description, status, goal.Dates.Due); err != nil {
 						fmt.Printf("Warning: Failed to update milestone for root goal %s: %v\n", goal.ID, err)
 					}
 				}
 			} else {
 
-				if goal.GitHub != nil && goal.GitHub.Milestone != "" {
+				if goal.Management != nil && goal.Management.Milestone != "" {
 
 					fmt.Printf("Migrating child goal %s: removing milestone\n", goal.ID)
-					number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+					number, err := parseMilestoneNumber(goal.Management.Milestone)
 					if err == nil {
-						if err := ghDeleteMilestone(number); err != nil {
+						if err := c.managementProvider.DeleteMilestone(number); err != nil {
 							fmt.Printf("Warning: Failed to delete milestone %d for child goal %s: %v\n", number, goal.ID, err)
 						}
 					}
-					goal.GitHub.Milestone = ""
+					goal.Management.Milestone = ""
 				}
 
 				needsSave := false
-				if goal.GitHub == nil || goal.GitHub.Issue == "" {
+				if goal.Management == nil || goal.Management.Issue == "" {
 
 					var milestone *int
 					if isFirstGenGoal(goal) {
 						milestone, _ = getRootGoalMilestone(goal.ID)
 					}
-					issueURL, err := ghCreateGoalIssue(goal.Title, goal.Description, milestone)
+					issueURL, err := c.managementProvider.CreateGoalIssue(goal.Title, goal.Description, milestone)
 					if err != nil {
 						fmt.Printf("Warning: Failed to create issue for child goal %s: %v\n", goal.ID, err)
 						continue
 					}
-					if goal.GitHub == nil {
-						goal.GitHub = &GoalGithubData{}
+					if goal.Management == nil {
+						goal.Management = &GoalManagementData{}
 					}
-					goal.GitHub.Issue = issueURL
+					goal.Management.Issue = issueURL
 					needsSave = true
 					fmt.Printf("Created issue for child goal %s: %s\n", goal.ID, issueURL)
 
 					if goal.Status == "closed" {
-						_ = ghCloseIssue(issueURL)
+						_ = c.managementProvider.CloseIssue(issueURL)
 					}
 
 					if isDeeperGoal(goal) {
 						parentID := getParentGoalID(goal.ID)
 						parentGoal, parentErr := ReadGoal(parentID)
-						if parentErr == nil && parentGoal.GitHub != nil && parentGoal.GitHub.Issue != "" {
-							if err := ghAddSubIssue(parentGoal.GitHub.Issue, issueURL); err != nil {
+						if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
+							if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
 								fmt.Printf("Warning: Failed to link sub-issue %s to parent %s: %v\n", goal.ID, parentID, err)
 							} else {
 								fmt.Printf("Linked sub-issue %s to parent %s\n", goal.ID, parentID)
@@ -25004,37 +26664,37 @@ func (c *repoContext) SyncGithub() (bool, error) {
 					}
 				} else {
 
-					remoteIssue, err := ghGetIssueDetails(goal.GitHub.Issue)
+					remoteIssue, err := c.managementProvider.GetIssueDetails(goal.Management.Issue)
 					if err != nil {
 						fmt.Printf("Warning: Failed to get issue for goal %s: %v\n", goal.ID, err)
 					} else {
 						if goal.Status == "closed" && strings.ToUpper(remoteIssue.State) == "OPEN" {
-							_ = ghCloseIssue(goal.GitHub.Issue)
+							_ = c.managementProvider.CloseIssue(goal.Management.Issue)
 						} else if goal.Status == "open" && strings.ToUpper(remoteIssue.State) == "CLOSED" {
-							_ = ghReopenIssue(goal.GitHub.Issue)
+							_ = c.managementProvider.ReopenIssue(goal.Management.Issue)
 						}
 						if isFirstGenGoal(goal) {
 							milestone, _ := getRootGoalMilestone(goal.ID)
 							if milestone != nil {
 								rootGoal, _ := ReadGoal(getRootGoalID(goal.ID))
 								if rootGoal != nil && (remoteIssue.Milestone == nil || remoteIssue.Milestone.Title != rootGoal.Title) {
-									_ = ghUpdateIssueMilestone(goal.GitHub.Issue, rootGoal.Title)
+									_ = c.managementProvider.UpdateIssueMilestone(goal.Management.Issue, rootGoal.Title)
 								}
 							}
 						} else if isDeeperGoal(goal) {
 							if remoteIssue.Milestone != nil {
-								if err := ghClearIssueMilestone(goal.GitHub.Issue); err != nil {
+								if err := c.managementProvider.ClearIssueMilestone(goal.Management.Issue); err != nil {
 									fmt.Printf("Warning: Failed to clear milestone for goal %s: %v\n", goal.ID, err)
 								}
 							}
 							parentID := getParentGoalID(goal.ID)
 							parentGoal, parentErr := ReadGoal(parentID)
-							if parentErr == nil && parentGoal.GitHub != nil && parentGoal.GitHub.Issue != "" {
-								parentURL, parentErr := ghGetIssueParentURL(goal.GitHub.Issue)
+							if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
+								parentURL, parentErr := c.managementProvider.GetIssueParentURL(goal.Management.Issue)
 								if parentErr != nil {
 									fmt.Printf("Warning: Failed to resolve parent for goal %s: %v\n", goal.ID, parentErr)
-								} else if parentURL == "" || parentURL != parentGoal.GitHub.Issue {
-									if err := ghAddSubIssue(parentGoal.GitHub.Issue, goal.GitHub.Issue); err != nil {
+								} else if parentURL == "" || parentURL != parentGoal.Management.Issue {
+									if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, goal.Management.Issue); err != nil {
 										fmt.Printf("Warning: Failed to link sub-issue %s to parent %s: %v\n", goal.ID, parentID, err)
 									} else {
 										fmt.Printf("Linked sub-issue %s to parent %s\n", goal.ID, parentID)
@@ -25050,7 +26710,7 @@ func (c *repoContext) SyncGithub() (bool, error) {
 							}
 						}
 						if !hasGoalLabel {
-							if err := ghAddLabels(goal.GitHub.Issue, []string{"goal"}); err != nil {
+							if err := c.managementProvider.AddLabels(goal.Management.Issue, []string{"goal"}); err != nil {
 								fmt.Printf("Warning: Failed to add goal label for %s: %v\n", goal.ID, err)
 							}
 						}
@@ -25073,13 +26733,13 @@ func (c *repoContext) SyncGithub() (bool, error) {
 
 	for i := range tickets {
 		t := &tickets[i]
-		if t.GitHub == nil || t.GitHub.Issue == "" {
+		if t.Management == nil || t.Management.Issue == "" {
 			continue
 		}
 
-		issueURL := t.GitHub.Issue
+		issueURL := t.Management.Issue
 
-		remoteIssue, err := ghGetIssueDetails(issueURL)
+		remoteIssue, err := c.managementProvider.GetIssueDetails(issueURL)
 		if err != nil {
 			fmt.Printf("Warning: Failed to get GitHub issue %s: %v\n", issueURL, err)
 			continue
@@ -25087,7 +26747,7 @@ func (c *repoContext) SyncGithub() (bool, error) {
 
 		if t.Status == TicketStatusClosed && strings.ToUpper(remoteIssue.State) == "OPEN" {
 			fmt.Printf("Closing GitHub issue %s (Ticket is closed locally)\n", issueURL)
-			if err := ghCloseIssue(issueURL); err != nil {
+			if err := c.managementProvider.CloseIssue(issueURL); err != nil {
 				fmt.Printf("Warning: Failed to close GitHub issue %s: %v\n", issueURL, err)
 			}
 		}
@@ -25102,7 +26762,7 @@ func (c *repoContext) SyncGithub() (bool, error) {
 				} else if milestone != nil && milestone.Title != "" {
 					if remoteIssue.Milestone == nil || remoteIssue.Milestone.Title != milestone.Title {
 						fmt.Printf("Updating milestone for issue %s to %s...\n", issueURL, milestone.Title)
-						if err := ghUpdateIssueMilestone(issueURL, milestone.Title); err != nil {
+						if err := c.managementProvider.UpdateIssueMilestone(issueURL, milestone.Title); err != nil {
 							fmt.Printf("Warning: Failed to update milestone for GitHub issue %s: %v\n", issueURL, err)
 						}
 					}
@@ -25120,13 +26780,13 @@ func (c *repoContext) SyncGithub() (bool, error) {
 		}
 		if len(labelsToRemove) > 0 {
 			fmt.Printf("Removing invalid project labels from issue %s: %v\n", issueURL, labelsToRemove)
-			if err := ghRemoveLabels(issueURL, labelsToRemove); err != nil {
+			if err := c.managementProvider.RemoveLabels(issueURL, labelsToRemove); err != nil {
 				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issueURL, err)
 			}
 		}
 	}
 
-	issues, err := ghListIssuesForLabelSync()
+	issues, err := c.managementProvider.ListIssuesForLabelSync()
 	if err != nil {
 		fmt.Printf("Warning: Failed to list GitHub issues for label sync: %v\n", err)
 	} else {
@@ -25141,7 +26801,7 @@ func (c *repoContext) SyncGithub() (bool, error) {
 				continue
 			}
 			fmt.Printf("Removing invalid project labels from issue %s: %v\n", issue.URL, labelsToRemove)
-			if err := ghRemoveLabels(issue.URL, labelsToRemove); err != nil {
+			if err := c.managementProvider.RemoveLabels(issue.URL, labelsToRemove); err != nil {
 				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issue.URL, err)
 			}
 		}
@@ -25341,10 +27001,10 @@ func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributorremove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/ContributorRemove)
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
 
-// SyncGithub MUST return a non-nil error when the operation fails.
-// SyncGithub performs the sync github operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SyncGithub)
-func (c *defaultContext) SyncGithub() (bool, error) { return false, nil }
+// SyncManagement MUST return a non-nil error when the operation fails.
+// SyncManagement performs the sync github operation on the default context.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SyncManagement)
+func (c *defaultContext) SyncManagement() (bool, error) { return false, nil }
 
 // GetGoals MUST retrieve the requested value or return an error.
 // GetGoals retrieves and returns the goals.
@@ -26423,20 +28083,20 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Type: graphql.Int,
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					goal := p.Source.(*Goal)
-					if goal.GitHub == nil || goal.GitHub.Milestone == "" {
+					if goal.Management == nil || goal.Management.Milestone == "" {
 						return nil, nil
 					}
-					return parseMilestoneNumber(goal.GitHub.Milestone)
+					return parseMilestoneNumber(goal.Management.Milestone)
 				},
 			},
 			"issue": &graphql.Field{
 				Type: graphql.String,
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					goal := p.Source.(*Goal)
-					if goal.GitHub == nil || goal.GitHub.Issue == "" {
+					if goal.Management == nil || goal.Management.Issue == "" {
 						return nil, nil
 					}
-					return goal.GitHub.Issue, nil
+					return goal.Management.Issue, nil
 				},
 			},
 			"parent": &graphql.Field{Type: graphql.String},
@@ -27491,7 +29151,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"issue":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
@@ -27506,7 +29166,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"files":    &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"all":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
@@ -27525,7 +29185,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -27542,7 +29202,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"client":   &graphql.InputObjectFieldConfig{Type: ticketClientEnum},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -27574,7 +29234,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"client":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"milestone":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
@@ -27587,7 +29247,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -27596,7 +29256,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.InputObjectConfigFieldMap{
 			"id":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -27611,7 +29271,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"noManagement":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -27631,10 +29291,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	mutationType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Mutation",
 		Fields: graphql.Fields{
-			"syncGithub": &graphql.Field{
+			"syncManagement": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.Boolean),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return mutationResolverInstance.SyncGithub(p.Context)
+					return mutationResolverInstance.SyncManagement(p.Context)
 				},
 			},
 			"goalCreate": &graphql.Field{
@@ -27663,8 +29323,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = s
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					return mutationResolverInstance.GoalCreate(p.Context, input)
 				},
@@ -27693,8 +29353,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = &s
 					}
-					if b, ok := inputMap["noGithub"].(bool); ok {
-						input.NoGithub = b
+					if b, ok := inputMap["noManagement"].(bool); ok {
+						input.NoManagement = b
 					}
 					return mutationResolverInstance.GoalChange(p.Context, id, input)
 				},
@@ -27710,8 +29370,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						ID:      inputMap["id"].(string),
 						Summary: inputMap["summary"].(string),
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					return mutationResolverInstance.GoalClose(p.Context, input)
 				},
@@ -27741,8 +29401,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = &s
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					return mutationResolverInstance.GoalReopen(p.Context, input)
 				},
@@ -27854,8 +29514,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if inputMap["noIssue"] != nil {
 						input.NoIssue = inputMap["noIssue"].(bool)
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					if inputMap["draft"] != nil {
 						input.Draft = inputMap["draft"].(string)
@@ -27902,8 +29562,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if v, ok := inputMap["summary"].(string); ok {
 						input.Summary = v
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					if inputMap["all"] != nil {
 						input.All = inputMap["all"].(bool)
@@ -27932,8 +29592,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					if t, ok := inputMap["title"].(string); ok {
 						input.Title = &t
@@ -27981,8 +29641,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = &s
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if inputMap["noManagement"] != nil {
+						input.NoManagement = inputMap["noManagement"].(bool)
 					}
 					return mutationResolverInstance.TicketChange(p.Context, input)
 				},
@@ -28855,12 +30515,12 @@ func (r *Resolver) Mutation() MutationResolver {
 
 type mutationResolver struct{ *Resolver }
 
-// SyncGithub MUST return a non-nil error when the operation fails.
-// SyncGithub performs the sync github operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/SyncGithub)
-func (r *mutationResolver) SyncGithub(ctx context.Context) (bool, error) {
+// SyncManagement MUST return a non-nil error when the operation fails.
+// SyncManagement performs the sync github operation on the mutation resolver.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/SyncManagement)
+func (r *mutationResolver) SyncManagement(ctx context.Context) (bool, error) {
 	if r.Ctx != nil {
-		return r.Ctx.SyncGithub()
+		return r.Ctx.SyncManagement()
 	}
 	return false, fmt.Errorf("not implemented")
 }
@@ -29393,7 +31053,7 @@ type QueryResolver interface {
 // MutationResolver defines the interface for mutation resolver operations.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️mutationresolver](semiorepo://definition/semio-repo/cli/main.go/Types/Resolver%20Interfaces/MutationResolver)
 type MutationResolver interface {
-	SyncGithub(ctx context.Context) (bool, error)
+	SyncManagement(ctx context.Context) (bool, error)
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
 	GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error)
 	TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error)
@@ -29597,7 +31257,7 @@ func createMcpServer() *server.MCPServer {
 			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
 			mcp.WithString("goal", mcp.Description("Goal ID to associate with this ticket")),
 			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets")),
-			mcp.WithBoolean("noGithub", mcp.Description("Skip all GitHub operations")),
+			mcp.WithBoolean("noManagement", mcp.Description("Skip all GitHub operations")),
 			mcp.WithString("issue", mcp.Description("Link to existing GitHub issue URL instead of creating new one")),
 		),
 		ticketOpen,
@@ -30161,10 +31821,10 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	noIssue, _, _ := getBoolArg(args, "noIssue")
 	goal, _, _ := getStringArg(args, "goal")
 	parent, _, _ := getStringArg(args, "parent")
-	noGithub, _, _ := getBoolArg(args, "noGithub")
+	noManagement, _, _ := getBoolArg(args, "noManagement")
 	issue, _, _ := getStringArg(args, "issue")
 
-	result := ToolTicketOpen(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
+	result := ToolTicketOpen(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	return toolResultToMCP(result)
 }
 
@@ -30226,9 +31886,9 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 		}
 	}
 	title, _, _ := getStringArg(args, "title")
-	noGithub, _, _ := getBoolArg(args, "noGithub")
+	noManagement, _, _ := getBoolArg(args, "noManagement")
 
-	result := ToolTicketClose(year, month, day, slug, summary, files, title, noGithub)
+	result := ToolTicketClose(year, month, day, slug, summary, files, title, noManagement)
 	return toolResultToMCP(result)
 }
 
@@ -30263,9 +31923,9 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	draft, _, _ := getStringArg(args, "draft")
 	goal, _, _ := getStringArg(args, "goal")
 	parent, _, _ := getStringArg(args, "parent")
-	noGithub, _, _ := getBoolArg(args, "noGithub")
+	noManagement, _, _ := getBoolArg(args, "noManagement")
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, goal, parent, noGithub)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, goal, parent, noManagement)
 	return toolResultToMCP(result)
 }
 
@@ -30323,11 +31983,11 @@ func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err != nil {
 		return nil, err
 	}
-	noGithub, _, _ := getBoolArg(args, "no_github")
+	noManagement, _, _ := getBoolArg(args, "no_github")
 	parent, _, _ := getStringArg(args, "parent")
 	milestone, _, _ := getStringArg(args, "milestone")
 
-	result := ToolGoalCreate(title, description, prompt, dueDate, llm, client, noGithub, parent, milestone)
+	result := ToolGoalCreate(title, description, prompt, dueDate, llm, client, noManagement, parent, milestone)
 	return toolResultToMCP(result)
 }
 
@@ -30341,9 +32001,9 @@ func goalClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolR
 	if err != nil {
 		return nil, err
 	}
-	noGithub, _, _ := getBoolArg(args, "no_github")
+	noManagement, _, _ := getBoolArg(args, "no_github")
 
-	result := ToolGoalClose(id, summary, noGithub)
+	result := ToolGoalClose(id, summary, noManagement)
 	return toolResultToMCP(result)
 }
 
@@ -30368,9 +32028,9 @@ func goalReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	title, _, _ := getStringArg(args, "title")
 	description, _, _ := getStringArg(args, "description")
 	dueDate, _, _ := getStringArg(args, "due_date")
-	noGithub, _, _ := getBoolArg(args, "no_github")
+	noManagement, _, _ := getBoolArg(args, "no_github")
 
-	result := ToolGoalReopen(id, prompt, llm, client, title, description, dueDate, noGithub)
+	result := ToolGoalReopen(id, prompt, llm, client, title, description, dueDate, noManagement)
 	return toolResultToMCP(result)
 }
 
@@ -33277,18 +34937,11 @@ func ResolveHookEvent(eventStr string, client string, toolName string, input jso
 		return event, "", nil
 	}
 	kind := classifyTool(toolName)
-	switch client {
-	case "copilot-chat":
-		return resolveCopilotEvent(eventStr, kind)
-	case "cursor-chat":
-		return resolveCursorEvent(eventStr, kind)
-	case "windsurf-chat":
-		return resolveWindsurfEvent(eventStr, kind)
-	case "claude-code", "codex", "antigravity-chat", "droid":
-		return resolveClaudeCompatibleEvent(eventStr, kind)
-	default:
-		return resolveClaudeCompatibleEvent(eventStr, kind)
+	provider := GetEditorProvider(client)
+	if provider != nil {
+		return provider.ResolveNativeEvent(eventStr, kind)
 	}
+	return resolveClaudeCompatibleEvent(eventStr, kind)
 }
 
 // vsCodeEventFromHookEvent maps a neutral HookEvent back to the VS Code hookEventName (outlet adapter).
@@ -34305,12 +35958,13 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
 				Input:      input,
 			}
 			result := RunHook(hctx)
-			if client == "copilot-chat" {
+			provider := GetEditorProvider(client)
+			if provider != nil && provider.Kind() == "copilot-chat" {
 				hookEventName := extractHookEventNameFromStdin(input)
 				if hookEventName == "" {
-					hookEventName = vsCodeEventFromHookEvent(event, parentInfo)
+					hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
 				}
-				out := formatVSCodeHookOutput(hookEventName, result)
+				out := provider.FormatHookOutput(hookEventName, result)
 				fmt.Fprintln(cmd.OutOrStdout(), out)
 				return nil
 			}
@@ -34365,22 +36019,16 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 				repoRoot = findRepoRoot(cwd)
 			}
 			var errs []error
-			for _, mapping := range getClientHookMappings() {
-				content, err := mapping.Generator(repoRoot)
-				if err != nil {
-					errs = append(errs, fmt.Errorf("%s: %w", mapping.Client, err))
+			for _, provider := range AllEditorProviders() {
+				mapping := provider.HookMapping()
+				if mapping.ConfigPath == "" {
 					continue
 				}
-				targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-				if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-					errs = append(errs, fmt.Errorf("%s: mkdir: %w", mapping.Client, err))
+				if err := provider.Configure(repoRoot); err != nil {
+					errs = append(errs, fmt.Errorf("%s: %w", provider.Kind(), err))
 					continue
 				}
-				if err := os.WriteFile(targetPath, []byte(content), 0644); err != nil {
-					errs = append(errs, fmt.Errorf("%s: write: %w", mapping.Client, err))
-					continue
-				}
-				fmt.Printf("✓ %s → %s\n", mapping.Client, mapping.ConfigPath)
+				fmt.Printf("✓ %s → %s\n", provider.Kind(), mapping.ConfigPath)
 			}
 			if err := configureGitHooks(repoRoot); err != nil {
 				errs = append(errs, fmt.Errorf("git hooks: %w", err))
@@ -34434,13 +36082,16 @@ cd "$repo_root"
 }
 
 func getClientHookMappings() []ClientHookMapping {
-	return []ClientHookMapping{
-		{Client: "copilot-chat", ConfigPath: ".github/hooks/semio-repo.json", Generator: generateCopilotConfig},
-		{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json", Generator: generateCursorConfig},
-		{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json", Generator: generateWindsurfConfig},
-		{Client: "claude-code", ConfigPath: ".claude/settings.json", Generator: generateClaudeCodeConfig},
-		{Client: "droid", ConfigPath: ".factory/hooks.json", Generator: generateDroidConfig},
+	var mappings []ClientHookMapping
+	for _, provider := range AllEditorProviders() {
+		m := provider.HookMapping()
+		if m.ConfigPath == "" {
+			continue
+		}
+		gen := provider.GenerateHookConfig
+		mappings = append(mappings, ClientHookMapping{Client: m.Client, ConfigPath: m.ConfigPath, Generator: gen})
 	}
+	return mappings
 }
 
 func generateCopilotConfig(repoRoot string) (string, error) {
@@ -35379,10 +37030,10 @@ func getRootGoalMilestone(goalID string) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
-	if rootGoal.GitHub == nil || rootGoal.GitHub.Milestone == "" {
+	if rootGoal.Management == nil || rootGoal.Management.Milestone == "" {
 		return nil, nil
 	}
-	n, err := parseMilestoneNumber(rootGoal.GitHub.Milestone)
+	n, err := parseMilestoneNumber(rootGoal.Management.Milestone)
 	if err != nil {
 		return nil, err
 	}
@@ -35398,10 +37049,10 @@ func getParentGoalIssueNodeID(goalID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if parentGoal.GitHub == nil || parentGoal.GitHub.Issue == "" {
+	if parentGoal.Management == nil || parentGoal.Management.Issue == "" {
 		return "", nil
 	}
-	return ghGetIssueNodeID(parentGoal.GitHub.Issue)
+	return ghGetIssueNodeID(parentGoal.Management.Issue)
 }
 
 func ghGetIssueNodeID(issueURL string) (string, error) {

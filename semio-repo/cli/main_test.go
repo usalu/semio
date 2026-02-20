@@ -7284,7 +7284,7 @@ func TestTreeCommands(t *testing.T) {
 	}
 }
 
-func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
+func TestCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
@@ -7299,7 +7299,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"sonnet-4-5",
 		"--goal", "TEST-GOAL",
 		"--no-issue",
-		"--no-github",
+		"--no-management",
 	)
 	if err != nil {
 		t.Fatalf("ticket open positional failed: %v\nStdout: %s\nStderr: %s", err, openOut, openErr)
@@ -7314,7 +7314,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"prompt",
 		"--cursor-chat",
 		"--sonnet-4-5",
-		"--no-github",
+		"--no-management",
 	)
 	if reopenOpenCmdErr == nil {
 		t.Fatal("expected error when reopening an already-open ticket")
@@ -7328,7 +7328,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	absFile := filepath.Join(GetRootDir(), fileRel)
 	closeOut, closeErr, err := executeCommand(
 		"ticket", "close",
-		"--no-github",
+		"--no-management",
 		"--year", strconv.Itoa(y),
 		"--month", strconv.Itoa(m),
 		"--day", strconv.Itoa(d),
@@ -7348,7 +7348,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 
 	_, closeAgainErr, closeAgainCmdErr := executeCommand(
 		"ticket", "close",
-		"--no-github",
+		"--no-management",
 		"--year", strconv.Itoa(y),
 		"--month", strconv.Itoa(m),
 		"--day", strconv.Itoa(d),
@@ -7369,7 +7369,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"E2E reopen prompt",
 		"--cursor-chat",
 		"--sonnet-4-5",
-		"--no-github",
+		"--no-management",
 	)
 	if err != nil {
 		t.Fatalf("ticket reopen mix failed: %v\nStdout: %s\nStderr: %s", err, reopenOut, reopenErr)
@@ -7384,7 +7384,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	}
 }
 
-func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
+func TestCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
@@ -7396,7 +7396,7 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"cursor-chat",
 		"gpt-5-mini",
 		"--due-date", "2026-02-15",
-		"--no-github",
+		"--no-management",
 	)
 	if err != nil {
 		t.Fatalf("goal open failed: %v\nStdout: %s\nStderr: %s", err, openOut, openErr)
@@ -7404,7 +7404,7 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	goalID := parseGoalCreateID(t, openOut)
 	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
-	_, reopenOpenErr, reopenOpenCmdErr := executeCommand("goal", "reopen", goalID, "prompt", "cursor-chat", "gpt-5-mini", "--no-github")
+	_, reopenOpenErr, reopenOpenCmdErr := executeCommand("goal", "reopen", goalID, "prompt", "cursor-chat", "gpt-5-mini", "--no-management")
 	if reopenOpenCmdErr == nil {
 		t.Fatal("expected error when reopening an already-open goal")
 	}
@@ -7412,12 +7412,12 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		t.Errorf("expected 'goal is already open' error, got: %s", reopenOpenErr)
 	}
 
-	_, closeErr, err := executeCommand("goal", "close", goalID, "E2E Goal Summary", "--no-github")
+	_, closeErr, err := executeCommand("goal", "close", goalID, "E2E Goal Summary", "--no-management")
 	if err != nil {
 		t.Fatalf("goal close failed: %v\nStderr: %s", err, closeErr)
 	}
 
-	_, closeAgainErr, closeAgainCmdErr := executeCommand("goal", "close", goalID, "E2E Goal Summary Again", "--no-github")
+	_, closeAgainErr, closeAgainCmdErr := executeCommand("goal", "close", goalID, "E2E Goal Summary Again", "--no-management")
 	if closeAgainCmdErr == nil {
 		t.Fatal("expected error when closing an already-closed goal")
 	}
@@ -7425,7 +7425,7 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		t.Errorf("expected 'goal is already closed' error, got: %s", closeAgainErr)
 	}
 
-	_, reopenErr, err := executeCommand("goal", "reopen", goalID, "E2E Goal Reopen Prompt", "cursor-chat", "gpt-5-mini", "--no-github")
+	_, reopenErr, err := executeCommand("goal", "reopen", goalID, "E2E Goal Reopen Prompt", "cursor-chat", "gpt-5-mini", "--no-management")
 	if err != nil {
 		t.Fatalf("goal reopen failed: %v\nStderr: %s", err, reopenErr)
 	}
@@ -7474,9 +7474,9 @@ func TestCliWrongArgs_TicketOpen(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"missing client", []string{"ticket", "open", "--goal", "TEST", "--title", "Valid Title", "--opus-4-5", "--no-github"}},
-		{"missing goal", []string{"ticket", "open", "--title", "Valid Title", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing client", []string{"ticket", "open", "--goal", "TEST", "--title", "Valid Title", "--opus-4-5", "--no-management"}},
+		{"missing goal", []string{"ticket", "open", "--title", "Valid Title", "--copilot-chat", "--opus-4-5", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7497,9 +7497,9 @@ func TestCliWrongArgs_TicketClose(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing path", []string{"ticket", "close", "--no-github", "--summary", "s", "--files", "f"}},
-		{"missing summary", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "NONEXISTENT", "--files", "f"}},
-		{"missing files", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "NONEXISTENT", "--summary", "s"}},
+		{"missing path", []string{"ticket", "close", "--no-management", "--summary", "s", "--files", "f"}},
+		{"missing summary", []string{"ticket", "close", "--no-management", "--year", "2025", "--month", "1", "--day", "1", "--slug", "NONEXISTENT", "--files", "f"}},
+		{"missing files", []string{"ticket", "close", "--no-management", "--year", "2025", "--month", "1", "--day", "1", "--slug", "NONEXISTENT", "--summary", "s"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7517,10 +7517,10 @@ func TestCliWrongArgs_TicketReopen(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"invalid path format", []string{"ticket", "reopen", "bad-path", "prompt", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"missing prompt", []string{"ticket", "reopen", "2025/01/01/NONEXISTENT", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"missing client", []string{"ticket", "reopen", "2025/01/01/NONEXISTENT", "prompt", "--opus-4-5", "--no-github"}},
+		{"missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"invalid path format", []string{"ticket", "reopen", "bad-path", "prompt", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing prompt", []string{"ticket", "reopen", "2025/01/01/NONEXISTENT", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing client", []string{"ticket", "reopen", "2025/01/01/NONEXISTENT", "prompt", "--opus-4-5", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7538,8 +7538,8 @@ func TestCliWrongArgs_TicketChange(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"invalid path format", []string{"ticket", "change", "bad-path", "--no-github"}},
-		{"nonexistent ticket", []string{"ticket", "change", "9999/01/01/NONEXISTENT", "--title", "New Title", "--no-github"}},
+		{"invalid path format", []string{"ticket", "change", "bad-path", "--no-management"}},
+		{"nonexistent ticket", []string{"ticket", "change", "9999/01/01/NONEXISTENT", "--title", "New Title", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7557,11 +7557,11 @@ func TestCliWrongArgs_GoalOpen(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing title", []string{"goal", "open", "--no-github"}},
-		{"missing description", []string{"goal", "open", "Valid Title", "--no-github", "--copilot-chat", "--opus-4-5", "--due-date", "2026-02-15"}},
-		{"missing client", []string{"goal", "open", "Valid Title", "desc", "prompt", "--opus-4-5", "--due-date", "2026-02-15", "--no-github"}},
-		{"missing llm", []string{"goal", "open", "Valid Title", "desc", "prompt", "--copilot-chat", "--due-date", "2026-02-15", "--no-github"}},
-		{"missing due-date", []string{"goal", "open", "Valid Title", "desc", "prompt", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"missing title", []string{"goal", "open", "--no-management"}},
+		{"missing description", []string{"goal", "open", "Valid Title", "--no-management", "--copilot-chat", "--opus-4-5", "--due-date", "2026-02-15"}},
+		{"missing client", []string{"goal", "open", "Valid Title", "desc", "prompt", "--opus-4-5", "--due-date", "2026-02-15", "--no-management"}},
+		{"missing llm", []string{"goal", "open", "Valid Title", "desc", "prompt", "--copilot-chat", "--due-date", "2026-02-15", "--no-management"}},
+		{"missing due-date", []string{"goal", "open", "Valid Title", "desc", "prompt", "--copilot-chat", "--opus-4-5", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7579,8 +7579,8 @@ func TestCliWrongArgs_GoalClose(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing id", []string{"goal", "close", "--no-github"}},
-		{"missing summary", []string{"goal", "close", "NONEXISTENT-GOAL", "--no-github"}},
+		{"missing id", []string{"goal", "close", "--no-management"}},
+		{"missing summary", []string{"goal", "close", "NONEXISTENT-GOAL", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7598,10 +7598,10 @@ func TestCliWrongArgs_GoalReopen(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing id", []string{"goal", "reopen", "--no-github"}},
-		{"missing prompt", []string{"goal", "reopen", "NONEXISTENT-GOAL", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"missing client", []string{"goal", "reopen", "NONEXISTENT-GOAL", "prompt", "--opus-4-5", "--no-github"}},
-		{"missing llm", []string{"goal", "reopen", "NONEXISTENT-GOAL", "prompt", "--copilot-chat", "--no-github"}},
+		{"missing id", []string{"goal", "reopen", "--no-management"}},
+		{"missing prompt", []string{"goal", "reopen", "NONEXISTENT-GOAL", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing client", []string{"goal", "reopen", "NONEXISTENT-GOAL", "prompt", "--opus-4-5", "--no-management"}},
+		{"missing llm", []string{"goal", "reopen", "NONEXISTENT-GOAL", "prompt", "--copilot-chat", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7619,7 +7619,7 @@ func TestCliWrongArgs_GoalChange(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing slug", []string{"goal", "change", "--no-github"}},
+		{"missing slug", []string{"goal", "change", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7823,20 +7823,20 @@ func TestCliWrongArgs_ErrorMessages(t *testing.T) {
 		expectedErr string
 	}{
 
-		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing title"},
-		{"ticket open missing goal", []string{"ticket", "open", "--title", "T", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing goal"},
-		{"ticket close missing path", []string{"ticket", "close", "--no-github", "--summary", "s", "--files", "f"}, "missing ticket path"},
-		{"ticket close missing summary", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--files", "f"}, "missing summary"},
-		{"ticket close missing files", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--summary", "s"}, "missing files"},
-		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing ticket path"},
+		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing title"},
+		{"ticket open missing goal", []string{"ticket", "open", "--title", "T", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing goal"},
+		{"ticket close missing path", []string{"ticket", "close", "--no-management", "--summary", "s", "--files", "f"}, "missing ticket path"},
+		{"ticket close missing summary", []string{"ticket", "close", "--no-management", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--files", "f"}, "missing summary"},
+		{"ticket close missing files", []string{"ticket", "close", "--no-management", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--summary", "s"}, "missing files"},
+		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing ticket path"},
 
-		{"goal open missing title", []string{"goal", "open", "--no-github"}, "missing title"},
-		{"goal close missing id", []string{"goal", "close", "--no-github"}, "missing goal id"},
-		{"goal close missing summary", []string{"goal", "close", "NONEXISTENT", "--no-github"}, "missing summary"},
-		{"goal reopen missing id", []string{"goal", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing goal id"},
-		{"goal reopen missing prompt", []string{"goal", "reopen", "NONEXISTENT", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing prompt"},
-		{"goal reopen missing client", []string{"goal", "reopen", "NONEXISTENT", "prompt", "--opus-4-5", "--no-github"}, "missing client"},
-		{"goal reopen missing llm", []string{"goal", "reopen", "NONEXISTENT", "prompt", "--copilot-chat", "--no-github"}, "missing llm"},
+		{"goal open missing title", []string{"goal", "open", "--no-management"}, "missing title"},
+		{"goal close missing id", []string{"goal", "close", "--no-management"}, "missing goal id"},
+		{"goal close missing summary", []string{"goal", "close", "NONEXISTENT", "--no-management"}, "missing summary"},
+		{"goal reopen missing id", []string{"goal", "reopen", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing goal id"},
+		{"goal reopen missing prompt", []string{"goal", "reopen", "NONEXISTENT", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing prompt"},
+		{"goal reopen missing client", []string{"goal", "reopen", "NONEXISTENT", "prompt", "--opus-4-5", "--no-management"}, "missing client"},
+		{"goal reopen missing llm", []string{"goal", "reopen", "NONEXISTENT", "prompt", "--copilot-chat", "--no-management"}, "missing llm"},
 
 		{"todo create missing parent or name", []string{"todo", "create"}, "missing parent-id or name"},
 		{"todo create missing name only", []string{"todo", "create", "parent"}, "missing parent-id or name"},
@@ -7934,12 +7934,12 @@ func TestCliJsonErrorsToStderr(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"ticket close missing path", []string{"ticket", "close", "--no-github", "--summary", "s", "--files", "f"}},
-		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}},
-		{"goal open missing title", []string{"goal", "open", "--no-github"}},
-		{"goal close missing id", []string{"goal", "close", "--no-github"}},
-		{"goal reopen missing id", []string{"goal", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"ticket close missing path", []string{"ticket", "close", "--no-management", "--summary", "s", "--files", "f"}},
+		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"goal open missing title", []string{"goal", "open", "--no-management"}},
+		{"goal close missing id", []string{"goal", "close", "--no-management"}},
+		{"goal reopen missing id", []string{"goal", "reopen", "--copilot-chat", "--opus-4-5", "--no-management"}},
 		{"policy check missing id", []string{"policy", "check"}},
 		{"folder create missing path", []string{"folder", "create"}},
 		{"file create missing path", []string{"file", "create"}},
@@ -8774,7 +8774,7 @@ func TestInferEntityKind(t *testing.T) {
 		{"todoCreate", "todo"},
 		{"todoChange", "todo"},
 		{"todoDelete", "todo"},
-		{"syncGithub", "root"},
+		{"syncManagement", "root"},
 		{"integrate", "file"},
 		{"extract", "file"},
 		{"fix", "root"},
@@ -8898,14 +8898,14 @@ func TestLifecycleCommands(t *testing.T) {
 			goalB := bytes.NewBufferString("")
 			goalCmd.SetOut(goalB)
 			goalCmd.SetErr(goalB)
-			goalCmd.SetArgs([]string{"goal", "open", goalTitle, "Test Goal Description", "Test Goal Prompt", "copilot-chat", "gemini-3-pro", "--due-date", "2025-12-31", "--no-github", "--json"})
+			goalCmd.SetArgs([]string{"goal", "open", goalTitle, "Test Goal Description", "Test Goal Prompt", "copilot-chat", "gemini-3-pro", "--due-date", "2025-12-31", "--no-management", "--json"})
 			if err := goalCmd.Execute(); err != nil {
 				t.Fatalf("goal open failed: %v\nOutput: %s", err, goalB.String())
 			}
 			goalID := parseGoalCreateID(t, goalB.String())
 			defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
-			openArgs := []string{"ticket", "open", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", goalID, "--no-issue", "--no-github"}
+			openArgs := []string{"ticket", "open", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", goalID, "--no-issue", "--no-management"}
 			if mode == "json" {
 				openArgs = append(openArgs, "--json")
 			} else if mode == "md" {
@@ -8967,7 +8967,7 @@ func TestLifecycleCommands(t *testing.T) {
 				fmt.Sprintf("%d/%02d/%02d/%s", y, m, d, slug),
 				"--goal", "test-goal",
 				"--parent", "parent-ticket-slug",
-				"--no-github",
+				"--no-management",
 			}
 			changeCmd := NewRoot(factory)
 			changeB := bytes.NewBufferString("")
@@ -8993,7 +8993,7 @@ func TestLifecycleCommands(t *testing.T) {
 			}
 
 			closeArgs := []string{"ticket", "close",
-				"--no-github",
+				"--no-management",
 				"--year", strconv.Itoa(y),
 				"--month", strconv.Itoa(m),
 				"--day", strconv.Itoa(d),
@@ -9332,7 +9332,7 @@ func TestStreamingList(t *testing.T) {
 	}
 }
 
-func TestTicketLifecycle_NoGithub(t *testing.T) {
+func TestTicketLifecycle_NoManagement(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	run := func(name string, field ...string) {
@@ -9366,7 +9366,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
-	if ticket.GitHub != nil {
+	if ticket.Management != nil {
 		t.Error("OpenTicket: GitHub data should be nil")
 	}
 
@@ -9387,7 +9387,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 	if goal.LLM != "gemini-3-pro" {
 		t.Errorf("expected llm 'gemini-3-pro', got '%s'", goal.LLM)
 	}
-	if goal.GitHub != nil {
+	if goal.Management != nil {
 		t.Error("OpenGoal: GitHub data should be nil")
 	}
 
@@ -9436,7 +9436,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 		DueDate:     "2026-02-15",
 		Client:      "cursor",
 		LLM:         "gpt-5-2-codex",
-		NoGithub:    true,
+		NoManagement:    true,
 	}
 
 	goal2, err := ctx.GoalCreate(goalInput)
@@ -9460,7 +9460,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 		t.Errorf("original goal interaction[0].Kind = %q, want %q", goal.Interactions[0].Kind, "goal.open")
 	}
 
-	_, err = ctx.GoalClose(GoalCloseInput{ID: goal2.ID, Summary: "Done", NoGithub: true})
+	_, err = ctx.GoalClose(GoalCloseInput{ID: goal2.ID, Summary: "Done", NoManagement: true})
 	if err != nil {
 		t.Fatalf("GoalClose failed: %v", err)
 	}
@@ -15890,3 +15890,594 @@ func TestHookResultOmitEmpty(t *testing.T) {
 }
 
 // #endregion 🔖Hook Tests
+
+// #region 🔖Mermaid Tests
+
+func TestMermaidLocByProjectsBundlesFoldersFiles(t *testing.T) {
+	root := findTestRepoRoot(".")
+	SetRootDir(root)
+	result := MermaidLocByProjectsBundlesFoldersFiles()
+	if !strings.HasPrefix(result, "treemap-beta\n") {
+		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
+	}
+	if !strings.Contains(result, "\"Lines of Code\"") {
+		t.Error("expected 'Lines of Code' title")
+	}
+	if !strings.Contains(result, EmojiProjectUser) {
+		t.Error("expected user project emoji")
+	}
+	if !strings.Contains(result, EmojiProjectInfra) {
+		t.Error("expected infra project emoji")
+	}
+	lines := strings.Split(strings.TrimSpace(result), "\n")
+	if len(lines) < 5 {
+		t.Errorf("expected at least 5 lines, got %d", len(lines))
+	}
+	hasValue := false
+	for _, line := range lines {
+		if strings.Contains(line, ": ") {
+			parts := strings.Split(strings.TrimSpace(line), ": ")
+			if len(parts) == 2 {
+				val := strings.TrimSpace(parts[1])
+				if val != "0" {
+					hasValue = true
+				}
+			}
+		}
+	}
+	if !hasValue {
+		t.Error("expected at least one file with non-zero LOC value")
+	}
+}
+
+func TestMermaidLocByLanguage(t *testing.T) {
+	root := findTestRepoRoot(".")
+	SetRootDir(root)
+	result := MermaidLocByLanguage()
+	if !strings.HasPrefix(result, "treemap-beta\n") {
+		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
+	}
+	if !strings.Contains(result, "\"Lines of Code by Language\"") {
+		t.Error("expected 'Lines of Code by Language' title")
+	}
+	lines := strings.Split(strings.TrimSpace(result), "\n")
+	if len(lines) < 3 {
+		t.Errorf("expected at least 3 lines (header + title + at least 1 language), got %d", len(lines))
+	}
+	hasLanguage := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.Contains(trimmed, ": ") && strings.HasPrefix(trimmed, "\"") {
+			hasLanguage = true
+		}
+	}
+	if !hasLanguage {
+		t.Error("expected at least one language entry with LOC")
+	}
+}
+
+func TestMermaidLocByContributors(t *testing.T) {
+	root := findTestRepoRoot(".")
+	SetRootDir(root)
+	result := MermaidLocByContributors()
+	if !strings.HasPrefix(result, "treemap-beta\n") {
+		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
+	}
+	if !strings.Contains(result, "\"Lines of Code by Contributor\"") {
+		t.Error("expected 'Lines of Code by Contributor' title")
+	}
+	lines := strings.Split(strings.TrimSpace(result), "\n")
+	if len(lines) < 3 {
+		t.Errorf("expected at least 3 lines (header + title + at least 1 contributor), got %d", len(lines))
+	}
+}
+
+func TestMermaidCommandLocByProjectsBundlesFoldersFiles(t *testing.T) {
+	root := findTestRepoRoot(".")
+	SetRootDir(root)
+	cmd := NewRoot(testEngineFactory)
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	cmd.SetArgs([]string{"mermaid", "loc-by-projects-bundles-folders-files"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("command failed: %v", err)
+	}
+	output := buf.String()
+	if !strings.HasPrefix(output, "treemap-beta\n") {
+		t.Errorf("expected treemap-beta output, got: %s", output[:min(len(output), 100)])
+	}
+}
+
+func TestMermaidCommandLocByLanguage(t *testing.T) {
+	root := findTestRepoRoot(".")
+	SetRootDir(root)
+	cmd := NewRoot(testEngineFactory)
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	cmd.SetArgs([]string{"mermaid", "loc-by-language"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("command failed: %v", err)
+	}
+	output := buf.String()
+	if !strings.HasPrefix(output, "treemap-beta\n") {
+		t.Errorf("expected treemap-beta output, got: %s", output[:min(len(output), 100)])
+	}
+}
+
+func TestMermaidEscapeLabel(t *testing.T) {
+	if got := mermaidEscapeLabel("hello \"world\""); got != "hello 'world'" {
+		t.Errorf("expected hello 'world', got: %s", got)
+	}
+	if got := mermaidEscapeLabel("no quotes"); got != "no quotes" {
+		t.Errorf("expected no quotes, got: %s", got)
+	}
+}
+
+// #endregion 🔖Mermaid Tests
+
+// #region 🔖Provider Tests
+
+func TestProviderRegistry(t *testing.T) {
+	mp := DefaultManagementProvider()
+	if mp == nil {
+		t.Fatal("DefaultManagementProvider() returned nil")
+	}
+	if mp.Kind() != "github" {
+		t.Errorf("expected github, got %s", mp.Kind())
+	}
+	scp := DefaultSourceControlProvider()
+	if scp == nil {
+		t.Fatal("DefaultSourceControlProvider() returned nil")
+	}
+	if scp.Kind() != "github" {
+		t.Errorf("expected github, got %s", scp.Kind())
+	}
+	sp := DefaultSandboxProvider()
+	if sp == nil {
+		t.Fatal("DefaultSandboxProvider() returned nil")
+	}
+	if sp.Kind() != "devcontainer" {
+		t.Errorf("expected devcontainer, got %s", sp.Kind())
+	}
+}
+
+func TestGetManagementProvider(t *testing.T) {
+	mp := GetManagementProvider()
+	if mp == nil {
+		t.Fatal("GetManagementProvider() returned nil")
+	}
+	if mp.Kind() != "github" {
+		t.Errorf("expected github, got %s", mp.Kind())
+	}
+}
+
+func TestNullManagementProvider(t *testing.T) {
+	p := &NullManagementProvider{}
+	if p.Kind() != "none" {
+		t.Errorf("expected none, got %s", p.Kind())
+	}
+	if err := p.Configure("/tmp"); err != nil {
+		t.Errorf("Configure should not error: %v", err)
+	}
+	url, err := p.CreateIssue("test", "body", nil)
+	if err != nil || url != "" {
+		t.Errorf("CreateIssue should return empty string, got %q, err=%v", url, err)
+	}
+	if err := p.CloseIssue("url"); err != nil {
+		t.Errorf("CloseIssue should not error: %v", err)
+	}
+	if err := p.ReopenIssue("url"); err != nil {
+		t.Errorf("ReopenIssue should not error: %v", err)
+	}
+	if err := p.DeleteIssue("url"); err != nil {
+		t.Errorf("DeleteIssue should not error: %v", err)
+	}
+	if err := p.UpdateIssueTitle("url", "title"); err != nil {
+		t.Errorf("UpdateIssueTitle should not error: %v", err)
+	}
+	if err := p.UpdateIssueBody("url", "body"); err != nil {
+		t.Errorf("UpdateIssueBody should not error: %v", err)
+	}
+	details, err := p.GetIssueDetails("url")
+	if err != nil || details != nil {
+		t.Errorf("GetIssueDetails should return nil, got %v, err=%v", details, err)
+	}
+	nodeID, err := p.GetIssueNodeID("url")
+	if err != nil || nodeID != "" {
+		t.Errorf("GetIssueNodeID should return empty, got %q, err=%v", nodeID, err)
+	}
+	parentURL, err := p.GetIssueParentURL("url")
+	if err != nil || parentURL != "" {
+		t.Errorf("GetIssueParentURL should return empty, got %q, err=%v", parentURL, err)
+	}
+	if err := p.AddComment("url", "comment"); err != nil {
+		t.Errorf("AddComment should not error: %v", err)
+	}
+	if err := p.AddLabels("url", []string{"a"}); err != nil {
+		t.Errorf("AddLabels should not error: %v", err)
+	}
+	if err := p.RemoveLabels("url", []string{"a"}); err != nil {
+		t.Errorf("RemoveLabels should not error: %v", err)
+	}
+	p.AddIssueToProject("url")
+	p.AssignIssueToCurrentUser("url")
+	if err := p.AddSubIssue("parent", "child"); err != nil {
+		t.Errorf("AddSubIssue should not error: %v", err)
+	}
+	if err := p.UpdateIssueMilestone("url", "title"); err != nil {
+		t.Errorf("UpdateIssueMilestone should not error: %v", err)
+	}
+	if err := p.ClearIssueMilestone("url"); err != nil {
+		t.Errorf("ClearIssueMilestone should not error: %v", err)
+	}
+	num, err := p.CreateMilestone("title", "desc")
+	if err != nil || num != 0 {
+		t.Errorf("CreateMilestone should return 0, got %d, err=%v", num, err)
+	}
+	if err := p.UpdateMilestone(1, "t", "d", "s", "due"); err != nil {
+		t.Errorf("UpdateMilestone should not error: %v", err)
+	}
+	if err := p.DeleteMilestone(1); err != nil {
+		t.Errorf("DeleteMilestone should not error: %v", err)
+	}
+	m, err := p.GetMilestone(1)
+	if err != nil || m != nil {
+		t.Errorf("GetMilestone should return nil, got %v, err=%v", m, err)
+	}
+	title, err := p.GetMilestoneTitle(1)
+	if err != nil || title != "" {
+		t.Errorf("GetMilestoneTitle should return empty, got %q, err=%v", title, err)
+	}
+	found, err := p.FindMilestoneByTitle("title")
+	if err != nil || found != nil {
+		t.Errorf("FindMilestoneByTitle should return nil, got %v, err=%v", found, err)
+	}
+	issues, err := p.ListIssuesForLabelSync()
+	if err != nil || issues != nil {
+		t.Errorf("ListIssuesForLabelSync should return nil, got %v, err=%v", issues, err)
+	}
+	urls, err := p.ListOpenIssuesWithLabel("label")
+	if err != nil || urls != nil {
+		t.Errorf("ListOpenIssuesWithLabel should return nil, got %v, err=%v", urls, err)
+	}
+	labels, err := p.ListRepoLabels()
+	if err != nil || labels != nil {
+		t.Errorf("ListRepoLabels should return nil, got %v, err=%v", labels, err)
+	}
+	if err := p.CreateRepoLabel("name"); err != nil {
+		t.Errorf("CreateRepoLabel should not error: %v", err)
+	}
+	if err := p.DeleteRepoLabel("name"); err != nil {
+		t.Errorf("DeleteRepoLabel should not error: %v", err)
+	}
+	if err := p.SyncRepoLabelCatalog(map[string]bool{"a": true}); err != nil {
+		t.Errorf("SyncRepoLabelCatalog should not error: %v", err)
+	}
+	goalURL, err := p.CreateGoalIssue("title", "desc", nil)
+	if err != nil || goalURL != "" {
+		t.Errorf("CreateGoalIssue should return empty, got %q, err=%v", goalURL, err)
+	}
+	if err := p.UpdateGoalIssue("url", "t", "d"); err != nil {
+		t.Errorf("UpdateGoalIssue should not error: %v", err)
+	}
+	if user := p.GetCurrentUser(); user != "" {
+		t.Errorf("GetCurrentUser should return empty, got %q", user)
+	}
+}
+
+func TestAllEditorProviders(t *testing.T) {
+	providers := AllEditorProviders()
+	if len(providers) == 0 {
+		t.Fatal("AllEditorProviders() returned empty")
+	}
+	kinds := make(map[string]bool)
+	for _, p := range providers {
+		if p.Kind() == "" {
+			t.Error("editor provider has empty Kind()")
+		}
+		kinds[p.Kind()] = true
+	}
+	for _, expected := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
+		if !kinds[expected] {
+			t.Errorf("missing editor provider for %s", expected)
+		}
+	}
+}
+
+func TestGetEditorProvider(t *testing.T) {
+	for _, client := range []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "codex", "antigravity-chat"} {
+		p := GetEditorProvider(client)
+		if p == nil {
+			t.Errorf("GetEditorProvider(%s) returned nil", client)
+			continue
+		}
+		if p.Kind() != client {
+			t.Errorf("expected Kind()=%s, got %s", client, p.Kind())
+		}
+	}
+	if p := GetEditorProvider("nonexistent"); p != nil {
+		t.Errorf("expected nil for unknown client, got %v", p)
+	}
+}
+
+func TestEditorProviderHookMapping(t *testing.T) {
+	for _, p := range AllEditorProviders() {
+		m := p.HookMapping()
+		if m.Client == "" {
+			t.Errorf("editor provider %s has empty HookMapping().Client", p.Kind())
+		}
+	}
+}
+
+func TestManagementProviderInterface(t *testing.T) {
+	var _ ManagementProvider = &GitHubManagementProvider{}
+	var _ ManagementProvider = &NullManagementProvider{}
+}
+
+func TestSourceControlProviderInterface(t *testing.T) {
+	var _ SourceControlProvider = &GitHubSourceControlProvider{}
+}
+
+func TestSandboxProviderInterface(t *testing.T) {
+	var _ SandboxProvider = &DevcontainerSandboxProvider{}
+}
+
+func TestEditorProviderInterface(t *testing.T) {
+	var _ EditorProvider = &CopilotEditorProvider{}
+	var _ EditorProvider = &CursorEditorProvider{}
+	var _ EditorProvider = &WindsurfEditorProvider{}
+	var _ EditorProvider = &ClaudeCodeEditorProvider{}
+	var _ EditorProvider = &DroidEditorProvider{}
+	var _ EditorProvider = &CodexEditorProvider{}
+	var _ EditorProvider = &AntigravityEditorProvider{}
+}
+
+// #endregion 🔖Provider Tests
+
+// #region 🔖Project Generate Tests
+
+func TestIsLicenseText(t *testing.T) {
+	if !isLicenseText("This program is free software: you can redistribute it and/or modify") {
+		t.Error("should detect 'free software' and 'redistribute'")
+	}
+	if !isLicenseText("it under the terms of the GNU Affero General Public License as") {
+		t.Error("should detect 'GNU' and 'License'")
+	}
+	if !isLicenseText("WITHOUT ANY WARRANTY; without even the implied warranty of") {
+		t.Error("should detect 'warranty'")
+	}
+	if !isLicenseText("Copyright 2025 Test User") {
+		t.Error("should detect 'copyright'")
+	}
+	if isLicenseText("This function MUST return a valid result.") {
+		t.Error("should not match spec text as license")
+	}
+	if isLicenseText("Functions for parsing SVG files.") {
+		t.Error("should not match summary text as license")
+	}
+}
+
+func TestIsHeaderMetaLine(t *testing.T) {
+	if !isHeaderMetaLine("[🧰semiorepo⌨️cli💻maingo](semiorepo://file/semio-repo/cli/main.go)") {
+		t.Error("should detect ID link")
+	}
+	if !isHeaderMetaLine("#region Header") {
+		t.Error("should detect #region")
+	}
+	if !isHeaderMetaLine("#endregion Header") {
+		t.Error("should detect #endregion")
+	}
+	if !isHeaderMetaLine("region Header") {
+		t.Error("should detect region (Python style)")
+	}
+	if !isHeaderMetaLine("endregion Header") {
+		t.Error("should detect endregion (Python style)")
+	}
+	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
+		t.Error("should detect contributor line starting with year")
+	}
+	if !isHeaderMetaLine("💻semio/assets/repo/some/folder/file.py") {
+		t.Error("should detect file ID emoji prefix")
+	}
+	if isHeaderMetaLine("This function handles parsing.") {
+		t.Error("should not match summary text")
+	}
+}
+
+func TestExtractMarkdownSection(t *testing.T) {
+	content := "# Summary\n\nThis is the summary.\n\n# Specs\n\nSpec line one MUST work.\nSpec line two SHOULD also work.\n\n# Docs\n\nDocumentation here.\n"
+	summary := ExtractMarkdownSection(content, "Summary")
+	if !strings.Contains(summary, "This is the summary.") {
+		t.Errorf("expected summary content, got: %q", summary)
+	}
+	specs := ExtractMarkdownSection(content, "Specs")
+	if !strings.Contains(specs, "Spec line one MUST work.") {
+		t.Errorf("expected specs content, got: %q", specs)
+	}
+	docs := ExtractMarkdownSection(content, "Docs")
+	if !strings.Contains(docs, "Documentation here.") {
+		t.Errorf("expected docs content, got: %q", docs)
+	}
+	missing := ExtractMarkdownSection(content, "Nonexistent")
+	if missing != "" {
+		t.Errorf("expected empty for missing section, got: %q", missing)
+	}
+}
+
+func TestExtractFileHeaderSummary(t *testing.T) {
+	summary := ExtractFileHeaderSummary("semio/assets/repo/some/folder/file_empty_region.tsx")
+	if strings.Contains(summary, "GNU") || strings.Contains(summary, "license") || strings.Contains(summary, "redistribute") {
+		t.Errorf("should not contain license text, got: %q", summary)
+	}
+	if strings.HasPrefix(summary, "#region") || strings.HasPrefix(summary, "region ") {
+		t.Errorf("should not start with region markers, got: %q", summary)
+	}
+}
+
+func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
+	summary := ExtractFileHeaderSummary("semio/assets/repo/some/folder/file_empty_region.tsx")
+	if strings.Contains(summary, "free software") {
+		t.Errorf("should not return license as summary, got: %q", summary)
+	}
+}
+
+func TestExtractFileHeaderSpecsNoLicense(t *testing.T) {
+	specs := ExtractFileHeaderSpecs("semio/assets/repo/some/folder/file.py")
+	if strings.Contains(specs, "GNU") || strings.Contains(specs, "license") || strings.Contains(specs, "redistribute") {
+		t.Errorf("should not contain license text, got: %q", specs)
+	}
+}
+
+func TestExtractSectionLeadCommentsSkipsLicense(t *testing.T) {
+	content := "# region License\n\n# This program is free software: you can redistribute it and/or modify\n# it under the terms of the GNU Affero General Public License.\n\n# endregion License\n"
+	sections := GetLanguage("test.py").ParseSections(content)
+	for _, s := range sections {
+		if s.Name == "License" {
+			specs, summary := ExtractSectionLeadComments(content, s, "#")
+			if specs != "" || summary != "" {
+				t.Errorf("license section should return empty specs and summary, got specs=%q summary=%q", specs, summary)
+			}
+		}
+	}
+}
+
+func TestExtractSectionLeadCommentsSkipsRegionMarkers(t *testing.T) {
+	content := "//#region 🔖Exports\n// Re-exports of icons.\n// Data MUST be valid.\n//#endregion 🔖Exports\n"
+	sections := GetLanguage("test.ts").ParseSections(content)
+	for _, s := range sections {
+		if s.Name == "Exports" {
+			specs, summary := ExtractSectionLeadComments(content, s, "//")
+			if strings.Contains(summary, "region") {
+				t.Errorf("should not contain region text in summary, got: %q", summary)
+			}
+			if !strings.Contains(summary, "Re-exports of icons.") {
+				t.Errorf("should contain actual summary text, got: %q", summary)
+			}
+			if !strings.Contains(specs, "Data MUST be valid.") {
+				t.Errorf("should contain spec text, got: %q", specs)
+			}
+		}
+	}
+}
+
+func TestGenerateProjectSpecs(t *testing.T) {
+	err := GenerateProjectSpecs("coda")
+	if err != nil {
+		t.Fatalf("GenerateProjectSpecs failed: %v", err)
+	}
+	content, err := ReadTextFile(filepath.Join(rootDir, "coda", "SPECS.md"))
+	if err != nil {
+		t.Fatalf("failed to read SPECS.md: %v", err)
+	}
+	if !strings.HasPrefix(content, "# 💯 Specs") {
+		t.Error("SPECS.md should start with '# 💯 Specs'")
+	}
+	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") {
+		t.Error("SPECS.md should not contain license text")
+	}
+	if !strings.Contains(content, "MUST") {
+		t.Error("SPECS.md should contain spec keywords")
+	}
+}
+
+func TestGenerateProjectDocs(t *testing.T) {
+	err := GenerateProjectDocs("coda")
+	if err != nil {
+		t.Fatalf("GenerateProjectDocs failed: %v", err)
+	}
+	content, err := ReadTextFile(filepath.Join(rootDir, "coda", "DOCS.md"))
+	if err != nil {
+		t.Fatalf("failed to read DOCS.md: %v", err)
+	}
+	if !strings.HasPrefix(content, "# 📚 Docs") {
+		t.Error("DOCS.md should start with '# 📚 Docs'")
+	}
+	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") || strings.Contains(content, "redistribute") {
+		t.Error("DOCS.md should not contain license text")
+	}
+	if strings.Contains(content, "region ") {
+		t.Error("DOCS.md should not contain region markers")
+	}
+}
+
+func TestGenerateProjectTodos(t *testing.T) {
+	err := GenerateProjectTodos("coda")
+	if err != nil {
+		t.Fatalf("GenerateProjectTodos failed: %v", err)
+	}
+	content, err := ReadTextFile(filepath.Join(rootDir, "coda", "TODOS.md"))
+	if err != nil {
+		t.Fatalf("failed to read TODOS.md: %v", err)
+	}
+	if !strings.HasPrefix(content, "# 🔳 TODOs") {
+		t.Error("TODOS.md should start with '# 🔳 TODOs'")
+	}
+}
+
+func TestGenerateProjectSpecsInvalidProject(t *testing.T) {
+	err := GenerateProjectSpecs("nonexistent-project")
+	if err == nil {
+		t.Error("should return error for nonexistent project")
+	}
+}
+
+func TestGenerateProjectDocsInvalidProject(t *testing.T) {
+	err := GenerateProjectDocs("nonexistent-project")
+	if err == nil {
+		t.Error("should return error for nonexistent project")
+	}
+}
+
+func TestGenerateProjectTodosInvalidProject(t *testing.T) {
+	err := GenerateProjectTodos("nonexistent-project")
+	if err == nil {
+		t.Error("should return error for nonexistent project")
+	}
+}
+
+func TestGenerateProjectSpecsSemio(t *testing.T) {
+	err := GenerateProjectSpecs("semio")
+	if err != nil {
+		t.Fatalf("GenerateProjectSpecs semio failed: %v", err)
+	}
+	content, err := ReadTextFile(filepath.Join(rootDir, "semio", "SPECS.md"))
+	if err != nil {
+		t.Fatalf("failed to read semio/SPECS.md: %v", err)
+	}
+	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") || strings.Contains(content, "redistribute") {
+		t.Error("semio SPECS.md should not contain license text")
+	}
+	if !strings.Contains(content, "MUST") {
+		t.Error("semio SPECS.md should contain MUST keywords")
+	}
+}
+
+func TestGenerateProjectDocsSemio(t *testing.T) {
+	err := GenerateProjectDocs("semio")
+	if err != nil {
+		t.Fatalf("GenerateProjectDocs semio failed: %v", err)
+	}
+	content, err := ReadTextFile(filepath.Join(rootDir, "semio", "DOCS.md"))
+	if err != nil {
+		t.Fatalf("failed to read semio/DOCS.md: %v", err)
+	}
+	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") || strings.Contains(content, "redistribute") {
+		t.Error("semio DOCS.md should not contain license text")
+	}
+}
+
+func TestGenerateProjectSpecsSemioRepo(t *testing.T) {
+	err := GenerateProjectSpecs("semio-repo")
+	if err != nil {
+		t.Fatalf("GenerateProjectSpecs semio-repo failed: %v", err)
+	}
+	content, err := ReadTextFile(filepath.Join(rootDir, "semio-repo", "SPECS.md"))
+	if err != nil {
+		t.Fatalf("failed to read semio-repo/SPECS.md: %v", err)
+	}
+	if strings.Contains(content, "free software") || strings.Contains(content, "redistribute") {
+		t.Error("semio-repo SPECS.md should not contain license text")
+	}
+}
+
+// #endregion 🔖Project Generate Tests

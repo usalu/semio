@@ -20,17 +20,17 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## Research
 
-### [👤semio]
+## [👤semio]
 
-#### [👤semio📚js]()
+## [👤semio📚js]()
 
-##### [👤semio📚js🗃️sketchpad]()
+## [👤semio📚js🗃️sketchpad]()
 
-###### [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
+## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
 
-### 🧰semiorepo
+## 🧰semiorepo
 
-#### 🧰semiorepo⌨️cli
+## 🧰semiorepo⌨️cli
 
 We want to develop a general hook system that works accross all ai tools (claude code, vscode agent, cursor agent, windsurf agent, droid). One go binary exposes general hooks that can be reused accross platforms. How would you design the system? It needs to be compatible with the following apis:
 https://code.visualstudio.com/docs/copilot/customization/hooks
@@ -45,10 +45,10 @@ https://docs.factory.ai/cli/configuration/hooks-guide
 
 semio repo:
 Write scripts to handle all git interactions and make them available as vscode launch (create archive branch `{{contributor}}/<{{YY}}/{{MM}}/{{DD}}`, checkout to `main` squash merge `{{contributor}}/latest>` into `main`), etc
+
 - Merge (prioritize me)
 - Merge (prioritize main)
 - Pull # fast forwards `{{contributor}}/latest>` to `main`
-
 
 sketchpad:
 
@@ -62,15 +62,186 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 ## [👤semio]
 
-### [👤semio📚js]()
+## [👤semio📚js]()
 
-#### [👤semio📚js🗃️sketchpad]()
+## [👤semio📚js🗃️sketchpad]()
 
-##### [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
+## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
 
-# 🧰semiorepo
+## 🧰semiorepo
 
 ## 🧰semiorepo⌨️cli
+
+```json
+{
+  "context": {
+    "event": "agent.ended",
+    "client": "copilot-chat",
+    "timestamp": "2026-02-20T09:11:47Z",
+    "repoRoot": "/workspaces/semio",
+    "input": {
+      "timestamp": "2026-02-20T09:11:46.811Z",
+      "hookEventName": "Stop",
+      "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+      "stop_hook_active": false,
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "result": {
+    "allowed": true,
+    "raw": {
+      "timestamp": "2026-02-20T09:11:46.811Z",
+      "hookEventName": "Stop",
+      "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+      "stop_hook_active": false,
+      "cwd": "/workspaces/semio"
+    },
+    "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
+    "timestamp": "2026-02-20T09:11:47Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
+  }
+}
+```
+
+```json
+{
+  "input": {
+     "timestamp": "2026-02-20T09:11:46.811Z",
+      "hookEventName": "Stop",
+      "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+      "stop_hook_active": false,
+      "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.ended",
+    "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
+    "timestamp": "2026-02-20T09:11:46.811Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
+  },
+  "response": {
+  }
+}
+```
+
+Extend the cli by a general project specs, docs and todo generation system.
+
+```bash
+./semio-repo/cli/cli project <project-name> generate <kind>
+
+./semio-repo/cli/cli project semio generate specs
+./semio-repo/cli/cli project semio-repo generate docs
+./semio-repo/cli/cli project coda generate todos
+```
+
+---
+
+`DOCS.md`
+```md
+# 📚 Docs
+
+## [{{ENTITYID}}]({{ENTITYURI}})
+
+{{ENTITYDOCS}}
+```
+
+`SPECS.MD`
+```md
+# 💯 Specs
+
+## [{{ENTITYID}}]({{ENTITYURI}})
+
+{{ENTITYSPECS}}
+```
+
+`TODOS.md`
+```md
+# 🔳 TODOs
+
+## [{{ENTITYID}}]({{ENTITYURI}})
+
+### TODO: {{TODOTITLE}}
+{{TODODESCRIPTION}}
+```
+
+You MUST implement, test and run it for all projects.
+
+The information is sourced from the code:
+
+
+
+Create a `generate <kind> ` command that generates.
+
+```bash
+./semio-repo/cli/cli mermaid <visualization>
+./semio-repo/cli/cli mermaid loc-by-projects-bundles-folders-files
+./semio-repo/cli/cli mermaid loc-by-contributors
+./semio-repo/cli/cli mermaid loc-by-language
+```
+
+---
+
+Currently a lot of dependencies are hardcoded. Generalize them, so that everything is composable.
+There are SourceControlProvider (GitHub, GitLab, BitBucket, …), TrackerProvider (Jira, Trello, Linear, GitHub, …), SandboxProvider (Devcontainer, Podman, …), LanguageProviders (Typescript, Go, Python, C#, …), AIProvider (VSCode, Windsurf, Cursor, Antigrvity, Claude Code, Codex, Droid, …), MonorepoProvider (Nx, Turborepo, Bazel, Pant, Buck2, Lage, Rush, …).
+You MUST use for every Provider the native cli.
+All Providers MUST provide a configure method that adjusts config files accordingly.
+All issue/milestone related code usage from GitHub MUST be abstracted to ManagmentProvider.
+All native agent hooks MUST be abstracted to EditorProvider. EditorProvider provide things like adapters for native agent hooks where they can map to common semio repo agent hooks.
+Dont stop until you have refactored and tested everything.
+
+---
+
+### 🧰semiorepo⌨️cli🔖metrics
+
+The semio repo cli MUST generate mermaid diagram strings.
+
+```bash
+./semio-repo/cli/cli mermaid <visualization>
+./semio-repo/cli/cli mermaid loc-by-projects-bundles-folders-files
+./semio-repo/cli/cli mermaid loc-by-contributors
+./semio-repo/cli/cli mermaid loc-by-language
+```
+
+e.g `./semio-repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be something like this:
+
+```mermaid
+treemap-beta
+"Lines of Code (k)"
+    "👤semio"
+      "📚js"
+        "🗃️skethcpad"
+          "💻designtsx"
+            "🔖statemanagment"
+              "🔖store": 40
+            "🔖designtsx": 80
+        "💻semio.ts": 30
+      "📚sketchpad": 80
+    "🧰semiorepo"
+      "⌨️cli": 30
+    "🔬coda"
+      "⌨️cli": 2
+```
+
+e.g `./semio-repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be something like this:
+
+```mermaid
+treemap-beta
+"Lines of Code (k)"
+    "🐍Python"
+      "📚js"
+        "🗃️skethcpad"
+          "💻Design.tsx": 80
+        "💻semio.ts": 30
+      "📚sketchpad": 80
+    "🧰semiorepo"
+      "⌨️cli": 30
+    "🔬coda"
+      "⌨️cli": 2
+```
 
 ### 🧰semiorepo⌨️cli🔖identification
 
@@ -79,6 +250,7 @@ Update tree to not have sections but every section should have a tree. A tab sho
 All ids are designed to be displayed as tree.
 The --text option should not show the full ids but only the tree part of the ids.
 e.g. this:
+
 ```bash
  $ ./semio-repo/cli/cli tree --only-goal --text
 [🎯Goals](semiorepo://goals)
@@ -89,7 +261,9 @@ e.g. this:
 │   │   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli Repo CLI open Goal for Repo CLI
 │   │   │   │   └── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
 ```
+
 should be:
+
 ```bash
  $ ./semio-repo/cli/cli tree --only-goal --text
 [🎯Goals](semiorepo://goals)
@@ -100,11 +274,13 @@ should be:
 │   │   │   ├── 🎯repocli Repo CLI open Goal for Repo CLI
 │   │   │   │   └── 🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
 ```
+
 ---
 
 ### 🧰semiorepo⌨️cli🔖hooks
 
 ticket
+
 ```md
 - .semio-repo # folder
   - 🎫 # folder
@@ -116,88 +292,88 @@ ticket
 
 Agent hooks are matched with session id to tickets.
 
-
-
-
 ---
 
 semio repo cli:
 The hooks from vscode-chat are not working and not calling the hooks from semio repo. The hooks MUST be only configured by `./semio-repo/cli/cli configure`.
+
 ---
+
 semio repo hook:
 In vscode this command was blocked allthough it shouldnt be blocked. Only some git commands should be blocked.
 cd /workspaces/semio && ./semio-repo/cli/cli tree "hooks events inlet adapter cli" 2>&1 | head -200
 
 ---
-vscode 
+
+vscode
 
 ```json
 {
-  "input": {
-    "timestamp": "2026-02-18T09:25:46.649Z",
-    "hookEventName": "PostToolUse",
-    "sessionId": "34ec4d3a-862a-4732-82b3-01532df2aca2",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/34ec4d3a-862a-4732-82b3-01532df2aca2.jsonl",
-    "tool_name": "manage_todo_list",
-    "tool_input": {
-      "todoList": [
-        {
-          "id": 1,
-          "status": "completed",
-          "title": "Read test patterns for hooks"
-        },
-        {
-          "id": 2,
-          "status": "completed",
-          "title": "Add formatVSCodeHookOutput function"
-        },
-        {
-          "id": 3,
-          "status": "completed",
-          "title": "Extract tool_name from stdin JSON"
-        },
-        {
-          "id": 4,
-          "status": "completed",
-          "title": "Modify hookCommand for copilot-chat output"
-        },
-        {
-          "id": 5,
-          "status": "completed",
-          "title": "Update generateCopilotConfig"
-        },
-        {
-          "id": 6,
-          "status": "completed",
-          "title": "Update tests for VS Code output"
-        },
-        {
-          "id": 7,
-          "status": "completed",
-          "title": "Run configure and rebuild CLI"
-        },
-        {
-          "id": 8,
-          "status": "completed",
-          "title": "Run all hook tests"
-        },
-        {
-          "id": 9,
-          "status": "completed",
-          "title": "Close ticket"
-        }
-      ]
+ "input": {
+  "timestamp": "2026-02-18T09:25:46.649Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "34ec4d3a-862a-4732-82b3-01532df2aca2",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/34ec4d3a-862a-4732-82b3-01532df2aca2.jsonl",
+  "tool_name": "manage_todo_list",
+  "tool_input": {
+   "todoList": [
+    {
+     "id": 1,
+     "status": "completed",
+     "title": "Read test patterns for hooks"
     },
-    "tool_response": "Successfully wrote todo list",
-    "tool_use_id": "toolu_vrtx_01YQjTvPuR25jrTCD8mg1baT__vscode-1771370659744",
-    "cwd": "/workspaces/semio"
-  }
+    {
+     "id": 2,
+     "status": "completed",
+     "title": "Add formatVSCodeHookOutput function"
+    },
+    {
+     "id": 3,
+     "status": "completed",
+     "title": "Extract tool_name from stdin JSON"
+    },
+    {
+     "id": 4,
+     "status": "completed",
+     "title": "Modify hookCommand for copilot-chat output"
+    },
+    {
+     "id": 5,
+     "status": "completed",
+     "title": "Update generateCopilotConfig"
+    },
+    {
+     "id": 6,
+     "status": "completed",
+     "title": "Update tests for VS Code output"
+    },
+    {
+     "id": 7,
+     "status": "completed",
+     "title": "Run configure and rebuild CLI"
+    },
+    {
+     "id": 8,
+     "status": "completed",
+     "title": "Run all hook tests"
+    },
+    {
+     "id": 9,
+     "status": "completed",
+     "title": "Close ticket"
+    }
+   ]
+  },
+  "tool_response": "Successfully wrote todo list",
+  "tool_use_id": "toolu_vrtx_01YQjTvPuR25jrTCD8mg1baT__vscode-1771370659744",
+  "cwd": "/workspaces/semio"
+ }
 }
 ```
 
 ---
 
-All mcp tools that have 
+All mcp tools that have
 
 All hooks should always include all possible information and have no matchers in the plattform configs. Only the semio repo cli then can drop information when mapping to the native semio repo hook events. Make sure configure cli command is correctly setting everything up.
 
@@ -222,6 +398,7 @@ Claude Code: `.claude/settings.json` with `SessionStart`, `UserPromptSubmit`, `P
 Droid: `.factory/hooks.json` with `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Notification`, `Stop`, `SubagentStop`, `PreCompact`, `SessionStart`, `SessionEnd`
 
 The api for hooks maps to native events:
+
 ```bash
 ./semio-repo/cli/cli hook PreCompact vscode-chat
 ./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat
@@ -232,143 +409,145 @@ The api for hooks maps to native events:
 You MUST make sure that the hooks return exactly this information (additionally make sure to add raw as a field where you add the raw input json and leave it for logging for now):
 
 Events
+
 ```yaml
 git:
-  commit:
-    starting: # pre-commit
-      message: {{COMMITMESSAGE}} 
-    ended: # post-commit
-      sha: {{COMMITSHA}}
-      message: {{COMMITMESSAGE}}
+ commit:
+  starting: # pre-commit
+   message: { { COMMITMESSAGE } }
+  ended: # post-commit
+   sha: { { COMMITSHA } }
+   message: { { COMMITMESSAGE } }
 agent:
-  started:
-    session: {{ID}}
-    timestamp: {{TIMESTAMP}}
-    client: {{CLIENT}}
-    llm: {{LLM}}
-    transcript: {{TRANSSCRIPTPATH}}
-    parent: {{PARENT}}
-  ended:
-    session: {{ID}}
-    timestamp: {{TIMESTAMP}}
-    client: {{CLIENT}}
-    llm: {{LLM}}
-    transcript: {{TRANSSCRIPTPATH}}
-    message: {{MESSAGEID}}
-    parent: {{PARENTMESSAGEID}}
-  prompt:
-    submitting:
-      session: {{ID}}
-      timestamp: {{TIMESTAMP}}
-      client: {{CLIENT}}
-      llm: {{LLM}}
-      message: {{MESSAGEID}}
-      parent: {{PARENTMESSAGEID}}
-      prompt: {{PROMPT}}
-  compacting:
-    session: {{ID}}
-    timestamp: {{TIMESTAMP}}
-    client: {{CLIENT}}
-    llm: {{LLM}}
-    transcript: {{TRANSSCRIPTPATH}}
-    message: {{MESSAGEID}}
-    parent: {{PARENTMESSAGEID}}
-    chat: {{CHAT}}
-  tool:
-    starting: # all tools but excluding task, code, terminal
-      session: {{ID}}
-      timestamp: {{TIMESTAMP}}
-      client: {{CLIENT}}
-      llm: {{LLM}}
-      transcript: {{TRANSSCRIPTPATH}}
-      message: {{MESSAGEID}}
-      parent: {{PARENTMESSAGEID}}
-      name: {{NAME}} # name of the tool
-      input: {{INPUT}}
-    ended: # excluding task, code and terminal
-      session: {{ID}}
-      timestamp: {{TIMESTAMP}}
-      client: {{CLIENT}}
-      llm: {{LLM}}
-      transcript: {{TRANSSCRIPTPATH}}
-      message: {{MESSAGEID}}
-      parent: {{PARENTMESSAGEID}}
-      name: {{NAME}} # name of the tool
-      input: {{INPUT}}
-      response: {{RESPONSE}}
-    plan: # A list of tasks - usually TODO lists in the native clients
-      updating: # Planning involves changing the task list
-        session: {{ID}}
-        timestamp: {{TIMESTAMP}}
-        client: {{CLIENT}}
-        llm: {{LLM}}
-        transcript: {{TRANSSCRIPTPATH}}
-        message: {{MESSAGEID}}
-        parent: {{PARENTMESSAGEID}}
-        steps:
-          - name: {{STEPNAME}}
-          - status: {{STATUS}} # completed, in progress, pending
-    searching: # All searches such as file read, grep, websearch
-      session: {{ID}}
-      timestamp: {{TIMESTAMP}}
-      client: {{CLIENT}}
-      llm: {{LLM}}
-      transcript: {{TRANSSCRIPTPATH}}
-      message: {{MESSAGEID}}
-      parent: {{PARENTMESSAGEID}}
-      query: {{QUERY}} # regex, glob, file path, url, etc
-      include: [{{INCLUDEPATTERN}}] # file glob patterns, line numbers, etc
-      exclude: [{{EXCLUDEPATTERN}}]
-    code:
-      editing:
-        session: {{ID}}
-        timestamp: {{TIMESTAMP}}
-        client: {{CLIENT}}
-        llm: {{LLM}}
-        transcript: {{TRANSSCRIPTPATH}}
-        message: {{MESSAGEID}}
-        parent: {{PARENTMESSAGEID}}
-        path: {{FILEPATH}}
-        old: {{OLDSTRING}}
-        new: {{NEWSTRING}}
-        all: {{REPLACEALLSTRINGS}} # false: just first, true: replace all occurrences
-      edited:
-        session: {{ID}}
-        timestamp: {{TIMESTAMP}}
-        client: {{CLIENT}}
-        llm: {{LLM}}
-        transcript: {{TRANSSCRIPTPATH}}
-        message: {{MESSAGEID}}
-        parent: {{PARENTMESSAGEID}}
-        path: {{FILEPATH}}
-        old: {{OLDSTRING}}
-        new: {{NEWSTRING}}
-    terminal:
-      starting:
-        session: {{ID}}
-        timestamp: {{TIMESTAMP}}
-        client: {{CLIENT}}
-        llm: {{LLM}}
-        transcript: {{TRANSSCRIPTPATH}}
-        message: {{MESSAGEID}}
-        parent: {{PARENTMESSAGEID}}
-        command: {{COMMAND}}
-      ended:
-        session: {{ID}}
-        timestamp: {{TIMESTAMP}}
-        client: {{CLIENT}}
-        llm: {{LLM}}
-        transcript: {{TRANSSCRIPTPATH}}
-        message: {{MESSAGEID}}
-        parent: {{PARENTMESSAGEID}}
-        command: {{COMMAND}}
-        pid: {{PID}} # process id, execution id, etc
-        terminated: {{HASTERMINATED}} # true: stopped, false: still running
-        stdout: {{STDOUT}}
-        stderr: {{STDERR}}
+ started:
+  session: { { ID } }
+  timestamp: { { TIMESTAMP } }
+  client: { { CLIENT } }
+  llm: { { LLM } }
+  transcript: { { TRANSSCRIPTPATH } }
+  parent: { { PARENT } }
+ ended:
+  session: { { ID } }
+  timestamp: { { TIMESTAMP } }
+  client: { { CLIENT } }
+  llm: { { LLM } }
+  transcript: { { TRANSSCRIPTPATH } }
+  message: { { MESSAGEID } }
+  parent: { { PARENTMESSAGEID } }
+ prompt:
+  submitting:
+   session: { { ID } }
+   timestamp: { { TIMESTAMP } }
+   client: { { CLIENT } }
+   llm: { { LLM } }
+   message: { { MESSAGEID } }
+   parent: { { PARENTMESSAGEID } }
+   prompt: { { PROMPT } }
+ compacting:
+  session: { { ID } }
+  timestamp: { { TIMESTAMP } }
+  client: { { CLIENT } }
+  llm: { { LLM } }
+  transcript: { { TRANSSCRIPTPATH } }
+  message: { { MESSAGEID } }
+  parent: { { PARENTMESSAGEID } }
+  chat: { { CHAT } }
+ tool:
+  starting: # all tools but excluding task, code, terminal
+   session: { { ID } }
+   timestamp: { { TIMESTAMP } }
+   client: { { CLIENT } }
+   llm: { { LLM } }
+   transcript: { { TRANSSCRIPTPATH } }
+   message: { { MESSAGEID } }
+   parent: { { PARENTMESSAGEID } }
+   name: { { NAME } } # name of the tool
+   input: { { INPUT } }
+  ended: # excluding task, code and terminal
+   session: { { ID } }
+   timestamp: { { TIMESTAMP } }
+   client: { { CLIENT } }
+   llm: { { LLM } }
+   transcript: { { TRANSSCRIPTPATH } }
+   message: { { MESSAGEID } }
+   parent: { { PARENTMESSAGEID } }
+   name: { { NAME } } # name of the tool
+   input: { { INPUT } }
+   response: { { RESPONSE } }
+  plan: # A list of tasks - usually TODO lists in the native clients
+   updating: # Planning involves changing the task list
+    session: { { ID } }
+    timestamp: { { TIMESTAMP } }
+    client: { { CLIENT } }
+    llm: { { LLM } }
+    transcript: { { TRANSSCRIPTPATH } }
+    message: { { MESSAGEID } }
+    parent: { { PARENTMESSAGEID } }
+    steps:
+     - name: { { STEPNAME } }
+     - status: { { STATUS } } # completed, in progress, pending
+  searching: # All searches such as file read, grep, websearch
+   session: { { ID } }
+   timestamp: { { TIMESTAMP } }
+   client: { { CLIENT } }
+   llm: { { LLM } }
+   transcript: { { TRANSSCRIPTPATH } }
+   message: { { MESSAGEID } }
+   parent: { { PARENTMESSAGEID } }
+   query: { { QUERY } } # regex, glob, file path, url, etc
+   include: [{ { INCLUDEPATTERN } }] # file glob patterns, line numbers, etc
+   exclude: [{ { EXCLUDEPATTERN } }]
+  code:
+   editing:
+    session: { { ID } }
+    timestamp: { { TIMESTAMP } }
+    client: { { CLIENT } }
+    llm: { { LLM } }
+    transcript: { { TRANSSCRIPTPATH } }
+    message: { { MESSAGEID } }
+    parent: { { PARENTMESSAGEID } }
+    path: { { FILEPATH } }
+    old: { { OLDSTRING } }
+    new: { { NEWSTRING } }
+    all: { { REPLACEALLSTRINGS } } # false: just first, true: replace all occurrences
+   edited:
+    session: { { ID } }
+    timestamp: { { TIMESTAMP } }
+    client: { { CLIENT } }
+    llm: { { LLM } }
+    transcript: { { TRANSSCRIPTPATH } }
+    message: { { MESSAGEID } }
+    parent: { { PARENTMESSAGEID } }
+    path: { { FILEPATH } }
+    old: { { OLDSTRING } }
+    new: { { NEWSTRING } }
+  terminal:
+   starting:
+    session: { { ID } }
+    timestamp: { { TIMESTAMP } }
+    client: { { CLIENT } }
+    llm: { { LLM } }
+    transcript: { { TRANSSCRIPTPATH } }
+    message: { { MESSAGEID } }
+    parent: { { PARENTMESSAGEID } }
+    command: { { COMMAND } }
+   ended:
+    session: { { ID } }
+    timestamp: { { TIMESTAMP } }
+    client: { { CLIENT } }
+    llm: { { LLM } }
+    transcript: { { TRANSSCRIPTPATH } }
+    message: { { MESSAGEID } }
+    parent: { { PARENTMESSAGEID } }
+    command: { { COMMAND } }
+    pid: { { PID } } # process id, execution id, etc
+    terminated: { { HASTERMINATED } } # true: stopped, false: still running
+    stdout: { { STDOUT } }
+    stderr: { { STDERR } }
 ```
 
 Hooks:
+
 ```yaml
 git:
   commit:
@@ -462,6 +641,7 @@ agent:
 ```
 
 `ticket.json`
+
 ```yaml
 title: Tree Text Short IDs
 description: >-
@@ -503,14 +683,13 @@ sessions: # Create a new session when semio repo mcp ticket open is called
         commit: 503dcda1bc1de15727d922200c8d579a230ddf0c
         llm: opus-4-6
         prompt: vscode copliot hooks have the following error:\nCannot read properties of undefined (reading 'hookSpecificOutput') # From agent.prompt.submit
-       
+
         reads: # Derive from code read hooks
           projects: [{{ID}}]
           bundles:  [{{ID}}]
           …
-      
-```
 
+```
 
 - git
   - commit
@@ -527,18 +706,19 @@ sessions: # Create a new session when semio repo mcp ticket open is called
     - ended # with return information, tool.post cursor: postToolUse or postToolUseFailure
     - task
       - plan # vscode-chat: "toolName": "manage_todo_list" with non-completed
-      - starting # vscode-chat: "toolName": "manage_todo_list" and compare 
+      - starting # vscode-chat: "toolName": "manage_todo_list" and compare
       - ended # vscode-chat: "toolName": "manage_todo_list" and compare if the, claude-code: TaskCompleted
     - code
       - reading # vscode-chat: tool.pre with proper tool, cursor-chat: beforeReadFile, windsurf-chat: pre_read_code, claude-code: PreToolUse"
-      - edited  # vscode-chat: tool.pre with proper tool, cursor-chat: afterFileEdit, windsurf-chat: pre_write_code, 
+      - edited # vscode-chat: tool.pre with proper tool, cursor-chat: afterFileEdit, windsurf-chat: pre_write_code,
     - terminal
-      - starting #  claude-code: "tool_name": "Bash", windsurf: pre_run_command, cursor-chat: beforeShellExecution
+      - starting # claude-code: "tool_name": "Bash", windsurf: pre_run_command, cursor-chat: beforeShellExecution
       - ended # terminal.stop
 
 Tool calling should implement a block decision. e.g. `git checkout`, `git stash`, `git reset`, `git commit` should be always denied.
 
 Support:
+
 ```bash
 ./semio-repo/cli/cli hook <event-kind> <client>
 ./semio-repo/cli/cli hook commit.starting vscode-chat
@@ -549,7 +729,6 @@ Support:
 ```
 
 Extend the cli with a command `configure` that automatically configures the repo (you MUST always define workspace configs that are checked in with source control) the pre-commit config, all the agent hook config for (copilot-chat, cursor-chat, windsurf-chat, claude-code, droid, etc)
-
 
 The codebase diff mechanism should change. Instead of adding the diffs on ticket close, require files on ticket create and on ticket close. Dont compute any diffs on ticket interactions. Just require files (accept path, id and uri).
 Introduce a git hook that adds the commit message as a commit under `.semio-repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE` with the codebase diff. That diff should be complete and contain all changes (removed, renamed, modified, added) for all diffable entities (project, bundle, folder, file, section, definition, goal, ticket, draft, todo, policy, breach, contributor)
@@ -764,8 +943,6 @@ Dont keep any legacy api.
 ## ⌨️server
 
 ##
-
-# coda
 
 When semio repo go is tested there is a cli binary placed at root. Just use the semio-repo/cli/cli,
 
@@ -1033,8 +1210,6 @@ at async $Ujc.S (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/W
 at async $Ujc.L (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:993:63845)
 at async $Ujc.openEditor (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:993:62861)
 at async vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1105:42321
-
-Create a `generate docs` command that generates
 
 You didnt get the format right. Extend policies to enforce the following:
 Only definitions have docstrings. Section have regular comments.

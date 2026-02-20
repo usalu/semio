@@ -1,10 +1,10 @@
-# Summary
-
-Monorepo tools that are ai-ready 🚀
+---
+summary: Monorepo tools that are ai-ready.
+---
 
 ## ✨ Features
 
-- 🤖 AI-first
+- 🤖 AI integrations
   - ✅ Currently
     - 🧑‍✈️ Copilot
     - 🌊 Cascade
@@ -14,7 +14,7 @@ Monorepo tools that are ai-ready 🚀
   - 📅 Possible
     - 🦾 Droid
     - …
-- 🧑‍💻 IDE native
+- 🧑‍💻 IDE integrations
   - ✅ Currently
     - 💻 VSCode
     - 🌊 Windsurf
@@ -30,7 +30,7 @@ Monorepo tools that are ai-ready 🚀
     - Rider
     - Android Studio
     - …
-- 🗣️ Multi-Language
+- 🗣️ Language integrations
   - ✅ Currently
     - 🟦 Typescript
     - 🐹 Go
@@ -46,13 +46,13 @@ Monorepo tools that are ai-ready 🚀
     - 💎 Ruby
     - 🐦 Swift
     - …
-- 📦 Sandboxed
+- 📦 Sandbox integrations
   - ✅ Currently
     - 🐋 Devcontainers
   - 📅 Possible
     - 🦭 Podman
     - …
-- 👥 Team ready
+- 👥 Tracker integrations
   - ✅ Currently
     - 🐙 GitHub
   - 📅 Possible
@@ -62,38 +62,54 @@ Monorepo tools that are ai-ready 🚀
 
 ### 🤖 AI
 
-| System             | Agents | Skills | Hooks |
-|--------------------|:------:|:------:|:-----:|
-| 🧑‍✈️ Copilot         |   ✅   |   ✅   |  ✅   |
-| 🌊 Cascade         |   ✅   |   ✅   |  ✅   |
-| 🖱️ Cursor Agent     |   ✅   |   ✅   |  ✅   |
-| ❄️ Claude Code     |   ✅   |   ✅   |  ✅   |
-| ⚙️ Codex           |   ✅   |   ✅   |  ❌   |
-| (🦾 Droid)         |   ✅   |   ✅   |  ✅   |
+| System          | Agents | Skills | Hooks |
+| --------------- | :----: | :----: | :---: |
+| 🧑‍✈️ Copilot      |   ✅   |   ✅   |  ✅   |
+| 🌊 Cascade      |   ✅   |   ✅   |  ✅   |
+| 🖱️ Cursor Agent |   ✅   |   ✅   |  ✅   |
+| ❄️ Claude Code  |   ✅   |   ✅   |  ✅   |
+| ⚙️ Codex        |   ✅   |   ✅   |  ❌   |
+| (🦾 Droid)      |   ✅   |   ✅   |  ✅   |
 
-### 
+###
 
-## 😥 What, you'll have to abandon 
+## 🥇 Why semio-repo is a game changer
 
-### ❌ No granular files, only godfiles 
+### 📈 Specs + Docs + Stats + Semantics
 
-### ❌ No normal docstrings 
+#### 🚀 Agents love TDD
 
-### ❌ No inline comments 
+[Test-Driven-Development (TDD)](https://en.wikipedia.org/wiki/Test-driven_development) is a game changer for agents 🚀
 
-## 😲 What, you'll get 
+##### ↔️ Multi-lanugage development
 
-### 🚀 Zero-touch development 
+Ever had the problem that you domain-expert devs write Python/C++/C/Javascript/Ruby/Lua/… but not Typescript/Go/Rust/C#/Julia/… or vice versa?
 
-### 🧪 Shared test infrastructure 
+No problem, let them write what they know, until the tests are extended and let agents reimplement it natively until the tests succeeds ✅
 
-### 💯 Consistent specs 
+## 😥 What, you'll have to abandon
 
-### 📑 Conistent docs 
+### ❌ No granular files, only godfiles
 
-### 🔮 Future proof infrastructure 
+### ❌ No normal docstrings
 
-### 📊 Meaningful stats 
+### ❌ No inline comments
+
+## 😲 What, you'll get
+
+### 🚀 Zero-touch development
+
+### 🧪 Shared test infrastructure
+
+### 💯 Consistent specs
+
+### 📑 Conistent docs
+
+### 🔮 Future proof infrastructure
+
+### 📊 Meaningful stats
+
+---
 
 
 ## Specs
@@ -108,7 +124,7 @@ Monorepo tools that are ai-ready 🚀
 
 ### Contributors, Commits, Interactions
 
-## 
+##
 
 ## AI
 

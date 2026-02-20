@@ -34,13 +34,13 @@ CREATE TABLE IF NOT EXISTS contributor (
     id TEXT PRIMARY KEY,
     github TEXT NOT NULL UNIQUE,
     name TEXT,
-    avatar_url TEXT,
-    avatar_round_url TEXT,
-    github_icon_url TEXT
+    avatar TEXT,
 );
 CREATE TABLE IF NOT EXISTS commit (
     sha TEXT PRIMARY KEY,
-    message 
+    message TEXT NOT NULL,
+    contributor_id TEXT NOT NULL REFERENCES contributor(id) ON DELETE CASCADE,
+    date TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS repo (
     id TEXT PRIMARY KEY,
