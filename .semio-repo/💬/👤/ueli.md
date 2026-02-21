@@ -32,6 +32,14 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## 🧰semiorepo⌨️cli
 
+We are building a general tool that abstracts source control managment tools like git.
+It should provide task-focused and simplified
+The workflow in git is:
+Every person has a working branch `{{contributor-name}}/latest`.
+Whenever a person starts working `{{contributor-name}}/latest` is fast-forwarded to the latest `main`. 
+Every time a person finished working, then a temporary branch `{{contributor}}/YY/MM/DD` is created at the current `{{contributor-name}}/latest`
+
+
 We want to develop a general hook system that works accross all ai tools (claude code, vscode agent, cursor agent, windsurf agent, droid). One go binary exposes general hooks that can be reused accross platforms. How would you design the system? It needs to be compatible with the following apis:
 https://code.visualstudio.com/docs/copilot/customization/hooks
 https://docs.windsurf.com/windsurf/cascade/hooks#hook-events
@@ -60,18 +68,33 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 - Id system should be slugged to make sure no illegal characters are used.
 
-## [👤semio]
+## [👤semio](semiorepo://project/semio)
 
-## [👤semio📚js]()
+## [👤semio📚js](semiorepo://project/semio/bundle/js)
 
-## [👤semio📚js🗃️sketchpad]()
+## [👤semio📚js🗃️sketchpad](semiorepo://project/semio/bundle/js/folder/sketchpad)
 
-## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
+## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)
 
 ## 🧰semiorepo
 
 ## 🧰semiorepo⌨️cli
 
+The logging path of agent of hooks should change to
+- .semio-repo
+  - 📜
+    - 🪝
+      - 🤖
+        - {{session-id}}
+          - {{timestamp}}_{{semio-repo-agent-hook-event-kind}}.json
+      - 🔀
+        - {{change-id}}
+          - {{timestamp}}_{{semio-repo-git-h}}.json
+
+The mapping of the native agent hooks to the general hook system MUST be tested for every single native hook event with real data. Use the `./.semio-repo/📜/*.json` files for real data. 
+
+Logs MUST be clean and just have input, event and response data.
+e.g.
 ```json
 {
   "context": {
@@ -105,7 +128,7 @@ Update tree to not have sections but every section should have a tree. A tab sho
   }
 }
 ```
-
+should be:
 ```json
 {
   "input": {

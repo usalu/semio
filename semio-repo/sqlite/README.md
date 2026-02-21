@@ -20,23 +20,20 @@ erDiagram
     folder ||--o{ bundle : contains
     file ||--o{ section : contains
     section ||--o{ definition : contains
+    REPO {
+        string github PK
+        string exported_at
+    }
     CONTRIBUTOR {
-        int id PK
-        string github
+        string github PK
         string name
         string avatar
     }
     COMMIT {
-        int id PK
         string sha
         string message
-        int contributor_id FK
         string date
-    }
-    REPO {
-        int id PK
-        string sha FK
-        string name
+        int contributor_id FK
     }
     FOLDER {
         int id PK
@@ -51,7 +48,6 @@ erDiagram
         string name
         string extension
         int bundle_id FK
-        int lines
     }
     BUNDLE {
         int id PK

@@ -100,7 +100,14 @@ find_working_clis() {
       done
     fi
     if [ "$cmd" = "code" ] || [ "$cmd" = "code-insiders" ]; then
-      for bin in /vscode/vscode-server/bin/linux-x64/*/bin/remote-cli/code; do
+      for bin in /home/vscode/.vscode-server/bin/*/bin/remote-cli/code; do
+        if [ -x "$bin" ]; then
+          if "$bin" --version >/dev/null 2>&1; then
+            add_cli_path "$bin"
+          fi
+        fi
+      done
+      for bin in /home/vscode/.vscode-server-insiders/bin/*/bin/remote-cli/code-insiders; do
         if [ -x "$bin" ]; then
           if "$bin" --version >/dev/null 2>&1; then
             add_cli_path "$bin"
@@ -123,7 +130,18 @@ mapfile -t IDE_CLIS < <(find_working_clis)
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
   exec 201>"$INSTALL_LOCK_FILE"
   if flock -w 120 201; then
-    if [ ! -f "$VSIX_PATH" ] || [ "$VSIX_PATH" -ot "semio-repo/vscode/extension.ts" ]; then
+    needs_rebuild=""
+    if [ ! -f "$VSIX_PATH" ]; then
+      needs_rebuild="1"
+    else
+      for src in semio-repo/vscode/extension.ts semio-repo/vscode/queries.ts semio-repo/vscode/package.json semio-repo/vscode/vite.config.ts; do
+        if [ -f "$src" ] && [ "$VSIX_PATH" -ot "$src" ]; then
+          needs_rebuild="1"
+          break
+        fi
+      done
+    fi
+    if [ -n "$needs_rebuild" ]; then
       (cd semio-repo/vscode && npm run package)
     fi
     if [ -f "semio-repo/vscode/package.json" ]; then

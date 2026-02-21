@@ -13,6 +13,9 @@ old
 generated
 #--------------------------------------SEMIOREPO--------------------------------------
 .semio-repo/cache
+SPECS.md
+DOCS.md
+TODOS.md
 #--------------------------------------GO--------------------------------------
 semio-repo/cli/cli
 semio-repo/cli/main

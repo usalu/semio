@@ -6,7 +6,8 @@ goal: HOOKS/AGENT-EVENTS
 
 ## Summary
 
-Refactored all agent hook events to match spec: renamed agent.starting to agent.started and agent.tool.code.searching to agent.tool.searching, created HookResultAgentBase with shared fields (session, timestamp, client, llm, transcript, message, parent), updated all 12 agent result types, added extraction functions, fixed JSON tag shadowing, all tests pass.
+Refactored all agent hook events to match the new YAML spec exactly.
+
 ## Changes
 
 - Renamed `agent.starting` → `agent.started` (HookEvent constant, result type, dispatch, tests, help text, log filenames)
@@ -36,7 +37,7 @@ Refactored all agent hook events to match spec: renamed agent.starting to agent.
 - [x] Update `HookContext` with `LLM`, `Transcript`, `Message`, `Parent` fields
 - [x] Update `dispatchHook` to populate new fields from input extraction
 - [x] Add extraction functions for `transcript`, `message`, `parent` from input
-- [x] Update all event mapping functions (resolve*Event) for renamed events
+- [x] Update all event mapping functions (resolve\*Event) for renamed events
 - [x] Update `vsCodeEventFromHookEvent`, `formatVSCodeHookOutput` for renamed events
 - [x] Update `hookCommand` help text
 - [x] Update all tests in `main_test.go`
@@ -69,10 +70,12 @@ The new spec defines these events:
 **agent.tool.terminal.ended**: session, timestamp, client, llm, transcript, message, parent, command, pid, terminated, stdout, stderr
 
 ### Key Renames
+
 1. `agent.starting` → `agent.started`
 2. `agent.tool.code.searching` → `agent.tool.searching`
 
 ### Missing Fields (to add to ALL agent event result types)
+
 - `llm` (LLM model identifier)
 - `transcript` (transcript file path)
 - `message` (message ID)

@@ -34599,11 +34599,29 @@ type HookResultGitCommitEnded struct {
 	SHA string `json:"sha,omitempty"`
 }
 
-// HookLogEntry pairs the invocation context with its result for audit logging.
+// HookLogEvent represents the resolved hook event metadata for audit logging.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogEvent)
+type HookLogEvent struct {
+	Kind       HookEvent `json:"kind"`
+	Session    string    `json:"session,omitempty"`
+	Timestamp  string    `json:"timestamp,omitempty"`
+	Client     string    `json:"client,omitempty"`
+	Transcript string    `json:"transcript,omitempty"`
+}
+
+// HookLogResponse represents the hook response data for audit logging.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogresponse](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogResponse)
+type HookLogResponse struct {
+	Blocked *bool  `json:"blocked,omitempty"`
+	Reason  string `json:"reason,omitempty"`
+}
+
+// HookLogEntry pairs input, event and response for audit logging.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogentry](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogEntry)
 type HookLogEntry struct {
-	Context HookContext `json:"context"`
-	Result  HookResult  `json:"result"`
+	Input    json.RawMessage `json:"input"`
+	Event    HookLogEvent    `json:"event"`
+	Response HookLogResponse `json:"response"`
 }
 
 // BlockedToolPatterns lists shell command patterns that MUST always be denied.
@@ -35050,7 +35068,7 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	return string(out)
 }
 
-// logHook writes the hook context and result to ./semio-repo/📜/YYMMDDHHMMSS_client_hook-kind.json.
+// logHook writes hook input, event and response to .semio-repo/📜/🪝/🤖/<session-id>/<timestamp>_<hook-kind>.json.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️loghook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/logHook)
 func logHook(hctx HookContext, result HookResult) {
 	repoRoot := hctx.RepoRoot
@@ -35061,19 +35079,35 @@ func logHook(hctx HookContext, result HookResult) {
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
-	logDir := filepath.Join(repoRoot, ".semio-repo", "📜")
+	sessionID := extractSessionIDFromInput(hctx.Input)
+	if sessionID == "" {
+		sessionID = "unknown"
+	}
+	logDir := filepath.Join(repoRoot, ".semio-repo", "📜", "🪝", "🤖", sessionID)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return
 	}
 	ts := time.Now().UTC().Format("060102150405")
 	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
-	clientSlug := strings.ReplaceAll(hctx.Client, ".", "-")
-	entry := HookLogEntry{Context: hctx, Result: result}
+	logEvent := HookLogEvent{
+		Kind:       hctx.Event,
+		Session:    sessionID,
+		Timestamp:  extractTimestampFromInput(hctx.Input),
+		Client:     hctx.Client,
+		Transcript: extractTranscriptFromInput(hctx.Input),
+	}
+	var logResponse HookLogResponse
+	if !result.IsAllowed() {
+		blocked := true
+		logResponse.Blocked = &blocked
+		logResponse.Reason = result.GetMessage()
+	}
+	entry := HookLogEntry{Input: hctx.Input, Event: logEvent, Response: logResponse}
 	data, err := json.MarshalIndent(entry, "", "  ")
 	if err != nil {
 		return
 	}
-	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s_%s.json", ts, clientSlug, hookKind)), data, 0644)
+	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s.json", ts, hookKind)), data, 0644)
 }
 
 // dispatchHook routes the hook event to its handler and returns the specific result.
@@ -35290,6 +35324,20 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 				return value
 			}
 		}
+	}
+	return ""
+}
+
+func extractTimestampFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	if v, ok := data["timestamp"].(string); ok && v != "" {
+		return strings.TrimSpace(v)
 	}
 	return ""
 }
@@ -36258,31 +36306,40 @@ func generateClaudeCodeConfig(repoRoot string) (string, error) {
 	if data, err := os.ReadFile(settingsPath); err == nil {
 		_ = json.Unmarshal(data, &existing)
 	}
-	hookEntry := func(cmd string) []map[string]interface{} {
-		return []map[string]interface{}{
-			{
-				"matcher": "",
-				"hooks": []map[string]interface{}{
-					{"type": "command", "command": cmd},
-				},
-			},
-		}
+	cursorHooksPath := filepath.Join(repoRoot, ".cursor", "hooks.json")
+	cursorHooksExist := false
+	if _, err := os.Stat(cursorHooksPath); err == nil {
+		cursorHooksExist = true
 	}
-	existing["hooks"] = map[string]interface{}{
-		"SessionStart":       hookEntry(fmt.Sprintf("%s hook SessionStart claude-code", c)),
-		"SessionEnd":         hookEntry(fmt.Sprintf("%s hook SessionEnd claude-code", c)),
-		"SubagentStart":      hookEntry(fmt.Sprintf("%s hook SubagentStart claude-code", c)),
-		"SubagentStop":       hookEntry(fmt.Sprintf("%s hook SubagentStop claude-code", c)),
-		"Stop":               hookEntry(fmt.Sprintf("%s hook Stop claude-code", c)),
-		"UserPromptSubmit":   hookEntry(fmt.Sprintf("%s hook UserPromptSubmit claude-code", c)),
-		"PreCompact":         hookEntry(fmt.Sprintf("%s hook PreCompact claude-code", c)),
-		"PreToolUse":         hookEntry(fmt.Sprintf("%s hook PreToolUse claude-code", c)),
-		"PostToolUse":        hookEntry(fmt.Sprintf("%s hook PostToolUse claude-code", c)),
-		"PostToolUseFailure": hookEntry(fmt.Sprintf("%s hook PostToolUseFailure claude-code", c)),
-		"PermissionRequest":  hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
-		"TaskCompleted":      hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
-		"Notification":       hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
-		"TeammateIdle":       hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
+	if !cursorHooksExist {
+		hookEntry := func(cmd string) []map[string]interface{} {
+			return []map[string]interface{}{
+				{
+					"matcher": "",
+					"hooks": []map[string]interface{}{
+						{"type": "command", "command": cmd},
+					},
+				},
+			}
+		}
+		existing["hooks"] = map[string]interface{}{
+			"SessionStart":       hookEntry(fmt.Sprintf("%s hook SessionStart claude-code", c)),
+			"SessionEnd":         hookEntry(fmt.Sprintf("%s hook SessionEnd claude-code", c)),
+			"SubagentStart":      hookEntry(fmt.Sprintf("%s hook SubagentStart claude-code", c)),
+			"SubagentStop":       hookEntry(fmt.Sprintf("%s hook SubagentStop claude-code", c)),
+			"Stop":               hookEntry(fmt.Sprintf("%s hook Stop claude-code", c)),
+			"UserPromptSubmit":   hookEntry(fmt.Sprintf("%s hook UserPromptSubmit claude-code", c)),
+			"PreCompact":         hookEntry(fmt.Sprintf("%s hook PreCompact claude-code", c)),
+			"PreToolUse":         hookEntry(fmt.Sprintf("%s hook PreToolUse claude-code", c)),
+			"PostToolUse":        hookEntry(fmt.Sprintf("%s hook PostToolUse claude-code", c)),
+			"PostToolUseFailure": hookEntry(fmt.Sprintf("%s hook PostToolUseFailure claude-code", c)),
+			"PermissionRequest":  hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
+			"TaskCompleted":      hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
+			"Notification":       hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
+			"TeammateIdle":       hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
+		}
+	} else {
+		delete(existing, "hooks")
 	}
 	out, err := json.MarshalIndent(existing, "", "  ")
 	if err != nil {
