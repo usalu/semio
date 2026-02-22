@@ -7254,7 +7254,10 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   if (appliedDiff.removed) inverse.added = original.filter((i) => removedGuids.includes(i.guid));
   if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: i.guid }));
   if (appliedDiff.updated) {
-    inverse.updated = appliedDiff.updated.map((u) => {
+    inverse.updated = appliedDiff.updated.filter((u) => {
+      const entityId = (u as any)[entityKey] as EntityIdType;
+      return original.some((i) => i.guid === entityId.guid);
+    }).map((u) => {
       const entityId = (u as any)[entityKey] as EntityIdType;
       const originalItem = original.find((i) => i.guid === entityId.guid)!;
       return { [entityKey]: entityId, diff: inverseItemDiff(originalItem, u.diff) } as { [key in K]: EntityIdType } & { diff: D };

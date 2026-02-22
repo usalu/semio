@@ -274,7 +274,7 @@ export { useHome };
 
 // #region Table
 
-export {};
+  export { };
 
 // #endregion Table
 

@@ -933,11 +933,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.updatePiece": (context: DesignAppCommandContext, pieceGuidOrUpdate: Guid | { piece: PieceId | Guid; diff: PieceDiff }, pieceDiffArg?: PieceDiff): DesignAppCommandResult => {
-    const pieceDiff = (typeof pieceGuidOrUpdate === "object" && "diff" in pieceGuidOrUpdate ? pieceGuidOrUpdate.diff : pieceDiffArg) ?? {};
-    const pieceGuid = typeof pieceGuidOrUpdate === "object" && "piece" in pieceGuidOrUpdate
-      ? (typeof pieceGuidOrUpdate.piece === "string" ? pieceGuidOrUpdate.piece : pieceGuidOrUpdate.piece.guid)
-      : pieceGuidOrUpdate;
+  "semio.designApp.updatePiece": (context: DesignAppCommandContext, pieceGuid: Guid, pieceDiff: PieceDiff): DesignAppCommandResult => {
     return {
       kitDiff: {
         designs: {
@@ -955,17 +951,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
-  "semio.designApp.updatePieces": (
-    context: DesignAppCommandContext,
-    updates: Array<{ piece: PieceId | Guid; diff: PieceDiff } | { id: Guid; diff: PieceDiff }>,
-  ): DesignAppCommandResult => {
-    const normalizedUpdates = updates.map((update) => {
-      const pieceValue = "id" in update ? update.id : update.piece;
-      return {
-        piece: { guid: typeof pieceValue === "string" ? pieceValue : pieceValue.guid },
-        diff: update.diff,
-      };
-    });
+  "semio.designApp.updatePieces": (context: DesignAppCommandContext, updates: { piece: PieceId; diff: PieceDiff }[]): DesignAppCommandResult => {
     return {
       kitDiff: {
         designs: {
@@ -974,7 +960,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
               design: { guid: context.design.guid },
               diff: {
                 pieces: {
-                  updated: normalizedUpdates,
+                  updated: updates,
                 },
               },
             },
@@ -2663,7 +2649,7 @@ export function useDesignAppUpdatePiece(): ActionHookResult<[pieceGuid: Guid, di
   const getOrigin = useOrigin();
   const action = useMemo(() => {
     if (!store) return undefined;
-    return (pieceGuid: Guid, diff: PieceDiff) => store.execute("semio.designApp.updatePiece", getOrigin(), { piece: pieceGuid, diff });
+    return (pieceGuid: Guid, diff: PieceDiff) => store.execute("semio.designApp.updatePiece", getOrigin(), pieceGuid, diff);
   }, [store, getOrigin]);
   return [action, !!store];
 }
@@ -2684,7 +2670,7 @@ export function useDesignAppUpdatePieces(): ActionHookResult<[updates: { id: Gui
       store.execute(
         "semio.designApp.updatePieces",
         getOrigin(),
-        updates.map((u) => ({ piece: u.id, diff: u.diff })),
+        updates.map((u) => ({ piece: { guid: u.id }, diff: u.diff })),
       );
   }, [store, getOrigin]);
   return [action, !!store];
@@ -2770,7 +2756,7 @@ export function useDesignAppUpdateConnection(): ActionHookResult<[connectionGuid
   const getOrigin = useOrigin();
   const action = useMemo(() => {
     if (!store) return undefined;
-    return (connectionGuid: Guid, diff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", getOrigin(), { connection: connectionGuid, diff });
+    return (connectionGuid: Guid, diff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", getOrigin(), connectionGuid, diff);
   }, [store, getOrigin]);
   return [action, !!store];
 }
@@ -2791,7 +2777,7 @@ export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id
       store.execute(
         "semio.designApp.updateConnections",
         getOrigin(),
-        updates.map((u) => ({ connection: u.id, diff: u.diff })),
+        updates.map((u) => ({ connection: { guid: u.id }, diff: u.diff })),
       );
   }, [store, getOrigin]);
   return [action, !!store];
@@ -6842,7 +6828,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [savedDiagramScale] = useDesignAppDiagramScale();
   const panelVisibility = useAppPanelVisibility();
 
-  const design = useDesign() as Design | null;
+  const design = useDesign(undefined, undefined, true) as Design | null;
   const metadata = usePiecesMetadataMap();
 
   const commands = useDesignAppCommands();
@@ -6965,8 +6951,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const onNodesChangeReactFlow = useCallback(
     (changes: any[]) => {
       nodesChangeCountRef.current++;
-      if (nodesChangeCountRef.current % 100 === 0) console.warn(`[DEBUG] onNodesChangeReactFlow called ${nodesChangeCountRef.current} times`);
-      if (isDraggingNodeRef.current || isPanningRef.current) return;
+      if (isDraggingNodeRef.current || isPanningRef.current) {
+        const positionChanges = changes.filter((c: any) => c.type === "position");
+        if (positionChanges.length > 0) setNodes((nds) => applyNodeChanges(positionChanges, nds) as typeof nds);
+        return;
+      }
       if (changes.length === 0) return;
       setNodes((nds) => applyNodeChanges(changes, nds) as typeof nds);
     },
@@ -6991,7 +6980,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const onSelectionChange = useCallback(
     ({ nodes, edges }: { nodes: Array<Node>; edges: Array<Edge> }) => {
       selChangeCountRef.current++;
-      if (selChangeCountRef.current % 100 === 0) console.warn(`[DEBUG] onSelectionChange called ${selChangeCountRef.current} times, nodes=${nodes.length}, edges=${edges.length}`);
       if (isDraggingNodeRef.current || isPanningRef.current) return;
 
       const selectedPieceGuids = nodes.filter((n) => n.id.startsWith("piece-")).map((n) => getPieceIdFromNode(n as DiagramNode));
@@ -7201,9 +7189,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (event.key === "Escape" && isDraggingRef.current) {
         transaction?.abort();
         isDraggingRef.current = false;
+        isDraggingNodeRef.current = false;
         dragPositionRef.current = null;
         pendingPieceUpdatesRef.current = [];
         pendingSelectionRef.current = null;
+        setHelperLines([]);
         if (reactFlowInstanceRef.current) {
           reactFlowInstanceRef.current.setNodes((nodes) => nodes.map((node) => ({ ...node })));
         }
@@ -7212,7 +7202,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [transaction]);
+  }, [transaction, isDraggingNodeRef]);
 
   useEffect(() => {
     if (!viewportRestoredRef.current && savedDiagramCenter && savedDiagramScale !== undefined && reactFlowInstanceRef.current) {
@@ -7420,7 +7410,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeDragStart = useCallback(
     (event: any, node: Node) => {
-      console.warn(`[DEBUG] onNodeDragStart CALLED: node.id=${node.id}`);
       const currentSelectedIds = selectionRef.current?.pieces ?? [];
       const pieceId = getPieceIdFromNode(node as DiagramNode);
       const isNodeSelected = currentSelectedIds.includes(pieceId);
@@ -7437,8 +7426,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       pendingPieceUpdatesRef.current = [];
       isDraggingRef.current = true;
       isDraggingNodeRef.current = true;
+      transaction?.start();
     },
-    [activeTool, isDraggingNodeRef],
+    [activeTool, isDraggingNodeRef, transaction],
   );
 
   const isDraggingRef = useRef(false);
@@ -7449,11 +7439,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const onNodeDrag = useCallback(
     (event: any, node: DiagramNode) => {
       if (!isDraggingRef.current || !dragPositionRef.current || !reactFlowInstanceRef.current) {
-        dragPositionRef.current = { x: node.position.x, y: node.position.y };
-        return;
-      }
-
-      if (!event.altKey) {
         dragPositionRef.current = { x: node.position.x, y: node.position.y };
         return;
       }
@@ -7485,7 +7470,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       let draggedX = node.position.x;
       let draggedY = node.position.y;
 
-      for (const selectedNode of nodes.filter((n) => selectionRef.current?.pieces?.includes(getPieceIdFromNode(n)))) {
+      const selectedNodes = nodes.filter((n) => selectionRef.current?.pieces?.includes(getPieceIdFromNode(n)));
+      for (const selectedNode of selectedNodes) {
         const piece = selectedNode.data.piece;
         const selectedInternalNode = reactFlowInstanceRef.current!.getInternalNode(selectedNode.id)!;
 
@@ -7497,16 +7483,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             node.position.y = draggedY;
           }
 
-          const scaledOffset = {
-            x: (draggedX - lastPostition!.x) / ICON_WIDTH,
-            y: -(draggedY - lastPostition!.y) / ICON_WIDTH,
-          };
           updatedPieces.push({
             id: piece.guid,
             diff: {
               center: {
-                u: (piece.center?.u ?? 0) + scaledOffset.x / ICON_WIDTH,
-                v: (piece.center?.v ?? 0) - scaledOffset.y / ICON_WIDTH,
+                u: selectedInternalNode.internals.positionAbsolute.x / ICON_WIDTH,
+                v: -selectedInternalNode.internals.positionAbsolute.y / ICON_WIDTH,
               },
             },
           });
@@ -8004,16 +7986,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             },
           });
         } else {
-          const scaledOffset = {
-            x: (draggedX - lastPostition!.x) / ICON_WIDTH,
-            y: -(draggedY - lastPostition!.y) / ICON_WIDTH,
-          };
           updatedPieces.push({
             id: piece.guid,
             diff: {
               center: {
-                u: (piece.center?.u ?? 0) + scaledOffset.x / ICON_WIDTH,
-                v: (piece.center?.v ?? 0) - scaledOffset.y / ICON_WIDTH,
+                u: selectedInternalNode.internals.positionAbsolute.x / ICON_WIDTH,
+                v: -selectedInternalNode.internals.positionAbsolute.y / ICON_WIDTH,
               },
             },
           });
@@ -8031,45 +8009,48 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeDragStop = useCallback(
     (event: any, node: DiagramNode) => {
-      console.warn(`[DEBUG] onNodeDragStop CALLED: node.id=${node.id} node.pos=(${node.position.x},${node.position.y})`);
       const pendingSelection = pendingSelectionRef.current;
       const pendingUpdates = pendingPieceUpdatesRef.current;
       const currentSelection = selectionRef.current;
       pendingSelectionRef.current = null;
       pendingPieceUpdatesRef.current = [];
       dragPositionRef.current = null;
-      requestAnimationFrame(() => {
-        console.warn(`[DEBUG] onNodeDragStop rAF: pendingSel=${!!pendingSelection} pendingUpdates=${pendingUpdates?.length} currentSel=${currentSelection?.pieces?.length ?? 0} updatePieces=${!!updatePieces} transaction=${!!transaction} node.pos=(${node.position.x},${node.position.y})`);
-        if (pendingSelection) {
-          const { pieceId, compositionKind } = pendingSelection;
-          if (setSelection) setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) });
-        }
-        transaction?.start();
-        if (pendingUpdates && pendingUpdates.length > 0) {
-          updatePieces?.(pendingUpdates);
-        } else {
-          const updatedPieces: Array<{ id: string; diff: any }> = [];
-          const selectedPieceIds = currentSelection?.pieces ?? [];
-          const draggedPieceId = getPieceIdFromNode(node);
-          const pieceIdsToUpdate = selectedPieceIds.length > 0 ? selectedPieceIds : [draggedPieceId];
-          for (const pieceId of pieceIdsToUpdate) {
-            const pieceNode = pieceId === draggedPieceId ? node : nodes.find((n) => getPieceIdFromNode(n) === pieceId);
-            if (pieceNode) {
-              updatedPieces.push({
-                id: pieceId,
-                diff: { center: { u: pieceNode.position.x / ICON_WIDTH, v: -pieceNode.position.y / ICON_WIDTH } },
-              });
-            }
+      if (pendingSelection) {
+        const { pieceId, compositionKind } = pendingSelection;
+        if (setSelection) setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) });
+      }
+      if (pendingUpdates && pendingUpdates.length > 0) {
+        const updateMap = new Map(pendingUpdates.map(u => [u.id, u.diff.center]));
+        setNodes((nds) => nds.map((n) => {
+          const pieceGuid = (n as any).data?.piece?.guid;
+          if (!pieceGuid) return n;
+          const center = updateMap.get(pieceGuid);
+          if (!center) return n;
+          return { ...n, position: { x: center.u * ICON_WIDTH, y: -center.v * ICON_WIDTH } };
+        }));
+        updatePieces?.(pendingUpdates);
+      } else {
+        const updatedPieces: Array<{ id: string; diff: any }> = [];
+        const selectedPieceIds = currentSelection?.pieces ?? [];
+        const draggedPieceId = getPieceIdFromNode(node);
+        const pieceIdsToUpdate = selectedPieceIds.length > 0 ? selectedPieceIds : [draggedPieceId];
+        for (const pieceId of pieceIdsToUpdate) {
+          const pieceNode = pieceId === draggedPieceId ? node : nodes.find((n) => getPieceIdFromNode(n) === pieceId);
+          if (pieceNode) {
+            updatedPieces.push({
+              id: pieceId,
+              diff: { center: { u: pieceNode.position.x / ICON_WIDTH, v: -pieceNode.position.y / ICON_WIDTH } },
+            });
           }
-          if (updatedPieces.length > 0) {
-            console.warn(`[DEBUG] onNodeDragStop updating ${updatedPieces.length} pieces: ${JSON.stringify(updatedPieces.map(u => ({ id: u.id.slice(0,8), center: u.diff.center })))}`);
-            updatePieces?.(updatedPieces);
-          }
         }
-        transaction?.finalize();
-        isDraggingRef.current = false;
-        isDraggingNodeRef.current = false;
-      });
+        if (updatedPieces.length > 0) {
+          updatePieces?.(updatedPieces);
+        }
+      }
+      transaction?.finalize();
+      setHelperLines([]);
+      isDraggingRef.current = false;
+      isDraggingNodeRef.current = false;
     },
     [transaction, updatePieces, nodes, isDraggingNodeRef, setSelection],
   );

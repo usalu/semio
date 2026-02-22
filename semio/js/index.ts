@@ -26,13 +26,6 @@
 // MUST re-export all public types alongside their runtime counterparts.
 
 import "./i18n";
-import "./sketchpad/Home";
-import "./sketchpad/Kit";
-import "./sketchpad/Design";
-import "./sketchpad/Type";
-import "./sketchpad/Quality";
-import "./sketchpad/Docs";
-import "./sketchpad/Feedback";
 
 export type { TooltipConfig } from "./sketchpad/elements";
 export type { AppConfig, CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";

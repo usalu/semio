@@ -1,16 +1,19 @@
 {
   "title": "Fix Play Dev CSS Import",
-  "status": "open",
+  "status": "closed",
   "prompt": "Fix play dev server failing due to unresolved 'semio/js/globals.css' import in play globals.css. The CSS import needs to use a relative path instead of a bare module specifier.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/499"
   },
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2026-02-11T18:11:46.443320052Z",
+  "finished": "2026-02-18T15:30:18.260249014Z",
   "interactions": [
     {
       "dates": {
-        "started": "2026-02-11 18:11:46"
+        "started": "2026-02-11 18:11:46",
+        "finished": "2026-02-18 15:30:18"
       },
       "author": "kinansarak",
       "system": "linux",

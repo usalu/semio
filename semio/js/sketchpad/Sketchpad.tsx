@@ -11597,6 +11597,12 @@ export function usePath<T, TSelected = T>(
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+function jsonReplacerMapSet(_key: string, value: any): any {
+  if (value instanceof Map) return Object.fromEntries(value);
+  if (value instanceof Set) return [...value];
+  return value;
+}
+
 /**
  * Hook computing and caching a derived value from store dependencies.
  *
@@ -11629,7 +11635,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
       lastResultRef.current = { value: newValue };
       return newValue;
     }
-    const newJson = JSON.stringify(newValue);
+    const newJson = JSON.stringify(newValue, jsonReplacerMapSet);
     if (newJson === lastResultRef.current.json) return lastResultRef.current.value;
     lastResultRef.current = { value: newValue, json: newJson };
     return newValue;
@@ -14509,7 +14515,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
     setSections((prev) => {
       const updated = {
         ...prev,
-        [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section as any].sort((a: any, b: any) => {
+        [panelKey]: [...(prev[panelKey] ?? []).filter((s) => s.id !== section.id), section as any].sort((a: any, b: any) => {
           const specificityDiff = (b.specificity ?? 0) - (a.specificity ?? 0);
           if (specificityDiff !== 0) return specificityDiff;
           return (a.order || 0) - (b.order || 0);
@@ -14520,7 +14526,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const removeSection = useCallback((panelKey: PanelKey, sectionId: string) => {
-    setSections((prev) => ({ ...prev, [panelKey]: prev[panelKey].filter((s) => s.id !== sectionId) }));
+    setSections((prev) => ({ ...prev, [panelKey]: (prev[panelKey] ?? []).filter((s) => s.id !== sectionId) }));
   }, []);
 
   const contextValue = useMemo(() => ({ sections, addSection, removeSection }), [sections, addSection, removeSection]);

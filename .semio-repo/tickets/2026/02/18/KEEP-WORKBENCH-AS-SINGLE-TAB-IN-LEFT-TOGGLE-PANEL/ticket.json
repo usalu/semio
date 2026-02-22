@@ -1,0 +1,26 @@
+{
+  "title": "Keep Workbench as Single Tab in Left Toggle Panel",
+  "status": "closed",
+  "prompt": "keep workbench as a single tab in the left toggle panel",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/621"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-18T14:45:17.581656968Z",
+  "finished": "2026-02-18T15:30:18.443808885Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-18 14:45:17",
+        "finished": "2026-02-18 15:30:18"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "b02e5676a32481161a859ed23cd52fb810c779ea",
+      "prompt": "keep workbench as a single tab in the left toggle panel",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

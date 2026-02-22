@@ -2126,13 +2126,12 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
     return () => root.unobserveDeep(callback);
   }
   const disposables: Disposable[] = [];
-  let lastValue = getValueAtPath(root, path);
+  const serializeValue = (v: any) => JSON.stringify(v instanceof Y.Map || v instanceof Y.Array ? v.toJSON() : v);
+  let lastJson = serializeValue(getValueAtPath(root, path));
   const notifyIfChanged = () => {
-    const newValue = getValueAtPath(root, path);
-    const lastJson = JSON.stringify(lastValue instanceof Y.Map || lastValue instanceof Y.Array ? lastValue.toJSON() : lastValue);
-    const newJson = JSON.stringify(newValue instanceof Y.Map || newValue instanceof Y.Array ? newValue.toJSON() : newValue);
+    const newJson = serializeValue(getValueAtPath(root, path));
     if (lastJson !== newJson) {
-      lastValue = newValue;
+      lastJson = newJson;
       subscribe(() => { });
     }
   };
@@ -2245,9 +2244,15 @@ export class DerivedNode<T> {
     this.recompute();
   }
 
+  private static jsonReplacer(_key: string, value: any): any {
+    if (value instanceof Map) return Object.fromEntries(value);
+    if (value instanceof Set) return [...value];
+    return value;
+  }
+
   private recompute() {
     const next = this.compute();
-    const nextJson = JSON.stringify(next);
+    const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);
     if (nextJson !== this.valueJson) {
       this.value = next;
       this.valueJson = nextJson;

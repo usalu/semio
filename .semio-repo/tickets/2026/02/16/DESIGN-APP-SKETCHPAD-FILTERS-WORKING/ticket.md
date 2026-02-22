@@ -6,6 +6,7 @@ goal: 🎯r26021
 
 ## Summary
 
+Bulk close
 ## Changes
 
 ## Log

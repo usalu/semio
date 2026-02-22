@@ -99,7 +99,7 @@ export {
   ArrowDown as SortDescendingIcon,
   BarChart3 as StatsIcon,
   Square as StopIcon,
-  Sun as SunIcon, Table2 as TableViewIcon, Tablet as TabletIcon, Clock as TemporaryKitIcon,
+  Sun as SunIcon, Tablet as TabletIcon, Table2 as TableViewIcon, Clock as TemporaryKitIcon,
   Hammer as ToolbarIcon,
   Wrench as ToolsIcon,
   TriangleAlert as TriangleAlertIcon,

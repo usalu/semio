@@ -1,5 +1,5 @@
 ---
-goal: R26-02/RUNNING-SKETCHPAD
+goal: SKETCHPAD-IMPROVEMENTS
 ---
 
 # Ticket

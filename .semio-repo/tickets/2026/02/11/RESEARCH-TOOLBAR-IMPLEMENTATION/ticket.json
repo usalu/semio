@@ -1,16 +1,19 @@
 {
   "title": "Research Toolbar Implementation",
-  "status": "open",
+  "status": "closed",
   "prompt": "Research toolbar",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/504"
   },
   "goal": "sketchpad/toolbar",
   "started": "2026-02-11T19:09:17.769382418Z",
+  "finished": "2026-02-18T15:30:18.290356017Z",
   "interactions": [
     {
       "dates": {
-        "started": "2026-02-11 19:09:17"
+        "started": "2026-02-11 19:09:17",
+        "finished": "2026-02-18 15:30:18"
       },
       "author": "kinansarak",
       "system": "linux",

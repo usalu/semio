@@ -6,8 +6,7 @@ goal: sketchpad/toolbar
 
 ## Summary
 
-Research of the current toolbar implementation in the semio sketchpad. All findings documented below.
-
+Bulk close
 ## Changes
 
 No code changes — research only.

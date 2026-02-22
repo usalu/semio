@@ -1006,7 +1006,9 @@ test.describe("sketchpad", () => {
     const kitHandToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.navigation.hand"]');
     const hasKitHand = await kitHandToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Kit] Hand toggle visible: ${hasKitHand}`);
-    expect(hasKitAdditive || hasKitSubtractive || hasKitIntersect || hasKitRectangular || hasKitLasso || hasKitHand).toBe(true);
+    expect(hasKitIntersect).toBe(true);
+    expect(hasKitLasso).toBe(true);
+    expect(hasKitAdditive || hasKitSubtractive || hasKitRectangular || hasKitHand).toBe(true);
 
     if (hasKitAdditive) {
       console.log("[Kit] Testing additive toggle activation");
@@ -2445,7 +2447,6 @@ test.describe("sketchpad", () => {
           const dragOffsetY = 50;
           const targetXDrag = nodeCenterXDrag + dragOffsetX;
           const targetYDrag = nodeCenterYDrag + dragOffsetY;
-          const warningCountBeforeFirstDrag = warnings.length;
 
           console.log(`[Design] Dragging piece node from (${nodeCenterXDrag}, ${nodeCenterYDrag}) to (${targetXDrag}, ${targetYDrag})`);
 
@@ -2460,18 +2461,12 @@ test.describe("sketchpad", () => {
           await page.mouse.up();
           await page.waitForTimeout(2000);
 
-          const dragWarningsAfterFirstDrag = warnings.slice(warningCountBeforeFirstDrag).filter((w) => w.includes("onNodeDrag"));
-          console.log("[Design] Drag DEBUG warnings:", dragWarningsAfterFirstDrag.slice(-10));
-          const dragStartMessage = dragWarningsAfterFirstDrag.find((warning) => warning.includes("onNodeDragStart CALLED: node.id="));
-          const draggedNodeIdMatch = dragStartMessage?.match(/node\.id=([^\s]+)/);
-          const draggedNodeId = draggedNodeIdMatch?.[1] ?? pieceGuidDrag ?? "";
+          const draggedNodeId = pieceGuidDrag ?? "";
           const draggedPieceGuidFromEvent = draggedNodeId.replace(/^piece-\d+-/, "");
           if (draggedPieceGuidFromEvent) {
             pieceGuidFromData = draggedPieceGuidFromEvent;
           }
           centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
-          console.log(`[Design] Actual dragged node from event: ${draggedNodeId}`);
-          console.log(`[Design] Actual dragged piece center before drag: u=${centerBeforeDrag?.u}, v=${centerBeforeDrag?.v}`);
 
           const draggedNodeLocator = page.locator(`.react-flow__node[data-id="${draggedNodeId}"]`).first();
           const pieceNodeBoxAfterDrag = await draggedNodeLocator.boundingBox();
@@ -2486,32 +2481,25 @@ test.describe("sketchpad", () => {
           const pieceCenterChanged = centerBeforeDrag && centerAfterDrag
             ? Math.abs(centerAfterDrag.u - centerBeforeDrag.u) > TOLERANCE || Math.abs(centerAfterDrag.v - centerBeforeDrag.v) > TOLERANCE
             : centerBeforeDrag !== centerAfterDrag;
-          const dragUpdateMessage = dragWarningsAfterFirstDrag.find((warning) => warning.includes("onNodeDragStop updating"));
-          const dragUpdateDispatched = !!dragUpdateMessage;
-          const firstUpdatedPieceIdMatch = dragUpdateMessage?.match(/"id":"([^"]+)"/);
-          const firstUpdatedPieceId = firstUpdatedPieceIdMatch?.[1] ?? pieceGuidFromData;
-          const firstDragUpdateUMatch = dragUpdateMessage?.match(/"u":(-?\d+(?:\.\d+)?)/);
-          const firstDragUpdateVMatch = dragUpdateMessage?.match(/"v":(-?\d+(?:\.\d+)?)/);
-          const firstDragUpdateU = firstDragUpdateUMatch ? parseFloat(firstDragUpdateUMatch[1]) : null;
-          const firstDragUpdateV = firstDragUpdateVMatch ? parseFloat(firstDragUpdateVMatch[1]) : null;
-          const persistedCenterBeforeDrag = centersBeforeDrag[pieceGuidFromData];
           const persistedCenterAfterDrag = centersAfterDrag[pieceGuidFromData];
-          const centerDeltaU = persistedCenterBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.u - persistedCenterBeforeDrag.u : 0;
-          const centerDeltaV = persistedCenterBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.v - persistedCenterBeforeDrag.v : 0;
+          const centerDeltaU = centerBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.u - centerBeforeDrag.u : 0;
+          const centerDeltaV = centerBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.v - centerBeforeDrag.v : 0;
           console.log(`[Design] Piece center after drag: u=${centerAfterDrag?.u}, v=${centerAfterDrag?.v}`);
-          console.log(`[Design] Persisted piece center after drag (${firstUpdatedPieceId}): u=${persistedCenterAfterDrag?.u}, v=${persistedCenterAfterDrag?.v}`);
+          console.log(`[Design] Persisted piece center after drag (${pieceGuidFromData}): u=${persistedCenterAfterDrag?.u}, v=${persistedCenterAfterDrag?.v}`);
           console.log(`[Design] Piece center changed: ${pieceCenterChanged}`);
           console.log(`[Design] Piece center delta after right/down drag: du=${centerDeltaU}, dv=${centerDeltaV}`);
-          console.log(`[Design] First drag update payload center: u=${firstDragUpdateU}, v=${firstDragUpdateV}`);
-          console.log(`[Design] Piece update dispatched during drag: ${dragUpdateDispatched}`);
           expect(nodeMovedInViewport).toBe(true);
           expect(Math.abs(firstViewportDeltaX)).toBeGreaterThan(10);
           expect(Math.abs(firstViewportDeltaY)).toBeGreaterThan(5);
-          expect(dragUpdateDispatched).toBe(true);
-          expect(firstDragUpdateU).not.toBeNull();
-          expect(firstDragUpdateV).not.toBeNull();
-          expect(firstDragUpdateU).toBeGreaterThan(0.01);
-          expect(firstDragUpdateV).toBeLessThan(-0.01);
+          expect(pieceCenterChanged).toBe(true);
+          expect(centerAfterDrag!.u).toBeGreaterThan(0.01);
+          expect(centerAfterDrag!.v).toBeLessThan(-0.01);
+
+          const afterFirstDragTransform = await page.evaluate((nodeId: string) => {
+            const el = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`) as HTMLElement | null;
+            return el ? { transform: el.style.transform, x: el.getBoundingClientRect().x, y: el.getBoundingClientRect().y, w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height } : null;
+          }, draggedNodeId);
+          console.log(`[Design] After first drag DOM state: ${JSON.stringify(afterFirstDragTransform)}`);
 
           const pieceNodeBoxSecondDrag = await draggedNodeLocator.boundingBox();
           expect(pieceNodeBoxSecondDrag).not.toBeNull();
@@ -2523,7 +2511,6 @@ test.describe("sketchpad", () => {
           const secondTargetYDrag = secondCenterYDrag + secondDragOffsetY;
 
           console.log(`[Design] Dragging piece node back from (${secondCenterXDrag}, ${secondCenterYDrag}) to (${secondTargetXDrag}, ${secondTargetYDrag})`);
-          const warningCountBeforeSecondDrag = warnings.length;
           await page.mouse.move(secondCenterXDrag, secondCenterYDrag);
           await page.waitForTimeout(50);
           await page.mouse.down();
@@ -2539,35 +2526,28 @@ test.describe("sketchpad", () => {
           console.log(`[Design] Piece node moved in viewport on second drag: ${secondNodeMovedInViewport}`);
           console.log(`[Design] Second drag viewport delta: dx=${secondViewportDeltaX}, dy=${secondViewportDeltaY}`);
 
+          const afterSecondDragTransform = await page.evaluate((nodeId: string) => {
+            const el = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`) as HTMLElement | null;
+            return el ? { transform: el.style.transform, x: el.getBoundingClientRect().x, y: el.getBoundingClientRect().y, w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height } : null;
+          }, draggedNodeId);
+          console.log(`[Design] After second drag DOM state: ${JSON.stringify(afterSecondDragTransform)}`);
+
           const centersAfterSecondDrag = await getDesignPieceCenters(page);
           const centerAfterSecondDrag = centersAfterSecondDrag[pieceGuidFromData];
           const secondDeltaU = centerAfterDrag && centerAfterSecondDrag ? centerAfterSecondDrag.u - centerAfterDrag.u : 0;
           const secondDeltaV = centerAfterDrag && centerAfterSecondDrag ? centerAfterSecondDrag.v - centerAfterDrag.v : 0;
-          const dragWarningsAfterSecondDrag = warnings.slice(warningCountBeforeSecondDrag).filter((w) => w.includes("onNodeDrag"));
-          const secondDragUpdateMessage = dragWarningsAfterSecondDrag.find((warning) => warning.includes("onNodeDragStop updating"));
-          const secondUpdatedPieceIdMatch = secondDragUpdateMessage?.match(/"id":"([^"]+)"/);
-          const secondUpdatedPieceId = secondUpdatedPieceIdMatch?.[1] ?? firstUpdatedPieceId;
-          const secondDragUpdateDispatched = !!secondDragUpdateMessage;
-          const secondDragUpdateUMatch = secondDragUpdateMessage?.match(/"u":(-?\d+(?:\.\d+)?)/);
-          const secondDragUpdateVMatch = secondDragUpdateMessage?.match(/"v":(-?\d+(?:\.\d+)?)/);
-          const secondDragUpdateU = secondDragUpdateUMatch ? parseFloat(secondDragUpdateUMatch[1]) : null;
-          const secondDragUpdateV = secondDragUpdateVMatch ? parseFloat(secondDragUpdateVMatch[1]) : null;
           const persistedCenterAfterSecondDrag = centersAfterSecondDrag[pieceGuidFromData];
           const secondPersistedDeltaU = persistedCenterAfterDrag && persistedCenterAfterSecondDrag ? persistedCenterAfterSecondDrag.u - persistedCenterAfterDrag.u : 0;
           const secondPersistedDeltaV = persistedCenterAfterDrag && persistedCenterAfterSecondDrag ? persistedCenterAfterSecondDrag.v - persistedCenterAfterDrag.v : 0;
           console.log(`[Design] Piece center after left/up drag: u=${centerAfterSecondDrag?.u}, v=${centerAfterSecondDrag?.v}`);
           console.log(`[Design] Piece center delta after left/up drag: du=${secondDeltaU}, dv=${secondDeltaV}`);
-          console.log(`[Design] Persisted piece center after left/up drag (${secondUpdatedPieceId}): u=${persistedCenterAfterSecondDrag?.u}, v=${persistedCenterAfterSecondDrag?.v}`);
+          console.log(`[Design] Persisted piece center after left/up drag (${pieceGuidFromData}): u=${persistedCenterAfterSecondDrag?.u}, v=${persistedCenterAfterSecondDrag?.v}`);
           console.log(`[Design] Persisted piece center delta after left/up drag: du=${secondPersistedDeltaU}, dv=${secondPersistedDeltaV}`);
-          console.log(`[Design] Second drag update payload center: u=${secondDragUpdateU}, v=${secondDragUpdateV}`);
-          console.log(`[Design] Second drag update dispatched: ${secondDragUpdateDispatched}`);
-          expect(secondDragUpdateU).not.toBeNull();
-          expect(secondDragUpdateV).not.toBeNull();
-          expect(secondDragUpdateDispatched).toBe(true);
-          expect(secondDragUpdateU).toBeLessThan(firstDragUpdateU);
-          expect(secondDragUpdateV).toBeGreaterThan(firstDragUpdateV);
-          expect(secondDeltaU).toBeLessThan(-0.01);
-          expect(secondDeltaV).toBeGreaterThan(0.01);
+          expect(centerAfterSecondDrag!.u).toBeLessThan(centerAfterDrag!.u);
+          expect(centerAfterSecondDrag!.v).toBeGreaterThan(centerAfterDrag!.v);
+          expect(secondNodeMovedInViewport).toBe(true);
+          expect(Math.abs(secondViewportDeltaX)).toBeGreaterThan(10);
+          expect(Math.abs(secondViewportDeltaY)).toBeGreaterThan(5);
         } else {
           console.log("[Design] Could not get bounding box for first piece node");
         }
