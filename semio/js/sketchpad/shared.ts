@@ -19,7 +19,7 @@
 
 // #region Imports
 
-import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon } from "@semio/assets";
+import { CodeIcon, DetailsIcon, LayoutIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
 import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
@@ -257,6 +257,7 @@ export const EMPTY_STRING_ARRAY: readonly string[] = Object.freeze([]);
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants🪨emptypanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS/EMPTY-PANEL-VISIBILITY)
  **/
 export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
+  workbench: false,
   toolbar: true,
   details: false,
   chat: false,
@@ -415,7 +416,7 @@ export type Device = "desktop" | "tablet" | MobileDevice;
  *
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️panelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/PANEL-KEY)
  **/
-export type PanelKey = "details" | "tools" | "stats" | "console" | "toolbar" | "leftSidePanel" | "rightSidePanel";
+export type PanelKey = "workbench" | "details" | "tools" | "stats" | "console" | "toolbar" | "leftSidePanel" | "rightSidePanel";
 
 /**
  * Union of left and right side panel keys.
@@ -660,6 +661,7 @@ export enum PanelPosition {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️panelkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/PANEL-KIND)
  **/
 export enum PanelKind {
+  WORKBENCH = "workbench",
   TOOLS = "tools",
   TOOLBAR = "toolbar",
   STATS = "stats",
@@ -823,6 +825,13 @@ export interface PanelKindConfig {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🪨panelkindconfigs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-KIND-CONFIGS)
  **/
 export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
+  [PanelKind.WORKBENCH]: {
+    icon: LayoutIcon,
+    position: PanelPosition.LEFT,
+    group: "left",
+    isGroupable: true,
+    hotkey: "ctrl+j",
+  },
   [PanelKind.TOOLS]: {
     icon: ToolsIcon,
     position: PanelPosition.LEFT,
@@ -901,6 +910,7 @@ export interface SidePanelVisibility {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-VISIBILITY)
  **/
 export interface PanelVisibility {
+  workbench?: boolean;
   toolbar?: boolean;
   leftSidePanel?: boolean;
   rightSidePanel?: boolean;
@@ -979,6 +989,7 @@ export interface SidePanelTabs {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelsections](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-SECTIONS)
  **/
 export interface PanelSections {
+  workbench: PanelSection[];
   details: PanelSection[];
   tools: PanelSection[];
   hud: PanelSection[];
@@ -2846,10 +2857,7 @@ export function createTogglePanelHandler<TAppKey extends string, TAppState exten
       return {
         [config.appKey]: {
           ...app,
-          panelVisibility: {
-            ...app.panelVisibility,
-            [event.panel]: !app.panelVisibility[event.panel],
-          },
+          panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel),
         },
       };
     },
@@ -2965,6 +2973,35 @@ export interface KeyedAppEventHandlerConfig<TAppKey extends string, TAppState> e
   getKey: (event: any) => string;
 }
 
+const EXCLUSIVE_SIDE_PANEL_KEYS: (keyof PanelVisibility)[] = ["rightSidePanel", "chat", "settings"];
+
+/**
+ * Returns the next panel visibility state for a toggle event.
+ *
+ * MUST keep right side panel, chat, and settings mutually exclusive when one is activated.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️getnextpanelvisibilityfromtoggle](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/GET-NEXT-PANEL-VISIBILITY-FROM-TOGGLE)
+ **/
+export function getNextPanelVisibilityFromToggle(panelVisibility: PanelVisibility, panel: keyof PanelVisibility): PanelVisibility {
+  const nextValue = !panelVisibility[panel];
+  if (!EXCLUSIVE_SIDE_PANEL_KEYS.includes(panel) || !nextValue) {
+    return {
+      ...panelVisibility,
+      [panel]: nextValue,
+    };
+  }
+  const nextPanelVisibility: PanelVisibility = {
+    ...panelVisibility,
+    [panel]: true,
+  };
+  EXCLUSIVE_SIDE_PANEL_KEYS.forEach((key) => {
+    if (key !== panel) {
+      nextPanelVisibility[key] = false;
+    }
+  });
+  return nextPanelVisibility;
+}
+
 /**
  * Registers a keyed toggle panel event handler for multi-instance app state.
  *
@@ -2984,10 +3021,7 @@ export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState 
           ...apps,
           [key]: {
             ...app,
-            panelVisibility: {
-              ...app.panelVisibility,
-              [event.panel]: !app.panelVisibility[event.panel],
-            },
+            panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel),
           },
         },
       };
@@ -3362,7 +3396,7 @@ export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppSt
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key] || createDefaultState();
-      return { [appKey]: { ...context[appKey], [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel) } } };
     },
   });
 }

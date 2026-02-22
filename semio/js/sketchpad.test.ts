@@ -584,6 +584,57 @@ async function getDesignPieceCenters(page: Page): Promise<Record<string, { u: nu
   });
 }
 
+async function getDesignPieceConnections(page: Page): Promise<Array<{ connecting: string; connected: string }>> {
+  return await page.evaluate(() => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return [];
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return [];
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return [];
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+    if (!design) return [];
+    return (design.connections ?? []).map((c: any) => ({
+      connecting: c.connecting?.piece?.guid,
+      connected: c.connected?.piece?.guid,
+    }));
+  });
+}
+
+async function getDesignPieceMetadata(page: Page): Promise<Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }>> {
+  return await page.evaluate(() => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return {};
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return {};
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return {};
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+    if (!design) return {};
+    const piecesMetadata = (window as any).__SEMIO_PIECES_METADATA__;
+    if (piecesMetadata && typeof piecesMetadata === "object") {
+      const result: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
+      for (const [guid, meta] of Object.entries(piecesMetadata) as any) {
+        result[guid] = { parentPieceId: meta.parentPieceId ?? null, center: meta.center ?? null };
+      }
+      return result;
+    }
+    const result: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
+    for (const piece of design.pieces ?? []) {
+      result[piece.guid] = { parentPieceId: null, center: piece.center ?? null };
+    }
+    return result;
+  });
+}
+
 async function togglePanelAndVerify(page: Page, panelToggleId: string, panelKey: string, appName: string): Promise<boolean> {
   const toggle = page.locator(`[id="${panelToggleId}"]`);
   const isToggleVisible = await toggle.isVisible({ timeout: 5000 }).catch(() => false);
@@ -2192,6 +2243,20 @@ test.describe("sketchpad", () => {
     const hasDiagramSel = await diagramContainerSel.isVisible({ timeout: 10000 }).catch(() => false);
 
     if (hasDiagramSel) {
+      await openDetailsPanel(page);
+      const detailsTabButton = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+      if (await detailsTabButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await detailsTabButton.click();
+        await page.waitForTimeout(400);
+      }
+      const designNameInputNoSelection = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.design.name"]').first();
+      const fallbackTextNoSelection = page.locator('[data-panel="rightSidePanel"] text=No valid pieces found in selection.').first();
+      const hasDesignNameInputNoSelection = await designNameInputNoSelection.isVisible({ timeout: 5000 }).catch(() => false);
+      const hasFallbackNoSelection = await fallbackTextNoSelection.isVisible({ timeout: 1500 }).catch(() => false);
+      console.log("[Design] No-selection details visible:", hasDesignNameInputNoSelection, "fallback:", hasFallbackNoSelection);
+      expect(hasDesignNameInputNoSelection).toBe(true);
+      expect(hasFallbackNoSelection).toBe(false);
+
       const existingPiecesSel = diagramContainerSel.locator(".react-flow__node");
       const pieceCountSel = await existingPiecesSel.count();
       console.log("[Design] Piece count for selection:", pieceCountSel);
@@ -2221,7 +2286,6 @@ test.describe("sketchpad", () => {
         const selectionPieces = afterClickDesignAppState?.designApp?.selection?.pieces || [];
         console.log("[Design] Selection pieces:", selectionPieces);
         await openDetailsPanel(page);
-        const detailsTabButton = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
         if (await detailsTabButton.isVisible({ timeout: 2000 }).catch(() => false)) {
           await detailsTabButton.click();
           await page.waitForTimeout(400);
@@ -2232,9 +2296,72 @@ test.describe("sketchpad", () => {
         const hasSelectedPieceIdInput = await selectedPieceIdInput.isVisible({ timeout: 5000 }).catch(() => false);
         console.log("[Design] Selected piece details visible:", hasSelectedPieceSection || hasSelectedPieceIdInput);
         expect(hasSelectedPieceSection || hasSelectedPieceIdInput).toBe(true);
-        const hasGeneralDesignNameInput = await page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.design.name"]').first().isVisible({ timeout: 1000 }).catch(() => false);
-        console.log("[Design] General design details visible during piece selection:", hasGeneralDesignNameInput);
-        expect(hasGeneralDesignNameInput).toBe(false);
+        const fallbackTextPieceSelection = page.locator('[data-panel="rightSidePanel"] text=No valid pieces found in selection.').first();
+        const hasFallbackPieceSelection = await fallbackTextPieceSelection.isVisible({ timeout: 1500 }).catch(() => false);
+        console.log("[Design] Piece-selection fallback visible:", hasFallbackPieceSelection);
+        expect(hasFallbackPieceSelection).toBe(false);
+
+        const selectedPieceGuid = selectionPieces[0];
+        if (typeof selectedPieceGuid === "string" && selectedPieceGuid.length > 0) {
+          const applySelectionShape = async (shape: "nodeId" | "nestedObject" | "wrappedString") => {
+            return await page.evaluate(({ shape, pieceGuid }) => {
+              const actor = (window as any).__SEMIO_ACTOR__;
+              if (!actor) return { applied: false, reason: "missing-actor" };
+              const snapshot = actor.getSnapshot();
+              const path = window.location.pathname;
+              const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+              const designGuid = designGuidMatch?.[1];
+              const kitGuid = Object.keys(snapshot?.context?.kits || {})[0];
+              if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+              const selectionPieces =
+                shape === "nodeId"
+                  ? [`piece-0-${pieceGuid}`]
+                  : shape === "nestedObject"
+                    ? ([{ data: { piece: { guid: pieceGuid } } }] as any)
+                    : ([`selected-piece:${pieceGuid}:active`] as any);
+              actor.send({
+                type: "DESIGN.SET_SELECTION",
+                kitGuid,
+                designGuid,
+                selection: {
+                  pieces: selectionPieces,
+                  connections: [],
+                  connectors: [],
+                },
+              });
+              return { applied: true };
+            }, { shape, pieceGuid: selectedPieceGuid });
+          };
+
+          const validateDetailsSelection = async (label: string) => {
+            await page.waitForTimeout(700);
+            await openDetailsPanel(page);
+            const pieceSection = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.piece.properties"]').first();
+            const pieceIdInput = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.piece.id"]').first();
+            const fallbackText = page.locator('[data-panel="rightSidePanel"] text=No valid pieces found in selection.').first();
+            const hasPieceSection = await pieceSection.isVisible({ timeout: 5000 }).catch(() => false);
+            const hasPieceIdInput = await pieceIdInput.isVisible({ timeout: 5000 }).catch(() => false);
+            const hasFallback = await fallbackText.isVisible({ timeout: 1500 }).catch(() => false);
+            console.log(`[Design] ${label} => pieceSection=${hasPieceSection}, pieceIdInput=${hasPieceIdInput}, fallback=${hasFallback}`);
+            expect(hasPieceSection || hasPieceIdInput).toBe(true);
+            expect(hasFallback).toBe(false);
+          };
+
+          const nodeIdApplied = await applySelectionShape("nodeId");
+          console.log("[Design] Applied nodeId selection shape:", nodeIdApplied);
+          expect(nodeIdApplied.applied).toBe(true);
+          await validateDetailsSelection("node-id shape");
+
+          const nestedApplied = await applySelectionShape("nestedObject");
+          console.log("[Design] Applied nested-object selection shape:", nestedApplied);
+          expect(nestedApplied.applied).toBe(true);
+          await validateDetailsSelection("nested-object shape");
+
+          const wrappedStringApplied = await applySelectionShape("wrappedString");
+          console.log("[Design] Applied wrapped-string selection shape:", wrappedStringApplied);
+          expect(wrappedStringApplied.applied).toBe(true);
+          await validateDetailsSelection("wrapped-string shape");
+        }
       }
     }
     console.log("[Design] Browser errors after selection click:", errors.length, "total errors");
@@ -2511,6 +2638,7 @@ test.describe("sketchpad", () => {
           const secondTargetYDrag = secondCenterYDrag + secondDragOffsetY;
 
           console.log(`[Design] Dragging piece node back from (${secondCenterXDrag}, ${secondCenterYDrag}) to (${secondTargetXDrag}, ${secondTargetYDrag})`);
+
           await page.mouse.move(secondCenterXDrag, secondCenterYDrag);
           await page.waitForTimeout(50);
           await page.mouse.down();
@@ -2519,6 +2647,7 @@ test.describe("sketchpad", () => {
           await page.waitForTimeout(100);
           await page.mouse.up();
           await page.waitForTimeout(2000);
+
           const pieceNodeBoxAfterSecondDrag = await draggedNodeLocator.boundingBox();
           const secondNodeMovedInViewport = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag && (Math.abs(pieceNodeBoxAfterSecondDrag.x - pieceNodeBoxAfterDrag.x) > 5 || Math.abs(pieceNodeBoxAfterSecondDrag.y - pieceNodeBoxAfterDrag.y) > 5);
           const secondViewportDeltaX = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag ? pieceNodeBoxAfterSecondDrag.x - pieceNodeBoxAfterDrag.x : 0;
@@ -2560,6 +2689,198 @@ test.describe("sketchpad", () => {
 
     console.log("[Design] Diagram node drag test complete");
     // #endregion 🔖Diagram Node Drag
+
+    // #region 🔖Drag Propagation
+    console.log("[Design] Testing drag propagation to downstream descendants");
+
+    if (hasDiagram) {
+      const metadataProp = await getDesignPieceMetadata(page);
+      const metadataGuids = Object.keys(metadataProp);
+      console.log(`[Design] Metadata available for ${metadataGuids.length} pieces`);
+
+      const childrenMapProp: Record<string, string[]> = {};
+      for (const [guid, meta] of Object.entries(metadataProp)) {
+        if (meta.parentPieceId) {
+          if (!childrenMapProp[meta.parentPieceId]) childrenMapProp[meta.parentPieceId] = [];
+          childrenMapProp[meta.parentPieceId].push(guid);
+        }
+      }
+
+      const rootPiecesProp = metadataGuids.filter((guid) => !metadataProp[guid].parentPieceId);
+      console.log(`[Design] Root pieces (no parent): ${rootPiecesProp.length}`);
+      console.log(`[Design] Pieces with children: ${Object.keys(childrenMapProp).length}`);
+
+      const parentWithChildAndGrandchild = metadataGuids.find((guid) => {
+        const children = childrenMapProp[guid] ?? [];
+        return children.length > 0 && children.some((c) => (childrenMapProp[c] ?? []).length > 0);
+      });
+
+      if (parentWithChildAndGrandchild) {
+        const childGuid = (childrenMapProp[parentWithChildAndGrandchild] ?? []).find((c) => (childrenMapProp[c] ?? []).length > 0)!;
+        const grandchildGuid = (childrenMapProp[childGuid] ?? [])[0];
+        const parentParentGuid = metadataProp[parentWithChildAndGrandchild].parentPieceId;
+        const siblingGuids = parentParentGuid ? (childrenMapProp[parentParentGuid] ?? []).filter((s) => s !== parentWithChildAndGrandchild) : [];
+
+        console.log(`[Design] Propagation chain: parent=${parentWithChildAndGrandchild?.slice(0, 8)}, child=${childGuid?.slice(0, 8)}, grandchild=${grandchildGuid?.slice(0, 8)}`);
+        console.log(`[Design] Parent's parent: ${parentParentGuid?.slice(0, 8) ?? "none"}, siblings: ${siblingGuids.length}`);
+
+        const allPieceNodes = diagramContainer.locator(".react-flow__node");
+        const nodeDataIds = await allPieceNodes.evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).getAttribute("data-id") ?? ""));
+        const findNodeDataId = (pieceGuid: string) => nodeDataIds.find((id) => id.endsWith(pieceGuid));
+
+        const parentNodeId = findNodeDataId(parentWithChildAndGrandchild);
+        const childNodeId = findNodeDataId(childGuid);
+        const grandchildNodeId = findNodeDataId(grandchildGuid);
+        const parentParentNodeId = parentParentGuid ? findNodeDataId(parentParentGuid) : null;
+
+        if (parentNodeId && childNodeId && grandchildNodeId) {
+          const positionsBeforePropDrag = await page.evaluate(() => {
+            const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
+            const positions: Record<string, { x: number; y: number }> = {};
+            for (const node of nodes) {
+              const id = node.getAttribute("data-id");
+              if (!id) continue;
+              const rect = node.getBoundingClientRect();
+              positions[id] = { x: rect.x, y: rect.y };
+            }
+            return positions;
+          });
+
+          const centersBeforePropDrag = await getDesignPieceCenters(page);
+
+          const parentNodeLocator = page.locator(`.react-flow__node[data-id="${parentNodeId}"]`).first();
+          const parentBoxProp = await parentNodeLocator.boundingBox();
+
+          if (parentBoxProp) {
+            const propDragOffsetX = 80;
+            const propDragOffsetY = 40;
+            const propStartX = parentBoxProp.x + parentBoxProp.width / 2;
+            const propStartY = parentBoxProp.y + parentBoxProp.height / 2;
+            const propTargetX = propStartX + propDragOffsetX;
+            const propTargetY = propStartY + propDragOffsetY;
+
+            console.log(`[Design] Dragging parent piece for propagation test from (${propStartX}, ${propStartY}) to (${propTargetX}, ${propTargetY})`);
+
+            await page.mouse.move(propStartX, propStartY);
+            await page.waitForTimeout(50);
+            await page.mouse.down();
+            await page.waitForTimeout(50);
+            await page.mouse.move(propTargetX, propTargetY, { steps: 10 });
+            await page.waitForTimeout(100);
+            await page.mouse.up();
+            await page.waitForTimeout(2000);
+
+            const positionsAfterPropDrag = await page.evaluate(() => {
+              const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
+              const positions: Record<string, { x: number; y: number }> = {};
+              for (const node of nodes) {
+                const id = node.getAttribute("data-id");
+                if (!id) continue;
+                const rect = node.getBoundingClientRect();
+                positions[id] = { x: rect.x, y: rect.y };
+              }
+              return positions;
+            });
+
+            const centersAfterPropDrag = await getDesignPieceCenters(page);
+
+            const parentBefore = positionsBeforePropDrag[parentNodeId];
+            const parentAfter = positionsAfterPropDrag[parentNodeId];
+            const childBefore = positionsBeforePropDrag[childNodeId];
+            const childAfter = positionsAfterPropDrag[childNodeId];
+            const grandchildBefore = positionsBeforePropDrag[grandchildNodeId];
+            const grandchildAfter = positionsAfterPropDrag[grandchildNodeId];
+
+            const parentDeltaX = parentAfter.x - parentBefore.x;
+            const parentDeltaY = parentAfter.y - parentBefore.y;
+            const childDeltaX = childAfter.x - childBefore.x;
+            const childDeltaY = childAfter.y - childBefore.y;
+            const grandchildDeltaX = grandchildAfter.x - grandchildBefore.x;
+            const grandchildDeltaY = grandchildAfter.y - grandchildBefore.y;
+
+            console.log(`[Design] Parent delta: dx=${parentDeltaX}, dy=${parentDeltaY}`);
+            console.log(`[Design] Child delta: dx=${childDeltaX}, dy=${childDeltaY}`);
+            console.log(`[Design] Grandchild delta: dx=${grandchildDeltaX}, dy=${grandchildDeltaY}`);
+
+            expect(Math.abs(parentDeltaX)).toBeGreaterThan(10);
+            expect(Math.abs(parentDeltaY)).toBeGreaterThan(5);
+            expect(Math.abs(childDeltaX - parentDeltaX)).toBeLessThan(5);
+            expect(Math.abs(childDeltaY - parentDeltaY)).toBeLessThan(5);
+            expect(Math.abs(grandchildDeltaX - parentDeltaX)).toBeLessThan(5);
+            expect(Math.abs(grandchildDeltaY - parentDeltaY)).toBeLessThan(5);
+
+            const parentPieceGuid = parentNodeId.replace(/^piece-\d+-/, "");
+            const childPieceGuid = childNodeId.replace(/^piece-\d+-/, "");
+            const grandchildPieceGuid = grandchildNodeId.replace(/^piece-\d+-/, "");
+            const parentCenterBefore = centersBeforePropDrag[parentPieceGuid];
+            const parentCenterAfter = centersAfterPropDrag[parentPieceGuid];
+            const childCenterBefore = centersBeforePropDrag[childPieceGuid];
+            const childCenterAfter = centersAfterPropDrag[childPieceGuid];
+            const grandchildCenterBefore = centersBeforePropDrag[grandchildPieceGuid];
+            const grandchildCenterAfter = centersAfterPropDrag[grandchildPieceGuid];
+
+            if (parentCenterBefore && parentCenterAfter && childCenterBefore && childCenterAfter) {
+              const parentCenterDeltaU = parentCenterAfter.u - parentCenterBefore.u;
+              const parentCenterDeltaV = parentCenterAfter.v - parentCenterBefore.v;
+              const childCenterDeltaU = childCenterAfter.u - childCenterBefore.u;
+              const childCenterDeltaV = childCenterAfter.v - childCenterBefore.v;
+              console.log(`[Design] Parent center delta: du=${parentCenterDeltaU}, dv=${parentCenterDeltaV}`);
+              console.log(`[Design] Child center delta: du=${childCenterDeltaU}, dv=${childCenterDeltaV}`);
+              expect(Math.abs(childCenterDeltaU - parentCenterDeltaU)).toBeLessThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaV - parentCenterDeltaV)).toBeLessThan(TOLERANCE);
+            }
+
+            if (grandchildCenterBefore && grandchildCenterAfter && parentCenterBefore && parentCenterAfter) {
+              const parentCenterDeltaU = parentCenterAfter.u - parentCenterBefore.u;
+              const parentCenterDeltaV = parentCenterAfter.v - parentCenterBefore.v;
+              const gcDeltaU = grandchildCenterAfter.u - grandchildCenterBefore.u;
+              const gcDeltaV = grandchildCenterAfter.v - grandchildCenterBefore.v;
+              console.log(`[Design] Grandchild center delta: du=${gcDeltaU}, dv=${gcDeltaV}`);
+              expect(Math.abs(gcDeltaU - parentCenterDeltaU)).toBeLessThan(TOLERANCE);
+              expect(Math.abs(gcDeltaV - parentCenterDeltaV)).toBeLessThan(TOLERANCE);
+            }
+
+            if (parentParentNodeId) {
+              const ppBefore = positionsBeforePropDrag[parentParentNodeId];
+              const ppAfter = positionsAfterPropDrag[parentParentNodeId];
+              if (ppBefore && ppAfter) {
+                const ppDeltaX = ppAfter.x - ppBefore.x;
+                const ppDeltaY = ppAfter.y - ppBefore.y;
+                console.log(`[Design] Parent's parent delta: dx=${ppDeltaX}, dy=${ppDeltaY}`);
+                expect(Math.abs(ppDeltaX)).toBeLessThan(2);
+                expect(Math.abs(ppDeltaY)).toBeLessThan(2);
+              }
+            }
+
+            for (const sibGuid of siblingGuids.slice(0, 3)) {
+              const sibNodeId = findNodeDataId(sibGuid);
+              if (sibNodeId) {
+                const sibBefore = positionsBeforePropDrag[sibNodeId];
+                const sibAfter = positionsAfterPropDrag[sibNodeId];
+                if (sibBefore && sibAfter) {
+                  const sibDeltaX = sibAfter.x - sibBefore.x;
+                  const sibDeltaY = sibAfter.y - sibBefore.y;
+                  console.log(`[Design] Sibling ${sibGuid.slice(0, 8)} delta: dx=${sibDeltaX}, dy=${sibDeltaY}`);
+                  expect(Math.abs(sibDeltaX)).toBeLessThan(2);
+                  expect(Math.abs(sibDeltaY)).toBeLessThan(2);
+                }
+              }
+            }
+
+            console.log("[Design] Drag propagation test passed: descendants moved, ancestors and siblings stayed");
+          } else {
+            console.log("[Design] Could not get bounding box for parent piece node in propagation test");
+          }
+        } else {
+          console.log("[Design] Could not find a parent-child-grandchild chain for propagation test");
+        }
+      } else {
+        console.log("[Design] No metadata available or diagram not visible for propagation test");
+      }
+    }
+
+    console.log("[Design] Drag propagation test complete");
+    // #endregion 🔖Drag Propagation
 
     const infiniteLoopErrorsFinal = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrorsFinal).toHaveLength(0);

@@ -5046,24 +5046,26 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   return (
     <LevelProvider level="panel">
       <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
-        <div className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
-          {sortedTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.id === activeTab?.id;
-            return (
-              <Tooltip key={tab.id}>
-                <TooltipTrigger asChild>
-                  <button id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
-                    <Icon size={16} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <DescriptionTooltipContent id={tab.id} />
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
+        {sortedTabs.length > 1 && (
+          <div className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
+            {sortedTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = tab.id === activeTab?.id;
+              return (
+                <Tooltip key={tab.id}>
+                  <TooltipTrigger asChild>
+                    <button id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
+                      <Icon size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <DescriptionTooltipContent id={tab.id} />
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
         <Scrollable className="flex-1 min-h-0">
           <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
         </Scrollable>

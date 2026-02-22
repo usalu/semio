@@ -1354,7 +1354,6 @@ const Settings: FC = () => {
  *  * [👤semio📚js🗃️sketchpad💻docstsx🔖app🛠️docsappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/DOCS.TSX/APP/DOCS-APP-WINDOW-KIND)
  **/
 export enum DocsAppWindowKind {
-  Workbench = "workbench",
   Page = "page",
   Settings = "settings",
   Chat = "chat",
@@ -1386,19 +1385,7 @@ const App: FC = () => {
       content: [
         {
           type: "stack",
-          size: "25%",
-          content: [
-            {
-              type: "component",
-              componentName: DocsAppWindowKind.Workbench,
-              title: "workbench",
-              componentState: {},
-            },
-          ],
-        },
-        {
-          type: "stack",
-          size: "75%",
+          size: "100%",
           content: [
             {
               type: "component",
@@ -1429,9 +1416,21 @@ const App: FC = () => {
 
   useEffect(() => {
     if (appType !== "docs") return;
-
+    const WorkbenchWrapper = () => <Workbench />;
+    const OverviewWrapper = () => <Overview />;
     const DetailsWrapper = () => <Details />;
-
+    addSection("workbench", {
+      id: "semio.sketchpad.app.docs.docs",
+      specificity: 20,
+      order: 1,
+      content: WorkbenchWrapper,
+    });
+    addSection("workbench", {
+      id: "semio.sketchpad.app.docs.overview",
+      specificity: 20,
+      order: 2,
+      content: OverviewWrapper,
+    });
     addSection("details", {
       id: "semio.sketchpad.app.docs.page",
       specificity: 20,
@@ -1448,6 +1447,8 @@ const App: FC = () => {
     });
 
     return () => {
+      removeSection("workbench", "semio.sketchpad.app.docs.docs");
+      removeSection("workbench", "semio.sketchpad.app.docs.overview");
       removeSection("details", "semio.sketchpad.app.docs.page");
       removeSection("toolbar", "semio.sketchpad.app.docs.toolbar.empty");
     };
@@ -1482,18 +1483,6 @@ const App: FC = () => {
   const windowConfig: AppWindowConfig = useMemo(
     () => ({
       windowKinds: [
-        {
-          id: DocsAppWindowKind.Workbench,
-          label: "workbench",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <Workbench />
-                <Overview />
-              </Tree>
-            </TreeStateProvider>
-          ),
-        },
         {
           id: DocsAppWindowKind.Page,
           label: "page",
@@ -1583,6 +1572,10 @@ export const config: AppConfig = {
   component: App,
   routeSegments: [{ path: "docs" }, { path: "*" }],
   getPanels: (getLabelFn: (key: string) => string, getHotkeyFn: (id: string) => string) => [
+    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show", getHotkeyFn("semio.sketchpad.navbar.panelToggle.workbench.show"), {
+      labelKey: "semio.sketchpad.navbar.panelToggle.workbench.show",
+      manualPath: "/docs/manuals/sketchpad#workbench",
+    }),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show", getHotkeyFn("semio.sketchpad.navbar.panelToggle.details.show"), {
       labelKey: "semio.sketchpad.navbar.panelToggle.details.show",
       manualPath: "/docs/manuals/sketchpad#details",

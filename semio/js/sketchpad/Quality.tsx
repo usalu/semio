@@ -146,7 +146,6 @@ export enum QualityAppFullscreenWindow {
  *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-WINDOW-KIND)
  **/
 export enum QualityAppWindowKind {
-  Workbench = "workbench",
   Formula = "formula",
   Diagram = "diagram",
   Settings = "settings",
@@ -2118,8 +2117,22 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     if (appType !== "quality") return;
-
-    return () => {};
+    addSection("workbench", {
+      id: "semio.sketchpad.app.quality.workbench.nodes",
+      specificity: 20,
+      order: 0,
+      content: () => <QualityWorkbench />,
+    });
+    addSection("workbench", {
+      id: "semio.sketchpad.app.quality.workbench.qualities",
+      specificity: 20,
+      order: 1,
+      content: () => <QualityWorkbenchQualities />,
+    });
+    return () => {
+      removeSection("workbench", "semio.sketchpad.app.quality.workbench.nodes");
+      removeSection("workbench", "semio.sketchpad.app.quality.workbench.qualities");
+    };
   }, [appType, addSection, removeSection]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -2206,18 +2219,7 @@ const App: FC<AppProps> = () => {
       content: [
         {
           type: "stack",
-          width: 25,
-          content: [
-            {
-              type: "component",
-              componentType: QualityAppWindowKind.Workbench,
-              title: "workbench",
-            },
-          ],
-        },
-        {
-          type: "stack",
-          width: 15,
+          width: 20,
           content: [
             {
               type: "component",
@@ -2228,7 +2230,7 @@ const App: FC<AppProps> = () => {
         },
         {
           type: "stack",
-          width: 60,
+          width: 80,
           content: [
             {
               type: "component",
@@ -2254,18 +2256,6 @@ const App: FC<AppProps> = () => {
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
       windowKinds: [
-        {
-          id: QualityAppWindowKind.Workbench,
-          label: "workbench",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <QualityWorkbench />
-                <QualityWorkbenchQualities />
-              </Tree>
-            </TreeStateProvider>
-          ),
-        },
         {
           id: QualityAppWindowKind.Formula,
           label: "Formula",
@@ -2353,6 +2343,7 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (): PanelDefinition[] => [
+    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
     createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),

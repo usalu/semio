@@ -23,7 +23,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { useSelector } from "@xstate/react";
-import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
@@ -1598,6 +1598,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
+  const { showModels } = useTypeFilters();
   const typeModels = useType(selectTypeModels) as Model[] | undefined;
   const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
   const typeGuid = useType(selectTypeMeshGuid) as string | undefined;
@@ -1759,6 +1760,10 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
+  if (!showModels) {
+    return null;
+  }
+
   if (!blobUrl) {
     return null;
   }
@@ -1775,6 +1780,7 @@ const selectTypeGuid = (type: Type) => type.guid;
 
 const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
+  const { showConnectors } = useTypeFilters();
 
   const typePorts = useType(selectTypePorts) as Connector[] | undefined;
   const typeGuid = useType(selectTypeGuid) as string | undefined;
@@ -1791,8 +1797,16 @@ const SceneContent: FC = React.memo(() => {
   const prevItemsRef = useRef<string>("");
 
   useEffect(() => {
-    if (!focusContext || !typePorts) return;
-    const items = typePorts.map((connector) => ({
+    if (!focusContext) return;
+    const filteredTypePorts = showConnectors ? typePorts : [];
+    if (!filteredTypePorts || filteredTypePorts.length === 0) {
+      if (prevItemsRef.current !== "") {
+        prevItemsRef.current = "";
+        focusContext.setFocusItems([]);
+      }
+      return;
+    }
+    const items = filteredTypePorts.map((connector) => ({
       id: connector.guid,
       label: connector.description || `Connector ${connector.guid.substring(0, 8)}`,
       category: "Connectors",
@@ -1802,7 +1816,7 @@ const SceneContent: FC = React.memo(() => {
       prevItemsRef.current = itemsKey;
       focusContext.setFocusItems(items);
     }
-  }, [focusContext, typePorts]);
+  }, [focusContext, showConnectors, typePorts]);
 
   useEffect(() => {
     if (!focusContext) return;
@@ -1890,7 +1904,7 @@ const SceneContent: FC = React.memo(() => {
   return (
     <>
       <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
-      {typePorts?.map((connector) => {
+      {showConnectors && typePorts?.map((connector) => {
         const isSelected = selection?.connectors?.includes(connector.guid) || false;
         const isHovered = hover?.connector === connector.guid;
         return (
@@ -3684,48 +3698,103 @@ const App: FC = () => {
   );
 };
 
-// #region Toolbar Filters
+// #region Filters
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖toolbarfilters](semiorepo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/TOOLBAR-FILTERS)
-// TypeKindToggles component for filtering connectors and models in Type app. MUST use URL state for filter persistence.
+// [👤semio📚js🗃️sketchpad💻typetsx🔖filters](semiorepo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/FILTERS)
+// Type filter context and toolbar toggles MUST control connector and model visibility via URL search params.
 
-type TypeKind = "connectors" | "models";
+type TypeFilterKind = "connectors" | "models";
+
+interface TypeFilterState {
+  showConnectors: boolean;
+  showModels: boolean;
+}
+
+const isTypeFilterKind = (value: string): value is TypeFilterKind => value === "connectors" || value === "models";
+const parseTypeFilterState = (searchParams: URLSearchParams): TypeFilterState => {
+  const kinds = searchParams.getAll("filter").filter(isTypeFilterKind);
+  if (kinds.length === 0) {
+    return { showConnectors: true, showModels: true };
+  }
+  return {
+    showConnectors: kinds.includes("connectors"),
+    showModels: kinds.includes("models"),
+  };
+};
+
+const createTypeFilterStore = () => {
+  let state: TypeFilterState = { showConnectors: true, showModels: true };
+  const listeners = new Set<() => void>();
+
+  const getState = () => state;
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  const setState = (nextState: TypeFilterState) => {
+    if (state.showConnectors === nextState.showConnectors && state.showModels === nextState.showModels) {
+      return;
+    }
+    state = nextState;
+    listeners.forEach((listener) => listener());
+  };
+
+  return { getState, subscribe, setState };
+};
+
+const typeFilterStore = createTypeFilterStore();
+
+const useTypeFilters = (): TypeFilterState => useSyncExternalStore(typeFilterStore.subscribe, typeFilterStore.getState, typeFilterStore.getState);
 
 const TypeKindToggles: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const selectedKindsFromUrl = useMemo(() => searchParams.getAll("kind") as TypeKind[], [searchParams]);
+  const selectedKindsFromUrl = useMemo(() => searchParams.getAll("filter").filter(isTypeFilterKind), [searchParams]);
   const selectedKinds = useMemo(() => new Set(selectedKindsFromUrl), [selectedKindsFromUrl]);
 
-  const toggleKind = (kind: TypeKind) => {
+  useEffect(() => {
+    typeFilterStore.setState(parseTypeFilterState(searchParams));
+  }, [searchParams]);
+
+  const toggleKind = (kind: TypeFilterKind) => {
+    const allKinds: TypeFilterKind[] = ["connectors", "models"];
     const newParams = new URLSearchParams(searchParams);
-    const kinds = newParams.getAll("kind") as TypeKind[];
+    const kinds = newParams.getAll("filter").filter(isTypeFilterKind);
 
     if (kinds.length === 0) {
-      newParams.append("kind", kind);
+      newParams.delete("filter");
+      allKinds.filter((k) => k !== kind).forEach((k) => newParams.append("filter", k));
     } else if (kinds.includes(kind)) {
       const remaining = kinds.filter((k) => k !== kind);
-      newParams.delete("kind");
-      remaining.forEach((k) => newParams.append("kind", k));
+      newParams.delete("filter");
+      remaining.forEach((k) => newParams.append("filter", k));
     } else {
-      newParams.append("kind", kind);
+      const updated = [...kinds, kind];
+      newParams.delete("filter");
+      if (updated.length < allKinds.length) {
+        updated.forEach((k) => newParams.append("filter", k));
+      }
     }
 
+    typeFilterStore.setState(parseTypeFilterState(newParams));
     setSearchParams(newParams);
   };
+  const isActive = (kind: TypeFilterKind) => selectedKindsFromUrl.length === 0 || selectedKinds.has(kind);
 
   const labelConnectors = useLabel("semio.sketchpad.app.type.toolbar.showConnectors");
   const labelModels = useLabel("semio.sketchpad.app.type.toolbar.showModels");
 
   return (
     <ToolbarGroup>
-      <Toggle pressed={selectedKinds.has("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon />} text={labelConnectors} />
-      <Toggle pressed={selectedKinds.has("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon />} text={labelModels} />
+      <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon />} text={labelConnectors} />
+      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon />} text={labelModels} />
     </ToolbarGroup>
   );
 };
 
-// #endregion Toolbar Filters
+// #endregion Filters
 
 const TypeApp: FC = () => {
   const appType = useAppType();

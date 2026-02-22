@@ -1,0 +1,138 @@
+{
+  "title": "Fix Visual Drag Propagation During Drag",
+  "status": "open",
+  "prompt": "Implement directional drag propagation in the Design 2D diagram with parent-fixed behavior. When dragging a node, move downstream children transitively. Parents never move. Persist in one transaction.",
+  "summary": "Implemented directional drag propagation in Design 2D diagram. When dragging a node, all downstream descendants (via parentPieceId tree from piecesMetadata) move together preserving offsets. Parents and siblings stay fixed. Key changes: (1) getDownstreamDescendants utility computes BFS over parentPieceId tree, (2) onNodeDragStart computes descendants+offsets, (3) onNodeDrag moves descendants via internal node positions, (4) onNodeDragStop persists all updates in single transaction, (5) fixed bug where dragged node was not included in pendingPieceUpdates when not pre-selected, (6) exposed metadata to window for test accessibility, (7) added drag propagation test region verifying transitive chain propagation and center delta consistency.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/644"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-22T13:35:47.894858732Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-22 13:35:47",
+        "finished": "2026-02-22 14:55:56"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3f0ee8c7d56cf758b50565ca1e0295282c7d8dd2",
+      "prompt": "Implement directional drag propagation in the Design 2D diagram with parent-fixed behavior. When dragging a node, move downstream children transitively. Parents never move. Persist in one transaction.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 347,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 103,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧪semio/js/sketchpad.test.ts",
+              "lines": {
+                "added": 3657,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 103,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Diagram Node Drag",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Drag Propagation",
+              "lines": {
+                "added": 191,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/sketchpad.test.ts#Drag Propagation",
+              "lines": {
+                "added": 191,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§getDownstreamDescendants",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram§getDownstreamDescendants",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-22 15:29:22"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3f0ee8c7d56cf758b50565ca1e0295282c7d8dd2",
+      "prompt": "Descendants dont visually move during drag - only after drop. Need to call setNodes during onNodeDrag to update descendant positions reactively.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

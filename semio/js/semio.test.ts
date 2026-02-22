@@ -42,7 +42,7 @@ import {
   validateKit,
   ValidationResult,
 } from "./semio";
-import { applySelectionComposition, resolveSelectionCompositionKind, ToolKind } from "./sketchpad/shared";
+import { applySelectionComposition, getNextPanelVisibilityFromToggle, resolveSelectionCompositionKind, ToolKind } from "./sketchpad/shared";
 
 const TOLERANCE = 0.001;
 
@@ -265,5 +265,35 @@ describe("Sketchpad Selection Composition", () => {
     expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { altKey: true })).toBe("subtractive");
     expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { metaKey: true })).toBe("subtractive");
     expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true, ctrlKey: true })).toBe("intersect");
+  });
+});
+
+describe("Sketchpad Panel Visibility", () => {
+  it("keeps chat, settings, and property tabs mutually exclusive when toggled on", () => {
+    const initialVisibility = {
+      rightSidePanel: false,
+      chat: false,
+      settings: false,
+      leftSidePanel: false,
+    };
+    const propertyVisible = getNextPanelVisibilityFromToggle(initialVisibility, "rightSidePanel");
+    expect(propertyVisible.rightSidePanel).toBe(true);
+    expect(propertyVisible.chat).toBe(false);
+    expect(propertyVisible.settings).toBe(false);
+    const chatVisible = getNextPanelVisibilityFromToggle(propertyVisible, "chat");
+    expect(chatVisible.rightSidePanel).toBe(false);
+    expect(chatVisible.chat).toBe(true);
+    expect(chatVisible.settings).toBe(false);
+    const settingsVisible = getNextPanelVisibilityFromToggle(chatVisible, "settings");
+    expect(settingsVisible.rightSidePanel).toBe(false);
+    expect(settingsVisible.chat).toBe(false);
+    expect(settingsVisible.settings).toBe(true);
+    const settingsHidden = getNextPanelVisibilityFromToggle(settingsVisible, "settings");
+    expect(settingsHidden.rightSidePanel).toBe(false);
+    expect(settingsHidden.chat).toBe(false);
+    expect(settingsHidden.settings).toBe(false);
+    const leftVisible = getNextPanelVisibilityFromToggle(settingsVisible, "leftSidePanel");
+    expect(leftVisible.leftSidePanel).toBe(true);
+    expect(leftVisible.settings).toBe(true);
   });
 });
