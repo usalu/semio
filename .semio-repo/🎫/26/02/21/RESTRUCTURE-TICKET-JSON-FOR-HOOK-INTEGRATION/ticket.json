@@ -1,0 +1,15 @@
+{
+  "title": "Restructure Ticket JSON for Hook Integration",
+  "status": "closed",
+  "description": "Change ticket.json structure to support sessions with prompts events plan and diff. Rename prompt to description. Remove interactions array. Add TicketSessionPlanStep TicketSessionPlan TicketSessionEvent TicketSessionPrompt types. Update trackHookInOpenTicket ensureTicketSession and all lifecycle functions. Update tests.",
+  "summary": "Restructured ticket.json format: renamed Prompt to Description, added Sessions with TicketSessionPlanStep/Plan/Event/Prompt types, removed TicketSessionInteraction and TicketSessionReads, rewrote trackHookInOpenTicket to create TicketSessionEvent entries in session prompts, replaced applyHookPathToReads with session-level applyHookPathToSessionDiffModified, added Sections/Definitions to TicketSessionDiff, updated all getter methods with Sessions fallback, updated CreateTicket/ReopenTicket to create Sessions, fixed all TicketNode.Prompt to Description refs, fixed HookResultJSONFields test, all ticket and hook tests pass.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    {
+      "id": "72804bac-38bf-4399-bbea-b9a4f28df165",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code"
+    }
+  ]
+}

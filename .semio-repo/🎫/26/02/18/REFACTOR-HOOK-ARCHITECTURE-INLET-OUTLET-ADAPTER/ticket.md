@@ -5,8 +5,8 @@ goal: DEVOPS
 # Ticket
 
 ## Summary
-Refactored hook architecture to inlet adapter → neutral implementation → outlet adapter pattern. CLI accepts native client events (VSCode PreToolUse, Windsurf pre_read_code, Cursor beforeReadFile, Claude-compatible PreToolUse) and resolves them to neutral events via per-client inlet adapters. Added HookAgentToolCodeEditing event, ToolKind classifier, 5 platform-specific resolvers, ResolveHookEvent master function. Updated all 10 config generators to fire native events. All 14 neutral events, 80+ test cases passing.
 
+Added HookAgentToolSearched (agent.tool.searching.ended) event for post-tool-use of search tools. resolvePostToolUse now returns HookAgentToolSearched for ToolKindCodeSearch. Added HookResultAgentToolSearched struct, RunHook case, trackHookInOpenTicket case, and updated windsurf post_read_code resolver. All test expectations updated.
 ## Changes
 - semio-repo/cli/main.go: Added HookAgentToolCodeEditing constant, ToolKind type, classifyTool function, inlet adapter functions (resolveCopilotEvent, resolveCursorEvent, resolveWindsurfEvent, resolveClaudeCompatibleEvent, ResolveHookEvent), updated vsCodeEventFromHookEvent outlet, dispatchHook, hookCommand, trackHookInOpenTicket, all 10 config generators
 - semio-repo/cli/main_test.go: Updated all existing hook tests for code.editing and native events, added TestClassifyTool, TestResolveHookEvent (51 cases), TestResolvePreToolUse, TestResolvePostToolUse
@@ -38,6 +38,12 @@ Refactored hook architecture to inlet adapter → neutral implementation → out
 - [x] Add new inlet adapter tests
 - [x] Update copilot-instructions.md
 - [x] Build and verify all tests pass
+- [ ] Add HookAgentToolSearched (agent.tool.searching.ended) event
+- [ ] Wire HookAgentToolSearched into resolvePostToolUse for ToolKindCodeSearch
+- [ ] Update tests for searching.ended
 
 ## Plan
 Inlet adapter → neutral implementation → outlet adapter. Native events from each platform (VSCode PascalCase, Cursor camelCase, Windsurf snake_case, Claude PascalCase) are resolved to neutral HookEvents by classifying tools by name (plan, code_search, code_edit, terminal, generic). Config generators fire native events; the CLI resolves them.
+
+### Phase 2: Add searching.ended event
+list_dir and other search tools fall back to generic agent.tool.ended on post-tool-use because resolvePostToolUse has no case for ToolKindCodeSearch. Add HookAgentToolSearched = "agent.tool.searching.ended", add to AllHookEvents, and handle ToolKindCodeSearch in resolvePostToolUse.

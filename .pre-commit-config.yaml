@@ -1,0 +1,9 @@
+repos:
+- repo: local
+  hooks:
+  - id: semio-monorepo-preflight
+    name: semio monorepo preflight
+    entry: ./semio-repo/cli/cli hook git.commit.starting
+    language: system
+    pass_filenames: false
+    always_run: true

@@ -6332,11 +6332,21 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	projectsNode := tree.Children[0]
+	var projectsNode *TreeNode
+	for _, child := range tree.Children {
+		if child.ID == "projects" {
+			projectsNode = child
+			break
+		}
+	}
+	if projectsNode == nil {
+		t.Fatal("projects node not found")
+	}
 	var semioProject, semioRepoProject *TreeNode
 	for _, c := range projectsNode.Children {
 		entityKind := treeNodeKindToEntityKind(c.Kind)
 		id := GetArtifactID(entityKind, c.Data)
+		t.Logf("Found project: %s", id)
 		if strings.Contains(id, "semio") && !strings.Contains(id, "repo") && !strings.Contains(id, "coda") {
 			semioProject = c
 		}
@@ -6358,25 +6368,26 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 	if semioRepoId != emojiText(EmojiProjectInfra)+"semiorepo" {
 		t.Errorf("semio-repo project id: expected %q, got %q", emojiText(EmojiProjectInfra)+"semiorepo", semioRepoId)
 	}
-	var jsBundle *TreeNode
+	var antlrBundle *TreeNode
 	for _, c := range semioProject.Children {
 		if c.Kind == TreeNodeBundle {
 			bId := GetArtifactID("bundle", c.Data)
-			if strings.HasSuffix(bId, emojiText(EmojiBundleLibrary)+"js") {
-				jsBundle = c
+			t.Logf("Found bundle in semioProject: %s", bId)
+			if strings.HasSuffix(bId, emojiText(EmojiBundleSchema)+"antlr") {
+				antlrBundle = c
 				break
 			}
 		}
 	}
-	if jsBundle == nil {
-		t.Fatal("semio/js bundle not found")
+	if antlrBundle == nil {
+		t.Fatal("semio/antlr bundle not found")
 	}
-	jsBundleId := GetArtifactID("bundle", jsBundle.Data)
-	expectedBundleId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"
-	if jsBundleId != expectedBundleId {
-		t.Errorf("semio/js bundle id: expected %q, got %q", expectedBundleId, jsBundleId)
+	antlrBundleId := GetArtifactID("bundle", antlrBundle.Data)
+	expectedBundleId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleSchema) + "antlr"
+	if antlrBundleId != expectedBundleId {
+		t.Errorf("semio/antlr bundle id: expected %q, got %q", expectedBundleId, antlrBundleId)
 	}
-	for _, c := range jsBundle.Children {
+	for _, c := range antlrBundle.Children {
 		ek := treeNodeKindToEntityKind(c.Kind)
 		if ek == "" {
 			continue
@@ -9366,6 +9377,9 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
+	if len(ticket.Sessions) != 0 {
+		t.Fatalf("OpenTicket should not create synthetic sessions, got %d", len(ticket.Sessions))
+	}
 	if ticket.Management != nil {
 		t.Error("OpenTicket: GitHub data should be nil")
 	}
@@ -9420,6 +9434,9 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReopenTicket failed: %v", err)
 	}
+	if len(ticket.Sessions) != 0 {
+		t.Fatalf("ReopenTicket should not create synthetic sessions, got %d", len(ticket.Sessions))
+	}
 	if ticket.GetStatus() != TicketStatusOpen {
 		t.Errorf("Ticket status mismatch: got %v, want open", ticket.GetStatus())
 	}
@@ -9430,13 +9447,13 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	ctx := NewRepoContext(tmpDir)
 
 	goalInput := GoalCreateInput{
-		Title:       "Test Goal NoGH 2",
-		Description: "Desc",
-		Prompt:      "Prompt",
-		DueDate:     "2026-02-15",
-		Client:      "cursor",
-		LLM:         "gpt-5-2-codex",
-		NoManagement:    true,
+		Title:        "Test Goal NoGH 2",
+		Description:  "Desc",
+		Prompt:       "Prompt",
+		DueDate:      "2026-02-15",
+		Client:       "cursor",
+		LLM:          "gpt-5-2-codex",
+		NoManagement: true,
 	}
 
 	goal2, err := ctx.GoalCreate(goalInput)
@@ -9475,6 +9492,84 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	}
 	if closedGoal.Interactions[len(closedGoal.Interactions)-1].Kind != "goal.close" {
 		t.Errorf("closed goal last interaction Kind = %q, want %q", closedGoal.Interactions[len(closedGoal.Interactions)-1].Kind, "goal.close")
+	}
+}
+
+func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
+	tmpDir := t.TempDir()
+	run := func(name string, field ...string) {
+		cmd := exec.Command(name, field...)
+		cmd.Dir = tmpDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("run %s %v failed: %v\nOutput: %s", name, field, err, out)
+		}
+	}
+	run("git", "init")
+	run("git", "config", "user.email", "test@test.com")
+	run("git", "config", "user.name", "Test")
+	run("git", "config", "commit.gpgsign", "false")
+	run("git", "commit", "--allow-empty", "-m", "initial")
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".semio-repo", "🎫"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	goal, err := OpenGoal("Hook Goal", "Hook Goal Desc", "Hook Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", true)
+	if err != nil {
+		t.Fatalf("OpenGoal failed: %v", err)
+	}
+	ticket, err := OpenTicket("Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
+	if err != nil {
+		t.Fatalf("OpenTicket failed: %v", err)
+	}
+	if len(ticket.Sessions) != 0 {
+		t.Fatalf("expected no synthetic sessions at open, got %d", len(ticket.Sessions))
+	}
+	stableInput := json.RawMessage(`{"session_id":"agent-session-123","request_id":"req-1","timestamp":"2026-02-23T00:00:00Z"}`)
+	RunHook(HookContext{
+		Event:     HookAgentStarted,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T00:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     stableInput,
+	})
+	ticketData, err := os.ReadFile(ticket.JsonPath)
+	if err != nil {
+		t.Fatalf("read ticket.json: %v", err)
+	}
+	var saved Ticket
+	if err := json.Unmarshal(ticketData, &saved); err != nil {
+		t.Fatalf("unmarshal ticket.json: %v", err)
+	}
+	if len(saved.Sessions) != 1 {
+		t.Fatalf("expected 1 session after first hook, got %d", len(saved.Sessions))
+	}
+	if saved.Sessions[0].ID != "agent-session-123" {
+		t.Fatalf("expected hook session id agent-session-123, got %s", saved.Sessions[0].ID)
+	}
+	requestOnlyInput := json.RawMessage(`{"request_id":"req-2","timestamp":"2026-02-23T00:00:01Z"}`)
+	RunHook(HookContext{
+		Event:     HookAgentToolStarting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T00:00:01Z",
+		RepoRoot:  tmpDir,
+		ToolName:  "Read",
+		Input:     requestOnlyInput,
+	})
+	ticketData, err = os.ReadFile(ticket.JsonPath)
+	if err != nil {
+		t.Fatalf("read ticket.json after request-only hook: %v", err)
+	}
+	if err := json.Unmarshal(ticketData, &saved); err != nil {
+		t.Fatalf("unmarshal ticket.json after request-only hook: %v", err)
+	}
+	if len(saved.Sessions) != 1 {
+		t.Fatalf("request-only hooks should not add sessions, got %d", len(saved.Sessions))
+	}
+	if saved.Sessions[0].ID != "agent-session-123" {
+		t.Fatalf("session id changed unexpectedly to %s", saved.Sessions[0].ID)
 	}
 }
 
@@ -12559,13 +12654,13 @@ func TestUnifiedRenderingTicketIdentity(t *testing.T) {
 
 	t.Run("ticketNodeToData roundtrip matches direct rendering", func(t *testing.T) {
 		node := &TicketNode{
-			Slug:     "MY-TICKET",
-			Title:    "My Ticket",
-			Status:   "open",
-			Created:  "2025-01-01T00:00:00Z",
-			Finished: "",
-			Prompt:   "Fix something",
-			Summary:  "",
+			Slug:        "MY-TICKET",
+			Title:       "My Ticket",
+			Status:      "open",
+			Created:     "2025-01-01T00:00:00Z",
+			Finished:    "",
+			Description: "Fix something",
+			Summary:     "",
 		}
 		nodeData := ticketNodeToData(node)
 		nodeData["year"] = float64(2025)
@@ -12583,7 +12678,7 @@ func TestUnifiedRenderingTicketIdentity(t *testing.T) {
 			ID: "G1", Title: "Parent", Status: "open",
 			Tickets: []*TicketNode{{
 				Slug: "MY-TICKET", Title: "My Ticket", Status: "open",
-				Created: "2025-01-01T00:00:00Z", Prompt: "Fix something",
+				Created: "2025-01-01T00:00:00Z", Description: "Fix something",
 			}},
 		}}
 		treeOutput := renderGoalTreeNodes(roots, "md")
@@ -13141,8 +13236,8 @@ func TestSingleLineOutput(t *testing.T) {
 				},
 				{
 					Slug: "T2", Title: "Ticket Two", Status: "open",
-					Created: "2025-01-01T00:00:00Z",
-					Prompt:  "Please fix:\n- Item 1\n- Item 2",
+					Created:     "2025-01-01T00:00:00Z",
+					Description: "Please fix:\n- Item 1\n- Item 2",
 				},
 			},
 			Children: []*GoalNode{{
@@ -13751,6 +13846,7 @@ func TestValidateHookEvent(t *testing.T) {
 		{"agent tool ended", "agent.tool.ended", true, HookAgentToolEnded},
 		{"agent tool plan updating", "agent.tool.plan.updating", true, HookAgentToolPlanUpdating},
 		{"agent tool code searching", "agent.tool.searching", true, HookAgentToolSearching},
+		{"agent tool searched", "agent.tool.searching.ended", true, HookAgentToolSearched},
 		{"agent tool code editing", "agent.tool.code.editing", true, HookAgentToolCodeEditing},
 		{"agent tool code edited", "agent.tool.code.edited", true, HookAgentToolCodeEdited},
 		{"agent tool terminal starting", "agent.tool.terminal.starting", true, HookAgentToolTerminalStarting},
@@ -13793,6 +13889,7 @@ func TestHookEventKind(t *testing.T) {
 		{"agent tool ended is agent", HookAgentToolEnded, HookKindAgent},
 		{"agent tool plan updating is agent", HookAgentToolPlanUpdating, HookKindAgent},
 		{"agent tool code searching is agent", HookAgentToolSearching, HookKindAgent},
+		{"agent tool searched is agent", HookAgentToolSearched, HookKindAgent},
 		{"agent tool code editing is agent", HookAgentToolCodeEditing, HookKindAgent},
 		{"agent tool code edited is agent", HookAgentToolCodeEdited, HookKindAgent},
 		{"agent tool terminal starting is agent", HookAgentToolTerminalStarting, HookKindAgent},
@@ -13915,6 +14012,7 @@ func TestRunHookAgentEvents(t *testing.T) {
 		{"agent compacting", HookAgentCompacting, true},
 		{"agent tool ended", HookAgentToolEnded, true},
 		{"agent tool code searching", HookAgentToolSearching, true},
+		{"agent tool searched", HookAgentToolSearched, true},
 		{"agent tool code editing", HookAgentToolCodeEditing, true},
 		{"agent tool code edited", HookAgentToolCodeEdited, true},
 		{"agent tool plan updating", HookAgentToolPlanUpdating, true},
@@ -13938,8 +14036,8 @@ func TestRunHookAgentEvents(t *testing.T) {
 	}
 	t.Run("git commit starting", func(t *testing.T) {
 		hctx := HookContext{
-			Event:     HookGitCommitStarting,
-			RepoRoot:  t.TempDir(),
+			Event:    HookGitCommitStarting,
+			RepoRoot: t.TempDir(),
 		}
 		result := RunHook(hctx)
 		// We just check type, value depends on environment (task existence)
@@ -14003,7 +14101,7 @@ func TestAllHookEventsCompleteness(t *testing.T) {
 		HookAgentPromptSubmitting, HookAgentCompacting,
 		HookAgentToolStarting, HookAgentToolEnded,
 		HookAgentToolPlanUpdating,
-		HookAgentToolSearching, HookAgentToolCodeEditing, HookAgentToolCodeEdited,
+		HookAgentToolSearching, HookAgentToolSearched, HookAgentToolCodeEditing, HookAgentToolCodeEdited,
 		HookAgentToolTerminalStarting, HookAgentToolTerminalEnded,
 	}
 	if len(AllHookEvents) != len(expected) {
@@ -14571,32 +14669,56 @@ func TestGenerateClaudeCodeConfig(t *testing.T) {
 }
 
 func TestConfigureGitHooks(t *testing.T) {
-	tmpDir := t.TempDir()
-	gitDir := filepath.Join(tmpDir, ".git")
-	if err := os.MkdirAll(gitDir, 0755); err != nil {
-		t.Fatal(err)
+	runCase := func(t *testing.T, setHooksPath string) string {
+		t.Helper()
+		tmpDir := t.TempDir()
+		init := exec.Command("git", "-C", tmpDir, "init")
+		if output, err := init.CombinedOutput(); err != nil {
+			t.Fatalf("git init failed: %v (%s)", err, string(output))
+		}
+		if setHooksPath != "" {
+			setCmd := exec.Command("git", "-C", tmpDir, "config", "--local", "core.hooksPath", setHooksPath)
+			if output, err := setCmd.CombinedOutput(); err != nil {
+				t.Fatalf("set core.hooksPath failed: %v (%s)", err, string(output))
+			}
+		}
+		if err := configureGitHooks(tmpDir); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		preCommitPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
+		preCommit, err := os.ReadFile(preCommitPath)
+		if err != nil {
+			t.Fatal("pre-commit hook not created")
+		}
+		if !strings.Contains(string(preCommit), "pre-commit run --hook-stage pre-commit") {
+			t.Error("pre-commit hook does not call pre-commit framework")
+		}
+		postCommit, err := os.ReadFile(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
+		if err != nil {
+			t.Fatal("post-commit hook not created")
+		}
+		if !strings.Contains(string(postCommit), "hook git.commit.ended") {
+			t.Error("post-commit hook does not call hook git.commit.ended")
+		}
+		info, err := os.Stat(preCommitPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.Mode()&0111 == 0 {
+			t.Error("pre-commit hook is not executable")
+		}
+		return tmpDir
 	}
-	if err := configureGitHooks(tmpDir); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	preCommit, err := os.ReadFile(filepath.Join(gitDir, "hooks", "pre-commit"))
-	if err != nil {
-		t.Fatal("pre-commit hook not created")
-	}
-	if !strings.Contains(string(preCommit), "hook git.commit.starting") {
-		t.Error("pre-commit hook does not call hook git.commit.starting")
-	}
-	postCommit, err := os.ReadFile(filepath.Join(gitDir, "hooks", "post-commit"))
-	if err != nil {
-		t.Fatal("post-commit hook not created")
-	}
-	if !strings.Contains(string(postCommit), "hook git.commit.ended") {
-		t.Error("post-commit hook does not call hook git.commit.ended")
-	}
-	info, _ := os.Stat(filepath.Join(gitDir, "hooks", "pre-commit"))
-	if info.Mode()&0111 == 0 {
-		t.Error("pre-commit hook is not executable")
-	}
+	t.Run("uses default hooks directory", func(t *testing.T) {
+		runCase(t, "")
+	})
+	t.Run("unsets local core hooksPath", func(t *testing.T) {
+		tmpDir := runCase(t, ".husky/_")
+		getCmd := exec.Command("git", "-C", tmpDir, "config", "--local", "--get", "core.hooksPath")
+		if output, err := getCmd.CombinedOutput(); err == nil {
+			t.Fatalf("expected core.hooksPath to be unset, got: %s", strings.TrimSpace(string(output)))
+		}
+	})
 }
 
 func TestGetClientHookMappings(t *testing.T) {
@@ -14702,6 +14824,19 @@ func TestHookLogging(t *testing.T) {
 	if entry.Input == nil {
 		t.Error("expected input to be populated")
 	}
+	if entry.Data == nil {
+		t.Fatal("expected data to be populated with event-specific result")
+	}
+	var dataMap map[string]interface{}
+	if err := json.Unmarshal(entry.Data, &dataMap); err != nil {
+		t.Fatalf("expected data to be valid JSON: %v", err)
+	}
+	if dataMap["session"] != "sess-log" {
+		t.Errorf("expected data.session=sess-log, got %v", dataMap["session"])
+	}
+	if dataMap["client"] != "claude-code" {
+		t.Errorf("expected data.client=claude-code, got %v", dataMap["client"])
+	}
 }
 
 func TestHookLoggingToolBlocked(t *testing.T) {
@@ -14742,6 +14877,16 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 	}
 	if !strings.HasSuffix(entries[0].Name(), "_agent-tool-starting.json") {
 		t.Errorf("expected filename to end with _agent-tool-starting.json, got: %s", entries[0].Name())
+	}
+	if entry.Data == nil {
+		t.Fatal("expected data to be populated with event-specific result")
+	}
+	var dataMap map[string]interface{}
+	if err := json.Unmarshal(entry.Data, &dataMap); err != nil {
+		t.Fatalf("expected data to be valid JSON: %v", err)
+	}
+	if dataMap["allowed"] != false {
+		t.Errorf("expected data.allowed=false for blocked tool, got %v", dataMap["allowed"])
 	}
 }
 
@@ -14797,6 +14942,306 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	}
 	if entry.Event.Client != "claude-code" {
 		t.Errorf("expected event.client claude-code, got: %s", entry.Event.Client)
+	}
+	if entry.Data == nil {
+		t.Fatal("expected data to be populated with event-specific result")
+	}
+	var dataMap map[string]interface{}
+	if err := json.Unmarshal(entry.Data, &dataMap); err != nil {
+		t.Fatalf("expected data to be valid JSON: %v", err)
+	}
+	if dataMap["name"] != "Bash" {
+		t.Errorf("expected data.name=Bash for tool.starting, got %v", dataMap["name"])
+	}
+	if dataMap["input"] == nil {
+		t.Error("expected data.input to be populated with tool input for tool.starting")
+	}
+}
+
+func setupTicketDir(t *testing.T) (string, string) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	now := time.Now().UTC()
+	ticketDir := filepath.Join(tmpDir, ".semio-repo", "🎫",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", now.Month()),
+		fmt.Sprintf("%02d", now.Day()),
+		"TEST-TICKET")
+	if err := os.MkdirAll(ticketDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	ticketJSON := filepath.Join(ticketDir, "ticket.json")
+	initialTicket := `{"title":"Test Ticket","status":"open","goal":"TEST/GOAL"}`
+	if err := os.WriteFile(ticketJSON, []byte(initialTicket), 0644); err != nil {
+		t.Fatal(err)
+	}
+	return tmpDir, ticketJSON
+}
+
+func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
+	t.Helper()
+	data, err := os.ReadFile(ticketJSON)
+	if err != nil {
+		t.Fatalf("cannot read ticket.json: %v", err)
+	}
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("invalid ticket.json: %v\n%s", err, string(data))
+	}
+	return result
+}
+
+func getTicketEvents(t *testing.T, ticketData map[string]interface{}) []interface{} {
+	t.Helper()
+	sessions, ok := ticketData["sessions"].([]interface{})
+	if !ok || len(sessions) == 0 {
+		t.Fatal("expected sessions in ticket.json")
+	}
+	lastSession := sessions[len(sessions)-1].(map[string]interface{})
+	prompts, ok := lastSession["prompts"].([]interface{})
+	if !ok || len(prompts) == 0 {
+		t.Fatal("expected prompts in session")
+	}
+	lastPrompt := prompts[len(prompts)-1].(map[string]interface{})
+	events, ok := lastPrompt["events"].([]interface{})
+	if !ok {
+		return nil
+	}
+	return events
+}
+
+func TestTrackHookAllEventsLogged(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	SetRootDir(tmpDir)
+	sessionInput := json.RawMessage(`{"session_id":"test-session-1","llm":"opus-4-6","transcript_path":"/tmp/transcript.jsonl"}`)
+	hctx := HookContext{
+		Event:     HookAgentPromptSubmitting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     sessionInput,
+		ToolArgs:  "Fix the bug",
+	}
+	RunHook(hctx)
+	ticket := readTicketJSON(t, ticketJSON)
+	sessions, ok := ticket["sessions"].([]interface{})
+	if !ok || len(sessions) == 0 {
+		t.Fatal("expected sessions after prompt.submitting")
+	}
+	session := sessions[0].(map[string]interface{})
+	prompts, ok := session["prompts"].([]interface{})
+	if !ok || len(prompts) == 0 {
+		t.Fatal("expected prompt after prompt.submitting")
+	}
+	prompt := prompts[0].(map[string]interface{})
+	if prompt["prompt"] != "Fix the bug" {
+		t.Errorf("expected prompt text, got: %v", prompt["prompt"])
+	}
+	agentEvents := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"agent.started", HookAgentStarted, sessionInput},
+		{"agent.tool.starting", HookAgentToolStarting, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
+		{"agent.tool.searching", HookAgentToolSearching, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"hello","includePattern":"src/**"}}`)},
+		{"agent.tool.searching.ended", HookAgentToolSearched, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"world"}}`)},
+		{"agent.tool.code.editing", HookAgentToolCodeEditing, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
+		{"agent.tool.code.edited", HookAgentToolCodeEdited, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
+		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"command":"go test ./..."}}`)},
+		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, json.RawMessage(`{"session_id":"test-session-1","command":"go test ./...","pid":"12345","stdout":"PASS"}`)},
+		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
+		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"todoList":[{"title":"Step 1","status":"completed"},{"title":"Step 2","status":"in-progress"}]}}`)},
+		{"agent.ended", HookAgentEnded, sessionInput},
+	}
+	for _, ae := range agentEvents {
+		hctx := HookContext{
+			Event:     ae.event,
+			Client:    "copilot-chat",
+			Timestamp: "2026-02-23T10:01:00Z",
+			RepoRoot:  tmpDir,
+			Input:     ae.input,
+		}
+		RunHook(hctx)
+	}
+	ticket = readTicketJSON(t, ticketJSON)
+	events := getTicketEvents(t, ticket)
+	if len(events) < 9 {
+		t.Fatalf("expected at least 9 events (excluding prompt.submitting and plan.updating), got %d", len(events))
+	}
+	eventKinds := make([]string, len(events))
+	for i, e := range events {
+		eventKinds[i] = e.(map[string]interface{})["kind"].(string)
+	}
+	expectedKinds := []string{
+		"agent.started",
+		"agent.tool.starting",
+		"agent.tool.searching",
+		"agent.tool.searching.ended",
+		"agent.tool.code.editing",
+		"agent.tool.code.edited",
+		"agent.tool.terminal.starting",
+		"agent.tool.terminal.ended",
+		"agent.tool.ended",
+	}
+	for _, expected := range expectedKinds {
+		found := false
+		for _, got := range eventKinds {
+			if got == expected {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("expected event kind %q in ticket events, got: %v", expected, eventKinds)
+		}
+	}
+	sessions = ticket["sessions"].([]interface{})
+	session = sessions[0].(map[string]interface{})
+	if session["llm"] != "opus-4-6" {
+		t.Errorf("expected session llm opus-4-6, got: %v", session["llm"])
+	}
+	if session["client"] != "copilot-chat" {
+		t.Errorf("expected session client copilot-chat, got: %v", session["client"])
+	}
+	plan, ok := session["plan"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected plan in session after plan.updating event")
+	}
+	steps, ok := plan["steps"].([]interface{})
+	if !ok || len(steps) != 2 {
+		t.Fatalf("expected 2 plan steps, got: %v", plan["steps"])
+	}
+}
+
+func TestTrackHookSearchingPattern(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	SetRootDir(tmpDir)
+	sessionInput := json.RawMessage(`{"session_id":"search-session"}`)
+	RunHook(HookContext{
+		Event:     HookAgentPromptSubmitting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     sessionInput,
+		ToolArgs:  "Search test",
+	})
+	RunHook(HookContext{
+		Event:     HookAgentToolSearching,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:01:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(`{"session_id":"search-session","tool_input":{"query":"findMe","includePattern":"src/**/*.ts"}}`),
+	})
+	ticket := readTicketJSON(t, ticketJSON)
+	events := getTicketEvents(t, ticket)
+	if len(events) == 0 {
+		t.Fatal("expected at least 1 event for searching")
+	}
+	searchEvent := events[0].(map[string]interface{})
+	pattern, _ := searchEvent["pattern"].(string)
+	if pattern == "" {
+		t.Error("expected non-empty pattern in search event")
+	}
+	if !strings.Contains(pattern, "findMe") {
+		t.Errorf("expected pattern to contain query, got: %s", pattern)
+	}
+}
+
+func TestTrackHookBlockedEvent(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	SetRootDir(tmpDir)
+	sessionInput := json.RawMessage(`{"session_id":"blocked-session"}`)
+	RunHook(HookContext{
+		Event:     HookAgentPromptSubmitting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     sessionInput,
+		ToolArgs:  "Do something",
+	})
+	RunHook(HookContext{
+		Event:     HookAgentToolStarting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:01:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(`{"session_id":"blocked-session","tool_input":{"command":"git checkout main"}}`),
+		ToolName:  "run_in_terminal",
+		ToolArgs:  "git checkout main",
+	})
+	ticket := readTicketJSON(t, ticketJSON)
+	events := getTicketEvents(t, ticket)
+	if len(events) == 0 {
+		t.Fatal("expected at least 1 event for blocked tool")
+	}
+	blockedEvent := events[0].(map[string]interface{})
+	denied, _ := blockedEvent["denied"].(string)
+	if denied == "" {
+		t.Error("expected non-empty denied field for blocked event")
+	}
+}
+
+func TestTrackHookTerminalEvents(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	SetRootDir(tmpDir)
+	sessionInput := json.RawMessage(`{"session_id":"terminal-session"}`)
+	RunHook(HookContext{
+		Event:     HookAgentPromptSubmitting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     sessionInput,
+		ToolArgs:  "Run command",
+	})
+	RunHook(HookContext{
+		Event:     HookAgentToolTerminalStarting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:01:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(`{"session_id":"terminal-session","tool_input":{"command":"npm test"}}`),
+	})
+	RunHook(HookContext{
+		Event:     HookAgentToolTerminalEnded,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:02:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(`{"session_id":"terminal-session","command":"npm test","pid":"999","stdout":"all passed"}`),
+	})
+	ticket := readTicketJSON(t, ticketJSON)
+	events := getTicketEvents(t, ticket)
+	if len(events) < 2 {
+		t.Fatalf("expected at least 2 terminal events, got %d", len(events))
+	}
+	startEvent := events[0].(map[string]interface{})
+	if startEvent["kind"] != "agent.tool.terminal.starting" {
+		t.Errorf("expected terminal.starting, got: %v", startEvent["kind"])
+	}
+	if startEvent["pattern"] == nil || startEvent["pattern"] == "" {
+		t.Error("expected command in pattern for terminal.starting")
+	}
+	endEvent := events[1].(map[string]interface{})
+	if endEvent["kind"] != "agent.tool.terminal.ended" {
+		t.Errorf("expected terminal.ended, got: %v", endEvent["kind"])
+	}
+}
+
+func TestTrackHookTranscriptInSession(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	SetRootDir(tmpDir)
+	RunHook(HookContext{
+		Event:     HookAgentPromptSubmitting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(`{"session_id":"transcript-session","transcript_path":"/home/user/.vscode/transcripts/abc.jsonl"}`),
+		ToolArgs:  "test",
+	})
+	ticket := readTicketJSON(t, ticketJSON)
+	sessions := ticket["sessions"].([]interface{})
+	session := sessions[0].(map[string]interface{})
+	transcript, _ := session["transcript"].(string)
+	if transcript != "/home/user/.vscode/transcripts/abc.jsonl" {
+		t.Errorf("expected transcript to be set, got: %v", transcript)
 	}
 }
 
@@ -14961,13 +15406,13 @@ func TestClassifyTool(t *testing.T) {
 
 func TestResolveHookEvent(t *testing.T) {
 	cases := []struct {
-		name       string
-		eventStr   string
-		client     string
-		toolName   string
-		expectEvt  HookEvent
-		expectPar  string
-		expectErr  bool
+		name      string
+		eventStr  string
+		client    string
+		toolName  string
+		expectEvt HookEvent
+		expectPar string
+		expectErr bool
 	}{
 		{"neutral agent.started", "agent.started", "copilot-chat", "", HookAgentStarted, "", false},
 		{"neutral agent.tool.code.editing", "agent.tool.code.editing", "copilot-chat", "", HookAgentToolCodeEditing, "", false},
@@ -14982,6 +15427,7 @@ func TestResolveHookEvent(t *testing.T) {
 		{"copilot PreToolUse create_file", "PreToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditing, "", false},
 		{"copilot PreToolUse run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalStarting, "", false},
 		{"copilot PreToolUse manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", HookAgentToolPlanUpdating, "", false},
+		{"copilot PostToolUse read_file", "PostToolUse", "copilot-chat", "read_file", HookAgentToolSearched, "", false},
 		{"copilot PostToolUse create_file", "PostToolUse", "copilot-chat", "create_file", HookAgentToolCodeEdited, "", false},
 		{"copilot PostToolUse run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalEnded, "", false},
 		{"copilot PostToolUse generic", "PostToolUse", "copilot-chat", "runSubagent", HookAgentToolEnded, "", false},
@@ -15078,11 +15524,11 @@ func TestResolvePostToolUse(t *testing.T) {
 		kind   ToolKind
 		expect HookEvent
 	}{
+		{ToolKindCodeSearch, HookAgentToolSearched},
 		{ToolKindCodeEdit, HookAgentToolCodeEdited},
 		{ToolKindTerminal, HookAgentToolTerminalEnded},
 		{ToolKindGeneric, HookAgentToolEnded},
 		{ToolKindPlan, HookAgentToolEnded},
-		{ToolKindCodeSearch, HookAgentToolEnded},
 	}
 	for _, tc := range cases {
 		t.Run(string(tc.kind), func(t *testing.T) {
@@ -15902,7 +16348,7 @@ func TestHookResultJSONFields(t *testing.T) {
 	if err := json.Unmarshal(data, &parsed); err != nil {
 		t.Fatalf("expected valid JSON round-trip, got: %v", err)
 	}
-	expectedKeys := []string{"allowed", "message", "raw", "session", "timestamp", "client", "command", "pid", "terminated", "stdout", "stderr"}
+	expectedKeys := []string{"allowed", "message", "session", "timestamp", "client", "command", "pid", "terminated", "stdout", "stderr"}
 	for _, key := range expectedKeys {
 		if _, ok := parsed[key]; !ok {
 			t.Errorf("missing JSON key: %s", key)
@@ -15952,13 +16398,13 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"copilot/PreToolUse/run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"run_in_terminal","timestamp":"2026-02-18T18:42:59.593Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalStarting, ""},
 		{"copilot/PreToolUse/manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"manage_todo_list","timestamp":"2026-02-18T18:44:13.780Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdating, ""},
 		{"copilot/PreToolUse/runSubagent", "PreToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"runSubagent","timestamp":"2026-02-19T12:46:49.918Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolStarting, ""},
-		{"copilot/PostToolUse/read_file", "PostToolUse", "copilot-chat", "read_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"read_file","timestamp":"2026-02-18T18:38:51.951Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
+		{"copilot/PostToolUse/read_file", "PostToolUse", "copilot-chat", "read_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"read_file","timestamp":"2026-02-18T18:38:51.951Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearched, ""},
 		{"copilot/PostToolUse/replace_string_in_file", "PostToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-18T18:37:05.471Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEdited, ""},
 		{"copilot/PostToolUse/multi_replace_string_in_file", "PostToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:26.261Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEdited, ""},
 		{"copilot/PostToolUse/run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"d765d480","hookEventName":"PostToolUse","tool_name":"run_in_terminal","timestamp":"2026-02-19T10:43:56.761Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalEnded, ""},
 		{"copilot/PostToolUse/manage_todo_list", "PostToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"manage_todo_list","timestamp":"2026-02-18T18:44:20.586Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"copilot/PostToolUse/runSubagent", "PostToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"runSubagent","timestamp":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
-		{"copilot/PostToolUse/grep_search", "PostToolUse", "copilot-chat", "grep_search", `{"sessionId":"8a40542e","hookEventName":"PostToolUse","tool_name":"grep_search","timestamp":"2026-02-18T18:58:48.393Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
+		{"copilot/PostToolUse/grep_search", "PostToolUse", "copilot-chat", "grep_search", `{"sessionId":"8a40542e","hookEventName":"PostToolUse","tool_name":"grep_search","timestamp":"2026-02-18T18:58:48.393Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearched, ""},
 		{"cursor/sessionStart", "sessionStart", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:00:00Z"}`, HookAgentStarted, ""},
 		{"cursor/sessionEnd", "sessionEnd", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
 		{"cursor/subagentStart", "subagentStart", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:01:00Z"}`, HookAgentStarted, "subagent"},
@@ -15970,7 +16416,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"cursor/preToolUse/edit", "preToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:03:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditing, ""},
 		{"cursor/preToolUse/terminal", "preToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:04:00Z","tool_name":"terminal"}`, HookAgentToolTerminalStarting, ""},
 		{"cursor/preToolUse/task", "preToolUse", "cursor-chat", "task", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:05:00Z","tool_name":"task"}`, HookAgentToolPlanUpdating, ""},
-		{"cursor/postToolUse/read_file", "postToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:06:00Z","tool_name":"read_file"}`, HookAgentToolEnded, ""},
+		{"cursor/postToolUse/read_file", "postToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:06:00Z","tool_name":"read_file"}`, HookAgentToolSearched, ""},
 		{"cursor/postToolUse/editfile", "postToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:07:00Z","tool_name":"editfile"}`, HookAgentToolCodeEdited, ""},
 		{"cursor/postToolUse/terminal", "postToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:08:00Z","tool_name":"terminal"}`, HookAgentToolTerminalEnded, ""},
 		{"cursor/postToolUseFailure/edit", "postToolUseFailure", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:09:00Z","tool_name":"editfile"}`, HookAgentToolCodeEdited, ""},
@@ -15990,7 +16436,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"windsurf/pre_mcp_tool_use", "pre_mcp_tool_use", "windsurf-chat", "", `{"agent_action_name":"pre_mcp_tool_use","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:54:57.304Z","execution_id":"d9b64466","tool_info":{"mcp_server_name":"semio-repo","mcp_tool_name":"tree"}}`, HookAgentToolStarting, ""},
 		{"windsurf/post_mcp_tool_use", "post_mcp_tool_use", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:55:28.469Z","agent_action_name":"post_mcp_tool_use","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolEnded, ""},
 		{"windsurf/pre_read_code", "pre_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:48.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearching, ""},
-		{"windsurf/post_read_code", "post_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:50.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolEnded, ""},
+		{"windsurf/post_read_code", "post_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:50.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearched, ""},
 		{"windsurf/pre_write_code", "pre_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:30.780Z","agent_action_name":"pre_write_code","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditing, ""},
 		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEdited, ""},
 		{"windsurf/pre_run_command", "pre_run_command", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:54:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolTerminalStarting, ""},
@@ -16014,7 +16460,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"claude/PreToolUse/mcp_tree", "PreToolUse", "claude-code", "mcp__semio-repo__tree", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"mcp__semio-repo__tree","tool_input":{"query":"hooks"}}`, HookAgentToolStarting, ""},
 		{"claude/PostToolUse/Bash", "PostToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","tool_name":"Bash","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl"}`, HookAgentToolTerminalEnded, ""},
 		{"claude/PostToolUse/Edit", "PostToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","tool_name":"Edit","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl"}`, HookAgentToolCodeEdited, ""},
-		{"claude/PostToolUse/Read", "PostToolUse", "claude-code", "Read", `{"session_id":"167906cd","tool_name":"Read","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
+		{"claude/PostToolUse/Read", "PostToolUse", "claude-code", "Read", `{"session_id":"167906cd","tool_name":"Read","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearched, ""},
 		{"claude/PostToolUse/TodoWrite", "PostToolUse", "claude-code", "TodoWrite", `{"session_id":"167906cd","tool_name":"TodoWrite","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"claude/PostToolUse/mcp_tree", "PostToolUse", "claude-code", "mcp__semio-repo__tree", `{"session_id":"167906cd","tool_name":"mcp__semio-repo__tree","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"claude/PostToolUseFailure/Bash", "PostToolUseFailure", "claude-code", "Bash", `{"session_id":"167906cd","tool_name":"Bash","transcript_path":"/tmp/t.jsonl","error":"command failed"}`, HookAgentToolTerminalEnded, ""},
@@ -16023,7 +16469,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"droid/PostToolUse/Bash", "PostToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","timestamp":"2026-02-18T18:47:10.000Z"}`, HookAgentToolTerminalEnded, ""},
 		{"codex/SessionStart", "SessionStart", "codex", "", `{"session_id":"codex-001","timestamp":"2026-02-18T18:50:00.000Z"}`, HookAgentStarted, ""},
 		{"codex/PreToolUse/Read", "PreToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:05.000Z"}`, HookAgentToolSearching, ""},
-		{"codex/PostToolUse/Read", "PostToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:10.000Z"}`, HookAgentToolEnded, ""},
+		{"codex/PostToolUse/Read", "PostToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:10.000Z"}`, HookAgentToolSearched, ""},
 		{"antigravity/SessionStart", "SessionStart", "antigravity-chat", "", `{"session_id":"ag-001","timestamp":"2026-02-18T18:55:00.000Z"}`, HookAgentStarted, ""},
 		{"antigravity/PreToolUse/Task", "PreToolUse", "antigravity-chat", "Task", `{"session_id":"ag-001","tool_name":"Task","timestamp":"2026-02-18T18:55:05.000Z"}`, HookAgentToolPlanUpdating, ""},
 	}

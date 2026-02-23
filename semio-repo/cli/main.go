@@ -1546,10 +1546,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				return fmt.Errorf("missing goal. Use --goal <goal-id>")
 			}
 			input := map[string]interface{}{
-				"title":    title,
-				"prompt":   prompt,
-				"client":   strings.ToUpper(strings.ReplaceAll(client, "-", "_")),
-				"noIssue":  noIssue,
+				"title":        title,
+				"prompt":       prompt,
+				"client":       strings.ToUpper(strings.ReplaceAll(client, "-", "_")),
+				"noIssue":      noIssue,
 				"noManagement": noManagement,
 			}
 			if llm != "" {
@@ -1646,7 +1646,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 			input := map[string]interface{}{
 				"noManagement": noManagement,
-				"all":      closeAll,
+				"all":          closeAll,
 			}
 			if !closeAll {
 				input["year"] = year
@@ -1731,13 +1731,13 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				return fmt.Errorf("missing client. Use --client <value>, --<client-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedClients, ", "))
 			}
 			input := map[string]interface{}{
-				"year":     year,
-				"month":    month,
+				"year":         year,
+				"month":        month,
 				"noManagement": noManagement,
-				"day":      day,
-				"slug":     slug,
-				"prompt":   prompt,
-				"client":   strings.ToUpper(strings.ReplaceAll(client, "-", "_")),
+				"day":          day,
+				"slug":         slug,
+				"prompt":       prompt,
+				"client":       strings.ToUpper(strings.ReplaceAll(client, "-", "_")),
 			}
 			if llm != "" {
 				input["llm"] = llm
@@ -1814,10 +1814,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			llm, _ := extractLLMFromArgs(cmd, []string{})
 
 			input := map[string]interface{}{
-				"year":     y,
-				"month":    m,
-				"day":      d,
-				"slug":     slug,
+				"year":         y,
+				"month":        m,
+				"day":          d,
+				"slug":         slug,
 				"noManagement": noManagement,
 			}
 			if cmd.Flags().Changed("title") {
@@ -1882,7 +1882,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			noManagement, _ := cmd.Flags().GetBool("no-management")
 
 			input := map[string]interface{}{
-				"id":       id,
+				"id":           id,
 				"noManagement": noManagement,
 			}
 			if cmd.Flags().Changed("title") {
@@ -1964,13 +1964,13 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			input := map[string]interface{}{
-				"title":       title,
-				"description": description,
-				"prompt":      prompt,
-				"dueDate":     dueDate,
-				"llm":         llm,
-				"client":      client,
-				"noManagement":    noManagement,
+				"title":        title,
+				"description":  description,
+				"prompt":       prompt,
+				"dueDate":      dueDate,
+				"llm":          llm,
+				"client":       client,
+				"noManagement": noManagement,
 			}
 			parent, _ := cmd.Flags().GetString("parent")
 			if parent != "" {
@@ -2032,8 +2032,8 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			noManagement, _ := cmd.Flags().GetBool("no-management")
 			input := map[string]interface{}{
-				"id":       id,
-				"summary":  summary,
+				"id":           id,
+				"summary":      summary,
 				"noManagement": noManagement,
 			}
 			variables := map[string]interface{}{"input": input}
@@ -2090,10 +2090,10 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			input := map[string]interface{}{
-				"id":       id,
-				"prompt":   prompt,
-				"client":   client,
-				"llm":      llm,
+				"id":           id,
+				"prompt":       prompt,
+				"client":       client,
+				"llm":          llm,
 				"noManagement": noManagement,
 			}
 			if title != "" {
@@ -4070,7 +4070,7 @@ type TicketNode struct {
 	Children         []*TicketNode
 	Created          string
 	Finished         string
-	Prompt           string
+	Description      string
 	Summary          string
 }
 
@@ -4409,7 +4409,7 @@ func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode
 				uri = fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", tTime.Year(), tTime.Month(), tTime.Day(), PathToUriPath(slug))
 			}
 
-			node := &TicketNode{ID: id, Slug: slug, Status: status, Title: title, URI: uri, GoalID: goalID, ParentID: parentID, Created: created, Finished: finished, Prompt: prompt, Summary: summary}
+			node := &TicketNode{ID: id, Slug: slug, Status: status, Title: title, URI: uri, GoalID: goalID, ParentID: parentID, Created: created, Finished: finished, Description: prompt, Summary: summary}
 			allTickets = append(allTickets, node)
 		}
 	}
@@ -4511,7 +4511,7 @@ func ticketNodeToData(n *TicketNode) map[string]interface{} {
 		"status":   n.Status,
 		"started":  n.Created,
 		"finished": n.Finished,
-		"prompt":   n.Prompt,
+		"prompt":   n.Description,
 		"summary":  n.Summary,
 	}
 	if n.URI != "" && strings.HasPrefix(n.URI, "semiorepo://ticket/") {
@@ -4951,7 +4951,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			ID:          t.GetID(),
 			Label:       t.Title,
 			URI:         t.GetURI(),
-			Description: t.Prompt,
+			Description: t.Description,
 			Year:        t.Year,
 			Month:       t.Month,
 			Day:         t.Day,
@@ -4965,7 +4965,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				"status":   string(t.Status),
 				"started":  ticketStarted,
 				"finished": ticketFinished,
-				"prompt":   t.Prompt,
+				"prompt":   t.Description,
 				"summary":  t.Summary,
 				"goalId":   t.Goal,
 			},
@@ -7260,9 +7260,11 @@ var AllowedLLMs = []string{
 	"opus-4-5",
 	"opus-4",
 	"sonnet-5",
+	"sonnet-4-6",
 	"sonnet-4-5",
 	"sonnet-4",
 	"haiku-4-5",
+	"gemini-3-1-pro",
 	"gemini-3-pro",
 	"gemini-3-flash",
 	"gpt-5-2",
@@ -7456,6 +7458,7 @@ const (
 	ProjectKindUser           ProjectKind = "👤"
 	ProjectKindInfrastructure ProjectKind = "🧰"
 	ProjectKindResearch       ProjectKind = "🔬"
+	ProjectKindMono           ProjectKind = "🥇"
 )
 
 // String MUST return the canonical string value.
@@ -7476,6 +7479,7 @@ const (
 	BundleKindUI      BundleKind = "ui"
 	BundleKindSite    BundleKind = "site"
 	BundleKindAssets  BundleKind = "assets"
+	BundleKindRepo    BundleKind = "repo"
 )
 
 // IsValid MUST return true only when the condition is met.
@@ -7483,7 +7487,7 @@ const (
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
 func (e BundleKind) IsValid() bool {
 	switch e {
-	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets:
+	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets, BundleKindRepo:
 		return true
 	}
 	return false
@@ -7631,6 +7635,8 @@ func (b *Bundle) GetID() string {
 		emoji = EmojiBundleLibrary
 	case "example":
 		emoji = EmojiBundleExample
+	case "repo":
+		emoji = EmojiBundleRepo
 	}
 	parts := strings.SplitN(b.Name, "/", 2)
 	projectCode := parts[0]
@@ -7693,6 +7699,7 @@ type FolderKind string
 const (
 	FolderKindOrganization FolderKind = "organization"
 	FolderKindRequired     FolderKind = "required"
+	FolderKindRoot         FolderKind = "root"
 )
 
 // IsValid MUST return true only when the condition is met.
@@ -7700,7 +7707,7 @@ const (
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
 func (e FolderKind) IsValid() bool {
 	switch e {
-	case FolderKindOrganization, FolderKindRequired:
+	case FolderKindOrganization, FolderKindRequired, FolderKindRoot:
 		return true
 	}
 	return false
@@ -7716,20 +7723,44 @@ func (e FolderKind) String() string {
 // DeriveFolderKind MUST return a valid value for any recognized input.
 // DeriveFolderKind infers and returns the folder kind from the given input.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivefolderkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DeriveFolderKind)
+var folderKindCache sync.Map
+
 func DeriveFolderKind(path string) FolderKind {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") {
 		return FolderKindRequired
 	}
-	requiredIndicators := []string{"package.json", "pyproject.toml", "go.mod", "Cargo.toml", "*.csproj", "*.sln"}
+
+	if val, ok := folderKindCache.Load(path); ok {
+		return val.(FolderKind)
+	}
+
+	kind := FolderKindOrganization
+	requiredIndicators := []string{"package.json", "pyproject.toml", "go.mod", "Cargo.toml"}
 	for _, indicator := range requiredIndicators {
-		pattern := filepath.Join(GetRootDir(), path, indicator)
-		matches, _ := filepath.Glob(pattern)
-		if len(matches) > 0 {
-			return FolderKindRequired
+		if FileExists(filepath.Join(GetRootDir(), path, indicator)) {
+			kind = FolderKindRequired
+			break
 		}
 	}
-	return FolderKindOrganization
+
+	if kind == FolderKindOrganization {
+		dir := filepath.Join(GetRootDir(), path)
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, entry := range entries {
+				if !entry.IsDir() {
+					ext := filepath.Ext(entry.Name())
+					if ext == ".csproj" || ext == ".sln" {
+						kind = FolderKindRequired
+						break
+					}
+				}
+			}
+		}
+	}
+
+	folderKindCache.Store(path, kind)
+	return kind
 }
 
 // IsGeneratedFolder MUST return true only when the condition is met.
@@ -7815,6 +7846,7 @@ const (
 	EmojiProjectUser          = "👤"
 	EmojiProjectInfra         = "🧰"
 	EmojiProjectResearch      = "🔬"
+	EmojiProjectMono          = "🥇"
 	EmojiBundleLibrary        = "📚"
 	EmojiBundleSchema         = "🛂"
 	EmojiBundleBinary         = "⌨️"
@@ -7822,8 +7854,10 @@ const (
 	EmojiBundleExample        = "📔"
 	EmojiBundleSite           = "🌐"
 	EmojiBundleAssets         = "🏪"
+	EmojiBundleRepo           = "🪆"
 	EmojiFolderOrg            = "🗃️"
 	EmojiFolderRequired       = "🛅"
+	EmojiFolderRoot           = "🌱"
 	EmojiFileCode             = "💻"
 	EmojiFileTest             = "🧪"
 	EmojiFileScript           = "📜"
@@ -8336,23 +8370,58 @@ func (c *Commit) GetURI() string {
 // Ticket holds the data fields for a ticket record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticket](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Ticket)
 type Ticket struct {
-	Year          int               `json:"-" yaml:"-"`
-	Month         int               `json:"-" yaml:"-"`
-	Day           int               `json:"-" yaml:"-"`
-	Slug          string            `json:"-" yaml:"-"`
-	Title         string            `json:"title" yaml:"title"`
-	Status        TicketStatus      `json:"status" yaml:"status"`
-	Prompt        string            `json:"prompt" yaml:"prompt"`
-	Summary       string            `json:"summary,omitempty" yaml:"summary,omitempty"`
-	Management        *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
-	Goal          string            `json:"goal,omitempty" yaml:"goal,omitempty"`
-	Parent        string            `json:"parent,omitempty" yaml:"parent,omitempty"`
-	Interactions  []Interaction     `json:"interactions" yaml:"interactions"`
-	Sessions      []TicketSession   `json:"sessions,omitempty" yaml:"sessions,omitempty"`
-	FolderPath    string            `json:"-" yaml:"-"`
-	JsonPath      string            `json:"-" yaml:"-"`
-	TicketPath    string            `json:"-" yaml:"-"`
-	ImportantPath string            `json:"-" yaml:"-"`
+	Year          int                   `json:"-" yaml:"-"`
+	Month         int                   `json:"-" yaml:"-"`
+	Day           int                   `json:"-" yaml:"-"`
+	Slug          string                `json:"-" yaml:"-"`
+	Title         string                `json:"title" yaml:"title"`
+	Status        TicketStatus          `json:"status,omitempty" yaml:"status,omitempty"`
+	Description   string                `json:"description,omitempty" yaml:"description,omitempty"`
+	Summary       string                `json:"summary,omitempty" yaml:"summary,omitempty"`
+	Management    *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
+	Goal          string                `json:"goal,omitempty" yaml:"goal,omitempty"`
+	Parent        string                `json:"-" yaml:"-"`
+	Interactions  []Interaction         `json:"-" yaml:"-"`
+	Sessions      []TicketSession       `json:"sessions,omitempty" yaml:"sessions,omitempty"`
+	FolderPath    string                `json:"-" yaml:"-"`
+	JsonPath      string                `json:"-" yaml:"-"`
+	TicketPath    string                `json:"-" yaml:"-"`
+	ImportantPath string                `json:"-" yaml:"-"`
+}
+
+// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
+// UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️unmarshaljsonticket](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/UnmarshalJSONTicket)
+func (t *Ticket) UnmarshalJSON(data []byte) error {
+	type TicketAlias Ticket
+	aux := &struct {
+		TicketAlias
+		PromptLegacy       string        `json:"prompt"`
+		InteractionsLegacy []Interaction `json:"interactions"`
+		ParentLegacy       string        `json:"parent"`
+	}{}
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	*t = Ticket(aux.TicketAlias)
+	if t.Description == "" && aux.PromptLegacy != "" {
+		t.Description = aux.PromptLegacy
+	}
+	if len(aux.InteractionsLegacy) > 0 {
+		t.Interactions = aux.InteractionsLegacy
+	}
+	if t.Parent == "" && aux.ParentLegacy != "" {
+		t.Parent = aux.ParentLegacy
+	}
+	if t.Status == "" && len(t.Interactions) > 0 {
+		lastKind := t.Interactions[len(t.Interactions)-1].Kind
+		if lastKind == string(repopkg.EventTicketClose) {
+			t.Status = TicketStatusClosed
+		} else {
+			t.Status = TicketStatusOpen
+		}
+	}
+	return nil
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -8384,42 +8453,61 @@ func (t *Ticket) GetTitle() string {
 	return t.Title
 }
 
-// GetPrompt MUST return the stored value without modification.
+// GetPrompt MUST return the description or the first interaction prompt.
 // GetPrompt returns the prompt of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getprompt](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetPrompt)
 func (t *Ticket) GetPrompt() string {
+	if t.Description != "" {
+		return t.Description
+	}
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Prompt
+	}
+	if len(t.Sessions) > 0 && len(t.Sessions[0].Prompts) > 0 {
+		return t.Sessions[0].Prompts[0].Prompt
 	}
 	return ""
 }
 
-// GetLatestPrompt MUST return the stored value without modification.
+// GetLatestPrompt MUST return the latest prompt from sessions or interactions.
 // GetLatestPrompt returns the latest prompt of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getlatestprompt](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetLatestPrompt)
 func (t *Ticket) GetLatestPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Prompt
 	}
-	return ""
+	for i := len(t.Sessions) - 1; i >= 0; i-- {
+		for j := len(t.Sessions[i].Prompts) - 1; j >= 0; j-- {
+			if t.Sessions[i].Prompts[j].Prompt != "" {
+				return t.Sessions[i].Prompts[j].Prompt
+			}
+		}
+	}
+	return t.Description
 }
 
-// GetLLM MUST return the stored value without modification.
+// GetLLM MUST return the LLM from the latest session or interaction.
 // GetLLM returns the l l m of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getllm](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetLLM)
 func (t *Ticket) GetLLM() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].LLM
 	}
+	if len(t.Sessions) > 0 {
+		return t.Sessions[len(t.Sessions)-1].LLM
+	}
 	return ""
 }
 
-// GetClient MUST return the stored value without modification.
+// GetClient MUST return the client from the latest session or interaction.
 // GetClient returns the client of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getclient](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetClient)
 func (t *Ticket) GetClient() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Client
+	}
+	if len(t.Sessions) > 0 {
+		return t.Sessions[len(t.Sessions)-1].Client
 	}
 	return ""
 }
@@ -8431,17 +8519,20 @@ func (t *Ticket) GetStatus() TicketStatus {
 	return t.Status
 }
 
-// GetAuthor MUST return the stored value without modification.
+// GetAuthor MUST return the author from the first session or interaction.
 // GetAuthor returns the author of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getauthor](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetAuthor)
 func (t *Ticket) GetAuthor() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Author
 	}
+	if len(t.Sessions) > 0 {
+		return t.Sessions[0].Contributor
+	}
 	return ""
 }
 
-// GetCommit MUST return the stored value without modification.
+// GetCommit MUST return the commit from the first interaction.
 // GetCommit returns the commit of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getcommit](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetCommit)
 func (t *Ticket) GetCommit() string {
@@ -8458,7 +8549,7 @@ func (t *Ticket) GetSummary() string {
 	return t.Summary
 }
 
-// GetDateStarted MUST return the stored value without modification.
+// GetDateStarted MUST return the earliest date from interactions or sessions.
 // GetDateStarted returns the date started of the Ticket.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatestarted](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetDateStarted)
 func (t *Ticket) GetDateStarted() time.Time {
@@ -8477,6 +8568,15 @@ func (t *Ticket) GetDateStarted() time.Time {
 			return parsed
 		}
 		if parsed, err := time.Parse(time.RFC3339, t.Interactions[0].Date); err == nil {
+			return parsed
+		}
+	}
+	if len(t.Sessions) > 0 && len(t.Sessions[0].Prompts) > 0 {
+		ts := t.Sessions[0].Prompts[0].Timestamp
+		if parsed, err := time.Parse(time.RFC3339, ts); err == nil {
+			return parsed
+		}
+		if parsed, err := time.Parse("2006-01-02 15:04:05", ts); err == nil {
 			return parsed
 		}
 	}
@@ -9182,16 +9282,16 @@ type FileListInput struct {
 // TicketOpenInput holds the data fields for a ticket open input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketopeninput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketOpenInput)
 type TicketOpenInput struct {
-	Title    string `json:"title"`
-	Prompt   string `json:"prompt"`
-	LLM      string `json:"llm,omitempty"`
-	Client   string `json:"client"`
-	NoIssue  bool   `json:"noIssue,omitempty"`
-	Draft    string `json:"draft,omitempty"`
-	Goal     string `json:"goal"`
-	Parent   string `json:"parent,omitempty"`
+	Title        string `json:"title"`
+	Prompt       string `json:"prompt"`
+	LLM          string `json:"llm,omitempty"`
+	Client       string `json:"client"`
+	NoIssue      bool   `json:"noIssue,omitempty"`
+	Draft        string `json:"draft,omitempty"`
+	Goal         string `json:"goal"`
+	Parent       string `json:"parent,omitempty"`
 	NoManagement bool   `json:"noManagement,omitempty"`
-	Issue    string `json:"issue,omitempty"`
+	Issue        string `json:"issue,omitempty"`
 }
 
 // DraftCreateInput holds the data fields for a draft create input record.
@@ -9214,111 +9314,111 @@ type TicketProgressInput struct {
 // GoalCreateInput holds the data fields for a goal create input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalcreateinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalCreateInput)
 type GoalCreateInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Prompt      string `json:"prompt"`
-	DueDate     string `json:"dueDate"`
-	LLM         string `json:"llm"`
-	Client      string `json:"client"`
-	NoManagement    bool   `json:"noManagement,omitempty"`
-	Parent      string `json:"parent,omitempty"`
-	Milestone   string `json:"milestone,omitempty"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Prompt       string `json:"prompt"`
+	DueDate      string `json:"dueDate"`
+	LLM          string `json:"llm"`
+	Client       string `json:"client"`
+	NoManagement bool   `json:"noManagement,omitempty"`
+	Parent       string `json:"parent,omitempty"`
+	Milestone    string `json:"milestone,omitempty"`
 }
 
 // GoalChangeInput holds the data fields for a goal change input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalchangeinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalChangeInput)
 type GoalChangeInput struct {
-	ID          string  `json:"id"`
-	Title       *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	DueDate     *string `json:"dueDate,omitempty"`
-	Parent      *string `json:"parent,omitempty"`
-	NoManagement    bool    `json:"noManagement,omitempty"`
+	ID           string  `json:"id"`
+	Title        *string `json:"title,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	DueDate      *string `json:"dueDate,omitempty"`
+	Parent       *string `json:"parent,omitempty"`
+	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
 // GoalCloseInput holds the data fields for a goal close input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalcloseinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalCloseInput)
 type GoalCloseInput struct {
-	ID       string `json:"id"`
-	Summary  string `json:"summary"`
+	ID           string `json:"id"`
+	Summary      string `json:"summary"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // GoalReopenInput holds the data fields for a goal reopen input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalreopeninput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalReopenInput)
 type GoalReopenInput struct {
-	ID          string  `json:"id"`
-	Prompt      string  `json:"prompt"`
-	Client      string  `json:"client"`
-	LLM         string  `json:"llm"`
-	Title       *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	DueDate     *string `json:"dueDate,omitempty"`
-	Parent      *string `json:"parent,omitempty"`
-	NoManagement    bool    `json:"noManagement,omitempty"`
+	ID           string  `json:"id"`
+	Prompt       string  `json:"prompt"`
+	Client       string  `json:"client"`
+	LLM          string  `json:"llm"`
+	Title        *string `json:"title,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	DueDate      *string `json:"dueDate,omitempty"`
+	Parent       *string `json:"parent,omitempty"`
+	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
 // GoalDeleteInput holds the data fields for a goal delete input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goaldeleteinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalDeleteInput)
 type GoalDeleteInput struct {
-	ID       string `json:"id"`
+	ID           string `json:"id"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // TicketDeleteInput holds the data fields for a ticket delete input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketdeleteinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketDeleteInput)
 type TicketDeleteInput struct {
-	Year     int    `json:"year"`
-	Month    int    `json:"month"`
-	Day      int    `json:"day"`
-	Slug     string `json:"slug"`
+	Year         int    `json:"year"`
+	Month        int    `json:"month"`
+	Day          int    `json:"day"`
+	Slug         string `json:"slug"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // TicketCloseInput holds the data fields for a ticket close input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketCloseInput)
 type TicketCloseInput struct {
-	Year     int      `json:"year"`
-	Month    int      `json:"month"`
-	Day      int      `json:"day"`
-	Slug     string   `json:"slug"`
-	Summary  string   `json:"summary"`
-	Files    []string `json:"files"`
-	Title    *string  `json:"title,omitempty"`
+	Year         int      `json:"year"`
+	Month        int      `json:"month"`
+	Day          int      `json:"day"`
+	Slug         string   `json:"slug"`
+	Summary      string   `json:"summary"`
+	Files        []string `json:"files"`
+	Title        *string  `json:"title,omitempty"`
 	NoManagement bool     `json:"noManagement,omitempty"`
-	All      bool     `json:"all,omitempty"`
+	All          bool     `json:"all,omitempty"`
 }
 
 // TicketReopenInput holds the data fields for a ticket reopen input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketreopeninput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketReopenInput)
 type TicketReopenInput struct {
-	Year     int     `json:"year"`
-	Month    int     `json:"month"`
-	Day      int     `json:"day"`
-	Slug     string  `json:"slug"`
-	Prompt   string  `json:"prompt"`
-	LLM      string  `json:"llm,omitempty"`
-	Client   string  `json:"client"`
-	Title    *string `json:"title,omitempty"`
-	Draft    string  `json:"draft,omitempty"`
-	Goal     string  `json:"goal,omitempty"`
-	Parent   string  `json:"parent,omitempty"`
+	Year         int     `json:"year"`
+	Month        int     `json:"month"`
+	Day          int     `json:"day"`
+	Slug         string  `json:"slug"`
+	Prompt       string  `json:"prompt"`
+	LLM          string  `json:"llm,omitempty"`
+	Client       string  `json:"client"`
+	Title        *string `json:"title,omitempty"`
+	Draft        string  `json:"draft,omitempty"`
+	Goal         string  `json:"goal,omitempty"`
+	Parent       string  `json:"parent,omitempty"`
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
 // TicketChangeInput holds the data fields for a ticket change input record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketchangeinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketChangeInput)
 type TicketChangeInput struct {
-	Year     int     `json:"year"`
-	Month    int     `json:"month"`
-	Day      int     `json:"day"`
-	Slug     string  `json:"slug"`
-	Title    *string `json:"title,omitempty"`
-	Prompt   *string `json:"prompt,omitempty"`
-	LLM      *string `json:"llm,omitempty"`
-	Client   *string `json:"client,omitempty"`
-	Goal     *string `json:"goal,omitempty"`
-	Parent   *string `json:"parent,omitempty"`
+	Year         int     `json:"year"`
+	Month        int     `json:"month"`
+	Day          int     `json:"day"`
+	Slug         string  `json:"slug"`
+	Title        *string `json:"title,omitempty"`
+	Prompt       *string `json:"prompt,omitempty"`
+	LLM          *string `json:"llm,omitempty"`
+	Client       *string `json:"client,omitempty"`
+	Goal         *string `json:"goal,omitempty"`
+	Parent       *string `json:"parent,omitempty"`
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
@@ -9693,8 +9793,8 @@ func (p *GitHubManagementProvider) GetCurrentUser() string {
 // [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️nullmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider/NullManagementProvider)
 type NullManagementProvider struct{}
 
-func (p *NullManagementProvider) Kind() string                          { return "none" }
-func (p *NullManagementProvider) Configure(repoRoot string) error       { return nil }
+func (p *NullManagementProvider) Kind() string                    { return "none" }
+func (p *NullManagementProvider) Configure(repoRoot string) error { return nil }
 func (p *NullManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
 	return "", nil
 }
@@ -9730,7 +9830,7 @@ func (p *NullManagementProvider) DeleteMilestone(number int) error { return nil 
 func (p *NullManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
 	return nil, nil
 }
-func (p *NullManagementProvider) GetMilestoneTitle(number int) (string, error)                { return "", nil }
+func (p *NullManagementProvider) GetMilestoneTitle(number int) (string, error) { return "", nil }
 func (p *NullManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	return nil, nil
 }
@@ -9741,8 +9841,8 @@ func (p *NullManagementProvider) ListOpenIssuesWithLabel(label string) ([]string
 	return nil, nil
 }
 func (p *NullManagementProvider) ListRepoLabels() ([]ManagementLabel, error) { return nil, nil }
-func (p *NullManagementProvider) CreateRepoLabel(name string) error           { return nil }
-func (p *NullManagementProvider) DeleteRepoLabel(name string) error           { return nil }
+func (p *NullManagementProvider) CreateRepoLabel(name string) error          { return nil }
+func (p *NullManagementProvider) DeleteRepoLabel(name string) error          { return nil }
 func (p *NullManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return nil
 }
@@ -12382,14 +12482,14 @@ type Interaction struct {
 	Files  []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
-// TicketSessionRename holds the data fields for a ticket session rename record.
+// TicketSessionRename holds a from/to pair for renamed entities.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionrename](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionRename)
 type TicketSessionRename struct {
 	From string `json:"from" yaml:"from"`
 	To   string `json:"to" yaml:"to"`
 }
 
-// TicketSessionDiffStats holds the data fields for a ticket session diff stats record.
+// TicketSessionDiffStats holds deleted/renamed/modified/created lists for a diff category.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessiondiffstats](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionDiffStats)
 type TicketSessionDiffStats struct {
 	Deleted  []string              `json:"deleted,omitempty" yaml:"deleted,omitempty"`
@@ -12398,46 +12498,79 @@ type TicketSessionDiffStats struct {
 	Created  []string              `json:"created,omitempty" yaml:"created,omitempty"`
 }
 
-// TicketSessionDiff holds the data fields for a ticket session diff record.
+// TicketSessionDiff holds diff stats for projects, bundles, folders, files, sections, and definitions.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessiondiff](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionDiff)
 type TicketSessionDiff struct {
-	Projects TicketSessionDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
-	Bundles  TicketSessionDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
-	Folders  TicketSessionDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
-	Files    TicketSessionDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
+	Projects    TicketSessionDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
+	Bundles     TicketSessionDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+	Folders     TicketSessionDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
+	Files       TicketSessionDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
+	Sections    TicketSessionDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
+	Definitions TicketSessionDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
 }
 
-// TicketSessionReads holds the data fields for a ticket session reads record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionreads](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionReads)
-type TicketSessionReads struct {
-	Projects []string `json:"projects,omitempty" yaml:"projects,omitempty"`
-	Bundles  []string `json:"bundles,omitempty" yaml:"bundles,omitempty"`
-	Folders  []string `json:"folders,omitempty" yaml:"folders,omitempty"`
-	Files    []string `json:"files,omitempty" yaml:"files,omitempty"`
+// TicketSessionPlanStep holds a single step in a session plan with optional timestamps.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionplanstep](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionPlanStep)
+type TicketSessionPlanStep struct {
+	Name      string `json:"name" yaml:"name"`
+	Completed string `json:"completed,omitempty" yaml:"completed,omitempty"`
+	Started   string `json:"started,omitempty" yaml:"started,omitempty"`
 }
 
-// TicketSessionInteraction holds the data fields for a ticket session interaction record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessioninteraction](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionInteraction)
-type TicketSessionInteraction struct {
-	Kind      string             `json:"kind,omitempty" yaml:"kind,omitempty"`
-	Timestamp string             `json:"timestamp" yaml:"timestamp"`
-	Commit    string             `json:"commit,omitempty" yaml:"commit,omitempty"`
-	LLM       string             `json:"llm,omitempty" yaml:"llm,omitempty"`
-	Prompt    string             `json:"prompt,omitempty" yaml:"prompt,omitempty"`
-	Query     string             `json:"query,omitempty" yaml:"query,omitempty"`
-	Context   string             `json:"context,omitempty" yaml:"context,omitempty"`
-	Reads     TicketSessionReads `json:"reads,omitempty" yaml:"reads,omitempty"`
-	Diff      TicketSessionDiff  `json:"diff,omitempty" yaml:"diff,omitempty"`
+// TicketSessionPlan holds the plan steps for a session.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionplan](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionPlan)
+type TicketSessionPlan struct {
+	Steps []TicketSessionPlanStep `json:"steps,omitempty" yaml:"steps,omitempty"`
 }
 
-// TicketSession holds the data fields for a ticket session record.
+// TicketSessionEventSectionRef holds a section ID and its definitions in a code block.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessioneventsectionref](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionEventSectionRef)
+type TicketSessionEventSectionRef struct {
+	Section     string   `json:"section" yaml:"section"`
+	Definitions []string `json:"definitions,omitempty" yaml:"definitions,omitempty"`
+}
+
+// TicketSessionEventCodeBlock holds section refs and lines of code for old/new in a code edit.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessioneventcodeblock](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionEventCodeBlock)
+type TicketSessionEventCodeBlock struct {
+	Sections []TicketSessionEventSectionRef `json:"sections,omitempty" yaml:"sections,omitempty"`
+	LOC      int                            `json:"loc,omitempty" yaml:"loc,omitempty"`
+}
+
+// TicketSessionEvent holds an agent hook event within a prompt.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionevent](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionEvent)
+type TicketSessionEvent struct {
+	Kind      string                       `json:"kind" yaml:"kind"`
+	Timestamp string                       `json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
+	Pattern   string                       `json:"pattern,omitempty" yaml:"pattern,omitempty"`
+	File      string                       `json:"file,omitempty" yaml:"file,omitempty"`
+	Denied    string                       `json:"denied,omitempty" yaml:"denied,omitempty"`
+	Line      int                          `json:"line,omitempty" yaml:"line,omitempty"`
+	Old       *TicketSessionEventCodeBlock `json:"old,omitempty" yaml:"old,omitempty"`
+	New       *TicketSessionEventCodeBlock `json:"new,omitempty" yaml:"new,omitempty"`
+}
+
+// TicketSessionPrompt holds a user prompt with its timestamp and agent events.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsessionprompt](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSessionPrompt)
+type TicketSessionPrompt struct {
+	Timestamp string               `json:"timestamp" yaml:"timestamp"`
+	Prompt    string               `json:"prompt,omitempty" yaml:"prompt,omitempty"`
+	Events    []TicketSessionEvent `json:"events,omitempty" yaml:"events,omitempty"`
+}
+
+// TicketSession holds a session record with contributor, plan, prompts, and diff.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsession](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSession)
 type TicketSession struct {
-	ID           string                     `json:"id" yaml:"id"`
-	Contributor  string                     `json:"contributor,omitempty" yaml:"contributor,omitempty"`
-	System       string                     `json:"system,omitempty" yaml:"system,omitempty"`
-	Client       string                     `json:"client,omitempty" yaml:"client,omitempty"`
-	Interactions []TicketSessionInteraction `json:"interactions,omitempty" yaml:"interactions,omitempty"`
+	ID          string                `json:"id" yaml:"id"`
+	Contributor string                `json:"contributor,omitempty" yaml:"contributor,omitempty"`
+	System      string                `json:"system,omitempty" yaml:"system,omitempty"`
+	Client      string                `json:"client,omitempty" yaml:"client,omitempty"`
+	LLM         string                `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Transcript  string                `json:"transcript,omitempty" yaml:"transcript,omitempty"`
+	Query       string                `json:"query,omitempty" yaml:"query,omitempty"`
+	Plan        *TicketSessionPlan    `json:"plan,omitempty" yaml:"plan,omitempty"`
+	Prompts     []TicketSessionPrompt `json:"prompts,omitempty" yaml:"prompts,omitempty"`
+	Diff        *TicketSessionDiff    `json:"diff,omitempty" yaml:"diff,omitempty"`
 }
 
 // UnmarshalJSON MUST handle both legacy and current JSON layouts.
@@ -12676,30 +12809,30 @@ type TicketDiffs struct {
 // TicketData holds the data fields for a ticket data record.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketData)
 type TicketData struct {
-	Title        string            `json:"title"`
-	Interactions []Interaction     `json:"interactions"`
-	Status       TicketStatus      `json:"status"`
-	Summary      string            `json:"summary,omitempty"`
-	Management       *TicketManagementData `json:"github,omitempty"`
-	Goal         string            `json:"goal,omitempty"`
-	Parent       string            `json:"parent,omitempty"`
+	Title        string                `json:"title"`
+	Interactions []Interaction         `json:"interactions"`
+	Status       TicketStatus          `json:"status"`
+	Summary      string                `json:"summary,omitempty"`
+	Management   *TicketManagementData `json:"github,omitempty"`
+	Goal         string                `json:"goal,omitempty"`
+	Parent       string                `json:"parent,omitempty"`
 }
 
 // Goal holds the data fields for a goal record.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Goal)
 type Goal struct {
-	Title        string          `json:"title"`
-	Description  string          `json:"description"`
-	Prompt       string          `json:"prompt"`
-	Status       string          `json:"status"`
-	Summary      string          `json:"summary,omitempty"`
-	DueDate      string          `json:"dueDate,omitempty"`
-	Dates        GoalDates       `json:"dates"`
-	Client       string          `json:"client"`
-	LLM          string          `json:"llm"`
-	Parent       string          `json:"parent,omitempty"`
-	Management       *GoalManagementData `json:"github,omitempty"`
-	Interactions []Interaction   `json:"interactions"`
+	Title        string              `json:"title"`
+	Description  string              `json:"description"`
+	Prompt       string              `json:"prompt"`
+	Status       string              `json:"status"`
+	Summary      string              `json:"summary,omitempty"`
+	DueDate      string              `json:"dueDate,omitempty"`
+	Dates        GoalDates           `json:"dates"`
+	Client       string              `json:"client"`
+	LLM          string              `json:"llm"`
+	Parent       string              `json:"parent,omitempty"`
+	Management   *GoalManagementData `json:"github,omitempty"`
+	Interactions []Interaction       `json:"interactions"`
 
 	ID   string `json:"-"`
 	Path string `json:"-"`
@@ -18965,13 +19098,13 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagement bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
-		Title:       title,
-		Description: description,
-		Prompt:      prompt,
-		DueDate:     dueDate,
-		Client:      client,
-		LLM:         llm,
-		NoManagement:    noManagement,
+		Title:        title,
+		Description:  description,
+		Prompt:       prompt,
+		DueDate:      dueDate,
+		Client:       client,
+		LLM:          llm,
+		NoManagement: noManagement,
 	}
 	return ctx.GoalCreate(input)
 }
@@ -19108,7 +19241,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 		Slug:          slug,
 		Title:         title,
 		Status:        TicketStatusOpen,
-		Prompt:        prompt,
+		Description:   prompt,
 		Goal:          goal,
 		Parent:        parent,
 		FolderPath:    ticketDir,
@@ -19157,7 +19290,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	repopkg.Emit(repopkg.EventTicketOpen, "repo-cli", repopkg.TicketOpenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Title:         ticket.Title, Prompt: ticket.Prompt, LLM: llmSlug, Client: uiSlug, Author: gitAuthor, Goal: goal, Parent: parent,
+		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Client: uiSlug, Author: gitAuthor, Goal: goal, Parent: parent,
 	})
 	return ticket, nil
 }
@@ -20003,7 +20136,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 							if !matchesFilter(ticket.GetID(), options) && !matchesFilter(ticket.Slug, options) && !matchesFilter(ticket.Title, options) {
 								return nil
 							}
-							if !matchesQuery(ticket.GetID()+" "+ticket.Slug+" "+ticket.Title+" "+ticket.Prompt+" "+string(ticket.Status), options) {
+							if !matchesQuery(ticket.GetID()+" "+ticket.Slug+" "+ticket.Title+" "+ticket.Description+" "+string(ticket.Status), options) {
 								return nil
 							}
 
@@ -20098,7 +20231,6 @@ func InvalidateProjectCache() {
 func LoadProjects() []Project {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
-
 	if projectCacheLoaded {
 		return projectCache
 	}
@@ -21876,15 +22008,15 @@ func ToolDraftDelete(slug string) ToolResult {
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noManagement bool, parent, milestone string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
-		Title:       title,
-		Description: description,
-		Prompt:      prompt,
-		DueDate:     dueDate,
-		LLM:         llm,
-		Client:      client,
-		NoManagement:    noManagement,
-		Parent:      parent,
-		Milestone:   milestone,
+		Title:        title,
+		Description:  description,
+		Prompt:       prompt,
+		DueDate:      dueDate,
+		LLM:          llm,
+		Client:       client,
+		NoManagement: noManagement,
+		Parent:       parent,
+		Milestone:    milestone,
 	})
 	if err != nil {
 		return toolErrorResult(err)
@@ -21922,8 +22054,8 @@ func ToolGoalList() ToolResult {
 func ToolGoalClose(id, summary string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
-		ID:       id,
-		Summary:  summary,
+		ID:           id,
+		Summary:      summary,
 		NoManagement: noManagement,
 	})
 	if err != nil {
@@ -21955,14 +22087,14 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 		dueDatePtr = &dueDate
 	}
 	res, err := ctx.GoalReopen(GoalReopenInput{
-		ID:          id,
-		Prompt:      prompt,
-		LLM:         llm,
-		Client:      client,
-		Title:       titlePtr,
-		Description: descriptionPtr,
-		DueDate:     dueDatePtr,
-		NoManagement:    noManagement,
+		ID:           id,
+		Prompt:       prompt,
+		LLM:          llm,
+		Client:       client,
+		Title:        titlePtr,
+		Description:  descriptionPtr,
+		DueDate:      dueDatePtr,
+		NoManagement: noManagement,
 	})
 	if err != nil {
 		return toolErrorResult(err)
@@ -24337,7 +24469,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 
 	changed := false
 	if input.Prompt != nil {
-		ticket.Prompt = *input.Prompt
+		ticket.Description = *input.Prompt
 		if len(ticket.Interactions) > 0 {
 			ticket.Interactions[len(ticket.Interactions)-1].Prompt = *input.Prompt
 		}
@@ -27275,6 +27407,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"UI":      &graphql.EnumValueConfig{Value: BundleKindUI},
 			"SITE":    &graphql.EnumValueConfig{Value: BundleKindSite},
 			"ASSETS":  &graphql.EnumValueConfig{Value: BundleKindAssets},
+			"REPO":    &graphql.EnumValueConfig{Value: BundleKindRepo},
 		},
 	})
 
@@ -29143,48 +29276,48 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	ticketOpenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketOpenInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"title":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"client":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
-			"noIssue":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
-			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
+			"noIssue":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"draft":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"goal":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
-			"issue":    &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"issue":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
 	ticketCloseInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketCloseInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"year":     &graphql.InputObjectFieldConfig{Type: graphql.Int},
-			"month":    &graphql.InputObjectFieldConfig{Type: graphql.Int},
-			"day":      &graphql.InputObjectFieldConfig{Type: graphql.Int},
-			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"files":    &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
-			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"year":         &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"month":        &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"day":          &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"slug":         &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"summary":      &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"files":        &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
-			"all":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"all":          &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
 	ticketReopenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketReopenInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"year":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"month":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"client":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
-			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"year":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
+			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"draft":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"goal":         &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
@@ -29192,16 +29325,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	ticketChangeInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketChangeInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"year":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"month":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"client":   &graphql.InputObjectFieldConfig{Type: ticketClientEnum},
-			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"year":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"client":       &graphql.InputObjectFieldConfig{Type: ticketClientEnum},
+			"goal":         &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
@@ -29227,35 +29360,35 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	goalCreateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "GoalCreateInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"title":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"description": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"client":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noManagement":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
-			"milestone":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"description":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"dueDate":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"milestone":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
 	goalChangeInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "GoalChangeInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"title":       &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noManagement":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"id":           &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"description":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"dueDate":      &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
 	goalCloseInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "GoalCloseInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"id":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"id":           &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"summary":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
@@ -29263,15 +29396,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	goalReopenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "GoalReopenInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"client":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"title":       &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"noManagement":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"id":           &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"title":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"description":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"dueDate":      &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -29918,8 +30051,8 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		return s, "", false
 	}
 
-	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch}
-	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets}
+	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch, EmojiProjectMono}
+	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
 	for _, pe := range projectEmojis {
 		if rest, ok := stripPrefix(cleanID, pe); ok {
 			if projectVal, bundleVal, found := findEmoji(rest, bundleEmojis); found {
@@ -33024,7 +33157,7 @@ const GitIndexRef = ":0"
 // Uses unstaged diffs only (index vs working tree) for complete, current working state.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️computeticketfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/ComputeTicketFiles)
 func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
-	if len(ticket.Interactions) == 0 {
+	if len(ticket.Interactions) == 0 && len(ticket.Sessions) == 0 {
 		return nil, fmt.Errorf("no interactions found for ticket")
 	}
 	files = normalizeTicketFileInputs(files)
@@ -33205,18 +33338,22 @@ func findBundleInfo(path string) (name, root string, ok bool) {
 func resolveParentIDFromPath(dirPath string) string {
 	normalized := NormalizePath(dirPath)
 	if normalized == "." || normalized == "" {
+		bundle := GetBundleByPath(".")
+		if bundle != nil {
+			return bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
+		}
 		return ""
 	}
 	bundle := GetBundleByPath(normalized)
 	if bundle != nil {
 		bundleRoot := NormalizePath(bundle.Root)
 		if normalized == bundleRoot {
-			return bundle.GetID()
+			return bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
 		}
 		if strings.HasPrefix(normalized, bundleRoot+"/") {
 			relPath := normalized[len(bundleRoot)+1:]
 			parts := strings.Split(relPath, "/")
-			parentID := bundle.GetID()
+			parentID := bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
 			currentPath := bundleRoot
 			for _, part := range parts {
 				currentPath += "/" + part
@@ -33252,6 +33389,10 @@ func resolveParentIDFromPath(dirPath string) string {
 func buildFolderID(path string, bundleID *string) string {
 	normalized := NormalizePath(path)
 	if normalized == "." || normalized == "" {
+		bundle := GetBundleByPath(".")
+		if bundle != nil {
+			return bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
+		}
 		return ""
 	}
 	dir := filepath.Dir(normalized)
@@ -33260,10 +33401,10 @@ func buildFolderID(path string, bundleID *string) string {
 	bundle := GetBundleByPath(normalized)
 	if bundle != nil {
 		bundleRoot := NormalizePath(bundle.Root)
-		if dir == bundleRoot || normalized == bundleRoot {
-			if normalized == bundleRoot {
-				return bundle.GetID()
-			}
+		if normalized == bundleRoot {
+			return bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
+		}
+		if dir == bundleRoot {
 			parentID = bundle.GetID()
 		} else if strings.HasPrefix(dir, bundleRoot+"/") {
 			parentID = resolveParentIDFromPath(dir)
@@ -33272,8 +33413,18 @@ func buildFolderID(path string, bundleID *string) string {
 		}
 	} else if dir != "." && dir != "" {
 		parentID = resolveParentIDFromPath(dir)
+	} else {
+		repoBundle := GetBundleByPath(".")
+		if repoBundle != nil {
+			parentID = repoBundle.GetID()
+		}
 	}
 	kind := DeriveFolderKind(normalized)
+	if kind == FolderKindRoot {
+		if bundle != nil {
+			return bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
+		}
+	}
 	if kind == FolderKindOrganization {
 		return parentID + emojiText(EmojiFolderOrg) + Flat(name)
 	}
@@ -33289,9 +33440,14 @@ func buildFileID(path string, bundleID *string) string {
 	if dir != "." && dir != "" {
 		bundle := GetBundleByPath(normalized)
 		if bundle != nil && NormalizePath(bundle.Root) == NormalizePath(dir) {
-			parentID = bundle.GetID()
+			parentID = bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
 		} else {
 			parentID = resolveParentIDFromPath(dir)
+		}
+	} else {
+		bundle := GetBundleByPath(normalized)
+		if bundle != nil {
+			parentID = bundle.GetID() + emojiText(EmojiFolderRoot) + Flat("root")
 		}
 	}
 	return GetArtifactID("file", map[string]interface{}{"path": normalized, "kind": kind, "parentId": parentID})
@@ -34381,20 +34537,21 @@ func runNx(target string, args ...string) error {
 type HookEvent string
 
 const (
-	HookGitCommitStarting        HookEvent = "git.commit.starting"
-	HookGitCommitEnded           HookEvent = "git.commit.ended"
-	HookAgentStarted            HookEvent = "agent.started"
-	HookAgentEnded               HookEvent = "agent.ended"
-	HookAgentPromptSubmitting    HookEvent = "agent.prompt.submitting"
-	HookAgentCompacting          HookEvent = "agent.compacting"
-	HookAgentToolStarting        HookEvent = "agent.tool.starting"
-	HookAgentToolEnded           HookEvent = "agent.tool.ended"
-	HookAgentToolPlanUpdating    HookEvent = "agent.tool.plan.updating"
-	HookAgentToolSearching    HookEvent = "agent.tool.searching"
+	HookGitCommitStarting         HookEvent = "git.commit.starting"
+	HookGitCommitEnded            HookEvent = "git.commit.ended"
+	HookAgentStarted              HookEvent = "agent.started"
+	HookAgentEnded                HookEvent = "agent.ended"
+	HookAgentPromptSubmitting     HookEvent = "agent.prompt.submitting"
+	HookAgentCompacting           HookEvent = "agent.compacting"
+	HookAgentToolStarting         HookEvent = "agent.tool.starting"
+	HookAgentToolEnded            HookEvent = "agent.tool.ended"
+	HookAgentToolPlanUpdating     HookEvent = "agent.tool.plan.updating"
+	HookAgentToolSearching        HookEvent = "agent.tool.searching"
+	HookAgentToolSearched         HookEvent = "agent.tool.searching.ended"
 	HookAgentToolCodeEditing      HookEvent = "agent.tool.code.editing"
 	HookAgentToolCodeEdited       HookEvent = "agent.tool.code.edited"
 	HookAgentToolTerminalStarting HookEvent = "agent.tool.terminal.starting"
-	HookAgentToolTerminalEnded   HookEvent = "agent.tool.terminal.ended"
+	HookAgentToolTerminalEnded    HookEvent = "agent.tool.terminal.ended"
 )
 
 // AllHookEvents lists every valid hook event slug.
@@ -34410,6 +34567,7 @@ var AllHookEvents = []HookEvent{
 	HookAgentToolEnded,
 	HookAgentToolPlanUpdating,
 	HookAgentToolSearching,
+	HookAgentToolSearched,
 	HookAgentToolCodeEditing,
 	HookAgentToolCodeEdited,
 	HookAgentToolTerminalStarting,
@@ -34470,7 +34628,7 @@ type HookResult interface {
 type HookResultBase struct {
 	Allowed bool   `json:"allowed"`
 	Message string `json:"message,omitempty"`
-	Raw     any    `json:"raw,omitempty"`
+	Raw     any    `json:"-"`
 }
 
 func (h HookResultBase) IsAllowed() bool    { return h.Allowed }
@@ -34548,6 +34706,16 @@ type HookResultAgentToolSearching struct {
 	Exclude []string `json:"exclude,omitempty"`
 }
 
+// HookResultAgentToolSearched represents the result of an agent tool searching ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearched](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearched)
+type HookResultAgentToolSearched struct {
+	HookResultAgentBase
+	Query    string          `json:"query,omitempty"`
+	Include  []string        `json:"include,omitempty"`
+	Exclude  []string        `json:"exclude,omitempty"`
+	Response json.RawMessage `json:"response,omitempty"`
+}
+
 // HookResultAgentToolCodeEditing represents the result of an agent tool code editing event.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeediting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditing)
 type HookResultAgentToolCodeEditing struct {
@@ -34616,12 +34784,13 @@ type HookLogResponse struct {
 	Reason  string `json:"reason,omitempty"`
 }
 
-// HookLogEntry pairs input, event and response for audit logging.
+// HookLogEntry pairs input, event, response and event-specific data for audit logging.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogentry](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogEntry)
 type HookLogEntry struct {
 	Input    json.RawMessage `json:"input"`
 	Event    HookLogEvent    `json:"event"`
 	Response HookLogResponse `json:"response"`
+	Data     json.RawMessage `json:"data,omitempty"`
 }
 
 // BlockedToolPatterns lists shell command patterns that MUST always be denied.
@@ -34810,6 +34979,8 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolveposttoolusse](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolvePostToolUse)
 func resolvePostToolUse(kind ToolKind) HookEvent {
 	switch kind {
+	case ToolKindCodeSearch:
+		return HookAgentToolSearched
 	case ToolKindCodeEdit:
 		return HookAgentToolCodeEdited
 	case ToolKindTerminal:
@@ -34902,7 +35073,7 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 	case "pre_read_code":
 		return HookAgentToolSearching, "", nil
 	case "post_read_code":
-		return HookAgentToolEnded, "", nil
+		return HookAgentToolSearched, "", nil
 	case "pre_write_code":
 		return HookAgentToolCodeEditing, "", nil
 	case "post_write_code":
@@ -34988,6 +35159,8 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 		return "PreToolUse"
 	case HookAgentToolSearching:
 		return "PreToolUse"
+	case HookAgentToolSearched:
+		return "PostToolUse"
 	case HookAgentToolCodeEditing:
 		return "PreToolUse"
 	case HookAgentToolCodeEdited:
@@ -35102,7 +35275,8 @@ func logHook(hctx HookContext, result HookResult) {
 		logResponse.Blocked = &blocked
 		logResponse.Reason = result.GetMessage()
 	}
-	entry := HookLogEntry{Input: hctx.Input, Event: logEvent, Response: logResponse}
+	resultData, _ := json.Marshal(result)
+	entry := HookLogEntry{Input: hctx.Input, Event: logEvent, Response: logResponse, Data: resultData}
 	data, err := json.MarshalIndent(entry, "", "  ")
 	if err != nil {
 		return
@@ -35213,6 +35387,15 @@ func dispatchHook(hctx HookContext) HookResult {
 			Include:             include,
 			Exclude:             exclude,
 		}
+	case HookAgentToolSearched:
+		query, include, exclude := extractCodeSearchFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolSearched{
+			HookResultAgentBase: agentBase(""),
+			Query:               query,
+			Include:             include,
+			Exclude:             exclude,
+			Response:            extractToolResponseFromStdin(hctx.Input),
+		}
 	case HookAgentToolCodeEditing:
 		path, old, new_, all := extractCodeEditFromInput(hctx.Input, hctx.ToolArgs)
 		return HookResultAgentToolCodeEditing{
@@ -35266,7 +35449,7 @@ func RunHook(hctx HookContext) HookResult {
 	}
 	result := dispatchHook(hctx)
 	logHook(hctx, result)
-	trackHookInOpenTicket(hctx)
+	trackHookInOpenTicket(hctx, result)
 	return result
 }
 
@@ -35317,7 +35500,7 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return ""
 	}
-	for _, key := range []string{"sessionId", "session_id", "conversationId", "conversation_id", "requestId", "request_id"} {
+	for _, key := range []string{"trajectory_id", "trajectoryId", "sessionId", "session_id", "conversationId", "conversation_id"} {
 		if value, ok := data[key].(string); ok {
 			value = strings.TrimSpace(value)
 			if value != "" {
@@ -35769,46 +35952,28 @@ func normalizeHookPath(path string) string {
 	return strings.TrimPrefix(path, "./")
 }
 
-func applyHookPathToReads(reads *TicketSessionReads, path string) {
+func applyHookPathToSessionDiffModified(session *TicketSession, path string) {
 	normalized := normalizeHookPath(path)
 	if normalized == "" {
 		return
 	}
-	reads.Files = appendUniqueString(reads.Files, normalized)
+	if session.Diff == nil {
+		session.Diff = &TicketSessionDiff{}
+	}
+	session.Diff.Files.Modified = appendUniqueString(session.Diff.Files.Modified, normalized)
 	parts := strings.Split(normalized, "/")
 	if len(parts) >= 1 {
-		reads.Projects = appendUniqueString(reads.Projects, parts[0])
-		reads.Folders = appendUniqueString(reads.Folders, parts[0])
+		session.Diff.Projects.Modified = appendUniqueString(session.Diff.Projects.Modified, parts[0])
+		session.Diff.Folders.Modified = appendUniqueString(session.Diff.Folders.Modified, parts[0])
 	}
 	if len(parts) >= 2 {
-		reads.Bundles = appendUniqueString(reads.Bundles, parts[0]+"/"+parts[1])
-		reads.Folders = appendUniqueString(reads.Folders, parts[0]+"/"+parts[1])
+		session.Diff.Bundles.Modified = appendUniqueString(session.Diff.Bundles.Modified, parts[0]+"/"+parts[1])
+		session.Diff.Folders.Modified = appendUniqueString(session.Diff.Folders.Modified, parts[0]+"/"+parts[1])
 	}
-}
-
-func applyHookPathToDiff(diff *TicketSessionDiff, path string) {
-	normalized := normalizeHookPath(path)
-	if normalized == "" {
-		return
-	}
-	diff.Files.Modified = appendUniqueString(diff.Files.Modified, normalized)
-	parts := strings.Split(normalized, "/")
-	if len(parts) >= 1 {
-		diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, parts[0])
-		diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, parts[0])
-	}
-	if len(parts) >= 2 {
-		diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, parts[0]+"/"+parts[1])
-		diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, parts[0]+"/"+parts[1])
-	}
-}
-
-func hasTicketSessionReadData(reads TicketSessionReads) bool {
-	return len(reads.Projects) > 0 || len(reads.Bundles) > 0 || len(reads.Folders) > 0 || len(reads.Files) > 0
 }
 
 func hasTicketSessionDiffData(diff TicketSessionDiff) bool {
-	stats := []TicketSessionDiffStats{diff.Projects, diff.Bundles, diff.Folders, diff.Files}
+	stats := []TicketSessionDiffStats{diff.Projects, diff.Bundles, diff.Folders, diff.Files, diff.Sections, diff.Definitions}
 	for _, item := range stats {
 		if len(item.Deleted) > 0 || len(item.Renamed) > 0 || len(item.Modified) > 0 || len(item.Created) > 0 {
 			return true
@@ -35835,57 +36000,220 @@ func ensureTicketSession(ticket *Ticket, sessionID string, client string) int {
 	return len(ticket.Sessions) - 1
 }
 
-func trackHookInOpenTicket(hctx HookContext) {
+func resolveCodeBlockRefs(filePath string, code string, fileContent string) *TicketSessionEventCodeBlock {
+	if code == "" {
+		return nil
+	}
+	loc := strings.Count(code, "\n") + 1
+	if strings.HasSuffix(code, "\n") {
+		loc--
+	}
+	block := &TicketSessionEventCodeBlock{LOC: loc}
+	normPath := normalizeHookPath(filePath)
+	if normPath == "" || fileContent == "" {
+		return block
+	}
+	absPath := filepath.Join(GetRootDir(), normPath)
+	sections := ParseSections(fileContent, absPath)
+	if len(sections) == 0 {
+		return block
+	}
+	idx := strings.Index(fileContent, code)
+	if idx < 0 {
+		return block
+	}
+	startLine := strings.Count(fileContent[:idx], "\n") + 1
+	endLine := startLine + loc - 1
+	sectionMap := map[string][]string{}
+	var collectSectionDefs func(secs []Section)
+	collectSectionDefs = func(secs []Section) {
+		for _, sec := range secs {
+			if sec.EndLine < startLine || sec.StartLine > endLine {
+				continue
+			}
+			secID := sec.GetID()
+			if _, exists := sectionMap[secID]; !exists {
+				sectionMap[secID] = []string{}
+			}
+			for _, def := range sec.Definitions {
+				if def.EndLine < startLine || def.StartLine > endLine {
+					continue
+				}
+				sectionMap[secID] = appendUniqueString(sectionMap[secID], def.GetID())
+			}
+			collectSectionDefs(sec.Children)
+		}
+	}
+	collectSectionDefs(sections)
+	for secID, defs := range sectionMap {
+		block.Sections = append(block.Sections, TicketSessionEventSectionRef{
+			Section:     secID,
+			Definitions: defs,
+		})
+	}
+	return block
+}
+
+func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	ticket, err := latestOpenTicket()
 	if err != nil || ticket == nil {
 		return
 	}
 	sessionID := extractSessionIDFromInput(hctx.Input)
 	if sessionID == "" {
-		if len(ticket.Sessions) > 0 {
-			sessionID = ticket.Sessions[len(ticket.Sessions)-1].ID
-		} else {
-			sessionID = generateHookSessionID()
-		}
-	}
-	sessionIndex := ensureTicketSession(ticket, sessionID, hctx.Client)
-	interaction := TicketSessionInteraction{
-		Kind:      string(hctx.Event),
-		Timestamp: hctx.Timestamp,
-		Commit:    GetGitCommit(),
-		LLM:       extractLLMFromInput(hctx.Input),
-		Prompt:    extractPromptFromInput(hctx.Input),
-	}
-	if interaction.Timestamp == "" {
-		interaction.Timestamp = time.Now().UTC().Format(time.RFC3339)
-	}
-	if hctx.Event == HookAgentPromptSubmitting && interaction.Prompt == "" {
-		interaction.Prompt = strings.TrimSpace(hctx.ToolArgs)
-	}
-	if hctx.Event == HookAgentToolSearching {
-		applyHookPathToReads(&interaction.Reads, hctx.FilePath)
-	}
-	if hctx.Event == HookAgentToolCodeEditing || hctx.Event == HookAgentToolCodeEdited {
-		applyHookPathToDiff(&interaction.Diff, hctx.FilePath)
-	}
-	toolArgs := parseHookToolArgs(hctx.ToolArgs)
-	if len(toolArgs) > 0 {
-		if value, ok := toolArgs["query"].(string); ok {
-			interaction.Query = strings.TrimSpace(value)
-		}
-		if value, ok := toolArgs["context"].(string); ok {
-			interaction.Context = strings.TrimSpace(value)
-		}
-	}
-	if interaction.Query == "" && strings.EqualFold(hctx.ToolName, "mcp0_tree") {
-		interaction.Query = strings.TrimSpace(hctx.ToolArgs)
-	}
-	if interaction.Prompt == "" && interaction.Query == "" && interaction.Context == "" && !hasTicketSessionReadData(interaction.Reads) && !hasTicketSessionDiffData(interaction.Diff) {
-		if hctx.Event != HookAgentStarted && hctx.Event != HookAgentEnded {
+		if len(ticket.Sessions) == 0 {
 			return
 		}
+		sessionID = ticket.Sessions[len(ticket.Sessions)-1].ID
 	}
-	ticket.Sessions[sessionIndex].Interactions = append(ticket.Sessions[sessionIndex].Interactions, interaction)
+	sessionIndex := ensureTicketSession(ticket, sessionID, hctx.Client)
+	session := &ticket.Sessions[sessionIndex]
+	timestamp := hctx.Timestamp
+	if timestamp == "" {
+		timestamp = time.Now().UTC().Format(time.RFC3339)
+	}
+	llm := extractLLMFromInput(hctx.Input)
+	if llm != "" && session.LLM == "" {
+		session.LLM = llm
+	}
+	transcript := extractTranscriptFromInput(hctx.Input)
+	if transcript != "" && session.Transcript == "" {
+		session.Transcript = transcript
+	}
+	if hctx.Event == HookAgentPromptSubmitting {
+		promptText := extractPromptFromInput(hctx.Input)
+		if promptText == "" {
+			promptText = strings.TrimSpace(hctx.ToolArgs)
+		}
+		session.Prompts = append(session.Prompts, TicketSessionPrompt{
+			Timestamp: timestamp,
+			Prompt:    promptText,
+		})
+		_ = SaveTicket(ticket)
+		return
+	}
+	if hctx.Event == HookAgentToolPlanUpdating {
+		if planResult, ok := result.(HookResultAgentToolPlanUpdating); ok && len(planResult.Steps) > 0 {
+			steps := make([]TicketSessionPlanStep, len(planResult.Steps))
+			for i, s := range planResult.Steps {
+				step := TicketSessionPlanStep{Name: s.Name}
+				switch s.Status {
+				case "completed":
+					step.Completed = timestamp
+				case "in-progress":
+					step.Started = timestamp
+				}
+				steps[i] = step
+			}
+			session.Plan = &TicketSessionPlan{Steps: steps}
+		}
+		_ = SaveTicket(ticket)
+		return
+	}
+	event := TicketSessionEvent{
+		Kind:      string(hctx.Event),
+		Timestamp: timestamp,
+	}
+	if !result.IsAllowed() {
+		event.Denied = result.GetMessage()
+		if event.Denied == "" {
+			event.Denied = "blocked"
+		}
+	}
+	switch r := result.(type) {
+	case HookResultAgentToolSearching:
+		pattern := r.Query
+		if len(r.Include) > 0 {
+			pattern = strings.Join(r.Include, ", ")
+			if r.Query != "" {
+				pattern = r.Query + " in " + pattern
+			}
+		}
+		event.Pattern = pattern
+		applyHookPathToSessionDiffModified(session, hctx.FilePath)
+	case HookResultAgentToolSearched:
+		pattern := r.Query
+		if len(r.Include) > 0 {
+			pattern = strings.Join(r.Include, ", ")
+			if r.Query != "" {
+				pattern = r.Query + " in " + pattern
+			}
+		}
+		event.Pattern = pattern
+		applyHookPathToSessionDiffModified(session, hctx.FilePath)
+	case HookResultAgentToolCodeEditing:
+		if r.Path != "" {
+			event.File = normalizeHookPath(r.Path)
+			applyHookPathToSessionDiffModified(session, r.Path)
+		}
+	case HookResultAgentToolCodeEdited:
+		if r.Path != "" {
+			event.File = normalizeHookPath(r.Path)
+			applyHookPathToSessionDiffModified(session, r.Path)
+		}
+		if r.Old != "" || r.New != "" {
+			var fileContent string
+			if r.Path != "" {
+				normPath := normalizeHookPath(r.Path)
+				absPath := filepath.Join(GetRootDir(), normPath)
+				if content, err := ReadTextFile(absPath); err == nil {
+					fileContent = content
+				}
+			}
+			if r.Old != "" && fileContent != "" {
+				idx := strings.Index(fileContent, r.Old)
+				if idx >= 0 {
+					event.Line = strings.Count(fileContent[:idx], "\n") + 1
+				}
+			}
+			event.Old = resolveCodeBlockRefs(r.Path, r.Old, fileContent)
+			newContent := fileContent
+			if r.Old != "" && r.New != "" && fileContent != "" {
+				newContent = strings.Replace(fileContent, r.Old, r.New, 1)
+			}
+			event.New = resolveCodeBlockRefs(r.Path, r.New, newContent)
+		}
+	case HookResultAgentToolTerminalStarting:
+		if r.Command != "" {
+			event.Pattern = r.Command
+		}
+	case HookResultAgentToolTerminalEnded:
+		if r.Command != "" {
+			event.Pattern = r.Command
+		}
+	case HookResultAgentToolStarting:
+		if r.Name != "" {
+			event.Pattern = r.Name
+		}
+	case HookResultAgentToolEnded:
+		if r.Name != "" {
+			event.Pattern = r.Name
+		}
+	}
+	if event.File == "" && hctx.FilePath != "" {
+		event.File = normalizeHookPath(hctx.FilePath)
+	}
+	if event.Pattern == "" {
+		toolArgs := parseHookToolArgs(hctx.ToolArgs)
+		if len(toolArgs) > 0 {
+			if value, ok := toolArgs["query"].(string); ok {
+				q := strings.TrimSpace(value)
+				if q != "" {
+					event.Pattern = q
+				}
+			}
+		}
+	}
+	if event.Pattern == "" && strings.EqualFold(hctx.ToolName, "mcp0_tree") {
+		event.Pattern = strings.TrimSpace(hctx.ToolArgs)
+	}
+	if len(session.Prompts) == 0 {
+		session.Prompts = append(session.Prompts, TicketSessionPrompt{
+			Timestamp: timestamp,
+		})
+	}
+	lastPromptIdx := len(session.Prompts) - 1
+	session.Prompts[lastPromptIdx].Events = append(session.Prompts[lastPromptIdx].Events, event)
 	_ = SaveTicket(ticket)
 }
 
@@ -36097,6 +36425,9 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 func configureGitHooks(repoRoot string) error {
 	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	if err := unsetLocalCoreHooksPath(repoRoot); err != nil {
+		return err
+	}
 	if err := os.MkdirAll(hooksDir, 0755); err != nil {
 		return err
 	}
@@ -36104,11 +36435,20 @@ func configureGitHooks(repoRoot string) error {
 	preCommitScript := `#!/usr/bin/env sh
 set -eu
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
+if [ -z "$repo_root" ] || [ ! -f "$repo_root/.pre-commit-config.yaml" ]; then
   exit 0
 fi
 cd "$repo_root"
-./semio-repo/cli/cli hook git.commit.starting
+if command -v uv >/dev/null 2>&1; then
+  uv run --group dev pre-commit run --hook-stage pre-commit
+  exit $?
+fi
+if command -v pre-commit >/dev/null 2>&1; then
+  pre-commit run --hook-stage pre-commit
+  exit $?
+fi
+echo "pre-commit is required. install with: uv sync --group dev" >&2
+exit 1
 `
 	if err := os.WriteFile(preCommitPath, []byte(preCommitScript), 0755); err != nil {
 		return err
@@ -36125,6 +36465,25 @@ cd "$repo_root"
 `
 	if err := os.WriteFile(postCommitPath, []byte(postCommitScript), 0755); err != nil {
 		return err
+	}
+	return nil
+}
+
+func unsetLocalCoreHooksPath(repoRoot string) error {
+	cmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--get", "core.hooksPath")
+	out, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+			return nil
+		}
+		return err
+	}
+	if strings.TrimSpace(string(out)) == "" {
+		return nil
+	}
+	unsetCmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--unset-all", "core.hooksPath")
+	if unsetErr := unsetCmd.Run(); unsetErr != nil {
+		return unsetErr
 	}
 	return nil
 }
@@ -37725,6 +38084,8 @@ func projectKindEmoji(data map[string]interface{}) string {
 			return emojiText(EmojiProjectInfra)
 		case "research":
 			return emojiText(EmojiProjectResearch)
+		case "mono":
+			return emojiText(EmojiProjectMono)
 		case "user":
 			return emojiText(EmojiProjectUser)
 		}
@@ -37785,6 +38146,8 @@ func folderKindEmoji(data map[string]interface{}) string {
 	fkind, _ := data["kind"].(string)
 	if fkind == "organization" {
 		return emojiText(EmojiFolderOrg)
+	} else if fkind == "root" {
+		return emojiText(EmojiFolderRoot)
 	}
 	return emojiText(EmojiFolderRequired)
 }
@@ -38642,8 +39005,8 @@ func IdToUri(id string) string {
 		return s, "", "", false
 	}
 	treeValueEmojis := []string{
-		EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch,
-		EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets,
+		EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch, EmojiProjectMono,
+		EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo,
 		EmojiFolderOrg, EmojiFolderRequired,
 		EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense,
 	}
@@ -38687,8 +39050,8 @@ func IdToUri(id string) string {
 		}
 		return values
 	}
-	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch}
-	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets}
+	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch, EmojiProjectMono}
+	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
 	folderEmojis := []string{EmojiFolderOrg, EmojiFolderRequired}
 	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
 	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant}

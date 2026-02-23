@@ -1,0 +1,950 @@
+{
+  "title": "Fix Missing Hook Case for agent.tool.searching.ended",
+  "status": "closed",
+  "description": "The PostToolUse hook is failing with \"unknown hook event: agent.tool.searching.ended\". The dispatchHook function in main.go has a case for HookAgentToolSearching but is missing a case for HookAgentToolSearched (agent.tool.searching.ended). Need to add the missing case.",
+  "summary": "Added missing HookResultAgentToolSearched struct with Query, Include, Exclude, Response fields. Added HookAgentToolSearched→PostToolUse mapping in vsCodeEventFromHookEvent. The dispatchHook case was already present but the struct lacked the Response field. Built binary and all 30 hook tests pass.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "sessions": [
+    {
+      "id": "1771808875036798824-8664345151780826358",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "llm": "sonnet-4-6",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T01:07:54Z",
+          "prompt": "The PostToolUse hook is failing with \"unknown hook event: agent.tool.searching.ended\". The dispatchHook function in main.go has a case for HookAgentToolSearching but is missing a case for HookAgentToolSearched (agent.tool.searching.ended). Need to add the missing case."
+        }
+      ]
+    },
+    {
+      "id": "a188e356-7386-4e52-9154-99edf29e025d",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "transcript": "/home/vscode/.claude/projects/-workspaces-semio/a188e356-7386-4e52-9154-99edf29e025d.jsonl",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T01:07:55Z",
+          "events": [
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:07:55Z",
+              "pattern": "mcp__semio-repo__tree"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:08:07Z",
+              "pattern": "mcp__semio-repo__tree"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:08:15Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:08:22Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:08:30Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:08:36Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:08:45Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:08:51Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:01Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:09:02Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:04Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:09:10Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:09:21Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:09:27Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:35Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:35Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:40Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:41Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:09:53Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:10:00Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:10:08Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:10:11Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:10:40Z",
+              "pattern": "mcp__semio-repo__ticket_open"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:10:46Z",
+              "pattern": "mcp__semio-repo__ticket_open"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:10:56Z",
+              "pattern": "mcp__semio-repo__tree"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:11:21Z",
+              "pattern": "mcp__semio-repo__tree"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:11:29Z",
+              "pattern": "mcp__semio-repo__tree"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:11:56Z",
+              "pattern": "mcp__semio-repo__tree"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:04Z",
+              "pattern": "ls /workspaces/semio/.semio-repo/goals/ 2\u003e/dev/null | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:12:10Z",
+              "pattern": "ls /workspaces/semio/.semio-repo/goals/ 2\u003e/dev/null | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:17Z",
+              "pattern": "find /workspaces/semio/.semio-repo -name \"goal.json\" 2\u003e/dev/null | head -10"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:12:25Z",
+              "pattern": "find /workspaces/semio/.semio-repo -name \"goal.json\" 2\u003e/dev/null | head -10"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:32Z",
+              "pattern": "find /workspaces/semio/.semio-repo -name \"goal.json\" 2\u003e/dev/null | xargs grep -l -i \"hook\" 2\u003e/dev/null"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:12:39Z",
+              "pattern": "find /workspaces/semio/.semio-repo -name \"goal.json\" 2\u003e/dev/null | xargs grep -l -i \"hook\" 2\u003e/dev/null"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:46Z",
+              "pattern": "find /workspaces/semio/.semio-repo -name \"goal.json\" 2\u003e/dev/null | xargs grep -l -i \"hook\" 2\u003e/dev/null || true"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:12:55Z",
+              "pattern": "find /workspaces/semio/.semio-repo -name \"goal.json\" 2\u003e/dev/null | xargs grep -l -i \"hook\" 2\u003e/dev/null || true"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:13:02Z",
+              "pattern": "cat /workspaces/semio/.semio-repo/🎯/AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/goal.json"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:13:08Z",
+              "pattern": "cat /workspaces/semio/.semio-repo/🎯/AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/goal.json"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:13:22Z",
+              "pattern": "mcp__semio-repo__ticket_open"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "06ea344a-316e-470c-9f54-086163ee25e6",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/06ea344a-316e-470c-9f54-086163ee25e6.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Gather repo context with tree",
+            "completed": "2026-02-23T01:12:25Z"
+          },
+          {
+            "name": "Inspect hooks and ticket.json schema",
+            "completed": "2026-02-23T01:12:25Z"
+          },
+          {
+            "name": "Find where events are added to ticket",
+            "completed": "2026-02-23T01:12:25Z"
+          },
+          {
+            "name": "Fix event logging in ticket.json",
+            "completed": "2026-02-23T01:12:25Z"
+          },
+          {
+            "name": "Run tests and validate fix",
+            "started": "2026-02-23T01:12:25Z"
+          },
+          {
+            "name": "Close ticket with summary"
+          }
+        ]
+      },
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T01:07:55Z",
+          "events": [
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:07:55Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:07:59Z",
+              "pattern": "sed -n '34975,34998p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:08:06Z",
+              "pattern": "sed -n '34975,34998p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:08:11Z",
+              "pattern": "grep -n \"HookResultAgentToolSearching\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:08:17Z",
+              "pattern": "grep -n \"HookResultAgentToolSearching\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:08:22Z",
+              "pattern": "sed -n '34722,34732p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:08:28Z",
+              "pattern": "sed -n '34722,34732p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:08:32Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:08:39Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:08:43Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:08:50Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T01:09:05Z"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:14Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:18Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:25Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:27Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:34Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T01:09:41Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T01:09:46Z",
+              "file": "semio-repo/cli/main.go",
+              "old": {
+                "loc": 11
+              },
+              "new": {
+                "sections": [
+                  {
+                    "section": "🔖types"
+                  },
+                  {
+                    "section": "🔖cli"
+                  },
+                  {
+                    "section": "🔖hooks"
+                  }
+                ],
+                "loc": 21
+              }
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:09:52Z",
+              "pattern": "grep -n \"HookAgentToolSearched\\|agent.tool.searching.ended\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:09:57Z",
+              "pattern": "grep -n \"HookAgentToolSearched\\|agent.tool.searching.ended\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:10:01Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:10:12Z",
+              "pattern": "sed -n '35180,35195p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:10:17Z",
+              "pattern": "sed -n '35180,35195p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:10:21Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build ./... 2\u003e\u00261 | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:10:33Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build ./... 2\u003e\u00261 | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:10:38Z",
+              "pattern": "grep -n \"HookAgentToolSearched\\b\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:10:44Z",
+              "pattern": "grep -n \"HookAgentToolSearched\\b\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:10:48Z",
+              "pattern": "sed -n '34588,34596p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:10:56Z",
+              "pattern": "sed -n '34588,34596p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:00Z",
+              "pattern": "sed -n '35400,35415p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:11:06Z",
+              "pattern": "sed -n '35400,35415p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:10Z",
+              "pattern": "grep -n \"type HookResultAgentToolSearched struct\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:11:17Z",
+              "pattern": "grep -n \"type HookResultAgentToolSearched struct\" /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:20Z",
+              "pattern": "sed -n '34731,34740p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:11:26Z",
+              "pattern": "sed -n '34731,34740p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:37Z",
+              "pattern": "sed -n '34731,34742p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:11:44Z",
+              "pattern": "sed -n '34731,34742p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:52Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:12:03Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:09Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestValidateHookEvent|TestHookEventKind|TestRunHookAgentEvents|TestRunHookToolBlocking|TestRunHookToolAllowed|TestRunHookUnknownEvent|TestAllHookEventsCompleteness|TestHookLogging\" -v -timeout 60s ./... 2\u003e\u00261 | tail -50"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:12:16Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestValidateHookEvent|TestHookEventKind|TestRunHookAgentEvents|TestRunHookToolBlocking|TestRunHookToolAllowed|TestRunHookUnknownEvent|TestAllHookEventsCompleteness|TestHookLogging\" -v -timeout 60s ./... 2\u003e\u00261 | tail -50"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:12:30Z",
+              "pattern": "manage_todo_list"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:34Z",
+              "pattern": "func TestHookLoggingStdinInput in **/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:12:40Z",
+              "pattern": "func TestHookLoggingStdinInput in **/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:43Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:12:49Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:52Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:12:58Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:13:03Z",
+              "pattern": "func OpenTicket|func CreateTicket in **/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:13:11Z",
+              "pattern": "func OpenTicket|func CreateTicket in **/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:13:16Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:13:23Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:13:27Z",
+              "pattern": "type Ticket struct in **/semio-repo/cli/main.go"
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            "semio-repo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "semio-repo/cli"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "semio-repo",
+            "semio-repo/cli"
+          ]
+        },
+        "files": {
+          "modified": [
+            "semio-repo/cli/main.go"
+          ]
+        },
+        "sections": {},
+        "definitions": {}
+      }
+    },
+    {
+      "id": "80e67447-bb88-4b08-bb88-ae4ee170e7d6",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "transcript": "/home/vscode/.claude/projects/-workspaces-semio/80e67447-bb88-4b08-bb88-ae4ee170e7d6.jsonl",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T01:07:55Z",
+          "events": [
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:07:55Z",
+              "pattern": "mcp__semio-repo__ticket_open"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:08:06Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:08:07Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:08:12Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:08:13Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:08:27Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:08:33Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T01:08:47Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T01:08:54Z",
+              "file": "semio-repo/cli/main.go",
+              "line": 34740,
+              "old": {
+                "sections": [
+                  {
+                    "section": "🔖hooks"
+                  },
+                  {
+                    "section": "🔖types"
+                  },
+                  {
+                    "section": "🔖cli"
+                  }
+                ],
+                "loc": 2
+              },
+              "new": {
+                "sections": [
+                  {
+                    "section": "🔖types"
+                  },
+                  {
+                    "section": "🔖cli"
+                  },
+                  {
+                    "section": "🔖hooks"
+                  }
+                ],
+                "loc": 11
+              }
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T01:09:05Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T01:09:12Z",
+              "file": "semio-repo/cli/main.go",
+              "old": {
+                "loc": 3
+              },
+              "new": {
+                "sections": [
+                  {
+                    "section": "🔖types"
+                  },
+                  {
+                    "section": "🔖cli"
+                  },
+                  {
+                    "section": "🔖hooks"
+                  }
+                ],
+                "loc": 5
+              }
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:28Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:09:29Z",
+              "pattern": "grep -n \"HookAgentToolSearched\\b\" /workspaces/semio/semio-repo/cli/main.go | head -10"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:34Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:09:35Z",
+              "pattern": "grep -n \"HookAgentToolSearched\\b\" /workspaces/semio/semio-repo/cli/main.go | head -10"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:09:51Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:09:57Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:10:15Z",
+              "pattern": "grep -n \"extractToolResponseFromStdin\\|Response.*string\\|Response.*json\" /workspaces/semio/semio-repo/cli/main.go | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:10:21Z",
+              "pattern": "grep -n \"extractToolResponseFromStdin\\|Response.*string\\|Response.*json\" /workspaces/semio/semio-repo/cli/main.go | head -20"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:10:39Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:10:45Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:10:59Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T01:11:05Z",
+              "denied": "unknown hook event: agent.tool.searching.ended"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:18Z",
+              "pattern": "grep -n \"HookResultAgentToolSearched\" /workspaces/semio/semio-repo/cli/main.go | head -10"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:11:25Z",
+              "pattern": "grep -n \"HookResultAgentToolSearched\" /workspaces/semio/semio-repo/cli/main.go | head -10"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:33Z",
+              "pattern": "sed -n '34733,34740p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:11:39Z",
+              "pattern": "sed -n '34733,34740p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:11:39Z"
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-02-23T01:11:44Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:49Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build -o cli . 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:11:50Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:11:54Z"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:12:00Z"
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            "semio-repo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "semio-repo/cli"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "semio-repo",
+            "semio-repo/cli"
+          ]
+        },
+        "files": {
+          "modified": [
+            "semio-repo/cli/main.go"
+          ]
+        },
+        "sections": {},
+        "definitions": {}
+      }
+    },
+    {
+      "id": "test",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T01:12:03Z",
+          "events": [
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T01:12:03Z",
+              "pattern": "Grep"
+            },
+            {
+              "kind": "agent.compacting",
+              "timestamp": "2026-02-23T01:12:05Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:12:10Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:12:12Z"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:15Z"
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-02-23T01:12:18Z"
+        },
+        {
+          "timestamp": "2026-02-23T01:12:20Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:23Z"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:26Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:12:29Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:12:31Z"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:12:33Z"
+            },
+            {
+              "kind": "agent.compacting",
+              "timestamp": "2026-02-23T01:12:38Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:12:43Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:12:45Z"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:47Z"
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-02-23T01:12:50Z"
+        },
+        {
+          "timestamp": "2026-02-23T01:12:53Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:12:56Z"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T01:12:58Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:13:01Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:13:02Z"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:13:07Z"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:13:07Z"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T01:13:12Z"
+            },
+            {
+              "kind": "agent.started",
+              "timestamp": "2026-02-23T01:13:19Z"
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-02-23T01:13:24Z"
+        }
+      ]
+    }
+  ]
+}

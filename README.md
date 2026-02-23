@@ -839,6 +839,7 @@ The default model for agent work is the one native to the platform we use for th
 
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
 The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
+Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `npm run pre-commit:install` once, then use `npm run pre-commit` to run hooks on all files.
 
 # ♻ Ecosystems [↑](#-overview)
 

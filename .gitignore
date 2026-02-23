@@ -520,3 +520,4 @@ nul
 !**/[Pp]ackages/build/
 !rb/lib
 !log
+.pre-commit-cache/

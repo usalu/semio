@@ -89,7 +89,7 @@ The logging path of agent of hooks should change to
           - {{timestamp}}_{{semio-repo-agent-hook-event-kind}}.json
       - 🔀
         - {{change-id}}
-          - {{timestamp}}_{{semio-repo-git-h}}.json
+          - {{timestamp}}_{{semio-repo-vcs-hook-event-kind}}.json
 
 The mapping of the native agent hooks to the general hook system MUST be tested for every single native hook event with real data. Use the `./.semio-repo/📜/*.json` files for real data. 
 
@@ -270,6 +270,14 @@ treemap-beta
 
 ---
 
+The id system should be changed. From now on all bundles MUST have a parent project and all folders MUST have a parent bundle and all files MUST have a parent folder.
+For this purpose introduce the virtual `🥇mono` project and virtual `🪆repo` bundle. Files and folders that are on the root level are children of the `🪆repo` bundle.
+Every bundle has a virtual folder called `🌱root` that is the parent of all files that are on the root folder level of the bundle.
+This makes it much easier because the hierarchy PROJECT - BUNDLE - FOLDER - FILE is now strict.
+Adjust the cli and the vscode extension accordingly. 
+
+---
+
 All ids are designed to be displayed as tree.
 The --text option should not show the full ids but only the tree part of the ids.
 e.g. this:
@@ -298,9 +306,237 @@ should be:
 │   │   │   │   └── 🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
 ```
 
+
+---
+
+The semio repo specs were majorly updated.
+
+You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
+
+flat strings means slugged (preserve only alphanumeric and emojis) and then lower cased.
+
+Every id is full, globally unique and treelike.
+
+Extract all the ids from below and refactor/extend the existing tests to use them.
+
+entity kinds: root, year, month, day, hour, minute, second, project, bundle, folder, file, line, range, section, definition, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
+
+resource kinds: repo, project, bundle, folder, file, section, definition
+diffable: root, year, month, day, hour, project, bundle, folder, file, section, definition, goal, ticket, contributor, commit, interaction
+interactable:
+
+relations:
+
+- year | month | day | hour | second - project: A project has years
+  related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
+
+Only stop once you have tests every single list and tree command to have exactly this ids:
+
+repo: ``, parent: none,
+years: `{{repo-id}}🎆`parent: repo, e.g.`🎆`year:`{{repo-id}}🎆{{YY}}`parent: repo, e.g.`🎆26`months:`{{year-id}}🌙`parent: year, e.g.`🎆26🌙`month:`{{year-id}}🌙{{MM}}`parent: year, e.g.`🎆26🌙02`days:`{{month-id}}☀️`parent: month, e.g.`🎆26🌙02☀️`day:`{{month-id}}☀️{{DD}}`parent: month, e.g.`🎆26🌙02☀️15`hours:`{{day-id}}⏰`parent: day, e.g.`🎆26🌙02☀️15⏰`hour:`{{day-id}}⏰{{HH}}`parent: day, e.g.`🎆26🌙02☀️15⏰14`minutes:`{{hour-id}}⌚`parent: hour, e.g.`🎆26🌙02☀️15⏰14⌚`minute:`{{hour-id}}⌚{{MM}}`parent: hour, e.g.`🎆26🌙02☀️15⏰14⌚33`seconds:`{{minute-id}}⏱️`parent: minute, e.g.`🎆26🌙02☀️15⏰14⌚33⏱️`second:`{{minute-id}}⏱️{{SS}}`parent: minute, e.g.`🎆26🌙02☀️15⏰14⌚33⏱️38`
+projects:`{{repo-id}}🏗️`parent: repo, e.g.`🏗️`project:`{{repo-id}}<project-kind>{{flat-project-code}}`, parent: repo, <kind> - 👤:user, 🧰:infrastructure, 🔬:research, e.g. `🧰semiorepo`for`semio-repo`bundles:`{{parent-project-id}}📦`parent: project, e.g.`👤semio📦`bundle:`{{parent-project-id}}<bundle-kind>{{flat-bundle-code}}`, parent: project, <kind> - 📚:library, 🛂:schema, ⌨️️:binary, 🖱️️:ui, 📔:example, 🌐:site, 🏪:assets, e.g. `👤semio📚js`for bundle code`semio/js`folders:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}📁`parent: folder | bundle | project | repo, e.g.`📁` for all folders on the repo that match`./_`(this does not include project folders) | `👤semio📚js🗃️sketchpad📁`for folders that match`semio/js/sketchpad/_`|`🛅github📁`for all subfolders of`.github`folder:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-folder-name}}`, parent: folder | bundle | project | repo, <kind> - 🗃️️:organization, 🛅:required, e.g. `👤semio📚js🗃️sketchpad`for`semio/js/sketchpad` `🛅devcontainer`for`.devcontainer`// by design the repo folder for bundles have no id and are not addressable/documentable/… because they "are" the bundle
+files:`{{diffable-id?}}📄`, parent: folder | bundle | project | repo e.g. `📄` for all files on the repo that match`./_`|`👤semio📚js🗃️sketchpad📄`for files that match`semio/js/sketchpad/_`|`🛅github📄`for all files inside`.github`file:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | repo, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx`for`semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson`for`.devcontainer/devcontainer.json`line:`{{parent-file-id}}📌{{linenumber}}`parent: file, e.g.`👤semio📚js🗃️sketchpad💻designtsx📌3872`for line number`3872`in`semio/js/sketchpad/Design.tsx`sections:`{{(parent-file-id|parent-section-id)?}}🔖`parent: section | file, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖`for all sections in`semio/js/sketchpad/Design.tsx`section:`{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store`for`Store`section with parent section`State Managment`definitions:`{{<diffable-id>}}🏷️`parent: diffable, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️`for all definitions in`Store`section
+definition:`{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore`for`createSketchpadStore`test:`{{<testable-id>}}🧪`, parent: testable, e.g. `👤semio📚js💻semiots🧪flattendesign`for`Store`section with parent section`State Managment`tests:`{{(parent-testable-id|parent-test-id)?}}🧪`parent: testable | test, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🧪`for all tests in`Store`section
+goals:`{{(repo-id|parent-goal-id)?}}🎯`parent: goal | repo, e.g.`🎯`for all goals on the repo or`🎯r26021🎯runningsketchpad🎯`for all goals under`Running Sketchpad`goal:`{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}`parent: goal | repo, e.g.`🎯r26021🎯runningsketchpad`for goal with name`Running Sketchpad`for parent`r26.02-1`tickets:`{{diffable-id?}}🎫`parent: diffable, e.g.`🎫`for all tickets (on repo) |`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫`for all tickets that diffed`Store`section |`🎯r26021🎯runningsketchpad🎫`for all tickets under`Running Sketchpad`ticket:`{{goal-id}}🎫{{flat-title}}`, parent: goal, e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism`for ticket with title`Introduce Key Guid Uri Mechanism`draft:`{{parent-resource-id}}📝{{flat-title}}`parent: resource, e.g.`🧰semiorepo⌨️cli📝newarchitecture`for draft with title`New Architecture`todo:`{{parent-resource-id}}📝{{flat-title}}`parent: resource, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism`for todo with title`Introduce Proper Sync Mechanism`policy:`{{(parent-resource-kind|parent-resource-id)?}}👮{{flat-name}}`parent: resource kind or resource, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore`for policy with name`Only One Store`-`💻👮godfiles`for policy`Godfiles`that affect all code files. // policies are either specific when on an entity or general when on a an entity kind.
+breach:`{{parent-policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}`parent: territory, e.g.`💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🌐🎆26🌙02☀️14⏰19⌚07⏱️12`for breach in`semio/js/sketchpad/design-store.ts`at line number`3872`on the 14th of February 2026 at 19:07:12
+contributor:`🧑‍💻{{github-username}}`parent: repo, e.g.`🧑‍💻usalu`for`https://github.com/usalu`
+commit: `{{day-id}}🔀{{sha}}{{contributors-ids}}` parent: repo, e.g. `🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak`
+interaction: `{{second-id}}{{contributor-id}}{{entity-id}}<kind>` parent: <kind> - 🌱:started, ✏️:edited, ✅:finished, 🔁:restarted, 🗑️: deleted e.g. `🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱🧑‍💻usalu` | `🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅🧑‍💻usalu`
+
+Display codebase diffs as
+added: `➕{{added}}`
+removed: `➖{{removed}}`
+total: `{{removed}}{{added}}🟰{{(➕|➖)?}}{{total}}`
+
+loc-diff: `{{diffable-id}}📌{{loc-total}}`
+root-loc-diff: `{{root-id}}📌{{loc-total}}` e.g. `📌➖253➕387🟰➕134`
+year-loc-diff: `{{year-id}}📌{{loc-total}}` e.g. `🎆26📌➖253➕387🟰➕134`
+month-loc-diff: `{{month-id}}📌{{loc-total}}` e.g. `🎆26🌙02📌➖253➕387🟰➕134`
+day-loc-diff: `{{day-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14📌➖253➕387🟰➕134`
+hour-loc-diff: `{{hour-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14⏰19📌➖253➕387🟰➕134`
+project-loc-diff: `{{project-id}}📌{{loc-total}}` e.g. `👤semio📌➖75324➕154056🟰➕78732`
+bundle-loc-diff: `{{bundle-id}}📌{{loc-total}}` e.g. `👤semio📚js📌➖253➕387🟰➕134`
+folder-loc-diff: `{{folder-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad📌➖253➕387🟰➕134`
+file-loc-diff: `{{file-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx📌➖253➕387🟰➕134`
+section-loc-diff: `{{section-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store📌➖253➕387🟰➕134`
+definition-loc-diff: `{{definition-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📌➖253➕387🟰➕134`
+goal-loc-diff: `{{goal-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad📌➖253➕387🟰➕134`
+ticket-loc-diff: `{{ticket-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism📌➖253➕387🟰➕134`
+contributor-loc-diff: `{{contributor-id}}{{loc-total}}` e.g. `🧑‍💻usalu➖253➕387🟰➕134`
+commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a➖253➕387🟰➕134`
+
+The uri system (mcp, rest, rdf) is:
+
+repo: `semiorepo://` e.g. `semiorepo://`
+years: `semiorepo://years` e.g. `semiorepo://years`
+year: `semiorepo://year/{{YY}}` e.g. `semiorepo://year/26`
+months: `semiorepo://months/{{YY}}` e.g. `semiorepo://months/26`
+month: `semiorepo://month/{{YY}}/{{MM}}` e.g. `semiorepo://month/26/02`
+days: `semiorepo://days/{{YY}}/{{MM}}` e.g. `semiorepo://days/26/02`
+day: `semiorepo://day/{{YY}}/{{MM}}/{{DD}}` e.g. `semiorepo://day/26/02/15`
+hours: `semiorepo://hours/{{YY}}/{{MM}}/{{DD}}` e.g. `semiorepo://hours/26/02/15`
+hour: `semiorepo://hour/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `semiorepo://hour/26/02/15/14`
+minutes: `semiorepo://minutes/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `semiorepo://minutes/26/02/15/14`
+minute: `semiorepo://minute/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `semiorepo://minute/26/02/15/14/33`
+seconds: `semiorepo://seconds/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `semiorepo://seconds/26/02/15/14/33`
+second: `semiorepo://second/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}/{{SS}}` e.g. `semiorepo://second/26/02/15/14/33/38`
+projects: `semiorepo://projects` e.g. `semiorepo://projects`
+project: `semiorepo://project/{{project-id}}` e.g. `semiorepo://project/semio-repo`
+bundles: `semiorepo://bundles/{{project-id}}` e.g. `semiorepo://bundles/semio-repo`
+bundle: `semiorepo://bundle/{{project-id}}/{{bundle-code}}` e.g. `semiorepo://bundle/semio-repo/cli`
+folders: `semiorepo://folders/{{uri-encoded-parent-path?*}}` e.g. `semiorepo://folders/semio/js`
+folder: `semiorepo://folder/{{uri-encoded-path*}}` e.g. `semiorepo://folder/semio/js/sketchpad`
+files: `semiorepo://files/{{uri-encoded-parent-path?*}}` e.g. `semiorepo://files/semio/js/sketchpad`
+file: `semiorepo://file/{{uri-encoded-file-path*}}` e.g. `semiorepo://file/semio/js/sketchpad/design.tsx`
+lines: `semiorepo://lines/{{uri-encoded-file-path*}}` e.g. `semiorepo://lines/semio/js/sketchpad/design.tsx`
+line: `semiorepo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `semiorepo://line/semio/js/sketchpad/design.tsx/3872`
+ranges: `semiorepo://ranges/{{uri-encoded-file-path*}}` e.g. `semiorepo://ranges/semio/js/sketchpad/design.tsx`
+range: `semiorepo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `semiorepo://range/semio/js/sketchpad/design.tsx/3872/3875`
+sections: `semiorepo://sections/{{uri-encoded-file-path*}}` e.g. `semiorepo://sections/semio/js/sketchpad/design.tsx`
+section: `semiorepo://section/{{uri-encoded-section-path*}}` e.g. `semiorepo://section/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definitions: `semiorepo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `semiorepo://definitions/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definition: `semiorepo://definition/{{uri-encoded-definition-path*}}` e.g. `semiorepo://definition/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
+goals: `semiorepo://goals/{{uri-encoded-parent-goal-path?*}}` e.g. `semiorepo://goals/r26.02-1`
+goal: `semiorepo://goal/{{uri-encoded-goal-path*}}` e.g. `semiorepo://goal/r26.02-1/Running%20Sketchpad`
+tickets: `semiorepo://tickets/{{uri-encoded-parent-scope?*}}` e.g. `semiorepo://tickets/r26.02-1/Running%20Sketchpad`
+ticket: `semiorepo://ticket/{{uri-encoded-ticket-path*}}` e.g. `semiorepo://ticket/r26.02-1/Running%20Sketchpad/Introduce%20Key%20Guid%20Uri%20Mechanism`
+drafts: `semiorepo://drafts/{{uri-encoded-parent-resource-uri?*}}` e.g. `semiorepo://drafts/semiorepo%3A%2F%2Fbundle%2Fsemio-repo%2Fcli`
+draft: `semiorepo://draft/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-draft-title*}}` e.g. `semiorepo://draft/semiorepo%3A%2F%2Fbundle%2Fsemio-repo%2Fcli/New%20Architecture`
+todos: `semiorepo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `semiorepo://todos/semiorepo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
+todo: `semiorepo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `semiorepo://todo/semiorepo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
+policies: `semiorepo://policies/{{uri-encoded-parent-resource-or-kind?*}}` e.g. `semiorepo://policies/code`
+policy: `semiorepo://policy/{{uri-encoded-parent-resource-or-kind?*}}/{{uri-encoded-policy-name*}}` e.g. `semiorepo://policy/code/Godfiles`
+statutes: `semiorepo://statutes/{{uri-encoded-policy-path?*}}` e.g. `semiorepo://statutes/code/Godfiles`
+statute: `semiorepo://statute/{{uri-encoded-policy-path*}}/{{uri-encoded-statute-name*}}` e.g. `semiorepo://statute/code/Godfiles/Max%20Lines%20Per%20File`
+breaches: `semiorepo://breaches/{{uri-encoded-policy-path?*}}` e.g. `semiorepo://breaches/code/Godfiles`
+breach: `semiorepo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `semiorepo://breach/code/Godfiles/affects/semiorepo%3A%2F%2Ffile%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/semiorepo%3A%2F%2Frange%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/semiorepo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
+contributors: `semiorepo://contributors` e.g. `semiorepo://contributors`
+contributor: `semiorepo://contributor/{{uri-encoded-contributor-name*}}` e.g. `semiorepo://contributor/usalu`
+commits: `semiorepo://commits` e.g. `semiorepo://commits`
+commit: `semiorepo://commit/{{uri-encoded-commit-sha*}}` e.g. `semiorepo://commit/cfb3b6084ff3fe883d5f39b08810a0b90997907a`
+interactions: `semiorepo://interactions` e.g. `semiorepo://interactions`
+interaction: `semiorepo://interaction/when/{{uri-encoded-second-path*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind}}/by/{{uri-encoded-contributor-name*}}` e.g. `semiorepo://interaction/when/semiorepo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12/on/semiorepo%3A%2F%2Fticket%2Fr26.02-1%2FRunning%2520Sketchpad%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu`
+
+The query params are
+General query params:
+{?client}
+tickets: at least one interaction with the given client
+goals: at least one interaction with the given client
+{?llm?}
+tickets: at least one interaction with the given llm
+goal: at least one interaction with the given llm
+{?year}
+tickets: at least one interaction with the given year
+goals: at least one interaction with the given year
+{?month}
+tickets: at least one interaction with the given month
+goals: at least one interaction with the given month
+{?day}
+tickets: at least one interaction with the given day
+goals: at least one interaction with the given day
+{?contributor}
+tickets: at least one interaction with the given contributor
+goals: at least one interaction with the given contributor
+{?status}
+tickets: only the given status
+goals: only the given status
+
+The semio repo folder layout changed.
+
+You must update the implementation and tests to match the new layout.
+
+Dont keep any legacy api.
+
+- .semio-repo
+- ✍️ // drafts
+- 🎫 // tickets
+  - {{YY}}
+    - {{MM}}
+      - {{DD}}
+        - {{UPPERCASESLUG}}
+- 🎯 // goals
+- 👤 // contributors
+  - {{github}}
+- 💡
+- 💬 // prompts
+  - 👤 // contributors
+    - {{contributor-name}}
+  - 📋 // templates
+    - {{template-name}}.
+
 ---
 
 ### 🧰semiorepo⌨️cli🔖hooks
+
+---
+
+semio repo cli:
+All agent terminal events should have command and
+
+```json
+{
+  "input": {
+    "timestamp": "2026-02-21T23:09:35.693Z",
+    "hookEventName": "PreToolUse",
+    "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+    "tool_name": "run_in_terminal",
+    "tool_input": {
+      "command": "cd /workspaces/semio \u0026\u0026 ls semio-repo/cli/",
+      "explanation": "List the semio-repo/cli directory to understand its structure",
+      "goal": "Understand CLI structure",
+      "isBackground": false,
+      "timeout": 5000
+    },
+    "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.tool.terminal.starting",
+    "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+    "timestamp": "2026-02-21T23:09:35.693Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl"
+  },
+  "response": {}
+}
+```
+
+should be
+
+```json
+{
+  "input": {
+    "timestamp": "2026-02-21T23:09:35.693Z",
+    "hookEventName": "PreToolUse",
+    "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+    "tool_name": "run_in_terminal",
+    "tool_input": {
+      "command": "cd /workspaces/semio \u0026\u0026 ls semio-repo/cli/",
+      "explanation": "List the semio-repo/cli directory to understand its structure",
+      "goal": "Understand CLI structure",
+      "isBackground": false,
+      "timeout": 5000
+    },
+    "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.tool.terminal.starting",
+    "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+    "timestamp": "2026-02-21T23:09:35.693Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+    "command": "cd /workspaces/semio && ls semio-repo/cli/",
+    "timeout": 5000 // when timeout is set then it is no background task
+  },
+  "response": {}
+}
+```
+
+---
+
 
 ticket
 
@@ -668,50 +904,98 @@ agent:
 ```yaml
 title: Tree Text Short IDs
 description: >-
-  Fixed renderTreeNodeText to temporarily clear parentId before calling
+  Fix renderTreeNodeText to temporarily clear parentId before calling
   renderEntityHuman so tree text output shows only the own ID segment instead of
-  full hierarchical chains. Added tests for nested goal short IDs and parentId
+  full hierarchical chains. Add tests for nested goal short IDs and parentId
   restoration.
 github:
   issue: 'https://github.com/usalu/semio/issues/612'
 goal: 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters
-sessions: # Create a new session when semio repo mcp ticket open is called
+sessions: # Create a new session when semio repo mcp ticket open, semio repo mco ticket reopen, or agent.terminal.ended with semio repo cli ticket open or reopen was called
   - id: 38b90183-005d-45cf-879d-c16b27c099ce # native session id from client
     contributor: usalu # find contributor with git config
     system: linux
-    client: copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag, vscode extension command: use session id.
+    client: copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag
+    llm: opus-4-6 # derive from agent hooks or if not available use the cli llm argument that was used on ticket open or ticket reopen
     transcript: /home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/2f1e87c2-af13-4067-9aa6-15f0af84010c.jsonl
     query: hooks copilot vscode # Last semio repo mcp tree or cli tool input
     plan:
       steps:
         - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
-          completed: {{TIMESTAMP}} # this means status completed
+          completed: {{timestamp}} # this means status completed
         - name: Implement hook-to-ticket session integration for interactions, reads, and diffs
-          started: {{TIMESTAMP}} # this means status in progress
+          started: {{timestamp}} # this means status in progress
         - name: Add/update tests and run relevant test suite # no completed or started means status pending
         - name: Update ticket artifacts and summarize changes
-    diff: # Derive diff at the end of a session
-        projects:
-          deleted: ""
-          renamed:
-            - from: ""
-              to: ""
-          modified:
-            {{STATS}}
-          created: ""
-        bundle:
-          …
-    agents:
-      - timestamp: 2026-02-18T13:20:47Z
-        commit: 503dcda1bc1de15727d922200c8d579a230ddf0c
-        llm: opus-4-6
+    prompts:
+      - timestamp: 2026-02-18T13:20:47Z # from agent.started
         prompt: vscode copliot hooks have the following error:\nCannot read properties of undefined (reading 'hookSpecificOutput') # From agent.prompt.submit
-
-        reads: # Derive from code read hooks
-          projects: [{{ID}}]
-          bundles:  [{{ID}}]
-          …
-
+        events: # all agent hooks 
+          - kind: agent.tool.searching
+            timestamp: {{timestamp}}
+            pattern: {{query}} # e.g. `semio/js/**.tsx`,  `semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/Design.tsx#L532-L771`, `semio-repo/**`, `https://reactflow.dev/api-reference/react-flow`
+            denied: "{{denied-reason}}" # e.g. `.env files are private.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
+          - kind: agent.code.editing
+            file: {{file-id}}
+            denied: "{{denied-reason}}" # e.g. `.cursor/hooks.json is autogenerated by the semio repo cli and cant be edited manually.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
+          - kind: agent.code.edited
+            timestamp: {{timestamp}}
+            line: {{line-number}} # starting line number of old string
+            old:
+              sections: # all sections that appear in the old string
+                - section: {{ID}}
+                  definitions: ["{{definition-id}}"] # all definitions that appear in the old string
+              loc: {{lines-of-code}} # lines of code of the old string
+            new:
+              sections: # all sections that appear in the new string
+                - section: {{ID}}
+                  definitions: ["{{definition-id}}"] # all definitions that appear in the new string
+              loc: {{lines-of-code}} # lines of code of the new string
+          - kind: agent.code.starting
+            timestamp: {{timestamp}}
+    diff: # Derive diff at the end of a session using the agent.code.edited events and git diff (both staged and unstaged)
+        projects:
+          deleted: ["{{project-id}}"]
+          renamed:
+            - from: "{{project-id}}"
+              to: "{{project-id}}"
+          modified: ["{{project-id}}"]
+          created: ["{{project-id}}"]
+        bundles:
+          deleted: ["{{bundle-id}}"]
+          renamed:
+            - from: "{{bundle-id}}"
+              to: "{{bundle-id}}"
+          modified: ["{{bundle-id}}"]
+          created: ["{{bundle-id}}"]
+        folders:
+          deleted: ["{{folder-id}}"]
+          renamed:
+            - from: "{{folder-id}}"
+              to: "{{folder-id}}"
+          modified: ["{{folder-id}}"]
+          created: ["{{folder-id}}"]
+        files:
+          deleted: ["{{file-id}}"]
+          renamed:
+            - from: "{{file-id}}"
+              to: "{{file-id}}"
+          modified: ["{{file-id}}"]
+          created: ["{{file-id}}"]
+        sections:
+          deleted: ["{{section-id}}"]
+          renamed:
+            - from: "{{section-id}}"
+              to: "{{section-id}}"
+          modified: ["{{section-id}}"]
+          created: ["{{section-id}}"]
+        definitions:
+          deleted: ["{{definition-id}}"]
+          renamed:
+            - from: "{{definition-id}}"
+              to: "{{definition-id}}"
+          modified: ["{{definition-id}}"]
+          created: ["{{definition-id}}"]
 ```
 
 - git
@@ -806,162 +1090,6 @@ Note that TODO, STATUTE, BREACH are not shown because they can be children of mo
   - ENTITYKIND
     - STATUTE
 
----
-
-The semio repo specs were majorly updated.
-
-You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
-
-flat strings means slugged (preserve only alphanumeric and emojis) and then lower cased.
-
-Every id is full, globally unique and treelike.
-
-Extract all the ids from below and refactor/extend the existing tests to use them.
-
-entity kinds: root, year, month, day, hour, minute, second, project, bundle, folder, file, line, range, section, definition, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
-
-resource kinds: repo, project, bundle, folder, file, section, definition
-diffable: root, year, month, day, hour, project, bundle, folder, file, section, definition, goal, ticket, contributor, commit, interaction
-interactable:
-
-relations:
-
-- year | month | day | hour | second - project: A project has years
-  related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
-
-Only stop once you have tests every single list and tree command to have exactly this ids:
-
-repo: ``, parent: none,
-years: `{{repo-id}}🎆`parent: repo, e.g.`🎆`year:`{{repo-id}}🎆{{YY}}`parent: repo, e.g.`🎆26`months:`{{year-id}}🌙`parent: year, e.g.`🎆26🌙`month:`{{year-id}}🌙{{MM}}`parent: year, e.g.`🎆26🌙02`days:`{{month-id}}☀️`parent: month, e.g.`🎆26🌙02☀️`day:`{{month-id}}☀️{{DD}}`parent: month, e.g.`🎆26🌙02☀️15`hours:`{{day-id}}⏰`parent: day, e.g.`🎆26🌙02☀️15⏰`hour:`{{day-id}}⏰{{HH}}`parent: day, e.g.`🎆26🌙02☀️15⏰14`minutes:`{{hour-id}}⌚`parent: hour, e.g.`🎆26🌙02☀️15⏰14⌚`minute:`{{hour-id}}⌚{{MM}}`parent: hour, e.g.`🎆26🌙02☀️15⏰14⌚33`seconds:`{{minute-id}}⏱️`parent: minute, e.g.`🎆26🌙02☀️15⏰14⌚33⏱️`second:`{{minute-id}}⏱️{{SS}}`parent: minute, e.g.`🎆26🌙02☀️15⏰14⌚33⏱️38`
-projects:`{{repo-id}}🏗️`parent: repo, e.g.`🏗️`project:`{{repo-id}}<project-kind>{{flat-project-code}}`, parent: repo, <kind> - 👤:user, 🧰:infrastructure, 🔬:research, e.g. `🧰semiorepo`for`semio-repo`bundles:`{{parent-project-id}}📦`parent: project, e.g.`👤semio📦`bundle:`{{parent-project-id}}<bundle-kind>{{flat-bundle-code}}`, parent: project, <kind> - 📚:library, 🛂:schema, ⌨️️:binary, 🖱️️:ui, 📔:example, 🌐:site, 🏪:assets, e.g. `👤semio📚js`for bundle code`semio/js`folders:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}📁`parent: folder | bundle | project | repo, e.g.`📁` for all folders on the repo that match`./_`(this does not include project folders) | `👤semio📚js🗃️sketchpad📁`for folders that match`semio/js/sketchpad/_`|`🛅github📁`for all subfolders of`.github`folder:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-folder-name}}`, parent: folder | bundle | project | repo, <kind> - 🗃️️:organization, 🛅:required, e.g. `👤semio📚js🗃️sketchpad`for`semio/js/sketchpad` `🛅devcontainer`for`.devcontainer`// by design the repo folder for bundles have no id and are not addressable/documentable/… because they "are" the bundle
-files:`{{diffable-id?}}📄`, parent: folder | bundle | project | repo e.g. `📄` for all files on the repo that match`./_`|`👤semio📚js🗃️sketchpad📄`for files that match`semio/js/sketchpad/_`|`🛅github📄`for all files inside`.github`file:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | repo, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx`for`semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson`for`.devcontainer/devcontainer.json`line:`{{parent-file-id}}📌{{linenumber}}`parent: file, e.g.`👤semio📚js🗃️sketchpad💻designtsx📌3872`for line number`3872`in`semio/js/sketchpad/Design.tsx`sections:`{{(parent-file-id|parent-section-id)?}}🔖`parent: section | file, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖`for all sections in`semio/js/sketchpad/Design.tsx`section:`{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store`for`Store`section with parent section`State Managment`definitions:`{{<diffable-id>}}🏷️`parent: diffable, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️`for all definitions in`Store`section
-definition:`{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore`for`createSketchpadStore`test:`{{<testable-id>}}🧪`, parent: testable, e.g. `👤semio📚js💻semiots🧪flattendesign`for`Store`section with parent section`State Managment`tests:`{{(parent-testable-id|parent-test-id)?}}🧪`parent: testable | test, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🧪`for all tests in`Store`section
-goals:`{{(repo-id|parent-goal-id)?}}🎯`parent: goal | repo, e.g.`🎯`for all goals on the repo or`🎯r26021🎯runningsketchpad🎯`for all goals under`Running Sketchpad`goal:`{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}`parent: goal | repo, e.g.`🎯r26021🎯runningsketchpad`for goal with name`Running Sketchpad`for parent`r26.02-1`tickets:`{{diffable-id?}}🎫`parent: diffable, e.g.`🎫`for all tickets (on repo) |`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫`for all tickets that diffed`Store`section |`🎯r26021🎯runningsketchpad🎫`for all tickets under`Running Sketchpad`ticket:`{{goal-id}}🎫{{flat-title}}`, parent: goal, e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism`for ticket with title`Introduce Key Guid Uri Mechanism`draft:`{{parent-resource-id}}📝{{flat-title}}`parent: resource, e.g.`🧰semiorepo⌨️cli📝newarchitecture`for draft with title`New Architecture`todo:`{{parent-resource-id}}📝{{flat-title}}`parent: resource, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism`for todo with title`Introduce Proper Sync Mechanism`policy:`{{(parent-resource-kind|parent-resource-id)?}}👮{{flat-name}}`parent: resource kind or resource, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore`for policy with name`Only One Store`-`💻👮godfiles`for policy`Godfiles`that affect all code files. // policies are either specific when on an entity or general when on a an entity kind.
-breach:`{{parent-policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}`parent: territory, e.g.`💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🌐🎆26🌙02☀️14⏰19⌚07⏱️12`for breach in`semio/js/sketchpad/design-store.ts`at line number`3872`on the 14th of February 2026 at 19:07:12
-contributor:`🧑‍💻{{github-username}}`parent: repo, e.g.`🧑‍💻usalu`for`https://github.com/usalu`
-commit: `{{day-id}}🔀{{sha}}{{contributors-ids}}` parent: repo, e.g. `🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak`
-interaction: `{{second-id}}{{contributor-id}}{{entity-id}}<kind>` parent: <kind> - 🌱:started, ✏️:edited, ✅:finished, 🔁:restarted, 🗑️: deleted e.g. `🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱🧑‍💻usalu` | `🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅🧑‍💻usalu`
-
-Display codebase diffs as
-added: `➕{{added}}`
-removed: `➖{{removed}}`
-total: `{{removed}}{{added}}🟰{{(➕|➖)?}}{{total}}`
-
-loc-diff: `{{diffable-id}}📌{{loc-total}}`
-root-loc-diff: `{{root-id}}📌{{loc-total}}` e.g. `📌➖253➕387🟰➕134`
-year-loc-diff: `{{year-id}}📌{{loc-total}}` e.g. `🎆26📌➖253➕387🟰➕134`
-month-loc-diff: `{{month-id}}📌{{loc-total}}` e.g. `🎆26🌙02📌➖253➕387🟰➕134`
-day-loc-diff: `{{day-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14📌➖253➕387🟰➕134`
-hour-loc-diff: `{{hour-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14⏰19📌➖253➕387🟰➕134`
-project-loc-diff: `{{project-id}}📌{{loc-total}}` e.g. `👤semio📌➖75324➕154056🟰➕78732`
-bundle-loc-diff: `{{bundle-id}}📌{{loc-total}}` e.g. `👤semio📚js📌➖253➕387🟰➕134`
-folder-loc-diff: `{{folder-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad📌➖253➕387🟰➕134`
-file-loc-diff: `{{file-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx📌➖253➕387🟰➕134`
-section-loc-diff: `{{section-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store📌➖253➕387🟰➕134`
-definition-loc-diff: `{{definition-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📌➖253➕387🟰➕134`
-goal-loc-diff: `{{goal-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad📌➖253➕387🟰➕134`
-ticket-loc-diff: `{{ticket-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism📌➖253➕387🟰➕134`
-contributor-loc-diff: `{{contributor-id}}{{loc-total}}` e.g. `🧑‍💻usalu➖253➕387🟰➕134`
-commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a➖253➕387🟰➕134`
-
-The uri system (mcp, rest, rdf) is:
-
-repo: `semiorepo://` e.g. `semiorepo://`
-years: `semiorepo://years` e.g. `semiorepo://years`
-year: `semiorepo://year/{{YY}}` e.g. `semiorepo://year/26`
-months: `semiorepo://months/{{YY}}` e.g. `semiorepo://months/26`
-month: `semiorepo://month/{{YY}}/{{MM}}` e.g. `semiorepo://month/26/02`
-days: `semiorepo://days/{{YY}}/{{MM}}` e.g. `semiorepo://days/26/02`
-day: `semiorepo://day/{{YY}}/{{MM}}/{{DD}}` e.g. `semiorepo://day/26/02/15`
-hours: `semiorepo://hours/{{YY}}/{{MM}}/{{DD}}` e.g. `semiorepo://hours/26/02/15`
-hour: `semiorepo://hour/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `semiorepo://hour/26/02/15/14`
-minutes: `semiorepo://minutes/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `semiorepo://minutes/26/02/15/14`
-minute: `semiorepo://minute/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `semiorepo://minute/26/02/15/14/33`
-seconds: `semiorepo://seconds/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `semiorepo://seconds/26/02/15/14/33`
-second: `semiorepo://second/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}/{{SS}}` e.g. `semiorepo://second/26/02/15/14/33/38`
-projects: `semiorepo://projects` e.g. `semiorepo://projects`
-project: `semiorepo://project/{{project-id}}` e.g. `semiorepo://project/semio-repo`
-bundles: `semiorepo://bundles/{{project-id}}` e.g. `semiorepo://bundles/semio-repo`
-bundle: `semiorepo://bundle/{{project-id}}/{{bundle-code}}` e.g. `semiorepo://bundle/semio-repo/cli`
-folders: `semiorepo://folders/{{uri-encoded-parent-path?*}}` e.g. `semiorepo://folders/semio/js`
-folder: `semiorepo://folder/{{uri-encoded-path*}}` e.g. `semiorepo://folder/semio/js/sketchpad`
-files: `semiorepo://files/{{uri-encoded-parent-path?*}}` e.g. `semiorepo://files/semio/js/sketchpad`
-file: `semiorepo://file/{{uri-encoded-file-path*}}` e.g. `semiorepo://file/semio/js/sketchpad/design.tsx`
-lines: `semiorepo://lines/{{uri-encoded-file-path*}}` e.g. `semiorepo://lines/semio/js/sketchpad/design.tsx`
-line: `semiorepo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `semiorepo://line/semio/js/sketchpad/design.tsx/3872`
-ranges: `semiorepo://ranges/{{uri-encoded-file-path*}}` e.g. `semiorepo://ranges/semio/js/sketchpad/design.tsx`
-range: `semiorepo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `semiorepo://range/semio/js/sketchpad/design.tsx/3872/3875`
-sections: `semiorepo://sections/{{uri-encoded-file-path*}}` e.g. `semiorepo://sections/semio/js/sketchpad/design.tsx`
-section: `semiorepo://section/{{uri-encoded-section-path*}}` e.g. `semiorepo://section/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
-definitions: `semiorepo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `semiorepo://definitions/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
-definition: `semiorepo://definition/{{uri-encoded-definition-path*}}` e.g. `semiorepo://definition/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
-goals: `semiorepo://goals/{{uri-encoded-parent-goal-path?*}}` e.g. `semiorepo://goals/r26.02-1`
-goal: `semiorepo://goal/{{uri-encoded-goal-path*}}` e.g. `semiorepo://goal/r26.02-1/Running%20Sketchpad`
-tickets: `semiorepo://tickets/{{uri-encoded-parent-scope?*}}` e.g. `semiorepo://tickets/r26.02-1/Running%20Sketchpad`
-ticket: `semiorepo://ticket/{{uri-encoded-ticket-path*}}` e.g. `semiorepo://ticket/r26.02-1/Running%20Sketchpad/Introduce%20Key%20Guid%20Uri%20Mechanism`
-drafts: `semiorepo://drafts/{{uri-encoded-parent-resource-uri?*}}` e.g. `semiorepo://drafts/semiorepo%3A%2F%2Fbundle%2Fsemio-repo%2Fcli`
-draft: `semiorepo://draft/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-draft-title*}}` e.g. `semiorepo://draft/semiorepo%3A%2F%2Fbundle%2Fsemio-repo%2Fcli/New%20Architecture`
-todos: `semiorepo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `semiorepo://todos/semiorepo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
-todo: `semiorepo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `semiorepo://todo/semiorepo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
-policies: `semiorepo://policies/{{uri-encoded-parent-resource-or-kind?*}}` e.g. `semiorepo://policies/code`
-policy: `semiorepo://policy/{{uri-encoded-parent-resource-or-kind?*}}/{{uri-encoded-policy-name*}}` e.g. `semiorepo://policy/code/Godfiles`
-statutes: `semiorepo://statutes/{{uri-encoded-policy-path?*}}` e.g. `semiorepo://statutes/code/Godfiles`
-statute: `semiorepo://statute/{{uri-encoded-policy-path*}}/{{uri-encoded-statute-name*}}` e.g. `semiorepo://statute/code/Godfiles/Max%20Lines%20Per%20File`
-breaches: `semiorepo://breaches/{{uri-encoded-policy-path?*}}` e.g. `semiorepo://breaches/code/Godfiles`
-breach: `semiorepo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `semiorepo://breach/code/Godfiles/affects/semiorepo%3A%2F%2Ffile%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/semiorepo%3A%2F%2Frange%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/semiorepo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
-contributors: `semiorepo://contributors` e.g. `semiorepo://contributors`
-contributor: `semiorepo://contributor/{{uri-encoded-contributor-name*}}` e.g. `semiorepo://contributor/usalu`
-commits: `semiorepo://commits` e.g. `semiorepo://commits`
-commit: `semiorepo://commit/{{uri-encoded-commit-sha*}}` e.g. `semiorepo://commit/cfb3b6084ff3fe883d5f39b08810a0b90997907a`
-interactions: `semiorepo://interactions` e.g. `semiorepo://interactions`
-interaction: `semiorepo://interaction/when/{{uri-encoded-second-path*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind}}/by/{{uri-encoded-contributor-name*}}` e.g. `semiorepo://interaction/when/semiorepo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12/on/semiorepo%3A%2F%2Fticket%2Fr26.02-1%2FRunning%2520Sketchpad%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu`
-
-The query params are
-General query params:
-{?client}
-tickets: at least one interaction with the given client
-goals: at least one interaction with the given client
-{?llm?}
-tickets: at least one interaction with the given llm
-goal: at least one interaction with the given llm
-{?year}
-tickets: at least one interaction with the given year
-goals: at least one interaction with the given year
-{?month}
-tickets: at least one interaction with the given month
-goals: at least one interaction with the given month
-{?day}
-tickets: at least one interaction with the given day
-goals: at least one interaction with the given day
-{?contributor}
-tickets: at least one interaction with the given contributor
-goals: at least one interaction with the given contributor
-{?status}
-tickets: only the given status
-goals: only the given status
-
-The semio repo folder layout changed.
-
-You must update the implementation and tests to match the new layout.
-
-Dont keep any legacy api.
-
-- .semio-repo
-- ✍️ // drafts
-- 🎫 // tickets
-  - {{YY}}
-    - {{MM}}
-      - {{DD}}
-        - {{UPPERCASESLUG}}
-- 🎯 // goals
-- 👤 // contributors
-  - {{github}}
-- 💡
-- 💬 // prompts
-  - 👤 // contributors
-    - {{contributor-name}}
-  - 📋 // templates
-    - {{template-name}}.
 
 ## ⌨️server
 
