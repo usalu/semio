@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻filefixabletsx](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXABLE.TSX)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx](semiorepo://file/semio/assets/repo/some/folder/file_fixable.tsx)
 
 // 2025 Test User <test@test.com>
 
@@ -12,7 +12,7 @@
 // #endregion 🔖Header
 
 // #region 🔖MissingEnd
-// [🔖semio/assets/repo/some/folder/file_fixable.tsx#MissingEnd](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/MISSING-END)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/MissingEnd)
 // MissingEnd MUST provide the missingend functionality.
 
 /** missingEnd holds the data fields for a missingEnd record.
@@ -25,7 +25,7 @@ const missingEnd = 1;
 // #endregion 🔖MissingEnd
 
 // #region 🔖Alpha
-// [🔖semio/assets/repo/some/folder/file_fixable.tsx#Alpha](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/ALPHA)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx🔖alpha](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/Alpha)
 // Alpha MUST provide the alpha functionality.
 
 /** mismatchName holds the data fields for a mismatchName record.

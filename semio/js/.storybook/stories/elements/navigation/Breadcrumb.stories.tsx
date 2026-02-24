@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎ semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx
+// 🥼︎ semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

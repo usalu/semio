@@ -68,3 +68,92 @@ Window layouts MUST be persisted per app as JSON strings.
 The active window MUST be tracked for focus-sensitive UI.
 
 Window chrome MUST expose action controls for open-in-new-window, maximize/minimize, and close.
+
+## [👤semio📚js🗃️sketchpad💻kittsx](semiorepo://section/semio/js/sketchpad/Kit.tsx)
+
+Selection:
+    - Designs
+    - Types
+    - Folders
+    - Files
+    - Ports
+
+Filters:
+    - Designs
+    - Types
+    - Folders
+    - Files
+    - Ports
+
+
+## [👤semio📚js🗃️sketchpad💻kittsx🔖table](semiorepo://section/semio/js/sketchpad/Kit.tsx/Internal%20State%20Management/Canvas)
+
+- {{design-row}}
+- {{type-row}}
+- {{port-row}}
+- {{folder-row*}} # folder
+    - {{file-row}} # files inside the folder
+
+Currently I have
+
+- file1
+- file2
+
+But it should be:
+
+- folder
+    - file1
+    - file2
+
+## [👤semio📚js🗃️sketchpad💻designtsx🔖panels](semiorepo://section/semio/js/sketchpad/Design.tsx/Panels/Details)
+
+Home screen:
+
+
+Once Piece, Once Connection selected:
+- {{piece-details}}
+- {{connection-details}}
+- {{kit-details}}
+
+Once Piece selected:
+- {{piece-details}}
+- {{kit-details}}
+
+
+Piece Details Section:
+```yaml
+Piece: # section,
+  Type: "{{piece-type-select}}" # input tree item, only show types that can replaced the type (e.g. all used connectors must exist)
+  Id: "{{piece-id-input}}" # input tree item
+  Description: "{{piece-description-text-area}}" # input tree item
+  Attributes:
+    - name: "{{attribute-name-input}}" # input tree item
+      value: "{{attribute-value-input}}" # input tree item
+  Plane: # collection tree item, only show section when
+    Origin: # collection tree item
+        X: "{{origin-x-stepper}}" # input tree item
+        Y: "{{origin-y-stepper}}" # input tree item
+        Z: "{{origin-z-stepper}}" # input tree item
+    X-Axis:
+      X: "{{x-axis-x-stepper}}"
+      Y: "{{x-axis-y-stepper}}"
+      Z: "{{x-axis-z-stepper}}"
+    Y-Axis:
+        X: "{{y-axis-x-stepper}}"
+        Y: "{{y-axis-y-stepper}}"
+        Z: "{{y-axis-z-stepper}}"
+Parent Connection:
+  Translation:
+    Gap: "{{gap-slider}}"
+    Shift: "{{shift-slider}}"
+    Rise: "{{rise-slider}}"
+  Orientation:
+    Rotation: "{{rotation-slider}}"
+    Inversion: "{{inversion-slider}}"
+```
+
+Kit Details Section
+```yaml
+Kit: # section,
+  Name: "{{kit-name}}"
+```

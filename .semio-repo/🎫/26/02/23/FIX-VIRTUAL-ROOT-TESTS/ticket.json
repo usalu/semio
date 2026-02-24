@@ -1,0 +1,839 @@
+{
+  "title": "Fix Virtual Root Tests",
+  "description": "Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/669"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-23 17:22:01",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
+      "prompt": "Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-23 18:37:42",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
+      "summary": "Fixed fixture files with correct emoji-based IDs, fixed interactionKindEmoji missing edited case, fixed minute emoji in TestAllSpecIDExamples, reverted incorrect 🌱root in TestFileHeaderId. All core tests pass.",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "session": "1771867321855675054-1080790156122852979",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "llm": "opus-4-6",
+      "events": [
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-23T17:22:01Z",
+          "prompt": "Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy"
+        }
+      ]
+    },
+    {
+      "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Gather context and open ticket",
+            "completed": "2026-02-23T17:28:42Z"
+          },
+          {
+            "name": "Fix TestFileHeaderId expectations",
+            "completed": "2026-02-23T17:28:42Z"
+          },
+          {
+            "name": "Fix file_fixed fixture files",
+            "completed": "2026-02-23T17:28:42Z"
+          },
+          {
+            "name": "Fix file_fixable_expected.tsx",
+            "completed": "2026-02-23T17:28:42Z"
+          },
+          {
+            "name": "Fix TestGoalHierarchy stale folder",
+            "completed": "2026-02-23T17:28:42Z"
+          },
+          {
+            "name": "Run tests and verify",
+            "started": "2026-02-23T17:28:42Z"
+          },
+          {
+            "name": "Close ticket"
+          }
+        ]
+      },
+      "events": [
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:22:09Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket open \"AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS\" \"Fix Virtual Root Tests\" \"Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy\" \"copilot-chat\" \"opus-4-6\" 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:22:22Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:22:26Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L1294-L1310"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:22:33Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L1294-L1310"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:23:16Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:23:24Z"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:23:41Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:23:56Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 cat \u003e /tmp/print_ids_test.go \u003c\u003c 'GOEOF'\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestPrintExpectedIdsAndUris(t *testing.T) {\n\tcwd, _ := os.Getwd()\n\toldRoot := rootDir\n\trootDir = findTestRepoRoot(cwd)\n\tdefer func() { rootDir = oldRoot }()\n\n\tfiles := []string{\n\t\t\"semio/assets/repo/some/folder/file_fixed.tsx\",\n\t\t\"semio/assets/repo/some/folder/file_fixed.go\",\n\t\t\"semio/assets/repo/some/folder/file_fixed.py\",\n\t\t\"semio/assets/repo/some/folder/file_fixed.cs\",\n\t\t\"semio/assets/repo/some/folder/file_fixable.tsx\",\n\t}\n\n\ttype SectionDef struct {\n\t\tSection    string\n\t\tDefName    string\n\t\tDefKind    DefinitionKind\n\t}\n\n\tfileSections := map[string][]SectionDef{\n\t\t\"semio/assets/repo/some/folder/file_fixed.tsx\": {\n\t\t\t{\"Types\", \"FixedType\", DefinitionKindInterface},\n\t\t\t{\"Types\", \"FixedKind\", DefinitionKindInterface},\n\t\t\t{\"Components\", \"FixedComponent\", DefinitionKindImplementation},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixed.go\": {\n\t\t\t{\"Functions\", \"FixedValue\", DefinitionKindImplementation},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixed.py\": {\n\t\t\t{\"Functions\", \"fixed_function\", DefinitionKindImplementation},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixed.cs\": {\n\t\t\t{\"Classes\", \"FixedClass\", DefinitionKindInterface},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixable.tsx\": {\n\t\t\t{\"MissingEnd\", \"missingEnd\", DefinitionKindConstant},\n\t\t\t{\"Alpha\", \"mismatchName\", DefinitionKindConstant},\n\t\t},\n\t}\n\n\t_ = filepath.Join\n\t_ = strings.TrimSpace\n\n\tfor _, f := range files {\n\t\tfmt.Printf(\"=== %s ===\\n\", f)\n\t\tfmt.Printf(\"FileHeaderId: %s\\n\", FileHeaderId(f))\n\t\tfmt.Printf(\"FileHeaderUri: %s\\n\", FileHeaderUri(f))\n\n\t\tif defs, ok := fileSections[f]; ok {\n\t\t\tfor _, d := range defs {\n\t\t\t\tfmt.Printf(\"SectionHeaderId(%s): %s\\n\", d.Section, SectionHeaderId(f, d.Section))\n\t\t\t\tfmt.Printf(\"SectionHeaderUri(%s): %s\\n\", d.Section, SectionHeaderUri(f, d.Section))\n\t\t\t\tfmt.Printf(\"DefinitionHeaderId(%s/%s): %s\\n\", d.Section, d.DefName, DefinitionHeaderId(f, d.Section, d.DefName, d.DefKind))\n\t\t\t\tfmt.Printf(\"DefinitionHeaderUri(%s/%s): %s\\n\", d.Section, d.DefName, DefinitionHeaderUri(f, d.Section, d.DefName))\n\t\t\t}\n\t\t}\n\t\tfmt.Println()\n\t}\n}\nGOEOF\ncp /tmp/print_ids_test.go print_ids_test.go \u0026\u0026 go test -run TestPrintExpectedIdsAndUris -v -count=1 -timeout 30s 2\u003e\u00261 | grep -E \"^(===|File|Section|Definition|---)\" | head -60"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:24:31Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 cat \u003e /tmp/print_ids_test.go \u003c\u003c 'GOEOF'\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestPrintExpectedIdsAndUris(t *testing.T) {\n\tcwd, _ := os.Getwd()\n\toldRoot := rootDir\n\trootDir = findTestRepoRoot(cwd)\n\tdefer func() { rootDir = oldRoot }()\n\n\tfiles := []string{\n\t\t\"semio/assets/repo/some/folder/file_fixed.tsx\",\n\t\t\"semio/assets/repo/some/folder/file_fixed.go\",\n\t\t\"semio/assets/repo/some/folder/file_fixed.py\",\n\t\t\"semio/assets/repo/some/folder/file_fixed.cs\",\n\t\t\"semio/assets/repo/some/folder/file_fixable.tsx\",\n\t}\n\n\ttype SectionDef struct {\n\t\tSection    string\n\t\tDefName    string\n\t\tDefKind    DefinitionKind\n\t}\n\n\tfileSections := map[string][]SectionDef{\n\t\t\"semio/assets/repo/some/folder/file_fixed.tsx\": {\n\t\t\t{\"Types\", \"FixedType\", DefinitionKindInterface},\n\t\t\t{\"Types\", \"FixedKind\", DefinitionKindInterface},\n\t\t\t{\"Components\", \"FixedComponent\", DefinitionKindImplementation},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixed.go\": {\n\t\t\t{\"Functions\", \"FixedValue\", DefinitionKindImplementation},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixed.py\": {\n\t\t\t{\"Functions\", \"fixed_function\", DefinitionKindImplementation},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixed.cs\": {\n\t\t\t{\"Classes\", \"FixedClass\", DefinitionKindInterface},\n\t\t},\n\t\t\"semio/assets/repo/some/folder/file_fixable.tsx\": {\n\t\t\t{\"MissingEnd\", \"missingEnd\", DefinitionKindConstant},\n\t\t\t{\"Alpha\", \"mismatchName\", DefinitionKindConstant},\n\t\t},\n\t}\n\n\t_ = filepath.Join\n\t_ = strings.TrimSpace\n\n\tfor _, f := range files {\n\t\tfmt.Printf(\"=== %s ===\\n\", f)\n\t\tfmt.Printf(\"FileHeaderId: %s\\n\", FileHeaderId(f))\n\t\tfmt.Printf(\"FileHeaderUri: %s\\n\", FileHeaderUri(f))\n\n\t\tif defs, ok := fileSections[f]; ok {\n\t\t\tfor _, d := range defs {\n\t\t\t\tfmt.Printf(\"SectionHeaderId(%s): %s\\n\", d.Section, SectionHeaderId(f, d.Section))\n\t\t\t\tfmt.Printf(\"SectionHeaderUri(%s): %s\\n\", d.Section, SectionHeaderUri(f, d.Section))\n\t\t\t\tfmt.Printf(\"DefinitionHeaderId(%s/%s): %s\\n\", d.Section, d.DefName, DefinitionHeaderId(f, d.Section, d.DefName, d.DefKind))\n\t\t\t\tfmt.Printf(\"DefinitionHeaderUri(%s/%s): %s\\n\", d.Section, d.DefName, DefinitionHeaderUri(f, d.Section, d.DefName))\n\t\t\t}\n\t\t}\n\t\tfmt.Println()\n\t}\n}\nGOEOF\ncp /tmp/print_ids_test.go print_ids_test.go \u0026\u0026 go test -run TestPrintExpectedIdsAndUris -v -count=1 -timeout 30s 2\u003e\u00261 | grep -E \"^(===|File|Section|Definition|---)\" | head -60"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:24:46Z",
+          "file": "semio-repo/cli/print_ids_test.go"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:24:59Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:25:07Z"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:25:15Z",
+          "file": "semio-repo/cli/print_ids_test.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:25:28Z",
+          "file": "semio-repo/cli/print_ids_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:25:31Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run TestPrintExpectedIdsAndUris -v -count=1 -timeout 30s 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:25:47Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run TestPrintExpectedIdsAndUris -v -count=1 -timeout 30s 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:25:52Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:26:00Z"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:26:10Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:26:19Z"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:26:44Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:26:53Z"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:27:03Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:27:11Z"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:27:19Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:27:26Z"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:27:41Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:27:51Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:27:59Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:28:17Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L5460-L5480"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:28:24Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L5460-L5480"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:28:29Z",
+          "file": "semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:28:36Z",
+          "file": "semio-repo/cli/main_test.go",
+          "old": {
+            "loc": 3
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖goaltests",
+                "definitions": [
+                  "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli🧪maintestgo🛠️testgoalhierarchy"
+                ]
+              }
+            ],
+            "loc": 6
+          }
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:28:52Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:28:57Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFileHeaderId|TestFixApplyAutofixes|TestFixtureBreachsByLanguage|TestGoalHierarchy\" -count=1 -timeout 60s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:29:32Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFileHeaderId|TestFixApplyAutofixes|TestFixtureBreachsByLanguage|TestGoalHierarchy\" -count=1 -timeout 60s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:29:42Z",
+          "query": "cd /workspaces/semio \u0026\u0026 head -5 semio/assets/repo/some/folder/file_fixed.tsx | xxd | head -20"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:29:50Z",
+          "query": "cd /workspaces/semio \u0026\u0026 head -5 semio/assets/repo/some/folder/file_fixed.tsx | xxd | head -20"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:29:53Z",
+          "query": "cd /workspaces/semio \u0026\u0026 head -3 semio/assets/repo/some/folder/file_fixed.tsx | od -A x -t x1z | head -10"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:30:00Z",
+          "query": "cd /workspaces/semio \u0026\u0026 head -3 semio/assets/repo/some/folder/file_fixed.tsx | od -A x -t x1z | head -10"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:30:14Z",
+          "query": "/workspaces/semio/semio/assets/repo/some/folder/file_fixed.tsx#L1-L55"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:30:21Z",
+          "query": "/workspaces/semio/semio/assets/repo/some/folder/file_fixed.tsx#L1-L55"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:30:30Z",
+          "query": "cd /workspaces/semio \u0026\u0026 python3 -c \"\nimport sys\n# Read file\nfor fname in [\n    'semio/assets/repo/some/folder/file_fixed.tsx',\n    'semio/assets/repo/some/folder/file_fixed.go',\n    'semio/assets/repo/some/folder/file_fixed.py',\n    'semio/assets/repo/some/folder/file_fixed.cs',\n    'semio/assets/repo/some/folder/file_fixable_expected.tsx',\n]:\n    with open(fname, 'rb') as f:\n        data = f.read()\n    # Replace U+FFFD (ef bf bd) with U+1F464 (f0 9f 91 a4)\n    data = data.replace(b'\\xef\\xbf\\xbd', b'\\xf0\\x9f\\x91\\xa4')\n    with open(fname, 'wb') as f:\n        f.write(data)\n    print(f'Fixed {fname}')\n\""
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:30:36Z",
+          "query": "cd /workspaces/semio \u0026\u0026 python3 -c \"\nimport sys\n# Read file\nfor fname in [\n    'semio/assets/repo/some/folder/file_fixed.tsx',\n    'semio/assets/repo/some/folder/file_fixed.go',\n    'semio/assets/repo/some/folder/file_fixed.py',\n    'semio/assets/repo/some/folder/file_fixed.cs',\n    'semio/assets/repo/some/folder/file_fixable_expected.tsx',\n]:\n    with open(fname, 'rb') as f:\n        data = f.read()\n    # Replace U+FFFD (ef bf bd) with U+1F464 (f0 9f 91 a4)\n    data = data.replace(b'\\xef\\xbf\\xbd', b'\\xf0\\x9f\\x91\\xa4')\n    with open(fname, 'wb') as f:\n        f.write(data)\n    print(f'Fixed {fname}')\n\""
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:30:41Z",
+          "query": "cd /workspaces/semio \u0026\u0026 head -3 semio/assets/repo/some/folder/file_fixed.tsx"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:30:50Z",
+          "query": "cd /workspaces/semio \u0026\u0026 head -3 semio/assets/repo/some/folder/file_fixed.tsx"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:30:57Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFixApplyAutofixes|TestFixtureBreachsByLanguage\" -count=1 -timeout 60s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:31:05Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFixApplyAutofixes|TestFixtureBreachsByLanguage\" -count=1 -timeout 60s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:31:14Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n \"definition\\|FixedClass\\|✂️\\|🛠️\" semio/assets/repo/some/folder/file_fixed.cs"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:31:22Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n \"definition\\|FixedClass\\|✂️\\|🛠️\" semio/assets/repo/some/folder/file_fixed.cs"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:31:31Z",
+          "query": "func inferDefinitionKindFromLine in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:31:38Z",
+          "query": "func inferDefinitionKindFromLine in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:31:43Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L24690-L24715"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:31:52Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L24690-L24715"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:32:13Z",
+          "query": "func DeriveDefinitionKind in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:32:20Z",
+          "query": "func DeriveDefinitionKind in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:32:24Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L7195-L7250"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:32:31Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L7195-L7250"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T17:32:54Z",
+          "file": "semio/assets/repo/some/folder/file_fixed.cs"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T17:33:00Z",
+          "file": "semio/assets/repo/some/folder/file_fixed.cs",
+          "line": 30,
+          "old": {
+            "sections": [
+              {
+                "section": "👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes"
+              }
+            ],
+            "loc": 1
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes"
+              }
+            ],
+            "loc": 1
+          }
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:33:08Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFixtureBreachsByLanguage\" -count=1 -timeout 30s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:33:17Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFixtureBreachsByLanguage\" -count=1 -timeout 30s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:33:27Z",
+          "query": "func definitionKindEmoji in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:33:35Z",
+          "query": "func definitionKindEmoji in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:33:39Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L38262-L38290"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:33:46Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L38262-L38290"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:33:55Z",
+          "query": "DefinitionKindImplementation in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:34:01Z",
+          "query": "DefinitionKindImplementation in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:34:17Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -n '30p' semio/assets/repo/some/folder/file_fixed.cs | od -A x -t x1z | head -5"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:34:25Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -n '30p' semio/assets/repo/some/folder/file_fixed.cs | od -A x -t x1z | head -5"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:34:29Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -n '30p' semio/assets/repo/some/folder/file_fixed.cs | od -A x -t x1z"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:34:35Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -n '30p' semio/assets/repo/some/folder/file_fixed.cs | od -A x -t x1z"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:35:17Z",
+          "query": "cd /workspaces/semio \u0026\u0026 python3 -c \"\nwith open('semio/assets/repo/some/folder/file_fixed.cs', 'r') as f:\n    content = f.read()\n\n# Replace ✂️ with 🛠️ only in the definition identification line\ncontent = content.replace('✂\\ufe0ffixedclass', '🛠\\ufe0ffixedclass')\n\nwith open('semio/assets/repo/some/folder/file_fixed.cs', 'w') as f:\n    f.write(content)\nprint('Done')\n\""
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:35:24Z",
+          "query": "cd /workspaces/semio \u0026\u0026 python3 -c \"\nwith open('semio/assets/repo/some/folder/file_fixed.cs', 'r') as f:\n    content = f.read()\n\n# Replace ✂️ with 🛠️ only in the definition identification line\ncontent = content.replace('✂\\ufe0ffixedclass', '🛠\\ufe0ffixedclass')\n\nwith open('semio/assets/repo/some/folder/file_fixed.cs', 'w') as f:\n    f.write(content)\nprint('Done')\n\""
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:35:29Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -n '30p' semio/assets/repo/some/folder/file_fixed.cs"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:35:36Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -n '30p' semio/assets/repo/some/folder/file_fixed.cs"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:35:41Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFixtureBreachsByLanguage\" -count=1 -timeout 30s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:35:51Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFixtureBreachsByLanguage\" -count=1 -timeout 30s -v 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:35:57Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFileHeaderId|TestFixApplyAutofixes|TestFixtureBreachsByLanguage|TestGoalHierarchy\" -count=1 -timeout 60s -v 2\u003e\u00261 | grep -E \"^(=== RUN|--- PASS|--- FAIL|PASS|FAIL)\""
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T17:36:30Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestFileHeaderId|TestFixApplyAutofixes|TestFixtureBreachsByLanguage|TestGoalHierarchy\" -count=1 -timeout 60s -v 2\u003e\u00261 | grep -E \"^(=== RUN|--- PASS|--- FAIL|PASS|FAIL)\""
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:36:36Z",
+          "query": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -count=1 -timeout 600s -v 2\u003e\u00261 | grep -E \"^(=== RUN |--- PASS|--- FAIL|panic|FAIL|PASS|ok)\" | tail -40"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T18:37:14Z",
+          "query": "cd /workspaces/semio \u0026\u0026 python3 \u003c\u003c 'PYEOF'\nimport json\n\npath = '.semio-repo/🎫/26/02/23/FIX-VIRTUAL-ROOT-TESTS/ticket.json'\nwith open(path, 'r') as f:\n    content = f.read()\n    \ndecoder = json.JSONDecoder()\nobj, end = decoder.raw_decode(content)\nremaining = content[end:].strip()\nprint(f\"Remaining after first object: {repr(remaining)}\")\n\n# The remaining is ']' '}' - the file somehow has extra brackets\n# Just keep the first valid JSON object\nwith open(path, 'w') as f:\n    json.dump(obj, f, indent=2, ensure_ascii=False)\n    f.write('\\n')\nprint(\"Fixed ticket.json\")\n\n# Verify\nwith open(path, 'r') as f:\n    d = json.load(f)\nprint(f\"Verified: title={d['title']}\")\nPYEOF"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T18:37:21Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close 26/02/23/FIX-VIRTUAL-ROOT-TESTS \"Fixed fixture files with correct emoji-based IDs, fixed interactionKindEmoji missing edited case, fixed minute emoji in TestAllSpecIDExamples, reverted incorrect 🌱root in TestFileHeaderId. All core tests pass.\" semio-repo/cli/main.go semio-repo/cli/main_test.go --no-management 2\u003e\u00261"
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            "🧰semiorepo",
+            "👤semio"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "🧰semiorepo⌨️cli",
+            "👤semio🏪assets"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root",
+            "👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root🧪printidstestgo",
+            "🧰semiorepo⌨️cli🌱root🧪maintestgo",
+            "👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixedcs"
+          ]
+        },
+        "sections": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖goaltests",
+            "👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes"
+          ]
+        },
+        "definitions": {
+          "modified": [
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli🧪maintestgo🛠️testgoalhierarchy"
+          ]
+        }
+      }
+    },
+    {
+      "session": "fe4ce050-c50e-4cb0-bbc9-f7b8ed5e3420",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "transcript": "/home/vscode/.claude/projects/-workspaces-semio/fe4ce050-c50e-4cb0-bbc9-f7b8ed5e3420.jsonl",
+      "events": [
+        {
+          "kind": "agent.started",
+          "timestamp": "2026-02-23T17:28:11Z"
+        },
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-23T17:30:10Z",
+          "prompt": "semio repo cli:\nWhen a new ticket is opened then it has two session where the first is wrong.\ne.g.\n{\n  \"title\": \"Fix Virtual Root Tests\",\n  \"description\": \"Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy\",\n  \"github\": {\n    \"issue\": \"https://github.com/usalu/semio/issues/669\"\n  },\n  \"goal\": \"AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS\",\n  \"interactions\": [\n    {\n      \"kind\": \"ticket.open\",\n      \"date\": \"2026-02-23 17:22:01\",\n      \"author\": \"usalu\",\n      \"system\": \"linux\",\n      \"client\": \"copilot-chat\",\n      \"commit\": \"90e432b355ad022d0ac8a326a426e293e60ed63f\",\n      \"prompt\": \"Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy\",\n      \"llm\": \"opus-4-6\"\n    }\n  ],\n  \"agents\": [\n    {\n      \"session\": \"1771867321855675054-1080790156122852979\",\n      \"contributor\": \"usalu\",\n      \"system\": \"linux\",\n      \"client\": \"copilot-chat\",\n      \"llm\": \"opus-4-6\",\n      \"events\": [\n        {\n          \"kind\": \"agent.prompt.submitting\",\n          \"timestamp\": \"2026-02-23T17:22:01Z\",\n          \"prompt\": \"Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy\"\n        }\n      ]\n    },\n    {\n      \"session\": \"6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a\",\n      \"contributor\": \"usalu\",\n      \"system\": \"linux\",\n      \"client\": \"copilot-chat\",\n      \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl\",\n      \"plan\": {\n        \"steps\": [\n          {\n            \"name\": \"Gather context and open ticket\",\n            \"completed\": \"2026-02-23T17:28:42Z\"\n          },\n          {\n            \"name\": \"Fix TestFileHeaderId expectations\",\n            \"completed\": \"2026-02-23T17:28:42Z\"\n          },\n          {\n            \"name\": \"Fix file_fixed fixture files\",\n            \"completed\": \"2026-02-23T17:28:42Z\"\n          },\n          {\n            \"name\": \"Fix file_fixable_expected.tsx\",\n            \"completed\": \"2026-02-23T17:28:42Z\"\n          },\n          {\n            \"name\": \"Fix TestGoalHierarchy stale folder\",\n            \"completed\": \"2026-02-23T17:28:42Z\"\n          },\n          {\n            \"name\": \"Run tests and verify\",\n            \"started\": \"2026-02-23T17:28:42Z\"\n          },\n          {\n            \"name\": \"Close ticket\"\n          }\n        ]\n      },\n      \"events\": [\n        {\n          \"kind\": \"agent.tool.terminal.ended\",\n          \"timestamp\": \"2026-02-23T17:22:09Z\",\n          \"query\": \"cd /workspaces/semio \\u0026\\u0026 ./semio-repo/cli/cli ticket open \\\"AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS\\\" \\\"Fix Virtual Root Tests\\\" \\\"Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy\\\" \\\"copilot-chat\\\" \\\"opus-4-6\\\" 2\\u003e\\u00261\"\n        },\n        {\n          \"kind\": \"agent.tool.ended\",\n          \"timestamp\": \"2026-02-23T17:22:22Z\",\n          \"query\": \"manage_todo_list\"\n        },\n        {\n          \"kind\": \"agent.tool.searching\",\n          \"timestamp\": \"2026-02-23T17:22:26Z\",\n          \"query\": \"/workspaces/semio/semio-repo/cli/main_test.go#L1294-L1310\"\n        },\n        {\n          \"kind\": \"agent.tool.searching.ended\",\n          \"timestamp\": \"2026-02-23T17:22:33Z\",\n          \"query\": \"/workspaces/semio/semio-repo/cli/main_test.go#L1294-L1310\"\n        },\n        {\n          \"kind\": \"agent.tool.code.editing\",\n          \"timestamp\": \"2026-02-23T17:23:16Z\"\n        },\n        {\n          \"kind\": \"agent.tool.code.edited\",\n          \"timestamp\": \"2026-02-23T17:23:24Z\"\n        },"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:30:29Z",
+          "query": "mcp__semio-repo__tree"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:30:55Z",
+          "query": "mcp__semio-repo__tree"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:31:01Z",
+          "query": "Glob"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:31:18Z",
+          "query": "Glob"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:31:27Z",
+          "query": "/workspaces/semio/.semio-repo/🎫/26/02/23/FIX-TICKET-EVENT-LOGGING/ticket.json"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:31:27Z",
+          "query": "/workspaces/semio/.semio-repo/🎫/26/02/23/FIX-VIRTUAL-ROOT-TESTS/ticket.json"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:31:33Z",
+          "query": "/workspaces/semio/.semio-repo/🎫/26/02/23/FIX-TICKET-EVENT-LOGGING/ticket.json"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:31:33Z",
+          "query": "/workspaces/semio/.semio-repo/🎫/26/02/23/FIX-VIRTUAL-ROOT-TESTS/ticket.json"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:32:04Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:32:11Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:32:21Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:32:27Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:32:36Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:32:43Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:32:53Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:32:59Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:33:10Z",
+          "query": "/workspaces/semio/.semio-repo/🎫/26/02/23/REFACTOR-TICKET-JSON-FORMAT/ticket.json"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:33:12Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:33:16Z",
+          "query": "/workspaces/semio/.semio-repo/🎫/26/02/23/REFACTOR-TICKET-JSON-FORMAT/ticket.json"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:33:18Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.starting",
+          "timestamp": "2026-02-23T17:33:34Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-23T17:33:40Z",
+          "query": "Grep"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:33:49Z"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:33:56Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:34:04Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:34:10Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:34:22Z"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:34:28Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:34:36Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:34:37Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:34:42Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:34:44Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:35:03Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:35:10Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:35:21Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:35:27Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:36:09Z"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:36:17Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:36:27Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:36:34Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:37:12Z"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:37:19Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:37:30Z"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:37:38Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:37:47Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:37:55Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:38:12Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:38:20Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-23T17:38:32Z"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-23T17:38:40Z"
+        }
+      ]
+    },
+    {
+      "session": "a8b1592e-5f8d-40ec-a341-4b52c0170499",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "events": [
+        {
+          "kind": "agent.prompt.submitting",
+          "timestamp": "2026-02-23T17:38:16Z"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:38:31Z",
+          "query": "./semio-repo/cli/cli hook agent.starting windsurf-chat"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T17:38:48Z",
+          "query": "./semio-repo/cli/cli tree \"id system\""
+        }
+      ]
+    }
+  ]
+}

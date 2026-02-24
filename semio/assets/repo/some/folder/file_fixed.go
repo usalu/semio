@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻filefixedgo](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.GO)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo](semiorepo://file/semio/assets/repo/some/folder/file_fixed.go)
 
 // 2025 Test User <test@test.com>
 
@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Package
-// [🔖semio/assets/repo/some/folder/file_fixed.go#Package](semiorepo://section/semio/assets/repo/some/folder/file_fixed.go/PACKAGE)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖package](semiorepo://section/semio/assets/repo/some/folder/file_fixed.go/Package)
 // Package declaration for fixed module.
 // Package MUST be named fixed.
 
@@ -29,13 +29,13 @@ package fixed
 // #endregion 🔖Package
 
 // #region 🔖Functions
-// [🔖semio/assets/repo/some/folder/file_fixed.go#Functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.go/FUNCTIONS)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.go/Functions)
 // Utility functions for fixed values.
 // Functions MUST return valid integers.
 
 // FixedValue returns a constant integer.
 // FixedValue MUST return 2.
-// [🛠️semio/assets/repo/some/folder/file_fixed.go#Functions§FixedValue](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.go/FUNCTIONS/FIXED-VALUE)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖functions🛠️fixedvalue](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.go/Functions/FixedValue)
 func FixedValue() int {
 return 2
 }

@@ -1,0 +1,100 @@
+{
+  "title": "Document All Hardcoded Semiorepo Uri Strings in Test",
+  "description": "Read main_test.go and find all lines containing old-scheme semiorepo:// URI strings, grouped by test function",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/681"
+  },
+  "goal": "DOCUMENT-HARDCODED-URI-STRINGS-IN-TEST",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-23 22:53:43",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
+      "prompt": "Read main_test.go and find all lines containing old-scheme semiorepo:// URI strings, grouped by test function",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-23 22:56:38",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
+      "summary": "Documented all 144 hardcoded semiorepo:// URI strings in main_test.go, grouped by 20 test functions with line numbers, URIs, and exact code",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "session": "a5b6b18f-ec28-4d2c-bc62-c7fd0e3ba06f",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "events": [
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T22:53:50Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket open \"DOCUMENT-HARDCODED-URI-STRINGS-IN-TEST\" \"Document All Hardcoded Semiorepo Uri Strings in Test\" \"Read main_test.go and find all lines containing old-scheme semiorepo:// URI strings, grouped by test function\" \"copilot-chat\" \"opus-4-6\" 2\u003e\u00261 | tail -5"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T22:53:53Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ls .semio-repo/🎫/26/02/23/ | head -20"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T22:54:00Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ls .semio-repo/🎫/26/02/23/ | head -20"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-23T22:55:46Z",
+          "file": ".semio-repo/🎫/26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST/report.md"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-23T22:55:54Z",
+          "file": ".semio-repo/🎫/26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST/report.md"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T22:56:02Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST\" \"Documented all 144 hardcoded semiorepo:// URI strings in main_test.go, grouped by 20 test functions with line numbers, URIs, and exact code\" \".semio-repo/🎫/26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST/report.md\" 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-23T22:56:16Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST\" \"Documented all 144 hardcoded semiorepo:// URI strings in main_test.go, grouped by 20 test functions with line numbers, URIs, and exact code\" \".semio-repo/🎫/26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST/report.md\" 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-23T22:56:21Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-ALL-HARDCODED-SEMIOREPO-URI-STRINGS-IN-TEST\" \"Documented all 144 hardcoded semiorepo:// URI strings in main_test.go, grouped by 20 test functions with line numbers, URIs, and exact code\" \"semio-repo/cli/main_test.go\" 2\u003e\u00261"
+        }
+      ],
+      "diff": {
+        "projects": {},
+        "bundles": {},
+        "folders": {
+          "modified": [
+            "🛅semiorepo🗃️🎫🗃️26🗃️02🗃️23🗃️documentallhardcodedsemiorepouristringsintest"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🛅semiorepo🗃️🎫🗃️26🗃️02🗃️23🗃️documentallhardcodedsemiorepouristringsintest📃reportmd"
+          ]
+        },
+        "sections": {},
+        "definitions": {}
+      }
+    }
+  ]
+}

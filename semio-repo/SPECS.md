@@ -127,23 +127,20 @@ erDiagram
     folder ||--o{ bundle : contains
     file ||--o{ section : contains
     section ||--o{ definition : contains
+    REPO {
+        string github PK
+        string exported_at
+    }
     CONTRIBUTOR {
-        int id PK
-        string github
+        string github PK
         string name
         string avatar
     }
     COMMIT {
-        int id PK
         string sha
         string message
-        int contributor_id FK
         string date
-    }
-    REPO {
-        int id PK
-        string sha FK
-        string name
+        int contributor_id FK
     }
     FOLDER {
         int id PK
@@ -158,7 +155,6 @@ erDiagram
         string name
         string extension
         int bundle_id FK
-        int lines
     }
     BUNDLE {
         int id PK
@@ -531,7 +527,7 @@ IsValid MUST return true only when the condition is met.
 
 String MUST return the canonical string value.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️derivefolderkind](semiorepo://definition/semio-repo/cli/main.go/DeriveFolderKind)
+## [🧰semiorepo⌨️cli💻maingo🪨folderkindcache](semiorepo://definition/semio-repo/cli/main.go/folderKindCache)
 
 DeriveFolderKind MUST return a valid value for any recognized input.
 
@@ -647,6 +643,10 @@ GetID MUST return the stored value without modification.
 
 GetURI MUST return the stored value without modification.
 
+## [🧰semiorepo⌨️cli💻maingo🛠️unmarshaljson](semiorepo://definition/semio-repo/cli/main.go/UnmarshalJSON)
+
+UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
+
 ## [🧰semiorepo⌨️cli💻maingo🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/IsNode)
 
 IsNode MUST return true only when the condition is met.
@@ -665,19 +665,19 @@ GetTitle MUST return the stored value without modification.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getprompt](semiorepo://definition/semio-repo/cli/main.go/GetPrompt)
 
-GetPrompt MUST return the stored value without modification.
+GetPrompt MUST return the description or the first interaction prompt.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getlatestprompt](semiorepo://definition/semio-repo/cli/main.go/GetLatestPrompt)
 
-GetLatestPrompt MUST return the stored value without modification.
+GetLatestPrompt MUST return the latest prompt from sessions or interactions.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getllm](semiorepo://definition/semio-repo/cli/main.go/GetLLM)
 
-GetLLM MUST return the stored value without modification.
+GetLLM MUST return the LLM from the latest session or interaction.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getclient](semiorepo://definition/semio-repo/cli/main.go/GetClient)
 
-GetClient MUST return the stored value without modification.
+GetClient MUST return the client from the latest session or interaction.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getstatus](semiorepo://definition/semio-repo/cli/main.go/GetStatus)
 
@@ -685,11 +685,11 @@ GetStatus MUST return the stored value without modification.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getauthor](semiorepo://definition/semio-repo/cli/main.go/GetAuthor)
 
-GetAuthor MUST return the stored value without modification.
+GetAuthor MUST return the author from the first session or interaction.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getcommit](semiorepo://definition/semio-repo/cli/main.go/GetCommit)
 
-GetCommit MUST return the stored value without modification.
+GetCommit MUST return the commit from the first interaction.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getsummary](semiorepo://definition/semio-repo/cli/main.go/GetSummary)
 
@@ -697,7 +697,7 @@ GetSummary MUST return the stored value without modification.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getdatestarted](semiorepo://definition/semio-repo/cli/main.go/GetDateStarted)
 
-GetDateStarted MUST return the stored value without modification.
+GetDateStarted MUST return the earliest date from interactions or sessions.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getdatefinished](semiorepo://definition/semio-repo/cli/main.go/GetDateFinished)
 
@@ -1535,10 +1535,6 @@ GetTicketsDir MUST return the stored value without modification.
 
 GetTicketPath MUST return the stored value without modification.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️getticketfilepath](semiorepo://definition/semio-repo/cli/main.go/GetTicketFilePath)
-
-GetTicketFilePath MUST return the stored value without modification.
-
 ## [🧰semiorepo⌨️cli💻maingo🛠️getimportantfilepath](semiorepo://definition/semio-repo/cli/main.go/GetImportantFilePath)
 
 GetImportantFilePath MUST return the stored value without modification.
@@ -1658,10 +1654,6 @@ StreamDefinitions MUST invoke the callback for each matching definitions entry.
 ## [🧰semiorepo⌨️cli💻maingo🛠️resolvebundleforpath](semiorepo://definition/semio-repo/cli/main.go/ResolveBundleForPath)
 
 ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
-
-## [🧰semiorepo⌨️cli💻maingo🛠️progressticket](semiorepo://definition/semio-repo/cli/main.go/ProgressTicket)
-
-ProgressTicket MUST return a non-nil error when the operation fails.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️finishticket](semiorepo://definition/semio-repo/cli/main.go/FinishTicket)
 
@@ -2011,10 +2003,6 @@ Fix MUST return a non-nil error when the operation fails.
 
 TicketOpen MUST return a non-nil error when the operation fails.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️ticketprogress](semiorepo://definition/semio-repo/cli/main.go/TicketProgress)
-
-TicketProgress MUST return a non-nil error when the operation fails.
-
 ## [🧰semiorepo⌨️cli💻maingo🛠️ticketclose](semiorepo://definition/semio-repo/cli/main.go/TicketClose)
 
 TicketClose MUST return a non-nil error when the operation fails.
@@ -2138,10 +2126,6 @@ Fix MUST return a non-nil error when the operation fails.
 ## [🧰semiorepo⌨️cli💻maingo🛠️ticketopen](semiorepo://definition/semio-repo/cli/main.go/TicketOpen)
 
 TicketOpen MUST return a non-nil error when the operation fails.
-
-## [🧰semiorepo⌨️cli💻maingo🛠️ticketprogress](semiorepo://definition/semio-repo/cli/main.go/TicketProgress)
-
-TicketProgress MUST return a non-nil error when the operation fails.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️ticketclose](semiorepo://definition/semio-repo/cli/main.go/TicketClose)
 
@@ -2466,10 +2450,6 @@ TodoDelete MUST return a non-nil error when the operation fails.
 ## [🧰semiorepo⌨️cli💻maingo🛠️goalreopen](semiorepo://definition/semio-repo/cli/main.go/GoalReopen)
 
 GoalReopen MUST return a non-nil error when the operation fails.
-
-## [🧰semiorepo⌨️cli💻maingo🛠️ticketprogress](semiorepo://definition/semio-repo/cli/main.go/TicketProgress)
-
-TicketProgress MUST return a non-nil error when the operation fails.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️goaldelete](semiorepo://definition/semio-repo/cli/main.go/GoalDelete)
 

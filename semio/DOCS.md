@@ -2517,7 +2517,7 @@ A fixed CSharp class for testing.
 
 / <summary>Represents a fixed value container.</summary>
 / <remarks>
-/ [🛠️semio/assets/repo/some/folder/file_fixed.cs#Classes§FixedClass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/CLASSES/FIXED-CLASS)
+/ [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes🛠️fixedclass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/Classes/FixedClass)
 / </remarks>
 
 ## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo](semiorepo://file/semio/assets/repo/some/folder/file_fixed.go)

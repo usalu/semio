@@ -11,5 +11,5 @@ Extend the existing test file to cover all new features. Dont create any new tes
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The target is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG*/ticket.md`
+Make sure to open and close a ticket. Everything is tracked over agent hooks.
 Dont keep any legacy api or backwards compatiblity.

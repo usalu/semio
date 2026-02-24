@@ -1,0 +1,409 @@
+{
+  "title": "Fix Windsurf Hook Mapping Semantics",
+  "status": "closed",
+  "description": "Windsurf agents hook mapping is not always semantically correct. e.g. grep is not identified as searching, sed is either searching or editing, etc.",
+  "summary": "Fixed tool classification and hook mapping for windsurf pre_run_command. Generic search and edit tools like grep and sed are now correctly classified.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/664"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [
+    {
+      "id": "1771854678760451567-2811989952915040119",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "llm": "opus-4-6",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T13:51:18Z",
+          "prompt": "Windsurf agents hook mapping is not always semantically correct. e.g. grep is not identified as searching, sed is either searching or editing, etc."
+        }
+      ]
+    },
+    {
+      "id": "d2a4aa5c-c091-4629-9d71-755d1e2284d5",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T13:51:32Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:51:32Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"pre_run_command\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:51:45Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"func resolvePreToolUse\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:51:53Z",
+              "pattern": "./semio-repo/cli/cli hook tool.ended windsurf-chat --tool-name \"grep_search\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:52:06Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"func resolveWindsurfEvent\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:52:23Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"read_file\" --tool-args '{\"file_path\":\"/workspaces/semio/semio-repo/cli/main.go\",\"offset\":34937,\"limit\":50}'"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:52:26Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:52:43Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"resolveWindsurfEvent(\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:52:55Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"type ToolKind\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T13:53:08Z"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:53:12Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:53:30Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"ResolveNativeEvent\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:54:11Z",
+              "pattern": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"\u0026cobra.Command{\\\\n\\\\tUse:   \\\\\\\"hook\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T13:54:37Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:54:59Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"func classifyTool\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:55:19Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.ended windsurf-chat --tool-name \"grep_search\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:55:20Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"read_file\" --tool-args '{\"file_path\":\"/workspaces/semio/semio-repo/cli/main.go\",\"offset\":34814,\"limit\":50}'"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:55:23Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:55:42Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"windsurf\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:56:01Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.ended windsurf-chat --tool-name \"grep_search\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T13:56:18Z"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:56:25Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:56:42Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.ended windsurf-chat --tool-name \"read_file\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:56:42Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.starting windsurf-chat --tool-name \"grep_search\" --tool-args '{\"Query\":\"extractToolNameFromStdin\",\"SearchPath\":\"/workspaces/semio/semio-repo/cli/main.go\"}'"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:57:19Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.ended windsurf-chat --tool-name \"grep_search\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:57:41Z",
+              "pattern": "./semio-repo/cli/cli hook agent.tool.ended windsurf-chat --tool-name \"read_file\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T15:00:50Z",
+              "pattern": "./semio-repo/cli/cli ticket close 26/02/23/FIX-WINDSURF-HOOK-MAPPING-SEMANTICS \"Fixed tool classification and hook mapping for windsurf pre_run_command. Generic search and edit tools like grep and sed are now correctly classified.\" /workspaces/semio/semio-repo/cli/main.go"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "654f7918-5993-446b-b252-5de98130e8a9",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/654f7918-5993-446b-b252-5de98130e8a9.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Fix remaining main.go TicketPath refs",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Build-verify main.go compiles",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Update VS Code extension.ts",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Update extension.test.ts",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Update main_test.go",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Update AGENTS.md and CLAUDE.md",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Run all tests",
+            "completed": "2026-02-23T13:57:29Z"
+          },
+          {
+            "name": "Close ticket",
+            "started": "2026-02-23T13:57:29Z"
+          }
+        ]
+      },
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T13:52:09Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T13:52:09Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -count=1 -timeout 120s ./... 2\u003e\u00261 | tail -40"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T13:52:15Z",
+              "pattern": "TicketProgress|ticket_progress in **/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:52:23Z",
+              "pattern": "TicketProgress|ticket_progress in **/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:52:28Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -count=1 -timeout 180s -run TestFilterTicketWorkspaceFiles ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T13:52:37Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -count=1 -timeout 180s -run TestFilterTicketWorkspaceFiles ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:52:40Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -count=1 -timeout 180s -run \"Ticket|ticket\" ./... 2\u003e\u00261 | tail -20"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:55:06Z",
+              "pattern": "grep_search"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T13:55:24Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -count=1 -timeout 180s -run \"Ticket|ticket\" ./... 2\u003e\u00261 | tail -20"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:55:26Z",
+              "pattern": "read_file"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:55:29Z",
+              "pattern": "cd /workspaces/semio/semio-repo/vscode \u0026\u0026 npx tsc --noEmit 2\u003e\u00261 | head -30"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T13:55:41Z",
+              "pattern": "cd /workspaces/semio/semio-repo/vscode \u0026\u0026 npx tsc --noEmit 2\u003e\u00261 | head -30"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T13:55:46Z",
+              "pattern": "read_file"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:55:46Z",
+              "pattern": "grep_search"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:56:04Z",
+              "pattern": "grep_search"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T13:56:10Z",
+              "pattern": "cd /workspaces/semio \u0026\u0026 npx nx test semio-repo/vscode 2\u003e\u00261 | tail -30"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T13:56:15Z",
+              "pattern": "cd /workspaces/semio/semio-repo/vscode \u0026\u0026 npx vitest run 2\u003e\u00261 | tail -20"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:56:21Z",
+              "pattern": "read_file"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T13:56:23Z",
+              "pattern": "cd /workspaces/semio/semio-repo/vscode \u0026\u0026 npx vitest run 2\u003e\u00261 | tail -20"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T13:56:27Z",
+              "pattern": "ticket.md"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:56:37Z",
+              "pattern": "ticket.md"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T13:56:46Z",
+              "pattern": "read_file"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:56:47Z",
+              "pattern": "ticket.md in **/.semio-repo/💬/📋/*.tpl"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:56:48Z",
+              "pattern": "grep_search"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T13:56:53Z"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T13:57:00Z"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T13:57:03Z",
+              "pattern": "/workspaces/semio/.semio-repo/💬/👤/ueli.md#L10-L18"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T13:57:10Z",
+              "pattern": "/workspaces/semio/.semio-repo/💬/👤/ueli.md#L10-L18"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T13:57:15Z",
+              "file": ".semio-repo/💬/👤/ueli.md"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T13:57:22Z",
+              "pattern": "read_file"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T13:57:23Z",
+              "file": ".semio-repo/💬/👤/ueli.md",
+              "old": {
+                "loc": 1
+              },
+              "new": {
+                "sections": [
+                  {
+                    "section": "🛅semiorepo🗃️💬🗃️👤📃uelimd🔖prompting"
+                  },
+                  {
+                    "section": "🛅semiorepo🗃️💬🗃️👤📃uelimd🔖templates"
+                  }
+                ],
+                "loc": 1
+              }
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T13:57:26Z",
+              "pattern": "grep_search"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T13:57:35Z",
+              "pattern": "manage_todo_list"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T15:00:54Z",
+              "pattern": "run_command"
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "projects": {},
+        "bundles": {},
+        "folders": {
+          "modified": [
+            "🛅semiorepo🗃️💬🗃️👤"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🛅semiorepo🗃️💬🗃️👤📃uelimd"
+          ]
+        },
+        "sections": {
+          "modified": [
+            "🛅semiorepo🗃️💬🗃️👤📃uelimd🔖prompting",
+            "🛅semiorepo🗃️💬🗃️👤📃uelimd🔖templates"
+          ]
+        },
+        "definitions": {}
+      }
+    }
+  ]
+}

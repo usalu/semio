@@ -1,0 +1,130 @@
+{
+  "title": "Refactor Ticket JSON Format",
+  "description": "Refactor ticket.json format: rename sessions to agents, flatten prompts into events, rename pattern to query on search events, rename id to session, remove status/summary from JSON serialization, add prompt field to agent.prompt.submitting events",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/667"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "interactions": [
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-23 18:38:24",
+      "author": "usalu",
+      "system": "linux",
+      "client": "",
+      "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
+      "summary": "Refactored ticket.json format: renamed sessions to agents, flattened prompts into events, renamed pattern to query, renamed id to session, removed status/summary from top-level JSON, added interactions persistence, fixed hook log entry kind field and test assertions. All tests pass.",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "session": "",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "llm": "opus-4-6"
+    },
+    {
+      "session": "",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Gather current ticket.json code",
+            "completed": "2026-02-23T15:40:54Z"
+          },
+          {
+            "name": "Understand current ticket types/structs",
+            "completed": "2026-02-23T15:40:54Z"
+          },
+          {
+            "name": "Open ticket for refactoring",
+            "completed": "2026-02-23T15:40:54Z"
+          },
+          {
+            "name": "Refactor ticket.json Go types",
+            "started": "2026-02-23T15:40:54Z"
+          },
+          {
+            "name": "Update ticket creation/read/write"
+          },
+          {
+            "name": "Update hook tracking code"
+          },
+          {
+            "name": "Update tests"
+          },
+          {
+            "name": "Run tests and verify"
+          },
+          {
+            "name": "Close ticket"
+          }
+        ]
+      },
+      "diff": {
+        "projects": {
+          "modified": [
+            "🧰semiorepo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "🧰semiorepo⌨️cli"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root💻maingo"
+          ]
+        },
+        "sections": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖graphqltypes",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖types",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖tickets",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖cli",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖missingutilities",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖hooks"
+          ]
+        },
+        "definitions": {
+          "modified": [
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️unmarshaljson",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️reopenticket",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️getdatestarted",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️computeticketfiles",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️applyhookpathtoagentdiffmodified",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️applycodeblockrefstoagentdiff",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️hasticketagentdiffdata",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️ensureticketagent",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️resolvecodeblockrefs",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️trackhookinopenticket"
+          ]
+        }
+      }
+    },
+    {
+      "session": "",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat"
+    }
+  ]
+}

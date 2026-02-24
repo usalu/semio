@@ -754,7 +754,7 @@ The free quota is very quickly reached but resets regularly and hence we just us
 
 #### [AI studio](https://ai.google.com/studio) [↑](#-web-chat-)
 
-Good for larger experiments due to more generous free quota 🧪
+Good for larger experiments due to more generous free quota 🥼
 
 ### 💻 Editor [↑](#-tools-)
 
@@ -788,7 +788,7 @@ But in general, we don't use the chat because it is way too expensive 💰
 
 #### 🌊 Windsurf [↑](#-editor-)
 
-Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🧪
+Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🥼
 
 ### ⌨️️ CLI [↑](#-tools-)
 

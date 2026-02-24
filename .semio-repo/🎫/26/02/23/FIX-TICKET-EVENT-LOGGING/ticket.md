@@ -6,8 +6,12 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI
 
 ## Summary
 
-Fixed event logging
+Fixed three issues: (1) Rebuilt stale CLI binary resolving agent.tool.searching.ended dispatch error that blocked PostToolUse hooks. (2) Removed ghost-prompt stub in trackHookInOpenTicket so prompts only come from agent.prompt.submitting hooks; saves session metadata before returning. (3) Isolated TestTicketOpenContinueKeyword with tmpDir to prevent real-filesystem interference. All tests pass.
 ## Changes
+
+- [semio-repo/cli/main.go](semio-repo/cli/main.go): Removed ghost-prompt stub in `trackHookInOpenTicket` — when no prompt exists, saves ticket (persisting session+metadata) then returns early instead of creating an empty `TicketSessionPrompt`; events only attach to real `agent.prompt.submitting`-originated prompts
+- [semio-repo/cli/main_test.go](semio-repo/cli/main_test.go): Added tmpDir+git isolation to `TestTicketOpenContinueKeyword` so it doesn't pick up real workspace tickets
+- Rebuilt `semio-repo/cli/cli` binary — dispatches `HookAgentToolSearched` (`agent.tool.searching.ended`) correctly, no more "unknown hook event" blocking error
 
 ## Log
 

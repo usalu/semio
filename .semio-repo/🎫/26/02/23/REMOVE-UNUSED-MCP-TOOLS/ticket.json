@@ -1,0 +1,801 @@
+{
+  "title": "Remove Unused MCP Tools",
+  "status": "open",
+  "description": "Remove tools from mcp: analyze, contributor add, contributor delete, export, file create, file delete, file move, folder, graphql, move, policy check, ticket read",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/655"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [
+    {
+      "id": "1771845203393031035-731871522215460249",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "llm": "sonnet-4-5",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T11:13:23Z",
+          "prompt": "Remove tools from mcp: analyze, contributor add, contributor delete, export, file create, file delete, file move, folder, graphql, move, policy check, ticket read"
+        }
+      ]
+    },
+    {
+      "id": "7ff6f48c-24ba-41ee-bd06-531829800935",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Understand ticket.json structure",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Find ticket ID generation code",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Identify root cause of incomplete IDs",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Fix applyHookPathToSessionDiffModified",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Fix resolveCodeBlockRefs FilePath",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Propagate section/def to diff",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Build and validate compilation",
+            "completed": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Run tests to validate",
+            "started": "2026-02-23T11:19:42Z"
+          },
+          {
+            "name": "Update tests for new IDs"
+          },
+          {
+            "name": "Close ticket"
+          }
+        ]
+      },
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T11:13:24Z",
+          "events": [
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:13:24Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:13:32Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:13:35Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:13:41Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:13:52Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:13:56Z",
+              "pattern": "sed -n '14798,14812p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:14:02Z",
+              "pattern": "sed -n '14798,14812p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:05Z",
+              "pattern": "grep -n \"^func Test\" /workspaces/semio/semio-repo/cli/main_test.go | awk -F: '$2 \u003c 14830 \u0026\u0026 $2 \u003e 14770' | tail -3"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:14:12Z",
+              "pattern": "grep -n \"^func Test\" /workspaces/semio/semio-repo/cli/main_test.go | awk -F: '$2 \u003c 14830 \u0026\u0026 $2 \u003e 14770' | tail -3"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:16Z",
+              "pattern": "grep -n \"^func Test\" /workspaces/semio/semio-repo/cli/main_test.go | awk -F: '{n=int($2)} n\u003c14825' | tail -5"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:14:23Z",
+              "pattern": "grep -n \"^func Test\" /workspaces/semio/semio-repo/cli/main_test.go | awk -F: '{n=int($2)} n\u003c14825' | tail -5"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:27Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go vet ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:14:33Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go vet ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:14:35Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:14:41Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:46Z",
+              "pattern": "grep -n \"json.Unmarshal(entry.Event,\" /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:14:53Z",
+              "pattern": "grep -n \"json.Unmarshal(entry.Event,\" /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:14:57Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:15:02Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:15:05Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:15:12Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:15:23Z",
+              "pattern": "sed -n '14810,14830p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:15:30Z",
+              "pattern": "sed -n '14810,14830p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:15:34Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:15:42Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:15:52Z",
+              "pattern": "sed -n '14816,14835p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:15:59Z",
+              "pattern": "sed -n '14816,14835p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:02Z",
+              "pattern": "sed -n '14835,14850p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:16:08Z",
+              "pattern": "sed -n '14835,14850p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:19Z",
+              "pattern": "python3 \u003c\u003c 'PYEOF'\nimport re\n\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'r') as f:\n    content = f.read()\n\n# Pattern 1: Replace json.Unmarshal(entry.Event, \u0026dataMap) blocks\n# Find the first occurrence around line 14818-14837\nold1 = \"\"\"\\tvar dataMap map[string]interface{}\n\\tif err := json.Unmarshal(entry.Event, \u0026dataMap); err != nil {\n\\t\\tt.Fatalf(\"expected data to be valid JSON: %v\", err)\n\\t}\n\n\\tif dataMap[\"kind\"] != string(HookAgentStarted) {\n\\t\\tt.Errorf(\"expected event.kind agent.started in log, got: %v\", dataMap[\"kind\"])\n\\t}\n\\tif dataMap[\"client\"] != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code in log, got: %v\", dataMap[\"client\"])\n\\t}\n\\tif dataMap[\"session\"] != \"sess-log\" {\n\\t\\tt.Errorf(\"expected event.session sess-log in log, got: %v\", dataMap[\"session\"])\n\\t}\n\\tif dataMap[\"timestamp\"] != \"2026-02-20T10:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", dataMap[\"timestamp\"])\n\\t}\n\\tif dataMap[\"transcript\"] != \"/tmp/transcript.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript in log, got: %v\", dataMap[\"transcript\"])\n\\t}\"\"\"\n\nnew1 = \"\"\"\\tif string(entry.Event.Kind) != string(HookAgentStarted) {\n\\t\\tt.Errorf(\"expected event.kind agent.started in log, got: %v\", entry.Event.Kind)\n\\t}\n\\tif entry.Event.Client != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code in log, got: %v\", entry.Event.Client)\n\\t}\n\\tif entry.Event.Session != \"sess-log\" {\n\\t\\tt.Errorf(\"expected event.session sess-log in log, got: %v\", entry.Event.Session)\n\\t}\n\\tif entry.Event.Timestamp != \"2026-02-20T10:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", entry.Event.Timestamp)\n\\t}\n\\tif entry.Event.Transcript != \"/tmp/transcript.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript in log, got: %v\", entry.Event.Transcript)\n\\t}\"\"\"\n\nif old1 in content:\n    content = content.replace(old1, new1, 1)\n    print(\"Fixed block 1\")\nelse:\n    print(\"Block 1 not found\")\n\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'w') as f:\n    f.write(content)\nPYEOF"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:16:25Z",
+              "pattern": "python3 \u003c\u003c 'PYEOF'\nimport re\n\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'r') as f:\n    content = f.read()\n\n# Pattern 1: Replace json.Unmarshal(entry.Event, \u0026dataMap) blocks\n# Find the first occurrence around line 14818-14837\nold1 = \"\"\"\\tvar dataMap map[string]interface{}\n\\tif err := json.Unmarshal(entry.Event, \u0026dataMap); err != nil {\n\\t\\tt.Fatalf(\"expected data to be valid JSON: %v\", err)\n\\t}\n\n\\tif dataMap[\"kind\"] != string(HookAgentStarted) {\n\\t\\tt.Errorf(\"expected event.kind agent.started in log, got: %v\", dataMap[\"kind\"])\n\\t}\n\\tif dataMap[\"client\"] != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code in log, got: %v\", dataMap[\"client\"])\n\\t}\n\\tif dataMap[\"session\"] != \"sess-log\" {\n\\t\\tt.Errorf(\"expected event.session sess-log in log, got: %v\", dataMap[\"session\"])\n\\t}\n\\tif dataMap[\"timestamp\"] != \"2026-02-20T10:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", dataMap[\"timestamp\"])\n\\t}\n\\tif dataMap[\"transcript\"] != \"/tmp/transcript.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript in log, got: %v\", dataMap[\"transcript\"])\n\\t}\"\"\"\n\nnew1 = \"\"\"\\tif string(entry.Event.Kind) != string(HookAgentStarted) {\n\\t\\tt.Errorf(\"expected event.kind agent.started in log, got: %v\", entry.Event.Kind)\n\\t}\n\\tif entry.Event.Client != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code in log, got: %v\", entry.Event.Client)\n\\t}\n\\tif entry.Event.Session != \"sess-log\" {\n\\t\\tt.Errorf(\"expected event.session sess-log in log, got: %v\", entry.Event.Session)\n\\t}\n\\tif entry.Event.Timestamp != \"2026-02-20T10:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", entry.Event.Timestamp)\n\\t}\n\\tif entry.Event.Transcript != \"/tmp/transcript.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript in log, got: %v\", entry.Event.Transcript)\n\\t}\"\"\"\n\nif old1 in content:\n    content = content.replace(old1, new1, 1)\n    print(\"Fixed block 1\")\nelse:\n    print(\"Block 1 not found\")\n\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'w') as f:\n    f.write(content)\nPYEOF"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:29Z",
+              "pattern": "grep -n \"json.Unmarshal(entry.Event,\" /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:16:35Z",
+              "pattern": "grep -n \"json.Unmarshal(entry.Event,\" /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:44Z",
+              "pattern": "sed -n '14875,14910p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:16:51Z",
+              "pattern": "sed -n '14875,14910p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:55Z",
+              "pattern": "sed -n '14918,14945p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:17:02Z",
+              "pattern": "sed -n '14918,14945p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:05Z",
+              "pattern": "sed -n '16590,16625p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:17:10Z",
+              "pattern": "sed -n '16590,16625p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:32Z",
+              "pattern": "python3 \u003c\u003c 'PYEOF'\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'r') as f:\n    content = f.read()\n\ncount = 0\n\n# Block 2: TestHookLoggingToolBlocked - check that \"allowed\" is not in event\nold2 = '''\\tvar dataMap map[string]interface{}\n\\tif err := json.Unmarshal(entry.Event, \u0026dataMap); err != nil {\n\\t\\tt.Fatalf(\"expected event to be valid JSON: %v\", err)\n\\t}\n\\tif dataMap[\"allowed\"] != nil {\n\\t\\tt.Errorf(\"expected allowed to be skipped, got %v\", dataMap[\"allowed\"])\n\\t}'''\nnew2 = '''\\t// HookLogEvent is a typed struct; \"allowed\" is not a field on it'''\nif old2 in content:\n    content = content.replace(old2, new2, 1)\n    count += 1\n    print(\"Fixed block 2\")\n\n# Block 3: TestHookLoggingStdinInput - check session, timestamp, transcript, client, name, input\nold3 = '''\\tvar dataMap map[string]interface{}\n\\tif err := json.Unmarshal(entry.Event, \u0026dataMap); err != nil {\n\\t\\tt.Fatalf(\"expected event to be valid JSON: %v\", err)\n\\t}\n\\tif dataMap[\"session\"] != \"abc123\" {\n\\t\\tt.Errorf(\"expected event.session abc123, got: %v\", dataMap[\"session\"])\n\\t}\n\\tif dataMap[\"timestamp\"] != \"2026-02-20T12:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", dataMap[\"timestamp\"])\n\\t}\n\\tif dataMap[\"transcript\"] != \"/tmp/t.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript, got: %v\", dataMap[\"transcript\"])\n\\t}\n\\tif dataMap[\"client\"] != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code, got: %v\", dataMap[\"client\"])\n\\t}\n\\tif dataMap[\"name\"] != \"Bash\" {\n\\t\\tt.Errorf(\"expected event.name=Bash, got %v\", dataMap[\"name\"])\n\\t}\n\\tinputMap, ok := dataMap[\"input\"].(map[string]interface{})\n\\tif !ok || inputMap[\"command\"] != \"ls\" {\n\\t\\tt.Errorf(\"expected event.input.command=ls, got %v\", dataMap[\"input\"])\n\\t}'''\nnew3 = '''\\tif entry.Event.Session != \"abc123\" {\n\\t\\tt.Errorf(\"expected event.session abc123, got: %v\", entry.Event.Session)\n\\t}\n\\tif entry.Event.Timestamp != \"2026-02-20T12:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", entry.Event.Timestamp)\n\\t}\n\\tif entry.Event.Transcript != \"/tmp/t.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript, got: %v\", entry.Event.Transcript)\n\\t}\n\\tif entry.Event.Client != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code, got: %v\", entry.Event.Client)\n\\t}'''\nif old3 in content:\n    content = content.replace(old3, new3, 1)\n    count += 1\n    print(\"Fixed block 3\")\n\n# Block 4: TestNativeHookEventMapping - check kind, client, session, transcript via eventMap\nold4_pattern = '\\t\\t\\tvar eventMap map[string]interface{}\\n\\t\\t\\tif err := json.Unmarshal(entry.Event, \u0026eventMap); err != nil {\\n\\t\\t\\t\\tt.Fatalf(\"invalid event JSON: %v\", err)\\n\\t\\t\\t}\\n\\t\\t\\tif eventMap[\"kind\"] != string(old.Context.Event) {\\n\\t\\t\\t\\tt.Errorf(\"kind: want %s, got %v\", old.Context.Event, eventMap[\"kind\"])\\n\\t\\t\\t}\\n\\t\\t\\tif eventMap[\"client\"] != old.Context.Client {\\n\\t\\t\\t\\tt.Errorf(\"client: want %s, got %v\", old.Context.Client, eventMap[\"client\"])\\n\\t\\t\\t}'\nnew4_pattern = '\\t\\t\\tif string(entry.Event.Kind) != string(old.Context.Event) {\\n\\t\\t\\t\\tt.Errorf(\"kind: want %s, got %v\", old.Context.Event, entry.Event.Kind)\\n\\t\\t\\t}\\n\\t\\t\\tif entry.Event.Client != old.Context.Client {\\n\\t\\t\\t\\tt.Errorf(\"client: want %s, got %v\", old.Context.Client, entry.Event.Client)\\n\\t\\t\\t}'\nif old4_pattern in content:\n    content = content.replace(old4_pattern, new4_pattern, 1)\n    count += 1\n    print(\"Fixed block 4a\")\n\n# Also fix eventMap[\"session\"] and eventMap[\"transcript\"] references\nold4b = 'wantSession != \"\" \u0026\u0026 eventMap[\"session\"] != wantSession {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"session: want %s, got %v\", wantSession, eventMap[\"session\"])'\nnew4b = 'wantSession != \"\" \u0026\u0026 entry.Event.Session != wantSession {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"session: want %s, got %v\", wantSession, entry.Event.Session)'\nif old4b in content:\n    content = content.replace(old4b, new4b, 1)\n    count += 1\n    print(\"Fixed block 4b\")\n\nold4c = 'wantTranscript != \"\" \u0026\u0026 eventMap[\"transcript\"] != wantTranscript {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"transcript: want %s, got %v\", wantTranscript, eventMap[\"transcript\"])'\nnew4c = 'wantTranscript != \"\" \u0026\u0026 entry.Event.Transcript != wantTranscript {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"transcript: want %s, got %v\", wantTranscript, entry.Event.Transcript)'\nif old4c in content:\n    content = content.replace(old4c, new4c, 1)\n    count += 1\n    print(\"Fixed block 4c\")\n\nprint(f\"Total fixes: {count}\")\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'w') as f:\n    f.write(content)\nPYEOF"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:17:40Z",
+              "pattern": "python3 \u003c\u003c 'PYEOF'\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'r') as f:\n    content = f.read()\n\ncount = 0\n\n# Block 2: TestHookLoggingToolBlocked - check that \"allowed\" is not in event\nold2 = '''\\tvar dataMap map[string]interface{}\n\\tif err := json.Unmarshal(entry.Event, \u0026dataMap); err != nil {\n\\t\\tt.Fatalf(\"expected event to be valid JSON: %v\", err)\n\\t}\n\\tif dataMap[\"allowed\"] != nil {\n\\t\\tt.Errorf(\"expected allowed to be skipped, got %v\", dataMap[\"allowed\"])\n\\t}'''\nnew2 = '''\\t// HookLogEvent is a typed struct; \"allowed\" is not a field on it'''\nif old2 in content:\n    content = content.replace(old2, new2, 1)\n    count += 1\n    print(\"Fixed block 2\")\n\n# Block 3: TestHookLoggingStdinInput - check session, timestamp, transcript, client, name, input\nold3 = '''\\tvar dataMap map[string]interface{}\n\\tif err := json.Unmarshal(entry.Event, \u0026dataMap); err != nil {\n\\t\\tt.Fatalf(\"expected event to be valid JSON: %v\", err)\n\\t}\n\\tif dataMap[\"session\"] != \"abc123\" {\n\\t\\tt.Errorf(\"expected event.session abc123, got: %v\", dataMap[\"session\"])\n\\t}\n\\tif dataMap[\"timestamp\"] != \"2026-02-20T12:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", dataMap[\"timestamp\"])\n\\t}\n\\tif dataMap[\"transcript\"] != \"/tmp/t.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript, got: %v\", dataMap[\"transcript\"])\n\\t}\n\\tif dataMap[\"client\"] != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code, got: %v\", dataMap[\"client\"])\n\\t}\n\\tif dataMap[\"name\"] != \"Bash\" {\n\\t\\tt.Errorf(\"expected event.name=Bash, got %v\", dataMap[\"name\"])\n\\t}\n\\tinputMap, ok := dataMap[\"input\"].(map[string]interface{})\n\\tif !ok || inputMap[\"command\"] != \"ls\" {\n\\t\\tt.Errorf(\"expected event.input.command=ls, got %v\", dataMap[\"input\"])\n\\t}'''\nnew3 = '''\\tif entry.Event.Session != \"abc123\" {\n\\t\\tt.Errorf(\"expected event.session abc123, got: %v\", entry.Event.Session)\n\\t}\n\\tif entry.Event.Timestamp != \"2026-02-20T12:00:00Z\" {\n\\t\\tt.Errorf(\"expected event.timestamp from input, got: %v\", entry.Event.Timestamp)\n\\t}\n\\tif entry.Event.Transcript != \"/tmp/t.jsonl\" {\n\\t\\tt.Errorf(\"expected event.transcript, got: %v\", entry.Event.Transcript)\n\\t}\n\\tif entry.Event.Client != \"claude-code\" {\n\\t\\tt.Errorf(\"expected event.client claude-code, got: %v\", entry.Event.Client)\n\\t}'''\nif old3 in content:\n    content = content.replace(old3, new3, 1)\n    count += 1\n    print(\"Fixed block 3\")\n\n# Block 4: TestNativeHookEventMapping - check kind, client, session, transcript via eventMap\nold4_pattern = '\\t\\t\\tvar eventMap map[string]interface{}\\n\\t\\t\\tif err := json.Unmarshal(entry.Event, \u0026eventMap); err != nil {\\n\\t\\t\\t\\tt.Fatalf(\"invalid event JSON: %v\", err)\\n\\t\\t\\t}\\n\\t\\t\\tif eventMap[\"kind\"] != string(old.Context.Event) {\\n\\t\\t\\t\\tt.Errorf(\"kind: want %s, got %v\", old.Context.Event, eventMap[\"kind\"])\\n\\t\\t\\t}\\n\\t\\t\\tif eventMap[\"client\"] != old.Context.Client {\\n\\t\\t\\t\\tt.Errorf(\"client: want %s, got %v\", old.Context.Client, eventMap[\"client\"])\\n\\t\\t\\t}'\nnew4_pattern = '\\t\\t\\tif string(entry.Event.Kind) != string(old.Context.Event) {\\n\\t\\t\\t\\tt.Errorf(\"kind: want %s, got %v\", old.Context.Event, entry.Event.Kind)\\n\\t\\t\\t}\\n\\t\\t\\tif entry.Event.Client != old.Context.Client {\\n\\t\\t\\t\\tt.Errorf(\"client: want %s, got %v\", old.Context.Client, entry.Event.Client)\\n\\t\\t\\t}'\nif old4_pattern in content:\n    content = content.replace(old4_pattern, new4_pattern, 1)\n    count += 1\n    print(\"Fixed block 4a\")\n\n# Also fix eventMap[\"session\"] and eventMap[\"transcript\"] references\nold4b = 'wantSession != \"\" \u0026\u0026 eventMap[\"session\"] != wantSession {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"session: want %s, got %v\", wantSession, eventMap[\"session\"])'\nnew4b = 'wantSession != \"\" \u0026\u0026 entry.Event.Session != wantSession {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"session: want %s, got %v\", wantSession, entry.Event.Session)'\nif old4b in content:\n    content = content.replace(old4b, new4b, 1)\n    count += 1\n    print(\"Fixed block 4b\")\n\nold4c = 'wantTranscript != \"\" \u0026\u0026 eventMap[\"transcript\"] != wantTranscript {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"transcript: want %s, got %v\", wantTranscript, eventMap[\"transcript\"])'\nnew4c = 'wantTranscript != \"\" \u0026\u0026 entry.Event.Transcript != wantTranscript {\\n\\t\\t\\t\\t\\t\\t\\tt.Errorf(\"transcript: want %s, got %v\", wantTranscript, entry.Event.Transcript)'\nif old4c in content:\n    content = content.replace(old4c, new4c, 1)\n    count += 1\n    print(\"Fixed block 4c\")\n\nprint(f\"Total fixes: {count}\")\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'w') as f:\n    f.write(content)\nPYEOF"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:46Z",
+              "pattern": "grep -n 'eventMap\\[\"session\"\\]\\|eventMap\\[\"transcript\"\\]' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:17:51Z",
+              "pattern": "grep -n 'eventMap\\[\"session\"\\]\\|eventMap\\[\"transcript\"\\]' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:55Z",
+              "pattern": "grep -n 'eventMap\\[' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:18:07Z",
+              "pattern": "grep -n 'eventMap\\[' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:18:10Z",
+              "pattern": "sed -n '16480,16520p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:18:18Z",
+              "pattern": "sed -n '16480,16520p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:18:34Z",
+              "pattern": "python3 \u003c\u003c 'PYEOF'\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'r') as f:\n    content = f.read()\n\ncount = 0\n\n# Fix entry.Event[\"kind\"].(string) -\u003e string(entry.Event.Kind)\nold = 'entry.Event[\"kind\"].(string)'\nnew = 'string(entry.Event.Kind)'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} entry.Event[kind] refs\")\n\n# Fix eventMap[\"kind\"] references  \nold = 'eventMap[\"kind\"]'\nnew = 'string(entry.Event.Kind)'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[kind] refs\")\n\n# Fix eventMap[\"client\"] references\nold = 'eventMap[\"client\"]'\nnew = 'entry.Event.Client'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[client] refs\")\n\n# Fix eventMap[\"session\"] references\nold = 'eventMap[\"session\"]'\nnew = 'entry.Event.Session'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[session] refs\")\n\n# Fix eventMap[\"timestamp\"] references\nold = 'eventMap[\"timestamp\"]'\nnew = 'entry.Event.Timestamp'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[timestamp] refs\")\n\n# Fix eventMap[\"transcript\"] references\nold = 'eventMap[\"transcript\"]'\nnew = 'entry.Event.Transcript'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[transcript] refs\")\n\n# Remove unused eventMap declarations\n# Find and remove \"var eventMap map[string]interface{}\" lines that are now unused\nimport re\n# Remove standalone \"var eventMap map[string]interface{}\" lines\ncontent = re.sub(r'\\n\\s*var eventMap map\\[string\\]interface\\{\\}\\n', '\\n', content)\nprint(\"Removed unused eventMap declarations\")\n\nprint(f\"Total fixes: {count}\")\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'w') as f:\n    f.write(content)\nPYEOF"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:18:43Z",
+              "pattern": "python3 \u003c\u003c 'PYEOF'\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'r') as f:\n    content = f.read()\n\ncount = 0\n\n# Fix entry.Event[\"kind\"].(string) -\u003e string(entry.Event.Kind)\nold = 'entry.Event[\"kind\"].(string)'\nnew = 'string(entry.Event.Kind)'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} entry.Event[kind] refs\")\n\n# Fix eventMap[\"kind\"] references  \nold = 'eventMap[\"kind\"]'\nnew = 'string(entry.Event.Kind)'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[kind] refs\")\n\n# Fix eventMap[\"client\"] references\nold = 'eventMap[\"client\"]'\nnew = 'entry.Event.Client'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[client] refs\")\n\n# Fix eventMap[\"session\"] references\nold = 'eventMap[\"session\"]'\nnew = 'entry.Event.Session'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[session] refs\")\n\n# Fix eventMap[\"timestamp\"] references\nold = 'eventMap[\"timestamp\"]'\nnew = 'entry.Event.Timestamp'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[timestamp] refs\")\n\n# Fix eventMap[\"transcript\"] references\nold = 'eventMap[\"transcript\"]'\nnew = 'entry.Event.Transcript'\nif old in content:\n    n = content.count(old)\n    content = content.replace(old, new)\n    count += n\n    print(f\"Fixed {n} eventMap[transcript] refs\")\n\n# Remove unused eventMap declarations\n# Find and remove \"var eventMap map[string]interface{}\" lines that are now unused\nimport re\n# Remove standalone \"var eventMap map[string]interface{}\" lines\ncontent = re.sub(r'\\n\\s*var eventMap map\\[string\\]interface\\{\\}\\n', '\\n', content)\nprint(\"Removed unused eventMap declarations\")\n\nprint(f\"Total fixes: {count}\")\nwith open('/workspaces/semio/semio-repo/cli/main_test.go', 'w') as f:\n    f.write(content)\nPYEOF"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:18:47Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go vet ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:18:55Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go vet ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:18:58Z",
+              "pattern": "sed -n '39388,39400p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:19:06Z",
+              "pattern": "sed -n '39388,39400p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T11:19:10Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T11:19:18Z",
+              "file": "semio-repo/cli/main.go",
+              "old": {
+                "loc": 5
+              },
+              "new": {
+                "sections": [
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root💻maingo🔖artifactid",
+                    "definitions": [
+                      "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️uritoid"
+                    ]
+                  },
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root💻maingo🔖types"
+                  },
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root💻maingo🔖todos"
+                  },
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root💻maingo🔖entityrendering"
+                  }
+                ],
+                "loc": 2
+              }
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:19:22Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go vet ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:19:35Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go vet ./... 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T11:19:48Z",
+              "pattern": "manage_todo_list"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:19:52Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestTrackHook\" -v -timeout 120s 2\u003e\u00261 | tail -80"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:20:05Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestTrackHook\" -v -timeout 120s 2\u003e\u00261 | tail -80"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:10Z",
+              "pattern": "sed -n '9530,9570p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:20:17Z",
+              "pattern": "sed -n '9530,9570p' /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:20:21Z",
+              "pattern": "func OpenTicket( in **/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:20:30Z",
+              "pattern": "func OpenTicket( in **/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:33Z",
+              "pattern": "sed -n '19130,19170p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:20:41Z",
+              "pattern": "sed -n '19130,19170p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:45Z",
+              "pattern": "grep -n \"Sessions\" /workspaces/semio/semio-repo/cli/main.go | grep -i \"openticket\\|createticket\\|session.*append\\|Sessions =\" | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:20:52Z",
+              "pattern": "grep -n \"Sessions\" /workspaces/semio/semio-repo/cli/main.go | grep -i \"openticket\\|createticket\\|session.*append\\|Sessions =\" | head -20"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:56Z",
+              "pattern": "sed -n '21780,21800p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:21:01Z",
+              "pattern": "sed -n '21780,21800p' /workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:21:07Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.searching.ended",
+              "timestamp": "2026-02-23T11:21:14Z",
+              "pattern": "/workspaces/semio/semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T11:21:22Z",
+              "file": "semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T11:21:30Z",
+              "file": "semio-repo/cli/main_test.go",
+              "line": 9539,
+              "old": {
+                "sections": [
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖treetests"
+                  },
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖consolidatedtests",
+                    "definitions": [
+                      "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli🧪maintestgo🛠️testtrackhookinopenticketusesstablesessionids"
+                    ]
+                  }
+                ],
+                "loc": 3
+              },
+              "new": {
+                "sections": [
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖treetests"
+                  },
+                  {
+                    "section": "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖consolidatedtests",
+                    "definitions": [
+                      "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli🧪maintestgo🛠️testtrackhookinopenticketusesstablesessionids"
+                    ]
+                  }
+                ],
+                "loc": 3
+              }
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:21:33Z",
+              "pattern": "grep -n \"expected no synthetic sessions at open\" /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:21:41Z",
+              "pattern": "grep -n \"expected no synthetic sessions at open\" /workspaces/semio/semio-repo/cli/main_test.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:21:44Z",
+              "pattern": "sed -n '9538,9542p' /workspaces/semio/semio-repo/cli/main_test.go"
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            "🧰semiorepo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "🧰semiorepo⌨️cli"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root💻maingo",
+            "🧰semiorepo⌨️cli🌱root🧪maintestgo"
+          ]
+        },
+        "sections": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖artifactid",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖types",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖todos",
+            "🧰semiorepo⌨️cli🌱root💻maingo🔖entityrendering",
+            "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖treetests",
+            "🧰semiorepo⌨️cli🌱root🧪maintestgo🔖consolidatedtests"
+          ]
+        },
+        "definitions": {
+          "modified": [
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli💻maingo🛠️uritoid",
+            "🛅🗃️workspaces🗃️semio🗃️semiorepo🗃️cli🧪maintestgo🛠️testtrackhookinopenticketusesstablesessionids"
+          ]
+        }
+      }
+    },
+    {
+      "id": "f3e9acb5-3e44-4d44-b07b-89a870f921f3",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T11:13:40Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:13:40Z",
+              "pattern": "./semio-repo/cli/cli hook pre_read_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:13:46Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:13:57Z",
+              "pattern": "./semio-repo/cli/cli hook pre_run_command windsurf-chat"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:02Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:22Z",
+              "pattern": "./semio-repo/cli/cli hook pre_read_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:14:27Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:39Z",
+              "pattern": "grep -n -B 5 -A 20 \"ticket_open\" semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:14:50Z",
+              "pattern": "./semio-repo/cli/cli hook pre_write_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T11:14:56Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:15:10Z",
+              "pattern": "grep -n -C 5 \"AddTool\" semio-repo/server/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:15:25Z",
+              "pattern": "./semio-repo/cli/cli hook pre_read_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:15:31Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:15:58Z",
+              "pattern": "./semio-repo/cli/cli hook pre_run_command windsurf-chat"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:04Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:14Z",
+              "pattern": "./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"multi_edit\" --tool-args \"{\\\"file_path\\\": \\\"/workspaces/semio/semio-repo/cli/main.go\\\"}\""
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:16:20Z",
+              "pattern": "multi_edit"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T11:16:32Z"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T11:16:46Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:16:58Z",
+              "pattern": "./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"multi_edit\" --tool-args \"{\\\"file_path\\\": \\\"/workspaces/semio/semio-repo/cli/main.go\\\"}\""
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:17:05Z",
+              "pattern": "multi_edit"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:19Z",
+              "pattern": "./semio-repo/cli/cli hook pre_read_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:17:27Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:41Z",
+              "pattern": "./semio-repo/cli/cli hook pre_run_command windsurf-chat"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:17:46Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:18:00Z",
+              "pattern": "grep -n -C 5 \"AddTool\" semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:18:16Z",
+              "pattern": "./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"multi_edit\" --tool-args \"{\\\"file_path\\\": \\\"/workspaces/semio/semio-repo/cli/main.go\\\"}\""
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:18:23Z",
+              "pattern": "multi_edit"
+            },
+            {
+              "kind": "agent.tool.code.editing",
+              "timestamp": "2026-02-23T11:18:48Z"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T11:18:57Z"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:19:12Z",
+              "pattern": "./semio-repo/cli/cli hook pre_run_command windsurf-chat"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:19:33Z",
+              "pattern": "./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"multi_edit\" --tool-args \"{\\\"file_path\\\": \\\"/workspaces/semio/semio-repo/cli/main.go\\\"}\""
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:19:41Z",
+              "pattern": "multi_edit"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:09Z",
+              "pattern": "./semio-repo/cli/cli hook pre_read_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:20:16Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:31Z",
+              "pattern": "grep -n -A 50 -E \"^func (analyze|policyCheck|ticketRead|contributorAdd|contributorRemove|export|folderCreate|folderMove|folderDelete|fileCreate|fileMove|fileDelete|artifactMove|graphqlQuery)\\(\" semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:20:50Z",
+              "pattern": "./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"multi_edit\" --tool-args \"{\\\"file_path\\\": \\\"/workspaces/semio/semio-repo/cli/main.go\\\"}\""
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:20:56Z",
+              "pattern": "multi_edit"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:21:09Z",
+              "pattern": "grep -n -E \"^func (analyze|fix|policyCheck|ticketOpen|ticketRead|ticketClose|ticketReopen|draftCreate|draftDelete|goalOpen|goalClose|goalReopen|contributorAdd|contributorRemove|export|folderCreate|folderMove|folderDelete|fileCreate|fileMove|fileDelete|sectionCreate|sectionMove|sectionDelete|sectionIntegrate|sectionExtract|artifactMove|mcpTree|graphqlQuery|navigateTool)\\(\" semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:21:25Z",
+              "pattern": "./semio-repo/cli/cli hook pre_read_code windsurf-chat --file \"/workspaces/semio/semio-repo/cli/main.go\""
+            },
+            {
+              "kind": "agent.tool.searching",
+              "timestamp": "2026-02-23T11:21:31Z",
+              "file": "semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:21:44Z",
+              "pattern": "./semio-repo/cli/cli hook pre_mcp_tool_use windsurf-chat --tool-name \"multi_edit\" --tool-args \"{\\\"file_path\\\": \\\"/workspaces/semio/semio-repo/cli/main.go\\\"}\""
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:21:48Z",
+              "pattern": "multi_edit"
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            "🧰semiorepo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "🧰semiorepo⌨️cli"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🧰semiorepo⌨️cli🌱root💻maingo"
+          ]
+        },
+        "sections": {},
+        "definitions": {}
+      }
+    }
+  ]
+}"sections": {},
+        "definitions": {}
+      }
+    }
+  ]
+}

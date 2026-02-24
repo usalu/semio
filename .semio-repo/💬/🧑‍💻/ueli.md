@@ -78,7 +78,348 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 ## 🧰semiorepo
 
-## 🧰semiorepo⌨️cli
+## 🧰semiorepo⌨️cli💻maingo
+
+The goal in `ticket.json` should be a proper id "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+```json
+{
+  "title": "Fix ID System and Emoji Prefixes",
+  "description": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/445"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+```
+
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T23:56:38.536Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
+    "tool_name": "grep_search",
+    "tool_input": {
+      "maxResults": 20,
+      "includePattern": "**/semio-repo/cli/main.go",
+      "isRegexp": true,
+      "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
+    },
+    "tool_response": "",
+    "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "allowed": true,
+    "client": "copilot-chat",
+    "include": [
+      "**/semio-repo/cli/main.go"
+    ],
+    "kind": "agent.tool.searching.ended",
+    "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
+    "response": "",
+    "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
+    "timestamp": "2026-02-23T23:56:39Z",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
+  },
+  "response": {
+    "allowed": true
+  }
+}
+```
+
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T23:56:38.536Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
+    "tool_name": "grep_search",
+    "tool_input": {
+      "maxResults": 20,
+      "includePattern": "**/semio-repo/cli/main.go",
+      "isRegexp": true,
+      "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
+    },
+    "tool_response": "",
+    "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "allowed": true,
+    "client": "copilot-chat",
+    "include": ["🧰semiorepo⌨️cli💻maingo"],
+    "kind": "agent.tool.searching.ended",
+    "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
+    "response": "",
+    "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
+    "timestamp": "2026-02-23T23:56:39Z",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
+  },
+  "response": {
+    "allowed": true
+  }
+}
+```
+
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T16:35:17.038Z",
+    "hookEventName": "PreToolUse",
+    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "tool_name": "replace_string_in_file",
+    "tool_input": {
+      "filePath": "/workspaces/semio/semio-repo/cli/main_test.go",
+      "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+      "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
+    },
+    "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "allowed": true,
+    "client": "copilot-chat",
+    "kind": "agent.tool.code.editing",
+    "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+    "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+    "path": "/workspaces/semio/semio-repo/cli/main_test.go",
+    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "timestamp": "2026-02-23T16:35:17Z",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl"
+  },
+  "response": {
+    "allowed": true
+  }
+}
+```
+should be:
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T16:35:17.038Z",
+    "hookEventName": "PreToolUse",
+    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "tool_name": "replace_string_in_file",
+    "tool_input": {
+      "filePath": "/workspaces/semio/semio-repo/cli/main_test.go",
+      "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+      "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
+    },
+    "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.tool.code.editing",
+    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "file": "🧰semiorepo⌨️cli🥼maintestgo",
+    "sections": ["🧰semiorepo⌨️cli🥼maintestgo🔖"],
+    "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+    "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+    "timestamp": "2026-02-23T16:35:17Z",
+  },
+  "response": {
+    "allowed": true
+  }
+}
+```
+
+
+
+The data is not cleanly modeled.
+
+```json
+{
+  "kind": "agent.tool.terminal.starting",
+  "timestamp": "2026-02-23T15:41:15Z",
+  "pattern": "sed -n '14860,14880p' semio-repo/cli/main_test.go"
+},
+```
+should be:
+```json
+{
+  "kind": "agent.tool.search.starting",
+  "timestamp": "2026-02-23T15:41:15Z",
+  "pattern": "semio-repo/cli/main_test.go#L14860-14880"
+},
+```
+
+```json
+{
+  "kind": "agent.tool.terminal.starting",
+  "timestamp": "2026-02-23T15:41:00Z",
+  "pattern": "grep -rn 'HookLogEntry' semio-repo/cli/main_test.go"
+}
+should be:
+{
+  "kind": "agent.tool.terminal.starting",
+  "timestamp": "2026-02-23T15:41:00Z",
+  "pattern": "HookLogEntry",
+  "include": "semio-repo/cli/main_test.go"
+}
+
+"cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5"
+
+should be:
+
+Everything like this:
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T16:23:51.780Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "tool_name": "run_in_terminal",
+    "tool_input": {
+      "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5",
+      "explanation": "Find where HookResultAgentStarted is created",
+      "goal": "Check if Kind is set",
+      "isBackground": false,
+      "timeout": 5000
+    },
+    "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
+    "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "allowed": true,
+    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "timestamp": "2026-02-23T16:23:52Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5"
+  },
+  "response": {
+    "allowed": true
+  }
+}
+```
+should be this:
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T16:23:51.780Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "tool_name": "run_in_terminal",
+    "tool_input": {
+      "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5",
+      "explanation": "Find where HookResultAgentStarted is created",
+      "goal": "Check if Kind is set",
+      "isBackground": false,
+      "timeout": 5000
+    },
+    "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
+    "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.tool.searching",
+    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "timestamp": "2026-02-23T16:23:52Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5"
+  },
+  "response": {
+    "allowed": true
+  }
+}
+```
+
+
+```go
+// #region 🔖Header
+
+// [🧰semiorepo⌨️cli💻maingo](semiorepo://file/semio-repo/cli/main.go)
+
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Monorepo CLI tool for repository management, analysis and code generation.
+
+// #endregion 🔖Header
+```
+
+should be
+
+```go
+// #region 🔖Header
+// [🧰semiorepo⌨️cli💻maingo](semiorepo://file/semio-repo/cli/main.go)
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+// Monorepo CLI tool for repository management, analysis and code generation.
+
+// #endregion 🔖Header
+
+All searching patterns with line numbers should be displayed like this:
+ `semio/js/sketchpad/Design.tsx#L532` for lines
+ `semio/js/sketchpad/Design.tsx#L532-L771` for ranges
+ here some wrong displays:
+ ```json
+{
+  "input": {
+    "timestamp": "2026-02-23T10:53:51.987Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "7ff6f48c-24ba-41ee-bd06-531829800935",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
+    "tool_name": "read_file",
+    "tool_input": {
+      "endLine": 35540,
+      "filePath": "/workspaces/semio/semio-repo/cli/main.go",
+      "startLine": 35490
+    },
+    "tool_response": "",
+    "tool_use_id": "toolu_vrtx_011DzYuTksYPRzS528HKBogs__vscode-1771801077693",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.tool.searching.ended",
+    "session": "7ff6f48c-24ba-41ee-bd06-531829800935",
+    "timestamp": "2026-02-23T10:53:51.987Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl"
+  },
+  "response": {},
+  "data": {
+    "allowed": true,
+    "session": "7ff6f48c-24ba-41ee-bd06-531829800935",
+    "timestamp": "2026-02-23T10:53:52Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
+    "query": "/workspaces/semio/semio-repo/cli/main.go",
+    "response": ""
+  }
+```
+```json
+{
+  "kind": "agent.tool.searching",
+  "timestamp": "2026-02-23T11:13:35Z",
+  "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+},
+{
+  "kind": "agent.tool.searching.ended",
+  "timestamp": "2026-02-23T11:13:41Z",
+  "pattern": "/workspaces/semio/semio-repo/cli/main_test.go"
+},
+```
+
+Agents MUST NOT actively track plan/progress/changes. Everything is tracked over agent hooks. Remove `ticket.md` in the mechanism and update all docs.
 
 The logging path of agent of hooks should change to
 - .semio-repo
@@ -218,7 +559,7 @@ Dont stop until you have refactored and tested everything.
 
 ---
 
-### 🧰semiorepo⌨️cli🔖metrics
+## 🧰semiorepo⌨️cli💻maingo🔖metrics
 
 The semio repo cli MUST generate mermaid diagram strings.
 
@@ -266,7 +607,11 @@ treemap-beta
       "⌨️cli": 2
 ```
 
-### 🧰semiorepo⌨️cli🔖identification
+## 🧰semiorepo⌨️cli💻maingo🔖identification
+
+semio repo:
+The id system has some problems. Recently special root project and root bundle was introduced. There are only meant for orphan folders and files.
+e.g. 👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `👤semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
 
 ---
 
@@ -332,38 +677,6 @@ relations:
 
 Only stop once you have tests every single list and tree command to have exactly this ids:
 
-repo: ``, parent: none,
-years: `{{repo-id}}🎆`parent: repo, e.g.`🎆`year:`{{repo-id}}🎆{{YY}}`parent: repo, e.g.`🎆26`months:`{{year-id}}🌙`parent: year, e.g.`🎆26🌙`month:`{{year-id}}🌙{{MM}}`parent: year, e.g.`🎆26🌙02`days:`{{month-id}}☀️`parent: month, e.g.`🎆26🌙02☀️`day:`{{month-id}}☀️{{DD}}`parent: month, e.g.`🎆26🌙02☀️15`hours:`{{day-id}}⏰`parent: day, e.g.`🎆26🌙02☀️15⏰`hour:`{{day-id}}⏰{{HH}}`parent: day, e.g.`🎆26🌙02☀️15⏰14`minutes:`{{hour-id}}⌚`parent: hour, e.g.`🎆26🌙02☀️15⏰14⌚`minute:`{{hour-id}}⌚{{MM}}`parent: hour, e.g.`🎆26🌙02☀️15⏰14⌚33`seconds:`{{minute-id}}⏱️`parent: minute, e.g.`🎆26🌙02☀️15⏰14⌚33⏱️`second:`{{minute-id}}⏱️{{SS}}`parent: minute, e.g.`🎆26🌙02☀️15⏰14⌚33⏱️38`
-projects:`{{repo-id}}🏗️`parent: repo, e.g.`🏗️`project:`{{repo-id}}<project-kind>{{flat-project-code}}`, parent: repo, <kind> - 👤:user, 🧰:infrastructure, 🔬:research, e.g. `🧰semiorepo`for`semio-repo`bundles:`{{parent-project-id}}📦`parent: project, e.g.`👤semio📦`bundle:`{{parent-project-id}}<bundle-kind>{{flat-bundle-code}}`, parent: project, <kind> - 📚:library, 🛂:schema, ⌨️️:binary, 🖱️️:ui, 📔:example, 🌐:site, 🏪:assets, e.g. `👤semio📚js`for bundle code`semio/js`folders:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}📁`parent: folder | bundle | project | repo, e.g.`📁` for all folders on the repo that match`./_`(this does not include project folders) | `👤semio📚js🗃️sketchpad📁`for folders that match`semio/js/sketchpad/_`|`🛅github📁`for all subfolders of`.github`folder:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-folder-name}}`, parent: folder | bundle | project | repo, <kind> - 🗃️️:organization, 🛅:required, e.g. `👤semio📚js🗃️sketchpad`for`semio/js/sketchpad` `🛅devcontainer`for`.devcontainer`// by design the repo folder for bundles have no id and are not addressable/documentable/… because they "are" the bundle
-files:`{{diffable-id?}}📄`, parent: folder | bundle | project | repo e.g. `📄` for all files on the repo that match`./_`|`👤semio📚js🗃️sketchpad📄`for files that match`semio/js/sketchpad/_`|`🛅github📄`for all files inside`.github`file:`{{(parent-repo-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | repo, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx`for`semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson`for`.devcontainer/devcontainer.json`line:`{{parent-file-id}}📌{{linenumber}}`parent: file, e.g.`👤semio📚js🗃️sketchpad💻designtsx📌3872`for line number`3872`in`semio/js/sketchpad/Design.tsx`sections:`{{(parent-file-id|parent-section-id)?}}🔖`parent: section | file, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖`for all sections in`semio/js/sketchpad/Design.tsx`section:`{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store`for`Store`section with parent section`State Managment`definitions:`{{<diffable-id>}}🏷️`parent: diffable, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️`for all definitions in`Store`section
-definition:`{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore`for`createSketchpadStore`test:`{{<testable-id>}}🧪`, parent: testable, e.g. `👤semio📚js💻semiots🧪flattendesign`for`Store`section with parent section`State Managment`tests:`{{(parent-testable-id|parent-test-id)?}}🧪`parent: testable | test, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🧪`for all tests in`Store`section
-goals:`{{(repo-id|parent-goal-id)?}}🎯`parent: goal | repo, e.g.`🎯`for all goals on the repo or`🎯r26021🎯runningsketchpad🎯`for all goals under`Running Sketchpad`goal:`{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}`parent: goal | repo, e.g.`🎯r26021🎯runningsketchpad`for goal with name`Running Sketchpad`for parent`r26.02-1`tickets:`{{diffable-id?}}🎫`parent: diffable, e.g.`🎫`for all tickets (on repo) |`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫`for all tickets that diffed`Store`section |`🎯r26021🎯runningsketchpad🎫`for all tickets under`Running Sketchpad`ticket:`{{goal-id}}🎫{{flat-title}}`, parent: goal, e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism`for ticket with title`Introduce Key Guid Uri Mechanism`draft:`{{parent-resource-id}}📝{{flat-title}}`parent: resource, e.g.`🧰semiorepo⌨️cli📝newarchitecture`for draft with title`New Architecture`todo:`{{parent-resource-id}}📝{{flat-title}}`parent: resource, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism`for todo with title`Introduce Proper Sync Mechanism`policy:`{{(parent-resource-kind|parent-resource-id)?}}👮{{flat-name}}`parent: resource kind or resource, e.g.`👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore`for policy with name`Only One Store`-`💻👮godfiles`for policy`Godfiles`that affect all code files. // policies are either specific when on an entity or general when on a an entity kind.
-breach:`{{parent-policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}`parent: territory, e.g.`💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🌐🎆26🌙02☀️14⏰19⌚07⏱️12`for breach in`semio/js/sketchpad/design-store.ts`at line number`3872`on the 14th of February 2026 at 19:07:12
-contributor:`🧑‍💻{{github-username}}`parent: repo, e.g.`🧑‍💻usalu`for`https://github.com/usalu`
-commit: `{{day-id}}🔀{{sha}}{{contributors-ids}}` parent: repo, e.g. `🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak`
-interaction: `{{second-id}}{{contributor-id}}{{entity-id}}<kind>` parent: <kind> - 🌱:started, ✏️:edited, ✅:finished, 🔁:restarted, 🗑️: deleted e.g. `🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱🧑‍💻usalu` | `🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅🧑‍💻usalu`
-
-Display codebase diffs as
-added: `➕{{added}}`
-removed: `➖{{removed}}`
-total: `{{removed}}{{added}}🟰{{(➕|➖)?}}{{total}}`
-
-loc-diff: `{{diffable-id}}📌{{loc-total}}`
-root-loc-diff: `{{root-id}}📌{{loc-total}}` e.g. `📌➖253➕387🟰➕134`
-year-loc-diff: `{{year-id}}📌{{loc-total}}` e.g. `🎆26📌➖253➕387🟰➕134`
-month-loc-diff: `{{month-id}}📌{{loc-total}}` e.g. `🎆26🌙02📌➖253➕387🟰➕134`
-day-loc-diff: `{{day-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14📌➖253➕387🟰➕134`
-hour-loc-diff: `{{hour-id}}📌{{loc-total}}` e.g. `🎆26🌙02☀️14⏰19📌➖253➕387🟰➕134`
-project-loc-diff: `{{project-id}}📌{{loc-total}}` e.g. `👤semio📌➖75324➕154056🟰➕78732`
-bundle-loc-diff: `{{bundle-id}}📌{{loc-total}}` e.g. `👤semio📚js📌➖253➕387🟰➕134`
-folder-loc-diff: `{{folder-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad📌➖253➕387🟰➕134`
-file-loc-diff: `{{file-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx📌➖253➕387🟰➕134`
-section-loc-diff: `{{section-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store📌➖253➕387🟰➕134`
-definition-loc-diff: `{{definition-id}}📌{{loc-total}}` e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📌➖253➕387🟰➕134`
-goal-loc-diff: `{{goal-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad📌➖253➕387🟰➕134`
-ticket-loc-diff: `{{ticket-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism📌➖253➕387🟰➕134`
-contributor-loc-diff: `{{contributor-id}}{{loc-total}}` e.g. `🧑‍💻usalu➖253➕387🟰➕134`
-commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a➖253➕387🟰➕134`
 
 The uri system (mcp, rest, rdf) is:
 
@@ -466,7 +779,13 @@ Dont keep any legacy api.
 
 ---
 
-### 🧰semiorepo⌨️cli🔖hooks
+## 🧰semiorepo⌨️cli💻maingo🔖hooks
+
+Make sure all common terminal commands (grep, ls, sed, …) are semantically correctly identified as searching, editing, etc.
+Add a test for every single command in every single native agent hook format.
+
+Make sure that all `sed` are semantically correctly mapped.
+All modifiying command should be code edits, all reading are searching, etc and not agent.tool
 
 ---
 
@@ -669,141 +988,7 @@ You MUST make sure that the hooks return exactly this information (additionally 
 
 Events
 
-```yaml
-git:
- commit:
-  starting: # pre-commit
-   message: { { COMMITMESSAGE } }
-  ended: # post-commit
-   sha: { { COMMITSHA } }
-   message: { { COMMITMESSAGE } }
-agent:
- started:
-  session: { { ID } }
-  timestamp: { { TIMESTAMP } }
-  client: { { CLIENT } }
-  llm: { { LLM } }
-  transcript: { { TRANSSCRIPTPATH } }
-  parent: { { PARENT } }
- ended:
-  session: { { ID } }
-  timestamp: { { TIMESTAMP } }
-  client: { { CLIENT } }
-  llm: { { LLM } }
-  transcript: { { TRANSSCRIPTPATH } }
-  message: { { MESSAGEID } }
-  parent: { { PARENTMESSAGEID } }
- prompt:
-  submitting:
-   session: { { ID } }
-   timestamp: { { TIMESTAMP } }
-   client: { { CLIENT } }
-   llm: { { LLM } }
-   message: { { MESSAGEID } }
-   parent: { { PARENTMESSAGEID } }
-   prompt: { { PROMPT } }
- compacting:
-  session: { { ID } }
-  timestamp: { { TIMESTAMP } }
-  client: { { CLIENT } }
-  llm: { { LLM } }
-  transcript: { { TRANSSCRIPTPATH } }
-  message: { { MESSAGEID } }
-  parent: { { PARENTMESSAGEID } }
-  chat: { { CHAT } }
- tool:
-  starting: # all tools but excluding task, code, terminal
-   session: { { ID } }
-   timestamp: { { TIMESTAMP } }
-   client: { { CLIENT } }
-   llm: { { LLM } }
-   transcript: { { TRANSSCRIPTPATH } }
-   message: { { MESSAGEID } }
-   parent: { { PARENTMESSAGEID } }
-   name: { { NAME } } # name of the tool
-   input: { { INPUT } }
-  ended: # excluding task, code and terminal
-   session: { { ID } }
-   timestamp: { { TIMESTAMP } }
-   client: { { CLIENT } }
-   llm: { { LLM } }
-   transcript: { { TRANSSCRIPTPATH } }
-   message: { { MESSAGEID } }
-   parent: { { PARENTMESSAGEID } }
-   name: { { NAME } } # name of the tool
-   input: { { INPUT } }
-   response: { { RESPONSE } }
-  plan: # A list of tasks - usually TODO lists in the native clients
-   updating: # Planning involves changing the task list
-    session: { { ID } }
-    timestamp: { { TIMESTAMP } }
-    client: { { CLIENT } }
-    llm: { { LLM } }
-    transcript: { { TRANSSCRIPTPATH } }
-    message: { { MESSAGEID } }
-    parent: { { PARENTMESSAGEID } }
-    steps:
-     - name: { { STEPNAME } }
-     - status: { { STATUS } } # completed, in progress, pending
-  searching: # All searches such as file read, grep, websearch
-   session: { { ID } }
-   timestamp: { { TIMESTAMP } }
-   client: { { CLIENT } }
-   llm: { { LLM } }
-   transcript: { { TRANSSCRIPTPATH } }
-   message: { { MESSAGEID } }
-   parent: { { PARENTMESSAGEID } }
-   query: { { QUERY } } # regex, glob, file path, url, etc
-   include: [{ { INCLUDEPATTERN } }] # file glob patterns, line numbers, etc
-   exclude: [{ { EXCLUDEPATTERN } }]
-  code:
-   editing:
-    session: { { ID } }
-    timestamp: { { TIMESTAMP } }
-    client: { { CLIENT } }
-    llm: { { LLM } }
-    transcript: { { TRANSSCRIPTPATH } }
-    message: { { MESSAGEID } }
-    parent: { { PARENTMESSAGEID } }
-    path: { { FILEPATH } }
-    old: { { OLDSTRING } }
-    new: { { NEWSTRING } }
-    all: { { REPLACEALLSTRINGS } } # false: just first, true: replace all occurrences
-   edited:
-    session: { { ID } }
-    timestamp: { { TIMESTAMP } }
-    client: { { CLIENT } }
-    llm: { { LLM } }
-    transcript: { { TRANSSCRIPTPATH } }
-    message: { { MESSAGEID } }
-    parent: { { PARENTMESSAGEID } }
-    path: { { FILEPATH } }
-    old: { { OLDSTRING } }
-    new: { { NEWSTRING } }
-  terminal:
-   starting:
-    session: { { ID } }
-    timestamp: { { TIMESTAMP } }
-    client: { { CLIENT } }
-    llm: { { LLM } }
-    transcript: { { TRANSSCRIPTPATH } }
-    message: { { MESSAGEID } }
-    parent: { { PARENTMESSAGEID } }
-    command: { { COMMAND } }
-   ended:
-    session: { { ID } }
-    timestamp: { { TIMESTAMP } }
-    client: { { CLIENT } }
-    llm: { { LLM } }
-    transcript: { { TRANSSCRIPTPATH } }
-    message: { { MESSAGEID } }
-    parent: { { PARENTMESSAGEID } }
-    command: { { COMMAND } }
-    pid: { { PID } } # process id, execution id, etc
-    terminated: { { HASTERMINATED } } # true: stopped, false: still running
-    stdout: { { STDOUT } }
-    stderr: { { STDERR } }
-```
+
 
 Hooks:
 
@@ -859,6 +1044,7 @@ agent:
         claude-code: PreToolUse matcher == "Task" (or tool_name == "Task")
         droid: PreToolUse matcher == "Task"
     search:
+      started:
       starting:
         vscode-chat: PreToolUse where tool_name indicates search (file, folder, web, … search tools)
         windsurf-chat: pre_read_code or pre_run_command or pre_mcp_tool_use
@@ -897,105 +1083,6 @@ agent:
         cursor-chat: afterShellExecution
         claude-code: PostToolUse | PostToolUseFailure (matcher "Bash") | Stop (if terminal run ends the turn)
         droid: PostToolUse (matcher "Bash") | Stop (if terminal run ends the turn)
-```
-
-`ticket.json`
-
-```yaml
-title: Tree Text Short IDs
-description: >-
-  Fix renderTreeNodeText to temporarily clear parentId before calling
-  renderEntityHuman so tree text output shows only the own ID segment instead of
-  full hierarchical chains. Add tests for nested goal short IDs and parentId
-  restoration.
-github:
-  issue: 'https://github.com/usalu/semio/issues/612'
-goal: 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters
-sessions: # Create a new session when semio repo mcp ticket open, semio repo mco ticket reopen, or agent.terminal.ended with semio repo cli ticket open or reopen was called
-  - id: 38b90183-005d-45cf-879d-c16b27c099ce # native session id from client
-    contributor: usalu # find contributor with git config
-    system: linux
-    client: copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag
-    llm: opus-4-6 # derive from agent hooks or if not available use the cli llm argument that was used on ticket open or ticket reopen
-    transcript: /home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/2f1e87c2-af13-4067-9aa6-15f0af84010c.jsonl
-    query: hooks copilot vscode # Last semio repo mcp tree or cli tool input
-    plan:
-      steps:
-        - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
-          completed: {{timestamp}} # this means status completed
-        - name: Implement hook-to-ticket session integration for interactions, reads, and diffs
-          started: {{timestamp}} # this means status in progress
-        - name: Add/update tests and run relevant test suite # no completed or started means status pending
-        - name: Update ticket artifacts and summarize changes
-    prompts:
-      - timestamp: 2026-02-18T13:20:47Z # from agent.started
-        prompt: vscode copliot hooks have the following error:\nCannot read properties of undefined (reading 'hookSpecificOutput') # From agent.prompt.submit
-        events: # all agent hooks 
-          - kind: agent.tool.searching
-            timestamp: {{timestamp}}
-            pattern: {{query}} # e.g. `semio/js/**.tsx`,  `semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/Design.tsx#L532-L771`, `semio-repo/**`, `https://reactflow.dev/api-reference/react-flow`
-            denied: "{{denied-reason}}" # e.g. `.env files are private.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
-          - kind: agent.code.editing
-            file: {{file-id}}
-            denied: "{{denied-reason}}" # e.g. `.cursor/hooks.json is autogenerated by the semio repo cli and cant be edited manually.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
-          - kind: agent.code.edited
-            timestamp: {{timestamp}}
-            line: {{line-number}} # starting line number of old string
-            old:
-              sections: # all sections that appear in the old string
-                - section: {{ID}}
-                  definitions: ["{{definition-id}}"] # all definitions that appear in the old string
-              loc: {{lines-of-code}} # lines of code of the old string
-            new:
-              sections: # all sections that appear in the new string
-                - section: {{ID}}
-                  definitions: ["{{definition-id}}"] # all definitions that appear in the new string
-              loc: {{lines-of-code}} # lines of code of the new string
-          - kind: agent.code.starting
-            timestamp: {{timestamp}}
-    diff: # Derive diff at the end of a session using the agent.code.edited events and git diff (both staged and unstaged)
-        projects:
-          deleted: ["{{project-id}}"]
-          renamed:
-            - from: "{{project-id}}"
-              to: "{{project-id}}"
-          modified: ["{{project-id}}"]
-          created: ["{{project-id}}"]
-        bundles:
-          deleted: ["{{bundle-id}}"]
-          renamed:
-            - from: "{{bundle-id}}"
-              to: "{{bundle-id}}"
-          modified: ["{{bundle-id}}"]
-          created: ["{{bundle-id}}"]
-        folders:
-          deleted: ["{{folder-id}}"]
-          renamed:
-            - from: "{{folder-id}}"
-              to: "{{folder-id}}"
-          modified: ["{{folder-id}}"]
-          created: ["{{folder-id}}"]
-        files:
-          deleted: ["{{file-id}}"]
-          renamed:
-            - from: "{{file-id}}"
-              to: "{{file-id}}"
-          modified: ["{{file-id}}"]
-          created: ["{{file-id}}"]
-        sections:
-          deleted: ["{{section-id}}"]
-          renamed:
-            - from: "{{section-id}}"
-              to: "{{section-id}}"
-          modified: ["{{section-id}}"]
-          created: ["{{section-id}}"]
-        definitions:
-          deleted: ["{{definition-id}}"]
-          renamed:
-            - from: "{{definition-id}}"
-              to: "{{definition-id}}"
-          modified: ["{{definition-id}}"]
-          created: ["{{definition-id}}"]
 ```
 
 - git
@@ -1090,8 +1177,32 @@ Note that TODO, STATUTE, BREACH are not shown because they can be children of mo
   - ENTITYKIND
     - STATUTE
 
+## 🧰semiorepo⌨️cli💻maingo🔖commands
 
-## ⌨️server
+Rename `tree` to command to `search`. 
+
+Remove all documentation about `--no-management`. It is a hidden feature. Only leave it for users that know it. 
+
+Remove all documentation about `list`. It is a hidden feature. Only leave it for users that know it. 
+
+Remove the `format` flag option from any documentation. It is a hidden feature. Only leave it for users that know it. 
+
+## 🧰semiorepo⌨️cli💻maingo🔖mcp
+
+Remove tools from mcp:
+- analyze
+- contributor add
+- contributor delete
+- export
+- file create
+- file delete
+- file move
+- folder 
+- graphql
+- move
+- policy check
+- ticket read
+-
 
 ##
 
@@ -2850,7 +2961,7 @@ definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <
 e.g. `🧰semiorepo⌨️cli💻maingo#GraphQL Types#GraphQL Input Types§TicketCloseInput` or `🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketCloseInput` should be only `🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseInput`
 go types are not currectly identified as ✂️
 
-file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
+file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
 
 The id of the projects contain an @ they shouldnt. The tests check for the correct ids.
 

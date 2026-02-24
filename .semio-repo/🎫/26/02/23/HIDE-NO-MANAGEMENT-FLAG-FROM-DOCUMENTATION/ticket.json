@@ -1,0 +1,25 @@
+{
+  "title": "Hide No-Management Flag from Documentation",
+  "status": "closed",
+  "description": "Remove all documentation about `--no-management` CLI flag and `noManagement` MCP parameter. The feature should remain functional but be hidden from help text and MCP tool descriptions. Use Cobra's MarkHidden for CLI flags and remove noManagement from MCP tool parameter descriptions.",
+  "summary": "Hidden --no-management from all CLI help output using MarkHidden on 8 cobra flag registrations (ticket open/close/reopen/change and goal open/close/reopen/change). Removed noManagement from MCP ticket_open tool parameter list. Feature remains fully functional for users who know it.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/665"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [
+    {
+      "id": "1771857735640-0000000000000000",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "llm": "sonnet-4-6",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T14:00:00Z",
+          "prompt": "Remove all documentation about --no-management. It is a hidden feature. Only leave it for users that know it."
+        }
+      ]
+    }
+  ]
+}

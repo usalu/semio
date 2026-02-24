@@ -1,6 +1,6 @@
 # region Header
 
-# [💻filefixedpy](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.PY)
+# [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy](semiorepo://file/semio/assets/repo/some/folder/file_fixed.py)
 
 # 2025 Test User <test@test.com>
 
@@ -22,14 +22,14 @@
 # endregion Header
 
 # region Functions
-# [🔖semio/assets/repo/some/folder/file_fixed.py#Functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.py/FUNCTIONS)
+# [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy🔖functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.py/Functions)
 # Utility functions for fixed values.
 # Functions MUST accept typed parameters.
 
 def fixed_function(value: int) -> int:
     """Increments a value by one.
     fixed_function MUST return value plus one.
-    [🛠️semio/assets/repo/some/folder/file_fixed.py#Functions§fixed_function](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.py/FUNCTIONS/FIXED-FUNCTION)
+    [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy🔖functions🛠️fixedfunction](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.py/Functions/fixed_function)
     """
     return value + 1
 

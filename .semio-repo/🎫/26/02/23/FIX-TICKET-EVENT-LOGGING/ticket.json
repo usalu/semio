@@ -2,11 +2,11 @@
   "title": "Fix Ticket Event Logging",
   "status": "closed",
   "description": "ticket.json is not correctly adding all events from hooks. Events are filtered out when they lack file/pattern data. Fix trackHookInOpenTicket to pass result data and remove overly restrictive filter. Also fix dispatchHook missing case for HookAgentToolSearched causing unknown hook event error. Prompts field should only be derived by agent hook events (agent.prompt.submitting), not created as empty stubs.",
-  "summary": "Fixed event logging",
+  "summary": "Fixed three issues: (1) Rebuilt stale CLI binary resolving agent.tool.searching.ended dispatch error that blocked PostToolUse hooks. (2) Removed ghost-prompt stub in trackHookInOpenTicket so prompts only come from agent.prompt.submitting hooks; saves session metadata before returning. (3) Isolated TestTicketOpenContinueKeyword with tmpDir to prevent real-filesystem interference. All tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/648"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "goal": "TEST-GOAL",
   "sessions": [
     {
       "id": "1771809206983263775-8444660674136616504",
@@ -149,6 +149,76 @@
                 ],
                 "loc": 13
               }
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:30:16Z",
+              "pattern": "cd /workspaces/semio \u0026\u0026 printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/hook_err.txt; printf \"exit=%d\\n\" $?; cat /tmp/hook_err.txt"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:30:25Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; echo \"exit=$?\"; cat /tmp/err.txt"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:30:33Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; echo \"exit=$?\"; cat /tmp/err.txt"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:30:44Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; ECODE=$?; echo \"exit=$ECODE\"; cat /tmp/err.txt"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:30:51Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; ECODE=$?; echo \"exit=$ECODE\"; cat /tmp/err.txt"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:31:04Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code; RC=$?; echo \"exit=$RC\""
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:31:19Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code; RC=$?; echo \"exit=$RC\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:31:31Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code\necho \"RC=$?\""
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:31:39Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code\necho \"RC=$?\""
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:31:54Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code \u0026\u0026 echo OK || echo FAIL"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:32:09Z",
+              "pattern": "printf '{\"tool_name\":\"Read\",\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code \u0026\u0026 echo OK || echo FAIL"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:32:20Z",
+              "pattern": "go test -run \"TestTrackHook|TestTicket|TestHook|TestDispatch\" -timeout 120s 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T01:32:27Z",
+              "pattern": "go test -run \"TestTrackHook|TestTicket|TestHook|TestDispatch\" -timeout 120s 2\u003e\u00261"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T01:32:37Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestTrackHook|TestTicket|TestHookResult\" -timeout 120s 2\u003e\u00261"
             }
           ]
         }

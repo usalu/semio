@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎ semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx
+// 🥼︎ semio/js/.storybook/stories/elements/aggregation/Band.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

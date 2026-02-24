@@ -159,7 +159,6 @@ export interface TicketData {
   slug: string;
   frontmatter: TicketFrontmatter;
   folderPath: string;
-  filePath: string;
   interactions?: TicketInteraction[];
 }
 
@@ -241,7 +240,6 @@ export interface ContributorTicketData {
   title: string;
   summary: string;
   folderPath?: string;
-  filePath?: string;
 }
 
 /**
@@ -707,7 +705,7 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   const command = getRepoCommand();
   if (!root || !command) return new Map();
   try {
-    const { stdout } = await execAsync(`"${command}" --json tree`, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
+    const { stdout } = await execAsync(`"${command}" --json search`, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
     if (!stdout.trim()) return treeNodeCache ?? new Map();
     const events = parseRepoEvents(stdout);
     const result = extractRepoResult(events);
@@ -736,7 +734,7 @@ async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
   const command = getRepoCommand();
   if (!root || !command) return null;
   try {
-    const fullArgs = ["--json", "tree", ...args];
+    const fullArgs = ["--json", "search", ...args];
     const { stdout } = await execFileAsync(command, fullArgs, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
     if (!stdout.trim()) return null;
     const events = parseRepoEvents(stdout);
@@ -811,11 +809,11 @@ async function navigateToUri(uri: string): Promise<void> {
         const year = String(node.Year).padStart(2, "0");
         const month = String(node.Month).padStart(2, "0");
         const day = String(node.Day).padStart(2, "0");
-        ticketPath = path.join(wsRoot, ".semio-repo", "🎫", year, month, day, slug, "ticket.md");
+        ticketPath = path.join(wsRoot, ".semio-repo", "🎫", year, month, day, slug);
       } else {
 
         if (parsed.path.match(/^\d+\/\d+\/\d+\/.+/)) {
-          ticketPath = path.join(wsRoot, ".semio-repo", "🎫", parsed.path, "ticket.md");
+          ticketPath = path.join(wsRoot, ".semio-repo", "🎫", parsed.path);
         } else {
 
           const slug = path.basename(parsed.path);
@@ -1057,12 +1055,11 @@ function extractFilePathFromScope(scope: string): string | undefined {
   return undefined;
 }
 
-function resolveTicketPath(ticket: { year: number; month: number; day: number; slug: string; filePath?: string }): string | undefined {
-  if (ticket.filePath) return ticket.filePath;
+function resolveTicketPath(ticket: { year: number; month: number; day: number; slug: string; folderPath?: string }): string | undefined {
+  if (ticket.folderPath) return ticket.folderPath;
   const root = getWorkspaceRoot();
   if (!root) return undefined;
-
-  const relPath = path.join(String(ticket.year).padStart(2, "0"), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug, "ticket.md");
+  const relPath = path.join(String(ticket.year).padStart(2, "0"), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug);
   return path.join(root, ".semio-repo", "🎫", relPath);
 }
 
@@ -1859,7 +1856,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     const day = node.Day ?? node.Data?.day;
     const slug = node.Data?.slug ?? node.Label;
     if (!year || !month || !day || !slug) return;
-    const t = { year, month, day, slug, filePath: undefined as string | undefined };
+    const t = { year, month, day, slug, folderPath: undefined as string | undefined };
     const p = resolveTicketPath(t);
     if (!p) return;
     return vscode.commands.executeCommand("semio.navigateToFile", p);

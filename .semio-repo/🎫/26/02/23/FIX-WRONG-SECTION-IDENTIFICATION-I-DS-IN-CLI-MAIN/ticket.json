@@ -1,0 +1,119 @@
+{
+  "title": "Fix Wrong Section Identification IDs in Cli Main",
+  "status": "closed",
+  "description": "Fix all wrong identification ID breaches in semio-repo/cli/main.go. Policy Code#Section#Wrong Identification#Id reported 1429 breaches across sections like Preamble, Engine Events, Engine Errors, Engine Requests, Engine, Cli Adapter and all its subsections, GraphQL Types, Providers, Types, Languages, etc.",
+  "summary": "Applied autofix to resolve all 1429 wrong identification ID breaches in semio-repo/cli/main.go. 0 breaches remaining.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/656"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "sessions": [
+    {
+      "id": "e79acc30-8791-4198-a555-169a51a79a23",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "llm": "sonnet-4-6",
+      "transcript": "/home/vscode/.claude/projects/-workspaces-semio/e79acc30-8791-4198-a555-169a51a79a23.jsonl",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T11:41:00Z",
+          "prompt": "semio repo: There are a lot of wrong breaches such as wrong identification on right ids",
+          "events": [
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T11:41:45Z",
+              "pattern": "mcp__semio-repo__fix semio-repo/cli/main.go"
+            },
+            {
+              "kind": "agent.tool.starting",
+              "timestamp": "2026-02-23T11:52:01Z"
+            },
+            {
+              "kind": "agent.tool.code.edited",
+              "timestamp": "2026-02-23T11:52:05Z",
+              "file": ".semio-repo/🎫/26/02/23/FIX-WRONG-SECTION-IDENTIFICATION-I-DS-IN-CLI-MAIN/ticket.json",
+              "old": {
+                "loc": 2
+              },
+              "new": {
+                "loc": 25
+              }
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:52:15Z",
+              "pattern": "./semio-repo/cli/cli ticket close 26/02/23/FIX-WRONG-SECTION-IDENTIFICATION-I-DS-IN-CLI-MAIN \"Applied autofix to resolve all 1429 wrong identification ID breaches in semio-repo/cli/main.go. 0 breaches remaining.\" semio-repo/cli/main.go 2\u003e\u00261"
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            ".semio-repo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            ".semio-repo/🎫"
+          ]
+        },
+        "folders": {
+          "modified": [
+            ".semio-repo",
+            ".semio-repo/🎫"
+          ]
+        },
+        "files": {
+          "modified": [
+            ".semio-repo/🎫/26/02/23/FIX-WRONG-SECTION-IDENTIFICATION-I-DS-IN-CLI-MAIN/ticket.json"
+          ]
+        },
+        "sections": {},
+        "definitions": {}
+      }
+    },
+    {
+      "id": "7ff6f48c-24ba-41ee-bd06-531829800935",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T11:52:08Z",
+          "events": [
+            {
+              "kind": "agent.tool.terminal.ended",
+              "timestamp": "2026-02-23T11:52:08Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestHook|TestTicket|TestNativeHook\" -v -timeout 180s 2\u003e\u00261 | grep -E \"^=== RUN|--- PASS|--- FAIL|FAIL|PASS|ok\" | head -40"
+            },
+            {
+              "kind": "agent.tool.terminal.starting",
+              "timestamp": "2026-02-23T11:52:14Z",
+              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestTicketLifecycle_NoManagement\" -v -timeout 60s 2\u003e\u00261 | tail -30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2063ef89-e394-4787-8b8d-209452419221",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T11:52:12Z",
+          "events": [
+            {
+              "kind": "agent.tool.ended",
+              "timestamp": "2026-02-23T11:52:12Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

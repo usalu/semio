@@ -15,13 +15,13 @@ You are a senior developer working with other senior developers at the same time
 - You MUST work inside a ticket.
 - You MUST start by gathering information about the repo with mcp tool `tree` (or `./semio-repo/cli/cli tree <query>`). `query` is list of keywords that are relevant to ticket. This includes all prefiltered information about relevant projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes.
 - You MUST reopen a ticket with `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>`) if an existing ticket is already covering the same task.
-- If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>?`). This creates a ticket folder `.semio-repo/🎫/YY/MM/DD/TICKETSLUG` along with a ticket file `ticket.md` in it.
+- If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>?`). This creates a ticket folder `.semio-repo/🎫/YY/MM/DD/TICKETSLUG`.
 - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
 - You MUST NOT create any additional folders or files outside the ticket folder.
 - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - You MUST NOT create additional test files for new tests but you MUST extend the existing test files to cover everything.
 - You MUST NOT create additional example files and you MUST implement it directly in the dependent parts.
-- You MUST NOT answer directly in the chat and MUST interact by editing the ticket file for everything for everything related to the plan, todos, changes, summary.
+- You MUST NOT answer directly in the chat and MUST interact by editing the ticket folder for everything related to the plan, todos, changes, summary.
 - You MUST close the ticket once you are done with the mcp tool `ticket_close` (or `./semio-repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat mostl likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>?`).
 - You MUST NOT open, close or reopen goals without the explicit instructions from the dev.
 - Open a goal with mcp tool `goal_open`(or `./semio-repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`).
@@ -81,5 +81,5 @@ Make sure all tests pass.
 Extend/Change/Refactor whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out. Create as many tickets as needed.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/🎫/YY/MM/DD/TICKETSLUG*/ticket.md`
+Make sure to open and close a ticket. Everything is tracked over agent hooks.
 Dont keep any legacy api or backwards compatiblity.

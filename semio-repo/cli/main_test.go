@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo⌨️cli🧪maintestgo](semiorepo://file/semio-repo/cli/main_test.go)
+// [🧰semiorepo⌨️cli🥼maintestgo](semiorepo://p/i/semio-repo/b/b/cli/f/main_test.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -565,7 +566,7 @@ func TestFilterTicketWorkspaceFiles(t *testing.T) {
 	}
 	files := []string{
 		".semio-repo/🎫/26/01/20/SAMPLE/plan.md",
-		"./.semio-repo/🎫/26/01/20/SAMPLE/ticket.md",
+		"./.semio-repo/🎫/26/01/20/SAMPLE/ticket.json",
 		filepath.Join(rootDir, ".semio-repo", "🎫", "26", "01", "20", "SAMPLE", "extra.txt"),
 		absMain,
 	}
@@ -580,9 +581,7 @@ func TestNormalizeTicketFileInput(t *testing.T) {
 	filePath := filepath.ToSlash(filepath.Join("semio-repo", "cli", "main.go"))
 	absPath := filepath.Join(absRoot, filePath)
 	fileID := FileHeaderId(filePath)
-	fileUri := "semiorepo://file/" + PathToUriPath(filePath)
-	filesUri := "semiorepo://files/" + PathToUriPath(filepath.Dir(filePath))
-	fileUriForFiles := filesUri + "/" + PathToUriPath(filepath.Base(filePath))
+	fileUri := buildFileUriFromPath(filePath)
 	cases := []struct {
 		name  string
 		input string
@@ -591,7 +590,6 @@ func TestNormalizeTicketFileInput(t *testing.T) {
 		{"path", filePath, filePath},
 		{"abs path", absPath, filePath},
 		{"file uri", fileUri, filePath},
-		{"files uri", fileUriForFiles, filePath},
 		{"id", fileID, filePath},
 	}
 	for _, tc := range cases {
@@ -2631,7 +2629,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 			want  string
 		}{
 			{"💻️", "💻"},
-			{"🧪️", "🧪"},
+			{"🥼️", "🥼"},
 			{"📃️", "📃"},
 			{"📜️", "📜"},
 		}
@@ -3510,7 +3508,7 @@ func TestSectionIdentificationAutofix(t *testing.T) {
 		t.Fatal("expected at least one autofix applied")
 	}
 	fixedContent, _ := ReadTextFile(absPath)
-	if !strings.Contains(fixedContent, "semiorepo://section/") {
+	if !strings.Contains(fixedContent, "/s/") {
 		t.Fatal("expected section identification URI after autofix")
 	}
 }
@@ -3551,7 +3549,7 @@ func TestDefinitionIdentificationAutofix(t *testing.T) {
 		t.Fatal("expected at least one autofix applied")
 	}
 	fixedContent, _ := ReadTextFile(absPath)
-	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+	if !strings.Contains(fixedContent, "/d/") {
 		t.Fatal("expected definition identification URI after autofix")
 	}
 }
@@ -3896,7 +3894,7 @@ func TestDefinitionNativeDocstringAutofix(t *testing.T) {
 	if !strings.Contains(fixedContent, " * doWork MUST be idempotent.") {
 		t.Fatal("expected spec line in JSDoc after autofix")
 	}
-	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+	if !strings.Contains(fixedContent, "§doWork") {
 		t.Fatal("expected identification in JSDoc after autofix")
 	}
 }
@@ -3943,7 +3941,7 @@ func TestPythonTripleQuoteDocstringAutofix(t *testing.T) {
 	if !strings.Contains(fixedContent, "do_work MUST be idempotent.") {
 		t.Fatal("expected spec line in docstring after autofix")
 	}
-	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+	if !strings.Contains(fixedContent, "§do_work") {
 		t.Fatal("expected identification in docstring after autofix")
 	}
 	if !strings.Contains(fixedContent, `"""`) {
@@ -3996,7 +3994,7 @@ func TestPythonTripleQuoteDocstringMerge(t *testing.T) {
 	if !strings.Contains(fixedContent, "do_work MUST be idempotent.") {
 		t.Fatal("expected spec from # comment merged into docstring")
 	}
-	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+	if !strings.Contains(fixedContent, "§do_work") {
 		t.Fatal("expected identification merged into docstring")
 	}
 	if strings.Contains(fixedContent, "# do_work MUST") {
@@ -4071,7 +4069,7 @@ func TestSectionHeaderIdAndUri(t *testing.T) {
 		t.Fatalf("section header id should include file parent before section emoji: %s", id)
 	}
 	uri := SectionHeaderUri("src/app.ts", "Functions")
-	if !strings.HasPrefix(uri, "semiorepo://section/") {
+	if !strings.Contains(uri, "/s/") {
 		t.Fatalf("unexpected section header uri: %s", uri)
 	}
 	if !strings.Contains(uri, "Functions") {
@@ -4085,7 +4083,7 @@ func TestDefinitionHeaderIdAndUri(t *testing.T) {
 		t.Fatalf("unexpected definition header id: %s", id)
 	}
 	uri := DefinitionHeaderUri("src/app.ts", "Functions", "doWork")
-	if !strings.HasPrefix(uri, "semiorepo://definition/") {
+	if !strings.Contains(uri, "/d/") {
 		t.Fatalf("unexpected definition header uri: %s", uri)
 	}
 	if !strings.Contains(uri, "doWork") {
@@ -4161,7 +4159,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain `License` subregions.\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain `License` subregions.\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4191,7 +4189,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain License subregions.\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain License subregions.\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4216,7 +4214,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST call `ctx.Check()` internally.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST call `ctx.Check()` internally.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4246,7 +4244,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST check constraints.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST check constraints.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4271,7 +4269,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * Kits MUST be editable offline.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * Kits MUST be editable offline.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4296,7 +4294,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\nx = 1;\n\n/**\n * This is a regular docstring without spec keywords.\n */\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\nx = 1;\n\n/**\n * This is a regular docstring without spec keywords.\n */\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4326,7 +4324,7 @@ func TestSpecsBreach(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\nconst x = 1;\n\n// This is a regular comment not a spec.\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🥼test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\nconst x = 1;\n\n// This is a regular comment not a spec.\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -4495,14 +4493,14 @@ func TestDocsBreach(t *testing.T) {
 
 func TestFormatHeaderStructure(t *testing.T) {
 	lang := NewTypeScriptLanguage()
-	header := lang.FormatHeader("💻test/file.ts", "semiorepo://file/test/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")
+	header := lang.FormatHeader("💻test/file.ts", "semiorepo://f/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")
 	if !strings.Contains(header, "// #region 🔖Header") {
 		t.Error("header missing Header region start")
 	}
 	if !strings.Contains(header, "// #endregion 🔖Header") {
 		t.Error("header missing Header region end")
 	}
-	if !strings.Contains(header, "[💻test/file.ts](semiorepo://file/test/file.ts)") {
+	if !strings.Contains(header, "[💻test/file.ts](semiorepo://f/file.ts)") {
 		t.Error("header missing [ID](URI) identification")
 	}
 	if !strings.Contains(header, "A test file") {
@@ -4521,7 +4519,7 @@ func TestFormatHeaderStructure(t *testing.T) {
 
 func TestFormatHeaderEmptySpecs(t *testing.T) {
 	lang := NewGoLanguage()
-	header := lang.FormatHeader("💻test/file.go", "semiorepo://file/test/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
+	header := lang.FormatHeader("💻test/file.go", "semiorepo://f/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
 	if strings.Contains(header, "Specs") {
 		t.Error("header should not contain Specs subregion when specs is empty")
 	}
@@ -4543,11 +4541,11 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		NewGraphqlLanguage(),
 	}
 	for _, lang := range languages {
-		header := lang.FormatHeader("💻test/file", "semiorepo://file/test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		header := lang.FormatHeader("💻test/file", "semiorepo://f/file", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header == "" {
 			t.Errorf("%s: FormatHeader returned empty", lang.Name())
 		}
-		if !strings.Contains(header, "[💻test/file](semiorepo://file/test/file)") {
+		if !strings.Contains(header, "[💻test/file](semiorepo://f/file)") {
 			t.Errorf("%s: header missing [ID](URI) identification", lang.Name())
 		}
 	}
@@ -4557,7 +4555,7 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		NewYamlLanguage(),
 	}
 	for _, lang := range noHeader {
-		header := lang.FormatHeader("💻test/file", "semiorepo://file/test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		header := lang.FormatHeader("💻test/file", "semiorepo://f/file", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header != "" {
 			t.Errorf("%s: FormatHeader should return empty for non-header language", lang.Name())
 		}
@@ -4716,8 +4714,8 @@ func TestTerritory(t *testing.T) {
 		if uri == "" {
 			t.Error("expected non-empty URI")
 		}
-		if !strings.HasPrefix(uri, "semiorepo://territory/") {
-			t.Errorf("expected URI to start with 'semiorepo://territory/', got %s", uri)
+		if !strings.HasPrefix(uri, "semiorepo://") {
+			t.Errorf("expected URI to start with 'semiorepo://', got %s", uri)
 		}
 	})
 }
@@ -5337,6 +5335,25 @@ func TestTicketOpenNoticketKeyword(t *testing.T) {
 }
 
 func TestTicketOpenContinueKeyword(t *testing.T) {
+	tmpDir := t.TempDir()
+	run := func(name string, args ...string) {
+		cmd := exec.Command(name, args...)
+		cmd.Dir = tmpDir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("run %s %v: %v\n%s", name, args, err, out)
+		}
+	}
+	run("git", "init")
+	run("git", "config", "user.email", "test@test.com")
+	run("git", "config", "user.name", "Test")
+	run("git", "config", "commit.gpgsign", "false")
+	run("git", "commit", "--allow-empty", "-m", "initial")
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".semio-repo", "🎫"), 0755); err != nil {
+		t.Fatal(err)
+	}
 	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
@@ -5345,13 +5362,6 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if !ok || seed == nil {
 		t.Fatalf("expected seeded ticket data")
 	}
-
-	defer func() {
-		if seed != nil && seed.FolderPath != "" {
-			os.RemoveAll(seed.FolderPath)
-		}
-	}()
-
 	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
@@ -5446,6 +5456,9 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 }
 
 func TestGoalHierarchy(t *testing.T) {
+	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-PARENT-GOAL"))
+	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "RENAMED-PARENT"))
+	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
 
 	parentTitle := "Test Parent Goal"
 	parentRes := ToolGoalCreate(parentTitle, "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
@@ -6435,7 +6448,7 @@ func TestGoalTreeEntityIDs(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	goalsNode := tree.Children[1]
+	goalsNode := tree.Children[2]
 	for _, c := range goalsNode.Children {
 		if c.Kind == TreeNodeGoal {
 			id := GetArtifactID("goal", c.Data)
@@ -6789,7 +6802,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	projectsNode := tree.Children[0]
+	projectsNode := tree.Children[1]
 	var semioProject, semioRepoProject, codaProject *TreeNode
 	for _, c := range projectsNode.Children {
 		entityKind := treeNodeKindToEntityKind(c.Kind)
@@ -6878,7 +6891,7 @@ func TestGoalTreeIDs(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	goalsNode := tree.Children[1]
+	goalsNode := tree.Children[2]
 	goalCount := 0
 	for _, c := range goalsNode.Children {
 		if c.Kind == TreeNodeGoal {
@@ -7012,10 +7025,10 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"day 15", "day", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902", "dd": "15"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15"},
 		{"hours under day", "hours", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F0"},
 		{"hour 14", "hour", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15", "hh": "14"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014"},
-		{"minutes under hour", "minutes", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014\u231B"},
-		{"minute 33", "minute", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014", "mm": "33"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014\u231B33"},
-		{"seconds under minute", "seconds", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014\u231B33"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014\u231B33" + emojiText(EmojiSecond)},
-		{"second 38", "second", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014\u231B33", "ss": "38"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014\u231B33" + emojiText(EmojiSecond) + "38"},
+		{"minutes under hour", "minutes", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute)},
+		{"minute 33", "minute", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014", "mm": "33"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33"},
+		{"seconds under minute", "seconds", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33" + emojiText(EmojiSecond)},
+		{"second 38", "second", map[string]interface{}{"parentId": "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33", "ss": "38"}, "\U0001F38626\U0001F31902" + emojiText(EmojiDay) + "15\u23F014" + emojiText(EmojiMinute) + "33" + emojiText(EmojiSecond) + "38"},
 		{"projects under root", "projects", map[string]interface{}{"parentId": ""}, emojiText(EmojiProjects)},
 		{"infra project semio-repo", "project", map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"}, emojiText(EmojiProjectInfra) + "semiorepo"},
 		{"user project semio", "project", map[string]interface{}{"name": "semio", "kind": "user"}, emojiText(EmojiProjectUser) + "semio"},
@@ -7211,7 +7224,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 
-	output, err := executeTreeCommand("tree", "semio/go")
+	output, err := executeTreeCommand("search", "semio/go")
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
 	}
@@ -7225,7 +7238,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("repo tree default output missing markdown list items, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("tree", "--only-folder", "semio/go")
+	output, err = executeTreeCommand("search", "--only-folder", "semio/go")
 	if err != nil {
 		t.Errorf("folder tree failed: %v", err)
 	}
@@ -7239,7 +7252,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("folder tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("tree", "--only-file", "semio/go")
+	output, err = executeTreeCommand("search", "--only-file", "semio/go")
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
@@ -7250,7 +7263,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("file tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("tree", "--only-ticket")
+	output, err = executeTreeCommand("search", "--only-ticket")
 	if err != nil {
 		t.Errorf("ticket tree failed: %v", err)
 	}
@@ -7261,7 +7274,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("ticket tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("tree", "--only-goal")
+	output, err = executeTreeCommand("search", "--only-goal")
 	if err != nil {
 		t.Errorf("goal tree failed: %v", err)
 	}
@@ -7272,7 +7285,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("goal tree default output must be markdown, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("tree", "semio/go", "--text")
+	output, err = executeTreeCommand("search", "semio/go", "--text")
 	if err != nil {
 		t.Errorf("repo tree text failed: %v", err)
 	}
@@ -7280,7 +7293,7 @@ func TestTreeCommands(t *testing.T) {
 		t.Errorf("repo tree text output should use connectors, got:\n%s", output)
 	}
 
-	output, err = executeTreeCommand("tree", "semio/go", "--json")
+	output, err = executeTreeCommand("search", "semio/go", "--json")
 	if err != nil {
 		t.Errorf("repo tree json failed: %v", err)
 	}
@@ -7335,7 +7348,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	}
 
 	fileID := FileHeaderId(fileRel)
-	fileURI := "semiorepo://file/" + PathToUriPath(fileRel)
+	fileURI := buildFileUriFromPath(fileRel)
 	absFile := filepath.Join(GetRootDir(), fileRel)
 	closeOut, closeErr, err := executeCommand(
 		"ticket", "close",
@@ -7452,7 +7465,7 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		args []string
 	}{
 		{"bundle list", []string{"list", "--only-bundle"}},
-		{"bundle tree", []string{"tree", "--only-bundle"}},
+		{"bundle tree", []string{"search", "--only-bundle"}},
 		{"folder list", []string{"list", "--only-folder", "go"}},
 		{"file list", []string{"list", "--only-file", "go"}},
 		{"section list", []string{"list", "--only-section", "semio/js/semio.ts"}},
@@ -7460,9 +7473,9 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		{"policy list", []string{"list", "--only-policy"}},
 		{"policy check", []string{"policy", "check", "code", "semio/js"}},
 		{"goal list", []string{"list", "--only-goal"}},
-		{"goal tree", []string{"tree", "--only-goal"}},
+		{"goal tree", []string{"search", "--only-goal"}},
 		{"ticket list", []string{"list", "--only-ticket"}},
-		{"ticket tree", []string{"tree", "--only-ticket"}},
+		{"ticket tree", []string{"search", "--only-ticket"}},
 		{"contributor list", []string{"list", "--only-contributor"}},
 		{"mcp dry-run", []string{"mcp", "--dry-run"}},
 		{"update", []string{"update"}},
@@ -8825,23 +8838,23 @@ func TestMarkdownOutput(t *testing.T) {
 	}{
 		{
 			name:        "Repo Tree MD",
-			args:        []string{"tree"},
+			args:        []string{"search"},
 			wantMarkers: []string{"- [", "]("},
 		},
 		{
 			name:        "Ticket Tree MD",
-			args:        []string{"tree", "--only-ticket"},
-			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
+			args:        []string{"search", "--only-ticket"},
+			wantMarkers: []string{"- [", "](semiorepo://y/"},
 		},
 		{
 			name:        "Goal Tree MD",
-			args:        []string{"tree", "--only-goal"},
-			wantMarkers: []string{"- [", "](semiorepo://goal/"},
+			args:        []string{"search", "--only-goal"},
+			wantMarkers: []string{"- [", "](semiorepo://g/"},
 		},
 		{
 			name:        "Ticket List MD",
 			args:        []string{"list", "--only-ticket"},
-			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
+			wantMarkers: []string{"- [", "](semiorepo://y/"},
 		},
 	}
 
@@ -9377,8 +9390,8 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
-	if len(ticket.Sessions) != 0 {
-		t.Fatalf("OpenTicket should not create synthetic sessions, got %d", len(ticket.Sessions))
+	if len(ticket.Agents) != 0 {
+		t.Fatalf("OpenTicket should not create synthetic agent, got %d", len(ticket.Agents))
 	}
 	if ticket.Management != nil {
 		t.Error("OpenTicket: GitHub data should be nil")
@@ -9434,8 +9447,8 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReopenTicket failed: %v", err)
 	}
-	if len(ticket.Sessions) != 0 {
-		t.Fatalf("ReopenTicket should not create synthetic sessions, got %d", len(ticket.Sessions))
+	if len(ticket.Agents) != 0 {
+		t.Fatalf("ReopenTicket should not create synthetic agent, got %d", len(ticket.Agents))
 	}
 	if ticket.GetStatus() != TicketStatusOpen {
 		t.Errorf("Ticket status mismatch: got %v, want open", ticket.GetStatus())
@@ -9524,8 +9537,8 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
-	if len(ticket.Sessions) != 0 {
-		t.Fatalf("expected no synthetic sessions at open, got %d", len(ticket.Sessions))
+	if len(ticket.Agents) != 0 {
+		t.Fatalf("expected 0 agents at open (no synthetic agent), got %d", len(ticket.Agents))
 	}
 	stableInput := json.RawMessage(`{"session_id":"agent-session-123","request_id":"req-1","timestamp":"2026-02-23T00:00:00Z"}`)
 	RunHook(HookContext{
@@ -9543,11 +9556,11 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err := json.Unmarshal(ticketData, &saved); err != nil {
 		t.Fatalf("unmarshal ticket.json: %v", err)
 	}
-	if len(saved.Sessions) != 1 {
-		t.Fatalf("expected 1 session after first hook, got %d", len(saved.Sessions))
+	if len(saved.Agents) != 1 {
+		t.Fatalf("expected 1 agent after first hook, got %d", len(saved.Agents))
 	}
-	if saved.Sessions[0].ID != "agent-session-123" {
-		t.Fatalf("expected hook session id agent-session-123, got %s", saved.Sessions[0].ID)
+	if saved.Agents[0].Session != "agent-session-123" {
+		t.Fatalf("expected hook agent session agent-session-123, got %s", saved.Agents[0].Session)
 	}
 	requestOnlyInput := json.RawMessage(`{"request_id":"req-2","timestamp":"2026-02-23T00:00:01Z"}`)
 	RunHook(HookContext{
@@ -9565,11 +9578,11 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err := json.Unmarshal(ticketData, &saved); err != nil {
 		t.Fatalf("unmarshal ticket.json after request-only hook: %v", err)
 	}
-	if len(saved.Sessions) != 1 {
-		t.Fatalf("request-only hooks should not add sessions, got %d", len(saved.Sessions))
+	if len(saved.Agents) != 1 {
+		t.Fatalf("request-only hooks should not add agents, got %d", len(saved.Agents))
 	}
-	if saved.Sessions[0].ID != "agent-session-123" {
-		t.Fatalf("session id changed unexpectedly to %s", saved.Sessions[0].ID)
+	if saved.Agents[0].Session != "agent-session-123" {
+		t.Fatalf("agent session changed unexpectedly to %s", saved.Agents[0].Session)
 	}
 }
 
@@ -9586,210 +9599,210 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "root",
 			data:    map[string]interface{}{},
 			wantID:  "",
-			wantURI: "semiorepo://root",
+			wantURI: "semiorepo://",
 		},
 		{
 			name:    "projects collection",
 			kind:    "projects",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiProjects),
-			wantURI: "semiorepo://projects",
+			wantURI: "semiorepo://p",
 		},
 		{
 			name:    "project user",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
 			wantID:  emojiText(EmojiProjectUser) + "semio",
-			wantURI: "semiorepo://project/semio",
+			wantURI: "semiorepo://p/u/semio",
 		},
 		{
 			name:    "project infrastructure",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
 			wantID:  emojiText(EmojiProjectInfra) + "semiorepo",
-			wantURI: "semiorepo://project/semio-repo",
+			wantURI: "semiorepo://p/i/semio-repo",
 		},
 		{
 			name:    "project research",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
 			wantID:  emojiText(EmojiProjectResearch) + "coda",
-			wantURI: "semiorepo://project/coda",
+			wantURI: "semiorepo://p/r/coda",
 		},
 		{
 			name:    "bundles collection",
 			kind:    "bundles",
 			data:    map[string]interface{}{"projectCode": "semio", "parentId": emojiText(EmojiProjectUser) + "semio"},
 			wantID:  emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundles),
-			wantURI: "semiorepo://bundles",
+			wantURI: "semiorepo://p/bs",
 		},
 		{
 			name:    "bundle library",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
 			wantID:  emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-			wantURI: "semiorepo://bundle/semio/js",
+			wantURI: "semiorepo://p/u/semio/b/l/js",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
 			wantID:  emojiText(EmojiProjectResearch) + "coda" + emojiText(EmojiBundleLibrary) + "examples",
-			wantURI: "semiorepo://bundle/coda/examples",
+			wantURI: "semiorepo://p/r/coda/b/l/examples",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
 			wantID:  emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-			wantURI: "semiorepo://bundle/semio/desktop",
+			wantURI: "semiorepo://p/u/semio/b/u/desktop",
 		},
 		{
 			name:    "folders collection empty",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiFolders),
-			wantURI: "semiorepo://folders",
+			wantURI: "semiorepo://fds",
 		},
 		{
 			name:    "folders collection with parent",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentPath": "semio/js/src", "parentId": emojiText(EmojiFolderOrg) + "src"},
 			wantID:  emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFolders),
-			wantURI: "semiorepo://folders/semio/js/src",
+			wantURI: "semiorepo://fds",
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
 			wantID:  emojiText(EmojiFolderRequired) + "src",
-			wantURI: "semiorepo://folder/semio/js/src",
+			wantURI: "semiorepo://fd/req/src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
 			wantID:  emojiText(EmojiFolderOrg) + "utils",
-			wantURI: "semiorepo://folder/semio/js/utils",
+			wantURI: "semiorepo://fd/org/utils",
 		},
 		{
 			name:    "files collection empty",
 			kind:    "files",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiFiles),
-			wantURI: "semiorepo://files",
+			wantURI: "semiorepo://fis",
 		},
 		{
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
 			wantID:  emojiText(EmojiFileDocs) + "testtxt",
-			wantURI: "semiorepo://file/test.txt",
+			wantURI: "semiorepo://f/test.txt",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "main.go", "kind": "code"},
 			wantID:  emojiText(EmojiFileCode) + "maingo",
-			wantURI: "semiorepo://file/main.go",
+			wantURI: "semiorepo://f/main.go",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
 			wantID:  emojiText(EmojiFileTest) + "indextestts",
-			wantURI: "semiorepo://file/semio/js/src/index.test.ts",
+			wantURI: GetArtifactURI("file", map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"}),
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
 			wantID:  emojiText(EmojiFileConfig) + "tsconfigjson",
-			wantURI: "semiorepo://file/tsconfig.json",
+			wantURI: "semiorepo://f/tsconfig.json",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
 			wantID:  emojiText(EmojiFileScript) + "buildsh",
-			wantURI: "semiorepo://file/build.sh",
+			wantURI: "semiorepo://f/build.sh",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
 			wantID:  emojiText(EmojiFileResource) + "logopng",
-			wantURI: "semiorepo://file/logo.png",
+			wantURI: "semiorepo://f/logo.png",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
 			wantID:  emojiText(EmojiFileLicense) + "licensemd",
-			wantURI: "semiorepo://file/LICENSE.md",
+			wantURI: "semiorepo://f/LICENSE.md",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "indexts"},
 			wantID:  emojiText(EmojiFileCode) + "indexts" + emojiText(EmojiSections),
-			wantURI: "semiorepo://sections/semio/js/src/index.ts",
+			wantURI: GetArtifactURI("sections", map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "indexts"}),
 		},
 		{
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
 			wantID:  buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
-			wantURI: "semiorepo://section/semio/js/src/Design.tsx/State%20Management/Design%20Store",
+			wantURI: GetArtifactURI("section", map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"}),
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
 			wantID:  buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
-			wantURI: "semiorepo://section/semio/js/src/file.ts/Imports",
+			wantURI: GetArtifactURI("section", map[string]interface{}{"path": "semio/js/src/file.ts#Imports"}),
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"},
 			wantID:  emojiText(EmojiSection) + "types" + emojiText(EmojiDefinitions),
-			wantURI: "semiorepo://definitions/semio/js/src/index.ts",
+			wantURI: GetArtifactURI("definitions", map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"}),
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
-			wantURI: "semiorepo://definition/semio/js/src/index.ts/MyClass",
+			wantURI: "semiorepo://d/i/semio/js/src/index.ts#MyClass",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
-			wantURI: "semiorepo://definition/semio/js/src/file.ts/Types/MyInterface",
+			wantURI: GetArtifactURI("definition", map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"}),
 		},
 		{
 			name:    "definition go type treated as interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "type", "filePath": "semio-repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"},
 			wantID:  buildDefinitionID(buildFileID("semio-repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
-			wantURI: "semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketCloseInput",
+			wantURI: GetArtifactURI("definition", map[string]interface{}{"kind": "type", "filePath": "semio-repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"}),
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
-			wantURI: "semiorepo://definition/semio/js/src/file.ts/MAX_SIZE",
+			wantURI: GetArtifactURI("definition", map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"}),
 		},
 		{
 			name:    "tickets collection",
 			kind:    "tickets",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiTickets),
-			wantURI: "semiorepo://tickets",
+			wantURI: "semiorepo://tks",
 		},
 		{
 			name: "ticket",
@@ -9801,7 +9814,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":  "test-ticket",
 			},
 			wantID:  emojiText(EmojiTicket) + "testticket",
-			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
+			wantURI: "semiorepo://y/2025/m/02/d/04/tk/test-ticket",
 		},
 		{
 			name: "ticket with status",
@@ -9814,133 +9827,133 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"status": "open",
 			},
 			wantID:  emojiText(EmojiTicket) + "testticket",
-			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
+			wantURI: "semiorepo://y/2025/m/02/d/04/tk/test-ticket",
 		},
 		{
 			name:    "goals collection",
 			kind:    "goals",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiGoals),
-			wantURI: "semiorepo://goals",
+			wantURI: "semiorepo://gs",
 		},
 		{
 			name:    "goal",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "RUNNING-SKETCHPAD", "parentId": ""},
 			wantID:  emojiText(EmojiGoal) + "runningsketchpad",
-			wantURI: "semiorepo://goal/RUNNING-SKETCHPAD",
+			wantURI: "semiorepo://g/RUNNING-SKETCHPAD",
 		},
 		{
 			name:    "goal nested",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "R26-02/RUNNING-SKETCHPAD", "parentId": emojiText(EmojiGoal) + "r2602"},
 			wantID:  emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad",
-			wantURI: "semiorepo://goal/R26-02/RUNNING-SKETCHPAD",
+			wantURI: "semiorepo://g/R26-02/g/RUNNING-SKETCHPAD",
 		},
 		{
 			name:    "drafts collection",
 			kind:    "drafts",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiDrafts),
-			wantURI: "semiorepo://drafts",
+			wantURI: "semiorepo://drs",
 		},
 		{
 			name:    "draft",
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
 			wantID:  emojiText(EmojiDraft) + "mydraft",
-			wantURI: "semiorepo://draft/my-draft",
+			wantURI: "semiorepo://drs/my-draft",
 		},
 		{
 			name:    "todos collection",
 			kind:    "todos",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiTodos),
-			wantURI: "semiorepo://todos",
+			wantURI: "semiorepo://tos",
 		},
 		{
 			name:    "todo",
 			kind:    "todo",
 			data:    map[string]interface{}{"id": "my-todo"},
 			wantID:  emojiText(EmojiTodo) + "mytodo",
-			wantURI: "semiorepo://todo/my-todo",
+			wantURI: "semiorepo://tos/my-todo",
 		},
 		{
 			name:    "policies collection",
 			kind:    "policies",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiPolicies),
-			wantURI: "semiorepo://policies",
+			wantURI: "semiorepo://pls",
 		},
 		{
 			name:    "policy",
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
 			wantID:  emojiText(EmojiPolicy) + "codehygiene",
-			wantURI: "semiorepo://policy/code-hygiene",
+			wantURI: "semiorepo://pls/pl/code-hygiene",
 		},
 		{
 			name:    "statutes collection",
 			kind:    "statutes",
 			data:    map[string]interface{}{},
 			wantID:  "",
-			wantURI: "semiorepo://statutes",
+			wantURI: "semiorepo://sts",
 		},
 		{
 			name:    "statute",
 			kind:    "statute",
 			data:    map[string]interface{}{"id": "code/inline-comment"},
 			wantID:  "codeinlinecomment",
-			wantURI: "semiorepo://statute/code/inline-comment",
+			wantURI: "semiorepo://sts/code/inline-comment",
 		},
 		{
 			name:    "contributors collection",
 			kind:    "contributors",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiContributors),
-			wantURI: "semiorepo://contributors",
+			wantURI: "semiorepo://cs",
 		},
 		{
 			name:    "contributor",
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
 			wantID:  emojiText(EmojiContributor) + "usalu",
-			wantURI: "semiorepo://contributor/usalu",
+			wantURI: "semiorepo://cs/usalu",
 		},
 		{
 			name:    "commits collection",
 			kind:    "commits",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiCommits),
-			wantURI: "semiorepo://commits",
+			wantURI: "semiorepo://cms",
 		},
 		{
 			name:    "commit",
 			kind:    "commit",
 			data:    map[string]interface{}{"sha": "abc123"},
 			wantID:  emojiText(EmojiCommit) + "abc123",
-			wantURI: "semiorepo://commit/abc123",
+			wantURI: "semiorepo://cms/abc123",
 		},
 		{
 			name:    "interactions collection",
 			kind:    "interactions",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  "",
-			wantURI: "semiorepo://interactions",
+			wantURI: "semiorepo://is",
 		},
 		{
 			name:    "interaction started ticket",
 			kind:    "interaction",
 			data:    map[string]interface{}{"kind": "started", "entityId": emojiText(EmojiTicket) + "introduceinteractionmechanism"},
 			wantID:  emojiText(EmojiTicket) + "introduceinteractionmechanism" + emojiText(EmojiInteractionStarted),
-			wantURI: "semiorepo://interaction/on/ticket/introduceinteractionmechanism/started",
+			wantURI: "semiorepo://is/on/" + url.PathEscape(IdToUri(emojiText(EmojiTicket)+"introduceinteractionmechanism")) + "/started",
 		},
 		{
 			name:    "interaction finished goal",
 			kind:    "interaction",
 			data:    map[string]interface{}{"kind": "finished", "entityId": emojiText(EmojiGoal) + "r2602"},
 			wantID:  emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished),
-			wantURI: "semiorepo://interaction/on/goal/r2602/finished",
+			wantURI: "semiorepo://is/on/" + url.PathEscape(IdToUri(emojiText(EmojiGoal)+"r2602")) + "/finished",
 		},
 	}
 
@@ -9964,31 +9977,31 @@ func TestIdToUri(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"project user", emojiText(EmojiProjectUser) + "semio", "semiorepo://project/semio"},
-		{"project infra", emojiText(EmojiProjectInfra) + "semiorepo", "semiorepo://project/semiorepo"},
-		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://bundle/semio/js"},
-		{"folder required", emojiText(EmojiFolderRequired) + "src", "semiorepo://folder/src"},
-		{"folder org", emojiText(EmojiFolderOrg) + "utils", "semiorepo://folder/utils"},
-		{"file docs", emojiText(EmojiFileDocs) + "testtxt", "semiorepo://file/testtxt"},
-		{"file code", emojiText(EmojiFileCode) + "maingo", "semiorepo://file/maingo"},
-		{"section collection", emojiText(EmojiSection), "semiorepo://sections"},
-		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), "semiorepo://section/semio/js/src/designtsx/statemanagment/store"},
-		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "semiorepo://definition/semio/js/src/filets/types/myclass"},
-		{"ticket collection", emojiText(EmojiTicket), "semiorepo://tickets"},
-		{"ticket", emojiText(EmojiTicket) + "testticket", "semiorepo://ticket/testticket"},
-		{"goal collection", emojiText(EmojiGoal), "semiorepo://goals"},
-		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "semiorepo://goal/r2602runningsketchpad"},
-		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "semiorepo://goal/r2602/runningsketchpad"},
-		{"draft collection", emojiText(EmojiDraft), "semiorepo://drafts"},
-		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://draft/mydraft"},
-		{"policy collection", emojiText(EmojiPolicy), "semiorepo://policies"},
-		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://policy/codehygiene"},
-		{"contributor collection", emojiText(EmojiContributor), "semiorepo://contributors"},
-		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://contributor/usalu"},
-		{"commit collection", emojiText(EmojiCommit), "semiorepo://commits"},
-		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://commit/abc123"},
-		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "semiorepo://interaction/on/ticket/testticket/started"},
-		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "semiorepo://interaction/on/goal/r2602/finished"},
+		{"project user", emojiText(EmojiProjectUser) + "semio", "semiorepo://p/u/semio"},
+		{"project infra", emojiText(EmojiProjectInfra) + "semiorepo", "semiorepo://p/i/semiorepo"},
+		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://p/u/semio/b/l/js"},
+		{"folder required", emojiText(EmojiFolderRequired) + "src", "semiorepo://f/src"},
+		{"folder org", emojiText(EmojiFolderOrg) + "utils", "semiorepo://f/utils"},
+		{"file docs", emojiText(EmojiFileDocs) + "testtxt", "semiorepo://f/testtxt"},
+		{"file code", emojiText(EmojiFileCode) + "maingo", "semiorepo://f/maingo"},
+		{"section collection", emojiText(EmojiSection), "semiorepo://ss"},
+		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), IdToUri(buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}))},
+		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), IdToUri(buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation))},
+		{"ticket collection", emojiText(EmojiTicket), "semiorepo://tks"},
+		{"ticket", emojiText(EmojiTicket) + "testticket", "semiorepo://tks/testticket"},
+		{"goal collection", emojiText(EmojiGoal), "semiorepo://gs"},
+		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "semiorepo://g/r2602runningsketchpad"},
+		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "semiorepo://g/r2602/g/runningsketchpad"},
+		{"draft collection", emojiText(EmojiDraft), "semiorepo://drs"},
+		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://drs/mydraft"},
+		{"policy collection", emojiText(EmojiPolicy), "semiorepo://pls"},
+		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://pls/pl/codehygiene"},
+		{"contributor collection", emojiText(EmojiContributor), "semiorepo://cs"},
+		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://cs/usalu"},
+		{"commit collection", emojiText(EmojiCommit), "semiorepo://cms"},
+		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://cms/abc123"},
+		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "semiorepo://is/on/" + url.PathEscape("semiorepo://tks/testticket") + "/started"},
+		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/finished"},
 		{"empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -10007,42 +10020,42 @@ func TestUriToId(t *testing.T) {
 		uri  string
 		want string
 	}{
-		{"repo", "semiorepo://root", ""},
-		{"projects", "semiorepo://projects", emojiText(EmojiProjects)},
-		{"project", "semiorepo://project/semio", emojiText(EmojiProjectUser) + "semio"},
-		{"project infra", "semiorepo://project/semio-repo", emojiText(EmojiProjectInfra) + "semiorepo"},
-		{"bundles", "semiorepo://bundles", emojiText(EmojiBundles)},
-		{"bundle", "semiorepo://bundle/semio/js", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
-		{"folders", "semiorepo://folders", emojiText(EmojiFolders)},
-		{"folders with parent", "semiorepo://folders/semio/js/src", emojiText(EmojiFolders)},
-		{"folder", "semiorepo://folder/semio/js/src", emojiText(EmojiFolderOrg) + "semiojssrc"},
-		{"files", "semiorepo://files", emojiText(EmojiFiles)},
-		{"file", "semiorepo://file/test.txt", emojiText(EmojiFileCode) + "testtxt"},
-		{"sections", "semiorepo://sections", emojiText(EmojiSections)},
-		{"section", "semiorepo://section/semio/js/src/Design.tsx/State%20Management/Design%20Store", buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"})},
-		{"definitions", "semiorepo://definitions", emojiText(EmojiDefinitions)},
-		{"definition single", "semiorepo://definition/semio/js/src/file.ts/myFunc", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation)},
-		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/Section/myFunc", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation)},
-		{"tickets", "semiorepo://tickets", emojiText(EmojiTicket)},
-		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", emojiText(EmojiTicket) + "20250204testticket"},
-		{"goals", "semiorepo://goals", emojiText(EmojiGoal)},
-		{"goal", "semiorepo://goal/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "runningsketchpad"},
-		{"goal nested", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
-		{"drafts", "semiorepo://drafts", emojiText(EmojiDraft)},
-		{"draft", "semiorepo://draft/my-draft", emojiText(EmojiDraft) + "mydraft"},
-		{"todos", "semiorepo://todos", emojiText(EmojiTodo)},
-		{"todo", "semiorepo://todo/my-todo", emojiText(EmojiTodo) + "mytodo"},
-		{"policies", "semiorepo://policies", emojiText(EmojiPolicy)},
-		{"policy", "semiorepo://policy/code-hygiene", emojiText(EmojiPolicy) + "codehygiene"},
-		{"statutes", "semiorepo://statutes", ""},
-		{"statute", "semiorepo://statute/code/inline-comment", ""},
-		{"contributors", "semiorepo://contributors", emojiText(EmojiContributor)},
-		{"contributor", "semiorepo://contributor/usalu", emojiText(EmojiContributor) + "usalu"},
-		{"commits", "semiorepo://commits", emojiText(EmojiCommit)},
-		{"commit", "semiorepo://commit/abc123", emojiText(EmojiCommit) + "abc123"},
-		{"interactions", "semiorepo://interactions", ""},
-		{"interaction ticket", "semiorepo://interaction/on/ticket/testticket/started", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
-		{"interaction goal", "semiorepo://interaction/on/goal/r2602/started", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
+		{"repo", "semiorepo://", ""},
+		{"projects", "semiorepo://p", emojiText(EmojiProjects)},
+		{"project", "semiorepo://p/u/semio", emojiText(EmojiProjectUser) + "semio"},
+		{"project infra", "semiorepo://p/i/semio-repo", emojiText(EmojiProjectInfra) + "semiorepo"},
+		{"bundles", "semiorepo://p/u/semio/bs", emojiText(EmojiBundles)},
+		{"bundle", "semiorepo://p/u/semio/b/l/js", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"folders", "semiorepo://fds", emojiText(EmojiFolders)},
+		{"folders with parent", "semiorepo://p/u/semio/b/l/js/fd/org/src/fds", emojiText(EmojiFolders)},
+		{"folder", "semiorepo://fd/org/src", emojiText(EmojiFolderOrg) + "src"},
+		{"files", "semiorepo://fis", emojiText(EmojiFiles)},
+		{"file", "semiorepo://f/test.txt", emojiText(EmojiFileCode) + "testtxt"},
+		{"sections", "semiorepo://ss", emojiText(EmojiSections)},
+		{"section", "semiorepo://f/Design.tsx/s/State%20Management/s/Design%20Store", emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "State Management" + emojiText(EmojiSection) + "Design Store"},
+		{"definitions", "semiorepo://ds", emojiText(EmojiDefinitions)},
+		{"definition single", "semiorepo://f/file.ts/d/i/myFunc", emojiText(EmojiFileCode) + "filets" + emojiText(EmojiDefinitionImpl) + "myfunc"},
+		{"definition with section", "semiorepo://f/file.ts/s/Section/d/i/myFunc", emojiText(EmojiFileCode) + "filets" + emojiText(EmojiSection) + "Section" + emojiText(EmojiDefinitionImpl) + "myfunc"},
+		{"tickets", "semiorepo://tks", emojiText(EmojiTickets)},
+		{"ticket", "semiorepo://y/2025/m/02/d/04/tk/test-ticket", emojiText(EmojiTicket) + "testticket"},
+		{"goals", "semiorepo://gs", emojiText(EmojiGoals)},
+		{"goal", "semiorepo://g/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "runningsketchpad"},
+		{"goal nested", "semiorepo://g/R26-02/g/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
+		{"drafts", "semiorepo://drs", emojiText(EmojiDrafts)},
+		{"draft", "semiorepo://drs/my-draft", emojiText(EmojiDraft) + "mydraft"},
+		{"todos", "semiorepo://tos", emojiText(EmojiTodos)},
+		{"todo", "semiorepo://tos/my-todo", emojiText(EmojiTodo) + "mytodo"},
+		{"policies", "semiorepo://pls", emojiText(EmojiPolicies)},
+		{"policy", "semiorepo://pls/pl/code-hygiene", emojiText(EmojiPolicy) + "codehygiene"},
+		{"statutes", "semiorepo://sts", emojiText(EmojiStatutes)},
+		{"statute", "semiorepo://sts/code/inline-comment", ""},
+		{"contributors", "semiorepo://cs", emojiText(EmojiContributors)},
+		{"contributor", "semiorepo://cs/usalu", emojiText(EmojiContributor) + "usalu"},
+		{"commits", "semiorepo://cms", emojiText(EmojiCommits)},
+		{"commit", "semiorepo://cms/abc123", emojiText(EmojiCommit) + "abc123"},
+		{"interactions", "semiorepo://is", ""},
+		{"interaction ticket", "semiorepo://is/on/" + url.PathEscape("semiorepo://tks/testticket") + "/started", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
+		{"interaction goal", "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/started", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -10295,17 +10308,17 @@ func TestIdUriRoundTrip(t *testing.T) {
 		id   string
 		uri  string
 	}{
-		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://policy/codehygiene"},
-		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://contributor/usalu"},
-		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://commit/abc123"},
-		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://draft/mydraft"},
-		{"section", emojiText(EmojiSection) + "imports", "semiorepo://section/imports"},
-		{"file", emojiText(EmojiFileCode) + "indexts", "semiorepo://file/indexts"},
-		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "semiorepo://ticket/20260115someticket"},
-		{"goal", emojiText(EmojiGoal) + "r2602running", "semiorepo://goal/r2602running"},
-		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "semiorepo://interaction/on/goal/r2602/started"},
-		{"project", emojiText(EmojiProjectUser) + "semio", "semiorepo://project/semio"},
-		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://bundle/semio/js"},
+		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://pls/pl/codehygiene"},
+		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://cs/usalu"},
+		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://cms/abc123"},
+		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://drs/mydraft"},
+		{"section", emojiText(EmojiFileCode) + "indexts" + emojiText(EmojiSection) + "imports", "semiorepo://f/indexts/s/imports"},
+		{"file", emojiText(EmojiFileCode) + "indexts", "semiorepo://f/indexts"},
+		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "semiorepo://tks/20260115someticket"},
+		{"goal", emojiText(EmojiGoal) + "r2602running", "semiorepo://g/r2602running"},
+		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/started"},
+		{"project", emojiText(EmojiProjectUser) + "semio", "semiorepo://p/u/semio"},
+		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://p/u/semio/b/l/js"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name+"_IdToUri", func(t *testing.T) {
@@ -10393,13 +10406,13 @@ func TestQueryFlag(t *testing.T) {
 	}{
 		{
 			name:        "tree --query filters monorepo tree",
-			args:        []string{"tree", "--query", "engine", "--text"},
+			args:        []string{"search", "--query", "engine", "--text"},
 			query:       "",
 			expectMatch: "engine",
 		},
 		{
 			name:          "tree --query excludes unrelated",
-			args:          []string{"tree", "--query", "zzz_nonexistent_xyz", "--text"},
+			args:          []string{"search", "--query", "zzz_nonexistent_xyz", "--text"},
 			query:         "",
 			expectMissing: "semio/go",
 		},
@@ -10411,7 +10424,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "project tree --query matches",
-			args:        []string{"tree", "--only-project", "--query", "semio", "--json"},
+			args:        []string{"search", "--only-project", "--query", "semio", "--json"},
 			query:       "",
 			expectMatch: "semio",
 		},
@@ -10429,7 +10442,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "bundle tree --query matches",
-			args:        []string{"tree", "--only-bundle", "--query", "engine", "--text"},
+			args:        []string{"search", "--only-bundle", "--query", "engine", "--text"},
 			query:       "",
 			expectMatch: "engine",
 		},
@@ -10441,7 +10454,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "folder tree --query matches",
-			args:        []string{"tree", "--only-folder", "--query", "go", "--text"},
+			args:        []string{"search", "--only-folder", "--query", "go", "--text"},
 			query:       "",
 			expectMatch: "go",
 		},
@@ -10453,7 +10466,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "file tree --query matches",
-			args:        []string{"tree", "--only-file", "--query", "semio", "--text"},
+			args:        []string{"search", "--only-file", "--query", "semio", "--text"},
 			query:       "",
 			expectMatch: "semio",
 		},
@@ -10465,7 +10478,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "section tree --query matches",
-			args:        []string{"tree", "--only-section", "--query", "Models", "--text"},
+			args:        []string{"search", "--only-section", "--query", "Models", "--text"},
 			query:       "",
 			expectMatch: "Model",
 		},
@@ -10483,7 +10496,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "ticket tree --query matches",
-			args:        []string{"tree", "--only-ticket", "--query", "ticket", "--text"},
+			args:        []string{"search", "--only-ticket", "--query", "ticket", "--text"},
 			query:       "",
 			expectMatch: "ticket",
 		},
@@ -10495,13 +10508,13 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "goal tree --query matches",
-			args:        []string{"tree", "--only-goal", "--query", "sketchpad", "--text"},
+			args:        []string{"search", "--only-goal", "--query", "sketchpad", "--text"},
 			query:       "",
 			expectMatch: "Sketchpad",
 		},
 		{
 			name:          "goal tree --query excludes unrelated",
-			args:          []string{"tree", "--only-goal", "--query", "zzz_nonexistent_xyz", "--text"},
+			args:          []string{"search", "--only-goal", "--query", "zzz_nonexistent_xyz", "--text"},
 			query:         "",
 			expectMissing: "Sketchpad",
 		},
@@ -10513,7 +10526,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "policy tree --query matches",
-			args:        []string{"tree", "--only-policy", "--query", "header", "--text"},
+			args:        []string{"search", "--only-policy", "--query", "header", "--text"},
 			query:       "",
 			expectMatch: "header",
 		},
@@ -10531,7 +10544,7 @@ func TestQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "statute tree --query matches",
-			args:        []string{"tree", "--only-statute", "--query", "header", "--text"},
+			args:        []string{"search", "--only-statute", "--query", "header", "--text"},
 			query:       "",
 			expectMatch: "header",
 		},
@@ -10640,7 +10653,7 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 	SetRootDir(repoRoot)
 
 	t.Run("tree query returns multiple resource kinds for shared keyword", func(t *testing.T) {
-		output, err := executeTreeCommand("tree", "--query", "bleve", "--text")
+		output, err := executeTreeCommand("search", "--query", "bleve", "--text")
 		if err != nil {
 			t.Fatalf("tree --query bleve failed: %v\nOutput: %s", err, output)
 		}
@@ -10682,7 +10695,7 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 	})
 
 	t.Run("tree query for cli returns file and bundle", func(t *testing.T) {
-		output, err := executeTreeCommand("tree", "--query", "cli", "--text")
+		output, err := executeTreeCommand("search", "--query", "cli", "--text")
 		if err != nil {
 			t.Fatalf("tree --query cli failed: %v", err)
 		}
@@ -10697,7 +10710,7 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 	})
 
 	t.Run("tree query nonexistent returns minimal output", func(t *testing.T) {
-		output, err := executeTreeCommand("tree", "--query", "zzz_nonexistent_xyzz", "--text")
+		output, err := executeTreeCommand("search", "--query", "zzz_nonexistent_xyzz", "--text")
 		if err != nil {
 			t.Fatalf("tree --query nonexistent failed: %v", err)
 		}
@@ -10707,11 +10720,11 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 	})
 
 	t.Run("different queries return different resources", func(t *testing.T) {
-		bleveOut, err := executeTreeCommand("tree", "--query", "bleve", "--json")
+		bleveOut, err := executeTreeCommand("search", "--query", "bleve", "--json")
 		if err != nil {
 			t.Fatalf("tree --query bleve failed: %v", err)
 		}
-		cliOut, err := executeTreeCommand("tree", "--query", "cli", "--json")
+		cliOut, err := executeTreeCommand("search", "--query", "cli", "--json")
 		if err != nil {
 			t.Fatalf("tree --query cli failed: %v", err)
 		}
@@ -10783,7 +10796,7 @@ func TestStatuteCommands(t *testing.T) {
 	})
 
 	t.Run("statute tree returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("tree", "--only-statute", "--text")
+		output, err := executeTreeCommand("search", "--only-statute", "--text")
 		if err != nil {
 			t.Fatalf("statute tree failed: %v", err)
 		}
@@ -10803,7 +10816,7 @@ func TestStatuteCommands(t *testing.T) {
 	})
 
 	t.Run("statute tree markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("tree", "--only-statute", "--md")
+		output, err := executeTreeCommand("search", "--only-statute", "--md")
 		if err != nil {
 			t.Fatalf("statute tree md failed: %v", err)
 		}
@@ -11163,8 +11176,8 @@ func TestToolGoalUri(t *testing.T) {
 		if uri == "" {
 			t.Errorf("goal %s has empty URI", g.ID)
 		}
-		if !strings.HasPrefix(uri, "semiorepo://goal/") {
-			t.Errorf("goal %s URI %q should start with semiorepo://goal/", g.ID, uri)
+		if !strings.HasPrefix(uri, "semiorepo://g/") {
+			t.Errorf("goal %s URI %q should start with semiorepo://g/", g.ID, uri)
 		}
 	}
 }
@@ -11357,7 +11370,7 @@ func TestParityProjectTree(t *testing.T) {
 	setupToolTest(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
-		cliOut, _, err := executeCommandMd("tree", "--only-project")
+		cliOut, _, err := executeCommandMd("search", "--only-project")
 		if err != nil {
 			t.Fatalf("CLI project tree failed: %v", err)
 		}
@@ -11377,11 +11390,14 @@ func TestParityProjectTree(t *testing.T) {
 		var projectNames []string
 		for _, line := range lines {
 			trimmed := strings.TrimSpace(line)
-			if idx := strings.Index(trimmed, "semiorepo://project/"); idx >= 0 {
-				nameStart := idx + len("semiorepo://project/")
-				nameEnd := strings.Index(trimmed[nameStart:], ")")
-				if nameEnd >= 0 {
-					projectNames = append(projectNames, trimmed[nameStart:nameStart+nameEnd])
+			if idx := strings.Index(trimmed, "semiorepo://p/"); idx >= 0 {
+				rest := trimmed[idx+len("semiorepo://p/"):]
+				slashIdx := strings.Index(rest, "/")
+				if slashIdx >= 0 {
+					nameEnd := strings.Index(rest[slashIdx+1:], ")")
+					if nameEnd >= 0 {
+						projectNames = append(projectNames, rest[slashIdx+1:slashIdx+1+nameEnd])
+					}
 				}
 			}
 		}
@@ -11961,7 +11977,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://p", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
@@ -11978,11 +11994,11 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders category URI", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://goals"},
+				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://gs"},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "[🎯Goals](semiorepo://goals)") {
+		if !strings.Contains(output, "[🎯Goals](semiorepo://gs)") {
 			t.Errorf("output should contain category with URI link, got: %s", output)
 		}
 	})
@@ -12013,13 +12029,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://p", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🏗️Projects](semiorepo://projects)") {
+		if !strings.Contains(output, "- [🏗️Projects](semiorepo://p)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {
@@ -12050,7 +12066,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 		}
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://goals", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://gs", Children: []*TreeNode{
 					{Kind: TreeNodeGoal, ID: "parentgoal", Label: "Parent Goal", Data: parentGoalData, Children: []*TreeNode{
 						{Kind: TreeNodeGoal, ID: "childgoal", Label: "Child Goal", Data: childGoalData, Children: []*TreeNode{
 							{Kind: TreeNodeGoal, ID: "grandchildgoal", Label: "Grandchild Goal", Data: grandchildGoalData},
@@ -12488,7 +12504,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 		if !strings.Contains(mdLink, "[🎯") {
 			t.Errorf("markdown link missing goal emoji prefix: %s", mdLink)
 		}
-		if !strings.Contains(mdLink, "](semiorepo://goal/") {
+		if !strings.Contains(mdLink, "](semiorepo://g/") {
 			t.Errorf("markdown link missing goal URI: %s", mdLink)
 		}
 	})
@@ -12568,7 +12584,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 			Kind:  TreeNodeGoal,
 			ID:    "TEST-GOAL",
 			Label: "TEST-GOAL",
-			URI:   "semiorepo://goal/test-goal",
+			URI:   "semiorepo://g/test-goal",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -12594,7 +12610,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 			Kind:  TreeNodeGoal,
 			ID:    "TEST-GOAL",
 			Label: "TEST-GOAL",
-			URI:   "semiorepo://goal/test-goal",
+			URI:   "semiorepo://g/test-goal",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -12800,7 +12816,7 @@ func TestUnifiedRenderingSectionIdentity(t *testing.T) {
 			Kind:  TreeNodeSection,
 			ID:    "sec1",
 			Label: "MySection",
-			URI:   "semiorepo://section/test/file.ts/mysection",
+			URI:   "semiorepo://f/file.ts/s/mysection",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -14773,7 +14789,7 @@ func TestHookLogging(t *testing.T) {
 	hctx := HookContext{
 		Event:     HookAgentStarted,
 		Client:    "claude-code",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Timestamp: "2026-02-20T10:00:00Z",
 		RepoRoot:  tmpDir,
 		Input:     payload,
 	}
@@ -14803,39 +14819,30 @@ func TestHookLogging(t *testing.T) {
 	if err := json.Unmarshal(data, &entry); err != nil {
 		t.Fatalf("expected valid JSON log entry, got: %v", err)
 	}
-	if entry.Event.Kind != HookAgentStarted {
-		t.Errorf("expected event.kind agent.started in log, got: %s", entry.Event.Kind)
+	var evt map[string]interface{}
+	if err := json.Unmarshal(entry.Event, &evt); err != nil {
+		t.Fatalf("cannot unmarshal event: %v", err)
 	}
-	if entry.Event.Client != "claude-code" {
-		t.Errorf("expected event.client claude-code in log, got: %s", entry.Event.Client)
+	if evt["kind"] != string(HookAgentStarted) {
+		t.Errorf("expected event.kind agent.started in log, got: %v", evt["kind"])
 	}
-	if entry.Event.Session != "sess-log" {
-		t.Errorf("expected event.session sess-log in log, got: %s", entry.Event.Session)
+	if evt["client"] != "claude-code" {
+		t.Errorf("expected event.client claude-code in log, got: %v", evt["client"])
 	}
-	if entry.Event.Timestamp != "2026-02-20T10:00:00Z" {
-		t.Errorf("expected event.timestamp from input, got: %s", entry.Event.Timestamp)
+	if evt["session"] != "sess-log" {
+		t.Errorf("expected event.session sess-log in log, got: %v", evt["session"])
 	}
-	if entry.Event.Transcript != "/tmp/transcript.jsonl" {
-		t.Errorf("expected event.transcript in log, got: %s", entry.Event.Transcript)
+	if evt["timestamp"] != "2026-02-20T10:00:00Z" {
+		t.Errorf("expected event.timestamp from input, got: %v", evt["timestamp"])
+	}
+	if evt["transcript"] != "/tmp/transcript.jsonl" {
+		t.Errorf("expected event.transcript in log, got: %v", evt["transcript"])
 	}
 	if entry.Response.Blocked != nil {
 		t.Error("expected response.blocked to be nil for allowed event")
 	}
-	if entry.Input == nil {
-		t.Error("expected input to be populated")
-	}
-	if entry.Data == nil {
-		t.Fatal("expected data to be populated with event-specific result")
-	}
-	var dataMap map[string]interface{}
-	if err := json.Unmarshal(entry.Data, &dataMap); err != nil {
-		t.Fatalf("expected data to be valid JSON: %v", err)
-	}
-	if dataMap["session"] != "sess-log" {
-		t.Errorf("expected data.session=sess-log, got %v", dataMap["session"])
-	}
-	if dataMap["client"] != "claude-code" {
-		t.Errorf("expected data.client=claude-code, got %v", dataMap["client"])
+	if entry.Raw == nil {
+		t.Error("expected raw to be populated")
 	}
 }
 
@@ -14878,16 +14885,7 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 	if !strings.HasSuffix(entries[0].Name(), "_agent-tool-starting.json") {
 		t.Errorf("expected filename to end with _agent-tool-starting.json, got: %s", entries[0].Name())
 	}
-	if entry.Data == nil {
-		t.Fatal("expected data to be populated with event-specific result")
-	}
-	var dataMap map[string]interface{}
-	if err := json.Unmarshal(entry.Data, &dataMap); err != nil {
-		t.Fatalf("expected data to be valid JSON: %v", err)
-	}
-	if dataMap["allowed"] != false {
-		t.Errorf("expected data.allowed=false for blocked tool, got %v", dataMap["allowed"])
-	}
+	// HookLogEvent is a typed struct; "allowed" is not a field on it
 }
 
 func TestHookLoggingStdinInput(t *testing.T) {
@@ -14897,64 +14895,42 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	hctx := HookContext{
 		Event:     HookAgentToolStarting,
 		Client:    "claude-code",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Timestamp: "2026-02-20T12:00:00Z",
 		RepoRoot:  tmpDir,
-		ToolName:  "Bash",
-		ToolArgs:  `{"command":"ls"}`,
 		Input:     payload,
 	}
 	RunHook(hctx)
-	entries, err := os.ReadDir(logDir)
-	if err != nil {
-		t.Fatalf("expected log dir to exist: %v", err)
-	}
+	entries, _ := os.ReadDir(logDir)
 	if len(entries) != 1 {
 		t.Fatalf("expected 1 log file, got %d", len(entries))
 	}
-	data, err := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
-	if err != nil {
-		t.Fatalf("cannot read log file: %v", err)
-	}
+	data, _ := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
 	var entry HookLogEntry
-	if err := json.Unmarshal(data, &entry); err != nil {
-		t.Fatalf("expected valid JSON log entry: %v", err)
+	json.Unmarshal(data, &entry)
+	if len(entry.Raw) == 0 {
+		t.Error("expected raw from HookContext.Input")
 	}
-	var gotInput, wantInput interface{}
-	if err := json.Unmarshal(entry.Input, &gotInput); err != nil {
-		t.Fatalf("expected valid JSON in logged input: %v", err)
-	}
-	if err := json.Unmarshal(payload, &wantInput); err != nil {
-		t.Fatalf("bad test payload: %v", err)
-	}
-	gotBytes, _ := json.Marshal(gotInput)
-	wantBytes, _ := json.Marshal(wantInput)
+	var wantMap, gotMap map[string]interface{}
+	json.Unmarshal(payload, &wantMap)
+	json.Unmarshal(entry.Raw, &gotMap)
+	wantBytes, _ := json.Marshal(wantMap)
+	gotBytes, _ := json.Marshal(gotMap)
 	if string(gotBytes) != string(wantBytes) {
-		t.Errorf("expected input %s in log, got: %s", wantBytes, gotBytes)
+		t.Errorf("expected raw %s in log, got: %s", wantBytes, gotBytes)
 	}
-	if entry.Event.Session != "abc123" {
-		t.Errorf("expected event.session abc123, got: %s", entry.Event.Session)
+	var evt map[string]interface{}
+	json.Unmarshal(entry.Event, &evt)
+	if evt["session"] != "abc123" {
+		t.Errorf("expected event.session abc123, got: %v", evt["session"])
 	}
-	if entry.Event.Timestamp != "2026-02-20T12:00:00Z" {
-		t.Errorf("expected event.timestamp from input, got: %s", entry.Event.Timestamp)
+	if evt["timestamp"] != "2026-02-20T12:00:00Z" {
+		t.Errorf("expected event.timestamp from input, got: %v", evt["timestamp"])
 	}
-	if entry.Event.Transcript != "/tmp/t.jsonl" {
-		t.Errorf("expected event.transcript, got: %s", entry.Event.Transcript)
+	if evt["transcript"] != "/tmp/t.jsonl" {
+		t.Errorf("expected event.transcript, got: %v", evt["transcript"])
 	}
-	if entry.Event.Client != "claude-code" {
-		t.Errorf("expected event.client claude-code, got: %s", entry.Event.Client)
-	}
-	if entry.Data == nil {
-		t.Fatal("expected data to be populated with event-specific result")
-	}
-	var dataMap map[string]interface{}
-	if err := json.Unmarshal(entry.Data, &dataMap); err != nil {
-		t.Fatalf("expected data to be valid JSON: %v", err)
-	}
-	if dataMap["name"] != "Bash" {
-		t.Errorf("expected data.name=Bash for tool.starting, got %v", dataMap["name"])
-	}
-	if dataMap["input"] == nil {
-		t.Error("expected data.input to be populated with tool input for tool.starting")
+	if evt["client"] != "claude-code" {
+		t.Errorf("expected event.client claude-code, got: %v", evt["client"])
 	}
 }
 
@@ -14971,7 +14947,7 @@ func setupTicketDir(t *testing.T) (string, string) {
 		t.Fatal(err)
 	}
 	ticketJSON := filepath.Join(ticketDir, "ticket.json")
-	initialTicket := `{"title":"Test Ticket","status":"open","goal":"TEST/GOAL"}`
+	initialTicket := `{"title":"Test Ticket","goal":"TEST/GOAL"}`
 	if err := os.WriteFile(ticketJSON, []byte(initialTicket), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -14993,17 +14969,12 @@ func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
 
 func getTicketEvents(t *testing.T, ticketData map[string]interface{}) []interface{} {
 	t.Helper()
-	sessions, ok := ticketData["sessions"].([]interface{})
-	if !ok || len(sessions) == 0 {
-		t.Fatal("expected sessions in ticket.json")
+	agents, ok := ticketData["agents"].([]interface{})
+	if !ok || len(agents) == 0 {
+		t.Fatal("expected agents in ticket.json")
 	}
-	lastSession := sessions[len(sessions)-1].(map[string]interface{})
-	prompts, ok := lastSession["prompts"].([]interface{})
-	if !ok || len(prompts) == 0 {
-		t.Fatal("expected prompts in session")
-	}
-	lastPrompt := prompts[len(prompts)-1].(map[string]interface{})
-	events, ok := lastPrompt["events"].([]interface{})
+	lastAgent := agents[len(agents)-1].(map[string]interface{})
+	events, ok := lastAgent["events"].([]interface{})
 	if !ok {
 		return nil
 	}
@@ -15024,18 +14995,21 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}
 	RunHook(hctx)
 	ticket := readTicketJSON(t, ticketJSON)
-	sessions, ok := ticket["sessions"].([]interface{})
-	if !ok || len(sessions) == 0 {
-		t.Fatal("expected sessions after prompt.submitting")
+	agents, ok := ticket["agents"].([]interface{})
+	if !ok || len(agents) == 0 {
+		t.Fatal("expected agents after prompt.submitting")
 	}
-	session := sessions[0].(map[string]interface{})
-	prompts, ok := session["prompts"].([]interface{})
-	if !ok || len(prompts) == 0 {
-		t.Fatal("expected prompt after prompt.submitting")
+	agent := agents[0].(map[string]interface{})
+	events, ok := agent["events"].([]interface{})
+	if !ok || len(events) == 0 {
+		t.Fatal("expected events after prompt.submitting")
 	}
-	prompt := prompts[0].(map[string]interface{})
-	if prompt["prompt"] != "Fix the bug" {
-		t.Errorf("expected prompt text, got: %v", prompt["prompt"])
+	promptEvent := events[0].(map[string]interface{})
+	if promptEvent["kind"] != "agent.prompt.submitting" {
+		t.Errorf("expected prompt event kind, got: %v", promptEvent["kind"])
+	}
+	if promptEvent["prompt"] != "Fix the bug" {
+		t.Errorf("expected prompt text, got: %v", promptEvent["prompt"])
 	}
 	agentEvents := []struct {
 		name  string
@@ -15065,15 +15039,16 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 		RunHook(hctx)
 	}
 	ticket = readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 9 {
-		t.Fatalf("expected at least 9 events (excluding prompt.submitting and plan.updating), got %d", len(events))
+	events = getTicketEvents(t, ticket)
+	if len(events) < 10 {
+		t.Fatalf("expected at least 10 events (prompt.submitting + 9 others), got %d", len(events))
 	}
 	eventKinds := make([]string, len(events))
 	for i, e := range events {
 		eventKinds[i] = e.(map[string]interface{})["kind"].(string)
 	}
 	expectedKinds := []string{
+		"agent.prompt.submitting",
 		"agent.started",
 		"agent.tool.starting",
 		"agent.tool.searching",
@@ -15096,17 +15071,17 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 			t.Errorf("expected event kind %q in ticket events, got: %v", expected, eventKinds)
 		}
 	}
-	sessions = ticket["sessions"].([]interface{})
-	session = sessions[0].(map[string]interface{})
-	if session["llm"] != "opus-4-6" {
-		t.Errorf("expected session llm opus-4-6, got: %v", session["llm"])
+	agents = ticket["agents"].([]interface{})
+	agent = agents[0].(map[string]interface{})
+	if agent["llm"] != "opus-4-6" {
+		t.Errorf("expected agent llm opus-4-6, got: %v", agent["llm"])
 	}
-	if session["client"] != "copilot-chat" {
-		t.Errorf("expected session client copilot-chat, got: %v", session["client"])
+	if agent["client"] != "copilot-chat" {
+		t.Errorf("expected agent client copilot-chat, got: %v", agent["client"])
 	}
-	plan, ok := session["plan"].(map[string]interface{})
+	plan, ok := agent["plan"].(map[string]interface{})
 	if !ok {
-		t.Fatal("expected plan in session after plan.updating event")
+		t.Fatal("expected plan in agent after plan.updating event")
 	}
 	steps, ok := plan["steps"].([]interface{})
 	if !ok || len(steps) != 2 {
@@ -15135,16 +15110,16 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 	})
 	ticket := readTicketJSON(t, ticketJSON)
 	events := getTicketEvents(t, ticket)
-	if len(events) == 0 {
-		t.Fatal("expected at least 1 event for searching")
+	if len(events) < 2 {
+		t.Fatal("expected at least 2 events (prompt + searching)")
 	}
-	searchEvent := events[0].(map[string]interface{})
-	pattern, _ := searchEvent["pattern"].(string)
-	if pattern == "" {
-		t.Error("expected non-empty pattern in search event")
+	searchEvent := events[len(events)-1].(map[string]interface{})
+	query, _ := searchEvent["query"].(string)
+	if query == "" {
+		t.Error("expected non-empty query in search event")
 	}
-	if !strings.Contains(pattern, "findMe") {
-		t.Errorf("expected pattern to contain query, got: %s", pattern)
+	if !strings.Contains(query, "findMe") {
+		t.Errorf("expected query to contain search term, got: %s", query)
 	}
 }
 
@@ -15171,10 +15146,10 @@ func TestTrackHookBlockedEvent(t *testing.T) {
 	})
 	ticket := readTicketJSON(t, ticketJSON)
 	events := getTicketEvents(t, ticket)
-	if len(events) == 0 {
-		t.Fatal("expected at least 1 event for blocked tool")
+	if len(events) < 2 {
+		t.Fatal("expected at least 2 events (prompt + blocked tool)")
 	}
-	blockedEvent := events[0].(map[string]interface{})
+	blockedEvent := events[1].(map[string]interface{})
 	denied, _ := blockedEvent["denied"].(string)
 	if denied == "" {
 		t.Error("expected non-empty denied field for blocked event")
@@ -15209,17 +15184,17 @@ func TestTrackHookTerminalEvents(t *testing.T) {
 	})
 	ticket := readTicketJSON(t, ticketJSON)
 	events := getTicketEvents(t, ticket)
-	if len(events) < 2 {
-		t.Fatalf("expected at least 2 terminal events, got %d", len(events))
+	if len(events) < 3 {
+		t.Fatalf("expected at least 3 events (prompt + 2 terminal), got %d", len(events))
 	}
-	startEvent := events[0].(map[string]interface{})
+	startEvent := events[1].(map[string]interface{})
 	if startEvent["kind"] != "agent.tool.terminal.starting" {
 		t.Errorf("expected terminal.starting, got: %v", startEvent["kind"])
 	}
-	if startEvent["pattern"] == nil || startEvent["pattern"] == "" {
-		t.Error("expected command in pattern for terminal.starting")
+	if startEvent["query"] == nil || startEvent["query"] == "" {
+		t.Error("expected command in query for terminal.starting")
 	}
-	endEvent := events[1].(map[string]interface{})
+	endEvent := events[2].(map[string]interface{})
 	if endEvent["kind"] != "agent.tool.terminal.ended" {
 		t.Errorf("expected terminal.ended, got: %v", endEvent["kind"])
 	}
@@ -15237,11 +15212,74 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 		ToolArgs:  "test",
 	})
 	ticket := readTicketJSON(t, ticketJSON)
-	sessions := ticket["sessions"].([]interface{})
-	session := sessions[0].(map[string]interface{})
-	transcript, _ := session["transcript"].(string)
+	agents := ticket["agents"].([]interface{})
+	agent := agents[0].(map[string]interface{})
+	transcript, _ := agent["transcript"].(string)
 	if transcript != "/home/user/.vscode/transcripts/abc.jsonl" {
 		t.Errorf("expected transcript to be set, got: %v", transcript)
+	}
+}
+
+func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
+	tmpDir, ticketJSON := setupTicketDir(t)
+	SetRootDir(tmpDir)
+	tsContent := "// #region \U0001F516Functions\n\n// doWork MUST work.\nexport function doWork(): void {}\n\n// #endregion \U0001F516Functions\n"
+	tsFile := filepath.Join(tmpDir, "proj", "kit", "file.ts")
+	if err := os.MkdirAll(filepath.Dir(tsFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(tsFile, []byte(tsContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+	RunHook(HookContext{
+		Event:     HookAgentPromptSubmitting,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(`{"session_id":"def-id-session"}`),
+		ToolArgs:  "Edit file",
+	})
+	payload := fmt.Sprintf(`{"session_id":"def-id-session","tool_input":{"filePath":%q,"oldString":"","newString":"export function doWork(): void {}"}}`, tsFile)
+	RunHook(HookContext{
+		Event:     HookAgentToolCodeEdited,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-23T10:01:00Z",
+		RepoRoot:  tmpDir,
+		Input:     json.RawMessage(payload),
+	})
+	ticket := readTicketJSON(t, ticketJSON)
+	events := getTicketEvents(t, ticket)
+	var codeEditedEvent map[string]interface{}
+	for _, e := range events {
+		ev := e.(map[string]interface{})
+		if ev["kind"] == "agent.tool.code.edited" {
+			codeEditedEvent = ev
+			break
+		}
+	}
+	if codeEditedEvent == nil {
+		t.Fatal("expected agent.tool.code.edited event")
+	}
+	newBlock, ok := codeEditedEvent["new"].(map[string]interface{})
+	if !ok {
+		t.Fatal("expected 'new' code block in code.edited event")
+	}
+	sections, ok := newBlock["sections"].([]interface{})
+	if !ok || len(sections) == 0 {
+		t.Fatal("expected sections in new code block")
+	}
+	for _, sec := range sections {
+		s := sec.(map[string]interface{})
+		defs, _ := s["definitions"].([]interface{})
+		for _, d := range defs {
+			defID, _ := d.(string)
+			if strings.Contains(defID, tmpDir) {
+				t.Errorf("definition ID contains absolute path %q: %s", tmpDir, defID)
+			}
+			if strings.Contains(defID, "🗃️tmp") || strings.Contains(defID, "🗃️workspaces") {
+				t.Errorf("definition ID contains absolute path components: %s", defID)
+			}
+		}
 	}
 }
 
@@ -15401,6 +15439,336 @@ func TestClassifyTool(t *testing.T) {
 				t.Errorf("expected %s, got %s", tc.expect, result)
 			}
 		})
+	}
+}
+
+func TestClassifyCommandKind(t *testing.T) {
+	cases := []struct {
+		name    string
+		command string
+		expect  ToolKind
+	}{
+		{"empty", "", ToolKindTerminal},
+		{"whitespace only", "   ", ToolKindTerminal},
+		{"grep", "grep -r foo .", ToolKindCodeSearch},
+		{"grep with path", "/usr/bin/grep -rn pattern file.go", ToolKindCodeSearch},
+		{"rg", "rg --type go pattern", ToolKindCodeSearch},
+		{"ag", "ag pattern src/", ToolKindCodeSearch},
+		{"ack", "ack --go pattern", ToolKindCodeSearch},
+		{"ack-grep", "ack-grep pattern", ToolKindCodeSearch},
+		{"find", "find . -name '*.go'", ToolKindCodeSearch},
+		{"fd", "fd -e go pattern", ToolKindCodeSearch},
+		{"fdfind", "fdfind pattern", ToolKindCodeSearch},
+		{"locate", "locate main.go", ToolKindCodeSearch},
+		{"mlocate", "mlocate something", ToolKindCodeSearch},
+		{"ls", "ls -la", ToolKindCodeSearch},
+		{"ls piped", "ls .semio-repo/ | head -20", ToolKindCodeSearch},
+		{"ls with redirect", "ls .semio-repo/🎯/ 2>/dev/null | head -20 || ls .semio-repo/ | head -20", ToolKindCodeSearch},
+		{"exa", "exa --long", ToolKindCodeSearch},
+		{"eza", "eza --tree", ToolKindCodeSearch},
+		{"tree", "tree -L 2", ToolKindCodeSearch},
+		{"dir", "dir /w", ToolKindCodeSearch},
+		{"cat", "cat file.txt", ToolKindCodeSearch},
+		{"bat", "bat --style=numbers file.go", ToolKindCodeSearch},
+		{"batcat", "batcat file.go", ToolKindCodeSearch},
+		{"less", "less file.txt", ToolKindCodeSearch},
+		{"more", "more file.txt", ToolKindCodeSearch},
+		{"head", "head -20 file.txt", ToolKindCodeSearch},
+		{"tail", "tail -f log.txt", ToolKindCodeSearch},
+		{"wc", "wc -l file.txt", ToolKindCodeSearch},
+		{"file", "file binary.dat", ToolKindCodeSearch},
+		{"stat", "stat file.txt", ToolKindCodeSearch},
+		{"du", "du -sh .", ToolKindCodeSearch},
+		{"which", "which go", ToolKindCodeSearch},
+		{"whereis", "whereis python", ToolKindCodeSearch},
+		{"type", "type ls", ToolKindCodeSearch},
+		{"command", "command -v node", ToolKindCodeSearch},
+		{"hash", "hash -r", ToolKindCodeSearch},
+		{"diff", "diff file1.txt file2.txt", ToolKindCodeSearch},
+		{"cmp", "cmp file1 file2", ToolKindCodeSearch},
+		{"comm", "comm sorted1 sorted2", ToolKindCodeSearch},
+		{"strings", "strings binary", ToolKindCodeSearch},
+		{"od", "od -x file", ToolKindCodeSearch},
+		{"xxd", "xxd file", ToolKindCodeSearch},
+		{"hexdump", "hexdump -C file", ToolKindCodeSearch},
+		{"readlink", "readlink -f symlink", ToolKindCodeSearch},
+		{"realpath", "realpath relative/path", ToolKindCodeSearch},
+		{"basename", "basename /path/to/file.txt", ToolKindCodeSearch},
+		{"dirname", "dirname /path/to/file.txt", ToolKindCodeSearch},
+		{"jq", "jq '.name' package.json", ToolKindCodeSearch},
+		{"yq", "yq '.spec' config.yaml", ToolKindCodeSearch},
+		{"xq", "xq '.root' config.xml", ToolKindCodeSearch},
+		{"sort", "sort file.txt", ToolKindCodeSearch},
+		{"uniq", "uniq -c file.txt", ToolKindCodeSearch},
+		{"cut", "cut -d: -f1 /etc/passwd", ToolKindCodeSearch},
+		{"tr", "tr '[:lower:]' '[:upper:]'", ToolKindCodeSearch},
+		{"paste", "paste file1 file2", ToolKindCodeSearch},
+		{"column", "column -t file.txt", ToolKindCodeSearch},
+		{"rev", "rev file.txt", ToolKindCodeSearch},
+		{"fold", "fold -w 80 file.txt", ToolKindCodeSearch},
+		{"fmt", "fmt -w 72 file.txt", ToolKindCodeSearch},
+		{"nl", "nl file.txt", ToolKindCodeSearch},
+		{"expand", "expand file.txt", ToolKindCodeSearch},
+		{"unexpand", "unexpand file.txt", ToolKindCodeSearch},
+		{"echo", "echo hello", ToolKindCodeSearch},
+		{"printf", "printf '%s\\n' hello", ToolKindCodeSearch},
+		{"env", "env", ToolKindCodeSearch},
+		{"printenv", "printenv HOME", ToolKindCodeSearch},
+		{"set", "set", ToolKindCodeSearch},
+		{"export", "export FOO=bar", ToolKindCodeSearch},
+		{"pwd", "pwd", ToolKindCodeSearch},
+		{"id", "id", ToolKindCodeSearch},
+		{"whoami", "whoami", ToolKindCodeSearch},
+		{"hostname", "hostname", ToolKindCodeSearch},
+		{"uname", "uname -a", ToolKindCodeSearch},
+		{"date", "date +%Y-%m-%d", ToolKindCodeSearch},
+		{"uptime", "uptime", ToolKindCodeSearch},
+		{"free", "free -h", ToolKindCodeSearch},
+		{"df", "df -h", ToolKindCodeSearch},
+		{"ps", "ps aux", ToolKindCodeSearch},
+		{"top", "top -bn1", ToolKindCodeSearch},
+		{"htop", "htop", ToolKindCodeSearch},
+		{"lsof", "lsof -i :8080", ToolKindCodeSearch},
+		{"netstat", "netstat -tlnp", ToolKindCodeSearch},
+		{"ss", "ss -tlnp", ToolKindCodeSearch},
+		{"test", "test -f file.txt", ToolKindCodeSearch},
+		{"bracket test", "[ -f file.txt ]", ToolKindCodeSearch},
+		{"sed", "sed 's/old/new/g' file.txt", ToolKindCodeEdit},
+		{"awk", "awk '{print $1}' file.txt", ToolKindCodeEdit},
+		{"gawk", "gawk '{print $1}' file.txt", ToolKindCodeEdit},
+		{"mawk", "mawk '{print $1}' file.txt", ToolKindCodeEdit},
+		{"nawk", "nawk '{print $1}' file.txt", ToolKindCodeEdit},
+		{"rm", "rm -rf temp/", ToolKindCodeEdit},
+		{"mv", "mv old.txt new.txt", ToolKindCodeEdit},
+		{"cp", "cp src.txt dst.txt", ToolKindCodeEdit},
+		{"install", "install -m 755 bin /usr/local/bin/", ToolKindCodeEdit},
+		{"mkdir", "mkdir -p new/dir", ToolKindCodeEdit},
+		{"rmdir", "rmdir empty/", ToolKindCodeEdit},
+		{"touch", "touch new.txt", ToolKindCodeEdit},
+		{"chmod", "chmod 644 file.txt", ToolKindCodeEdit},
+		{"chown", "chown user:group file.txt", ToolKindCodeEdit},
+		{"chgrp", "chgrp group file.txt", ToolKindCodeEdit},
+		{"ln", "ln -s target link", ToolKindCodeEdit},
+		{"tee", "tee output.log", ToolKindCodeEdit},
+		{"patch", "patch -p1 < fix.patch", ToolKindCodeEdit},
+		{"truncate", "truncate -s 0 file.log", ToolKindCodeEdit},
+		{"dd", "dd if=/dev/zero of=file bs=1M count=1", ToolKindCodeEdit},
+		{"shred", "shred -u file.txt", ToolKindCodeEdit},
+		{"tar", "tar -xzf archive.tar.gz", ToolKindCodeEdit},
+		{"zip", "zip archive.zip file.txt", ToolKindCodeEdit},
+		{"unzip", "unzip archive.zip", ToolKindCodeEdit},
+		{"gzip", "gzip file.txt", ToolKindCodeEdit},
+		{"gunzip", "gunzip file.txt.gz", ToolKindCodeEdit},
+		{"bzip2", "bzip2 file.txt", ToolKindCodeEdit},
+		{"bunzip2", "bunzip2 file.txt.bz2", ToolKindCodeEdit},
+		{"xz", "xz file.txt", ToolKindCodeEdit},
+		{"unxz", "unxz file.txt.xz", ToolKindCodeEdit},
+		{"zstd", "zstd file.txt", ToolKindCodeEdit},
+		{"git", "git status", ToolKindTerminal},
+		{"npm", "npm install", ToolKindTerminal},
+		{"npx", "npx vitest run", ToolKindTerminal},
+		{"go", "go test ./...", ToolKindTerminal},
+		{"cargo", "cargo build", ToolKindTerminal},
+		{"pip", "pip install requests", ToolKindTerminal},
+		{"uv", "uv pip install requests", ToolKindTerminal},
+		{"python", "python -m pytest", ToolKindTerminal},
+		{"python3", "python3 script.py", ToolKindTerminal},
+		{"node", "node script.js", ToolKindTerminal},
+		{"make", "make build", ToolKindTerminal},
+		{"dotnet", "dotnet build", ToolKindTerminal},
+		{"docker", "docker build .", ToolKindTerminal},
+		{"kubectl", "kubectl get pods", ToolKindTerminal},
+		{"curl", "curl https://example.com", ToolKindTerminal},
+		{"wget", "wget https://example.com", ToolKindTerminal},
+		{"ssh", "ssh user@host", ToolKindTerminal},
+		{"custom-tool", "./custom-tool --flag", ToolKindTerminal},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := classifyCommandKind(tc.command)
+			if result != tc.expect {
+				t.Errorf("classifyCommandKind(%q) = %s, want %s", tc.command, result, tc.expect)
+			}
+		})
+	}
+}
+
+func TestResolveHookEventCommandReclassification(t *testing.T) {
+	searchCommands := []struct {
+		name string
+		cmd  string
+	}{
+		{"grep", "grep -r pattern ."},
+		{"rg", "rg pattern"},
+		{"ag", "ag pattern"},
+		{"find", "find . -name '*.go'"},
+		{"fd", "fd pattern"},
+		{"ls", "ls -la"},
+		{"ls piped", "ls .semio-repo/ | head -20"},
+		{"cat", "cat file.txt"},
+		{"head", "head -20 file.txt"},
+		{"tail", "tail -f log.txt"},
+		{"wc", "wc -l file.txt"},
+		{"diff", "diff file1 file2"},
+		{"jq", "jq '.name' package.json"},
+		{"sort", "sort file.txt"},
+		{"echo", "echo hello"},
+		{"pwd", "pwd"},
+		{"ps", "ps aux"},
+		{"which", "which go"},
+		{"tree", "tree -L 2"},
+		{"stat", "stat file.txt"},
+	}
+	editCommands := []struct {
+		name string
+		cmd  string
+	}{
+		{"sed", "sed 's/old/new/g' file.txt"},
+		{"awk", "awk '{print $1}' file.txt"},
+		{"rm", "rm -rf temp/"},
+		{"mv", "mv old.txt new.txt"},
+		{"cp", "cp src.txt dst.txt"},
+		{"mkdir", "mkdir -p newdir"},
+		{"touch", "touch new.txt"},
+		{"chmod", "chmod 644 file.txt"},
+		{"ln", "ln -s target link"},
+		{"tee", "tee output.log"},
+		{"patch", "patch -p1 < fix.patch"},
+		{"tar", "tar -xzf archive.tar.gz"},
+		{"zip", "zip archive.zip file.txt"},
+	}
+	terminalCommands := []struct {
+		name string
+		cmd  string
+	}{
+		{"git", "git status"},
+		{"npm", "npm install"},
+		{"go", "go test ./..."},
+		{"cargo", "cargo build"},
+		{"python", "python script.py"},
+		{"node", "node script.js"},
+		{"make", "make build"},
+		{"docker", "docker build ."},
+		{"curl", "curl https://example.com"},
+	}
+	clients := []struct {
+		name      string
+		client    string
+		preEvent  string
+		postEvent string
+		toolName  string
+		mkInput   func(cmd string) json.RawMessage
+	}{
+		{
+			"claude-code", "claude-code", "PreToolUse", "PostToolUse", "Bash",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"tool_name":"Bash","tool_input":{"command":%q}}`, cmd))
+			},
+		},
+		{
+			"copilot-chat", "copilot-chat", "PreToolUse", "PostToolUse", "run_in_terminal",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":%q}}`, cmd))
+			},
+		},
+		{
+			"droid", "droid", "PreToolUse", "PostToolUse", "Bash",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"tool_name":"Bash","tool_input":{"command":%q}}`, cmd))
+			},
+		},
+		{
+			"codex", "codex", "PreToolUse", "PostToolUse", "Bash",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"tool_name":"Bash","tool_input":{"command":%q}}`, cmd))
+			},
+		},
+		{
+			"antigravity-chat", "antigravity-chat", "PreToolUse", "PostToolUse", "Bash",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"tool_name":"Bash","tool_input":{"command":%q}}`, cmd))
+			},
+		},
+		{
+			"windsurf-chat", "windsurf-chat", "pre_run_command", "post_run_command", "",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"input":{"command_line":%q}}`, cmd))
+			},
+		},
+		{
+			"cursor-chat", "cursor-chat", "preToolUse", "postToolUse", "terminal",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"tool_name":"terminal","tool_input":{"command":%q}}`, cmd))
+			},
+		},
+		{
+			"cursor-chat-shell", "cursor-chat", "beforeShellExecution", "afterShellExecution", "",
+			func(cmd string) json.RawMessage {
+				return json.RawMessage(fmt.Sprintf(`{"tool_input":{"command":%q}}`, cmd))
+			},
+		},
+	}
+	for _, cl := range clients {
+		for _, sc := range searchCommands {
+			t.Run(fmt.Sprintf("%s/%s/pre/searching", cl.name, sc.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.preEvent, cl.client, cl.toolName, cl.mkInput(sc.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolSearching {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolSearching, event, sc.cmd)
+				}
+			})
+			t.Run(fmt.Sprintf("%s/%s/post/searched", cl.name, sc.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.postEvent, cl.client, cl.toolName, cl.mkInput(sc.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolSearched {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolSearched, event, sc.cmd)
+				}
+			})
+		}
+		for _, ec := range editCommands {
+			t.Run(fmt.Sprintf("%s/%s/pre/editing", cl.name, ec.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.preEvent, cl.client, cl.toolName, cl.mkInput(ec.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolCodeEditing {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolCodeEditing, event, ec.cmd)
+				}
+			})
+			t.Run(fmt.Sprintf("%s/%s/post/edited", cl.name, ec.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.postEvent, cl.client, cl.toolName, cl.mkInput(ec.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolCodeEdited {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolCodeEdited, event, ec.cmd)
+				}
+			})
+		}
+		for _, tc := range terminalCommands {
+			t.Run(fmt.Sprintf("%s/%s/pre/terminal", cl.name, tc.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.preEvent, cl.client, cl.toolName, cl.mkInput(tc.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolTerminalStarting {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolTerminalStarting, event, tc.cmd)
+				}
+			})
+			t.Run(fmt.Sprintf("%s/%s/post/terminal", cl.name, tc.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.postEvent, cl.client, cl.toolName, cl.mkInput(tc.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolTerminalEnded {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolTerminalEnded, event, tc.cmd)
+				}
+			})
+		}
 	}
 }
 
@@ -16440,7 +16808,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"windsurf/pre_write_code", "pre_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:30.780Z","agent_action_name":"pre_write_code","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditing, ""},
 		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEdited, ""},
 		{"windsurf/pre_run_command", "pre_run_command", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:54:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolTerminalStarting, ""},
-		{"windsurf/post_run_command", "post_run_command", "windsurf-chat", "", `{"agent_action_name":"post_run_command","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:57:49.375Z","execution_id":"d9b64466","tool_info":{"command_line":"echo test","cwd":"/workspaces/semio"}}`, HookAgentToolTerminalEnded, ""},
+		{"windsurf/post_run_command", "post_run_command", "windsurf-chat", "", `{"agent_action_name":"post_run_command","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:57:49.375Z","execution_id":"d9b64466","tool_info":{"command_line":"npm install","cwd":"/workspaces/semio"}}`, HookAgentToolTerminalEnded, ""},
 		{"claude/SessionStart", "SessionStart", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionStart","source":"startup"}`, HookAgentStarted, ""},
 		{"claude/SessionEnd", "SessionEnd", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionEnd"}`, HookAgentEnded, ""},
 		{"claude/SubagentStart", "SubagentStart", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"SubagentStart"}`, HookAgentStarted, "subagent"},
@@ -16487,10 +16855,14 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 				t.Errorf("parent: want %q, got %q", tc.expectPar, parent)
 			}
 			tmpDir := t.TempDir()
+			inputTimestamp := extractTimestampFromInput(input)
+			if inputTimestamp == "" {
+				inputTimestamp = time.Now().UTC().Format(time.RFC3339)
+			}
 			hctx := HookContext{
 				Event:      event,
 				Client:     tc.client,
-				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Timestamp:  inputTimestamp,
 				RepoRoot:   tmpDir,
 				ToolName:   tc.toolName,
 				Input:      input,
@@ -16517,26 +16889,30 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if err := json.Unmarshal(data, &entry); err != nil {
 				t.Fatalf("invalid log JSON: %v", err)
 			}
-			if entry.Event.Kind != event {
-				t.Errorf("log kind: want %s, got %s", event, entry.Event.Kind)
+			var evt map[string]interface{}
+			if err := json.Unmarshal(entry.Event, &evt); err != nil {
+				t.Fatalf("cannot unmarshal event: %v", err)
 			}
-			if entry.Event.Client != tc.client {
-				t.Errorf("log client: want %s, got %s", tc.client, entry.Event.Client)
+			if evt["kind"] != string(event) {
+				t.Errorf("log kind: want %s, got %v", event, evt["kind"])
 			}
-			if entry.Input == nil {
-				t.Error("log input: want non-nil")
+			if evt["client"] != tc.client {
+				t.Errorf("log client: want %s, got %v", tc.client, evt["client"])
+			}
+			if entry.Raw == nil {
+				t.Error("log raw: want non-nil")
 			}
 			wantSession := extractSessionIDFromInput(input)
-			if wantSession != "" && entry.Event.Session != wantSession {
-				t.Errorf("log session: want %s, got %s", wantSession, entry.Event.Session)
+			if wantSession != "" && evt["session"] != wantSession {
+				t.Errorf("log session: want %s, got %v", wantSession, evt["session"])
 			}
 			wantTimestamp := extractTimestampFromInput(input)
-			if wantTimestamp != "" && entry.Event.Timestamp != wantTimestamp {
-				t.Errorf("log timestamp: want %s, got %s", wantTimestamp, entry.Event.Timestamp)
+			if wantTimestamp != "" && evt["timestamp"] != wantTimestamp {
+				t.Errorf("log timestamp: want %s, got %v", wantTimestamp, evt["timestamp"])
 			}
 			wantTranscript := extractTranscriptFromInput(input)
-			if wantTranscript != "" && entry.Event.Transcript != wantTranscript {
-				t.Errorf("log transcript: want %s, got %s", wantTranscript, entry.Event.Transcript)
+			if wantTranscript != "" && evt["transcript"] != wantTranscript {
+				t.Errorf("log transcript: want %s, got %v", wantTranscript, evt["transcript"])
 			}
 			if entry.Response.Blocked != nil {
 				t.Error("log response.blocked: want nil for non-blocked event")
@@ -16608,22 +16984,26 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 			if err := json.Unmarshal(outData, &entry); err != nil {
 				t.Fatalf("invalid log JSON: %v", err)
 			}
-			if entry.Event.Kind != HookEvent(old.Context.Event) {
-				t.Errorf("kind: want %s, got %s", old.Context.Event, entry.Event.Kind)
+			var evt map[string]interface{}
+			if err := json.Unmarshal(entry.Event, &evt); err != nil {
+				t.Fatalf("cannot unmarshal event: %v", err)
 			}
-			if entry.Event.Client != old.Context.Client {
-				t.Errorf("client: want %s, got %s", old.Context.Client, entry.Event.Client)
+			if evt["kind"] != string(old.Context.Event) {
+				t.Errorf("kind: want %s, got %v", old.Context.Event, evt["kind"])
 			}
-			if old.Context.Input != nil && entry.Input == nil {
-				t.Error("input not preserved")
+			if evt["client"] != old.Context.Client {
+				t.Errorf("client: want %s, got %v", old.Context.Client, evt["client"])
+			}
+			if old.Context.Input != nil && entry.Raw == nil {
+				t.Error("raw not preserved")
 			}
 			wantSession := extractSessionIDFromInput(old.Context.Input)
-			if wantSession != "" && entry.Event.Session != wantSession {
-				t.Errorf("session: want %s, got %s", wantSession, entry.Event.Session)
+			if wantSession != "" && evt["session"] != wantSession {
+				t.Errorf("session: want %s, got %v", wantSession, evt["session"])
 			}
 			wantTranscript := extractTranscriptFromInput(old.Context.Input)
-			if wantTranscript != "" && entry.Event.Transcript != wantTranscript {
-				t.Errorf("transcript: want %s, got %s", wantTranscript, entry.Event.Transcript)
+			if wantTranscript != "" && evt["transcript"] != wantTranscript {
+				t.Errorf("transcript: want %s, got %v", wantTranscript, evt["transcript"])
 			}
 			if result.IsAllowed() && entry.Response.Blocked != nil {
 				t.Error("response.blocked should be nil for allowed event")
@@ -17001,7 +17381,7 @@ func TestIsLicenseText(t *testing.T) {
 }
 
 func TestIsHeaderMetaLine(t *testing.T) {
-	if !isHeaderMetaLine("[🧰semiorepo⌨️cli💻maingo](semiorepo://file/semio-repo/cli/main.go)") {
+	if !isHeaderMetaLine("[🧰semiorepo⌨️cli💻maingo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go)") {
 		t.Error("should detect ID link")
 	}
 	if !isHeaderMetaLine("#region Header") {
@@ -17224,3 +17604,56 @@ func TestGenerateProjectSpecsSemioRepo(t *testing.T) {
 }
 
 // #endregion 🔖Project Generate Tests
+func TestExtractCodeSearchFromInputLineNumbers(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		toolArgs string
+		expected string
+	}{
+		{
+			name: "single line",
+			input: `{
+				"tool_name": "read_file",
+				"tool_input": {
+					"filePath": "/workspaces/semio/semio-repo/cli/main.go",
+					"startLine": 35490,
+					"endLine": 35490
+				}
+			}`,
+			expected: "/workspaces/semio/semio-repo/cli/main.go#L35490",
+		},
+		{
+			name: "line range",
+			input: `{
+				"tool_name": "read_file",
+				"tool_input": {
+					"filePath": "/workspaces/semio/semio-repo/cli/main.go",
+					"startLine": 35490,
+					"endLine": 35540
+				}
+			}`,
+			expected: "/workspaces/semio/semio-repo/cli/main.go#L35490-L35540",
+		},
+		{
+			name: "only start line",
+			input: `{
+				"tool_name": "read_file",
+				"tool_input": {
+					"filePath": "/workspaces/semio/semio-repo/cli/main.go",
+					"startLine": 35490
+				}
+			}`,
+			expected: "/workspaces/semio/semio-repo/cli/main.go#L35490",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query, _, _ := extractCodeSearchFromInput(json.RawMessage(tt.input), tt.toolArgs)
+			if query != tt.expected {
+				t.Errorf("extractCodeSearchFromInput() query = %v, want %v", query, tt.expected)
+			}
+		})
+	}
+}

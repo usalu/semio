@@ -1,0 +1,24 @@
+{
+  "title": "Fix Ticket JSON Diff IDs",
+  "status": "closed",
+  "description": "The ids used in ticket.json diff section are not correct - they use raw paths like .semio-repo instead of proper emoji-based IDs like 🧰semiorepo. Fix applyHookPathToSessionDiffModified to use buildFileID, buildFolderID, and proper project/bundle GetID methods. Also propagate section/definition refs from code edit events into session diff.",
+  "summary": "Fixed ticket.json diff IDs to use proper emoji-based identifiers instead of raw paths. Rewrote applyHookPathToSessionDiffModified, added setSectionsFilePath/applyCodeBlockRefsToSessionDiff, fixed session lifecycle, restored concurrent agent deletions. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/653"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "sessions": [
+    {
+      "id": "fix-ticket-json-diff-ids-session",
+      "system": "linux",
+      "client": "copilot-chat",
+      "llm": "opus-4-6",
+      "prompts": [
+        {
+          "timestamp": "2026-02-23T00:00:00Z",
+          "prompt": "The ids used in ticket.json diff section are not correct - they use raw paths like .semio-repo instead of proper emoji-based IDs like 🧰semiorepo. Fix applyHookPathToSessionDiffModified to use buildFileID, buildFolderID, and proper project/bundle GetID methods. Also propagate section/definition refs from code edit events into session diff."
+        }
+      ]
+    }
+  ]
+}

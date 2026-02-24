@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js🧪semiobenchmarkts](semiorepo://file/semio/js/semio.benchmark.ts)
+// [👤semio📚js🥼semiobenchmarkts](semiorepo://file/semio/js/semio.benchmark.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -26,13 +26,13 @@ import DiffInverse from "../assets/semio/diff_kit_metabolism_inverted.json";
 import InvalidKit from "../assets/semio/kit_invalid.json";
 import MetabolismKit from "../assets/semio/kit_metabolism.json";
 import {
-    applyKitDiff,
-    exportKit,
-    flattenDesign,
-    importKit,
-    Kit,
-    KitDiff,
-    validateKit
+  applyKitDiff,
+  exportKit,
+  flattenDesign,
+  importKit,
+  Kit,
+  KitDiff,
+  validateKit
 } from "./semio.js";
 
 // Number of iterations per benchmark run.
@@ -82,14 +82,14 @@ const diffForward = DiffForward as unknown as KitDiff;
 const diffInverse = DiffInverse as unknown as KitDiff;
 
 bench("Roundtrip/Metabolism", async () => {
-    const fs = await import("fs");
-    const path = await import("path");
-    const zipPath = path.resolve("../assets/semio/metabolism.zip");
-    const zipBuffer = fs.readFileSync(zipPath);
+  const fs = await import("fs");
+  const path = await import("path");
+  const zipPath = path.resolve("../assets/semio/metabolism.zip");
+  const zipBuffer = fs.readFileSync(zipPath);
 
-    const { kit, files } = await importKit(zipBuffer);
+  const { kit, files } = await importKit(zipBuffer);
 
-    const blob = await exportKit(kit, files);
+  const blob = await exportKit(kit, files);
 
 });
 

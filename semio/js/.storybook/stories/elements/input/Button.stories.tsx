@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎ semio/js/.storybook/stories/elements/input/Button.stories.tsx
+// 🥼︎ semio/js/.storybook/stories/elements/input/Button.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

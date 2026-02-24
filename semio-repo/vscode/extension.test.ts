@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode🧪extensiontestts](semiorepo://file/semio-repo/vscode/extension.test.ts)
+// [🧰semiorepo🖱️vscode🥼extensiontestts](semiorepo://file/semio-repo/vscode/extension.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -797,7 +797,6 @@ suite("Data Structures Test Suite", () => {
         prompt: "test"
       },
       folderPath: "/path/to/ticket",
-      filePath: "/path/to/ticket/ticket.md",
       interactions: []
     };
     assert.ok(ticket);
