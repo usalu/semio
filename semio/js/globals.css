@@ -869,6 +869,17 @@
   height: calc(2 * var(--spacing));
 }
 
+@utility size-single {
+  width: var(--spacing-single);
+  height: var(--spacing-single);
+}
+@utility w-single {
+  width: var(--spacing-single);
+}
+@utility h-single {
+  height: var(--spacing-single);
+}
+
 @utility size-tiny {
   width: var(--size-tiny);
   height: var(--size-tiny);

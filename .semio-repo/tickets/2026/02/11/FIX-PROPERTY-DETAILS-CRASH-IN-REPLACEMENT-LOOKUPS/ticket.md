@@ -44,6 +44,39 @@ Property/details panel parity hardened: canonical selection guid resolution, kno
 - Existing approved e2e command was executed:
   - `/bin/bash -lc "cd semio/js && npx playwright test sketchpad.test.ts --grep \"Design\" --timeout 240000 --workers=1 --max-failures=1 --reporter=list > /tmp/semio-design-playwright.log 2>&1; echo EXIT:$?; tail -n 200 /tmp/semio-design-playwright.log"`
   - Command output included: `Error: Process from config.webServer was not able to start. Exit code: 1`.
+
+## Continuation 2026-02-23
+
+### Changes
+- Updated `semio/js/sketchpad/Design.tsx`:
+  - Restored non-UUID fallback in `resolveSelectionEntryGuid` while keeping connection routing constrained by known connection ids.
+  - Prevented non-lasso empty `onSelectionChange` events from clearing current selection.
+  - Stopped event propagation in `onNodeClick` and `onEdgeClick` to avoid pane-level deselect clearing immediate selections.
+  - Set details sections (`design`, `piece`, `connection`, `connector`) to `defaultOpen: true`.
+  - Removed `useIsInDesignScope` hard gate in `DesignSection`/`PiecesSection` to avoid null section content from scope-only checks.
+  - Added temporary `[DEBUG] [DesignSectionForm]` warning when design scope is unavailable.
+  - Wrapped design-details section renderers with both `KitScopeProvider` and `DesignScopeProvider`.
+- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+  - Wrapped panel tab content in `ToolbarScopeWrapper`.
+  - Wrapped layout component in `ToolbarScopeWrapper` to guarantee route-derived scope availability for side-panel content.
+- Updated `semio/js/sketchpad.test.ts` existing `Design` test:
+  - Added explicit no-selection assertion block.
+  - Added deterministic selection-shape application via actor for `guid`, `nodeId`, `nestedObject`, and `wrappedString`.
+  - Added assertions that valid selections render piece details and hide fallback message.
+- Updated unrelated blocking compile regressions discovered during verification:
+  - `semio/js/sketchpad/Type.tsx`: added missing `useSyncExternalStore` import.
+  - `semio/js/sketchpad/Docs.tsx`: cast `addSection("workbench" as any, ...)` where current shared `PanelKey` contract excludes `"workbench"`.
+  - `semio/js/sketchpad/shared.ts`: removed duplicate `getNextPanelVisibilityFromToggle` declaration introduced during this continuation.
+
+### Verification
+- `npx tsc --noEmit -p semio/js/tsconfig.json` passed (latest run).
+- `npm run test` in `semio/js` passed (`13/13`).
+- `npx playwright test sketchpad.test.ts --grep "Design" --workers=1 --max-failures=1 --reporter=list` in `semio/js` still fails on:
+  - `No-selection details visible` assertion.
+  - Runtime evidence repeatedly shows right panel only rendering section header buttons (`3 buttons, 0 inputs, 0 tree items`) and no design field input in that state.
+
+### Status
+- Not closed as done in this continuation: parity remains unresolved for the no-selection DESIGN details visibility path in Design e2e.
 ## Wrapped Payload Fix 2026-02-22
 
 ### Changes
@@ -646,3 +679,43 @@ Property/details panel parity hardened: canonical selection guid resolution, kno
 - Undo granularity invariant: one user gesture => one undo item.
 - Inspector write-path invariant: details controls only mutate through command/store APIs, never direct state mutation.
 - Panel ownership invariant: details width is owned by right side panel state only; no duplicate width source.
+
+## Continuation 2026-02-23 (Panel Toggle Crash + Details Visibility)
+
+### Plan
+- Stop replacement lookup crash after details-panel toggles.
+- Restore deterministic right-panel details rendering for no-selection and valid piece selection payload variants.
+- Verify via `tsc`, unit tests, and Playwright Design flow.
+
+### Changes
+- Updated `semio/js/sketchpad/Sketchpad.tsx`:
+  - Hardened `useReplacableTypes` and `useReplacableDesigns` against transient missing-scope/missing-design states:
+    - use deep kit snapshot,
+    - validate scoped design exists,
+    - return `[]` fallback instead of throwing.
+  - Added right-side details tab activation guard on panel open to prefer details tab in normal right-panel mode.
+  - Updated `AppRegistry.getAppForPath` to prefer most specific route (more route segments first), then order.
+  - Updated `loadAppConfigs` to explicit app-module imports for deterministic registration.
+- Updated `semio/js/sketchpad/Design.tsx`:
+  - Hardened piece/design/type lookups in details forms with safe fallbacks.
+  - Switched piece form kit access to deep kit snapshots.
+  - Removed closure-gated section content wrappers returning `null` from stale state in details registration callbacks.
+  - Added multiple runtime fallbacks for resolving current design in `DesignSectionForm` (scope + URL + kit lists).
+  - Added temporary debug probes (`__DEBUG_*`) while tracing unresolved rendering path.
+- Updated `semio/js/site.tsx`:
+  - Switched sketchpad import to local source (`./sketchpad/Sketchpad`) and explicitly registered app configs in entrypoint.
+- Updated `semio/js/sketchpad.test.ts`:
+  - Added temporary debug reads for `__DEBUG_DESIGN_SECTION__`, `__DEBUG_EFFECT_TOP__`, `__DEBUG_PANEL_STATE__`, `__DEBUG_APP_RENDER__`, and `__DEBUG_DESIGN_MODULE_LOADED__` during failing no-selection assertion.
+
+### Verification
+- `npx tsc --noEmit -p semio/js/tsconfig.json` passed.
+- `npm run test` in `semio/js` passed (`13/13`).
+- `npx playwright test sketchpad.test.ts --grep "Design" --timeout 240000 --workers=1 --max-failures=1 --reporter=list` still fails on no-selection design-details visibility.
+
+### Blocking Findings
+- Right panel still shows only section headers (no input fields) at no-selection state in Design flow.
+- Runtime debug probes set in `semio/js/sketchpad/Design.tsx` remain `undefined` in Playwright (`__DEBUG_DESIGN_MODULE_LOADED__`, `__DEBUG_APP_RENDER__`, `__DEBUG_EFFECT_TOP__`, `__DEBUG_PANEL_STATE__`), indicating current test runtime path is not executing those probes.
+- Because of this mismatch, the no-selection design details input (`semio.sketchpad.app.design.panel.details.section.design.name`) remains absent at assertion time.
+
+### Status
+- Ticket remains open: crash hardening landed; no-selection DESIGN details visibility parity is still unresolved in the active Playwright runtime path.

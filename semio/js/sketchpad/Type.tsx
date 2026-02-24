@@ -32,67 +32,67 @@ import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit,
 import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, ToolbarGroup, TransactionProvider, Tree, TreeContent, TreeItem, TreeStateProvider } from "./elements";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext, TypeAppId } from "./shared";
 import {
-  AppConfig,
-  applySelectionComposition,
-  AppPlugin,
-  conditionalHookResult,
-  createKeyedTransactionHandlers,
-  createPanelDefinition,
-  EMPTY_PANEL_VISIBILITY,
-  Expertise,
-  isSelectionToolKind,
-  Mode,
-  PanelKind,
-  readonlyHookResult,
-  registerAppPlugin,
-  registerEventHandler,
-  registerKeyedAppEventHandlers,
-  resolveSelectionCompositionKind,
-  Theme,
-  ToolKind,
-  toSelectionToolKind,
+    AppConfig,
+    applySelectionComposition,
+    AppPlugin,
+    conditionalHookResult,
+    createKeyedTransactionHandlers,
+    createPanelDefinition,
+    EMPTY_PANEL_VISIBILITY,
+    Expertise,
+    isSelectionToolKind,
+    Mode,
+    PanelKind,
+    readonlyHookResult,
+    registerAppPlugin,
+    registerEventHandler,
+    registerKeyedAppEventHandlers,
+    resolveSelectionCompositionKind,
+    Theme,
+    ToolKind,
+    toSelectionToolKind,
 } from "./shared";
 import {
-  Canvas,
-  createDefaultTypeAppState,
-  createTypeActiveToolSelector,
-  createTypeAppSelector,
-  createTypeCameraSelector,
-  createTypeFocusedConnectorSelector,
-  createTypeHoverSelector,
-  createTypeOthersSelector,
-  createTypePanelVisibilitySelector,
-  createTypeSelectedModelTagsSelector,
-  createTypeSelectionSelector,
-  KitScopeProvider,
-  KitStore,
-  LayoutCanvas,
-  TypeAppFullscreenWindow as SketchpadTypeAppFullscreenWindow,
-  TypeScopeProvider,
-  useAddFooterItem,
-  useAddPanelSection,
-  useAppType,
-  useDevice,
-  useExpertise,
-  useFocusSafe,
-  useIsInTypeScope,
-  useKit,
-  useKitCommands,
-  useKitFiles,
-  useKitScope,
-  useKitStore,
-  useKitTags,
-  useKitTransaction,
-  useLanguage,
-  useMode,
-  useRemoveFooterItem,
-  useRemovePanelSection,
-  useSketchpadActor,
-  useTheme,
-  useTooltip,
-  useType,
-  useTypeAppXState,
-  useTypeScope
+    Canvas,
+    createDefaultTypeAppState,
+    createTypeActiveToolSelector,
+    createTypeAppSelector,
+    createTypeCameraSelector,
+    createTypeFocusedConnectorSelector,
+    createTypeHoverSelector,
+    createTypeOthersSelector,
+    createTypePanelVisibilitySelector,
+    createTypeSelectedModelTagsSelector,
+    createTypeSelectionSelector,
+    KitScopeProvider,
+    KitStore,
+    LayoutCanvas,
+    TypeAppFullscreenWindow as SketchpadTypeAppFullscreenWindow,
+    TypeScopeProvider,
+    useAddFooterItem,
+    useAddPanelSection,
+    useAppType,
+    useDevice,
+    useExpertise,
+    useFocusSafe,
+    useIsInTypeScope,
+    useKit,
+    useKitCommands,
+    useKitFiles,
+    useKitScope,
+    useKitStore,
+    useKitTags,
+    useKitTransaction,
+    useLanguage,
+    useMode,
+    useRemoveFooterItem,
+    useRemovePanelSection,
+    useSketchpadActor,
+    useTheme,
+    useTooltip,
+    useType,
+    useTypeAppXState,
+    useTypeScope
 } from "./Sketchpad";
 
 const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
@@ -1598,7 +1598,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
-  const { showModels } = useTypeFilters();
   const typeModels = useType(selectTypeModels) as Model[] | undefined;
   const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
   const typeGuid = useType(selectTypeMeshGuid) as string | undefined;
@@ -1760,10 +1759,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
-  if (!showModels) {
-    return null;
-  }
-
   if (!blobUrl) {
     return null;
   }
@@ -1780,7 +1775,7 @@ const selectTypeGuid = (type: Type) => type.guid;
 
 const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
-  const { showConnectors } = useTypeFilters();
+  const typeFilters = useTypeFilters();
 
   const typePorts = useType(selectTypePorts) as Connector[] | undefined;
   const typeGuid = useType(selectTypeGuid) as string | undefined;
@@ -1795,18 +1790,11 @@ const SceneContent: FC = React.memo(() => {
   const [connectorPreview, setConnectorPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
   const focusContext = useFocusSafe();
   const prevItemsRef = useRef<string>("");
+  const visibleTypePorts = useMemo(() => (typeFilters.showConnectors ? typePorts : []), [typeFilters.showConnectors, typePorts]);
 
   useEffect(() => {
     if (!focusContext) return;
-    const filteredTypePorts = showConnectors ? typePorts : [];
-    if (!filteredTypePorts || filteredTypePorts.length === 0) {
-      if (prevItemsRef.current !== "") {
-        prevItemsRef.current = "";
-        focusContext.setFocusItems([]);
-      }
-      return;
-    }
-    const items = filteredTypePorts.map((connector) => ({
+    const items = (visibleTypePorts || []).map((connector) => ({
       id: connector.guid,
       label: connector.description || `Connector ${connector.guid.substring(0, 8)}`,
       category: "Connectors",
@@ -1816,7 +1804,7 @@ const SceneContent: FC = React.memo(() => {
       prevItemsRef.current = itemsKey;
       focusContext.setFocusItems(items);
     }
-  }, [focusContext, showConnectors, typePorts]);
+  }, [focusContext, visibleTypePorts]);
 
   useEffect(() => {
     if (!focusContext) return;
@@ -1870,6 +1858,12 @@ const SceneContent: FC = React.memo(() => {
     if (clearHover) clearHover();
   }, [clearHover]);
 
+  useEffect(() => {
+    if (typeFilters.showConnectors) return;
+    setConnectorPreview(null);
+    if (clearHover) clearHover();
+  }, [typeFilters.showConnectors, clearHover]);
+
   const handlePortClick = useCallback(
     (connectorId: string) => {
       if (!setSelection) return;
@@ -1903,8 +1897,8 @@ const SceneContent: FC = React.memo(() => {
 
   return (
     <>
-      <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
-      {showConnectors && typePorts?.map((connector) => {
+      {typeFilters.showModels && <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />}
+      {visibleTypePorts?.map((connector) => {
         const isSelected = selection?.connectors?.includes(connector.guid) || false;
         const isHovered = hover?.connector === connector.guid;
         return (
@@ -1920,7 +1914,7 @@ const SceneContent: FC = React.memo(() => {
           />
         );
       })}
-      {connectorPreview && <ConnectorPreview position={connectorPreview.position} normal={connectorPreview.normal} />}
+      {typeFilters.showConnectors && connectorPreview && <ConnectorPreview position={connectorPreview.position} normal={connectorPreview.normal} />}
     </>
   );
 });

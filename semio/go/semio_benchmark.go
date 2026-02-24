@@ -17,6 +17,8 @@
 
 // #endregion 🔖Header
 
+//go:build ignore
+
 package main
 
 import (
@@ -105,7 +107,7 @@ func main() {
 			panic(err)
 		}
 
-		schemaPath := "../../sql/sqlite/semio/schema.sql"
+		schemaPath := "../sqlite/schema.sql"
 		schemaData, err := os.ReadFile(schemaPath)
 		if err != nil {
 

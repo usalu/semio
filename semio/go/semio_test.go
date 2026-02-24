@@ -198,7 +198,7 @@ func TestRoundtrip(t *testing.T) {
 					t.Error("Kit should have files")
 				}
 
-				schemaPath := filepath.Join(AssetsPath, "..", "..", "sql", "sqlite", "semio", "schema.sql")
+				schemaPath := filepath.Join("..", "sqlite", "schema.sql")
 				schemaData, err := os.ReadFile(schemaPath)
 				if err != nil {
 					t.Fatalf("Failed to read schema.sql: %v", err)

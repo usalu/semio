@@ -163,11 +163,9 @@ import {
     ReactFlowProvider,
     Strip,
     Toggle,
-    Transaction,
-    ToolbarDivider,
-    ToolbarGroup,
     ToolbarItem,
     ToolbarZone,
+    Transaction,
     Tree,
     TreeSection,
     TreeStateProvider,
@@ -5813,77 +5811,35 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
   const piecesMap = useMemo(() => new Map(pieces.map((p) => [p.guid, p])), [pieces]);
 
   return useMemo(() => {
-    const resolvePieceIdCandidates = (id: any): string[] => {
-      const guidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
-      const candidates: string[] = [];
-      const addCandidate = (value: string | undefined) => {
-        if (typeof value !== "string" || value.length === 0) return;
-        candidates.push(value);
-        if (value.startsWith("piece-")) {
-          const extractedFromNodeId = value.split("-").slice(2).join("-");
-          if (extractedFromNodeId.length > 0) candidates.push(extractedFromNodeId);
-        }
-        const guidLikeMatch = value.match(guidPattern);
-        if (guidLikeMatch?.[0]) candidates.push(guidLikeMatch[0]);
-      };
-      const addFromNested = (value: any, depth: number = 0) => {
-        if (depth > 5 || value === null || value === undefined) return;
-        if (typeof value === "string") {
-          addCandidate(value);
-          return;
-        }
-        if (Array.isArray(value)) {
-          for (const item of value) addFromNested(item, depth + 1);
-          return;
-        }
-        if (typeof value !== "object") return;
-        for (const key of Object.keys(value)) {
-          addFromNested((value as any)[key], depth + 1);
-        }
-        const serialized = JSON.stringify(value);
-        const guidLikeMatch = serialized.match(guidPattern);
-        if (guidLikeMatch?.[0]) candidates.push(guidLikeMatch[0]);
-      };
-      const rawId = typeof id === "string" ? id : id?.guid || id?.id_ || id?.id || id?.pieceGuid || id?.pieceId || id?.piece || id?.piece?.guid || id?.piece?.id_ || id?.data?.piece?.guid || id?.data?.piece?.id_ || id?.data?.pieceId;
-      addCandidate(rawId);
-      if ((typeof rawId !== "string" || rawId.length === 0) && typeof id === "object" && id !== null) {
-        addFromNested(id);
-      }
-      if (candidates.length === 0) return [];
-      return [...new Set(candidates)];
-    };
     return pieceIds.map((id) => {
-      const candidateIds = resolvePieceIdCandidates(id);
-      for (const pieceIdString of candidateIds) {
-        const foundPiece = piecesMap.get(pieceIdString);
-        if (foundPiece) {
-          return {
-            ...foundPiece,
-            id_: foundPiece.guid,
-          };
-        }
-        const includedDesign = includedDesignMap.get(pieceIdString);
-        if (includedDesign) {
-          return {
-            id_: pieceIdString,
-            type: {
-              name: "design",
-              variant: includedDesign.designGuid,
-            },
-            center: includedDesign.center,
-            plane: includedDesign.plane,
-            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design`,
-          };
-        }
+      const pieceIdString = typeof id === "string" ? id : (id as any).guid;
+      const foundPiece = piecesMap.get(pieceIdString);
+      if (foundPiece) {
+        return {
+          ...foundPiece,
+          id_: foundPiece.guid,
+        };
       }
-      const fallbackId = candidateIds[0] || (typeof id === "string" ? id : "");
+      const includedDesign = includedDesignMap.get(pieceIdString);
+      if (includedDesign) {
+        return {
+          id_: pieceIdString,
+          type: {
+            name: "design",
+            variant: includedDesign.designGuid,
+          },
+          center: includedDesign.center,
+          plane: includedDesign.plane,
+          description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design`,
+        };
+      }
       return {
-        id_: fallbackId,
+        id_: pieceIdString,
         type: {
           name: "unknown",
           variant: "",
         },
-        description: `Unknown piece: ${fallbackId}`,
+        description: `Unknown piece: ${pieceIdString}`,
       };
     });
   }, [pieceIds, piecesMap, includedDesignMap]);
@@ -5895,35 +5851,22 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
  *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usereplacabletypes](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-REPLACABLE-TYPES)
  **/
 export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
-  const kitTypes = useKitTypes();
+  const kit = useKit(identitySelector, undefined, true) as Kit | null;
   const designScope = useDesignScope();
-  const pieces = usePieces();
-  const connections = useConnections();
 
   return useMemo(() => {
-    if (!designScope) return [];
-    const design = { guid: designScope.guid, pieces, connections } as Design;
-    const kit = { types: kitTypes, designs: [design] } as Kit;
-    const pieceGuidSet = new Set((pieces || []).map((piece) => piece.guid));
-    const resolvedPieceIds = pieceIds
-      .map((id) => (typeof id === "string" ? id : (id as any)?.guid || (id as any)?.id_))
-      .filter((id): id is string => typeof id === "string" && pieceGuidSet.has(id));
-    if (resolvedPieceIds.length === 0) return [];
+    if (!kit || !designScope || pieceIds.length === 0) return [];
+    const scopedDesign = kit.designs?.find((entry) => entry.guid === designScope.guid);
+    if (!scopedDesign) return [];
     try {
-      if (resolvedPieceIds.length === 1) {
-        return findReplacableTypesForPieceInDesign(kit, design.guid, resolvedPieceIds[0], selectedVariants);
+      if (pieceIds.length === 1) {
+        return findReplacableTypesForPieceInDesign(kit, designScope.guid, pieceIds[0], selectedVariants);
       }
-      return findReplacableTypesForPiecesInDesign(kit, design.guid, resolvedPieceIds, selectedVariants);
-    } catch (error) {
-      console.warn("[DEBUG] [useReplacableTypes] failed to compute replacable types", {
-        designGuid: design.guid,
-        selectedPieceIds: pieceIds,
-        resolvedPieceIds,
-        error,
-      });
+      return findReplacableTypesForPiecesInDesign(kit, designScope.guid, pieceIds, selectedVariants);
+    } catch (_error) {
       return [];
     }
-  }, [kitTypes, pieces, connections, designScope?.guid, pieceIds, selectedVariants]);
+  }, [kit, designScope?.guid, pieceIds, selectedVariants]);
 }
 
 /**
@@ -5932,15 +5875,19 @@ export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]
  *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖design🛠️usereplacabledesigns](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/DESIGN/USE-REPLACABLE-DESIGNS)
  **/
 export function useReplacableDesigns(piece: Piece) {
-  const kitDesigns = useKitDesigns();
+  const kit = useKit(identitySelector, undefined, true) as Kit | null;
   const designScope = useDesignScope();
-  const pieces = usePieces();
 
   return useMemo(() => {
-    if (!designScope) return [];
-    const kit = { designs: kitDesigns } as Kit;
-    return findReplacableDesignsForDesignPiece(kit, designScope.guid, piece);
-  }, [kitDesigns, designScope?.guid, pieces, piece]);
+    if (!kit || !designScope || !piece || !piece.guid) return [];
+    const scopedDesign = kit.designs?.find((entry) => entry.guid === designScope.guid);
+    if (!scopedDesign) return [];
+    try {
+      return findReplacableDesignsForDesignPiece(kit, designScope.guid, piece);
+    } catch (_error) {
+      return [];
+    }
+  }, [kit, designScope?.guid, piece]);
 }
 
 /**
@@ -6534,12 +6481,14 @@ export class KitStore {
 
   async storeFileBlobs(blobs: Map<string, Blob>): Promise<void> {
     const pathMap = this.buildFilePathMap();
+    let hasStoredBlob = false;
 
     for (const [path, blob] of blobs) {
       const fileGuid = pathMap.get(path);
       if (fileGuid) {
         const objectUrl = URL.createObjectURL(blob);
         this.regularFiles.set(path, objectUrl);
+        hasStoredBlob = true;
 
         if (this.fileProvider) {
           try {
@@ -6553,6 +6502,9 @@ export class KitStore {
           }
         }
       }
+    }
+    if (hasStoredBlob) {
+      this.updated();
     }
   }
 
@@ -8826,7 +8778,7 @@ export function createDefaultTransactionState(): AppTransactionState {
  **/
 export function createDefaultDesignAppState(): DesignAppState {
   return {
-    panelVisibility: { ...defaultPanelVisibility, toolbar: true },
+    panelVisibility: { ...defaultPanelVisibility, toolbar: true, rightSidePanel: true },
     selection: undefined,
     hover: undefined,
     focusedPiece: undefined,
@@ -10926,6 +10878,20 @@ export function useConnectionV(): HookResult<number> {
     [connectionScope, commands],
   );
   return conditionalHookResult(!!connectionScope && !!connection, connection?.v ?? 0, setter);
+}
+
+export function useConnectionDescription(): HookResult<string> {
+  const connectionScope = useConnectionScope();
+  const connection = useConnection() as Connection | null;
+  const { useDesignAppCommands } = getDesignAppHooks();
+  const commands = useDesignAppCommands();
+  const setter = useCallback(
+    (value: string) => {
+      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.description", connectionScope.guid, { description: value || undefined });
+    },
+    [connectionScope, commands],
+  );
+  return conditionalHookResult(!!connectionScope && !!connection, connection?.description ?? "", setter);
 }
 
 /**
@@ -14421,12 +14387,16 @@ class AppRegistry {
   }
 
   getAppForPath(pathParts: string[]): AppRegistration | undefined {
-    for (const app of this.apps.values()) {
-      if (app.matchesPath && app.matchesPath(pathParts)) {
-        return app;
+    const matches = this.getAllApps().filter((app) => app.matchesPath && app.matchesPath(pathParts));
+    if (matches.length === 0) return undefined;
+    return matches.sort((a, b) => {
+      const aSegmentCount = a.routeSegments?.length || 0;
+      const bSegmentCount = b.routeSegments?.length || 0;
+      if (aSegmentCount !== bSegmentCount) {
+        return bSegmentCount - aSegmentCount;
       }
-    }
-    return undefined;
+      return (a.order || 0) - (b.order || 0);
+    })[0];
   }
 
   getPanelConfigs(getLabelFn: (key: string) => string, getHotkeyFn?: (key: string) => string): Record<string, PanelDefinition[]> {
@@ -14454,17 +14424,18 @@ async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
 
   appConfigsLoadPromise = (async () => {
-    const modules = import.meta.glob<any>("./*.tsx");
-    for (const [path, importFn] of Object.entries(modules)) {
-      if (path.endsWith("/Sketchpad.tsx")) continue;
-      if (path.endsWith("/elements.tsx")) continue;
-      if (path.endsWith("/shared.ts")) continue;
-      if (path.endsWith("/Tutorials.tsx")) continue;
-
-      const mod = await (importFn as any)();
-      if (mod?.config) {
-        appRegistry.register(mod.config as AppConfig);
-      }
+    const modules = await Promise.all([
+      import("./Home"),
+      import("./Kit"),
+      import("./Type"),
+      import("./Quality"),
+      import("./Design"),
+      import("./Docs"),
+      import("./Feedback"),
+    ]);
+    for (const mod of modules) {
+      if (!mod?.config) continue;
+      appRegistry.register(mod.config as AppConfig);
     }
   })();
 
@@ -14557,7 +14528,6 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
  **/
 export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sections, setSections] = useState<PanelSections>({
-    workbench: [],
     details: [],
     tools: [],
     hud: [],
@@ -16386,13 +16356,9 @@ const PanelToggles: FC = ({}) => {
   const appCommands = useAppCommands();
   const leftTabs = useSidePanelTabs("left");
   const rightTabs = useSidePanelTabs("right");
-  const [, setActiveRightTabId] = useActiveRightTabId();
-  const propertyRightTabs = rightTabs.filter((tab) => !tab.id.includes("chat") && !tab.id.includes("settings"));
 
   const hasLeftTabs = leftTabs.length > 0;
-  const hasRightTabs = propertyRightTabs.length > 0;
-  const chatTab = rightTabs.find((tab) => tab.id.includes("chat")) || leftTabs.find((tab) => tab.id.includes("chat"));
-  const settingsTab = rightTabs.find((tab) => tab.id.includes("settings")) || leftTabs.find((tab) => tab.id.includes("settings"));
+  const hasRightTabs = rightTabs.length > 0;
 
   const isLeftOpen = visiblePanels.leftSidePanel ?? false;
   const isRightOpen = visiblePanels.rightSidePanel ?? false;
@@ -16421,31 +16387,29 @@ const PanelToggles: FC = ({}) => {
   const handleChatToggle = useCallback(
     (pressed: boolean) => {
       if (pressed) {
-        if (!isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+        // Close right panel and settings when opening chat
+        if (isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
         if (isSettingsOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
-        if (isLeftOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
-        if (chatTab) setActiveRightTabId(chatTab.id);
       }
       appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
     },
-    [appCommands, chatTab, isLeftOpen, isRightOpen, isSettingsOpen, setActiveRightTabId],
+    [appCommands, isRightOpen, isSettingsOpen],
   );
 
   const handleSettingsToggle = useCallback(
     (pressed: boolean) => {
       if (pressed) {
-        if (!isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+        // Close right panel and chat when opening settings
+        if (isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
         if (isChatOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
-        if (isLeftOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
-        if (settingsTab) setActiveRightTabId(settingsTab.id);
       }
       appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
     },
-    [appCommands, isChatOpen, isLeftOpen, isRightOpen, setActiveRightTabId, settingsTab],
+    [appCommands, isRightOpen, isChatOpen],
   );
 
   const LeftIcon = leftTabs[0]?.icon;
-  const RightIcon = propertyRightTabs[0]?.icon;
+  const RightIcon = rightTabs[0]?.icon;
 
   if (!hasLeftTabs && !hasRightTabs) return null;
 
@@ -17365,7 +17329,6 @@ const LayoutWrapper: FC = () => {
   const appType = useAppType();
   const panelSizes = usePanelSizes();
   const footerItems = useFooterItems();
-  const workbenchSections = usePanelSections("workbench");
   const toolsSections = usePanelSections("tools");
   const toolbarSections = usePanelSections("toolbar");
   const statsSections = usePanelSections("stats");
@@ -17376,9 +17339,7 @@ const LayoutWrapper: FC = () => {
   const rightSidePanelTabs = useSidePanelTabs("right");
   const [activeLeftTabId, setActiveLeftTabId] = useActiveLeftTabId();
   const [activeRightTabId, setActiveRightTabId] = useActiveRightTabId();
-  const propertyRightSidePanelTabs = rightSidePanelTabs.filter((tab) => !tab.id.includes("chat") && !tab.id.includes("settings"));
-  const chatSidePanelTab = rightSidePanelTabs.find((tab) => tab.id.includes("chat")) || leftSidePanelTabs.find((tab) => tab.id.includes("chat"));
-  const settingsSidePanelTab = rightSidePanelTabs.find((tab) => tab.id.includes("settings")) || leftSidePanelTabs.find((tab) => tab.id.includes("settings"));
+  const wasRightSidePanelVisibleRef = useRef(false);
 
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
@@ -17386,7 +17347,6 @@ const LayoutWrapper: FC = () => {
 
   // Create mapping from PanelKind to sections
   const sectionsByKind: Record<PanelKind, PanelSection[]> = {
-    [PanelKind.WORKBENCH]: workbenchSections,
     [PanelKind.TOOLS]: toolsSections,
     [PanelKind.TOOLBAR]: toolbarSections,
     [PanelKind.STATS]: statsSections,
@@ -17409,7 +17369,11 @@ const LayoutWrapper: FC = () => {
         id: panel.id,
         icon: config.icon,
         order: 0,
-        content: () => <PanelTabContent sections={sections} />,
+        content: () => (
+          <ToolbarScopeWrapper>
+            <PanelTabContent sections={sections} />
+          </ToolbarScopeWrapper>
+        ),
       };
 
       if (config.position === PanelPosition.LEFT) {
@@ -17437,13 +17401,39 @@ const LayoutWrapper: FC = () => {
     panelConfigs,
     addSidePanelTab,
     removeSidePanelTab,
-    workbenchSections,
     toolsSections,
     toolbarSections,
     statsSections,
     detailsSections,
     consoleSections,
   ]);
+
+  useEffect(() => {
+    const isRightSidePanelMode = !panelVisibility.settings && !panelVisibility.chat;
+    const isRightSidePanelVisible = !!panelVisibility.rightSidePanel && isRightSidePanelMode;
+    const wasRightSidePanelVisible = wasRightSidePanelVisibleRef.current;
+    if (isRightSidePanelVisible && !wasRightSidePanelVisible) {
+      const sortedRightTabs = [...rightSidePanelTabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const detailsTab = sortedRightTabs.find((tab) => tab.id === "semio.sketchpad.navbar.panelToggle.details.show");
+      const nextActiveTabId = detailsTab?.id ?? sortedRightTabs[0]?.id;
+      if (nextActiveTabId && activeRightTabId !== nextActiveTabId) {
+        setActiveRightTabId(nextActiveTabId);
+      }
+    }
+    wasRightSidePanelVisibleRef.current = isRightSidePanelVisible;
+  }, [panelVisibility.settings, panelVisibility.chat, panelVisibility.rightSidePanel, rightSidePanelTabs, activeRightTabId, setActiveRightTabId]);
+
+  useEffect(() => {
+    if (appType !== "design") return;
+    if (panelVisibility.settings || panelVisibility.chat || !panelVisibility.rightSidePanel) return;
+    const sortedRightTabs = [...rightSidePanelTabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const detailsTab = sortedRightTabs.find((tab) => tab.id === "semio.sketchpad.navbar.panelToggle.details.show");
+    if (!detailsTab) return;
+    const activeTabIsUtility = !activeRightTabId || activeRightTabId.includes(".settings") || activeRightTabId.includes(".chat");
+    if (activeTabIsUtility && activeRightTabId !== detailsTab.id) {
+      setActiveRightTabId(detailsTab.id);
+    }
+  }, [appType, panelVisibility.settings, panelVisibility.chat, panelVisibility.rightSidePanel, rightSidePanelTabs, activeRightTabId, setActiveRightTabId]);
 
   const sketchpadCommands = useSketchpadCommands();
 
@@ -17850,97 +17840,108 @@ const LayoutWrapper: FC = () => {
         }}
       >
         <LevelProvider level="base">
-          <LayoutComponent
-            className="bg-base text-foreground relative border"
-            navbar={<Navbar items={navbarItems} />}
-            footer={
-              <Footer
-                items={footerItems.map((item) => ({
-                  id: item.id,
-                  icon: item.icon,
-                  text: item.text,
-                  content: item.content,
-                  order: item.order,
-                  onClick: item.onClick,
-                }))}
-                isVisible={isFooterExpanded || !isFullscreen}
-              />
-            }
-            bottomPanel={
-              consoleSections.length > 0
-                ? {
-                    visible: true,
-                    size: panelSizes.consoleHeight,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                    sections: consoleSections,
-                    panelKey: "console",
-                  }
-                : undefined
-            }
-            leftSidePanel={
-              leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
-                ? {
-                    position: "left" as const,
-                    visible: true,
-                    size: panelSizes.leftSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
-                    tabs: leftSidePanelTabs,
-                    activeTabId: activeLeftTabId,
-                    onActiveTabChange: setActiveLeftTabId,
-                  }
-                : undefined
-            }
-            rightSidePanel={
-              panelVisibility.chat
-                ? {
-                    position: "right" as const,
-                    visible: true,
-                    size: panelSizes.chatWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "chatWidth", size),
-                    tabs: [
-                      chatSidePanelTab || {
-                        id: "chat",
-                        icon: ChatIcon,
-                        order: 0,
-                        content: () => <div className="p-double text-muted-foreground">Chat not available</div>,
-                      },
-                    ],
-                    activeTabId: chatSidePanelTab?.id || "chat",
-                    onActiveTabChange: () => {},
-                  }
-                : panelVisibility.settings
+          <ToolbarScopeWrapper>
+            <LayoutComponent
+              className="bg-base text-foreground relative border"
+              navbar={<Navbar items={navbarItems} />}
+              footer={
+                <Footer
+                  items={footerItems.map((item) => ({
+                    id: item.id,
+                    icon: item.icon,
+                    text: item.text,
+                    content: item.content,
+                    order: item.order,
+                    onClick: item.onClick,
+                  }))}
+                  isVisible={isFooterExpanded || !isFullscreen}
+                />
+              }
+              bottomPanel={
+                consoleSections.length > 0
+                  ? {
+                      visible: true,
+                      size: panelSizes.consoleHeight,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                      sections: consoleSections,
+                      panelKey: "console",
+                    }
+                  : undefined
+              }
+              leftSidePanel={
+                leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
+                  ? {
+                      position: "left" as const,
+                      visible: true,
+                      size: panelSizes.leftSidePanelWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
+                      tabs: leftSidePanelTabs,
+                      activeTabId: activeLeftTabId,
+                      onActiveTabChange: setActiveLeftTabId,
+                    }
+                  : undefined
+              }
+              rightSidePanel={
+                panelVisibility.chat
                   ? {
                       position: "right" as const,
                       visible: true,
-                      size: panelSizes.settingsWidth,
-                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "settingsWidth", size),
+                      size: panelSizes.chatWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "chatWidth", size),
                       tabs: [
-                        settingsSidePanelTab || {
-                          id: "settings",
-                          icon: SettingsIcon,
+                        {
+                          id: "chat",
+                          icon: ChatIcon,
                           order: 0,
-                          content: () => <div className="p-double text-muted-foreground">Settings not available</div>,
+                          content: () => {
+                            const chatTab = rightSidePanelTabs.find(t => t.id.includes("chat"));
+                            return chatTab ? (typeof chatTab.content === "function" ? chatTab.content() : chatTab.content) : (
+                              <div className="p-double text-muted-foreground">Chat not available</div>
+                            );
+                          },
                         },
                       ],
-                      activeTabId: settingsSidePanelTab?.id || "settings",
+                      activeTabId: "chat",
                       onActiveTabChange: () => {},
                     }
-                  : propertyRightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
-                ? {
-                    position: "right" as const,
-                    visible: true,
-                    size: panelSizes.rightSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                    tabs: propertyRightSidePanelTabs,
-                    activeTabId: activeRightTabId,
-                    onActiveTabChange: setActiveRightTabId,
-                  }
-                  : undefined
-            }
-            toolbar={
-              panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "quality" || appType === "docs" ? (
-                toolbarSections.length > 0 ? (
-                  <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 h-[40px] pointer-events-none px-2">
+                  : panelVisibility.settings
+                    ? {
+                        position: "right" as const,
+                        visible: true,
+                        size: panelSizes.settingsWidth,
+                        onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "settingsWidth", size),
+                        tabs: [
+                          {
+                            id: "settings",
+                            icon: SettingsIcon,
+                            order: 0,
+                            content: () => {
+                              const settingsTab = rightSidePanelTabs.find(t => t.id.includes("settings"));
+                              return settingsTab ? (typeof settingsTab.content === "function" ? settingsTab.content() : settingsTab.content) : (
+                                <div className="p-double text-muted-foreground">Settings not available</div>
+                              );
+                            },
+                          },
+                        ],
+                        activeTabId: "settings",
+                        onActiveTabChange: () => {},
+                      }
+                    : rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
+                      ? {
+                          position: "right" as const,
+                          visible: true,
+                          size: panelSizes.rightSidePanelWidth,
+                          onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                          tabs: rightSidePanelTabs,
+                          activeTabId: activeRightTabId,
+                          onActiveTabChange: setActiveRightTabId,
+                        }
+                      : undefined
+              }
+              toolbar={
+                panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "quality" || appType === "docs" ? (
+                  toolbarSections.length > 0 ? (
+                    <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 h-[40px] pointer-events-none px-2">
                     <div id="semio.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2">
                       <div id="semio.sketchpad.toolbar.zone.tools" className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
                         <LevelProvider level="panel">
@@ -18036,17 +18037,18 @@ const LayoutWrapper: FC = () => {
                       )}
                     </div>
                   </div>
-                ) : (
-                  <div id="semio.sketchpad.toolbar" className="hidden" />
-                )
-              ) : undefined
-            }
-            canvas={
-              <div className="relative h-full w-full">
-                <AppRouter />
-              </div>
-            }
-          />
+                  ) : (
+                    <div id="semio.sketchpad.toolbar" className="hidden" />
+                  )
+                ) : undefined
+              }
+              canvas={
+                <div className="relative h-full w-full">
+                  <AppRouter />
+                </div>
+              }
+            />
+          </ToolbarScopeWrapper>
         </LevelProvider>
         <DragOverlay>
           {activeDragId && activeDragData ? (

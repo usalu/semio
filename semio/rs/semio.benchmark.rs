@@ -70,6 +70,12 @@ fn find_design<'a>(kit: &'a Kit, name: &str, parent_name: Option<&str>) -> &'a D
         }
     }).expect(&format!("Design {} not found", name))
 }
+
+fn main() {
+    let kit_metabolism = load_kit("metabolism.kit.semio.json");
+    let kit_invalid = load_kit("metabolism.kit.semio.json");
+    let metabolism_zip_path = Path::new(ASSETS_DIR).join("metabolism.semio.zip");
+    let metabolism_zip_str = metabolism_zip_path.to_str().unwrap();
     // We assume running from rs/semio
     
     bench("Roundtrip/Metabolism", || {
@@ -84,12 +90,6 @@ fn find_design<'a>(kit: &'a Kit, name: &str, parent_name: Option<&str>) -> &'a D
         if Path::new(temp_zip).exists() {
             std::fs::remove_file(temp_zip).unwrap();
         }
-    });
-
-    bench("Diff/Metabolism", || {
-        let mut kit = kit_metabolism.clone();
-        apply_kit_diff(&mut kit, &diff_forward);
-        apply_kit_diff(&mut kit, &diff_inverse);
     });
 
     let d1 = find_design(&kit_metabolism, "Nakagin Capsule Tower", None);

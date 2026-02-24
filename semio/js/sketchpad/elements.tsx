@@ -40,50 +40,50 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
 import {
-  AddIcon,
-  AlertCircleIcon,
-  BookIcon,
-  CameraIcon,
-  CheckIcon,
-  CheckIconAlt,
-  ChevronDownIcon,
-  ChevronDownIconAlt,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsUpDownIcon,
-  CloseIcon,
-  CloseIconAlt,
-  DocumentIcon,
-  ExternalLinkIcon,
-  FolderIcon,
-  GripVerticalIcon,
-  InfoIcon,
-  LightbulbIcon,
-  LucideIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  RemoveIcon,
-  SearchIcon,
-  TriangleAlertIcon,
-  TutorialIcon,
+    AddIcon,
+    AlertCircleIcon,
+    BookIcon,
+    CameraIcon,
+    CheckIcon,
+    CheckIconAlt,
+    ChevronDownIcon,
+    ChevronDownIconAlt,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ChevronsUpDownIcon,
+    CloseIcon,
+    CloseIconAlt,
+    DocumentIcon,
+    ExternalLinkIcon,
+    FolderIcon,
+    GripVerticalIcon,
+    InfoIcon,
+    LightbulbIcon,
+    LucideIcon,
+    Maximize2Icon,
+    Minimize2Icon,
+    RemoveIcon,
+    SearchIcon,
+    TriangleAlertIcon,
+    TutorialIcon,
 } from "@semio/assets";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import {
-  applyNodeChanges,
-  Background,
-  BackgroundVariant,
-  BaseEdge,
-  ConnectionMode,
-  getBezierPath,
-  Handle,
-  MiniMap,
-  Position,
-  ReactFlow,
-  ReactFlowProvider,
-  SelectionMode,
-  useInternalNode,
-  useReactFlow,
-  ViewportPortal,
+    applyNodeChanges,
+    Background,
+    BackgroundVariant,
+    BaseEdge,
+    ConnectionMode,
+    getBezierPath,
+    Handle,
+    MiniMap,
+    Position,
+    ReactFlow,
+    ReactFlowProvider,
+    SelectionMode,
+    useInternalNode,
+    useReactFlow,
+    ViewportPortal,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -1007,10 +1007,14 @@ export interface DraggableAvatarProps {
   dragListeners?: any;
   dragAttributes?: any;
   onClick?: () => void;
+  onPointerDown?: () => void;
+  onMouseDown?: () => void;
   onDoubleClick?: () => void;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
   className?: string;
+  dataDragKind?: "type" | "design";
+  dataDragGuid?: string;
 }
 
 /**
@@ -1019,9 +1023,35 @@ export interface DraggableAvatarProps {
  *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🪨draggableavatar](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/AVATAR/DRAGGABLE-AVATAR)
  **/
 export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
-  ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onDoubleClick, onPointerEnter, onPointerLeave, className }, ref) => {
+  ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onPointerDown, onMouseDown, onDoubleClick, onPointerEnter, onPointerLeave, className, dataDragKind, dataDragGuid }, ref) => {
+    const dragPointerDown = dragListeners?.onPointerDown as ((event: React.PointerEvent<HTMLDivElement>) => void) | undefined;
+    const dragMouseDown = dragListeners?.onMouseDown as ((event: React.MouseEvent<HTMLDivElement>) => void) | undefined;
+    const mergedDragListeners = { ...(dragListeners ?? {}) };
+    delete mergedDragListeners.onPointerDown;
+    delete mergedDragListeners.onMouseDown;
     return (
-      <div data-slot="avatar" ref={dragRef || ref} {...dragListeners} {...dragAttributes} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} title={title} className={className}>
+      <div
+        data-slot="avatar"
+        ref={dragRef || ref}
+        {...mergedDragListeners}
+        {...dragAttributes}
+        onClick={onClick}
+        onPointerDown={(event) => {
+          dragPointerDown?.(event);
+          onPointerDown?.();
+        }}
+        onMouseDown={(event) => {
+          dragMouseDown?.(event);
+          onMouseDown?.();
+        }}
+        onDoubleClick={onDoubleClick}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+        title={title}
+        className={className}
+        data-drag-kind={dataDragKind}
+        data-drag-guid={dataDragGuid}
+      >
         <Avatar
           className={cn("cursor-grab active:cursor-grabbing select-none", isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && !isSelected && "ring-1 ring-[color:var(--hover-base)]")}
           style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
@@ -5046,26 +5076,24 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   return (
     <LevelProvider level="panel">
       <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
-        {sortedTabs.length > 1 && (
-          <div className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
-            {sortedTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activeTab?.id;
-              return (
-                <Tooltip key={tab.id}>
-                  <TooltipTrigger asChild>
-                    <button id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
-                      <Icon size={16} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <DescriptionTooltipContent id={tab.id} />
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
-        )}
+        <div className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
+          {sortedTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = tab.id === activeTab?.id;
+            return (
+              <Tooltip key={tab.id}>
+                <TooltipTrigger asChild>
+                  <button id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
+                    <Icon size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <DescriptionTooltipContent id={tab.id} />
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
         <Scrollable className="flex-1 min-h-0">
           <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
         </Scrollable>
@@ -5315,25 +5343,25 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // Consumers MUST provide nodes and edges arrays.
 
 export {
-  applyNodeChanges,
-  Background,
-  BackgroundVariant,
-  BaseEdge,
-  forceCenter,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-  forceX,
-  forceY,
-  getBezierPath,
-  Handle,
-  Position,
-  ReactFlow,
-  ReactFlowProvider,
-  useInternalNode,
-  useReactFlow,
-  ViewportPortal
+    applyNodeChanges,
+    Background,
+    BackgroundVariant,
+    BaseEdge,
+    forceCenter,
+    forceCollide,
+    forceLink,
+    forceManyBody,
+    forceSimulation,
+    forceX,
+    forceY,
+    getBezierPath,
+    Handle,
+    Position,
+    ReactFlow,
+    ReactFlowProvider,
+    useInternalNode,
+    useReactFlow,
+    ViewportPortal
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 

@@ -107,6 +107,7 @@ import {
   useKitAppXState,
   useKitCommands,
   useKitScope,
+  useFileUrls,
   useLanguage,
   useMode,
   useNavigation,
@@ -4737,6 +4738,28 @@ const AppContent: FC = () => {
   const kitFiles = kit?.files;
   const kitFolders = kit?.folders;
   const kitAuthors = kit?.authors;
+  const fileUrls = useFileUrls();
+  const importedFilePathsKey = Array.from(fileUrls.keys()).sort().join("|");
+  const importedFilePaths = useMemo(() => {
+    const paths = new Set<string>();
+    fileUrls.forEach((_url, path) => {
+      const normalizedPath = path.replace(/^\.?\//, "").replace(/\/+$/, "");
+      if (normalizedPath) {
+        paths.add(normalizedPath);
+      }
+    });
+    return paths;
+  }, [fileUrls, importedFilePathsKey]);
+  const importedFolderPaths = useMemo(() => {
+    const paths = new Set<string>();
+    importedFilePaths.forEach((filePath) => {
+      const segments = filePath.split("/").filter(Boolean);
+      for (let i = 1; i < segments.length; i++) {
+        paths.add(segments.slice(0, i).join("/"));
+      }
+    });
+    return paths;
+  }, [importedFilePaths]);
   const kitDesignsKey = useMemo(() => kitDesigns?.map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`).join("|") || "", [kitDesigns]);
   const kitTypesKey = useMemo(() => kitTypes?.map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|") || "", [kitTypes]);
   const kitQualitiesKey = useMemo(() => kitQualities?.map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|") || "", [kitQualities]);
@@ -5022,6 +5045,47 @@ const AppContent: FC = () => {
     const typesByFolder = new Map<string, Type[]>();
     const qualitiesByFolder = new Map<string, Quality[]>();
     const filesByFolder = new Map<string, SemioFile[]>();
+    const foldersByGuid = new Map<string, Folder>();
+    const folderPathByGuid = new Map<string, string>();
+
+    (kitFolders || []).forEach((folder) => {
+      foldersByGuid.set(folder.guid, folder);
+    });
+
+    const getFolderStoragePath = (folderGuid?: string): string => {
+      if (!folderGuid) return "";
+      const cachedPath = folderPathByGuid.get(folderGuid);
+      if (cachedPath !== undefined) return cachedPath;
+      const folder = foldersByGuid.get(folderGuid);
+      if (!folder) {
+        folderPathByGuid.set(folderGuid, "");
+        return "";
+      }
+      const parentPath = getFolderStoragePath(folder.parent?.guid);
+      const folderPath = parentPath ? `${parentPath}/${folder.name}` : folder.name;
+      folderPathByGuid.set(folderGuid, folderPath);
+      return folderPath;
+    };
+
+    const filteredKitFiles = (kitFiles || []).filter((file) => {
+      const parentPath = getFolderStoragePath(file.folder?.guid);
+      const storagePath = parentPath ? `${parentPath}/${file.name}` : file.name;
+      return importedFilePaths.has(storagePath);
+    });
+
+    const filteredKitFolders = (kitFolders || []).filter((folder) => importedFolderPaths.has(getFolderStoragePath(folder.guid)));
+    const foldersWithZipFileDescendants = new Set<string>();
+
+    filteredKitFiles.forEach((file) => {
+      let currentFolderGuid = file.folder?.guid;
+      while (currentFolderGuid) {
+        if (foldersWithZipFileDescendants.has(currentFolderGuid)) {
+          break;
+        }
+        foldersWithZipFileDescendants.add(currentFolderGuid);
+        currentFolderGuid = foldersByGuid.get(currentFolderGuid)?.parent?.guid;
+      }
+    });
 
     kitDesigns?.forEach((d: Design) => {
       const parentKey = d.parent?.guid;
@@ -5043,7 +5107,7 @@ const AppContent: FC = () => {
       }
     });
 
-    kitFolders?.forEach((f: Folder) => {
+    filteredKitFolders.forEach((f: Folder) => {
       const parentKey = f.parent?.guid;
       if (!foldersByParent.has(parentKey)) foldersByParent.set(parentKey, []);
       foldersByParent.get(parentKey)!.push(f);
@@ -5056,7 +5120,7 @@ const AppContent: FC = () => {
       }
     });
 
-    kitFiles?.forEach((f: SemioFile) => {
+    filteredKitFiles.forEach((f: SemioFile) => {
       if (f.folder?.guid) {
         if (!filesByFolder.has(f.folder.guid)) filesByFolder.set(f.folder.guid, []);
         filesByFolder.get(f.folder.guid)!.push(f);
@@ -5261,7 +5325,7 @@ const AppContent: FC = () => {
     }
 
     if (selectedKinds.size === 0 || selectedKinds.has("files")) {
-      const fileTree = buildFileTree(kitFolders || [], kitFiles || []);
+      const fileTree = buildFileTree(filteredKitFolders, filteredKitFiles);
       const flatTree = flattenFileTree(fileTree, 0, expandedRows);
 
       flatTree.forEach((node) => {
@@ -5289,6 +5353,7 @@ const AppContent: FC = () => {
         const childFolders = foldersByParent.get(parentGuid) || [];
 
         childFolders.forEach((folder: Folder) => {
+          if (!foldersWithZipFileDescendants.has(folder.guid)) return;
           if (searchQuery && !folder.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
           const folderedDesigns = designsByFolder.get(folder.guid) || [];
@@ -5583,6 +5648,7 @@ const AppContent: FC = () => {
     kitFilesKey,
     kitFoldersKey,
     kitAuthorsKey,
+    importedFilePathsKey,
     selectedKinds,
     selectedName,
     selectedConcepts,

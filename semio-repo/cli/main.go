@@ -33748,6 +33748,8 @@ func goalArtifactID(rawGoalID string) string {
 func interactionKindEmoji(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	switch kind {
+	case "edited":
+		return emojiText(EmojiInteractionEdited)
 	case "finished":
 		return emojiText(EmojiInteractionFinished)
 	case "restarted":

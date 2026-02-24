@@ -2392,10 +2392,6 @@ class QualityId(QualityKeyField, Id):
     pass
 
 class QualityProps(
-    """Property fields for a quality.
-    QualityProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semiopy🔖domain🔖quality🛠️qualityprops](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY-PROPS)
-    """
     QualityUnitField,
     QualityImageField,
     QualityIconField,
@@ -2416,13 +2412,13 @@ class QualityProps(
     QualityKeyField,
     Props,
 ):
+    """Property fields for a quality.
+    QualityProps MUST contain all non-relational property fields.
+    [👤semio📚py💻semiopy🔖domain🔖quality🛠️qualityprops](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY-PROPS)
+    """
     pass
 
 class QualityInput(
-    """Input fields for creating or updating a quality.
-    QualityInput MUST contain all fields required for creation.
-    [👤semio📚py💻semiopy🔖domain🔖quality🛠️qualityinput](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY-INPUT)
-    """
     QualityUnitField,
     QualityImageField,
     QualityIconField,
@@ -2443,6 +2439,10 @@ class QualityInput(
     QualityKeyField,
     Input,
 ):
+    """Input fields for creating or updating a quality.
+    QualityInput MUST contain all fields required for creation.
+    [👤semio📚py💻semiopy🔖domain🔖quality🛠️qualityinput](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY-INPUT)
+    """
     pass
 
 class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
@@ -2453,10 +2453,6 @@ class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField,
     pass
 
 class QualityOutput(
-    """Output fields returned when fetching a quality.
-    QualityOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semiopy🔖domain🔖quality🛠️qualityoutput](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY-OUTPUT)
-    """
     QualityUpdatedField,
     QualityCreatedField,
     QualityUnitField,
@@ -2479,14 +2475,14 @@ class QualityOutput(
     QualityKeyField,
     Output,
 ):
+    """Output fields returned when fetching a quality.
+    QualityOutput MUST contain all fields returned on fetch.
+    [👤semio📚py💻semiopy🔖domain🔖quality🛠️qualityoutput](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY-OUTPUT)
+    """
     benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 class Quality(
-    """Quality entity with units, constraints, formula and folder classification.
-    Quality MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semiopy🔖domain🔖quality🛠️quality](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY)
-    """
     QualityUpdatedField,
     QualityCreatedField,
     QualityUnitField,
@@ -2510,6 +2506,10 @@ class Quality(
     TableEntity,
     table=True,
 ):
+    """Quality entity with units, constraints, formula and folder classification.
+    Quality MUST implement idMembers and inherit from the appropriate field mixins.
+    [👤semio📚py💻semiopy🔖domain🔖quality🛠️quality](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/QUALITY/QUALITY)
+    """
     PLURAL = "qualities"
     __tablename__ = "quality"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -3542,10 +3542,6 @@ class TypeContext(
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 class Type(
-    """Type entity defining a reusable parametric building block.
-    Type MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semiopy🔖domain🔖type🛠️type](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/TYPE/TYPE)
-    """
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
@@ -3564,6 +3560,10 @@ class Type(
     TableEntity,
     table=True,
 ):
+    """Type entity defining a reusable parametric building block.
+    Type MUST implement idMembers and inherit from the appropriate field mixins.
+    [👤semio📚py💻semiopy🔖domain🔖type🛠️type](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/TYPE/TYPE)
+    """
     PLURAL = "types"
     __tablename__ = "type"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -5295,10 +5295,6 @@ class DesignPrediction(DesignDescriptionField, Prediction):
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 class Design(
-    """Design entity composing pieces and connections into an assembly.
-    Design MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semiopy🔖domain🔖design🛠️design](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/DESIGN/DESIGN)
-    """
     DesignNameField,
     DesignVariantField,
     DesignViewField,
@@ -5317,6 +5313,10 @@ class Design(
     TableEntity,
     table=True,
 ):
+    """Design entity composing pieces and connections into an assembly.
+    Design MUST implement idMembers and inherit from the appropriate field mixins.
+    [👤semio📚py💻semiopy🔖domain🔖design🛠️design](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/DESIGN/DESIGN)
+    """
     PLURAL = "designs"
     __tablename__ = "design"
     pk: typing.Optional[int] = sqlmodel.Field(

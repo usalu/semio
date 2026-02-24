@@ -3226,7 +3226,7 @@ pub mod sqlite {
         let conn = rusqlite::Connection::open(path)
             .map_err(|e| SemioError::Database { message: e.to_string() })?;
         
-        conn.execute_batch(include_str!("../../sql/sqlite/semio/schema.sql"))
+        conn.execute_batch(include_str!("../sqlite/schema.sql"))
             .map_err(|e| SemioError::Database { message: format!("Schema creation failed: {}", e) })?;
         
         let now = chrono::Utc::now().to_rfc3339();

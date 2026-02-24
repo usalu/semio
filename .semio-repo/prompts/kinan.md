@@ -1,6 +1,369 @@
 
+Validate that Workbench type piece creation is fully implemented and working in Sketchpad, using the existing test structure only.
+
+Context:
+- Repo: semio monorepo
+- Relevant files:
+  - semio/js/sketchpad/Design.tsx
+  - semio/js/sketchpad.test.ts
+- Existing expected behavior:
+  - A piece can be created from Workbench Types by drag-and-drop.
+  - A piece can also be created by clicking the `+` action on each type row.
+- Do not create new test files.
+- Extend/refactor only existing test files and existing implementation files as needed.
+
+Goals:
+1. Confirm implementation is correct for both creation paths:
+   - Type row `+` adds a piece to active design.
+   - Dragging a type avatar from Workbench to diagram adds a piece.
+2. Ensure behavior is covered in existing test suite structure.
+3. Run tests and verify runtime behavior before claiming success.
+
+Required workflow:
+1. Inspect current Workbench implementation in `Design.tsx`:
+   - Find `TypeTreeItem` actions and creation handlers.
+   - Verify `+` action calls add-piece flow (not only create-child flow).
+   - Verify drag-drop flow still adds piece via drop handling.
+2. Inspect `semio/js/sketchpad.test.ts`:
+   - Locate existing Design app left panel/workbench tests.
+   - Add/adjust tests in-place to cover both creation paths in one coherent unit flow.
+3. Implement missing behavior if needed:
+   - Keep existing functionality (create child, double-click navigation, drag/drop).
+   - Do not remove features to make tests pass.
+4. Add robust assertions:
+   - Capture piece/node count before action.
+   - Perform action.
+   - Assert count increases by exactly 1.
+   - Do this for both `+` and drag-drop.
+5. Run relevant tests and report exact results:
+   - Include command used.
+   - Include pass/fail summary and failing test names if any.
+   - If flaky, document exact failure and rerun evidence.
+6. Provide concise final report:
+   - What was broken/missing.
+   - What changed (files + key functions/sections).
+   - Test evidence that both creation paths work.
+
+Test constraints:
+- Use existing test framework and conventions in `sketchpad.test.ts`.
+- No new test files.
+- Keep selectors resilient and aligned with current UI ids/data attributes.
+- If temporary logs are needed, prefix with `[DEBUG]` and remove them before finalizing.
+
+Acceptance criteria:
+- Clicking Workbench type row `+` creates one new piece in active design.
+- Dragging a Workbench type into diagram creates one new piece.
+- Both are validated in existing test file structure.
+- Test run executed and reported with real results (no assumptions).
+
+Deliverables:
+- Updated implementation (if required).
+- Updated `semio/js/sketchpad.test.ts` with coverage for both flows.
+- Final summary with:
+  - changed files
+  - what each change does
+  - exact test command(s)
+  - exact test outcome.
 
 
+Multiple connections 
+
+
+
+```yaml
+
+Multiple Connections: # section
+  Plane: # collection tree item
+    Translation:
+      Gap: "{{gap-slider}}" # applied to all selected connections (supports mixed values)
+      Shift: "{{shift-slider}}"
+      Rise: "{{rise-slider}}"
+    Orientation:
+      Rotation: "{{rotation-slider}}"
+      Turn: "{{turn-slider}}"
+      Tilt: "{{tilt-slider}}"
+
+  Diagram:
+    X Offset: "{{diagram-x-offset-stepper}}" # applied to all selected connections
+    Y Offset: "{{diagram-y-offset-stepper}}"
+
+
+```
+
+
+
+
+
+Multiple Pieces: # section
+
+
+```yaml
+  Type: "{{piece-type-select}}" # input tree item, shows shared type or mixed state; only valid replacement types allowed
+  Variant: "{{piece-variant-select}}" # input tree item, may show mixed values
+  Id: "{{piece-id-input}}" # input tree item, may represent multiple ids (mixed)
+  Description: "{{piece-description-text-area}}" # input tree item, may show mixed values
+  Attributes:
+    - name: "{{attribute-name-input}}" # input tree item, applied to all selected pieces
+      value: "{{attribute-value-input}}" # input tree item
+  Plane: # collection tree item, only show section when applicable to all selected pieces
+    Origin: # collection tree item
+      X: "{{origin-x-stepper}}" # input tree item, supports multi-edit
+      Y: "{{origin-y-stepper}}" # input tree item
+      Z: "{{origin-z-stepper}}" # input tree item
+    X-Axis:
+      X: "{{x-axis-x-stepper}}"
+      Y: "{{x-axis-y-stepper}}"
+      Z: "{{x-axis-z-stepper}}"
+    Y-Axis:
+      X: "{{y-axis-x-stepper}}"
+      Y: "{{y-axis-y-stepper}}"
+      Z: "{{y-axis-z-stepper}}"
+
+Parent Connections: # section (editing multiple connections simultaneously)
+  Translation:
+    Gap: "{{gap-slider}}" # applied to all selected parent connections
+    Shift: "{{shift-slider}}"
+    Rise: "{{rise-slider}}"
+  Orientation:
+    Rotation: "{{rotation-slider}}"
+    Inversion: "{{inversion-slider}}"
+
+Diagram:
+  X Offset: "{{diagram-x-offset-stepper}}"
+  Y Offset: "{{diagram-y-offset-stepper}}"
+
+```
+-----------------------------------------------------------------
+
+Drag and drop from workbench to the diagram window 
+
+
+Currently Type cant be dragged from workbench window toward the diagram window. 
+
+By dragging and dropping from workbench to diagram a new type should be created
+
+
+-----------------------------------------------------------------------
+
+when connection is selected 
+
+```yaml
+
+connecting:
+  Translation:
+    piece id: "{{gap-slider}}"
+    port id: "{{shift-slider}}"
+
+connected:
+  Translation:
+    piece id: "{{gap-slider}}"
+    port id: "{{shift-slider}}"
+
+Plane:
+  Translation:
+    Gap: "{{gap-slider}}"
+    Shift: "{{shift-slider}}"
+    Rise: "{{rise-slider}}"
+  Orientation:
+    Rotation: "{{rotation-slider}}"
+    Inversion: "{{inversion-slider}}"
+
+Diagram:
+  Gap: "{{gap-slider}}"
+  Shift: "{{shift-slider}}"
+  Rise: "{{rise-slider}}"
+  X Offset: "{{origin-x-stepper}}"
+  Y Offset: "{{origin-y-stepper}}"
+```
+
+Parent Connection:
+  Translation:
+    Gap: "{{gap-slider}}"
+    Shift: "{{shift-slider}}"
+    Rise: "{{rise-slider}}"
+  Orientation:
+    Rotation: "{{rotation-slider}}"
+    Inversion: "{{inversion-slider}}"
+```
+----------------------------------------------------
+
+
+
+Sketchpad Design app
+
+When piece is selected tab crashes
+
+
+
+
+```yaml
+Piece: # section,
+  Type: "{{piece-type-select}}" # input tree item, only show types that can replaced the type (e.g. all used connectors must exist)
+  Id: "{{piece-id-input}}" # input tree item
+  Description: "{{piece-description-text-area}}" # input tree item
+  Attributes:
+    - name: "{{attribute-name-input}}" # input tree item
+      value: "{{attribute-value-input}}" # input tree item
+  Plane: # collection tree item, only show section when
+    Origin: # collection tree item
+      X: "{{origin-x-stepper}}" # input tree item
+      Y: "{{origin-y-stepper}}" # input tree item
+      Z: "{{origin-z-stepper}}" # input tree item
+    X-Axis:
+      X: "{{x-axis-x-stepper}}"
+      Y: "{{x-axis-y-stepper}}"
+      Z: "{{x-axis-z-stepper}}"
+    Y-Axis:
+      X: "{{y-axis-x-stepper}}"
+      Y: "{{y-axis-y-stepper}}"
+      Z: "{{y-axis-z-stepper}}"
+Parent Connection:
+  Translation:
+    Gap: "{{gap-slider}}"
+    Shift: "{{shift-slider}}"
+    Rise: "{{rise-slider}}"
+  Orientation:
+    Rotation: "{{rotation-slider}}"
+    Inversion: "{{inversion-slider}}"
+```
+
+
+
+
+ sketchpad design app : Add End-to-End Coverage for Type Piece Creation (Plus + Drag/Drop) 
+Extend existing sketchpad tests (do not create new test files) to cover both Workbench type-piece creation paths.
+Scope:
+
+
+Prompt A: Enable Plus-Button Piece Creation in Workbench Types
+Implement Workbench Types so each type row + creates a new piece in the active design (same outcome as drag-and-drop).
+Scope:
+
+Update the TypeTreeItem row action in Design.tsx so primary + adds a piece using that type.
+Keep drag-and-drop behavior unchanged.
+Keep “create child type” available as a separate action (not removed).
+Place created piece at a deterministic default location if no cursor/drop point is available.
+Ensure transaction handling and selection/focus behavior are consistent with existing add-piece flows.
+Acceptance:
+Clicking + on a type increases piece count by 1 in current design.
+Drag-and-drop still creates pieces.
+No regression in Workbench navigation/double-click behavior.
+Prompt B: Add End-to-End Coverage for Type Piece Creation (Plus + Drag/Drop)
+ 
+
+
+Fix the Kit table so both Folders and Files are rendered only when they physically exist in the imported metabolism zip payload.
+
+Bug:
+- The table shows extra folder/file elements that come from metadata but do not exist as actual zip entries.
+
+Required behavior:
+- Folder rows: show only folder paths that exist in the zip entry tree.
+- File rows: show only files that exist in the zip entry tree.
+- No metadata-only, inferred, or remote-only folder/file rows.
+- If a folder has no real children from zip entries, it must not appear.
+- Keep normal table behavior (expand/collapse, selection, sorting, filtering) intact.
+
+Scope:
+- Investigate `importKit` result and where zip entry paths are stored.
+- Update `Kit.tsx` row generation (`buildFileTree` / `flattenFileTree` usage) to use existence from imported zip file map.
+- Implement in existing files only.
+- Do not alter metabolism sample data to hide the bug.
+
+Tests (extend existing test files only):
+1. Existing zip folders/files are shown.
+2. Metadata-only folders/files are hidden.
+3. Parent folder visibility depends on real zip descendants.
+4. Expand/collapse/sort/filter/selection still works with filtered folder/file data.
+
+Acceptance criteria:
+- In metabolism, no extra folder or file element appears unless it exists in the zip content tree.
+- All relevant tests pass.
+- Provide concise root-cause and fix summary.
+
+Extend/Change/Refactor whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
+Dont ask in between, no confirmations, no matter the issue. Figure it out. Create as many tickets as needed.
+Be sure that it works everywhere before stopping.
+Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) 
+
+-------------------------------------------------------
+
+ Sketchpad Kit app
+ Currently the table in kit app isnt pulling the correct kit data. Files with 
+ 
+ 
+ 
+ currently when a piece is selected in design app piece section appears in the details panel. task : piece and parent connection should be showing in this tree structure
+
+├─ Piece
+│ ├─ ID: <piece_id>
+│ ├─ Type: <piece_type>
+│ └─ Variant: <variant>
+│
+└─ Parent Connection
+├─ Connecting
+│ ├─ Piece ID: <connecting_piece_id>
+│ └─ Port ID: <connecting_port_id>
+│
+├─ Connected
+│ ├─ Piece ID: <connected_piece_id>
+│ └─ Port ID: <connected_port_id>
+│
+├─ Plane
+│ ├─ Translation
+│ │ ├─ Gap: <number>
+│ │ ├─ Shift: <number>
+│ │ └─ Rise: <number>
+│ │
+│ └─ Orientation
+│ ├─ Rotation: <degrees>
+│ ├─ Turn: <degrees>
+│ └─ Tilt: <degrees>
+│
+└─ Diagram
+├─ X Offset: <number>
+└─ Y Offset: <number>
+
+analyze old build and get the tree structure in detail panel to work as in the old build
+
+
+
+
+
+
+
+
+
+
+
+├─ Piece
+│  ├─ ID: <piece_id>
+│  ├─ Type: <piece_type>
+│  └─ Variant: <variant>
+│
+└─ Parent Connection
+   ├─ Connecting
+   │  ├─ Piece ID: <connecting_piece_id>
+   │  └─ Port ID: <connecting_port_id>
+   │
+   ├─ Connected
+   │  ├─ Piece ID: <connected_piece_id>
+   │  └─ Port ID: <connected_port_id>
+   │
+   ├─ Plane
+   │  ├─ Translation
+   │  │  ├─ Gap: <number>
+   │  │  ├─ Shift: <number>
+   │  │  └─ Rise: <number>
+   │  │
+   │  └─ Orientation
+   │     ├─ Rotation: <degrees>
+   │     ├─ Turn: <degrees>
+   │     └─ Tilt: <degrees>
+   │
+   └─ Diagram
+      ├─ X Offset: <number>
+      └─ Y Offset: <number>
 
 Implement filter in the type app similar to the design app but with different elements according to the Type app. e.g. Filter connector  
 

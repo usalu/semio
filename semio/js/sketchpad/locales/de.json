@@ -2156,6 +2156,30 @@
                 "normal": "Neigung",
                 "beginner": "Neigung"
               }
+            },
+            "plane": {
+              "label": {
+                "normal": "Ebene",
+                "beginner": "Ebene"
+              }
+            },
+            "translation": {
+              "label": {
+                "normal": "Verschiebung",
+                "beginner": "Verschiebung"
+              }
+            },
+            "orientation": {
+              "label": {
+                "normal": "Ausrichtung",
+                "beginner": "Ausrichtung"
+              }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagramm",
+                "beginner": "Diagramm"
+              }
             }
           },
           "panel": {
@@ -2245,6 +2269,18 @@
                       "normal": "Aktualisiert am",
                       "beginner": "Das Datum und die Uhrzeit, wann dieser Entwurf zuletzt geaendert wurde."
                     }
+                  },
+                  "pieceCount": {
+                    "label": {
+                      "normal": "Bauteile",
+                      "beginner": "Die Gesamtanzahl der Bauteile in diesem Entwurf."
+                    }
+                  },
+                  "connectionCount": {
+                    "label": {
+                      "normal": "Verbindungen",
+                      "beginner": "Die Gesamtanzahl der Verbindungen in diesem Entwurf."
+                    }
                   }
                 },
                 "location": {
@@ -2325,6 +2361,102 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
+                  },
+                  "properties": {
+                    "label": {
+                      "normal": "Bauteil",
+                      "beginner": "Eigenschaften des ausgewaehlten Bauteils."
+                    }
+                  },
+                  "multipleTitle": {
+                    "label": {
+                      "normal": "Bauteile",
+                      "beginner": "Eigenschaften der ausgewaehlten Bauteile."
+                    }
+                  },
+                  "pieceInfo": {
+                    "label": {
+                      "normal": "Bauteil",
+                      "beginner": "Grundinformationen ueber das Bauteil."
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Ein optionaler Name für dieses Bauteil zur Identifikation innerhalb des Entwurfs."
+                    }
+                  },
+                  "namePlaceholder": {
+                    "label": {
+                      "normal": "Bauteilname eingeben...",
+                      "beginner": "Bauteilname eingeben..."
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Beschreibung",
+                      "beginner": "Eine Beschreibung des Zwecks oder der Rolle dieses Bauteils im Entwurf."
+                    }
+                  },
+                  "descriptionPlaceholder": {
+                    "label": {
+                      "normal": "Bauteilbeschreibung eingeben...",
+                      "beginner": "Bauteilbeschreibung eingeben..."
+                    }
+                  },
+                  "scale": {
+                    "label": {
+                      "normal": "Skalierung",
+                      "beginner": "Der Skalierungsfaktor für dieses Bauteil. Standard ist 1.0."
+                    }
+                  },
+                  "color": {
+                    "label": {
+                      "normal": "Farbe",
+                      "beginner": "Eine optionale Farbüberschreibung für dieses Bauteil (z.B. #FF0000)."
+                    }
+                  },
+                  "colorPlaceholder": {
+                    "label": {
+                      "normal": "Farbe eingeben...",
+                      "beginner": "Farbe eingeben..."
+                    }
+                  },
+                  "attributes": {
+                    "label": {
+                      "normal": "Attribute",
+                      "beginner": "Benutzerdefinierte Schlüssel-Wert-Attribute für dieses Bauteil."
+                    },
+                    "name": {
+                      "label": {
+                        "normal": "Name",
+                        "beginner": "Der Schlüsselbezeichner für dieses Attribut."
+                      }
+                    },
+                    "value": {
+                      "label": {
+                        "normal": "Wert",
+                        "beginner": "Der Wert für dieses Attribut."
+                      }
+                    },
+                    "unit": {
+                      "label": {
+                        "normal": "Einheit",
+                        "beginner": "Die Maßeinheit für dieses Attribut."
+                      }
+                    },
+                    "definition": {
+                      "label": {
+                        "normal": "Definition",
+                        "beginner": "Eine URL oder ein Text, der dieses Attribut definiert."
+                      }
+                    }
+                  },
+                  "attribute": {
+                    "label": {
+                      "normal": "Attribut",
+                      "beginner": "Ein benutzerdefiniertes Attribut dieses Bauteils."
+                    }
                   },
                   "center": {
                     "label": {
@@ -2436,46 +2568,82 @@
                     "normal": "",
                     "beginner": ""
                   },
+                  "properties": {
+                    "label": {
+                      "normal": "Verbindung",
+                      "beginner": "Eigenschaften der ausgewaehlten Verbindung."
+                    }
+                  },
+                  "multipleTitle": {
+                    "label": {
+                      "normal": "Verbindungen",
+                      "beginner": "Eigenschaften der ausgewaehlten Verbindungen."
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Beschreibung",
+                      "beginner": "Eine Beschreibung des Zwecks dieser Verbindung."
+                    }
+                  },
+                  "descriptionPlaceholder": {
+                    "label": {
+                      "normal": "Verbindungsbeschreibung eingeben...",
+                      "beginner": "Verbindungsbeschreibung eingeben..."
+                    }
+                  },
                   "multipleEditing": {
                     "label": {
                       "normal": "{{count}} Verbindungen werden gleichzeitig bearbeitet",
                       "beginner": "{{count}} Verbindungen werden gleichzeitig bearbeitet"
                     }
                   },
-                  "connectingPieceId": {
+                  "connecting": {
                     "label": {
-                      "normal": "Connecting Piece",
-                      "beginner": "Connecting Piece"
+                      "normal": "Verbindend",
+                      "beginner": "Verbindend"
                     }
                   },
-                  "connectingConnectorId": {
+                  "connectingPieceId": {
                     "label": {
-                      "normal": "Connecting Connector",
-                      "beginner": "Connecting Connector"
+                      "normal": "Verbindendes Stück",
+                      "beginner": "Verbindendes Stück"
+                    }
+                  },
+                  "connectingPortId": {
+                    "label": {
+                      "normal": "Verbindender Anschluss",
+                      "beginner": "Verbindender Anschluss"
                     }
                   },
                   "connectingDesignPieceId": {
                     "label": {
-                      "normal": "Connecting Design Piece",
-                      "beginner": "Connecting Design Piece"
+                      "normal": "Verbindendes Designstück",
+                      "beginner": "Verbindendes Designstück"
+                    }
+                  },
+                  "connected": {
+                    "label": {
+                      "normal": "Verbunden",
+                      "beginner": "Verbunden"
                     }
                   },
                   "connectedPieceId": {
                     "label": {
-                      "normal": "Connected Piece",
-                      "beginner": "Connected Piece"
+                      "normal": "Verbundenes Stück",
+                      "beginner": "Verbundenes Stück"
                     }
                   },
-                  "connectedConnectorId": {
+                  "connectedPortId": {
                     "label": {
-                      "normal": "Connected Connector",
-                      "beginner": "Connected Connector"
+                      "normal": "Verbundener Anschluss",
+                      "beginner": "Verbundener Anschluss"
                     }
                   },
                   "connectedDesignPieceId": {
                     "label": {
-                      "normal": "Connected Design Piece",
-                      "beginner": "Connected Design Piece"
+                      "normal": "Verbundenes Designstück",
+                      "beginner": "Verbundenes Designstück"
                     }
                   },
                   "gap": {
@@ -2528,14 +2696,14 @@
                   },
                   "u": {
                     "label": {
-                      "normal": "U",
-                      "beginner": "U"
+                      "normal": "X-Versatz",
+                      "beginner": "X-Versatz"
                     }
                   },
                   "v": {
                     "label": {
-                      "normal": "V",
-                      "beginner": "V"
+                      "normal": "Y-Versatz",
+                      "beginner": "Y-Versatz"
                     }
                   }
                 },
@@ -2548,6 +2716,18 @@
                     "label": {
                       "normal": "Connector-ID",
                       "beginner": "Die eindeutige Kennung des Connectors"
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Der Name dieses Connectors."
+                    }
+                  },
+                  "t": {
+                    "label": {
+                      "normal": "T",
+                      "beginner": "Der Parameter t entlang der Kurve des Typs für diesen Connector."
                     }
                   },
                   "position": {

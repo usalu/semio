@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// [💻filefixedcs](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.CS)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.CS)
 
 // 2025 Test User <test@test.com>
 
@@ -20,14 +20,14 @@
 #endregion 🔖Header
 
 #region 🔖Classes
-// [🔖semio/assets/repo/some/folder/file_fixed.cs#Classes](semiorepo://section/semio/assets/repo/some/folder/file_fixed.cs/CLASSES)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes](semiorepo://section/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.CS/CLASSES)
 // Domain classes for fixed values.
 // Classes MUST have public properties.
 
 /// <summary>Represents a fixed value container.</summary>
 /// <remarks>
 /// FixedClass MUST have a Value property.
-/// [🛠️semio/assets/repo/some/folder/file_fixed.cs#Classes§FixedClass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/CLASSES/FIXED-CLASS)
+/// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes🛠️fixedclass](semiorepo://definition/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.CS/CLASSES/FIXED-CLASS)
 /// </remarks>
 public class FixedClass {
     public int Value { get; set; }

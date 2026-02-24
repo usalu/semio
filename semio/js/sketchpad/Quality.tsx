@@ -28,56 +28,56 @@ import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
 import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
 import {
-  Diagram as BaseDiagram,
-  calculateDiagramLayout,
-  DiagramNode,
-  DraggableAvatar,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-  Input,
-  PlaceholderDiagramNode,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-  Toggle,
-  ToggleGroup,
-  Tree,
-  TreeContent,
-  TreeItem,
-  TreeStateProvider,
+    Diagram as BaseDiagram,
+    calculateDiagramLayout,
+    DiagramNode,
+    DraggableAvatar,
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+    Input,
+    PlaceholderDiagramNode,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    Textarea,
+    Toggle,
+    ToggleGroup,
+    Tree,
+    TreeContent,
+    TreeItem,
+    TreeStateProvider,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
 import { AppConfig, applySelectionComposition, AppPlugin, createPanelDefinition, Expertise, isSelectionToolKind, Mode, PanelKind, registerAppPlugin, registerEventHandler, resolveSelectionCompositionKind, Theme, ToolKind, toSelectionToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
-  Canvas,
-  createDefaultQualityAppState,
-  identitySelector,
-  KitScopeProvider,
-  LayoutCanvas,
-  PlainKitDiffAppStore,
-  QualityScopeProvider,
-  registerQualityAppStoreFactory,
-  useActiveInteraction,
-  useAddPanelSection,
-  useAppType,
-  useDevice,
-  useExpertise,
-  useKit,
-  useKitScope,
-  useLanguage,
-  useMode,
-  useQuality,
-  useQualityScope,
-  useRemovePanelSection,
-  useSketchpadCommands,
-  useSketchpadStore,
-  useSyncDeep,
-  useTheme,
+    Canvas,
+    createDefaultQualityAppState,
+    identitySelector,
+    KitScopeProvider,
+    LayoutCanvas,
+    PlainKitDiffAppStore,
+    QualityScopeProvider,
+    registerQualityAppStoreFactory,
+    useActiveInteraction,
+    useAddPanelSection,
+    useAppType,
+    useDevice,
+    useExpertise,
+    useKit,
+    useKitScope,
+    useLanguage,
+    useMode,
+    useQuality,
+    useQualityScope,
+    useRemovePanelSection,
+    useSketchpadCommands,
+    useSketchpadStore,
+    useSyncDeep,
+    useTheme,
 } from "./Sketchpad";
 
 // #endregion Imports
@@ -146,6 +146,7 @@ export enum QualityAppFullscreenWindow {
  *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-WINDOW-KIND)
  **/
 export enum QualityAppWindowKind {
+  Workbench = "workbench",
   Formula = "formula",
   Diagram = "diagram",
   Settings = "settings",
@@ -2117,22 +2118,8 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     if (appType !== "quality") return;
-    addSection("workbench", {
-      id: "semio.sketchpad.app.quality.workbench.nodes",
-      specificity: 20,
-      order: 0,
-      content: () => <QualityWorkbench />,
-    });
-    addSection("workbench", {
-      id: "semio.sketchpad.app.quality.workbench.qualities",
-      specificity: 20,
-      order: 1,
-      content: () => <QualityWorkbenchQualities />,
-    });
-    return () => {
-      removeSection("workbench", "semio.sketchpad.app.quality.workbench.nodes");
-      removeSection("workbench", "semio.sketchpad.app.quality.workbench.qualities");
-    };
+
+    return () => {};
   }, [appType, addSection, removeSection]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -2219,7 +2206,18 @@ const App: FC<AppProps> = () => {
       content: [
         {
           type: "stack",
-          width: 20,
+          width: 25,
+          content: [
+            {
+              type: "component",
+              componentType: QualityAppWindowKind.Workbench,
+              title: "workbench",
+            },
+          ],
+        },
+        {
+          type: "stack",
+          width: 15,
           content: [
             {
               type: "component",
@@ -2230,7 +2228,7 @@ const App: FC<AppProps> = () => {
         },
         {
           type: "stack",
-          width: 80,
+          width: 60,
           content: [
             {
               type: "component",
@@ -2256,6 +2254,18 @@ const App: FC<AppProps> = () => {
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
       windowKinds: [
+        {
+          id: QualityAppWindowKind.Workbench,
+          label: "workbench",
+          component: () => (
+            <TreeStateProvider>
+              <Tree className="min-w-0 overflow-hidden p-double">
+                <QualityWorkbench />
+                <QualityWorkbenchQualities />
+              </Tree>
+            </TreeStateProvider>
+          ),
+        },
         {
           id: QualityAppWindowKind.Formula,
           label: "Formula",
@@ -2343,7 +2353,6 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (): PanelDefinition[] => [
-    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
     createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),

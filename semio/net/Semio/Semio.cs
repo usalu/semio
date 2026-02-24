@@ -6784,6 +6784,12 @@ public static class KitExporter
     {
         var possiblePaths = new[]
         {
+            "../../../../../sqlite/schema.sql",
+            "../../../../sqlite/schema.sql",
+            "../../../sqlite/schema.sql",
+            "../../sqlite/schema.sql",
+            "../sqlite/schema.sql",
+            "sqlite/schema.sql",
             "../../../../../sql/sqlite/semio/schema.sql",
             "../../../../sql/sqlite/semio/schema.sql",
             "../../../sql/sqlite/semio/schema.sql",
