@@ -2,4 +2,4 @@
 
 RDF ontology and SHACL shapes for semio data models.
 
-# Specs
+# 💯Requirements

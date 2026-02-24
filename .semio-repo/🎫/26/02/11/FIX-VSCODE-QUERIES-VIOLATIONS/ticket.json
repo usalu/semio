@@ -71,7 +71,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/queries.ts#Header#Specs",
+              "path": "💻semio-repo/vscode/queries.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -101,7 +101,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/queries.ts#Header#Specs",
+              "path": "semio-repo/vscode/queries.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0

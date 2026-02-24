@@ -24,7 +24,7 @@ Researched the complete policy/breach system in main.go: documented all 31 Breac
 | `BreachCodeHeaderMissingLicense` | `code:header:missing-license` | No |
 | `BreachCodeHeaderMissingLicenseRegion` | `code:header:missing-license-region` | No |
 | `BreachCodeHeaderWrongLicense` | `code:header:wrong-license` | No |
-| `BreachCodeHeaderMissingSpecsRegion` | `code:header:missing-specs-region` | No |
+| `BreachCodeHeaderMissingRequirementsRegion` | `code:header:missing-requirements-region` | No |
 
 **Code: Section** (prefix `code:section:`)
 | Constant | Value | Autofixable |

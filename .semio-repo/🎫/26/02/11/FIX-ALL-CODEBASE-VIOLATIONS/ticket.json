@@ -1,7 +1,7 @@
 {
   "title": "Fix All Codebase Breachs",
   "status": "closed",
-  "prompt": "Fix all breachs from all statutes. Summarize, document and migrate existing specs into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
+  "prompt": "Fix all breachs from all statutes. Summarize, document and migrate existing requirements into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
   "summary": "Fixed all 14014 breachs to 0.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/511"
@@ -15,7 +15,7 @@
       "system": "linux",
       "client": "copilot-chat",
       "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
-      "prompt": "Fix all breachs from all statutes. Summarize, document and migrate existing specs into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
+      "prompt": "Fix all breachs from all statutes. Summarize, document and migrate existing requirements into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
       "llm": "opus-4-6",
       "diff": {
         "bundles": {
@@ -1024,7 +1024,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionSpecs",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionRequirements",
               "lines": {
                 "added": 25,
                 "removed": 0
@@ -1243,7 +1243,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionSpecs",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionRequirements",
               "lines": {
                 "added": 25,
                 "removed": 0

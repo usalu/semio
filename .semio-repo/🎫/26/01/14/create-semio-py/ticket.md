@@ -1,13 +1,14 @@
 # Ticket
 
 ## Todos
+
 # Plan: Create Standalone semio.py Package
 
 ## Objective
 
 Create a standalone `py/semio/semio.py` package that matches the functionality of `semio.ts`, `semio.go`, `semio.rs`, and `Semio.cs`.
 
-## Requirements
+## 💯Requirements
 
 1. Pure Pydantic models (no SQLModel table=True, no graphene, no FastAPI)
 2. Minimal dependencies: pydantic, numpy, networkx
@@ -43,11 +44,13 @@ Create a standalone `py/semio/semio.py` package that matches the functionality o
 ## Changes
 
 ## Log
+
 # Log: Create Standalone semio.py Package
 
 ## 2026-01-14
 
 ### Analysis
+
 - Examined existing `py/semio/semio.py` - contains engine code with SQLModel/graphene dependencies
 - Analyzed `semio.ts` structure - pure Zod schemas with diff operations
 - Analyzed `semio.go` - pure Go structs with JSON tags
@@ -55,12 +58,14 @@ Create a standalone `py/semio/semio.py` package that matches the functionality o
 - Analyzed `Semio.cs` - pure C# classes
 
 ### Implementation
+
 - Creating `pyproject.toml` for the standalone package
 - Rewriting `semio.py` with pure Pydantic models
 - Adding diff operations for all models
 - Adding validation constraints
 
 ### Progress
+
 - Reviewed full codebase structure
 - Identified 8655 lines in current semio.py that mix domain models with ORM/GraphQL
 - semio.py pyproject.toml already has minimal dependencies (pydantic, numpy, networkx)
@@ -68,6 +73,7 @@ Create a standalone `py/semio/semio.py` package that matches the functionality o
 - Keep: pydantic, numpy, networkx, pytransform3d
 
 ### Starting Rewrite
+
 Creating pure Pydantic-based semio.py following the pattern from semio.ts and semio.go
 
 ## Summary

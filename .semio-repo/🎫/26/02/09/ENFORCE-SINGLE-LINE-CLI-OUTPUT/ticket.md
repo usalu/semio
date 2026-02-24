@@ -6,7 +6,8 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI
 
 ## Summary
 
-Enforced single-line output for all CLI tree and list items. Added sanitizeProp (strips newlines, replaces backticks with single quotes, collapses spaces) and sanitizeSingleLine (final rendering safety net) functions. Updated collectEntityProps, renderEntityMarkdownLink, and renderEntityHuman to use them. Extended TestCollectEntityPropsConsistency with 7 new sub-tests and added TestSingleLineOutput with 50+ sub-tests covering all entity kinds through every rendering path. Fixed missing io/fs import in test file. Updated AGENTS.md and README.md with specs and codebase docs.
+Enforced single-line output for all CLI tree and list items. Added sanitizeProp (strips newlines, replaces backticks with single quotes, collapses spaces) and sanitizeSingleLine (final rendering safety net) functions. Updated collectEntityProps, renderEntityMarkdownLink, and renderEntityHuman to use them. Extended TestCollectEntityPropsConsistency with 7 new sub-tests and added TestSingleLineOutput with 50+ sub-tests covering all entity kinds through every rendering path. Fixed missing io/fs import in test file. Updated AGENTS.md and README.md with requirements and codebase docs.
+
 ## Changes
 
 - `semio-repo/cli/main.go`: Added `sanitizeProp()` function that strips `\r\n`, `\n`, `\r`, backticks (replaced with `'`), collapses double spaces, and trims. Added `sanitizeSingleLine()` for final output guarantee. Updated `collectEntityProps` to use `sanitizeProp`. Updated `renderEntityMarkdownLink` to sanitize artifact ID and apply `sanitizeSingleLine` to output. Updated `renderEntityHuman` to sanitize artifact ID and apply `sanitizeSingleLine` to output.

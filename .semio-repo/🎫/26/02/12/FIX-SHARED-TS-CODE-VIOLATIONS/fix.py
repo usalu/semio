@@ -283,7 +283,7 @@ def_summaries = {
     "getDocsRegistry": "// Returns the registered docs registry or null.",
 }
 
-func_specs = {
+func_requirements = {
     "readonlyHookResult": "// MUST return a frozen readonly tuple with undefined setter and false canSet.",
     "writableHookResult": "// MUST return a tuple with the setter included only when canSet is true.",
     "conditionalHookResult": "// MUST return a tuple with the setter conditional on the canSet flag.",
@@ -384,7 +384,7 @@ func_specs = {
     "getDocsRegistry": "// MUST return the registered docs registry or null when none is registered.",
 }
 
-class_specs = {
+class_requirements = {
     "DerivedNode": "// MUST lazily initialize observers and recompute only when dependency values change.",
     "DerivedStore": "// MUST manage DerivedNode lifecycle including creation, retrieval, and disposal.",
 }
@@ -396,18 +396,18 @@ seen_synchronizable = False
 
 while i < len(lines):
     line = lines[i]
-    stripped = line.rstrip('\n')
+    stripped = line.rstrip("\n")
 
-    section_match = re.match(r'^// #region 🔖(.+)$', stripped)
+    section_match = re.match(r"^// #region 🔖(.+)$", stripped)
     if section_match:
         section_name = section_match.group(1)
         if section_name in section_summaries:
             new_lines.append(line)
             i += 1
             if i < len(lines):
-                next_stripped = lines[i].rstrip('\n')
-                if not next_stripped.startswith('//'):
-                    new_lines.append(section_summaries[section_name] + '\n')
+                next_stripped = lines[i].rstrip("\n")
+                if not next_stripped.startswith("//"):
+                    new_lines.append(section_summaries[section_name] + "\n")
                     added_count += 1
                 else:
                     new_lines.append(lines[i])
@@ -418,7 +418,9 @@ while i < len(lines):
             i += 1
             continue
 
-    export_match = re.match(r'^export (type|const|function|interface|enum|class) (\w+)', stripped)
+    export_match = re.match(
+        r"^export (type|const|function|interface|enum|class) (\w+)", stripped
+    )
     if export_match:
         kind = export_match.group(1)
         name = export_match.group(2)
@@ -426,9 +428,9 @@ while i < len(lines):
         if name == "Synchronizable":
             if seen_synchronizable:
                 if name in def_summaries:
-                    prev_stripped = new_lines[-1].rstrip('\n') if new_lines else ''
-                    if not prev_stripped.startswith('//'):
-                        new_lines.append(def_summaries[name] + '\n')
+                    prev_stripped = new_lines[-1].rstrip("\n") if new_lines else ""
+                    if not prev_stripped.startswith("//"):
+                        new_lines.append(def_summaries[name] + "\n")
                         added_count += 1
                 new_lines.append(line)
                 i += 1
@@ -437,21 +439,21 @@ while i < len(lines):
                 seen_synchronizable = True
 
         if name in def_summaries:
-            prev_stripped = new_lines[-1].rstrip('\n') if new_lines else ''
-            if not prev_stripped.startswith('//'):
-                if kind in ("function", "class") and name in func_specs:
-                    new_lines.append(func_specs[name] + '\n')
+            prev_stripped = new_lines[-1].rstrip("\n") if new_lines else ""
+            if not prev_stripped.startswith("//"):
+                if kind in ("function", "class") and name in func_requirements:
+                    new_lines.append(func_requirements[name] + "\n")
                     added_count += 1
-                elif kind == "class" and name in class_specs:
-                    new_lines.append(class_specs[name] + '\n')
+                elif kind == "class" and name in class_requirements:
+                    new_lines.append(class_requirements[name] + "\n")
                     added_count += 1
-                new_lines.append(def_summaries[name] + '\n')
+                new_lines.append(def_summaries[name] + "\n")
                 added_count += 1
 
     new_lines.append(line)
     i += 1
 
-with open(FILE, 'w') as f:
+with open(FILE, "w") as f:
     f.writelines(new_lines)
 
 print(f"Added {added_count} comments")

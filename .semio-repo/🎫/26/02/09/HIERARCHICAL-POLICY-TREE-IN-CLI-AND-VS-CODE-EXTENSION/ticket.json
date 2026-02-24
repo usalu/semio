@@ -229,23 +229,23 @@
             },
             {
               "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
-              "to": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#⚙️️ Prop [↑](#-requirements-)",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏘️ Design [↑](#-requirements-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏘 Design [↑](#-requirements-)",
               "lines": {
                 "added": 14,
                 "removed": 14
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏷️️ Attribute [↑](#-requirements-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏷️ Attribute [↑](#-requirements-)",
               "lines": {
                 "added": 25,
                 "removed": 25
@@ -253,7 +253,7 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏷️ Concept [↑](#-requirements-)",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -261,7 +261,7 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏷️ Tag [↑](#-requirements-)",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -404,7 +404,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏷️️ Concept [↑](#-requirements-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 6,
@@ -436,7 +436,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#⚙️️️ Prop [↑](#-requirements-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🦌 semio.monoceros [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 6,
@@ -540,7 +540,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏷️️ Tag [↑](#-requirements-)",
               "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
@@ -1001,91 +1001,91 @@
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#◳ Plane [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#◳ Plane [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚓ Connector [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#⚓ Connector [↑](#-requirements-)",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#⚙️️ Prop [↑](#-requirements-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#⚙️️️ Prop [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏘 Design [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏘️ Design [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️ Attribute [↑](#-requirements-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️ Concept [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️ Tag [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️️ Attribute [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️️ Concept [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️️ Tag [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🔗 Connection [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🔗 Connection [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 1

@@ -2,7 +2,7 @@
 
 coda is an ai that helps in designing buildings with Automated-Compliance-Checking (ACC).
 
-# Specs
+# 💯Requirements
 
 ## project
 

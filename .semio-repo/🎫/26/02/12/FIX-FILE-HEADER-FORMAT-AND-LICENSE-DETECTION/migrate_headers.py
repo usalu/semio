@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Migrate file headers to [ID](URI) format with AGPL license text."""
+
 import os
 import re
 import sys
@@ -163,12 +164,24 @@ def find_bare_id(lines, cp):
         stripped = line.strip()
         if not stripped:
             continue
-        content_after_prefix = stripped[len(cp) :].strip() if stripped.startswith(cp) else ""
+        content_after_prefix = (
+            stripped[len(cp) :].strip() if stripped.startswith(cp) else ""
+        )
         if not content_after_prefix:
             continue
         has_ext = any(
             ext in content_after_prefix
-            for ext in [".ts", ".tsx", ".go", ".cs", ".py", ".sh", ".sql", ".graphql", ".d.ts"]
+            for ext in [
+                ".ts",
+                ".tsx",
+                ".go",
+                ".cs",
+                ".py",
+                ".sh",
+                ".sql",
+                ".graphql",
+                ".d.ts",
+            ]
         )
         has_emoji = any(
             ch in content_after_prefix
@@ -227,7 +240,12 @@ def migrate_file(root_dir, filepath):
         return False
     uri = make_uri(filepath)
     new_id_line = f"{cp} [{bare_id}]({uri})"
-    has_license = any("GNU Affero General Public License" in line or "AGPL" in line or "gnu.org/licenses" in line for line in header_lines)
+    has_license = any(
+        "GNU Affero General Public License" in line
+        or "AGPL" in line
+        or "gnu.org/licenses" in line
+        for line in header_lines
+    )
     contributor_pattern = re.compile(r"\d{4}.*<[\w.@-]+>")
     contributor_lines = []
     contributor_last_idx = -1
@@ -236,32 +254,68 @@ def migrate_file(root_dir, filepath):
             contributor_lines.append(line)
             contributor_last_idx = i
     summary_lines = []
-    specs_lines = []
+    requirements_lines = []
     for i, line in enumerate(header_lines):
         stripped = line.strip()
         if stripped == "" or stripped == cp:
             continue
-        if stripped.startswith(cp + " #region") or stripped.startswith(cp + " #endregion"):
+        if stripped.startswith(cp + " #region") or stripped.startswith(
+            cp + " #endregion"
+        ):
             continue
-        if stripped == header_start_marker.strip() or stripped == header_end_marker.strip():
+        if (
+            stripped == header_start_marker.strip()
+            or stripped == header_end_marker.strip()
+        ):
             continue
-        if "#region" in stripped or "#endregion" in stripped or "region " in stripped.lower() and "endregion" not in stripped.lower():
+        if (
+            "#region" in stripped
+            or "#endregion" in stripped
+            or "region " in stripped.lower()
+            and "endregion" not in stripped.lower()
+        ):
             continue
-        content_text = stripped[len(cp):].strip() if stripped.startswith(cp) else stripped
+        content_text = (
+            stripped[len(cp) :].strip() if stripped.startswith(cp) else stripped
+        )
         if not content_text:
             continue
         if "[" in content_text and "semiorepo://" in content_text:
             continue
         if contributor_pattern.search(line):
             continue
-        if any(m in content_text for m in ["GNU Affero", "AGPL", "gnu.org/licenses", "free software", "redistribute", "General Public License", "WARRANTY", "PURPOSE", "Foundation", "received"]):
+        if any(
+            m in content_text
+            for m in [
+                "GNU Affero",
+                "AGPL",
+                "gnu.org/licenses",
+                "free software",
+                "redistribute",
+                "General Public License",
+                "WARRANTY",
+                "PURPOSE",
+                "Foundation",
+                "received",
+            ]
+        ):
             continue
-        has_ext = any(ext in content_text for ext in [".ts", ".tsx", ".go", ".cs", ".py", ".sh", ".sql"])
-        has_emoji = any(ch in content_text for ch in "\U0001f4bb\U0001f9ea\U0001f4dc\U0001f4c3\u2699\U0001f4be\u2696")
+        has_ext = any(
+            ext in content_text
+            for ext in [".ts", ".tsx", ".go", ".cs", ".py", ".sh", ".sql"]
+        )
+        has_emoji = any(
+            ch in content_text
+            for ch in "\U0001f4bb\U0001f9ea\U0001f4dc\U0001f4c3\u2699\U0001f4be\u2696"
+        )
         if has_ext and has_emoji and "[" not in content_text:
             continue
-        if "MUST" in content_text or "SHALL" in content_text or "SHOULD" in content_text:
-            specs_lines.append(line)
+        if (
+            "MUST" in content_text
+            or "SHALL" in content_text
+            or "SHOULD" in content_text
+        ):
+            requirements_lines.append(line)
         else:
             summary_lines.append(line)
     new_header = []
@@ -279,8 +333,8 @@ def migrate_file(root_dir, filepath):
         for sl in summary_lines:
             new_header.append(sl)
         new_header.append("")
-    if specs_lines:
-        for sl in specs_lines:
+    if requirements_lines:
+        for sl in requirements_lines:
             new_header.append(sl)
         new_header.append("")
     new_header.append(lines[header_end_idx])
@@ -293,7 +347,17 @@ def migrate_file(root_dir, filepath):
 
 
 def main():
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "..", ".."))
+    root_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            "..",
+            "..",
+            "..",
+            "..",
+            "..",
+        )
+    )
     if not os.path.exists(os.path.join(root_dir, "AGENTS.md")):
         root_dir = "/workspaces/semio"
     print(f"Root dir: {root_dir}")

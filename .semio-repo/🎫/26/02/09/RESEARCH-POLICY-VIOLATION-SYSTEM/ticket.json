@@ -113,7 +113,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Header#Specs",
+              "path": "💻semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -218,7 +218,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Header#Specs",
+              "path": "🧪semio-repo/cli/main_test.go#Header#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -276,7 +276,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main.go#Header#Specs",
+              "path": "semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -290,7 +290,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main_test.go#Header#Specs",
+              "path": "semio-repo/cli/main_test.go#Header#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -884,7 +884,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptyRequirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -1110,7 +1110,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptyRequirements",
               "lines": {
                 "added": 10,
                 "removed": 0

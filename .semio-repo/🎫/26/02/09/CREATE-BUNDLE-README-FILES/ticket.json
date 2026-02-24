@@ -1,8 +1,8 @@
 {
   "title": "Create Bundle README Files",
   "status": "closed",
-  "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Specs sections.",
-  "summary": "Created 9 bundle README.md files with Summary, Docs, and Specs sections. Desktop, docs, and assets include Resources/Channels details blocks and content from root README.md. Server includes mechanism description. Play, go, rs, sketchpad, and sqlite have summary-only content with empty Docs/Specs.",
+  "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Requirements sections.",
+  "summary": "Created 9 bundle README.md files with Summary, Docs, and Requirements sections. Desktop, docs, and assets include Resources/Channels details blocks and content from root README.md. Server includes mechanism description. Play, go, rs, sketchpad, and sqlite have summary-only content with empty Docs/Requirements.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/477"
   },
@@ -15,7 +15,7 @@
       "system": "linux",
       "client": "copilot-chat",
       "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
-      "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Specs sections.",
+      "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Requirements sections.",
       "llm": "opus-4-6",
       "diff": {
         "bundles": {
@@ -49,7 +49,7 @@
               }
             },
             {
-              "path": "semio-repo/server/README.md#Specs",
+              "path": "semio-repo/server/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -98,7 +98,7 @@
               }
             },
             {
-              "path": "semio/assets/README.md#Specs",
+              "path": "semio/assets/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -119,7 +119,7 @@
               }
             },
             {
-              "path": "semio/desktop/README.md#Specs",
+              "path": "semio/desktop/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -140,7 +140,7 @@
               }
             },
             {
-              "path": "semio/docs/README.md#Specs",
+              "path": "semio/docs/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -161,7 +161,7 @@
               }
             },
             {
-              "path": "semio/go/README.md#Specs",
+              "path": "semio/go/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -182,7 +182,7 @@
               }
             },
             {
-              "path": "semio/play/README.md#Specs",
+              "path": "semio/play/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -203,7 +203,7 @@
               }
             },
             {
-              "path": "semio/rs/README.md#Specs",
+              "path": "semio/rs/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -224,7 +224,7 @@
               }
             },
             {
-              "path": "semio/sketchpad/README.md#Specs",
+              "path": "semio/sketchpad/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -245,7 +245,7 @@
               }
             },
             {
-              "path": "semio/sqlite/README.md#Specs",
+              "path": "semio/sqlite/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0

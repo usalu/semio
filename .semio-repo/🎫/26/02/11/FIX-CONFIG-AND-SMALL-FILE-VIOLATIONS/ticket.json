@@ -64,7 +64,7 @@
               }
             },
             {
-              "path": "⚙️semio/desktop/forge.config.ts#Header#Specs",
+              "path": "⚙️semio/desktop/forge.config.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -108,7 +108,7 @@
               }
             },
             {
-              "path": "semio/desktop/forge.config.ts#Header#Specs",
+              "path": "semio/desktop/forge.config.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0

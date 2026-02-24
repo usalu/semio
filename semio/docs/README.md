@@ -21,4 +21,4 @@ Documentation site built with Astro, Starlight, and MDX.
 
 </details>
 
-# Specs
+# 💯Requirements

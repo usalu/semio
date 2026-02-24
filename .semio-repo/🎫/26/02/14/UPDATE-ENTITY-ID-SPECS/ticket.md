@@ -6,7 +6,8 @@ goal: AI-OPTIMIZED-REPO
 
 ## Summary
 
-Updated all entity ID generation to match new hierarchical specs. Added PropagateParentIDs, goalArtifactID helper, fixed GetArtifactID for goals/tickets/commits/line/range, excluded bundle root folders from tree, updated 6 stale tests, added 20+ comprehensive entity ID tests.
+Updated all entity ID generation to match new hierarchical requirements. Added PropagateParentIDs, goalArtifactID helper, fixed GetArtifactID for goals/tickets/commits/line/range, excluded bundle root folders from tree, updated 6 stale tests, added 20+ comprehensive entity ID tests.
+
 ## Changes
 
 - `semio-repo/cli/main.go`: Added `PropagateParentIDs` function, `goalArtifactID` helper, fixed `GetArtifactID` for goal/ticket/commit/line/range, excluded bundle root from folder map, removed debug log from `FileHeaderId`

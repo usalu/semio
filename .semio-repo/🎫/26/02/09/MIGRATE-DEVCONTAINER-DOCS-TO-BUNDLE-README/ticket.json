@@ -114,14 +114,14 @@
               }
             },
             {
-              "path": ".devcontainer/README.md#Specs",
+              "path": ".devcontainer/README.md#Requirements",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": ".devcontainer/README.md#Specs#Devcontainer",
+              "path": ".devcontainer/README.md#Requirements#Devcontainer",
               "lines": {
                 "added": 16,
                 "removed": 0

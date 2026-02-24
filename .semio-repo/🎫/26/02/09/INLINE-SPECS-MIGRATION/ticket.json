@@ -1,8 +1,8 @@
 {
-  "title": "Inline Specs Migration",
+  "title": "Inline Requirements Migration",
   "status": "closed",
-  "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new specs statute for the code policy that validates specs are implementation-agnostic and properly located. Bundle specs go to .bundle.md files, folder specs to .folder.md files, file specs to header Specs sections, section specs under section starts, and definition specs in language-native docstrings. Extend existing tests to cover the new statute.",
-  "summary": "Migrated specs from AGENTS.md into distributed .bundle.md/.folder.md files with new code:specs:implementation-syntax statute. Created specsPolicy, isSpecText, hasImplementationSyntax helpers, ScanComments spec exemptions. 11 new test subtests all passing.",
+  "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new requirements statute for the code policy that validates requirements are implementation-agnostic and properly located. Bundle requirements go to .bundle.md files, folder requirements to .folder.md files, file requirements to header Requirements sections, section requirements under section starts, and definition requirements in language-native docstrings. Extend existing tests to cover the new statute.",
+  "summary": "Migrated requirements from AGENTS.md into distributed .bundle.md/.folder.md files with new code:requirements:implementation-syntax statute. Created requirementsPolicy, isSpecText, hasImplementationSyntax helpers, ScanComments spec exemptions. 11 new test subtests all passing.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/467"
   },
@@ -15,7 +15,7 @@
       "system": "linux",
       "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
-      "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new specs statute for the code policy that validates specs are implementation-agnostic and properly located. Bundle specs go to .bundle.md files, folder specs to .folder.md files, file specs to header Specs sections, section specs under section starts, and definition specs in language-native docstrings. Extend existing tests to cover the new statute.",
+      "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new requirements statute for the code policy that validates requirements are implementation-agnostic and properly located. Bundle requirements go to .bundle.md files, folder requirements to .folder.md files, file requirements to header Requirements sections, section requirements under section starts, and definition requirements in language-native docstrings. Extend existing tests to cover the new statute.",
       "llm": "opus-4-6",
       "diff": {
         "bundles": {
@@ -521,7 +521,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Header#Specs",
+              "path": "💻semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 14,
                 "removed": 0
@@ -997,7 +997,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Header#Specs",
+              "path": "🧪semio-repo/cli/main_test.go#Header#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -1048,119 +1048,119 @@
           ],
           "added": [
             {
-              "path": ".devcontainer/.folder.md#Specs",
+              "path": ".devcontainer/.folder.md#Requirements",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": ".devcontainer/.folder.md#Specs#Devcontainer",
+              "path": ".devcontainer/.folder.md#Requirements#Devcontainer",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs",
+              "path": "semio-repo/cli/.bundle.md#Requirements",
               "lines": {
                 "added": 386,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Artifact Kind Derivation",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Artifact Kind Derivation",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#CLI",
+              "path": "semio-repo/cli/.bundle.md#Requirements#CLI",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Code Hygiene",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Code Hygiene",
               "lines": {
                 "added": 78,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Contributor",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Contributor",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Goal",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Goal",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#MCP Tools",
+              "path": "semio-repo/cli/.bundle.md#Requirements#MCP Tools",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Move, Integrate, Extract",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Move, Integrate, Extract",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Repo Dev Server",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Repo Dev Server",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Repo Tooling",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Repo Tooling",
               "lines": {
                 "added": 88,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Sections",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Sections",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Ticket",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Ticket",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Ticket UX",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Ticket UX",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Tooling",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Tooling",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/.bundle.md#Specs#Tree",
+              "path": "semio-repo/cli/.bundle.md#Requirements#Tree",
               "lines": {
                 "added": 26,
                 "removed": 0
@@ -1174,7 +1174,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main.go#Header#Specs",
+              "path": "semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 14,
                 "removed": 0
@@ -1188,280 +1188,280 @@
               }
             },
             {
-              "path": "semio-repo/cli/main_test.go#Header#Specs",
+              "path": "semio-repo/cli/main_test.go#Header#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs",
+              "path": "semio-repo/vscode/.bundle.md#Requirements",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#Commands",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#Commands",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#Contributors",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#Contributors",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#Diagnostics",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#Diagnostics",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#General",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#General",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#Sections View",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#Sections View",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#Sidebar",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#Sidebar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/.bundle.md#Specs#Tickets",
+              "path": "semio-repo/vscode/.bundle.md#Requirements#Tickets",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs",
+              "path": "semio/.bundle.md#Requirements",
               "lines": {
                 "added": 199,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Attribute",
+              "path": "semio/.bundle.md#Requirements#Attribute",
               "lines": {
                 "added": 24,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Author",
+              "path": "semio/.bundle.md#Requirements#Author",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Benchmark",
+              "path": "semio/.bundle.md#Requirements#Benchmark",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Concept",
+              "path": "semio/.bundle.md#Requirements#Concept",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Connection",
+              "path": "semio/.bundle.md#Requirements#Connection",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Connector",
+              "path": "semio/.bundle.md#Requirements#Connector",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Design",
+              "path": "semio/.bundle.md#Requirements#Design",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Group",
+              "path": "semio/.bundle.md#Requirements#Group",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Kit",
+              "path": "semio/.bundle.md#Requirements#Kit",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Layer",
+              "path": "semio/.bundle.md#Requirements#Layer",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Model",
+              "path": "semio/.bundle.md#Requirements#Model",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Model#Model Tag Selection",
+              "path": "semio/.bundle.md#Requirements#Model#Model Tag Selection",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Model#Supported 3D File Extensions",
+              "path": "semio/.bundle.md#Requirements#Model#Supported 3D File Extensions",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Piece",
+              "path": "semio/.bundle.md#Requirements#Piece",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Plane",
+              "path": "semio/.bundle.md#Requirements#Plane",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Port",
+              "path": "semio/.bundle.md#Requirements#Port",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Prop",
+              "path": "semio/.bundle.md#Requirements#Prop",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Quality",
+              "path": "semio/.bundle.md#Requirements#Quality",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Stat",
+              "path": "semio/.bundle.md#Requirements#Stat",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Tag",
+              "path": "semio/.bundle.md#Requirements#Tag",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Type",
+              "path": "semio/.bundle.md#Requirements#Type",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio/.bundle.md#Specs#Url",
+              "path": "semio/.bundle.md#Requirements#Url",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/engine/.bundle.md#Specs",
+              "path": "semio/engine/.bundle.md#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/engine/.bundle.md#Specs#Engine",
+              "path": "semio/engine/.bundle.md#Requirements#Engine",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/.folder.md#Specs",
+              "path": "semio/js/sketchpad/.folder.md#Requirements",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/.folder.md#Specs#Borders",
+              "path": "semio/js/sketchpad/.folder.md#Requirements#Borders",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/.folder.md#Specs#Interaction State",
+              "path": "semio/js/sketchpad/.folder.md#Requirements#Interaction State",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/.folder.md#Specs#State Management",
+              "path": "semio/js/sketchpad/.folder.md#Requirements#State Management",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/.folder.md#Specs#Toolbar",
+              "path": "semio/js/sketchpad/.folder.md#Requirements#Toolbar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/.folder.md#Specs#Windows",
+              "path": "semio/js/sketchpad/.folder.md#Requirements#Windows",
               "lines": {
                 "added": 12,
                 "removed": 0
@@ -1894,7 +1894,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§specsPolicy",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requirementsPolicy",
               "lines": {
                 "added": 82,
                 "removed": 0
@@ -2174,7 +2174,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptyRequirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -2195,7 +2195,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSpecsBreach",
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestRequirementsBreach",
               "lines": {
                 "added": 267,
                 "removed": 0
@@ -2428,7 +2428,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§specsPolicy",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requirementsPolicy",
               "lines": {
                 "added": 82,
                 "removed": 0
@@ -2484,7 +2484,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptyRequirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -2505,7 +2505,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSpecsBreach",
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestRequirementsBreach",
               "lines": {
                 "added": 267,
                 "removed": 0

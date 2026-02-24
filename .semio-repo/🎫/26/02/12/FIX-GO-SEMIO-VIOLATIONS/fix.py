@@ -97,7 +97,7 @@ for i, line in enumerate(lines):
             if not next_line.startswith("//") or next_line.startswith("// #"):
                 add_insert(i + 1, "// " + section_summaries[section_name] + "\n")
 
-# === 3. Definition summaries and specs ===
+# === 3. Definition summaries and requirements ===
 # We need to add comments above exported definitions
 # For type definitions: summary only
 # For func definitions: spec + summary (spec above summary)

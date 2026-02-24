@@ -3,7 +3,7 @@
 Phase 1: Wrap orphan blocks in sections (Imports, Utilities)
 Phase 2: Move DateProperty inside Attribute section
 Phase 3: Add section summaries
-Phase 4: Add definition summaries + specs
+Phase 4: Add definition summaries + requirements
 """
 
 import re
@@ -364,7 +364,11 @@ for i in range(len(lines2)):
             break
 
         result2.append(line)
-        if not has_summary and section_name not in ("Header", "License", "Specs"):
+        if not has_summary and section_name not in (
+            "Header",
+            "License",
+            "Requirements",
+        ):
             summary_text = section_summary_map.get(
                 section_name, f"{section_name} definitions MUST be defined here."
             )

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # semio Validation & Diff-Based Fix System
 
 **Date:** 2025-11-23  
@@ -56,7 +57,7 @@ JSON-aware linter:
 15. ✅ Register all default constraints
 16. ✅ Implement VS Code extension
 17. ✅ Update extension package.json
-18. ✅ Update AGENTS.md with validation specs
+18. ✅ Update AGENTS.md with validation requirements
 19. ✅ Update engineering files (softwarearchitecture.pu)
 20. ✅ Create central VALIDATION.md
 21. ✅ Update VS Code README to reference central docs
@@ -133,8 +134,8 @@ const result = validateSemioKit(currentKit);
 showProblems(result.issues);
 
 function applyFix(issue: Problem, fix: Fix) {
-  const newKit = applyKitDiff(currentKit, fix.diff);
-  setCurrentKit(newKit);
+ const newKit = applyKitDiff(currentKit, fix.diff);
+ setCurrentKit(newKit);
 }
 ```
 

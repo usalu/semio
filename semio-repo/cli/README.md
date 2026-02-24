@@ -2,7 +2,7 @@
 
 Repo CLI implementation and tests for the Go-based `semio-repo` tooling entrypoint.
 
-# Specs
+# 💯Requirements
 
 ## hooks
 

@@ -75,7 +75,7 @@ summary: Monorepo tools that are ai-ready.
 
 ## 🥇 Why semio-repo is a game changer
 
-### 📈 Specs + Docs + Stats + Semantics
+### 📈 Requirements + Docs + Stats + Semantics
 
 #### 🚀 Agents love TDD
 
@@ -101,7 +101,7 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ### � Shared test infrastructure
 
-### 💯 Consistent specs
+### 💯 Consistent requirements
 
 ### 📑 Conistent docs
 
@@ -109,10 +109,7 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ### 📊 Meaningful stats
 
----
-
-
-# 💯 Specs
+# 💯 Requirements
 
 ## [🧰semio-repo](semiorepo://project/semio-repo)
 
@@ -120,23 +117,72 @@ No problem, let them write what they know, until the tests are extended and let 
 
 #### Projects, Bundles, Folders, Files, Sections, Definitions
 
-#### Goals, Tickets, Tasks
+#### Goals, Tickets
 
-#### Events, Hooks
+#### Events, Hooks, Trackers
 
 #### Policies, Breaches
 
-#### Docs, Specs, Tests
+#### Docs, Requirements, Requirements
 
-#### Contributors, Version Control System
-
+#### Contributors, Agents, Checkpoints
 
 ### 🛠️ Mechanisms
+
+#### 🤖 Agents
+
+##### 🥽 Generalist
+
+A `generalist` MUST do everything that is neccessary to achieve a `target`.
+
+A `generalist` MUST use the same `tools` and perform the same `tasks` than all the other `agents`.
+
+A `generalist` MUST NOT delegate work to other `agents`.
+
+##### 🗺️ Coordinator
+
+A `coordinator` MUST only delegate work to other `agents`.
+
+A `coordinator` MOST NOT work on any specific `task`.
+
+##### 🪛 Fixer
+
+A `fixer` MUST only fix exactly one `problem`.
+
+##### 🔄️ Refactorer
+
+#### 🔀 Versions
+
+```mermaid
+sequenceDiagram
+ Contributor->>+semio-repo: checkin
+ semio-repo->>+git: fast foward `contributor/latest` to `main`
+ git->>-semio-repo: ✅
+ semio-repo->>-Contributor: ✅
+ Contributor->>+semio-repo: checkpoint
+ semio-repo->>+git: commit `contributor/latest`
+ git->>-semio-repo: ✅
+ semio-repo->>-Contributor: ✅
+ Contributor->>+semio-repo: checkout
+ semio-repo->>+git: create branch `contributor/backup`
+ git->>-semio-repo: ✅
+ semio-repo->>+git: squashmerge `contributor/latest` to `main`
+ git->>-semio-repo: ✅
+ semio-repo->>-Contributor: ✅
+```
 
 #### ⚡ Events
 
 ```yaml
-vcs:
+version:
+ checkpoint:
+  starting: # e.g. in git pre-commit
+   timestamp: "{{timestamp}}"
+   description: "{{checkpoint-description}}" # e.g. in git commit message
+  ended: # e.g. in git post-commit
+   timestamp: "{{timestamp}}"
+   id: "{{checkpoint-id}}" # e.g. in git commit sha
+   description: "{{checkpoint-description}}" # e.g. in git commit message
  checkin:
   starting:
    checkpoint: "{{checkpoint-id}}" # current checkpoint id
@@ -144,18 +190,14 @@ vcs:
   ended:
    checkpoint: "{{checkpoint-id}}" # new checkin checkpoint id
    timestamp: "{{timestamp}}"
- checkpoint:
-  starting: # e.g. in git pre-commit
-   description: "{{description}}" # e.g. in git commit message
-  ended: # e.g. in git post-commit
-   id: "{{checkpoint-id}}" # e.g. in git commit sha
-   description: "{{description}}" # e.g. in git commit message
  checkout:
-  starting: # e.g. in git pre-checkout
-   description: "{{description}}" # e.g. in git commit message
-  ended: # e.g. in git post-checkout
-   id: "{{checkpoint-id}}" # e.g. in git commit sha
-   description: "{{description}}" # e.g. in git commit message
+  starting:
+   description: "{{checkout-description}}"
+   checkpoints: ["{{checkpoint-id-between-checkin-and-checkout}}"] # e.g. in git commit sha of squash checkpoints between checkin and checkout
+   archive: ["{{archive-checkpoint-id}}"] # e.g. in git branch name of the archive branch e.g. "kinan/2026/02/24"
+  ended:
+   id: "{{checkpoint-id}}" # e.g. in new git commit sha of squash checkpoints between checkin and checkout
+   description: "{{checkout-description}}" # e.g. in git commit message
 agent:
  started:
   session: "{{session-id}}"
@@ -171,8 +213,16 @@ agent:
   llm: "{{llm}}"
   transcript: "{{transcript-path}}"
   parent: "{{parent-agent-session-id}}"
- prompt:
-  submitting:
+ prompting:
+  starting:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   message: "{{message-id}}"
+   parent: "{{parent-message-id}}"
+   prompt: "{{prompt}}"
+  ended:
    session: "{{session-id}}"
    timestamp: "{{timestamp}}"
    client: "{{client}}"
@@ -189,8 +239,109 @@ agent:
   message: "{{message-id}}"
   parent: "{{parent-message-id}}"
   chat: "{{chat}}"
+ plan: # A list of tasks - usually TODO lists in the native clients
+  updating: # Planning involves changing the task list
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   steps:
+    - name: "{{step-name}}"
+    - status: "{{STATUS}}" # completed, in progress, pending
+ search: # All searches such as file read, grep, websearch, ls, …
+  starting:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   pages: ["{{web-page-url}}"] # e.g. https://reactflow.dev/api-reference/react-flow
+   ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
+  ended:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   pages: ["{{web-page-url}}"] # e.g. https://reactflow.dev/api-reference/react-flow
+   ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
+   error: "{{error-message-from-failed-search}}" # When this is non-empty then it means that the search failed. The error message of the failed search.
+ code:
+  edit:
+   starting:
+    session: "{{session-id}}"
+    timestamp: "{{timestamp}}"
+    client: "{{client}}"
+    llm: "{{llm}}"
+    transcript: "{{transcript-path}}"
+    path: "{{file-path}}"
+    old: "{{old-string}}"
+    new: "{{new-string}}"
+    all: "{{REPLACEALLSTRINGS}}" # false: just first, true: replace all occurrences
+   ended:
+    session: "{{session-id}}"
+    timestamp: "{{timestamp}}"
+    client: "{{client}}"
+    llm: "{{llm}}"
+    transcript: "{{transcript-path}}"
+    path: "{{file-path}}"
+    old: "{{old-string}}"
+    new: "{{new-string}}"
+ test:
+  starting:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   tests: ["{{test-id}}"] # e.g. ["","🧰semiorepo⌨️cli�maintestgo🔖policytests�testpolicylistcommand",]
+   timeout: "{{timeout}}" # seconds e.g. 600
+  ended:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   succeeded: ["{{successful-test-id}}"] # e.g. ["🧰semiorepo⌨️cli�maintestgo🔖policytests�"]
+   failed: ["{{failed-test-id}}"] # e.g. ["🧰semiorepo⌨️cli�maintestgo🔖policytests�"]
+ build:
+  starting:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   bundles: ["{{bundle-id}}"] # e.g. ["🧰semiorepo⌨️cli","👤semio📚js"]
+  ended:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   succeeded: ["{{successfully-built-bundle-id}}"] # e.g. ["🧰semiorepo⌨️cli","👤semio📚js"]
+   failed: ["{{failed-to-build-bundle-id}}"] # e.g. ["🧰semiorepo⌨️cli","👤semio📚js"]
+ terminal:
+  starting:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   command: "{{command}}"
+  ended:
+   session: "{{session-id}}"
+   timestamp: "{{timestamp}}"
+   client: "{{client}}"
+   llm: "{{llm}}"
+   transcript: "{{transcript-path}}"
+   command: "{{command}}"
+   pid: "{{pid}}" # process id, execution id, etc
+   terminated: "{{has-terminated}}" # true: stopped, false: still running
+   stdout: "{{stdout}}"
+   stderr: "{{stderr}}"
  tool:
-  starting: # all tools but excluding task, code, terminal
+  starting: # all tools but excluding
    session: "{{session-id}}"
    timestamp: "{{timestamp}}"
    client: "{{client}}"
@@ -198,8 +349,8 @@ agent:
    transcript: "{{transcript-path}}"
    message: "{{message-id}}"
    parent: "{{parent-message-id}}"
-   name: "{{name}}" # name of the tool
-   input: "{{input}}"
+   name: "{{tool-name}}" # name of the tool
+   input: "{{tool-input}}"
   ended: # excluding task, code and terminal
    session: "{{session-id}}"
    timestamp: "{{timestamp}}"
@@ -208,777 +359,679 @@ agent:
    transcript: "{{transcript-path}}"
    message: "{{message-id}}"
    parent: "{{parent-message-id}}"
-   name: "{{name}}" # name of the tool
-   input: "{{input}}"
-   response: "{{response}}"
-  plan: # A list of tasks - usually TODO lists in the native clients
-   updating: # Planning involves changing the task list
-    session: "{{session-id}}"
-    timestamp: "{{timestamp}}"
-    client: "{{client}}"
-    llm: "{{llm}}"
-    transcript: "{{transcript-path}}"
-    steps:
-     - name: "{{step-name}}"
-     - status: "{{STATUS}}" # completed, in progress, pending
-  search: # All searches such as file read, grep, websearch, ls, …
-    starting:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      pages: ["{{web-page-url}}"] # e.g. https://reactflow.dev/api-reference/react-flow
-      ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
-    ended:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      pages: ["{{web-page-url}}"] # e.g. https://reactflow.dev/api-reference/react-flow
-      ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
-      error: "{{error-message-from-failed-search}}" # When this is non-empty then it means that the search failed. The error message of the failed search.
-  code:
-   edit:
-    starting:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      path: "{{file-path}}"
-      old: "{{old-string}}"
-      new: "{{new-string}}"
-      all: "{{REPLACEALLSTRINGS}}" # false: just first, true: replace all occurrences
-    ended:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      path: "{{file-path}}"
-      old: "{{old-string}}"
-      new: "{{new-string}}"
-  test:
-    starting:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      tests: ["{{test-id}}"] # e.g. ["","🧰semiorepo⌨️cli�maintestgo🔖policytests�testpolicylistcommand",]
-      timeout: "{{timeout}}" # seconds e.g. 600
-    ended:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      succeeded: ["{{successful-test-id}}"] # e.g. ["🧰semiorepo⌨️cli�maintestgo🔖policytests�"]
-      failed: ["{{failed-test-id}}"] # e.g. ["🧰semiorepo⌨️cli�maintestgo🔖policytests�"]
-  build:
-    starting:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      bundles: ["{{bundle-id}}"] # e.g. ["🧰semiorepo⌨️cli","👤semio📚js"]
-    ended:
-      session: "{{session-id}}"
-      timestamp: "{{timestamp}}"
-      client: "{{client}}"
-      llm: "{{llm}}"
-      transcript: "{{transcript-path}}"
-      succeeded: ["{{successfully-built-bundle-id}}"] # e.g. ["🧰semiorepo⌨️cli","👤semio📚js"]
-      failed: ["{{failed-to-build-bundle-id}}"] # e.g. ["🧰semiorepo⌨️cli","👤semio📚js"]
-  terminal:
-   starting:
-    session: "{{session-id}}"
-    timestamp: "{{timestamp}}"
-    client: "{{client}}"
-    llm: "{{llm}}"
-    transcript: "{{transcript-path}}"
-    command: "{{command}}"
-   ended:
-    session: "{{session-id}}"
-    timestamp: "{{timestamp}}"
-    client: "{{client}}"
-    llm: "{{llm}}"
-    transcript: "{{transcript-path}}"
-    command: "{{command}}"
-    pid: "{{pid}}" # process id, execution id, etc
-    terminated: "{{has-terminated}}" # true: stopped, false: still running
-    stdout: "{{stdout}}"
-    stderr: "{{stderr}}"
+   name: "{{tool-name}}" # name of the tool
+   input: "{{tool-input}}"
+   response: "{{tool-response}}"
 ```
 
 #### 🪪 Identification
 
 ```yaml
 repo:
-  parent: none
-  id:
-    scheme: ""
-    examples: [""]
-  uri:
-    scheme: "semiorepo://"
-    examples: ["semiorepo://"]
+ parent: none
+ id:
+  scheme: ""
+  examples: [""]
+ uri:
+  scheme: "semiorepo://"
+  examples: ["semiorepo://"]
 
 years:
-  parent: repo
-  id:
-    scheme: "{{repo-id}}🎆"
-    examples: ["🎆"]
-  uri:
-    scheme: "{{repo-uri}}y"
-    examples: ["semiorepo://y"]
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🎆"
+  examples: ["🎆"]
+ uri:
+  scheme: "{{repo-uri}}y"
+  examples: ["semiorepo://y"]
 
 year:
-  parent: years
-  id:
-    scheme: "{{repo-id}}🎆{{YY}}"
-    examples: ["🎆26"]
-  uri:
-    scheme: "{{years-uri}}/{{YY}}"
-    examples: ["semiorepo://y/26"]
+ parent: years
+ id:
+  scheme: "{{repo-id}}🎆{{YY}}"
+  examples: ["🎆26"]
+ uri:
+  scheme: "{{years-uri}}/{{YY}}"
+  examples: ["semiorepo://y/26"]
 
 months:
-  parent: year
-  id:
-    scheme: "{{year-id}}🌙"
-    examples: ["🎆26🌙"]
-  uri:
-    scheme: "{{year-uri}}/m"
-    examples: ["semiorepo://y/26/m"]
+ parent: year
+ id:
+  scheme: "{{year-id}}🌙"
+  examples: ["🎆26🌙"]
+ uri:
+  scheme: "{{year-uri}}/m"
+  examples: ["semiorepo://y/26/m"]
 
 month:
-  parent: months
-  id:
-    scheme: "{{year-id}}🌙{{MM}}"
-    examples: ["🎆26🌙02"]
-  uri:
-    scheme: "{{months-uri}}/{{MM}}"
-    examples: ["semiorepo://y/26/m/02"]
+ parent: months
+ id:
+  scheme: "{{year-id}}🌙{{MM}}"
+  examples: ["🎆26🌙02"]
+ uri:
+  scheme: "{{months-uri}}/{{MM}}"
+  examples: ["semiorepo://y/26/m/02"]
 
 days:
-  parent: month
-  id:
-    scheme: "{{month-id}}☀️"
-    examples: ["🎆26🌙02☀️"]
-  uri:
-    scheme: "{{month-uri}}/d"
-    examples: ["semiorepo://y/26/m/02/d"]
+ parent: month
+ id:
+  scheme: "{{month-id}}☀️"
+  examples: ["🎆26🌙02☀️"]
+ uri:
+  scheme: "{{month-uri}}/d"
+  examples: ["semiorepo://y/26/m/02/d"]
 
 day:
-  parent: days
-  id:
-    scheme: "{{month-id}}☀️{{DD}}"
-    examples: ["🎆26🌙02☀️15"]
-  uri:
-    scheme: "{{days-uri}}/{{DD}}"
-    examples: ["semiorepo://y/26/m/02/d/15"]
+ parent: days
+ id:
+  scheme: "{{month-id}}☀️{{DD}}"
+  examples: ["🎆26🌙02☀️15"]
+ uri:
+  scheme: "{{days-uri}}/{{DD}}"
+  examples: ["semiorepo://y/26/m/02/d/15"]
 
 hours:
-  parent: day
-  id:
-    scheme: "{{day-id}}⏰"
-    examples: ["🎆26🌙02☀️15⏰"]
-  uri:
-    scheme: "{{day-uri}}/h"
-    examples: ["semiorepo://y/26/m/02/d/15/h"]
+ parent: day
+ id:
+  scheme: "{{day-id}}⏰"
+  examples: ["🎆26🌙02☀️15⏰"]
+ uri:
+  scheme: "{{day-uri}}/h"
+  examples: ["semiorepo://y/26/m/02/d/15/h"]
 
 hour:
-  parent: hours
-  id:
-    scheme: "{{day-id}}⏰{{HH}}"
-    examples: ["🎆26🌙02☀️15⏰14"]
-  uri:
-    scheme: "{{hours-uri}}/{{HH}}"
-    examples: ["semiorepo://y/26/m/02/d/15/h/14"]
+ parent: hours
+ id:
+  scheme: "{{day-id}}⏰{{HH}}"
+  examples: ["🎆26🌙02☀️15⏰14"]
+ uri:
+  scheme: "{{hours-uri}}/{{HH}}"
+  examples: ["semiorepo://y/26/m/02/d/15/h/14"]
 
 minutes:
-  parent: hour
-  id:
-    scheme: "{{hour-id}}⌚"
-    examples: ["🎆26🌙02☀️15⏰14⌚"]
-  uri:
-    scheme: "{{hour-uri}}/min"
-    examples: ["semiorepo://y/26/m/02/d/15/h/14/min"]
+ parent: hour
+ id:
+  scheme: "{{hour-id}}⌚"
+  examples: ["🎆26🌙02☀️15⏰14⌚"]
+ uri:
+  scheme: "{{hour-uri}}/min"
+  examples: ["semiorepo://y/26/m/02/d/15/h/14/min"]
 
 minute:
-  parent: minutes
-  id:
-    scheme: "{{hour-id}}⌚{{mm}}"
-    examples: ["🎆26🌙02☀️15⏰14⌚33"]
-  uri:
-    scheme: "{{minutes-uri}}/{{mm}}"
-    examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33"]
+ parent: minutes
+ id:
+  scheme: "{{hour-id}}⌚{{mm}}"
+  examples: ["🎆26🌙02☀️15⏰14⌚33"]
+ uri:
+  scheme: "{{minutes-uri}}/{{mm}}"
+  examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33"]
 
 seconds:
-  parent: minute
-  id:
-    scheme: "{{minute-id}}⏱️"
-    examples: ["🎆26🌙02☀️15⏰14⌚33⏱️"]
-  uri:
-    scheme: "{{minute-uri}}/s"
-    examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33/s"]
+ parent: minute
+ id:
+  scheme: "{{minute-id}}⏱️"
+  examples: ["🎆26🌙02☀️15⏰14⌚33⏱️"]
+ uri:
+  scheme: "{{minute-uri}}/s"
+  examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33/s"]
 
 second:
-  parent: seconds
-  id:
-    scheme: "{{minute-id}}⏱️{{SS}}"
-    examples: ["🎆26🌙02☀️15⏰14⌚33⏱️38"]
-  uri:
-    scheme: "{{seconds-uri}}/{{SS}}"
-    examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33/s/38"]
+ parent: seconds
+ id:
+  scheme: "{{minute-id}}⏱️{{SS}}"
+  examples: ["🎆26🌙02☀️15⏰14⌚33⏱️38"]
+ uri:
+  scheme: "{{seconds-uri}}/{{SS}}"
+  examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33/s/38"]
 
 projects:
-  parent: repo
-  id:
-    scheme: "{{repo-id}}🏗️"
-    examples: ["🏗️"]
-  uri:
-    scheme: "{{repo-uri}}p"
-    examples: ["semiorepo://p"]
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🏗️"
+  examples: ["🏗️"]
+ uri:
+  scheme: "{{repo-uri}}p"
+  examples: ["semiorepo://p"]
 
 project:
-  parent: projects
-  kinds:
-    - name: mono # virtual root project
-      emoji: 🌱
-      code: m
-    - name: infrastructure
-      emoji: 🧰
-      code: i
-    - name: user
-      emoji: 👤
-      code: u
-    - name: research
-      emoji: 🔬
-      code: r
-  id:
-    scheme: "{{repo-id}}{{project-kind-emoji}}{{flat-project-code}}"
-    examples:
-      - "🌱mono"
-      - "🧰semiorepo"
-      - "👤semio"
-  uri:
-    scheme: "{{projects-uri}}/{{project-kind-code}}/{{flat-project-code}}"
-    examples:
-      - "semiorepo://p/m/mono"
-      - "semiorepo://p/i/semio-repo"
-      - "semiorepo://p/u/semio"
+ parent: projects
+ kinds:
+  - name: mono # virtual root project
+    emoji: 🌱
+    code: m
+  - name: infrastructure
+    emoji: 🧰
+    code: i
+  - name: user
+    emoji: 👤
+    code: u
+  - name: research
+    emoji: 🔬
+    code: r
+ id:
+  scheme: "{{repo-id}}{{project-kind-emoji}}{{flat-project-code}}"
+  examples:
+   - "🌱mono"
+   - "🧰semiorepo"
+   - "👤semio"
+ uri:
+  scheme: "{{projects-uri}}/{{project-kind-code}}/{{flat-project-code}}"
+  examples:
+   - "semiorepo://p/m/mono"
+   - "semiorepo://p/i/semio-repo"
+   - "semiorepo://p/u/semio"
 
 bundles:
-  parent: project
-  id:
-    scheme: "{{project-id}}📦"
-    examples:
-      - "👤semio📦"
-      - "🧰semiorepo📦"
-  uri:
-    scheme: "{{project-uri}}/bs"
-    examples:
-      - "semiorepo://p/u/semio/bs"
-      - "semiorepo://p/i/semio-repo/bs"
+ parent: project
+ id:
+  scheme: "{{project-id}}📦"
+  examples:
+   - "👤semio📦"
+   - "🧰semiorepo📦"
+ uri:
+  scheme: "{{project-uri}}/bs"
+  examples:
+   - "semiorepo://p/u/semio/bs"
+   - "semiorepo://p/i/semio-repo/bs"
 
 bundle:
-  parent: project
-  kinds:
-    - name: repo # virtual root bundle of root project
-      emoji: 🪆
-      code: r
-    - name: library
-      emoji: 📚
-      code: l
-    - name: schema
-      emoji: 🛂
-      code: s
-    - name: binary
-      emoji: ⌨️️
-      code: b
-    - name: ui
-      emoji: 🖱️️
-      code: u
-    - name: example
-      emoji: 📔
-      code: e
-    - name: site
-      emoji: 🌐
-      code: w
-    - name: assets
-      emoji: 🏪
-      code: a
-  id:
-    scheme: "{{project-id}}{{bundle-kind-emoji}}{{flat-bundle-code}}"
-    examples:
-      - "🌱mono🪆repo"
-      - "👤semio📚js"
-      - "🧰semiorepo⌨️cli"
-  uri:
-    scheme: "{{project-uri}}/b/{{bundle-kind-code}}/{{flat-bundle-code}}"
-    examples:
-      - "semiorepo://p/m/mono/b/r/repo"
-      - "semiorepo://p/u/semio/b/l/js"
-      - "semiorepo://p/i/semio-repo/b/b/cli"
+ parent: project
+ kinds:
+  - name: repo # virtual root bundle of root project
+    emoji: 🪆
+    code: r
+  - name: library
+    emoji: 📚
+    code: l
+  - name: schema
+    emoji: 🛂
+    code: s
+  - name: binary
+    emoji: ⌨️️
+    code: b
+  - name: ui
+    emoji: 🖱️️
+    code: u
+  - name: example
+    emoji: 📔
+    code: e
+  - name: site
+    emoji: 🌐
+    code: w
+  - name: assets
+    emoji: 🏪
+    code: a
+ id:
+  scheme: "{{project-id}}{{bundle-kind-emoji}}{{flat-bundle-code}}"
+  examples:
+   - "🌱mono🪆repo"
+   - "👤semio📚js"
+   - "🧰semiorepo⌨️cli"
+ uri:
+  scheme: "{{project-uri}}/b/{{bundle-kind-code}}/{{flat-bundle-code}}"
+  examples:
+   - "semiorepo://p/m/mono/b/r/repo"
+   - "semiorepo://p/u/semio/b/l/js"
+   - "semiorepo://p/i/semio-repo/b/b/cli"
 
 folders:
-  parent: folder | bundle
-  id:
-    scheme: "{{(bundle-id|folder-id)?}}📁"
-    examples:
-      - "👤semio📚js📁"
-      - "🧰semiorepo⌨️cli📁"
-      - "👤semio📚js🗃️sketchpad📁"
-  uri:
-    scheme: "{{parent-uri}}/fds"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fds"
-      - "semiorepo://p/i/semio-repo/b/b/cli/fds"
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fds"
+ parent: folder | bundle
+ id:
+  scheme: "{{(bundle-id|folder-id)?}}📁"
+  examples:
+   - "👤semio📚js📁"
+   - "🧰semiorepo⌨️cli📁"
+   - "👤semio📚js🗃️sketchpad📁"
+ uri:
+  scheme: "{{parent-uri}}/fds"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fds"
+   - "semiorepo://p/i/semio-repo/b/b/cli/fds"
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fds"
 
 folder:
-  parent: folder | bundle
-  kinds:
-    - name: organization
-      emoji: 🗃️️
-      code: org
-    - name: required
-      emoji: 🛅
-      code: req
-  id:
-    scheme: "{{(parent-bundle-id|parent-folder-id)?}}{{folder-kind-emoji}}{{flat-folder-name}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad"
-      - "🛅devcontainer"
-  uri:
-    scheme: "{{parent-uri}}/fd/{{folder-kind-code}}/{{uri-encoded-folder-name}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad"
-      - "semiorepo://p/i/semio-repo/b/r/repo/fd/req/.devcontainer"
+ parent: folder | bundle
+ kinds:
+  - name: organization
+    emoji: 🗃️️
+    code: org
+  - name: required
+    emoji: 🛅
+    code: req
+ id:
+  scheme: "{{(parent-bundle-id|parent-folder-id)?}}{{folder-kind-emoji}}{{flat-folder-name}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad"
+   - "🛅devcontainer"
+ uri:
+  scheme: "{{parent-uri}}/fd/{{folder-kind-code}}/{{uri-encoded-folder-name}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad"
+   - "semiorepo://p/i/semio-repo/b/r/repo/fd/req/.devcontainer"
 
 files:
-  parent: folder
-  id:
-    scheme: "{{folder-id}}📄"
-    examples:
-      - "🛅devcontainer📄"
-      - "👤semio📚js🗃️sketchpad📄"
-  uri:
-    scheme: "{{folder-uri}}/fis"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fis"
+ parent: folder
+ id:
+  scheme: "{{folder-id}}📄"
+  examples:
+   - "🛅devcontainer📄"
+   - "👤semio📚js🗃️sketchpad📄"
+ uri:
+  scheme: "{{folder-uri}}/fis"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fis"
 
 file:
-  parent: folder
-  kinds:
-    - name: code
-      emoji: 💻
-      code: c
-    - name: lab
-      emoji: �
-      code: t
-    - name: script
-      emoji: 📜
-      code: s
-    - name: docs
-      emoji: 📃
-      code: d
-    - name: config
-      emoji: ⚙️️
-      code: g
-    - name: asset
-      emoji: 💾
-      code: a
-    - name: license
-      emoji: ⚖️
-      code: l
-  id:
-    scheme: "{{folder-id}}{{file-kind-emoji}}{{flat-file-name-with-extension*}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx"
-      - "🛅devcontainer⚙️️devcontainerjson"
-  uri:
-    scheme: "{{folder-uri}}/f/{{uri-encoded-file-name-with-extension*}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx"
-      - "semiorepo://p/i/semio-repo/b/r/repo/fd/req/.devcontainer/f/devcontainer.json"
+ parent: folder
+ kinds:
+  - name: code
+    emoji: 💻
+    code: c
+  - name: lab
+    emoji: �
+    code: t
+  - name: script
+    emoji: 📜
+    code: s
+  - name: docs
+    emoji: 📃
+    code: d
+  - name: config
+    emoji: ⚙️️
+    code: g
+  - name: asset
+    emoji: 💾
+    code: a
+  - name: license
+    emoji: ⚖️
+    code: l
+ id:
+  scheme: "{{folder-id}}{{file-kind-emoji}}{{flat-file-name-with-extension*}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx"
+   - "🛅devcontainer⚙️️devcontainerjson"
+ uri:
+  scheme: "{{folder-uri}}/f/{{uri-encoded-file-name-with-extension*}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx"
+   - "semiorepo://p/i/semio-repo/b/r/repo/fd/req/.devcontainer/f/devcontainer.json"
 
 lines:
-  parent: file
-  id:
-    scheme: "{{file-id}}📌"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌"
-  uri:
-    scheme: "{{file-uri}}/ls"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/ls"
+ parent: file
+ id:
+  scheme: "{{file-id}}📌"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx📌"
+ uri:
+  scheme: "{{file-uri}}/ls"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/ls"
 
 line:
-  parent: file
-  id:
-    scheme: "{{file-id}}📌{{linenumber}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌3872"
-  uri:
-    scheme: "{{file-uri}}/l/{{linenumber}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/l/3872"
+ parent: file
+ id:
+  scheme: "{{file-id}}📌{{linenumber}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx📌3872"
+ uri:
+  scheme: "{{file-uri}}/l/{{linenumber}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/l/3872"
 
 ranges:
-  parent: file
-  id:
-    scheme: "{{file-id}}📌📌"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌📌"
-  uri:
-    scheme: "{{file-uri}}/rgs"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/rgs"
+ parent: file
+ id:
+  scheme: "{{file-id}}📌📌"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx📌📌"
+ uri:
+  scheme: "{{file-uri}}/rgs"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/rgs"
 
 range:
-  parent: file
-  code: r
-  id:
-    scheme: "{{file-id}}📌{{start-linenumber}}📌{{end-linenumber}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
-  uri:
-    scheme: "{{file-uri}}/rg/{{start-linenumber}}/{{end-linenumber}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/rg/3872/3875"
+ parent: file
+ code: r
+ id:
+  scheme: "{{file-id}}📌{{start-linenumber}}📌{{end-linenumber}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
+ uri:
+  scheme: "{{file-uri}}/rg/{{start-linenumber}}/{{end-linenumber}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/rg/3872/3875"
 
 sections:
-  parent: section | file
-  id:
-    scheme: "{{(file-id|section-id)?}}🔖"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖"
-  uri:
-    scheme: "{{parent-uri}}/ss"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/ss"
+ parent: section | file
+ id:
+  scheme: "{{(file-id|section-id)?}}🔖"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖"
+ uri:
+  scheme: "{{parent-uri}}/ss"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/ss"
 
 section:
-  parent: section | file
-  code: s
-  id:
-    scheme: "{{(file-id|parent-section-id)?}}🔖{{flat-section-name}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"
-  uri:
-    scheme: "{{parent-uri}}/s/{{uri-encoded-section-name}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management"
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store"
+ parent: section | file
+ code: s
+ id:
+  scheme: "{{(file-id|parent-section-id)?}}🔖{{flat-section-name}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment"
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"
+ uri:
+  scheme: "{{parent-uri}}/s/{{uri-encoded-section-name}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management"
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store"
 
 definitions:
-  parent: diffable
-  id:
-    scheme: "{{diffable-id}}🏷️"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️"
-  uri:
-    scheme: "{{diffable-uri}}/ds"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/ds"
+ parent: diffable
+ id:
+  scheme: "{{diffable-id}}🏷️"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️"
+ uri:
+  scheme: "{{diffable-uri}}/ds"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/ds"
 
 definition:
-  parent: section
-  code: d
-  kinds:
-    - name: implementation
-      emoji: 🛠️
-      code: i
-    - name: interface
-      emoji: ✂️
-      code: f
-    - name: constant
-      emoji: 🪨
-      code: c
-  id:
-    scheme: "{{section-id}}{{definition-kind-emoji}}{{flat-definition-name}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore"
-  uri:
-    scheme: "{{section-uri}}/d/{{definition-kind-code}}/{{uri-encoded-definition-name}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore"
+ parent: section
+ code: d
+ kinds:
+  - name: implementation
+    emoji: 🛠️
+    code: i
+  - name: interface
+    emoji: ✂️
+    code: f
+  - name: constant
+    emoji: 🪨
+    code: c
+  - name: test
+    emoji: 🧪
+    code: t
+ id:
+  scheme: "{{section-id}}{{definition-kind-emoji}}{{flat-definition-name}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore"
+ uri:
+  scheme: "{{section-uri}}/d/{{definition-kind-code}}/{{uri-encoded-definition-name}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore"
 
-tests:
-  parent: testable | test
-  id:
-    scheme: "{{(testable-id|test-id)?}}�"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store�"
-  uri:
-    scheme: "{{parent-uri}}/ts"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/ts"
+requirements:
+ parent: testable | test
+ id:
+  scheme: "{{(testable-id|test-id)?}}�"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store�"
+ uri:
+  scheme: "{{parent-uri}}/ts"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/ts"
 
-test:
-  parent: testable
-  code: t
-  id:
-    scheme: "{{testable-id}}�{{flat-test-name}}"
-    examples:
-      - "👤semio📚js💻semiots�flattendesign"
-  uri:
-    scheme: "{{testable-uri}}/t/{{uri-encoded-test-name}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/f/semio.ts/t/flattenDesign"
+spec:
+ parent: testable
+ code: t
+ id:
+  scheme: "{{testable-id}}�{{flat-test-name}}"
+  examples:
+   - "👤semio📚js💻semiots�flattendesign"
+ uri:
+  scheme: "{{testable-uri}}/t/{{uri-encoded-test-name}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/f/semio.ts/t/flattenDesign"
 
 goals:
-  parent: goal | repo
-  id:
-    scheme: "{{(repo-id|goal-id)?}}🎯"
-    examples:
-      - "🎯"
-      - "🎯r26021🎯runningsketchpad🎯"
-  uri:
-    scheme: "{{parent-uri}}/gs"
-    examples:
-      - "semiorepo://gs"
-      - "semiorepo://g/r26.02-1/Running%20Sketchpad/gs"
+ parent: goal | repo
+ id:
+  scheme: "{{(repo-id|goal-id)?}}🎯"
+  examples:
+   - "🎯"
+   - "🎯r26021🎯runningsketchpad🎯"
+ uri:
+  scheme: "{{parent-uri}}/gs"
+  examples:
+   - "semiorepo://gs"
+   - "semiorepo://g/r26.02-1/Running%20Sketchpad/gs"
 
 goal:
-  parent: goal | repo
-  code: g
-  id:
-    scheme: "{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}"
-    examples:
-      - "🎯r26021🎯runningsketchpad"
-  uri:
-    scheme: "{{parent-uri}}/g/{{uri-encoded-goal-name}}"
-    examples:
-      - "semiorepo://g/r26.02-1"
-      - "semiorepo://g/r26.02-1/g/Running%20Sketchpad"
+ parent: goal | repo
+ code: g
+ id:
+  scheme: "{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}"
+  examples:
+   - "🎯r26021🎯runningsketchpad"
+ uri:
+  scheme: "{{parent-uri}}/g/{{uri-encoded-goal-name}}"
+  examples:
+   - "semiorepo://g/r26.02-1"
+   - "semiorepo://g/r26.02-1/g/Running%20Sketchpad"
 
 tickets:
-  parent: diffable
-  id:
-    scheme: "{{diffable-id}}🎫"
-    examples:
-      - "🎫"
-      - "🎯r26021🎯runningsketchpad🎫"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫"
-  uri:
-    scheme: "{{diffable-uri}}/tks"
-    examples:
-      - "semiorepo://g/r26.02-1/Running%20Sketchpad/tks"
+ parent: diffable
+ id:
+  scheme: "{{diffable-id}}🎫"
+  examples:
+   - "🎫"
+   - "🎯r26021🎯runningsketchpad🎫"
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫"
+ uri:
+  scheme: "{{diffable-uri}}/tks"
+  examples:
+   - "semiorepo://g/r26.02-1/Running%20Sketchpad/tks"
 
 ticket:
-  parent: goal
-  code: ti
-  id:
-    scheme: "{{goal-id}}🎫{{flat-title}}"
-    examples:
-      - "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism"
-  uri:
-    scheme: "{{goal-uri}}/tk/{{uri-encoded-ticket-title}}"
-    examples:
-      - "semiorepo://g/r26.02-1/g/Running%20Sketchpad/tk/Introduce%20Key%20Guid%20Uri%20Mechanism"
+ parent: goal
+ code: ti
+ id:
+  scheme: "{{goal-id}}🎫{{flat-title}}"
+  examples:
+   - "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism"
+ uri:
+  scheme: "{{goal-uri}}/tk/{{uri-encoded-ticket-title}}"
+  examples:
+   - "semiorepo://g/r26.02-1/g/Running%20Sketchpad/tk/Introduce%20Key%20Guid%20Uri%20Mechanism"
 
 drafts:
-  parent: resource
-  id:
-    scheme: "{{resource-id}}📝"
-    examples:
-      - "🧰semiorepo⌨️cli📝"
-  uri:
-    scheme: "{{resource-uri}}/drs"
-    examples:
-      - "semiorepo://p/i/semio-repo/b/b/cli/drs"
+ parent: resource
+ id:
+  scheme: "{{resource-id}}📝"
+  examples:
+   - "🧰semiorepo⌨️cli📝"
+ uri:
+  scheme: "{{resource-uri}}/drs"
+  examples:
+   - "semiorepo://p/i/semio-repo/b/b/cli/drs"
 
 draft:
-  parent: resource
-  code: ~d~
-  id:
-    scheme: "{{resource-id}}📝{{flat-title}}"
-    examples:
-      - "🧰semiorepo⌨️cli📝newarchitecture"
-  uri:
-    scheme: "{{drafts-uri}}/{{uri-encoded-draft-title*}}"
-    examples:
-      - "semiorepo://p/i/semio-repo/b/b/cli/drs/New%20Architecture"
+ parent: resource
+ code: ~d~
+ id:
+  scheme: "{{resource-id}}📝{{flat-title}}"
+  examples:
+   - "🧰semiorepo⌨️cli📝newarchitecture"
+ uri:
+  scheme: "{{drafts-uri}}/{{uri-encoded-draft-title*}}"
+  examples:
+   - "semiorepo://p/i/semio-repo/b/b/cli/drs/New%20Architecture"
 
 todos:
-  parent: resource
-  id:
-    scheme: "{{resource-id}}✅"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅"
-  uri:
-    scheme: "{{resource-uri}}/tos"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore/tos"
+ parent: resource
+ id:
+  scheme: "{{resource-id}}✅"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅"
+ uri:
+  scheme: "{{resource-uri}}/tos"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore/tos"
 
 todo:
-  parent: resource
-  code: ~to~
-  id:
-    scheme: "{{resource-id}}✅{{flat-title}}"
-    examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅introducepropersyncmechanism"
-  uri:
-    scheme: "{{todos-uri}}/{{uri-encoded-todo-title*}}"
-    examples:
-      - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore/tos/Introduce%20Proper%20Sync%20Mechanism"
+ parent: resource
+ code: ~to~
+ id:
+  scheme: "{{resource-id}}✅{{flat-title}}"
+  examples:
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅introducepropersyncmechanism"
+ uri:
+  scheme: "{{todos-uri}}/{{uri-encoded-todo-title*}}"
+  examples:
+   - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore/tos/Introduce%20Proper%20Sync%20Mechanism"
 
 policies:
-  parent: resource kind | resource
-  id:
-    scheme: "{{(resource-kind|resource-id)?}}👮"
-    examples:
-      - "💻👮"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮"
-  uri:
-    scheme: "{{parent-uri}}/pls"
-    examples:
-      - "semiorepo://code/pls"
+ parent: resource kind | resource
+ id:
+  scheme: "{{(resource-kind|resource-id)?}}👮"
+  examples:
+   - "💻👮"
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮"
+ uri:
+  scheme: "{{parent-uri}}/pls"
+  examples:
+   - "semiorepo://code/pls"
 
 policy:
-  parent: resource kind | resource
-  id:
-    scheme: "{{(resource-kind|resource-id)?}}👮{{flat-name}}"
-    examples:
-      - "💻👮godfiles"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore"
-  uri:
-    scheme: "{{parent-uri}}/pl/{{uri-encoded-policy-name*}}"
-    examples:
-      - "semiorepo://code/pls/pl/Godfiles"
+ parent: resource kind | resource
+ id:
+  scheme: "{{(resource-kind|resource-id)?}}👮{{flat-name}}"
+  examples:
+   - "💻👮godfiles"
+   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore"
+ uri:
+  scheme: "{{parent-uri}}/pl/{{uri-encoded-policy-name*}}"
+  examples:
+   - "semiorepo://code/pls/pl/Godfiles"
 
 statutes:
-  parent: policy
-  id:
-    scheme: "{{policy-id}}📜"
-    examples:
-      - "💻👮godfiles📜"
-  uri:
-    scheme: "{{policy-uri}}/sts"
-    examples:
-      - "semiorepo://code/pls/pl/Godfiles/sts"
+ parent: policy
+ id:
+  scheme: "{{policy-id}}📜"
+  examples:
+   - "💻👮godfiles📜"
+ uri:
+  scheme: "{{policy-uri}}/sts"
+  examples:
+   - "semiorepo://code/pls/pl/Godfiles/sts"
 
 statute:
-  parent: policy
-  id:
-    scheme: "{{policy-id}}📜{{flat-name}}"
-    examples:
-      - "💻👮godfiles📜maxlinesperfile"
-  uri:
-    scheme: "{{statutes-uri}}/{{uri-encoded-statute-name*}}"
-    examples:
-      - "semiorepo://code/pls/pl/Godfiles/sts/Max%20Lines%20Per%20File"
+ parent: policy
+ id:
+  scheme: "{{policy-id}}📜{{flat-name}}"
+  examples:
+   - "💻👮godfiles📜maxlinesperfile"
+ uri:
+  scheme: "{{statutes-uri}}/{{uri-encoded-statute-name*}}"
+  examples:
+   - "semiorepo://code/pls/pl/Godfiles/sts/Max%20Lines%20Per%20File"
 
 breaches:
-  parent: policy
-  id:
-    scheme: "{{policy-id}}🚫"
-    examples:
-      - "💻👮godfiles🚫"
-  uri:
-    scheme: "{{policy-uri}}/brs"
-    examples:
-      - "semiorepo://code/pls/pl/Godfiles/brs"
+ parent: policy
+ id:
+  scheme: "{{policy-id}}🚫"
+  examples:
+   - "💻👮godfiles🚫"
+ uri:
+  scheme: "{{policy-uri}}/brs"
+  examples:
+   - "semiorepo://code/pls/pl/Godfiles/brs"
 
 breach:
-  parent: policy
-  id:
-    scheme: "{{policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}"
-    examples:
-      - "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"
-  uri:
-    scheme: "{{breaches-uri}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-uri*}}"
-    examples:
-      - "semiorepo://code/pls/pl/Godfiles/brs/affects/semiorepo%3A%2F%2Fp%2Fu%2Fsemio%2Fb%2Fl%2Fjs%2Ffd%2Forg%2Fsketchpad%2Ff%2Fdesign-store.ts/at/semiorepo%3A%2F%2Fp%2Fu%2Fsemio%2Fb%2Fl%2Fjs%2Ffd%2Forg%2Fsketchpad%2Ff%2Fdesign-store.ts%2Frg%2F3872%2F3875/when/semiorepo%3A%2F%2Fy%2F26%2Fm%2F02%2Fd%2F14%2Fh%2F19%2Fmin%2F07%2Fs%2F12"
+ parent: policy
+ id:
+  scheme: "{{policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}"
+  examples:
+   - "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"
+ uri:
+  scheme: "{{breaches-uri}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-uri*}}"
+  examples:
+   - "semiorepo://code/pls/pl/Godfiles/brs/affects/semiorepo%3A%2F%2Fp%2Fu%2Fsemio%2Fb%2Fl%2Fjs%2Ffd%2Forg%2Fsketchpad%2Ff%2Fdesign-store.ts/at/semiorepo%3A%2F%2Fp%2Fu%2Fsemio%2Fb%2Fl%2Fjs%2Ffd%2Forg%2Fsketchpad%2Ff%2Fdesign-store.ts%2Frg%2F3872%2F3875/when/semiorepo%3A%2F%2Fy%2F26%2Fm%2F02%2Fd%2F14%2Fh%2F19%2Fmin%2F07%2Fs%2F12"
 
 contributors:
-  parent: repo
-  id:
-    scheme: "{{repo-id}}🧑‍💻"
-    examples:
-      - "🧑‍💻"
-  uri:
-    scheme: "{{repo-uri}}cs"
-    examples:
-      - "semiorepo://cs"
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🧑‍💻"
+  examples:
+   - "🧑‍💻"
+ uri:
+  scheme: "{{repo-uri}}cs"
+  examples:
+   - "semiorepo://cs"
 
 contributor:
-  parent: contributors
-  id:
-    scheme: "🧑‍💻{{github-username}}"
-    examples:
-      - "🧑‍💻usalu"
-  uri:
-    scheme: "{{contributors-uri}}/{{uri-encoded-contributor-name*}}"
-    examples:
-      - "semiorepo://cs/usalu"
+ parent: contributors
+ id:
+  scheme: "🧑‍💻{{github-username}}"
+  examples:
+   - "🧑‍💻usalu"
+ uri:
+  scheme: "{{contributors-uri}}/{{uri-encoded-contributor-name*}}"
+  examples:
+   - "semiorepo://cs/usalu"
 
 commits:
-  parent: repo
-  id:
-    scheme: "{{repo-id}}🔀"
-    examples:
-      - "🔀"
-  uri:
-    scheme: "{{repo-uri}}cms"
-    examples:
-      - "semiorepo://cms"
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🔀"
+  examples:
+   - "🔀"
+ uri:
+  scheme: "{{repo-uri}}cms"
+  examples:
+   - "semiorepo://cms"
 
 commit:
-  parent: commits
-  id:
-    scheme: "{{day-id}}🔀{{sha}}{{contributors-ids}}"
-    examples:
-      - "🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak"
-  uri:
-    scheme: "{{commits-uri}}/{{uri-encoded-commit-sha*}}"
-    examples:
-      - "semiorepo://cms/cfb3b6084ff3fe883d5f39b08810a0b90997907a"
+ parent: commits
+ id:
+  scheme: "{{day-id}}🔀{{sha}}{{contributors-ids}}"
+  examples:
+   - "🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak"
+ uri:
+  scheme: "{{commits-uri}}/{{uri-encoded-commit-sha*}}"
+  examples:
+   - "semiorepo://cms/cfb3b6084ff3fe883d5f39b08810a0b90997907a"
 
 interactions:
-  parent: repo
-  id:
-    scheme: "{{repo-id}}🤝"
-    examples:
-      - "🤝"
-  uri:
-    scheme: "{{repo-uri}}is"
-    examples:
-      - "semiorepo://is"
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🤝"
+  examples:
+   - "🤝"
+ uri:
+  scheme: "{{repo-uri}}is"
+  examples:
+   - "semiorepo://is"
 
 interaction:
-  parent: interactions
-  kinds:
-    - name: started
-      emoji: 🌱
-      code: started
-    - name: edited
-      emoji: ✏️
-      code: edited
-    - name: finished
-      emoji: ✅
-      code: finished
-    - name: restarted
-      emoji: 🔁
-      code: restarted
-    - name: deleted
-      emoji: 🗑️
-      code: deleted
-  id:
-    scheme: "{{second-id}}{{entity-id}}{{interaction-kind-emoji}}{{contributor-id}}"
-    examples:
-      - "🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱🧑‍💻usalu"
-      - "🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅🧑‍💻usalu"
-  uri:
-    scheme: "{{interactions-uri}}/when/{{uri-encoded-second-uri*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind-code}}/by/{{uri-encoded-contributor-name*}}"
-    examples:
-      - "semiorepo://is/when/semiorepo%3A%2F%2Fy%2F26%2Fm%2F02%2Fd%2F14%2Fh%2F19%2Fmin%2F07%2Fs%2F12/on/semiorepo%3A%2F%2Fg%2Fr26.02-1%2Fg%2FRunning%2520Sketchpad%2Ftk%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu"
+ parent: interactions
+ kinds:
+  - name: started
+    emoji: 🌱
+    code: started
+  - name: edited
+    emoji: ✏️
+    code: edited
+  - name: finished
+    emoji: ✅
+    code: finished
+  - name: restarted
+    emoji: 🔁
+    code: restarted
+  - name: deleted
+    emoji: 🗑️
+    code: deleted
+ id:
+  scheme: "{{second-id}}{{entity-id}}{{interaction-kind-emoji}}{{contributor-id}}"
+  examples:
+   - "🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱🧑‍💻usalu"
+   - "🎆26🌙02☀️14⏰19⌚07⏱️12🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅🧑‍💻usalu"
+ uri:
+  scheme: "{{interactions-uri}}/when/{{uri-encoded-second-uri*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind-code}}/by/{{uri-encoded-contributor-name*}}"
+  examples:
+   - "semiorepo://is/when/semiorepo%3A%2F%2Fy%2F26%2Fm%2F02%2Fd%2F14%2Fh%2F19%2Fmin%2F07%2Fs%2F12/on/semiorepo%3A%2F%2Fg%2Fr26.02-1%2Fg%2FRunning%2520Sketchpad%2Ftk%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu"
 ```
 
 Display codebase diffs as
@@ -1003,7 +1056,6 @@ ticket-loc-diff: `{{ticket-id}}📌{{loc-total}}` e.g. `🎯r26021🎯runningske
 contributor-loc-diff: `{{contributor-id}}{{loc-total}}` e.g. `🧑‍💻usalu➖253➕387🟰➕134`
 commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a➖253➕387🟰➕134`
 
-
 ### 📛 Concepts
 
 #### Project
@@ -1026,92 +1078,92 @@ commit-loc-diff: `{{commit-id}}{{loc-total}}` e.g. `🧑‍💻usalu🔀cfb3b608
 title: "{{ticket-title}}" # e.g. Tree Text Short IDs
 description: "{{ticket-description}}" # e.g. Fix renderTreeNodeText to temporarily clear parentId before calling renderEntityHuman so tree text output shows only the own ID segment instead of full hierarchical chains. Add tests for nested goal short IDs and parentId restoration.
 github:
-  issue: "{{github-issue-url}}" # e.g. https://github.com/usalu/semio/issues/612
+ issue: "{{github-issue-url}}" # e.g. https://github.com/usalu/semio/issues/612
 goal: "{{goal-id}}" # e.g. 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters
 agents: # created by agent hooks after ticket was opened or reopened by the cli or the mcp tool.
-  - session: "{{session-id}}" # native session id from client e.g. 38b90183-005d-45cf-879d-c16b27c099ce
-    contributor: "{{contributor-id}}" # find contributor with git config e.g. 🧑‍💻usalu
-    system: "{{system-id}}" # e.g. "linux"
-    client: "{{client-id}}" # e.g. copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag
-    llm: "{{llm-id}}" # derive from agent hooks or if not available use the cli llm argument that was used on ticket open or ticket reopen e.g. "opus-4-6"
-    transcript: "{{transcript-path}}" # path to the transcript of the native ai chat e.g. /home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/2f1e87c2-af13-4067-9aa6-15f0af84010c.jsonl
-    plan:
-      steps:
-        - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
-          completed: {{timestamp}} # this means status completed
-        - name: Implement hook-to-ticket session integration for interactions, reads, and diffs
-          started: {{timestamp}} # this means status in progress
-        - name: Add/update tests and run relevant test suite # no completed or started means status pending
-        - name: Update ticket artifacts and summarize changes
-    events: # all events that are related to the ticket MUST be logged here. 
-      - kind: agent.prompt.submitting
-        prompt: {{prompt}} # e.g. "The data should be directly on the event property. No extra data keyword.\nnot like currently:\n{\n  \"input\": {\n    \"timestamp\": \"2026-02-23T10:50:31.218Z\",\n    \"hookEventName\": \"SessionStart\",\n    \"sessionId\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"transcript_path\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\",\n    \"source\": \"new\",\n    \"cwd\": \"/workspaces/semio\"\n  },\n  \"event\": {\n    \"kind\": \"agent.started\",\n    \"session\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"timestamp\": \"2026-02-23T10:50:31.218Z\",\n    \"client\": \"copilot-chat\",\n    \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\"\n  },\n  \"response\": {},\n  \"data\": {\n    \"allowed\": true,\n    \"session\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"timestamp\": \"2026-02-23T10:50:31Z\",\n    \"client\": \"copilot-chat\",\n    \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\",\n    \"parent\": \"new\"\n  }\n}"
-      - kind: agent.tool.searching
-        timestamp: {{timestamp}}
-        query: {{query}} # e.g. `semio/js/**.tsx`,  `semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/Design.tsx#L532-L771`, `semio-repo/**`, `https://reactflow.dev/api-reference/react-flow`
-        denied: "{{denied-reason}}" # e.g. `.env files are private.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
-      - kind: agent.code.editing
-        file: {{file-id}}
-        denied: "{{denied-reason}}" # e.g. `.cursor/hooks.json is autogenerated by the semio repo cli and cant be edited manually.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
-      - kind: agent.code.edited
-        timestamp: {{timestamp}}
-        line: {{line-number}} # starting line number of old string
-        old:
-          sections: # all sections that appear in the old string
-            - section: {{ID}}
-              definitions: ["{{definition-id}}"] # all definitions that appear in the old string
-          loc: {{lines-of-code}} # lines of code of the old string
-        new:
-          sections: # all sections that appear in the new string
-            - section: {{ID}}
-              definitions: ["{{definition-id}}"] # all definitions that appear in the new string
-          loc: {{lines-of-code}} # lines of code of the new string
-      - kind: agent.code.testing
-        language: go
-        target: "{{target-pattern}}" # e.g.  TestTicketLifecycle_NoManagement
-    diff: # Derive diff at the end of a session using the agent.code.edited events and git diff (both staged and unstaged)
-        projects:
-          deleted: ["{{project-id}}"]
-          renamed:
-            - from: "{{project-id}}"
-              to: "{{project-id}}"
-          modified: ["{{project-id}}"]
-          created: ["{{project-id}}"]
-        bundles:
-          deleted: ["{{bundle-id}}"]
-          renamed:
-            - from: "{{bundle-id}}"
-              to: "{{bundle-id}}"
-          modified: ["{{bundle-id}}"]
-          created: ["{{bundle-id}}"]
-        folders:
-          deleted: ["{{folder-id}}"]
-          renamed:
-            - from: "{{folder-id}}"
-              to: "{{folder-id}}"
-          modified: ["{{folder-id}}"]
-          created: ["{{folder-id}}"]
-        files:
-          deleted: ["{{file-id}}"]
-          renamed:
-            - from: "{{file-id}}"
-              to: "{{file-id}}"
-          modified: ["{{file-id}}"]
-          created: ["{{file-id}}"]
-        sections:
-          deleted: ["{{section-id}}"]
-          renamed:
-            - from: "{{section-id}}"
-              to: "{{section-id}}"
-          modified: ["{{section-id}}"]
-          created: ["{{section-id}}"]
-        definitions:
-          deleted: ["{{definition-id}}"]
-          renamed:
-            - from: "{{definition-id}}"
-              to: "{{definition-id}}"
-          modified: ["{{definition-id}}"]
-          created: ["{{definition-id}}"]
+ - session: "{{session-id}}" # native session id from client e.g. 38b90183-005d-45cf-879d-c16b27c099ce
+   contributor: "{{contributor-id}}" # find contributor with git config e.g. 🧑‍💻usalu
+   system: "{{system-id}}" # e.g. "linux"
+   client: "{{client-id}}" # e.g. copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag
+   llm: "{{llm-id}}" # derive from agent hooks or if not available use the cli llm argument that was used on ticket open or ticket reopen e.g. "opus-4-6"
+   transcript: "{{transcript-path}}" # path to the transcript of the native ai chat e.g. /home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/2f1e87c2-af13-4067-9aa6-15f0af84010c.jsonl
+   plan:
+    steps:
+     - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
+       completed: { { timestamp } } # this means status completed
+     - name: Implement hook-to-ticket session integration for interactions, reads, and diffs
+       started: { { timestamp } } # this means status in progress
+     - name: Add/update tests and run relevant test suite # no completed or started means status pending
+     - name: Update ticket artifacts and summarize changes
+   events: # all events that are related to the ticket MUST be logged here.
+    - kind: agent.prompt.submitting
+      prompt: { { prompt } } # e.g. "The data should be directly on the event property. No extra data keyword.\nnot like currently:\n{\n  \"input\": {\n    \"timestamp\": \"2026-02-23T10:50:31.218Z\",\n    \"hookEventName\": \"SessionStart\",\n    \"sessionId\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"transcript_path\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\",\n    \"source\": \"new\",\n    \"cwd\": \"/workspaces/semio\"\n  },\n  \"event\": {\n    \"kind\": \"agent.started\",\n    \"session\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"timestamp\": \"2026-02-23T10:50:31.218Z\",\n    \"client\": \"copilot-chat\",\n    \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\"\n  },\n  \"response\": {},\n  \"data\": {\n    \"allowed\": true,\n    \"session\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"timestamp\": \"2026-02-23T10:50:31Z\",\n    \"client\": \"copilot-chat\",\n    \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\",\n    \"parent\": \"new\"\n  }\n}"
+    - kind: agent.tool.searching
+      timestamp: { { timestamp } }
+      query: { { query } } # e.g. `semio/js/**.tsx`,  `semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/Design.tsx#L532-L771`, `semio-repo/**`, `https://reactflow.dev/api-reference/react-flow`
+      denied: "{{denied-reason}}" # e.g. `.env files are private.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
+    - kind: agent.code.editing
+      file: { { file-id } }
+      denied: "{{denied-reason}}" # e.g. `.cursor/hooks.json is autogenerated by the semio repo cli and cant be edited manually.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
+    - kind: agent.code.edited
+      timestamp: { { timestamp } }
+      line: { { line-number } } # starting line number of old string
+      old:
+       sections: # all sections that appear in the old string
+        - section: { { ID } }
+          definitions: ["{{definition-id}}"] # all definitions that appear in the old string
+       loc: { { lines-of-code } } # lines of code of the old string
+      new:
+       sections: # all sections that appear in the new string
+        - section: { { ID } }
+          definitions: ["{{definition-id}}"] # all definitions that appear in the new string
+       loc: { { lines-of-code } } # lines of code of the new string
+    - kind: agent.code.testing
+      language: go
+      target: "{{target-pattern}}" # e.g.  TestTicketLifecycle_NoManagement
+   diff: # Derive diff at the end of a session using the agent.code.edited events and git diff (both staged and unstaged)
+    projects:
+     deleted: ["{{project-id}}"]
+     renamed:
+      - from: "{{project-id}}"
+        to: "{{project-id}}"
+     modified: ["{{project-id}}"]
+     created: ["{{project-id}}"]
+    bundles:
+     deleted: ["{{bundle-id}}"]
+     renamed:
+      - from: "{{bundle-id}}"
+        to: "{{bundle-id}}"
+     modified: ["{{bundle-id}}"]
+     created: ["{{bundle-id}}"]
+    folders:
+     deleted: ["{{folder-id}}"]
+     renamed:
+      - from: "{{folder-id}}"
+        to: "{{folder-id}}"
+     modified: ["{{folder-id}}"]
+     created: ["{{folder-id}}"]
+    files:
+     deleted: ["{{file-id}}"]
+     renamed:
+      - from: "{{file-id}}"
+        to: "{{file-id}}"
+     modified: ["{{file-id}}"]
+     created: ["{{file-id}}"]
+    sections:
+     deleted: ["{{section-id}}"]
+     renamed:
+      - from: "{{section-id}}"
+        to: "{{section-id}}"
+     modified: ["{{section-id}}"]
+     created: ["{{section-id}}"]
+    definitions:
+     deleted: ["{{definition-id}}"]
+     renamed:
+      - from: "{{definition-id}}"
+        to: "{{definition-id}}"
+     modified: ["{{definition-id}}"]
+     created: ["{{definition-id}}"]
 ```
 
 ## AI

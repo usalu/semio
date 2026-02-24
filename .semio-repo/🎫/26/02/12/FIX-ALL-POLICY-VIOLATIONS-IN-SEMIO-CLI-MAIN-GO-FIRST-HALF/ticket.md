@@ -6,7 +6,7 @@ goal: CODE-QUALITY/CLI-POLICIES
 
 ## Summary
 
-Fixed 842 policy breachs in the first half (lines 1-15000) of semio-repo/cli/main.go: added Preamble section for orphan package/import, added 35 section summaries, added ~500 definition summaries, added ~300 func specs with RFC 2119 keywords, removed 1 incorrect inline comment. Total breachs reduced from 1515 to 673. Build passes, all tests pass.
+Fixed 842 policy breachs in the first half (lines 1-15000) of semio-repo/cli/main.go: added Preamble section for orphan package/import, added 35 section summaries, added ~500 definition summaries, added ~300 func requirements with RFC 2119 keywords, removed 1 incorrect inline comment. Total breachs reduced from 1515 to 673. Build passes, all tests pass.
 
 ## Changes
 
@@ -38,7 +38,7 @@ Fixed 842 policy breachs in the first half (lines 1-15000) of semio-repo/cli/mai
 ## Plan
 
 1. Analyze breachs in first half of main.go
-2. Write Python processing script to add summaries/specs
+2. Write Python processing script to add summaries/requirements
 3. Fix orphan definitions with Preamble section
 4. Clean up any incorrectly placed comments
 5. Verify build and tests

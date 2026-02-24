@@ -8,4 +8,4 @@ The CLI sends unified diffs or file snapshots; the server parses them, reindexes
 HTTP endpoints cover ticket lifecycle commands, diff ingestion, precommit checks, indexing, and read-only queries for warnings, breachs, and scopes.
 Webhook receivers enrich GitHub issue events, and Discord notifications format prompt/summary headings to match ticket workflow conventions.
 
-# Specs
+# 💯Requirements

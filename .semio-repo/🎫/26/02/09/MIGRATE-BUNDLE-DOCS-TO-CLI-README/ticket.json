@@ -170,105 +170,105 @@
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs",
+              "path": "semio-repo/cli/README.md#Requirements",
               "lines": {
                 "added": 386,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Artifact Kind Derivation",
+              "path": "semio-repo/cli/README.md#Requirements#Artifact Kind Derivation",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#CLI",
+              "path": "semio-repo/cli/README.md#Requirements#CLI",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Code Hygiene",
+              "path": "semio-repo/cli/README.md#Requirements#Code Hygiene",
               "lines": {
                 "added": 78,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Contributor",
+              "path": "semio-repo/cli/README.md#Requirements#Contributor",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Goal",
+              "path": "semio-repo/cli/README.md#Requirements#Goal",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#MCP Tools",
+              "path": "semio-repo/cli/README.md#Requirements#MCP Tools",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Move, Integrate, Extract",
+              "path": "semio-repo/cli/README.md#Requirements#Move, Integrate, Extract",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Repo Dev Server",
+              "path": "semio-repo/cli/README.md#Requirements#Repo Dev Server",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Repo Tooling",
+              "path": "semio-repo/cli/README.md#Requirements#Repo Tooling",
               "lines": {
                 "added": 88,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Sections",
+              "path": "semio-repo/cli/README.md#Requirements#Sections",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Ticket",
+              "path": "semio-repo/cli/README.md#Requirements#Ticket",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Ticket UX",
+              "path": "semio-repo/cli/README.md#Requirements#Ticket UX",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Tooling",
+              "path": "semio-repo/cli/README.md#Requirements#Tooling",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Tree",
+              "path": "semio-repo/cli/README.md#Requirements#Tree",
               "lines": {
                 "added": 26,
                 "removed": 0

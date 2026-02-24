@@ -25,11 +25,11 @@ Fixed all code breachs in extension.ts (45→0) and coda.py (70→0). Added sect
 ## Todos
 
 - [x] Fix extension.ts section summaries
-- [x] Fix extension.ts definition summaries and specs
+- [x] Fix extension.ts definition summaries and requirements
 - [x] Fix extension.ts inline comment breachs (RFC2119 keywords)
 - [x] Fix coda.py orphan definitions (wrap in sections)
 - [x] Fix coda.py section summaries
-- [x] Fix coda.py definition summaries and specs (move between decorator and def)
+- [x] Fix coda.py definition summaries and requirements (move between decorator and def)
 - [x] Verify 0 breachs on both files
 
 ## Plan

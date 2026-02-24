@@ -2,7 +2,7 @@
   "title": "Fix All Policy Breachs in Semio Py",
   "status": "closed",
   "prompt": "Fix all 985 policy breachs in semio/py/semio.py",
-  "summary": "Fixed all 985 policy breachs in semio/py/semio.py: 45 section summaries, 469 definition summaries, 470 definition specs, 1 orphan fix. 0 breachs remaining.",
+  "summary": "Fixed all 985 policy breachs in semio/py/semio.py: 45 section summaries, 469 definition summaries, 470 definition requirements, 1 orphan fix. 0 breachs remaining.",
   "goal": "FIX-POLICY-VIOLATIONS/FIX-ALL-PY-VIOLATIONS",
   "interactions": [
     {

@@ -11,7 +11,7 @@ Fixed all 163 code breachs across semio-repo/server/main.go and semio/js/sketchp
 ## Changes
 
 - semio-repo/server/main.go: Added 16 section summaries, 26 type summaries, ~50 function summaries, and spec comments for exported functions.
-- semio/js/sketchpad/Type.tsx: Added 15 section summaries, 9 interface summaries, 2 enum summaries, 1 type alias summary, 30 exported function summaries with specs, and 18 exported const summaries.
+- semio/js/sketchpad/Type.tsx: Added 15 section summaries, 9 interface summaries, 2 enum summaries, 1 type alias summary, 30 exported function summaries with requirements, and 18 exported const summaries.
 
 ## Log
 
@@ -24,10 +24,10 @@ Fixed all 163 code breachs across semio-repo/server/main.go and semio/js/sketchp
 
 - [x] Add section summaries for main.go (16 sections)
 - [x] Add type summaries for main.go (26 types)
-- [x] Add function summaries + specs for main.go
+- [x] Add function summaries + requirements for main.go
 - [x] Add section summaries for Type.tsx (15 sections)
 - [x] Add interface/enum/type summaries for Type.tsx
-- [x] Add exported function summaries + specs for Type.tsx (30 functions)
+- [x] Add exported function summaries + requirements for Type.tsx (30 functions)
 - [x] Add exported const summaries for Type.tsx (18 consts)
 
 ## Plan

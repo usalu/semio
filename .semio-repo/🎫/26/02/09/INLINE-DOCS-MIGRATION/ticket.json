@@ -4273,14 +4273,14 @@
               }
             },
             {
-              "path": ".devcontainer/README.md#Specs",
+              "path": ".devcontainer/README.md#Requirements",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": ".devcontainer/README.md#Specs#Devcontainer",
+              "path": ".devcontainer/README.md#Requirements#Devcontainer",
               "lines": {
                 "added": 16,
                 "removed": 0
@@ -4413,105 +4413,105 @@
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs",
+              "path": "semio-repo/cli/README.md#Requirements",
               "lines": {
                 "added": 386,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Artifact Kind Derivation",
+              "path": "semio-repo/cli/README.md#Requirements#Artifact Kind Derivation",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#CLI",
+              "path": "semio-repo/cli/README.md#Requirements#CLI",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Code Hygiene",
+              "path": "semio-repo/cli/README.md#Requirements#Code Hygiene",
               "lines": {
                 "added": 78,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Contributor",
+              "path": "semio-repo/cli/README.md#Requirements#Contributor",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Goal",
+              "path": "semio-repo/cli/README.md#Requirements#Goal",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#MCP Tools",
+              "path": "semio-repo/cli/README.md#Requirements#MCP Tools",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Move, Integrate, Extract",
+              "path": "semio-repo/cli/README.md#Requirements#Move, Integrate, Extract",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Repo Dev Server",
+              "path": "semio-repo/cli/README.md#Requirements#Repo Dev Server",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Repo Tooling",
+              "path": "semio-repo/cli/README.md#Requirements#Repo Tooling",
               "lines": {
                 "added": 88,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Sections",
+              "path": "semio-repo/cli/README.md#Requirements#Sections",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Ticket",
+              "path": "semio-repo/cli/README.md#Requirements#Ticket",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Ticket UX",
+              "path": "semio-repo/cli/README.md#Requirements#Ticket UX",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Tooling",
+              "path": "semio-repo/cli/README.md#Requirements#Tooling",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/cli/README.md#Specs#Tree",
+              "path": "semio-repo/cli/README.md#Requirements#Tree",
               "lines": {
                 "added": 26,
                 "removed": 0
@@ -4553,7 +4553,7 @@
               }
             },
             {
-              "path": "semio-repo/server/README.md#Specs",
+              "path": "semio-repo/server/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -4679,56 +4679,56 @@
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs",
+              "path": "semio-repo/vscode/README.md#Requirements",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Commands",
+              "path": "semio-repo/vscode/README.md#Requirements#Commands",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Contributors",
+              "path": "semio-repo/vscode/README.md#Requirements#Contributors",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Diagnostics",
+              "path": "semio-repo/vscode/README.md#Requirements#Diagnostics",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#General",
+              "path": "semio-repo/vscode/README.md#Requirements#General",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Sections View",
+              "path": "semio-repo/vscode/README.md#Requirements#Sections View",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Sidebar",
+              "path": "semio-repo/vscode/README.md#Requirements#Sidebar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Tickets",
+              "path": "semio-repo/vscode/README.md#Requirements#Tickets",
               "lines": {
                 "added": 14,
                 "removed": 0
@@ -4742,161 +4742,161 @@
               }
             },
             {
-              "path": "semio/README.md#Specs",
+              "path": "semio/README.md#Requirements",
               "lines": {
                 "added": 199,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Attribute",
+              "path": "semio/README.md#Requirements#Attribute",
               "lines": {
                 "added": 24,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Author",
+              "path": "semio/README.md#Requirements#Author",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Benchmark",
+              "path": "semio/README.md#Requirements#Benchmark",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Concept",
+              "path": "semio/README.md#Requirements#Concept",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Connection",
+              "path": "semio/README.md#Requirements#Connection",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Connector",
+              "path": "semio/README.md#Requirements#Connector",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Design",
+              "path": "semio/README.md#Requirements#Design",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Group",
+              "path": "semio/README.md#Requirements#Group",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Kit",
+              "path": "semio/README.md#Requirements#Kit",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Layer",
+              "path": "semio/README.md#Requirements#Layer",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Model",
+              "path": "semio/README.md#Requirements#Model",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Model#Model Tag Selection",
+              "path": "semio/README.md#Requirements#Model#Model Tag Selection",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Model#Supported 3D File Extensions",
+              "path": "semio/README.md#Requirements#Model#Supported 3D File Extensions",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Piece",
+              "path": "semio/README.md#Requirements#Piece",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Plane",
+              "path": "semio/README.md#Requirements#Plane",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Port",
+              "path": "semio/README.md#Requirements#Port",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Prop",
+              "path": "semio/README.md#Requirements#Prop",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Quality",
+              "path": "semio/README.md#Requirements#Quality",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Stat",
+              "path": "semio/README.md#Requirements#Stat",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Tag",
+              "path": "semio/README.md#Requirements#Tag",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Type",
+              "path": "semio/README.md#Requirements#Type",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio/README.md#Specs#Url",
+              "path": "semio/README.md#Requirements#Url",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -4945,7 +4945,7 @@
               }
             },
             {
-              "path": "semio/assets/README.md#Specs",
+              "path": "semio/assets/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -4966,7 +4966,7 @@
               }
             },
             {
-              "path": "semio/desktop/README.md#Specs",
+              "path": "semio/desktop/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -4987,7 +4987,7 @@
               }
             },
             {
-              "path": "semio/docs/README.md#Specs",
+              "path": "semio/docs/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -5015,14 +5015,14 @@
               }
             },
             {
-              "path": "semio/engine/README.md#Specs",
+              "path": "semio/engine/README.md#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/engine/README.md#Specs#Engine",
+              "path": "semio/engine/README.md#Requirements#Engine",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -5043,7 +5043,7 @@
               }
             },
             {
-              "path": "semio/go/README.md#Specs",
+              "path": "semio/go/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -6268,7 +6268,7 @@
               }
             },
             {
-              "path": "semio/js/README.md#Specs",
+              "path": "semio/js/README.md#Requirements",
               "lines": {
                 "added": 3,
                 "removed": 0
@@ -6331,42 +6331,42 @@
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs",
+              "path": "semio/js/sketchpad/README.md#Requirements",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Borders",
+              "path": "semio/js/sketchpad/README.md#Requirements#Borders",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Interaction State",
+              "path": "semio/js/sketchpad/README.md#Requirements#Interaction State",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#State Management",
+              "path": "semio/js/sketchpad/README.md#Requirements#State Management",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Toolbar",
+              "path": "semio/js/sketchpad/README.md#Requirements#Toolbar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/sketchpad/README.md#Specs#Windows",
+              "path": "semio/js/sketchpad/README.md#Requirements#Windows",
               "lines": {
                 "added": 12,
                 "removed": 0
@@ -6436,7 +6436,7 @@
               }
             },
             {
-              "path": "semio/play/README.md#Specs",
+              "path": "semio/play/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -6464,7 +6464,7 @@
               }
             },
             {
-              "path": "semio/rs/README.md#Specs",
+              "path": "semio/rs/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -6485,7 +6485,7 @@
               }
             },
             {
-              "path": "semio/sketchpad/README.md#Specs",
+              "path": "semio/sketchpad/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -6506,7 +6506,7 @@
               }
             },
             {
-              "path": "semio/sqlite/README.md#Specs",
+              "path": "semio/sqlite/README.md#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0

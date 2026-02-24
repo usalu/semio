@@ -21,8 +21,8 @@
 
 // #endregion 🔖License
 
-// #region 🔖Specs
-// #endregion 🔖Specs
+// #region 🔖Requirements
+// #endregion 🔖Requirements
 
 // #endregion 🔖Header
 

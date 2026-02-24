@@ -2,7 +2,7 @@
   "title": "Fix All Policy Breachs in CLI Main Go",
   "status": "closed",
   "prompt": "Fix all 673 remaining policy breachs in semio-repo/cli/main.go by adding summary and spec comments to exported definitions and sections",
-  "summary": "Fixed all 673 policy breachs in semio-repo/cli/main.go: added 329 definition summaries, 314 function specs with RFC 2119 keywords, and 30 section summaries. All section summaries placed after #region markers. File compiles cleanly. Zero breachs remaining.",
+  "summary": "Fixed all 673 policy breachs in semio-repo/cli/main.go: added 329 definition summaries, 314 function requirements with RFC 2119 keywords, and 30 section summaries. All section summaries placed after #region markers. File compiles cleanly. Zero breachs remaining.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/542"
   },
@@ -961,7 +961,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionSpecs",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionRequirements",
               "lines": {
                 "added": 25,
                 "removed": 0
@@ -1229,7 +1229,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionSpecs",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requiresDefinitionRequirements",
               "lines": {
                 "added": 25,
                 "removed": 0

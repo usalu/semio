@@ -41,4 +41,4 @@ Components use virtual methods to define their inputs/outputs:
 
 Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
 
-# Specs
+# 💯Requirements

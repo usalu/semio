@@ -67,14 +67,14 @@
       "file": "sketchpad.test.ts",
       "column": 0,
       "line": 0,
-      "specs": [],
+      "requirements": [],
       "suites": [
         {
           "title": "sketchpad",
           "file": "sketchpad.test.ts",
           "line": 567,
           "column": 6,
-          "specs": [
+          "requirements": [
             {
               "title": "Design",
               "ok": true,

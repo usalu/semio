@@ -1,0 +1,680 @@
+{
+  "title": "Refactor Event Hook Architecture",
+  "description": "Refactor the event and hook architecture in semio-repo CLI to match the new layout with renamed events (searching→search.starting, code.editing→code.edit.starting, etc.) and new events (test, build). Update all HookEvent constants, HookResult types, dispatch logic, tool classification, editor providers, configure command, and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/687"
+  },
+  "goal": "SHIPPABLE/CLI-FOUNDATION",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-24 14:16:04",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "234c0d69fdad61b1af8e68a33982d606ecac54e0",
+      "prompt": "Refactor the event and hook architecture in semio-repo CLI to match the new layout with renamed events (searching→search.starting, code.editing→code.edit.starting, etc.) and new events (test, build). Update all HookEvent constants, HookResult types, dispatch logic, tool classification, editor providers, configure command, and tests.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-24 15:19:39",
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "234c0d69fdad61b1af8e68a33982d606ecac54e0",
+      "summary": "Refactored event hook architecture with renamed and new test/build events. All tests pass."
+    }
+  ],
+  "agents": [
+    {
+      "session": "8553afbd-303f-45c0-ac3d-24e724f624ce",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/8553afbd-303f-45c0-ac3d-24e724f624ce.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Gather repo context on hooks/events",
+            "completed": "2026-02-24T14:24:46Z"
+          },
+          {
+            "name": "Open ticket for refactoring",
+            "completed": "2026-02-24T14:24:46Z"
+          },
+          {
+            "name": "Rename HookEvent constants",
+            "completed": "2026-02-24T14:24:46Z"
+          },
+          {
+            "name": "Add new test/build events and ToolKinds",
+            "completed": "2026-02-24T14:24:46Z"
+          },
+          {
+            "name": "Update HookResult types",
+            "completed": "2026-02-24T14:24:46Z"
+          },
+          {
+            "name": "Update dispatch and extract functions",
+            "started": "2026-02-24T14:24:46Z"
+          },
+          {
+            "name": "Update resolve event adapters"
+          },
+          {
+            "name": "Update hook command and vsCode mapping"
+          },
+          {
+            "name": "Update tests for new architecture"
+          },
+          {
+            "name": "Run tests and fix issues"
+          },
+          {
+            "name": "Close ticket with summary"
+          }
+        ]
+      },
+      "events": [
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:16:17Z",
+          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket open \"SHIPPABLE/CLI-FOUNDATION\" \"Refactor Event Hook Architecture\" \"Refactor the event and hook architecture in semio-repo CLI to match the new layout with renamed events (searching→search.starting, code.editing→code.edit.starting, etc.) and new events (test, build). Update all HookEvent constants, HookResult types, dispatch logic, tool classification, editor providers, configure command, and tests.\" \"copilot-chat\" \"opus-4-6\" 2\u003e\u00261"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-24T14:16:35Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:16:38Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L13846-L13950"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:16:44Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L13846-L13950"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:16:47Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L13950-L14200"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:16:54Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L13950-L14200"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:16:57Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L14200-L14600"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:17:04Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L14200-L14600"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:17:08Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L14600-L15100"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:17:16Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L14600-L15100"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:17:22Z",
+          "query": "func Test.*classifyTool|func Test.*ClassifyTool|func Test.*ToolKind|func Test.*ResolveHookEvent|func Test.*ResolveCopilot|func Test.*ResolveCursor|func Test.*ResolveWindsurf|func Test.*ResolveClaude in **/semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:17:29Z",
+          "query": "func Test.*classifyTool|func Test.*ClassifyTool|func Test.*ToolKind|func Test.*ResolveHookEvent|func Test.*ResolveCopilot|func Test.*ResolveCursor|func Test.*ResolveWindsurf|func Test.*ResolveClaude in **/semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:17:34Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L15406-L15550"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:17:41Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L15406-L15550"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:17:48Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L15550-L15900"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:17:55Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L15550-L15900"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:17:59Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L15900-L17100"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:18:06Z",
+          "query": "/workspaces/semio/semio-repo/cli/main_test.go#L15900-L17100"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-24T14:18:48Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:19:01Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:19:10Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 17
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo✂️hookevent"
+                ]
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              }
+            ],
+            "loc": 21
+          }
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:19:16Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:19:31Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 17
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo🪨allhookevents"
+                ]
+              }
+            ],
+            "loc": 21
+          }
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:19:36Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n 'HookAgentToolSearching\\b\\|HookAgentToolSearched\\b\\|HookAgentToolCodeEditing\\b\\|HookAgentToolCodeEdited\\b' semio-repo/cli/main.go | head -80"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:19:44Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n 'HookAgentToolSearching\\b\\|HookAgentToolSearched\\b\\|HookAgentToolCodeEditing\\b\\|HookAgentToolCodeEdited\\b' semio-repo/cli/main.go | head -80"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:19:47Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -c 'HookAgentToolSearching\\b\\|HookAgentToolSearched\\b\\|HookAgentToolCodeEditing\\b\\|HookAgentToolCodeEdited\\b' semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:19:55Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -c 'HookAgentToolSearching\\b\\|HookAgentToolSearched\\b\\|HookAgentToolCodeEditing\\b\\|HookAgentToolCodeEdited\\b' semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:20:00Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -c 'HookAgentToolSearching\\b\\|HookAgentToolSearched\\b\\|HookAgentToolCodeEditing\\b\\|HookAgentToolCodeEdited\\b' semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:20:08Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -c 'HookAgentToolSearching\\b\\|HookAgentToolSearched\\b\\|HookAgentToolCodeEditing\\b\\|HookAgentToolCodeEdited\\b' semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:20:13Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\\bHookAgentToolSearching\\b/HookAgentToolSearchStarting/g; s/\\bHookAgentToolSearched\\b/HookAgentToolSearchEnded/g; s/\\bHookAgentToolCodeEditing\\b/HookAgentToolCodeEditStarting/g; s/\\bHookAgentToolCodeEdited\\b/HookAgentToolCodeEditEnded/g' semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:20:22Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\\bHookAgentToolSearching\\b/HookAgentToolSearchStarting/g; s/\\bHookAgentToolSearched\\b/HookAgentToolSearchEnded/g; s/\\bHookAgentToolCodeEditing\\b/HookAgentToolCodeEditStarting/g; s/\\bHookAgentToolCodeEdited\\b/HookAgentToolCodeEditEnded/g' semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:20:26Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\\bHookAgentToolSearching\\b/HookAgentToolSearchStarting/g; s/\\bHookAgentToolSearched\\b/HookAgentToolSearchEnded/g; s/\\bHookAgentToolCodeEditing\\b/HookAgentToolCodeEditStarting/g; s/\\bHookAgentToolCodeEdited\\b/HookAgentToolCodeEditEnded/g' semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:20:34Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\\bHookAgentToolSearching\\b/HookAgentToolSearchStarting/g; s/\\bHookAgentToolSearched\\b/HookAgentToolSearchEnded/g; s/\\bHookAgentToolCodeEditing\\b/HookAgentToolCodeEditStarting/g; s/\\bHookAgentToolCodeEdited\\b/HookAgentToolCodeEditEnded/g' semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:20:40Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n '\"agent\\.tool\\.searching\\|\"agent\\.tool\\.code\\.editing\\|\"agent\\.tool\\.code\\.edited\\|\"agent\\.tool\\.searching\\.ended' semio-repo/cli/main_test.go | head -30"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:20:47Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n '\"agent\\.tool\\.searching\\|\"agent\\.tool\\.code\\.editing\\|\"agent\\.tool\\.code\\.edited\\|\"agent\\.tool\\.searching\\.ended' semio-repo/cli/main_test.go | head -30"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:20:52Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\"agent\\.tool\\.searching\\.ended\"/\"agent.tool.search.ended\"/g; s/\"agent\\.tool\\.searching\"/\"agent.tool.search.starting\"/g; s/\"agent\\.tool\\.code\\.editing\"/\"agent.tool.code.edit.starting\"/g; s/\"agent\\.tool\\.code\\.edited\"/\"agent.tool.code.edit.ended\"/g' semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:21:04Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\"agent\\.tool\\.searching\\.ended\"/\"agent.tool.search.ended\"/g; s/\"agent\\.tool\\.searching\"/\"agent.tool.search.starting\"/g; s/\"agent\\.tool\\.code\\.editing\"/\"agent.tool.code.edit.starting\"/g; s/\"agent\\.tool\\.code\\.edited\"/\"agent.tool.code.edit.ended\"/g' semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:21:09Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n '\"agent\\.tool\\.searching\\|\"agent\\.tool\\.code\\.editing\\|\"agent\\.tool\\.code\\.edited\\|\"agent\\.tool\\.searching\\.ended\\|agent\\.tool\\.searching\\|agent\\.tool\\.code\\.editing\\|agent\\.tool\\.code\\.edited' semio-repo/cli/main.go | head -30"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:21:16Z",
+          "query": "cd /workspaces/semio \u0026\u0026 grep -n '\"agent\\.tool\\.searching\\|\"agent\\.tool\\.code\\.editing\\|\"agent\\.tool\\.code\\.edited\\|\"agent\\.tool\\.searching\\.ended\\|agent\\.tool\\.searching\\|agent\\.tool\\.code\\.editing\\|agent\\.tool\\.code\\.edited' semio-repo/cli/main.go | head -30"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:21:19Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L36400-L36440"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:21:27Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L36400-L36440"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:21:33Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:21:42Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 13
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo🛠️hookcommand"
+                ]
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              }
+            ],
+            "loc": 18
+          }
+        },
+        {
+          "kind": "agent.tool.terminal.starting",
+          "timestamp": "2026-02-24T14:21:50Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\\bHookResultAgentToolSearching\\b/HookResultAgentToolSearchStarting/g; s/\\bHookResultAgentToolSearched\\b/HookResultAgentToolSearchEnded/g; s/\\bHookResultAgentToolCodeEditing\\b/HookResultAgentToolCodeEditStarting/g; s/\\bHookResultAgentToolCodeEdited\\b/HookResultAgentToolCodeEditEnded/g' semio-repo/cli/main.go semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.terminal.ended",
+          "timestamp": "2026-02-24T14:21:58Z",
+          "query": "cd /workspaces/semio \u0026\u0026 sed -i 's/\\bHookResultAgentToolSearching\\b/HookResultAgentToolSearchStarting/g; s/\\bHookResultAgentToolSearched\\b/HookResultAgentToolSearchEnded/g; s/\\bHookResultAgentToolCodeEditing\\b/HookResultAgentToolCodeEditStarting/g; s/\\bHookResultAgentToolCodeEdited\\b/HookResultAgentToolCodeEditEnded/g' semio-repo/cli/main.go semio-repo/cli/main_test.go"
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-24T14:22:13Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:22:17Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L34920-L34950"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:22:28Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L34920-L34950"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:22:31Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L34950-L34970"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:22:39Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L34950-L34970"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:22:44Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:22:53Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 7
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo✂️toolkind"
+                ]
+              }
+            ],
+            "loc": 9
+          }
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:23:02Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:23:11Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 21
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo🛠️classifytool"
+                ]
+              }
+            ],
+            "loc": 26
+          }
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:23:15Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35030-L35070"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:23:23Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35030-L35070"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:23:32Z"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:23:40Z"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:23:47Z",
+          "query": "type HookResultAgentToolSearch in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:23:59Z",
+          "query": "type HookResultAgentToolSearch in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:24:02Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L34645-L34720"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:24:10Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L34645-L34720"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:24:30Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:24:39Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 37
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolsearchstarting",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolsearchended",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolcodeeditstarting",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolcodeeditended",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolteststarting",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttooltestended",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolbuildstarting",
+                  "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolbuildended"
+                ]
+              }
+            ],
+            "loc": 66
+          }
+        },
+        {
+          "kind": "agent.tool.ended",
+          "timestamp": "2026-02-24T14:24:54Z",
+          "query": "manage_todo_list"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:25:00Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35475-L35530"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:25:07Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35475-L35530"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:25:11Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35530-L35590"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:25:20Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35530-L35590"
+        },
+        {
+          "kind": "agent.tool.code.editing",
+          "timestamp": "2026-02-24T14:25:32Z",
+          "file": "semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.code.edited",
+          "timestamp": "2026-02-24T14:25:42Z",
+          "file": "semio-repo/cli/main.go",
+          "old": {
+            "loc": 35
+          },
+          "new": {
+            "sections": [
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖cli"
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖hooks",
+                "definitions": [
+                  "🧰semiorepo⌨️cli💻maingo🛠️dispatchhook"
+                ]
+              },
+              {
+                "section": "🧰semiorepo⌨️cli💻maingo🔖types"
+              }
+            ],
+            "loc": 59
+          }
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:27:14Z",
+          "query": "func extractCodeSearch in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:27:21Z",
+          "query": "func extractCodeSearch in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:27:25Z",
+          "query": "func extractCodeEdit in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:27:28Z",
+          "query": "func extractTerminal in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:27:31Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35830-L35990"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:27:38Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35830-L35990"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:27:41Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35990-L36040"
+        },
+        {
+          "kind": "agent.tool.searching.ended",
+          "timestamp": "2026-02-24T14:27:48Z",
+          "query": "/workspaces/semio/semio-repo/cli/main.go#L35990-L36040"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:28:02Z",
+          "query": "HookResultAgentToolSearchStarting struct in **/semio-repo/cli/main.go"
+        },
+        {
+          "kind": "agent.tool.searching",
+          "timestamp": "2026-02-24T14:28:10Z",
+          "query": "HookResultAgentToolTestStarting struct in **/semio-repo/cli/main.go"
+        }
+      ],
+      "diff": {
+        "projects": {
+          "modified": [
+            "🧰semiorepo"
+          ]
+        },
+        "bundles": {
+          "modified": [
+            "🧰semiorepo⌨️cli"
+          ]
+        },
+        "folders": {
+          "modified": [
+            "🧰semiorepo⌨️cli"
+          ]
+        },
+        "files": {
+          "modified": [
+            "🧰semiorepo⌨️cli💻maingo"
+          ]
+        },
+        "sections": {
+          "modified": [
+            "🧰semiorepo⌨️cli💻maingo🔖hooks",
+            "🧰semiorepo⌨️cli💻maingo🔖types",
+            "🧰semiorepo⌨️cli💻maingo🔖cli"
+          ]
+        },
+        "definitions": {
+          "modified": [
+            "🧰semiorepo⌨️cli💻maingo✂️hookevent",
+            "🧰semiorepo⌨️cli💻maingo🪨allhookevents",
+            "🧰semiorepo⌨️cli💻maingo🛠️hookcommand",
+            "🧰semiorepo⌨️cli💻maingo✂️toolkind",
+            "🧰semiorepo⌨️cli💻maingo🛠️classifytool",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolsearchstarting",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolsearchended",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolcodeeditstarting",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolcodeeditended",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolteststarting",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttooltestended",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolbuildstarting",
+            "🧰semiorepo⌨️cli💻maingo✂️hookresultagenttoolbuildended",
+            "🧰semiorepo⌨️cli💻maingo🛠️dispatchhook"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -78,8 +78,8 @@
               }
             },
             {
-              "from": "semio-repo/server/main.go#Specs",
-              "to": "semio-repo/server/main.go#Header#Specs",
+              "from": "semio-repo/server/main.go#Requirements",
+              "to": "semio-repo/server/main.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 2

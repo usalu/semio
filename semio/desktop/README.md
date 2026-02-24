@@ -17,4 +17,4 @@ Electron desktop shell for the semio sketchpad, working primarily with local kit
 
 </details>
 
-# Specs
+# 💯Requirements

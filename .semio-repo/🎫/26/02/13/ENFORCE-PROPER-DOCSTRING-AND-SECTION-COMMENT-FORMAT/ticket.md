@@ -41,8 +41,8 @@ Implemented Python triple-quote docstring detection, autofix (create/merge), Def
 
 - [x] Fix section format: regular comments only, no docstrings
 - [x] Fix definition format per language: JSDoc(TS), """(Py), XML doc(C#), ///(Rust), //(Go)
-- [x] Section order: identification, summary, specs, TODOs, docs
-- [x] Definition order: summary, specs, TODOs, identification (last)
+- [x] Section order: identification, summary, requirements, TODOs, docs
+- [x] Definition order: summary, requirements, TODOs, identification (last)
 - [x] Implement breachs and autofix
 - [x] Write tests for all languages
 - [x] Fix all codebase files
@@ -59,7 +59,7 @@ Implemented Python triple-quote docstring detection, autofix (create/merge), Def
 3. In codePolicy definition checking, add native docstring detection per language
 4. Update DefinitionDocLines to mark JSDoc block lines as definition doc
 5. In TypeScript ScanComments, exempt JSDoc blocks that precede definitions
-6. Update the definition summary/specs/identification detection to parse JSDoc content
+6. Update the definition summary/requirements/identification detection to parse JSDoc content
 7. Add autofix case for converting // lines to JSDoc format
 8. Run all tests
 9. Fix all files in the codebase

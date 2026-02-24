@@ -13,7 +13,7 @@ Fixed all 52 code breachs in kitSelectionHelper.ts: added 4 section summary comm
 - Added 4 section summary comments with MUST keywords (Imports, Types, Generic Utilities, Kit Diagram Geometry)
 - Added 48 definition summary comments for all exported definitions
 - Added 8 spec comments with RFC2119 keywords on all `export function` definitions (addToSelection, removeFromSelection, toggleInSelection, replaceSelectionDimension, clearSelectionDimension, clearSelection, selectAllInDimension, isSelected)
-- No specs added for `export const`, `export type`, `export interface` definitions per instructions
+- No requirements added for `export const`, `export type`, `export interface` definitions per instructions
 
 ## Log
 

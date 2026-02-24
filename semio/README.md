@@ -2,7 +2,7 @@
 
 Domain model library shared across all semio implementations (Kit, Design, Type, Connection, Piece, Connector, Model, Attribute, Tag, Concept, Plane, Url, Quality, Benchmark, Port, Author, Layer, Group, Prop, Stat).
 
-# Specs
+# 💯Requirements
 
 ## Kit
 

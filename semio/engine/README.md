@@ -11,7 +11,7 @@ Python engine providing schema generation, validation, and backend functionality
 - `generate-schemas.ts` - Generates GraphQL, JSON, and SQL schemas from TypeScript definitions
 - `sqliteschema.ts` - SQLite schema generation utilities
 
-# Specs
+# 💯Requirements
 
 ## Engine
 

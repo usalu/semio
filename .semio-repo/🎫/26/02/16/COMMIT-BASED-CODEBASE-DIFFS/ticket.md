@@ -23,6 +23,6 @@ goal: AI-OPTIMIZED-REPO
 7. Create commits infrastructure: `GetCommitsDir`, `CommitDiff` type, `SaveCommitDiff`
 8. Implement post-commit git hook CLI command (`repo commit-hook`) that captures full codebase diff
 9. Create git hook installer / hook script
-10. Update README specs
+10. Update README requirements
 11. Update/extend tests
 12. Build and verify

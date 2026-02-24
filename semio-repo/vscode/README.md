@@ -66,7 +66,7 @@ Section tree expansion in the Monorepo view treats GraphQL section children as m
 
 Ticket tree items expose inline close or reopen actions that apply to the clicked ticket, list commit entries derived from ticket and interaction commits, and keep hover tooltips limited to the ticket description.
 
-# Specs
+# 💯Requirements
 
 ## Sidebar
 

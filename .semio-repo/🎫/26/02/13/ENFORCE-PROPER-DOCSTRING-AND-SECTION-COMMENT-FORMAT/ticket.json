@@ -13614,7 +13614,7 @@
       "system": "linux",
       "client": "copilot-chat",
       "commit": "fca8a9a0d53f7c789f1f214d7e769920fbe2cea2",
-      "prompt": "Refactor docstring and section comment format to enforce: (1) Sections use regular comments, definitions use native docstrings (JSDoc for TS/JS, triple-quote for Python, XML doc for C#, /// for Rust, // for Go). (2) No blank lines between region marker and comments/docstrings. (3) One blank line between definitions/sections. (4) Section format: identification first, summary second, specs, TODOs, docs. (5) Definition docstring format: summary first, specs, TODOs, identification last. (6) Implement policies, autofix, tests for all languages. Fix all breachs to 0.",
+      "prompt": "Refactor docstring and section comment format to enforce: (1) Sections use regular comments, definitions use native docstrings (JSDoc for TS/JS, triple-quote for Python, XML doc for C#, /// for Rust, // for Go). (2) No blank lines between region marker and comments/docstrings. (3) One blank line between definitions/sections. (4) Section format: identification first, summary second, requirements, TODOs, docs. (5) Definition docstring format: summary first, requirements, TODOs, identification last. (6) Implement policies, autofix, tests for all languages. Fix all breachs to 0.",
       "llm": "opus-4-6",
       "diff": {
         "bundles": {

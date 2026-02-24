@@ -39,7 +39,7 @@ This keeps the active editor clean of stale versions while aligning installation
 Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.
 The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-op once cached.
 
-# Specs
+# 💯Requirements
 
 ## Devcontainer
 

@@ -2,7 +2,7 @@
   "title": "Migrate Vscode Bundle Docs From Root Readme",
   "status": "closed",
   "prompt": "Migrate Command Tree, Sections Explorer, and semio/vscode subsections from root README.md into the semio-repo/vscode/README.md Docs section",
-  "summary": "Appended six doc subsections (Command Tree, Sections Explorer, Breach Diagnostics, Kit Validation, Sidebar, Tickets) from root README.md to semio-repo/vscode/README.md Docs section before Specs",
+  "summary": "Appended six doc subsections (Command Tree, Sections Explorer, Breach Diagnostics, Kit Validation, Sidebar, Tickets) from root README.md to semio-repo/vscode/README.md Docs section before Requirements",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/475"
   },
@@ -149,56 +149,56 @@
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs",
+              "path": "semio-repo/vscode/README.md#Requirements",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Commands",
+              "path": "semio-repo/vscode/README.md#Requirements#Commands",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Contributors",
+              "path": "semio-repo/vscode/README.md#Requirements#Contributors",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Diagnostics",
+              "path": "semio-repo/vscode/README.md#Requirements#Diagnostics",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#General",
+              "path": "semio-repo/vscode/README.md#Requirements#General",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Sections View",
+              "path": "semio-repo/vscode/README.md#Requirements#Sections View",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Sidebar",
+              "path": "semio-repo/vscode/README.md#Requirements#Sidebar",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio-repo/vscode/README.md#Specs#Tickets",
+              "path": "semio-repo/vscode/README.md#Requirements#Tickets",
               "lines": {
                 "added": 14,
                 "removed": 0

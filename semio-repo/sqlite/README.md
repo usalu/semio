@@ -8,7 +8,7 @@ SQLite schema definitions for repo exports.
 
 SQLite schema with ticket UI storage alongside LLM and commit metadata.
 
-# Specs
+# 💯Requirements
 
 ```mermaid
 erDiagram

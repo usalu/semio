@@ -85,7 +85,7 @@
               }
             },
             {
-              "path": "💻coda/py/coda.py#Header#Specs",
+              "path": "💻coda/py/coda.py#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -220,7 +220,7 @@
               }
             },
             {
-              "path": "coda/py/coda.py#Header#Specs",
+              "path": "coda/py/coda.py#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0

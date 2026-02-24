@@ -232,7 +232,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§specsPolicy",
+              "path": "💻semio-repo/cli/main.go#Types#Policies§requirementsPolicy",
               "lines": {
                 "added": 0,
                 "removed": 11

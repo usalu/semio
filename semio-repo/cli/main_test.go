@@ -3091,7 +3091,7 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 	}
 }
 
-func TestSectionMissingSummaryAndSpecs(t *testing.T) {
+func TestSectionMissingSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -3120,7 +3120,7 @@ func TestSectionMissingSummaryAndSpecs(t *testing.T) {
 	}
 }
 
-func TestSectionWithSummaryAndSpecs(t *testing.T) {
+func TestSectionWithSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -3147,7 +3147,7 @@ func TestSectionWithSummaryAndSpecs(t *testing.T) {
 	}
 }
 
-func TestDefinitionMissingSummaryAndSpecs(t *testing.T) {
+func TestDefinitionMissingSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -3176,7 +3176,7 @@ func TestDefinitionMissingSummaryAndSpecs(t *testing.T) {
 	}
 }
 
-func TestDefinitionWithSummaryAndSpecs(t *testing.T) {
+func TestDefinitionWithSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -3197,7 +3197,7 @@ func TestDefinitionWithSummaryAndSpecs(t *testing.T) {
 		t.Fatalf("policy check failed: %v", err)
 	}
 	for _, v := range breachs {
-		if v.Kind == BreachCodeDefMissingSummary || v.Kind == BreachCodeDefMissingSpecs {
+		if v.Kind == BreachCodeDefMissingSummary || v.Kind == BreachCodeDefMissingRequirements {
 			t.Fatalf("unexpected breach: %s", v.Kind)
 		}
 	}
@@ -4091,7 +4091,7 @@ func TestDefinitionHeaderIdAndUri(t *testing.T) {
 	}
 }
 
-func TestSpecsBreach(t *testing.T) {
+func TestRequirementsBreach(t *testing.T) {
 	t.Run("isSpecText detects RFC 2119 keywords", func(t *testing.T) {
 		cases := []struct {
 			text   string
@@ -4125,7 +4125,7 @@ func TestSpecsBreach(t *testing.T) {
 			{"File headers MUST contain `License` subregions.", true},
 			{"Use `FormatHeader` to build headers.", true},
 			{"File headers MUST contain License subregions.", false},
-			{"Specs MUST be implementation-agnostic.", false},
+			{"Requirements MUST be implementation-agnostic.", false},
 		}
 		for _, tc := range cases {
 			got, _ := hasImplementationSyntax(tc.text)
@@ -4143,7 +4143,7 @@ func TestSpecsBreach(t *testing.T) {
 			{"FormatHeader() MUST build the header.", true},
 			{"Call ctx.ReadText() for content.", true},
 			{"File headers MUST contain License subregions.", false},
-			{"Specs MUST be clean.", false},
+			{"Requirements MUST be clean.", false},
 		}
 		for _, tc := range cases {
 			got, _ := hasImplementationSyntax(tc.text)
@@ -4153,7 +4153,7 @@ func TestSpecsBreach(t *testing.T) {
 		}
 	})
 
-	t.Run("specsPolicy detects implementation syntax in header Specs", func(t *testing.T) {
+	t.Run("requirementsPolicy detects implementation syntax in header Requirements", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4169,21 +4169,21 @@ func TestSpecsBreach(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		breachs := specsPolicy(ctx)
+		breachs := requirementsPolicy(ctx)
 
 		found := false
 		for _, v := range breachs {
-			if v.Kind == BreachCodeSpecsSyntax {
+			if v.Kind == BreachCodeRequirementsSyntax {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected BreachCodeSpecsSyntax for backtick-wrapped code in header Specs")
+			t.Error("expected BreachCodeRequirementsSyntax for backtick-wrapped code in header Requirements")
 		}
 	})
 
-	t.Run("specsPolicy clean specs no breach", func(t *testing.T) {
+	t.Run("requirementsPolicy clean requirements no breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4199,16 +4199,16 @@ func TestSpecsBreach(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		breachs := specsPolicy(ctx)
+		breachs := requirementsPolicy(ctx)
 
 		for _, v := range breachs {
-			if v.Kind == BreachCodeSpecsSyntax {
-				t.Errorf("unexpected BreachCodeSpecsSyntax for clean spec: %s", v.Summary)
+			if v.Kind == BreachCodeRequirementsSyntax {
+				t.Errorf("unexpected BreachCodeRequirementsSyntax for clean spec: %s", v.Summary)
 			}
 		}
 	})
 
-	t.Run("specsPolicy detects implementation syntax in section specs", func(t *testing.T) {
+	t.Run("requirementsPolicy detects implementation syntax in section requirements", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4224,17 +4224,17 @@ func TestSpecsBreach(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		breachs := specsPolicy(ctx)
+		breachs := requirementsPolicy(ctx)
 
 		found := false
 		for _, v := range breachs {
-			if v.Kind == BreachCodeSpecsSyntax {
+			if v.Kind == BreachCodeRequirementsSyntax {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected BreachCodeSpecsSyntax for backtick in section spec")
+			t.Error("expected BreachCodeRequirementsSyntax for backtick in section spec")
 		}
 	})
 
@@ -4348,13 +4348,13 @@ func TestSpecsBreach(t *testing.T) {
 		}
 	})
 
-	t.Run("BreachCodeSpecsSyntax in breach info table", func(t *testing.T) {
-		info := BreachCodeSpecsSyntax.Info()
-		if info.Kind != BreachCodeSpecsSyntax {
-			t.Errorf("expected kind %s, got %s", BreachCodeSpecsSyntax, info.Kind)
+	t.Run("BreachCodeRequirementsSyntax in breach info table", func(t *testing.T) {
+		info := BreachCodeRequirementsSyntax.Info()
+		if info.Kind != BreachCodeRequirementsSyntax {
+			t.Errorf("expected kind %s, got %s", BreachCodeRequirementsSyntax, info.Kind)
 		}
 		if info.Autofixable {
-			t.Error("specs syntax breach should not be autofixable")
+			t.Error("requirements syntax breach should not be autofixable")
 		}
 	})
 }
@@ -4394,7 +4394,7 @@ func TestDocsBreach(t *testing.T) {
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)
 		}
-		if err := WriteTextFile(readmePath, "# Specs\n\nSome specs here.\n"); err != nil {
+		if err := WriteTextFile(readmePath, "# 💯Requirements\n\nSome requirements here.\n"); err != nil {
 			t.Fatalf("failed to write: %v", err)
 		}
 		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
@@ -4412,7 +4412,7 @@ func TestDocsBreach(t *testing.T) {
 			t.Error("expected BreachCodeDocsMissingReadme for missing # Summary section")
 		}
 	})
-	t.Run("docsPolicy detects missing Specs section", func(t *testing.T) {
+	t.Run("docsPolicy detects missing Requirements section", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4431,13 +4431,13 @@ func TestDocsBreach(t *testing.T) {
 		breachs := docsPolicy(ctx)
 		found := false
 		for _, v := range breachs {
-			if v.Kind == BreachCodeDocsMissingReadme && strings.Contains(v.Summary, "Specs") {
+			if v.Kind == BreachCodeDocsMissingReadme && strings.Contains(v.Summary, "Requirements") {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected BreachCodeDocsMissingReadme for missing # Specs section")
+			t.Error("expected BreachCodeDocsMissingReadme for missing # 💯Requirements section")
 		}
 	})
 	t.Run("docsPolicy clean README no breach", func(t *testing.T) {
@@ -4450,7 +4450,7 @@ func TestDocsBreach(t *testing.T) {
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)
 		}
-		if err := WriteTextFile(readmePath, "# Summary\n\nA test bundle.\n\n# Docs\n\n# Specs\n\nSome specs.\n"); err != nil {
+		if err := WriteTextFile(readmePath, "# Summary\n\nA test bundle.\n\n# Docs\n\n# 💯Requirements\n\nSome requirements.\n"); err != nil {
 			t.Fatalf("failed to write: %v", err)
 		}
 		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
@@ -4493,7 +4493,7 @@ func TestDocsBreach(t *testing.T) {
 
 func TestFormatHeaderStructure(t *testing.T) {
 	lang := NewTypeScriptLanguage()
-	header := lang.FormatHeader("💻test/file.ts", "semiorepo://f/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")
+	header := lang.FormatHeader("💻test/file.ts", "semiorepo://f/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some requirements")
 	if !strings.Contains(header, "// #region 🔖Header") {
 		t.Error("header missing Header region start")
 	}
@@ -4512,16 +4512,16 @@ func TestFormatHeaderStructure(t *testing.T) {
 	if !strings.Contains(header, "AGPL license text here") {
 		t.Error("header missing license text")
 	}
-	if !strings.Contains(header, "Some specs") {
-		t.Error("header missing specs text")
+	if !strings.Contains(header, "Some requirements") {
+		t.Error("header missing requirements text")
 	}
 }
 
-func TestFormatHeaderEmptySpecs(t *testing.T) {
+func TestFormatHeaderEmptyRequirements(t *testing.T) {
 	lang := NewGoLanguage()
 	header := lang.FormatHeader("💻test/file.go", "semiorepo://f/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
-	if strings.Contains(header, "Specs") {
-		t.Error("header should not contain Specs subregion when specs is empty")
+	if strings.Contains(header, "Requirements") {
+		t.Error("header should not contain Requirements subregion when requirements is empty")
 	}
 	if !strings.Contains(header, "// #region 🔖Header") {
 		t.Error("header missing Header region start")
@@ -13534,9 +13534,9 @@ func TestFixHeaderWithShebang(t *testing.T) {
 		"# #region 🔖License\n" +
 		"# AGPL\n" +
 		"# #endregion 🔖License\n\n" +
-		"# #region 🔖Specs\n" +
-		"# Specs\n" +
-		"# #endregion 🔖Specs\n\n" +
+		"# #region 🔖Requirements\n" +
+		"# 💯Requirements\n" +
+		"# #endregion 🔖Requirements\n\n" +
 		"#endregion 🔖Header\n\n" +
 		"print(\"hello\")\n"
 	os.WriteFile(absPath, []byte(content), 0644)
@@ -13861,10 +13861,10 @@ func TestValidateHookEvent(t *testing.T) {
 		{"agent tool starting", "agent.tool.starting", true, HookAgentToolStarting},
 		{"agent tool ended", "agent.tool.ended", true, HookAgentToolEnded},
 		{"agent tool plan updating", "agent.tool.plan.updating", true, HookAgentToolPlanUpdating},
-		{"agent tool code searching", "agent.tool.searching", true, HookAgentToolSearching},
-		{"agent tool searched", "agent.tool.searching.ended", true, HookAgentToolSearched},
-		{"agent tool code editing", "agent.tool.code.editing", true, HookAgentToolCodeEditing},
-		{"agent tool code edited", "agent.tool.code.edited", true, HookAgentToolCodeEdited},
+		{"agent tool code searching", "agent.tool.search.starting", true, HookAgentToolSearchStarting},
+		{"agent tool searched", "agent.tool.search.ended", true, HookAgentToolSearchEnded},
+		{"agent tool code editing", "agent.tool.code.edit.starting", true, HookAgentToolCodeEditStarting},
+		{"agent tool code edited", "agent.tool.code.edit.ended", true, HookAgentToolCodeEditEnded},
 		{"agent tool terminal starting", "agent.tool.terminal.starting", true, HookAgentToolTerminalStarting},
 		{"agent tool terminal ended", "agent.tool.terminal.ended", true, HookAgentToolTerminalEnded},
 		{"invalid", "invalid.event", false, ""},
@@ -13904,10 +13904,10 @@ func TestHookEventKind(t *testing.T) {
 		{"agent tool starting is agent", HookAgentToolStarting, HookKindAgent},
 		{"agent tool ended is agent", HookAgentToolEnded, HookKindAgent},
 		{"agent tool plan updating is agent", HookAgentToolPlanUpdating, HookKindAgent},
-		{"agent tool code searching is agent", HookAgentToolSearching, HookKindAgent},
-		{"agent tool searched is agent", HookAgentToolSearched, HookKindAgent},
-		{"agent tool code editing is agent", HookAgentToolCodeEditing, HookKindAgent},
-		{"agent tool code edited is agent", HookAgentToolCodeEdited, HookKindAgent},
+		{"agent tool code searching is agent", HookAgentToolSearchStarting, HookKindAgent},
+		{"agent tool searched is agent", HookAgentToolSearchEnded, HookKindAgent},
+		{"agent tool code editing is agent", HookAgentToolCodeEditStarting, HookKindAgent},
+		{"agent tool code edited is agent", HookAgentToolCodeEditEnded, HookKindAgent},
 		{"agent tool terminal starting is agent", HookAgentToolTerminalStarting, HookKindAgent},
 		{"agent tool terminal ended is agent", HookAgentToolTerminalEnded, HookKindAgent},
 	}
@@ -14027,10 +14027,10 @@ func TestRunHookAgentEvents(t *testing.T) {
 		{"agent prompt submitting", HookAgentPromptSubmitting, true},
 		{"agent compacting", HookAgentCompacting, true},
 		{"agent tool ended", HookAgentToolEnded, true},
-		{"agent tool code searching", HookAgentToolSearching, true},
-		{"agent tool searched", HookAgentToolSearched, true},
-		{"agent tool code editing", HookAgentToolCodeEditing, true},
-		{"agent tool code edited", HookAgentToolCodeEdited, true},
+		{"agent tool code searching", HookAgentToolSearchStarting, true},
+		{"agent tool searched", HookAgentToolSearchEnded, true},
+		{"agent tool code editing", HookAgentToolCodeEditStarting, true},
+		{"agent tool code edited", HookAgentToolCodeEditEnded, true},
 		{"agent tool plan updating", HookAgentToolPlanUpdating, true},
 		{"agent tool terminal starting", HookAgentToolTerminalStarting, true},
 		{"agent tool terminal ended", HookAgentToolTerminalEnded, true},
@@ -14117,7 +14117,10 @@ func TestAllHookEventsCompleteness(t *testing.T) {
 		HookAgentPromptSubmitting, HookAgentCompacting,
 		HookAgentToolStarting, HookAgentToolEnded,
 		HookAgentToolPlanUpdating,
-		HookAgentToolSearching, HookAgentToolSearched, HookAgentToolCodeEditing, HookAgentToolCodeEdited,
+		HookAgentToolSearchStarting, HookAgentToolSearchEnded,
+		HookAgentToolCodeEditStarting, HookAgentToolCodeEditEnded,
+		HookAgentToolTestStarting, HookAgentToolTestEnded,
+		HookAgentToolBuildStarting, HookAgentToolBuildEnded,
 		HookAgentToolTerminalStarting, HookAgentToolTerminalEnded,
 	}
 	if len(AllHookEvents) != len(expected) {
@@ -14329,11 +14332,15 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 		{"agent.ended subagent", HookAgentEnded, "subagent", "SubagentStop"},
 		{"agent.prompt.submitting", HookAgentPromptSubmitting, "", "UserPromptSubmit"},
 		{"agent.compacting", HookAgentCompacting, "", "PreCompact"},
-		{"agent.tool.searching", HookAgentToolSearching, "", "PreToolUse"},
-		{"agent.tool.code.editing", HookAgentToolCodeEditing, "", "PreToolUse"},
-		{"agent.tool.code.edited", HookAgentToolCodeEdited, "", "PostToolUse"},
+		{"agent.tool.search.starting", HookAgentToolSearchStarting, "", "PreToolUse"},
+		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, "", "PreToolUse"},
+		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, "", "PostToolUse"},
 		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, "", "PreToolUse"},
 		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, "", "PostToolUse"},
+		{"agent.tool.test.starting", HookAgentToolTestStarting, "", "PreToolUse"},
+		{"agent.tool.test.ended", HookAgentToolTestEnded, "", "PostToolUse"},
+		{"agent.tool.build.starting", HookAgentToolBuildStarting, "", "PreToolUse"},
+		{"agent.tool.build.ended", HookAgentToolBuildEnded, "", "PostToolUse"},
 		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, "", "PreToolUse"},
 		{"unknown", HookEvent("unknown.x"), "", ""},
 	}
@@ -15018,12 +15025,16 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}{
 		{"agent.started", HookAgentStarted, sessionInput},
 		{"agent.tool.starting", HookAgentToolStarting, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
-		{"agent.tool.searching", HookAgentToolSearching, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"hello","includePattern":"src/**"}}`)},
-		{"agent.tool.searching.ended", HookAgentToolSearched, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"world"}}`)},
-		{"agent.tool.code.editing", HookAgentToolCodeEditing, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
-		{"agent.tool.code.edited", HookAgentToolCodeEdited, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
+		{"agent.tool.search.starting", HookAgentToolSearchStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"hello","includePattern":"src/**"}}`)},
+		{"agent.tool.search.ended", HookAgentToolSearchEnded, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"world"}}`)},
+		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
+		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
 		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"command":"go test ./..."}}`)},
 		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, json.RawMessage(`{"session_id":"test-session-1","command":"go test ./...","pid":"12345","stdout":"PASS"}`)},
+		{"agent.tool.test.starting", HookAgentToolTestStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"files":["/tmp/test.go"],"timeout":"30000"}}`)},
+		{"agent.tool.test.ended", HookAgentToolTestEnded, json.RawMessage(`{"session_id":"test-session-1","tool_output":{"succeeded":["TestA"],"failed":["TestB"]}}`)},
+		{"agent.tool.build.starting", HookAgentToolBuildStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"bundles":["semio/js"]}}`)},
+		{"agent.tool.build.ended", HookAgentToolBuildEnded, json.RawMessage(`{"session_id":"test-session-1","tool_output":{"succeeded":["semio/js"]}}`)},
 		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
 		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"todoList":[{"title":"Step 1","status":"completed"},{"title":"Step 2","status":"in-progress"}]}}`)},
 		{"agent.ended", HookAgentEnded, sessionInput},
@@ -15040,8 +15051,8 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}
 	ticket = readTicketJSON(t, ticketJSON)
 	events = getTicketEvents(t, ticket)
-	if len(events) < 10 {
-		t.Fatalf("expected at least 10 events (prompt.submitting + 9 others), got %d", len(events))
+	if len(events) < 15 {
+		t.Fatalf("expected at least 15 events (prompt.submitting + 14 others), got %d", len(events))
 	}
 	eventKinds := make([]string, len(events))
 	for i, e := range events {
@@ -15051,12 +15062,16 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 		"agent.prompt.submitting",
 		"agent.started",
 		"agent.tool.starting",
-		"agent.tool.searching",
-		"agent.tool.searching.ended",
-		"agent.tool.code.editing",
-		"agent.tool.code.edited",
+		"agent.tool.search.starting",
+		"agent.tool.search.ended",
+		"agent.tool.code.edit.starting",
+		"agent.tool.code.edit.ended",
 		"agent.tool.terminal.starting",
 		"agent.tool.terminal.ended",
+		"agent.tool.test.starting",
+		"agent.tool.test.ended",
+		"agent.tool.build.starting",
+		"agent.tool.build.ended",
 		"agent.tool.ended",
 	}
 	for _, expected := range expectedKinds {
@@ -15102,7 +15117,7 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 		ToolArgs:  "Search test",
 	})
 	RunHook(HookContext{
-		Event:     HookAgentToolSearching,
+		Event:     HookAgentToolSearchStarting,
 		Client:    "copilot-chat",
 		Timestamp: "2026-02-23T10:01:00Z",
 		RepoRoot:  tmpDir,
@@ -15241,7 +15256,7 @@ func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
 	})
 	payload := fmt.Sprintf(`{"session_id":"def-id-session","tool_input":{"filePath":%q,"oldString":"","newString":"export function doWork(): void {}"}}`, tsFile)
 	RunHook(HookContext{
-		Event:     HookAgentToolCodeEdited,
+		Event:     HookAgentToolCodeEditEnded,
 		Client:    "copilot-chat",
 		Timestamp: "2026-02-23T10:01:00Z",
 		RepoRoot:  tmpDir,
@@ -15252,17 +15267,17 @@ func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
 	var codeEditedEvent map[string]interface{}
 	for _, e := range events {
 		ev := e.(map[string]interface{})
-		if ev["kind"] == "agent.tool.code.edited" {
+		if ev["kind"] == "agent.tool.code.edit.ended" {
 			codeEditedEvent = ev
 			break
 		}
 	}
 	if codeEditedEvent == nil {
-		t.Fatal("expected agent.tool.code.edited event")
+		t.Fatal("expected agent.tool.code.edit.ended event")
 	}
 	newBlock, ok := codeEditedEvent["new"].(map[string]interface{})
 	if !ok {
-		t.Fatal("expected 'new' code block in code.edited event")
+		t.Fatal("expected 'new' code block in code.edit.ended event")
 	}
 	sections, ok := newBlock["sections"].([]interface{})
 	if !ok || len(sections) == 0 {
@@ -15428,7 +15443,12 @@ func TestClassifyTool(t *testing.T) {
 		{"get_terminal_output", "get_terminal_output", ToolKindTerminal},
 		{"Bash", "Bash", ToolKindTerminal},
 		{"runSubagent", "runSubagent", ToolKindGeneric},
-		{"runTests", "runTests", ToolKindGeneric},
+		{"runTests", "runTests", ToolKindTest},
+		{"run_tests", "run_tests", ToolKindTest},
+		{"run_task", "run_task", ToolKindBuild},
+		{"create_and_run_task", "create_and_run_task", ToolKindBuild},
+		{"fetch_webpage", "fetch_webpage", ToolKindCodeSearch},
+		{"open_simple_browser", "open_simple_browser", ToolKindCodeSearch},
 		{"tool_search_tool_regex", "tool_search_tool_regex", ToolKindGeneric},
 		{"empty", "", ToolKindGeneric},
 	}
@@ -15715,8 +15735,8 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				if event != HookAgentToolSearching {
-					t.Errorf("expected %s, got %s for command %q", HookAgentToolSearching, event, sc.cmd)
+				if event != HookAgentToolSearchStarting {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolSearchStarting, event, sc.cmd)
 				}
 			})
 			t.Run(fmt.Sprintf("%s/%s/post/searched", cl.name, sc.name), func(t *testing.T) {
@@ -15724,8 +15744,8 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				if event != HookAgentToolSearched {
-					t.Errorf("expected %s, got %s for command %q", HookAgentToolSearched, event, sc.cmd)
+				if event != HookAgentToolSearchEnded {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolSearchEnded, event, sc.cmd)
 				}
 			})
 		}
@@ -15735,8 +15755,8 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				if event != HookAgentToolCodeEditing {
-					t.Errorf("expected %s, got %s for command %q", HookAgentToolCodeEditing, event, ec.cmd)
+				if event != HookAgentToolCodeEditStarting {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolCodeEditStarting, event, ec.cmd)
 				}
 			})
 			t.Run(fmt.Sprintf("%s/%s/post/edited", cl.name, ec.name), func(t *testing.T) {
@@ -15744,8 +15764,8 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				if event != HookAgentToolCodeEdited {
-					t.Errorf("expected %s, got %s for command %q", HookAgentToolCodeEdited, event, ec.cmd)
+				if event != HookAgentToolCodeEditEnded {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolCodeEditEnded, event, ec.cmd)
 				}
 			})
 		}
@@ -15783,7 +15803,7 @@ func TestResolveHookEvent(t *testing.T) {
 		expectErr bool
 	}{
 		{"neutral agent.started", "agent.started", "copilot-chat", "", HookAgentStarted, "", false},
-		{"neutral agent.tool.code.editing", "agent.tool.code.editing", "copilot-chat", "", HookAgentToolCodeEditing, "", false},
+		{"neutral agent.tool.code.edit.starting", "agent.tool.code.edit.starting", "copilot-chat", "", HookAgentToolCodeEditStarting, "", false},
 		{"copilot SessionStart", "SessionStart", "copilot-chat", "", HookAgentStarted, "", false},
 		{"copilot Stop", "Stop", "copilot-chat", "", HookAgentEnded, "", false},
 		{"copilot SubagentStart", "SubagentStart", "copilot-chat", "", HookAgentStarted, "subagent", false},
@@ -15791,33 +15811,33 @@ func TestResolveHookEvent(t *testing.T) {
 		{"copilot UserPromptSubmit", "UserPromptSubmit", "copilot-chat", "", HookAgentPromptSubmitting, "", false},
 		{"copilot PreCompact", "PreCompact", "copilot-chat", "", HookAgentCompacting, "", false},
 		{"copilot PreToolUse generic", "PreToolUse", "copilot-chat", "runSubagent", HookAgentToolStarting, "", false},
-		{"copilot PreToolUse read_file", "PreToolUse", "copilot-chat", "read_file", HookAgentToolSearching, "", false},
-		{"copilot PreToolUse create_file", "PreToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditing, "", false},
+		{"copilot PreToolUse read_file", "PreToolUse", "copilot-chat", "read_file", HookAgentToolSearchStarting, "", false},
+		{"copilot PreToolUse create_file", "PreToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditStarting, "", false},
 		{"copilot PreToolUse run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalStarting, "", false},
 		{"copilot PreToolUse manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", HookAgentToolPlanUpdating, "", false},
-		{"copilot PostToolUse read_file", "PostToolUse", "copilot-chat", "read_file", HookAgentToolSearched, "", false},
-		{"copilot PostToolUse create_file", "PostToolUse", "copilot-chat", "create_file", HookAgentToolCodeEdited, "", false},
+		{"copilot PostToolUse read_file", "PostToolUse", "copilot-chat", "read_file", HookAgentToolSearchEnded, "", false},
+		{"copilot PostToolUse create_file", "PostToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditEnded, "", false},
 		{"copilot PostToolUse run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalEnded, "", false},
 		{"copilot PostToolUse generic", "PostToolUse", "copilot-chat", "runSubagent", HookAgentToolEnded, "", false},
 		{"cursor sessionStart", "sessionStart", "cursor-chat", "", HookAgentStarted, "", false},
 		{"cursor sessionEnd", "sessionEnd", "cursor-chat", "", HookAgentEnded, "", false},
 		{"cursor subagentStart", "subagentStart", "cursor-chat", "", HookAgentStarted, "subagent", false},
-		{"cursor beforeReadFile", "beforeReadFile", "cursor-chat", "", HookAgentToolSearching, "", false},
-		{"cursor afterFileEdit", "afterFileEdit", "cursor-chat", "", HookAgentToolCodeEdited, "", false},
+		{"cursor beforeReadFile", "beforeReadFile", "cursor-chat", "", HookAgentToolSearchStarting, "", false},
+		{"cursor afterFileEdit", "afterFileEdit", "cursor-chat", "", HookAgentToolCodeEditEnded, "", false},
 		{"cursor beforeShellExecution", "beforeShellExecution", "cursor-chat", "", HookAgentToolTerminalStarting, "", false},
 		{"cursor afterShellExecution", "afterShellExecution", "cursor-chat", "", HookAgentToolTerminalEnded, "", false},
 		{"cursor beforeMCPExecution", "beforeMCPExecution", "cursor-chat", "", HookAgentToolStarting, "", false},
 		{"cursor afterMCPExecution", "afterMCPExecution", "cursor-chat", "", HookAgentToolEnded, "", false},
 		{"cursor afterAgentResponse", "afterAgentResponse", "cursor-chat", "", HookAgentEnded, "", false},
 		{"cursor afterAgentThought", "afterAgentThought", "cursor-chat", "", HookAgentEnded, "", false},
-		{"cursor beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", HookAgentToolSearching, "", false},
-		{"cursor afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", HookAgentToolCodeEdited, "", false},
+		{"cursor beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", HookAgentToolSearchStarting, "", false},
+		{"cursor afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", HookAgentToolCodeEditEnded, "", false},
 		{"windsurf pre_user_prompt", "pre_user_prompt", "windsurf-chat", "", HookAgentPromptSubmitting, "", false},
 		{"windsurf post_cascade_response", "post_cascade_response", "windsurf-chat", "", HookAgentEnded, "", false},
 		{"windsurf post_setup_worktree", "post_setup_worktree", "windsurf-chat", "", HookAgentStarted, "", false},
-		{"windsurf pre_read_code", "pre_read_code", "windsurf-chat", "", HookAgentToolSearching, "", false},
-		{"windsurf pre_write_code", "pre_write_code", "windsurf-chat", "", HookAgentToolCodeEditing, "", false},
-		{"windsurf post_write_code", "post_write_code", "windsurf-chat", "", HookAgentToolCodeEdited, "", false},
+		{"windsurf pre_read_code", "pre_read_code", "windsurf-chat", "", HookAgentToolSearchStarting, "", false},
+		{"windsurf pre_write_code", "pre_write_code", "windsurf-chat", "", HookAgentToolCodeEditStarting, "", false},
+		{"windsurf post_write_code", "post_write_code", "windsurf-chat", "", HookAgentToolCodeEditEnded, "", false},
 		{"windsurf pre_run_command", "pre_run_command", "windsurf-chat", "", HookAgentToolTerminalStarting, "", false},
 		{"windsurf post_run_command", "post_run_command", "windsurf-chat", "", HookAgentToolTerminalEnded, "", false},
 		{"windsurf pre_mcp_tool_use", "pre_mcp_tool_use", "windsurf-chat", "", HookAgentToolStarting, "", false},
@@ -15832,11 +15852,11 @@ func TestResolveHookEvent(t *testing.T) {
 		{"claude Notification", "Notification", "claude-code", "", HookAgentToolStarting, "", false},
 		{"claude PreToolUse Bash", "PreToolUse", "claude-code", "Bash", HookAgentToolTerminalStarting, "", false},
 		{"claude PostToolUse Bash", "PostToolUse", "claude-code", "Bash", HookAgentToolTerminalEnded, "", false},
-		{"claude PreToolUse Read", "PreToolUse", "claude-code", "Read", HookAgentToolSearching, "", false},
-		{"claude PreToolUse Edit", "PreToolUse", "claude-code", "Edit", HookAgentToolCodeEditing, "", false},
-		{"claude PostToolUse Edit", "PostToolUse", "claude-code", "Edit", HookAgentToolCodeEdited, "", false},
+		{"claude PreToolUse Read", "PreToolUse", "claude-code", "Read", HookAgentToolSearchStarting, "", false},
+		{"claude PreToolUse Edit", "PreToolUse", "claude-code", "Edit", HookAgentToolCodeEditStarting, "", false},
+		{"claude PostToolUse Edit", "PostToolUse", "claude-code", "Edit", HookAgentToolCodeEditEnded, "", false},
 		{"droid PreToolUse", "PreToolUse", "droid", "Bash", HookAgentToolTerminalStarting, "", false},
-		{"codex PreToolUse", "PreToolUse", "codex", "Read", HookAgentToolSearching, "", false},
+		{"codex PreToolUse", "PreToolUse", "codex", "Read", HookAgentToolSearchStarting, "", false},
 		{"antigravity PreToolUse", "PreToolUse", "antigravity-chat", "Task", HookAgentToolPlanUpdating, "", false},
 		{"unknown client defaults to claude-compatible", "SessionStart", "unknown-client", "", HookAgentStarted, "", false},
 		{"invalid copilot event", "UnknownEvent", "copilot-chat", "", "", "", true},
@@ -15872,8 +15892,10 @@ func TestResolvePreToolUse(t *testing.T) {
 		expect HookEvent
 	}{
 		{ToolKindPlan, HookAgentToolPlanUpdating},
-		{ToolKindCodeSearch, HookAgentToolSearching},
-		{ToolKindCodeEdit, HookAgentToolCodeEditing},
+		{ToolKindCodeSearch, HookAgentToolSearchStarting},
+		{ToolKindCodeEdit, HookAgentToolCodeEditStarting},
+		{ToolKindTest, HookAgentToolTestStarting},
+		{ToolKindBuild, HookAgentToolBuildStarting},
 		{ToolKindTerminal, HookAgentToolTerminalStarting},
 		{ToolKindGeneric, HookAgentToolStarting},
 	}
@@ -15892,8 +15914,10 @@ func TestResolvePostToolUse(t *testing.T) {
 		kind   ToolKind
 		expect HookEvent
 	}{
-		{ToolKindCodeSearch, HookAgentToolSearched},
-		{ToolKindCodeEdit, HookAgentToolCodeEdited},
+		{ToolKindCodeSearch, HookAgentToolSearchEnded},
+		{ToolKindCodeEdit, HookAgentToolCodeEditEnded},
+		{ToolKindTest, HookAgentToolTestEnded},
+		{ToolKindBuild, HookAgentToolBuildEnded},
 		{ToolKindTerminal, HookAgentToolTerminalEnded},
 		{ToolKindGeneric, HookAgentToolEnded},
 		{ToolKindPlan, HookAgentToolEnded},
@@ -16125,41 +16149,38 @@ func TestPopulateEventDataPlanUpdating(t *testing.T) {
 func TestPopulateEventDataCodeSearching(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-cs","tool_input":{"query":"hookCommand","includePattern":"*.go"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolSearching,
+		Event:     HookAgentToolSearchStarting,
 		Client:    "copilot-chat",
 		Timestamp: "2026-02-19T16:00:00Z",
 		RepoRoot:  t.TempDir(),
 		Input:     payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultAgentToolSearching)
+	res, ok := result.(HookResultAgentToolSearchStarting)
 	if !ok {
-		t.Fatalf("expected HookResultAgentToolSearching, got %T", result)
+		t.Fatalf("expected HookResultAgentToolSearchStarting, got %T", result)
 	}
 	if res.Session != "sess-cs" {
 		t.Errorf("expected session=sess-cs, got %s", res.Session)
 	}
-	if res.Query != "hookCommand" {
-		t.Errorf("expected query=hookCommand, got %s", res.Query)
-	}
-	if len(res.Include) != 1 || res.Include[0] != "*.go" {
-		t.Errorf("expected include=[*.go], got %v", res.Include)
+	if len(res.Pages) != 2 || res.Pages[0] != "hookCommand" || res.Pages[1] != "*.go" {
+		t.Errorf("expected pages=[hookCommand, *.go], got %v", res.Pages)
 	}
 }
 
 func TestPopulateEventDataCodeEditing(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ce","tool_input":{"filePath":"/workspaces/semio/test.go","oldString":"old code","newString":"new code"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolCodeEditing,
+		Event:     HookAgentToolCodeEditStarting,
 		Client:    "copilot-chat",
 		Timestamp: "2026-02-19T17:00:00Z",
 		RepoRoot:  t.TempDir(),
 		Input:     payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultAgentToolCodeEditing)
+	res, ok := result.(HookResultAgentToolCodeEditStarting)
 	if !ok {
-		t.Fatalf("expected HookResultAgentToolCodeEditing, got %T", result)
+		t.Fatalf("expected HookResultAgentToolCodeEditStarting, got %T", result)
 	}
 	if res.Session != "sess-ce" {
 		t.Errorf("expected session=sess-ce, got %s", res.Session)
@@ -16178,16 +16199,16 @@ func TestPopulateEventDataCodeEditing(t *testing.T) {
 func TestPopulateEventDataCodeEditingWithAll(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-cea","tool_input":{"filePath":"/tmp/file.ts","oldString":"x","newString":"y","all":true}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolCodeEditing,
+		Event:     HookAgentToolCodeEditStarting,
 		Client:    "cursor-chat",
 		Timestamp: "2026-02-19T17:30:00Z",
 		RepoRoot:  t.TempDir(),
 		Input:     payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultAgentToolCodeEditing)
+	res, ok := result.(HookResultAgentToolCodeEditStarting)
 	if !ok {
-		t.Fatalf("expected HookResultAgentToolCodeEditing, got %T", result)
+		t.Fatalf("expected HookResultAgentToolCodeEditStarting, got %T", result)
 	}
 	if !res.All {
 		t.Error("expected all=true")
@@ -16197,16 +16218,16 @@ func TestPopulateEventDataCodeEditingWithAll(t *testing.T) {
 func TestPopulateEventDataCodeEdited(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ced","tool_input":{"filePath":"/tmp/edited.ts","oldString":"before","newString":"after"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolCodeEdited,
+		Event:     HookAgentToolCodeEditEnded,
 		Client:    "copilot-chat",
 		Timestamp: "2026-02-19T18:00:00Z",
 		RepoRoot:  t.TempDir(),
 		Input:     payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultAgentToolCodeEdited)
+	res, ok := result.(HookResultAgentToolCodeEditEnded)
 	if !ok {
-		t.Fatalf("expected HookResultAgentToolCodeEdited, got %T", result)
+		t.Fatalf("expected HookResultAgentToolCodeEditEnded, got %T", result)
 	}
 	if res.Path != "/tmp/edited.ts" {
 		t.Errorf("expected path=/tmp/edited.ts, got %s", res.Path)
@@ -16385,25 +16406,19 @@ func TestPopulateEventDataToolNameFromStdin(t *testing.T) {
 func TestPopulateEventDataCodeSearchWithExclude(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ex","tool_input":{"query":"test","include":["*.ts","*.tsx"],"exclude":["node_modules"]}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolSearching,
+		Event:     HookAgentToolSearchStarting,
 		Client:    "copilot-chat",
 		Timestamp: "2026-02-19T23:30:00Z",
 		RepoRoot:  t.TempDir(),
 		Input:     payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultAgentToolSearching)
+	res, ok := result.(HookResultAgentToolSearchStarting)
 	if !ok {
-		t.Fatalf("expected HookResultAgentToolSearching, got %T", result)
+		t.Fatalf("expected HookResultAgentToolSearchStarting, got %T", result)
 	}
-	if res.Query != "test" {
-		t.Errorf("expected query=test, got %s", res.Query)
-	}
-	if len(res.Include) != 2 {
-		t.Errorf("expected 2 include patterns, got %d", len(res.Include))
-	}
-	if len(res.Exclude) != 1 || res.Exclude[0] != "node_modules" {
-		t.Errorf("expected exclude=[node_modules], got %v", res.Exclude)
+	if len(res.Pages) < 3 {
+		t.Errorf("expected at least 3 pages (test + *.ts + *.tsx), got %v", res.Pages)
 	}
 }
 
@@ -16445,38 +16460,53 @@ func TestExtractPlanStepsFromInput(t *testing.T) {
 	})
 }
 
-func TestExtractCodeSearchFromInput(t *testing.T) {
+func TestExtractSearchFromInput(t *testing.T) {
 	t.Run("grep_search style", func(t *testing.T) {
-		input := json.RawMessage(`{"tool_input":{"query":"hookCommand","includePattern":"*.go","excludePattern":"vendor"}}`)
-		query, include, exclude := extractCodeSearchFromInput(input, "")
-		if query != "hookCommand" {
-			t.Errorf("expected query=hookCommand, got %s", query)
+		input := json.RawMessage(`{"tool_input":{"query":"hookCommand","includePattern":"*.go"}}`)
+		pages, ranges := extractSearchFromInput(input, "")
+		if len(pages) < 2 {
+			t.Errorf("expected at least 2 pages, got %v", pages)
 		}
-		if len(include) != 1 || include[0] != "*.go" {
-			t.Errorf("expected include=[*.go], got %v", include)
-		}
-		if len(exclude) != 1 || exclude[0] != "vendor" {
-			t.Errorf("expected exclude=[vendor], got %v", exclude)
+		if len(ranges) != 0 {
+			t.Errorf("expected no ranges, got %v", ranges)
 		}
 	})
 	t.Run("file_search style", func(t *testing.T) {
 		input := json.RawMessage(`{"tool_input":{"query":"**/*.ts"}}`)
-		query, _, _ := extractCodeSearchFromInput(input, "")
-		if query != "**/*.ts" {
-			t.Errorf("expected query=**/*.ts, got %s", query)
+		pages, _ := extractSearchFromInput(input, "")
+		found := false
+		for _, p := range pages {
+			if p == "**/*.ts" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("expected pages to contain **/*.ts, got %v", pages)
 		}
 	})
 	t.Run("read_file style", func(t *testing.T) {
 		input := json.RawMessage(`{"tool_input":{"filePath":"/tmp/test.go"}}`)
-		query, _, _ := extractCodeSearchFromInput(input, "")
-		if query != "/tmp/test.go" {
-			t.Errorf("expected query=/tmp/test.go, got %s", query)
+		pages, _ := extractSearchFromInput(input, "")
+		found := false
+		for _, p := range pages {
+			if p == "/tmp/test.go" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("expected pages to contain /tmp/test.go, got %v", pages)
 		}
 	})
 	t.Run("from toolArgs", func(t *testing.T) {
-		query, _, _ := extractCodeSearchFromInput(nil, `{"query":"fromArgs"}`)
-		if query != "fromArgs" {
-			t.Errorf("expected query=fromArgs, got %s", query)
+		pages, _ := extractSearchFromInput(nil, `{"query":"fromArgs"}`)
+		found := false
+		for _, p := range pages {
+			if p == "fromArgs" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("expected pages to contain fromArgs, got %v", pages)
 		}
 	})
 }
@@ -16755,24 +16785,24 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"copilot/SubagentStop", "SubagentStop", "copilot-chat", "", `{"hookEventName":"SubagentStop","sessionId":"ab58fc89","timestamp":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentEnded, "subagent"},
 		{"copilot/UserPromptSubmit", "UserPromptSubmit", "copilot-chat", "", `{"hookEventName":"UserPromptSubmit","sessionId":"d765d480","timestamp":"2026-02-19T10:44:16.328Z","transcript_path":"/tmp/t.jsonl","cwd":"/workspaces/semio"}`, HookAgentPromptSubmitting, ""},
 		{"copilot/PreCompact", "PreCompact", "copilot-chat", "", `{"timestamp":"2026-02-18T18:41:24.718Z","hookEventName":"PreCompact","sessionId":"2f1e87c2","transcript_path":"/tmp/t.jsonl","trigger":"auto","cwd":"/workspaces/semio"}`, HookAgentCompacting, ""},
-		{"copilot/PreToolUse/read_file", "PreToolUse", "copilot-chat", "read_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"read_file","timestamp":"2026-02-19T12:30:31.702Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearching, ""},
-		{"copilot/PreToolUse/grep_search", "PreToolUse", "copilot-chat", "grep_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"grep_search","timestamp":"2026-02-19T10:44:35.056Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearching, ""},
-		{"copilot/PreToolUse/file_search", "PreToolUse", "copilot-chat", "file_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"file_search","timestamp":"2026-02-19T10:50:09.443Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearching, ""},
-		{"copilot/PreToolUse/list_dir", "PreToolUse", "copilot-chat", "list_dir", `{"timestamp":"2026-02-19T10:44:16.328Z","hookEventName":"PreToolUse","sessionId":"d765d480","transcript_path":"/tmp/t.jsonl","tool_name":"list_dir","tool_input":{"path":"/workspaces/semio"}}`, HookAgentToolSearching, ""},
-		{"copilot/PreToolUse/list_code_usages", "PreToolUse", "copilot-chat", "list_code_usages", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"list_code_usages","timestamp":"2026-02-19T11:31:35.416Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearching, ""},
-		{"copilot/PreToolUse/replace_string_in_file", "PreToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-19T10:50:46.160Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditing, ""},
-		{"copilot/PreToolUse/multi_replace_string_in_file", "PreToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:17.358Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditing, ""},
-		{"copilot/PreToolUse/create_file", "PreToolUse", "copilot-chat", "create_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"create_file","timestamp":"2026-02-19T12:25:00.000Z"}`, HookAgentToolCodeEditing, ""},
+		{"copilot/PreToolUse/read_file", "PreToolUse", "copilot-chat", "read_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"read_file","timestamp":"2026-02-19T12:30:31.702Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/grep_search", "PreToolUse", "copilot-chat", "grep_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"grep_search","timestamp":"2026-02-19T10:44:35.056Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/file_search", "PreToolUse", "copilot-chat", "file_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"file_search","timestamp":"2026-02-19T10:50:09.443Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/list_dir", "PreToolUse", "copilot-chat", "list_dir", `{"timestamp":"2026-02-19T10:44:16.328Z","hookEventName":"PreToolUse","sessionId":"d765d480","transcript_path":"/tmp/t.jsonl","tool_name":"list_dir","tool_input":{"path":"/workspaces/semio"}}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/list_code_usages", "PreToolUse", "copilot-chat", "list_code_usages", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"list_code_usages","timestamp":"2026-02-19T11:31:35.416Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/replace_string_in_file", "PreToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-19T10:50:46.160Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditStarting, ""},
+		{"copilot/PreToolUse/multi_replace_string_in_file", "PreToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:17.358Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditStarting, ""},
+		{"copilot/PreToolUse/create_file", "PreToolUse", "copilot-chat", "create_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"create_file","timestamp":"2026-02-19T12:25:00.000Z"}`, HookAgentToolCodeEditStarting, ""},
 		{"copilot/PreToolUse/run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"run_in_terminal","timestamp":"2026-02-18T18:42:59.593Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalStarting, ""},
 		{"copilot/PreToolUse/manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"manage_todo_list","timestamp":"2026-02-18T18:44:13.780Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdating, ""},
 		{"copilot/PreToolUse/runSubagent", "PreToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"runSubagent","timestamp":"2026-02-19T12:46:49.918Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolStarting, ""},
-		{"copilot/PostToolUse/read_file", "PostToolUse", "copilot-chat", "read_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"read_file","timestamp":"2026-02-18T18:38:51.951Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearched, ""},
-		{"copilot/PostToolUse/replace_string_in_file", "PostToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-18T18:37:05.471Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEdited, ""},
-		{"copilot/PostToolUse/multi_replace_string_in_file", "PostToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:26.261Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEdited, ""},
+		{"copilot/PostToolUse/read_file", "PostToolUse", "copilot-chat", "read_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"read_file","timestamp":"2026-02-18T18:38:51.951Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
+		{"copilot/PostToolUse/replace_string_in_file", "PostToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-18T18:37:05.471Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditEnded, ""},
+		{"copilot/PostToolUse/multi_replace_string_in_file", "PostToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:26.261Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditEnded, ""},
 		{"copilot/PostToolUse/run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"d765d480","hookEventName":"PostToolUse","tool_name":"run_in_terminal","timestamp":"2026-02-19T10:43:56.761Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalEnded, ""},
 		{"copilot/PostToolUse/manage_todo_list", "PostToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"manage_todo_list","timestamp":"2026-02-18T18:44:20.586Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"copilot/PostToolUse/runSubagent", "PostToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"runSubagent","timestamp":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
-		{"copilot/PostToolUse/grep_search", "PostToolUse", "copilot-chat", "grep_search", `{"sessionId":"8a40542e","hookEventName":"PostToolUse","tool_name":"grep_search","timestamp":"2026-02-18T18:58:48.393Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearched, ""},
+		{"copilot/PostToolUse/grep_search", "PostToolUse", "copilot-chat", "grep_search", `{"sessionId":"8a40542e","hookEventName":"PostToolUse","tool_name":"grep_search","timestamp":"2026-02-18T18:58:48.393Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
 		{"cursor/sessionStart", "sessionStart", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:00:00Z"}`, HookAgentStarted, ""},
 		{"cursor/sessionEnd", "sessionEnd", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
 		{"cursor/subagentStart", "subagentStart", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:01:00Z"}`, HookAgentStarted, "subagent"},
@@ -16780,33 +16810,33 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"cursor/stop", "stop", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
 		{"cursor/beforeSubmitPrompt", "beforeSubmitPrompt", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:00:01Z","prompt":"Fix bug"}`, HookAgentPromptSubmitting, ""},
 		{"cursor/preCompact", "preCompact", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:15:00Z"}`, HookAgentCompacting, ""},
-		{"cursor/preToolUse/read_file", "preToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:02:00Z","tool_name":"read_file"}`, HookAgentToolSearching, ""},
-		{"cursor/preToolUse/edit", "preToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:03:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditing, ""},
+		{"cursor/preToolUse/read_file", "preToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:02:00Z","tool_name":"read_file"}`, HookAgentToolSearchStarting, ""},
+		{"cursor/preToolUse/edit", "preToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:03:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditStarting, ""},
 		{"cursor/preToolUse/terminal", "preToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:04:00Z","tool_name":"terminal"}`, HookAgentToolTerminalStarting, ""},
 		{"cursor/preToolUse/task", "preToolUse", "cursor-chat", "task", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:05:00Z","tool_name":"task"}`, HookAgentToolPlanUpdating, ""},
-		{"cursor/postToolUse/read_file", "postToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:06:00Z","tool_name":"read_file"}`, HookAgentToolSearched, ""},
-		{"cursor/postToolUse/editfile", "postToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:07:00Z","tool_name":"editfile"}`, HookAgentToolCodeEdited, ""},
+		{"cursor/postToolUse/read_file", "postToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:06:00Z","tool_name":"read_file"}`, HookAgentToolSearchEnded, ""},
+		{"cursor/postToolUse/editfile", "postToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:07:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditEnded, ""},
 		{"cursor/postToolUse/terminal", "postToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:08:00Z","tool_name":"terminal"}`, HookAgentToolTerminalEnded, ""},
-		{"cursor/postToolUseFailure/edit", "postToolUseFailure", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:09:00Z","tool_name":"editfile"}`, HookAgentToolCodeEdited, ""},
+		{"cursor/postToolUseFailure/edit", "postToolUseFailure", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:09:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditEnded, ""},
 		{"cursor/beforeMCPExecution", "beforeMCPExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:10:00Z"}`, HookAgentToolStarting, ""},
 		{"cursor/afterMCPExecution", "afterMCPExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:11:00Z"}`, HookAgentToolEnded, ""},
-		{"cursor/beforeReadFile", "beforeReadFile", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:12:00Z"}`, HookAgentToolSearching, ""},
-		{"cursor/afterFileEdit", "afterFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:13:00Z"}`, HookAgentToolCodeEdited, ""},
+		{"cursor/beforeReadFile", "beforeReadFile", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:12:00Z"}`, HookAgentToolSearchStarting, ""},
+		{"cursor/afterFileEdit", "afterFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:13:00Z"}`, HookAgentToolCodeEditEnded, ""},
 		{"cursor/beforeShellExecution", "beforeShellExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:14:00Z"}`, HookAgentToolTerminalStarting, ""},
 		{"cursor/afterShellExecution", "afterShellExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:15:00Z"}`, HookAgentToolTerminalEnded, ""},
 		{"cursor/afterAgentResponse", "afterAgentResponse", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:16:00Z"}`, HookAgentEnded, ""},
 		{"cursor/afterAgentThought", "afterAgentThought", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:17:00Z"}`, HookAgentEnded, ""},
-		{"cursor/beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:18:00Z"}`, HookAgentToolSearching, ""},
-		{"cursor/afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:19:00Z"}`, HookAgentToolCodeEdited, ""},
+		{"cursor/beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:18:00Z"}`, HookAgentToolSearchStarting, ""},
+		{"cursor/afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:19:00Z"}`, HookAgentToolCodeEditEnded, ""},
 		{"windsurf/pre_user_prompt", "pre_user_prompt", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:41.123Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentPromptSubmitting, ""},
 		{"windsurf/post_cascade_response", "post_cascade_response", "windsurf-chat", "", `{"timestamp":"2026-02-18T19:00:12.032Z","agent_action_name":"post_cascade_response","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentEnded, ""},
 		{"windsurf/post_setup_worktree", "post_setup_worktree", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:45:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentStarted, ""},
 		{"windsurf/pre_mcp_tool_use", "pre_mcp_tool_use", "windsurf-chat", "", `{"agent_action_name":"pre_mcp_tool_use","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:54:57.304Z","execution_id":"d9b64466","tool_info":{"mcp_server_name":"semio-repo","mcp_tool_name":"tree"}}`, HookAgentToolStarting, ""},
 		{"windsurf/post_mcp_tool_use", "post_mcp_tool_use", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:55:28.469Z","agent_action_name":"post_mcp_tool_use","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolEnded, ""},
-		{"windsurf/pre_read_code", "pre_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:48.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearching, ""},
-		{"windsurf/post_read_code", "post_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:50.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearched, ""},
-		{"windsurf/pre_write_code", "pre_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:30.780Z","agent_action_name":"pre_write_code","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditing, ""},
-		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEdited, ""},
+		{"windsurf/pre_read_code", "pre_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:48.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearchStarting, ""},
+		{"windsurf/post_read_code", "post_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:50.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearchEnded, ""},
+		{"windsurf/pre_write_code", "pre_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:30.780Z","agent_action_name":"pre_write_code","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditStarting, ""},
+		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditEnded, ""},
 		{"windsurf/pre_run_command", "pre_run_command", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:54:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolTerminalStarting, ""},
 		{"windsurf/post_run_command", "post_run_command", "windsurf-chat", "", `{"agent_action_name":"post_run_command","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:57:49.375Z","execution_id":"d9b64466","tool_info":{"command_line":"npm install","cwd":"/workspaces/semio"}}`, HookAgentToolTerminalEnded, ""},
 		{"claude/SessionStart", "SessionStart", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionStart","source":"startup"}`, HookAgentStarted, ""},
@@ -16821,14 +16851,14 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"claude/TeammateIdle", "TeammateIdle", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"TeammateIdle"}`, HookAgentToolStarting, ""},
 		{"claude/PermissionRequest", "PermissionRequest", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"PermissionRequest"}`, HookAgentToolStarting, ""},
 		{"claude/PreToolUse/Bash", "PreToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"go test -v"},"tool_use_id":"toolu_01WKqqc5y27LZu1KTB5GsGDu"}`, HookAgentToolTerminalStarting, ""},
-		{"claude/PreToolUse/Read", "PreToolUse", "claude-code", "Read", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/workspaces/semio/main.go"},"tool_use_id":"toolu_01Md976UFvJmmL5KaH4xzsx8"}`, HookAgentToolSearching, ""},
-		{"claude/PreToolUse/Edit", "PreToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl","tool_name":"Edit"}`, HookAgentToolCodeEditing, ""},
+		{"claude/PreToolUse/Read", "PreToolUse", "claude-code", "Read", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/workspaces/semio/main.go"},"tool_use_id":"toolu_01Md976UFvJmmL5KaH4xzsx8"}`, HookAgentToolSearchStarting, ""},
+		{"claude/PreToolUse/Edit", "PreToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl","tool_name":"Edit"}`, HookAgentToolCodeEditStarting, ""},
 		{"claude/PreToolUse/Glob", "PreToolUse", "claude-code", "Glob", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"Glob","tool_input":{"pattern":"**/*.json"}}`, HookAgentToolStarting, ""},
 		{"claude/PreToolUse/Grep", "PreToolUse", "claude-code", "Grep", `{"session_id":"e51a2976","transcript_path":"/tmp/t.jsonl","hook_event_name":"PreToolUse","tool_name":"Grep","tool_input":{"pattern":"BlockedToolPatterns"}}`, HookAgentToolStarting, ""},
 		{"claude/PreToolUse/mcp_tree", "PreToolUse", "claude-code", "mcp__semio-repo__tree", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"mcp__semio-repo__tree","tool_input":{"query":"hooks"}}`, HookAgentToolStarting, ""},
 		{"claude/PostToolUse/Bash", "PostToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","tool_name":"Bash","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl"}`, HookAgentToolTerminalEnded, ""},
-		{"claude/PostToolUse/Edit", "PostToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","tool_name":"Edit","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl"}`, HookAgentToolCodeEdited, ""},
-		{"claude/PostToolUse/Read", "PostToolUse", "claude-code", "Read", `{"session_id":"167906cd","tool_name":"Read","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearched, ""},
+		{"claude/PostToolUse/Edit", "PostToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","tool_name":"Edit","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl"}`, HookAgentToolCodeEditEnded, ""},
+		{"claude/PostToolUse/Read", "PostToolUse", "claude-code", "Read", `{"session_id":"167906cd","tool_name":"Read","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
 		{"claude/PostToolUse/TodoWrite", "PostToolUse", "claude-code", "TodoWrite", `{"session_id":"167906cd","tool_name":"TodoWrite","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"claude/PostToolUse/mcp_tree", "PostToolUse", "claude-code", "mcp__semio-repo__tree", `{"session_id":"167906cd","tool_name":"mcp__semio-repo__tree","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"claude/PostToolUseFailure/Bash", "PostToolUseFailure", "claude-code", "Bash", `{"session_id":"167906cd","tool_name":"Bash","transcript_path":"/tmp/t.jsonl","error":"command failed"}`, HookAgentToolTerminalEnded, ""},
@@ -16836,8 +16866,8 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"droid/PreToolUse/Bash", "PreToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","timestamp":"2026-02-18T18:47:06.000Z"}`, HookAgentToolTerminalStarting, ""},
 		{"droid/PostToolUse/Bash", "PostToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","timestamp":"2026-02-18T18:47:10.000Z"}`, HookAgentToolTerminalEnded, ""},
 		{"codex/SessionStart", "SessionStart", "codex", "", `{"session_id":"codex-001","timestamp":"2026-02-18T18:50:00.000Z"}`, HookAgentStarted, ""},
-		{"codex/PreToolUse/Read", "PreToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:05.000Z"}`, HookAgentToolSearching, ""},
-		{"codex/PostToolUse/Read", "PostToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:10.000Z"}`, HookAgentToolSearched, ""},
+		{"codex/PreToolUse/Read", "PreToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:05.000Z"}`, HookAgentToolSearchStarting, ""},
+		{"codex/PostToolUse/Read", "PostToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:10.000Z"}`, HookAgentToolSearchEnded, ""},
 		{"antigravity/SessionStart", "SessionStart", "antigravity-chat", "", `{"session_id":"ag-001","timestamp":"2026-02-18T18:55:00.000Z"}`, HookAgentStarted, ""},
 		{"antigravity/PreToolUse/Task", "PreToolUse", "antigravity-chat", "Task", `{"session_id":"ag-001","tool_name":"Task","timestamp":"2026-02-18T18:55:05.000Z"}`, HookAgentToolPlanUpdating, ""},
 	}
@@ -17408,14 +17438,14 @@ func TestIsHeaderMetaLine(t *testing.T) {
 }
 
 func TestExtractMarkdownSection(t *testing.T) {
-	content := "# Summary\n\nThis is the summary.\n\n# Specs\n\nSpec line one MUST work.\nSpec line two SHOULD also work.\n\n# Docs\n\nDocumentation here.\n"
+	content := "# Summary\n\nThis is the summary.\n\n# 💯Requirements\n\nSpec line one MUST work.\nSpec line two SHOULD also work.\n\n# Docs\n\nDocumentation here.\n"
 	summary := ExtractMarkdownSection(content, "Summary")
 	if !strings.Contains(summary, "This is the summary.") {
 		t.Errorf("expected summary content, got: %q", summary)
 	}
-	specs := ExtractMarkdownSection(content, "Specs")
-	if !strings.Contains(specs, "Spec line one MUST work.") {
-		t.Errorf("expected specs content, got: %q", specs)
+	requirements := ExtractMarkdownSection(content, "Requirements")
+	if !strings.Contains(requirements, "Spec line one MUST work.") {
+		t.Errorf("expected requirements content, got: %q", requirements)
 	}
 	docs := ExtractMarkdownSection(content, "Docs")
 	if !strings.Contains(docs, "Documentation here.") {
@@ -17444,10 +17474,10 @@ func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
 	}
 }
 
-func TestExtractFileHeaderSpecsNoLicense(t *testing.T) {
-	specs := ExtractFileHeaderSpecs("semio/assets/repo/some/folder/file.py")
-	if strings.Contains(specs, "GNU") || strings.Contains(specs, "license") || strings.Contains(specs, "redistribute") {
-		t.Errorf("should not contain license text, got: %q", specs)
+func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
+	requirements := ExtractFileHeaderRequirements("semio/assets/repo/some/folder/file.py")
+	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
+		t.Errorf("should not contain license text, got: %q", requirements)
 	}
 }
 
@@ -17456,9 +17486,9 @@ func TestExtractSectionLeadCommentsSkipsLicense(t *testing.T) {
 	sections := GetLanguage("test.py").ParseSections(content)
 	for _, s := range sections {
 		if s.Name == "License" {
-			specs, summary := ExtractSectionLeadComments(content, s, "#")
-			if specs != "" || summary != "" {
-				t.Errorf("license section should return empty specs and summary, got specs=%q summary=%q", specs, summary)
+			requirements, summary := ExtractSectionLeadComments(content, s, "#")
+			if requirements != "" || summary != "" {
+				t.Errorf("license section should return empty requirements and summary, got requirements=%q summary=%q", requirements, summary)
 			}
 		}
 	}
@@ -17469,31 +17499,31 @@ func TestExtractSectionLeadCommentsSkipsRegionMarkers(t *testing.T) {
 	sections := GetLanguage("test.ts").ParseSections(content)
 	for _, s := range sections {
 		if s.Name == "Exports" {
-			specs, summary := ExtractSectionLeadComments(content, s, "//")
+			requirements, summary := ExtractSectionLeadComments(content, s, "//")
 			if strings.Contains(summary, "region") {
 				t.Errorf("should not contain region text in summary, got: %q", summary)
 			}
 			if !strings.Contains(summary, "Re-exports of icons.") {
 				t.Errorf("should contain actual summary text, got: %q", summary)
 			}
-			if !strings.Contains(specs, "Data MUST be valid.") {
-				t.Errorf("should contain spec text, got: %q", specs)
+			if !strings.Contains(requirements, "Data MUST be valid.") {
+				t.Errorf("should contain spec text, got: %q", requirements)
 			}
 		}
 	}
 }
 
-func TestGenerateProjectSpecs(t *testing.T) {
-	err := GenerateProjectSpecs("coda")
+func TestGenerateProjectRequirements(t *testing.T) {
+	err := GenerateProjectRequirements("coda")
 	if err != nil {
-		t.Fatalf("GenerateProjectSpecs failed: %v", err)
+		t.Fatalf("GenerateProjectRequirements failed: %v", err)
 	}
 	content, err := ReadTextFile(filepath.Join(rootDir, "coda", "SPECS.md"))
 	if err != nil {
 		t.Fatalf("failed to read SPECS.md: %v", err)
 	}
-	if !strings.HasPrefix(content, "# 💯 Specs") {
-		t.Error("SPECS.md should start with '# 💯 Specs'")
+	if !strings.HasPrefix(content, "# 💯 Requirements") {
+		t.Error("SPECS.md should start with '# 💯 Requirements'")
 	}
 	if strings.Contains(content, "GNU") || strings.Contains(content, "free software") {
 		t.Error("SPECS.md should not contain license text")
@@ -17537,8 +17567,8 @@ func TestGenerateProjectTodos(t *testing.T) {
 	}
 }
 
-func TestGenerateProjectSpecsInvalidProject(t *testing.T) {
-	err := GenerateProjectSpecs("nonexistent-project")
+func TestGenerateProjectRequirementsInvalidProject(t *testing.T) {
+	err := GenerateProjectRequirements("nonexistent-project")
 	if err == nil {
 		t.Error("should return error for nonexistent project")
 	}
@@ -17558,10 +17588,10 @@ func TestGenerateProjectTodosInvalidProject(t *testing.T) {
 	}
 }
 
-func TestGenerateProjectSpecsSemio(t *testing.T) {
-	err := GenerateProjectSpecs("semio")
+func TestGenerateProjectRequirementsSemio(t *testing.T) {
+	err := GenerateProjectRequirements("semio")
 	if err != nil {
-		t.Fatalf("GenerateProjectSpecs semio failed: %v", err)
+		t.Fatalf("GenerateProjectRequirements semio failed: %v", err)
 	}
 	content, err := ReadTextFile(filepath.Join(rootDir, "semio", "SPECS.md"))
 	if err != nil {
@@ -17589,10 +17619,10 @@ func TestGenerateProjectDocsSemio(t *testing.T) {
 	}
 }
 
-func TestGenerateProjectSpecsSemioRepo(t *testing.T) {
-	err := GenerateProjectSpecs("semio-repo")
+func TestGenerateProjectRequirementsSemioRepo(t *testing.T) {
+	err := GenerateProjectRequirements("semio-repo")
 	if err != nil {
-		t.Fatalf("GenerateProjectSpecs semio-repo failed: %v", err)
+		t.Fatalf("GenerateProjectRequirements semio-repo failed: %v", err)
 	}
 	content, err := ReadTextFile(filepath.Join(rootDir, "semio-repo", "SPECS.md"))
 	if err != nil {
@@ -17604,7 +17634,7 @@ func TestGenerateProjectSpecsSemioRepo(t *testing.T) {
 }
 
 // #endregion 🔖Project Generate Tests
-func TestExtractCodeSearchFromInputLineNumbers(t *testing.T) {
+func TestExtractSearchFromInputLineNumbers(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -17647,12 +17677,11 @@ func TestExtractCodeSearchFromInputLineNumbers(t *testing.T) {
 			expected: "/workspaces/semio/semio-repo/cli/main.go#L35490",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query, _, _ := extractCodeSearchFromInput(json.RawMessage(tt.input), tt.toolArgs)
-			if query != tt.expected {
-				t.Errorf("extractCodeSearchFromInput() query = %v, want %v", query, tt.expected)
+			_, ranges := extractSearchFromInput(json.RawMessage(tt.input), tt.toolArgs)
+			if len(ranges) != 1 || ranges[0] != tt.expected {
+				t.Errorf("extractSearchFromInput() ranges = %v, want [%v]", ranges, tt.expected)
 			}
 		})
 	}

@@ -265,7 +265,7 @@
               }
             },
             {
-              "path": "coda/py/coda.py#Header#Specs",
+              "path": "coda/py/coda.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -279,7 +279,7 @@
               }
             },
             {
-              "path": "conftest.py#Header#Specs",
+              "path": "conftest.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -293,7 +293,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main.go#Header#Specs",
+              "path": "semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 14
@@ -307,7 +307,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/extension.ts#Header#Specs",
+              "path": "semio-repo/vscode/extension.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -321,7 +321,7 @@
               }
             },
             {
-              "path": "semio/assets/icons.ts#Header#Specs",
+              "path": "semio/assets/icons.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -335,7 +335,7 @@
               }
             },
             {
-              "path": "semio/assets/index.ts#Header#Specs",
+              "path": "semio/assets/index.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -349,7 +349,7 @@
               }
             },
             {
-              "path": "semio/assets/logo/logo.ts#Header#Specs",
+              "path": "semio/assets/logo/logo.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -363,7 +363,7 @@
               }
             },
             {
-              "path": "semio/desktop/forge.config.ts#Header#Specs",
+              "path": "semio/desktop/forge.config.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -377,7 +377,7 @@
               }
             },
             {
-              "path": "semio/desktop/main.ts#Header#Specs",
+              "path": "semio/desktop/main.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -391,7 +391,7 @@
               }
             },
             {
-              "path": "semio/desktop/renderer.tsx#Header#Specs",
+              "path": "semio/desktop/renderer.tsx#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -405,7 +405,7 @@
               }
             },
             {
-              "path": "semio/docs/index.tsx#Header#Specs",
+              "path": "semio/docs/index.tsx#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -419,7 +419,7 @@
               }
             },
             {
-              "path": "semio/engine/engine.py#Header#Specs",
+              "path": "semio/engine/engine.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -433,7 +433,7 @@
               }
             },
             {
-              "path": "semio/go/semio.go#Header#Specs",
+              "path": "semio/go/semio.go#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -447,7 +447,7 @@
               }
             },
             {
-              "path": "semio/js/semio.ts#Header#Specs",
+              "path": "semio/js/semio.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -461,7 +461,7 @@
               }
             },
             {
-              "path": "semio/js/sketchpad/Design.tsx#Header#Specs",
+              "path": "semio/js/sketchpad/Design.tsx#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -475,7 +475,7 @@
               }
             },
             {
-              "path": "semio/js/sketchpad/shared.ts#Header#Specs",
+              "path": "semio/js/sketchpad/shared.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -489,7 +489,7 @@
               }
             },
             {
-              "path": "semio/net/Semio/Semio.cs#Header#Specs",
+              "path": "semio/net/Semio/Semio.cs#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -503,7 +503,7 @@
               }
             },
             {
-              "path": "semio/py/semio.py#Header#Specs",
+              "path": "semio/py/semio.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -517,7 +517,7 @@
               }
             },
             {
-              "path": "vitest.config.ts#Header#Specs",
+              "path": "vitest.config.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -541,7 +541,7 @@
               }
             },
             {
-              "path": "⚙️semio/desktop/forge.config.ts#Header#Specs",
+              "path": "⚙️semio/desktop/forge.config.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -562,7 +562,7 @@
               }
             },
             {
-              "path": "⚙️vitest.config.ts#Header#Specs",
+              "path": "⚙️vitest.config.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -583,7 +583,7 @@
               }
             },
             {
-              "path": "💻coda/py/coda.py#Header#Specs",
+              "path": "💻coda/py/coda.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -604,7 +604,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Header#Specs",
+              "path": "💻semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 14
@@ -639,7 +639,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#Header#Specs",
+              "path": "💻semio-repo/vscode/extension.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -667,7 +667,7 @@
               }
             },
             {
-              "path": "💻semio/assets/icons.ts#Header#Specs",
+              "path": "💻semio/assets/icons.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -688,7 +688,7 @@
               }
             },
             {
-              "path": "💻semio/assets/index.ts#Header#Specs",
+              "path": "💻semio/assets/index.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -709,7 +709,7 @@
               }
             },
             {
-              "path": "💻semio/assets/logo/logo.ts#Header#Specs",
+              "path": "💻semio/assets/logo/logo.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -730,7 +730,7 @@
               }
             },
             {
-              "path": "💻semio/desktop/main.ts#Header#Specs",
+              "path": "💻semio/desktop/main.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -758,7 +758,7 @@
               }
             },
             {
-              "path": "💻semio/desktop/renderer.tsx#Header#Specs",
+              "path": "💻semio/desktop/renderer.tsx#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -779,7 +779,7 @@
               }
             },
             {
-              "path": "💻semio/docs/index.tsx#Header#Specs",
+              "path": "💻semio/docs/index.tsx#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -800,7 +800,7 @@
               }
             },
             {
-              "path": "💻semio/engine/engine.py#Header#Specs",
+              "path": "💻semio/engine/engine.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -821,7 +821,7 @@
               }
             },
             {
-              "path": "💻semio/go/semio.go#Header#Specs",
+              "path": "💻semio/go/semio.go#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -842,7 +842,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Header#Specs",
+              "path": "💻semio/js/semio.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -863,7 +863,7 @@
               }
             },
             {
-              "path": "💻semio/js/sketchpad/Design.tsx#Header#Specs",
+              "path": "💻semio/js/sketchpad/Design.tsx#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -884,7 +884,7 @@
               }
             },
             {
-              "path": "💻semio/js/sketchpad/shared.ts#Header#Specs",
+              "path": "💻semio/js/sketchpad/shared.ts#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -905,7 +905,7 @@
               }
             },
             {
-              "path": "💻semio/net/Semio/Semio.cs#Header#Specs",
+              "path": "💻semio/net/Semio/Semio.cs#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -926,7 +926,7 @@
               }
             },
             {
-              "path": "💻semio/py/semio.py#Header#Specs",
+              "path": "💻semio/py/semio.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -947,7 +947,7 @@
               }
             },
             {
-              "path": "🧪conftest.py#Header#Specs",
+              "path": "🧪conftest.py#Header#Requirements",
               "lines": {
                 "added": 0,
                 "removed": 2

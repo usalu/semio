@@ -29,7 +29,7 @@ Fixed all 299 policy breachs in semio/go/semio.go to 0. Added Imports section fo
 - [x] Fix orphan definitions
 - [x] Fix section summaries
 - [x] Fix definition summaries
-- [x] Fix definition specs
+- [x] Fix definition requirements
 - [x] Verify 0 breachs
 
 ## Plan

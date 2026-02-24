@@ -12,7 +12,7 @@ def parse_breachs(breachs_file):
     """Parse breach entries from analyzer output."""
     text = Path(breachs_file).read_text()
     summaries = {}
-    specs = set()
+    requirements = set()
     sections = {}
     for line in text.strip().split("\n"):
         if "DEFINITION-MISSING-SUMMARY" in line:
@@ -22,12 +22,12 @@ def parse_breachs(breachs_file):
         elif "DEFINITION-MISSING-SPECS" in line:
             m = re.search(r"main\.go::(\w+):(\d+)", line)
             if m:
-                specs.add(int(m.group(2)))
+                requirements.add(int(m.group(2)))
         elif "SECTION-MISSING-SUMMARY" in line:
             m = re.search(r"main\.go#(.+?):(\d+)", line)
             if m:
                 sections[int(m.group(2))] = m.group(1)
-    return summaries, specs, sections
+    return summaries, requirements, sections
 
 
 def camel_to_words(name):
@@ -448,82 +448,86 @@ def generate_spec_for_func(name, line_text, context_lines):
     line_lower = line_text.lower()
     body_text = "\n".join(context_lines).lower()
 
-    specs = []
+    requirements = []
 
     if fname and fname.startswith("New"):
         target = camel_to_words(fname[3:]) if len(fname) > 3 else "instance"
-        specs.append(
+        requirements.append(
             f"// {fname} MUST initialize all required fields and return a valid {target}."
         )
     elif fname and (fname.startswith("Is") or fname.startswith("Has")):
-        specs.append(f"// {fname} MUST return a deterministic boolean result.")
+        requirements.append(f"// {fname} MUST return a deterministic boolean result.")
     elif fname and fname.startswith("Stream"):
         what = camel_to_words(fname[6:]) if len(fname) > 6 else "entries"
-        specs.append(
+        requirements.append(
             f"// {fname} MUST invoke the callback for each matching {what} entry."
         )
     elif fname and fname.startswith("Load"):
         what = camel_to_words(fname[4:]) if len(fname) > 4 else "data"
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return all matching {what} from the data source."
         )
     elif fname and fname.startswith("Save"):
         what = camel_to_words(fname[4:]) if len(fname) > 4 else "data"
-        specs.append(
+        requirements.append(
             f"// {fname} MUST persist the {what} atomically to the data store."
         )
     elif fname and fname.startswith("Read"):
         what = camel_to_words(fname[4:]) if len(fname) > 4 else "data"
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return the {what} content or an error if unavailable."
         )
     elif fname and fname.startswith("List"):
         what = camel_to_words(fname[4:]) if len(fname) > 4 else "entries"
-        specs.append(f"// {fname} MUST return all available {what} entries.")
+        requirements.append(f"// {fname} MUST return all available {what} entries.")
     elif fname and fname.startswith("Delete") or fname and fname.startswith("Remove"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST remove the target and return an error on failure."
         )
     elif fname and fname.startswith("Create"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST create a new entry and return an error on conflict."
         )
     elif fname and fname.startswith("Update"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST apply the update and return an error if the target is missing."
         )
     elif fname and fname.startswith("Find") or fname and fname.startswith("Lookup"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return the matching result or an error if not found."
         )
     elif fname and fname.startswith("Filter"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return only entries that match the filter criteria."
         )
     elif fname and fname.startswith("Parse"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return the parsed result or an error for invalid input."
         )
     elif fname and fname.startswith("Format") or fname and fname.startswith("Render"):
-        specs.append(f"// {fname} MUST return a non-empty string representation.")
+        requirements.append(
+            f"// {fname} MUST return a non-empty string representation."
+        )
     elif fname and fname.startswith("Validate") or fname and fname.startswith("Check"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return nil when valid and a descriptive error otherwise."
         )
     elif fname and fname.startswith("Build"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST construct and return the fully initialized result."
         )
     elif fname and fname.startswith("Register"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST register the component and return an error on duplicate."
         )
     elif fname and fname.startswith("Resolve"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return the resolved value or an error if unresolvable."
         )
     elif fname and fname.startswith("Invalidate"):
-        specs.append(f"// {fname} MUST clear the cached state to force a reload.")
+        requirements.append(
+            f"// {fname} MUST clear the cached state to force a reload."
+        )
     elif (
         fname
         and fname.startswith("Convert")
@@ -532,11 +536,11 @@ def generate_spec_for_func(name, line_text, context_lines):
         or fname
         and fname.startswith("Transform")
     ):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return the transformed result without modifying the input."
         )
     elif fname and fname.startswith("Scan"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST scan the input completely and collect all matches."
         )
     elif (
@@ -545,25 +549,31 @@ def generate_spec_for_func(name, line_text, context_lines):
         or fname
         and fname.startswith("Sanitize")
     ):
-        specs.append(f"// {fname} MUST return the cleaned value in canonical form.")
+        requirements.append(
+            f"// {fname} MUST return the cleaned value in canonical form."
+        )
     elif fname and fname.startswith("Ensure"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST guarantee the precondition is met or return an error."
         )
     elif fname and fname.startswith("Extract"):
-        specs.append(f"// {fname} MUST return the extracted component from the input.")
+        requirements.append(
+            f"// {fname} MUST return the extracted component from the input."
+        )
     elif (
         fname and fname.startswith("Compute") or fname and fname.startswith("Calculate")
     ):
-        specs.append(f"// {fname} MUST return the computed result deterministically.")
+        requirements.append(
+            f"// {fname} MUST return the computed result deterministically."
+        )
     elif fname and fname.startswith("Collect"):
-        specs.append(f"// {fname} MUST gather and return all matching items.")
+        requirements.append(f"// {fname} MUST gather and return all matching items.")
     elif fname and fname.startswith("Merge"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST combine the inputs and return the merged result."
         )
     elif fname and fname.startswith("Init"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST initialize all fields and return a ready-to-use state."
         )
     elif (
@@ -574,65 +584,77 @@ def generate_spec_for_func(name, line_text, context_lines):
         or fname
         and fname.startswith("Execute")
     ):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST execute the operation to completion and report any errors."
         )
     elif fname and fname.startswith("Open"):
-        specs.append(f"// {fname} MUST open the resource and return a handle or error.")
+        requirements.append(
+            f"// {fname} MUST open the resource and return a handle or error."
+        )
     elif fname and fname.startswith("Close"):
-        specs.append(f"// {fname} MUST release all held resources.")
+        requirements.append(f"// {fname} MUST release all held resources.")
     elif fname and fname.startswith("Apply") or fname and fname.startswith("Patch"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST apply the changes and return an error on conflict."
         )
     elif fname and fname.startswith("Add") or fname and fname.startswith("Append"):
-        specs.append(f"// {fname} MUST add the item to the collection.")
+        requirements.append(f"// {fname} MUST add the item to the collection.")
     elif fname and fname.startswith("Handle") or fname and fname.startswith("Process"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST process the input and return the result or an error."
         )
     elif fname and fname.startswith("Serve"):
-        specs.append(f"// {fname} MUST start serving and block until shutdown.")
+        requirements.append(f"// {fname} MUST start serving and block until shutdown.")
     elif fname and fname.startswith("Fetch") or fname and fname.startswith("Get"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST retrieve the requested value or return an error."
         )
     elif fname and fname.startswith("Export"):
-        specs.append(f"// {fname} MUST write the complete output to the target.")
+        requirements.append(f"// {fname} MUST write the complete output to the target.")
     elif fname and fname.startswith("Import"):
-        specs.append(f"// {fname} MUST read and incorporate the source data.")
+        requirements.append(f"// {fname} MUST read and incorporate the source data.")
     elif fname and fname.startswith("Emit"):
-        specs.append(f"// {fname} MUST emit the event to all registered listeners.")
+        requirements.append(
+            f"// {fname} MUST emit the event to all registered listeners."
+        )
     elif fname and fname.startswith("Reset"):
-        specs.append(f"// {fname} MUST restore the state to its initial defaults.")
+        requirements.append(
+            f"// {fname} MUST restore the state to its initial defaults."
+        )
     elif fname and fname.startswith("Sort"):
-        specs.append(f"// {fname} MUST sort the collection in the specified order.")
+        requirements.append(
+            f"// {fname} MUST sort the collection in the specified order."
+        )
     elif fname and fname.startswith("Count"):
-        specs.append(f"// {fname} MUST return an accurate count.")
+        requirements.append(f"// {fname} MUST return an accurate count.")
     elif fname and fname.startswith("Match"):
-        specs.append(f"// {fname} MUST return true only when the input fully matches.")
+        requirements.append(
+            f"// {fname} MUST return true only when the input fully matches."
+        )
     elif fname and fname.startswith("Flatten"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return a single-level collection with all nested items."
         )
     elif fname and fname.startswith("Dedupe"):
-        specs.append(f"// {fname} MUST remove all duplicate entries.")
+        requirements.append(f"// {fname} MUST remove all duplicate entries.")
     elif fname and fname.startswith("Walk"):
-        specs.append(f"// {fname} MUST visit every node in the hierarchy.")
+        requirements.append(f"// {fname} MUST visit every node in the hierarchy.")
     elif fname and fname.startswith("Infer"):
-        specs.append(f"// {fname} MUST determine the value from available context.")
+        requirements.append(
+            f"// {fname} MUST determine the value from available context."
+        )
     elif fname and fname.startswith("Dispatch"):
-        specs.append(f"// {fname} MUST route the input to the correct handler.")
+        requirements.append(f"// {fname} MUST route the input to the correct handler.")
     elif fname and fname.startswith("Detect"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST identify the value from the input characteristics."
         )
     elif fname and fname.startswith("Skip"):
-        specs.append(
+        requirements.append(
             f"// {fname} MUST bypass the target when the skip condition is met."
         )
     elif fname and fname.startswith("Write"):
-        specs.append(f"// {fname} MUST write all bytes to the output.")
+        requirements.append(f"// {fname} MUST write all bytes to the output.")
     elif (
         fname
         and fname.startswith("Print")
@@ -641,35 +663,37 @@ def generate_spec_for_func(name, line_text, context_lines):
         or fname
         and fname.startswith("Describe")
     ):
-        specs.append(f"// {fname} MUST produce output for the given input.")
+        requirements.append(f"// {fname} MUST produce output for the given input.")
     elif fname and fname.startswith("Query"):
-        specs.append(f"// {fname} MUST execute the query and return matching results.")
+        requirements.append(
+            f"// {fname} MUST execute the query and return matching results."
+        )
     elif fname and fname.startswith("Assign") or fname and fname.startswith("Set"):
-        specs.append(f"// {fname} MUST assign the value to the target field.")
+        requirements.append(f"// {fname} MUST assign the value to the target field.")
     elif fname == "String":
-        specs.append(f"// String MUST return a non-empty string representation.")
+        requirements.append(f"// String MUST return a non-empty string representation.")
     elif fname == "Error":
-        specs.append(f"// Error MUST return a descriptive error message.")
+        requirements.append(f"// Error MUST return a descriptive error message.")
     elif fname == "MarshalJSON":
-        specs.append(f"// MarshalJSON MUST return valid JSON bytes or an error.")
+        requirements.append(f"// MarshalJSON MUST return valid JSON bytes or an error.")
     elif fname == "UnmarshalJSON":
-        specs.append(
+        requirements.append(
             f"// UnmarshalJSON MUST populate all fields from valid JSON or return an error."
         )
     elif has_error_return:
-        specs.append(
+        requirements.append(
             f"// {fname} MUST return a non-nil error when the operation fails."
         )
     elif has_bool_return:
-        specs.append(f"// {fname} MUST return a deterministic boolean result.")
+        requirements.append(f"// {fname} MUST return a deterministic boolean result.")
     elif has_chan_return:
-        specs.append(
+        requirements.append(
             f"// {fname} MUST close the returned channel when processing completes."
         )
     else:
-        specs.append(f"// {fname} MUST complete the operation successfully.")
+        requirements.append(f"// {fname} MUST complete the operation successfully.")
 
-    return specs
+    return requirements
 
 
 def extract_return_types(line_text):
@@ -724,12 +748,12 @@ def generate_section_summary(name):
 def main():
     lines = FILE.read_text().split("\n")
 
-    summaries_needed, specs_needed, sections_needed = parse_breachs(
+    summaries_needed, requirements_needed, sections_needed = parse_breachs(
         "/tmp/fresh_breachs.txt"
     )
 
     print(f"Summaries needed: {len(summaries_needed)}")
-    print(f"Specs needed: {len(specs_needed)}")
+    print(f"Requirements needed: {len(requirements_needed)}")
     print(f"Sections needed: {len(sections_needed)}")
 
     insertions = {}
@@ -773,7 +797,7 @@ def main():
                 continue
 
         is_func = line_text.strip().startswith("func ")
-        needs_spec = line_num in specs_needed
+        needs_spec = line_num in requirements_needed
 
         if is_func:
             context_start = idx
@@ -794,11 +818,11 @@ def main():
             insertions[line_num] = []
         insertions[line_num] = comments + insertions.get(line_num, [])
 
-        if needs_spec and line_num in specs_needed:
-            specs_needed.discard(line_num)
+        if needs_spec and line_num in requirements_needed:
+            requirements_needed.discard(line_num)
 
-    remaining_specs = specs_needed - set(summaries_needed.keys())
-    for line_num in remaining_specs:
+    remaining_requirements = requirements_needed - set(summaries_needed.keys())
+    for line_num in remaining_requirements:
         idx = line_num - 1
         if idx >= len(lines):
             continue

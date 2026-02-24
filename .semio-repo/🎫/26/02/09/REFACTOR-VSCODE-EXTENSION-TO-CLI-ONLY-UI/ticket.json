@@ -163,7 +163,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Header#Specs",
+              "path": "💻semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -282,7 +282,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#Header#Specs",
+              "path": "💻semio-repo/vscode/extension.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -352,7 +352,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/vscode/extension.test.ts#Header#Specs",
+              "path": "🧪semio-repo/vscode/extension.test.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -410,7 +410,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main.go#Header#Specs",
+              "path": "semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -431,7 +431,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/extension.test.ts#Header#Specs",
+              "path": "semio-repo/vscode/extension.test.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -445,7 +445,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/extension.ts#Header#Specs",
+              "path": "semio-repo/vscode/extension.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0

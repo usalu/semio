@@ -1,8 +1,8 @@
 {
   "title": "Extended Source Code Headers",
   "status": "closed",
-  "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Specs section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
-  "summary": "Refactored all source code headers to new standardized format with nested License and Specs subregions.\n\nCore changes:\n- Updated LanguagePlugin interface: FormatHeader now takes (filePath, summary, contributors, license, specs) args\n- Replaced headerFmt string field with supportsHeaders bool in BaseLanguage\n- Rewrote FormatHeader to programmatically build headers with nested #region License / #region Specs\n- Updated all 11 language constructors (TS, Go, Py, C#, Rust, Ruby, Shell, TOML, YAML, SQL, GraphQL)\n- Rewrote generateFileHeader and AGPLLicenseText() helper\n- Added 3 new statutes: missing-summary, missing-license-region, missing-specs-region\n- Updated headerPolicy to validate License and Specs subregions exist inside Header\n- Updated sectionPolicy to exempt License/Specs children of Header from empty-section breachs\n- Batch-updated 80+ source code file headers across the entire repo\n- Updated all test fixtures (file_fixed.*, file_invalid.*, file_fixable*, file_empty_region.tsx)\n- Fixed emoji variation selector (U+FE0E) issues in fixture files\n- Added 4 new tests: TestFormatHeaderStructure, TestFormatHeaderEmptySpecs, TestFormatHeaderAllLanguages, TestHeaderPolicyMissingSubregions\n- Added Specs content to main.go and main_test.go headers\n- Updated AGENTS.md SRS Code Hygiene section with new header requirements\n- Updated README.md Code Hygiene Hooks section with new header format documentation\n- Removed stale fix_main_breachs.go and fix_main_issues.go scripts from other agents\n- All header-related tests pass (pre-existing TestFormatResult_Bundle/Folder failures are unrelated emoji variation issues)",
+  "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Requirements section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
+  "summary": "Refactored all source code headers to new standardized format with nested License and Requirements subregions.\n\nCore changes:\n- Updated LanguagePlugin interface: FormatHeader now takes (filePath, summary, contributors, license, requirements) args\n- Replaced headerFmt string field with supportsHeaders bool in BaseLanguage\n- Rewrote FormatHeader to programmatically build headers with nested #region License / #region Requirements\n- Updated all 11 language constructors (TS, Go, Py, C#, Rust, Ruby, Shell, TOML, YAML, SQL, GraphQL)\n- Rewrote generateFileHeader and AGPLLicenseText() helper\n- Added 3 new statutes: missing-summary, missing-license-region, missing-requirements-region\n- Updated headerPolicy to validate License and Requirements subregions exist inside Header\n- Updated sectionPolicy to exempt License/Requirements children of Header from empty-section breachs\n- Batch-updated 80+ source code file headers across the entire repo\n- Updated all test fixtures (file_fixed.*, file_invalid.*, file_fixable*, file_empty_region.tsx)\n- Fixed emoji variation selector (U+FE0E) issues in fixture files\n- Added 4 new tests: TestFormatHeaderStructure, TestFormatHeaderEmptyRequirements, TestFormatHeaderAllLanguages, TestHeaderPolicyMissingSubregions\n- Added Requirements content to main.go and main_test.go headers\n- Updated AGENTS.md SRS Code Hygiene section with new header requirements\n- Updated README.md Code Hygiene Hooks section with new header format documentation\n- Removed stale fix_main_breachs.go and fix_main_issues.go scripts from other agents\n- All header-related tests pass (pre-existing TestFormatResult_Bundle/Folder failures are unrelated emoji variation issues)",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/448"
   },
@@ -15,7 +15,7 @@
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
-      "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Specs section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
+      "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Requirements section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {
@@ -504,23 +504,23 @@
             },
             {
               "from": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#⚙️️ Prop [↑](#-requirements-)",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏘️ Design [↑](#-requirements-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏘 Design [↑](#-requirements-)",
               "lines": {
                 "added": 14,
                 "removed": 14
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏷️️ Attribute [↑](#-requirements-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏷️ Attribute [↑](#-requirements-)",
               "lines": {
                 "added": 25,
                 "removed": 25
@@ -528,7 +528,7 @@
             },
             {
               "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#⌨️️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏷️ Concept [↑](#-requirements-)",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -536,7 +536,7 @@
             },
             {
               "from": "README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "to": "README.md#📄 Requirements [↑](#-overview)#🏷️ Tag [↑](#-requirements-)",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -679,7 +679,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏷️️ Concept [↑](#-requirements-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 6,
@@ -775,7 +775,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#⚙️️️ Prop [↑](#-requirements-)",
               "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
               "lines": {
                 "added": 6,
@@ -815,7 +815,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "from": "README.md#📄 Requirements [↑](#-overview)#🏷️️ Tag [↑](#-requirements-)",
               "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
@@ -1231,7 +1231,7 @@
               }
             },
             {
-              "path": "⚙️️︎semio-repo/vscode/eslint.config.ts#Header#Specs",
+              "path": "⚙️️︎semio-repo/vscode/eslint.config.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1273,7 +1273,7 @@
               }
             },
             {
-              "path": "💻semio-repo/cli/main.go#Header#Specs",
+              "path": "💻semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -1546,7 +1546,7 @@
               }
             },
             {
-              "path": "💻semio-repo/graphql/schema.graphql#Header#Specs",
+              "path": "💻semio-repo/graphql/schema.graphql#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1567,7 +1567,7 @@
               }
             },
             {
-              "path": "💻semio-repo/server/main.go#Header#Specs",
+              "path": "💻semio-repo/server/main.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1588,7 +1588,7 @@
               }
             },
             {
-              "path": "💻semio-repo/sqlite/schema.sql#Header#Specs",
+              "path": "💻semio-repo/sqlite/schema.sql#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1609,7 +1609,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/codegen.ts#Header#Specs",
+              "path": "💻semio-repo/vscode/codegen.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1637,7 +1637,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#Header#Specs",
+              "path": "💻semio-repo/vscode/extension.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1679,7 +1679,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file.tsx#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1700,7 +1700,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_empty_region.tsx#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_empty_region.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1721,7 +1721,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable.tsx#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_fixable.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1742,7 +1742,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_fixable_expected.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1763,7 +1763,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.cs#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_fixed.cs#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1784,7 +1784,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.go#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_fixed.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1805,7 +1805,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.py#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_fixed.py#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1826,7 +1826,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_fixed.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1847,7 +1847,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_invalid.cs#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_invalid.cs#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1868,7 +1868,7 @@
               }
             },
             {
-              "path": "💻semio/assets/repo/some/folder/file_invalid.go#Header#Specs",
+              "path": "💻semio/assets/repo/some/folder/file_invalid.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2057,91 +2057,91 @@
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#◳ Plane [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#◳ Plane [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚓ Connector [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#⚓ Connector [↑](#-requirements-)",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#⚙️️ Prop [↑](#-requirements-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#⚙️️️ Prop [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏘 Design [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏘️ Design [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️ Attribute [↑](#-requirements-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️ Concept [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️ Tag [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️️ Attribute [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️️ Concept [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🏷️️ Tag [↑](#-requirements-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🔗 Connection [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Requirements [↑](#-overview)#🔗 Connection [↑](#-requirements-)",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -2652,7 +2652,7 @@
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Header#Specs",
+              "path": "🧪︎semio-repo/cli/main_test.go#Header#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -2701,7 +2701,7 @@
               }
             },
             {
-              "path": "🧪︎semio-repo/vscode/extension.test.ts#Header#Specs",
+              "path": "🧪︎semio-repo/vscode/extension.test.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2731,7 +2731,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main.go#Header#Specs",
+              "path": "semio-repo/cli/main.go#Header#Requirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -2864,7 +2864,7 @@
               }
             },
             {
-              "path": "semio-repo/cli/main_test.go#Header#Specs",
+              "path": "semio-repo/cli/main_test.go#Header#Requirements",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -2878,7 +2878,7 @@
               }
             },
             {
-              "path": "semio-repo/graphql/schema.graphql#Header#Specs",
+              "path": "semio-repo/graphql/schema.graphql#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2892,7 +2892,7 @@
               }
             },
             {
-              "path": "semio-repo/server/main.go#Header#Specs",
+              "path": "semio-repo/server/main.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2906,7 +2906,7 @@
               }
             },
             {
-              "path": "semio-repo/sqlite/schema.sql#Header#Specs",
+              "path": "semio-repo/sqlite/schema.sql#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2920,7 +2920,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/codegen.ts#Header#Specs",
+              "path": "semio-repo/vscode/codegen.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2934,7 +2934,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/eslint.config.ts#Header#Specs",
+              "path": "semio-repo/vscode/eslint.config.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2948,7 +2948,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/extension.test.ts#Header#Specs",
+              "path": "semio-repo/vscode/extension.test.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2962,7 +2962,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/extension.ts#Header#Specs",
+              "path": "semio-repo/vscode/extension.ts#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2976,7 +2976,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file.tsx#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2990,7 +2990,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_empty_region.tsx#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_empty_region.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3004,7 +3004,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_fixable.tsx#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_fixable.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3018,7 +3018,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_fixable_expected.tsx#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_fixable_expected.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3032,7 +3032,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_fixed.cs#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_fixed.cs#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3046,7 +3046,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_fixed.go#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_fixed.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3060,7 +3060,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_fixed.py#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_fixed.py#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3074,7 +3074,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_fixed.tsx#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_fixed.tsx#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3088,7 +3088,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_invalid.cs#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_invalid.cs#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3102,7 +3102,7 @@
               }
             },
             {
-              "path": "semio/assets/repo/some/folder/file_invalid.go#Header#Specs",
+              "path": "semio/assets/repo/some/folder/file_invalid.go#Header#Requirements",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -10880,7 +10880,7 @@
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptyRequirements",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -11281,7 +11281,7 @@
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptyRequirements",
               "lines": {
                 "added": 10,
                 "removed": 0

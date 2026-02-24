@@ -2,4 +2,4 @@
 
 Ruby implementation of semio.
 
-# Specs
+# 💯Requirements

@@ -20,8 +20,8 @@
 
 // #endregion 🔖License
 
-// #region 🔖Specs
-// #endregion 🔖Specs
+// #region 🔖Requirements
+// #endregion 🔖Requirements
 
 // #endregion 🔖Header
 
@@ -34,17 +34,17 @@ export type FragmentType<TDocumentType extends DocumentTypeDecoration<any, any>>
   any
 >
   ? [TType] extends [{ ' $fragmentName'?: infer TKey }]
-    ? TKey extends string
-      ? { ' $fragmentRefs'?: { [key in TKey]: TType } }
-      : never
+  ? TKey extends string
+  ? { ' $fragmentRefs'?: { [key in TKey]: TType } }
+  : never
   : never;
 
-  _documentNode: DocumentTypeDecoration<TType, any>,
+_documentNode: DocumentTypeDecoration<TType, any>,
   fragmentType: FragmentType<DocumentTypeDecoration<TType, any>>
 ): TType;
 // return nullable if `fragmentType` is undefined
 export function useFragmen<TType, any>,
-  fragmentType: FragmentType<DocumentTypeDecoration<TType, any>> | undefined
+fragmentType: FragmentType<DocumentTypeDecoration<TType, any>> | undefined
 ): TType | undefined;
 // return nullable if `fragmentType` is nullable
 export function useFragment<TType>(
@@ -60,10 +60,10 @@ export function useFragment<TType>(
   _documentNode: DocumentTypeDecoration<TType, any>,
   fragmentType: Array<FragmentType<DocumentTypeDecoration<TType, any>>>of nullable
 export function useFragment<TType>(
-  _documentNode: DocumentTypeDecoration<TType, any>,
-  fragmentType: Array<FragmentType<DocumentTypeDecoration<TType, any>>> | null | undefined
-): Array<TType> | null | undefined;
-  _documentNode: DocumentTypeDecoration<TType, any>,
+    _documentNode: DocumentTypeDecoration<TType, any>,
+    fragmentType: Array<FragmentType<DocumentTypeDecoration<TType, any>>> | null | undefined
+  ): Array<TType> | null | undefined;
+_documentNode: DocumentTypeDecoration<TType, any>,
   fragmentType: ReadonlyArray<FragmentType<DocumentTypeDecoration<TType, any>>>
 ): ReadonlyArray<TType>;
 // return readonly array of nullable if `fragmentType` is array of nullable

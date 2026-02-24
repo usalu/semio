@@ -120,8 +120,8 @@ while i < len(lines):
 
 print(f"Added {insertions} section summaries")
 
-# --- PASS 3: Add definition summaries and specs ---
-# We need to find all exported definitions (class, def, async def) that need summaries/specs
+# --- PASS 3: Add definition summaries and requirements ---
+# We need to find all exported definitions (class, def, async def) that need summaries/requirements
 # and add the appropriate comments above them.
 
 # Parse breachs from files to know exact names and current line numbers
@@ -649,7 +649,7 @@ def make_spec(name, kind):
 
     # Functions
     if kind == "def" or kind == "async def":
-        func_specs = {
+        func_requirements = {
             "encode": "# encode MUST return a percent-encoded string safe for URL paths.",
             "decode": "# decode MUST return the original string from a percent-encoded input.",
             "encodeList": "# encodeList MUST encode each item and join them with commas.",
@@ -715,8 +715,8 @@ def make_spec(name, kind):
             "planeFromYAxis": "# planeFromYAxis MUST derive orthogonal x and z axes from the y axis.",
             "computeChildPlane": "# computeChildPlane MUST compose parent and local plane transformations.",
         }
-        if name in func_specs:
-            return func_specs[name]
+        if name in func_requirements:
+            return func_requirements[name]
         return f"# {name} MUST complete its operation and return a valid result."
 
     # Validation-related classes
@@ -738,7 +738,7 @@ def camel_to_words(name):
     return words
 
 
-# Now process the file to add summaries and specs above definitions
+# Now process the file to add summaries and requirements above definitions
 # We need to find all class/def/async def lines that are in the breach list
 
 # Build a set of (name, line_number) pairs that need summary
@@ -749,13 +749,13 @@ with open("/tmp/all_def_summary.txt") as f:
         if len(parts) == 2:
             needs_summary.add(parts[0])
 
-# Build a set of (name, line_number) pairs that need specs
-needs_specs = set()
-with open("/tmp/all_def_specs.txt") as f:
+# Build a set of (name, line_number) pairs that need requirements
+needs_requirements = set()
+with open("/tmp/all_def_requirements.txt") as f:
     for line in f:
         parts = line.strip().split(":")
         if len(parts) == 2:
-            needs_specs.add(parts[0])
+            needs_requirements.add(parts[0])
 
 # Process lines from bottom to top to avoid index shifting issues
 # First, find all definition positions and their decorators
@@ -806,7 +806,7 @@ while i < len(lines):
 changes = 0
 for def_line_idx, name, kind, insert_idx in reversed(definitions):
     need_summary = name in needs_summary
-    need_spec = name in needs_specs
+    need_spec = name in needs_requirements
 
     if not need_summary and not need_spec:
         continue

@@ -6,7 +6,8 @@ goal: AI-OPTIMIZED-REPO/SINGLE-FILE-REPO
 
 ## Summary
 
-Adapted all ID system implementations and tests to updated specs. New flat hierarchical ID format uses kind emojis directly, Flat() for values, interaction emojis at END. Fixed critical bugs in IdToUri, UriToId, renderEntityHuman, Node resolver. Updated VSCode extension emojis. All tests pass.
+Adapted all ID system implementations and tests to updated requirements. New flat hierarchical ID format uses kind emojis directly, Flat() for values, interaction emojis at END. Fixed critical bugs in IdToUri, UriToId, renderEntityHuman, Node resolver. Updated VSCode extension emojis. All tests pass.
+
 ## Changes
 
 - `semio-repo/cli/main.go`: Rewrote IdToUri with hasPrefix/hasSuffix/findEmoji helpers; fixed UriToId interaction format and added statute cases; fixed renderEntityHuman empty ID handling; rewrote Node resolver to use kind emojis directly; removed unused stripAnyPrefix

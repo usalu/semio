@@ -6,18 +6,18 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECH
 
 ## Summary
 
-Introduced Territory as hierarchical intermediate tree item in policy system. Refactored PolicyDef to use Groups instead of flat Kinds. Updated GraphQL schema/resolvers, CLI tree rendering, and all tests. Fixed pre-existing test failures from concurrent dev changes (fixture files, section specs removal, test file detection, file ID emoji changes).
+Introduced Territory as hierarchical intermediate tree item in policy system. Refactored PolicyDef to use Groups instead of flat Kinds. Updated GraphQL schema/resolvers, CLI tree rendering, and all tests. Fixed pre-existing test failures from concurrent dev changes (fixture files, section requirements removal, test file detection, file ID emoji changes).
 
 ## Changes
 
 - `semio-repo/cli/main.go`: Added Territory struct, refactored PolicyDef to use Groups, added buildTerritoryTree, updated GraphQL schema/resolvers, updated GetPolicies/AllKinds
-- `semio-repo/cli/main_test.go`: Updated fixture test expectations (fixture files changed by other dev), fixed test file naming (test.ts → src/app.ts to avoid isTestOrBenchmarkFile), removed BreachCodeSectionMissingSpecs expectations (section specs check removed by other dev), added Territory and policy groups tests, updated file ID emoji references
+- `semio-repo/cli/main_test.go`: Updated fixture test expectations (fixture files changed by other dev), fixed test file naming (test.ts → src/app.ts to avoid isTestOrBenchmarkFile), removed BreachCodeSectionMissingRequirements expectations (section requirements check removed by other dev), added Territory and policy groups tests, updated file ID emoji references
 
 ## Log
 
 - Session 1: Added Territory struct, refactored PolicyDef, updated GraphQL, CLI tree
 - Session 2: Fixed fixture test expectations, bulk-replaced file ID emoji references
-- Session 3: Root-caused test.ts being detected as test file by isTestOrBenchmarkFile, fixed all temp file tests to use src/app.ts, removed section specs expectations (sectionPolicy no longer checks hasSpecs), removed definition specs expectations (requiresDefinitionSpecs TrimLeft bug). All tests pass.
+- Session 3: Root-caused test.ts being detected as test file by isTestOrBenchmarkFile, fixed all temp file tests to use src/app.ts, removed section requirements expectations (sectionPolicy no longer checks hasRequirements), removed definition requirements expectations (requiresDefinitionRequirements TrimLeft bug). All tests pass.
 
 ## Todos
 

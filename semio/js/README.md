@@ -43,9 +43,9 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - **Field<T> Type**: Alternative object-based pattern with always-defined `set` (no-op when disabled):
     ```typescript
     interface Field<T> {
-      value: T;
-      canSet: boolean;
-      set: (next: T) => void;
+     value: T;
+     canSet: boolean;
+     set: (next: T) => void;
     }
     const field = useDesignAppSelectionField();
     field.set(newSelection); // Safe - no-op if canSet is false
@@ -245,13 +245,13 @@ import { registerEventHandler } from "./shared";
 
 // Register handler for a specific event type
 registerEventHandler("MYAPP.TOGGLE_PANEL", {
-  guard: (context, event) => context.myApp !== undefined, // optional
-  action: (context, event) => ({
-    myApp: {
-      ...context.myApp,
-      panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
-    },
-  }),
+ guard: (context, event) => context.myApp !== undefined, // optional
+ action: (context, event) => ({
+  myApp: {
+   ...context.myApp,
+   panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
+  },
+ }),
 });
 ```
 
@@ -354,16 +354,16 @@ import { FC } from "react";
 import { AppConfig } from "../registry";
 
 const App: FC = () => {
-  // ...
+ // ...
 };
 
 export const config: AppConfig = {
-  id: "myapp",
-  component: App,
-  routeSegments: [{ path: "my/:id", paramName: "id" }],
-  getPanels: (t) => [{ key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }],
-  matchesPath: (pathParts) => pathParts[0] === "my",
-  order: 50,
+ id: "myapp",
+ component: App,
+ routeSegments: [{ path: "my/:id", paramName: "id" }],
+ getPanels: (t) => [{ key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }],
+ matchesPath: (pathParts) => pathParts[0] === "my",
+ order: 50,
 };
 
 export default App;
@@ -808,12 +808,12 @@ Sketchpad UI elements resolve transactions via React context (not props):
 
 ```typescript
 interface AppEdit<TSelectionDiff> {
-  do: AppStep<TSelectionDiff>;
-  undo: AppStep<TSelectionDiff>;
+ do: AppStep<TSelectionDiff>;
+ undo: AppStep<TSelectionDiff>;
 }
 
 interface AppStep<TSelectionDiff> {
-  selectionDiff?: TSelectionDiff;
+ selectionDiff?: TSelectionDiff;
 }
 ```
 
@@ -858,13 +858,13 @@ The `KitDiffAppStore` extends AppStore for apps that modify kits (designs, types
 
 ```typescript
 interface KitDiffAppEdit<TSelectionDiff> {
-  do: KitDiffAppStep<TSelectionDiff>;
-  undo: KitDiffAppStep<TSelectionDiff>;
+ do: KitDiffAppStep<TSelectionDiff>;
+ undo: KitDiffAppStep<TSelectionDiff>;
 }
 
 interface KitDiffAppStep<TSelectionDiff> {
-  kitDiff?: KitDiff;
-  selectionDiff?: TSelectionDiff;
+ kitDiff?: KitDiff;
+ selectionDiff?: TSelectionDiff;
 }
 ```
 
@@ -1091,10 +1091,10 @@ Transaction state is embedded in each app's state port via `AppTransactionState`
 
 ```typescript
 interface AppTransactionState<TEdit = any> {
-  isTransactionActive: boolean;
-  currentTransactionStack: TEdit[]; // Edits in current active transaction
-  pastTransactionStack: TEdit[]; // Finalized transactions (for undo)
-  redoStack: TEdit[]; // Undone transactions (for redo)
+ isTransactionActive: boolean;
+ currentTransactionStack: TEdit[]; // Edits in current active transaction
+ pastTransactionStack: TEdit[]; // Finalized transactions (for undo)
+ redoStack: TEdit[]; // Undone transactions (for redo)
 }
 ```
 
@@ -1113,12 +1113,12 @@ Long-running async operations (kit import, file upload) are tracked via `backgro
 
 ```typescript
 backgroundOperations: Record<
-  string,
-  {
-    type: string;
-    status: "pending" | "running" | "completed" | "failed";
-    error?: string;
-  }
+ string,
+ {
+  type: string;
+  status: "pending" | "running" | "completed" | "failed";
+  error?: string;
+ }
 >;
 ```
 
@@ -1204,9 +1204,9 @@ Collection diffs (`*sDiff`) track changes to arrays/lists:
 
 ```typescript
 interface CollectionDiff<T> {
-  removed?: TId[]; // IDs of removed items
-  updated?: { id: TId; diff: TDiff }[]; // Updated items with their diffs
-  added?: T[]; // Newly added items
+ removed?: TId[]; // IDs of removed items
+ updated?: { id: TId; diff: TDiff }[]; // Updated items with their diffs
+ added?: T[]; // Newly added items
 }
 ```
 
@@ -1228,12 +1228,12 @@ Each app exports a `config: AppConfig`:
 
 ```typescript
 interface AppConfig {
-  id: string; // Unique app identifier
-  component: ComponentType; // React component
-  routeSegments: RouteSegment[]; // Route path segments
-  getPanels: (t: TFunction) => PanelDefinition[]; // Panel definitions
-  matchesPath: (pathParts: string[]) => boolean; // Path matcher
-  order?: number; // Display order
+ id: string; // Unique app identifier
+ component: ComponentType; // React component
+ routeSegments: RouteSegment[]; // Route path segments
+ getPanels: (t: TFunction) => PanelDefinition[]; // Panel definitions
+ matchesPath: (pathParts: string[]) => boolean; // Path matcher
+ order?: number; // Display order
 }
 ```
 
@@ -1243,9 +1243,9 @@ Route segments define the app's URL structure:
 
 ```typescript
 interface RouteSegment {
-  path: string; // React Router path pattern
-  paramName?: string; // Parameter name (e.g., "id")
-  scopeProvider?: ComponentType<{ guid: string; children: ReactNode }>; // Scope wrapper
+ path: string; // React Router path pattern
+ paramName?: string; // Parameter name (e.g., "id")
+ scopeProvider?: ComponentType<{ guid: string; children: ReactNode }>; // Scope wrapper
 }
 ```
 
@@ -1313,14 +1313,14 @@ Alternative object-based pattern with always-defined `set` function (no-op when 
 
 ```typescript
 interface Field<T> {
-  value: T;
-  canSet: boolean;
-  set: (next: T) => void;
+ value: T;
+ canSet: boolean;
+ set: (next: T) => void;
 }
 
 interface ActionField {
-  canExecute: boolean;
-  execute: () => void;
+ canExecute: boolean;
+ execute: () => void;
 }
 ```
 
@@ -1342,12 +1342,12 @@ interface ActionField {
 
 ```typescript
 interface UseDesignAppFieldOptions<T, TEvent> {
-  selector: (s: DesignAppState) => T;
-  fallback: T;
-  canEventType: TEvent["type"];
-  createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
-  createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
-  useWildcardFallback?: boolean;
+ selector: (s: DesignAppState) => T;
+ fallback: T;
+ canEventType: TEvent["type"];
+ createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
+ createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
+ useWildcardFallback?: boolean;
 }
 
 function useDesignAppField<T, TEvent>(options: UseDesignAppFieldOptions<T, TEvent>): Field<T>;
@@ -1357,55 +1357,55 @@ function useDesignAppField<T, TEvent>(options: UseDesignAppFieldOptions<T, TEven
 
 ```typescript
 enum Theme {
-  SYSTEM = "system",
-  LIGHT = "light",
-  DARK = "dark",
+ SYSTEM = "system",
+ LIGHT = "light",
+ DARK = "dark",
 }
 enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
+ BEGINNER = "beginner",
+ NORMAL = "normal",
+ EXPERT = "expert",
 }
 enum Mode {
-  USER = "user",
-  DEV = "dev",
+ USER = "user",
+ DEV = "dev",
 }
 enum StoreStatus {
-  IDLE = "idle",
-  LOADING = "loading",
-  ERROR = "error",
-  READY = "ready",
+ IDLE = "idle",
+ LOADING = "loading",
+ ERROR = "error",
+ READY = "ready",
 }
 enum ToolKind {
-  SELECTION_NORMAL,
-  SELECTION_ADDITIVE,
-  SELECTION_SUBTRACTIVE,
-  LASSO_RECTANGULAR,
-  LASSO_FREEFORM,
-  CONNECTOR,
+ SELECTION_NORMAL,
+ SELECTION_ADDITIVE,
+ SELECTION_SUBTRACTIVE,
+ LASSO_RECTANGULAR,
+ LASSO_FREEFORM,
+ CONNECTOR,
 }
 enum WindowKind {
-  TABLE = "table",
-  SCENE = "scene",
-  DIAGRAM = "diagram",
-  CUSTOM = "custom",
+ TABLE = "table",
+ SCENE = "scene",
+ DIAGRAM = "diagram",
+ CUSTOM = "custom",
 }
 enum PanelPosition {
-  LEFT = "left",
-  RIGHT = "right",
-  MIDDLE = "middle",
-  BOTTOM = "bottom",
+ LEFT = "left",
+ RIGHT = "right",
+ MIDDLE = "middle",
+ BOTTOM = "bottom",
 }
 enum PanelKind {
-  WORKBENCH,
-  TOOLS,
-  TOOLBAR,
-  HUD,
-  STATS,
-  DETAILS,
-  CHAT,
-  SETTINGS,
-  PARAMS,
+ WORKBENCH,
+ TOOLS,
+ TOOLBAR,
+ HUD,
+ STATS,
+ DETAILS,
+ CHAT,
+ SETTINGS,
+ PARAMS,
 }
 ```
 
@@ -1415,33 +1415,33 @@ Panels are configured via `PanelKind` with predefined positions and behaviors:
 
 ```typescript
 interface PanelKindConfig {
-  icon: ComponentType<{ size?: number }>;
-  position: PanelPosition;
-  group?: string;
-  isTransparent?: boolean;
-  isGroupable?: boolean;
-  hotkey?: string;
+ icon: ComponentType<{ size?: number }>;
+ position: PanelPosition;
+ group?: string;
+ isTransparent?: boolean;
+ isGroupable?: boolean;
+ hotkey?: string;
 }
 
 interface PanelVisibility {
-  toolbar?: boolean;
-  workbench?: boolean;
-  tools?: boolean;
-  hud?: boolean;
-  stats?: boolean;
-  details?: boolean;
-  chat?: boolean;
-  settings?: boolean;
-  params?: boolean;
+ toolbar?: boolean;
+ workbench?: boolean;
+ tools?: boolean;
+ hud?: boolean;
+ stats?: boolean;
+ details?: boolean;
+ chat?: boolean;
+ settings?: boolean;
+ params?: boolean;
 }
 
 interface PanelSection {
-  id: string;
-  content: ReactNode | (() => ReactNode);
-  specificity?: number;
-  defaultOpen?: boolean;
-  order?: number;
-  actions?: Array<{ id: string; icon: ReactNode; onClick: () => void }>;
+ id: string;
+ content: ReactNode | (() => ReactNode);
+ specificity?: number;
+ defaultOpen?: boolean;
+ order?: number;
+ actions?: Array<{ id: string; icon: ReactNode; onClick: () => void }>;
 }
 ```
 
@@ -1458,22 +1458,22 @@ Tools define interaction modes within apps:
 
 ```typescript
 interface Tool<TState = any> {
-  id: ToolKind | string;
-  icon?: ReactNode;
-  render: (context: ToolRenderContext<TState>) => { scene?: ReactNode; diagram?: ReactNode | null; table?: ReactNode | null };
+ id: ToolKind | string;
+ icon?: ReactNode;
+ render: (context: ToolRenderContext<TState>) => { scene?: ReactNode; diagram?: ReactNode | null; table?: ReactNode | null };
 }
 
 interface ToolMode {
-  id: string;
-  icon?: ReactNode;
-  label?: string;
-  tooltipId?: string;
+ id: string;
+ icon?: ReactNode;
+ label?: string;
+ tooltipId?: string;
 }
 
 interface ToolDefinition {
-  id: string;
-  defaultMode: ToolKind | string;
-  modes: ToolMode[];
+ id: string;
+ defaultMode: ToolKind | string;
+ modes: ToolMode[];
 }
 ```
 
@@ -1483,19 +1483,19 @@ Each app has a typed ID structure:
 
 ```typescript
 interface KitAppId {
-  kit: Guid;
+ kit: Guid;
 }
 interface TypeAppId {
-  kit: Guid;
-  type: Guid;
+ kit: Guid;
+ type: Guid;
 }
 interface DesignAppId {
-  kit: Guid;
-  design: Guid;
+ kit: Guid;
+ design: Guid;
 }
 interface QualityAppId {
-  kit: Guid;
-  quality: Guid;
+ kit: Guid;
+ quality: Guid;
 }
 ```
 
@@ -1532,16 +1532,16 @@ Caches computed values that depend on Y.js paths:
 
 ```typescript
 class DerivedNode<T> {
-  snapshot(): T;
-  subscribe(cb: () => void): Disposable;
-  dispose(): void;
+ snapshot(): T;
+ subscribe(cb: () => void): Disposable;
+ dispose(): void;
 }
 
 class DerivedStore {
-  getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T>;
-  get<T>(key: string): DerivedNode<T> | undefined;
-  delete(key: string): boolean;
-  clear(): void;
+ getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T>;
+ get<T>(key: string): DerivedNode<T> | undefined;
+ delete(key: string): boolean;
+ clear(): void;
 }
 ```
 
@@ -1559,19 +1559,19 @@ Apps register plugins that contribute event handlers, guards, and state factorie
 
 ```typescript
 interface AppPlugin {
-  id: string; // e.g., "home", "kit", "design"
-  namespace: string; // e.g., "HOME", "KIT", "DESIGN"
-  machine: AppMachineContribution;
-  registerStores?: () => void;
-  onRegister?: () => void;
+ id: string; // e.g., "home", "kit", "design"
+ namespace: string; // e.g., "HOME", "KIT", "DESIGN"
+ machine: AppMachineContribution;
+ registerStores?: () => void;
+ onRegister?: () => void;
 }
 
 interface AppMachineContribution {
-  actions?: Record<string, (context: any, event: any) => any>;
-  guards?: Record<string, (context: any, event: any) => boolean>;
-  eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
-  selectors?: Record<string, (context: any, ...args: any[]) => any>;
-  createDefaultState?: () => any;
+ actions?: Record<string, (context: any, event: any) => any>;
+ guards?: Record<string, (context: any, event: any) => boolean>;
+ eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
+ selectors?: Record<string, (context: any, ...args: any[]) => any>;
+ createDefaultState?: () => any;
 }
 ```
 
@@ -1589,8 +1589,8 @@ Dynamic event dispatch for app-specific events:
 
 ```typescript
 interface EventHandlerConfig<TContext = any, TEvent = any> {
-  guard?: (context: TContext, event: TEvent) => boolean;
-  action: (context: TContext, event: TEvent) => Partial<TContext>;
+ guard?: (context: TContext, event: TEvent) => boolean;
+ action: (context: TContext, event: TEvent) => Partial<TContext>;
 }
 ```
 
@@ -1598,12 +1598,12 @@ interface EventHandlerConfig<TContext = any, TEvent = any> {
 
 ```typescript
 registerEventHandler("HOME.TOGGLE_PANEL", {
-  action: (context, event) => ({
-    homeApp: {
-      ...context.homeApp,
-      panelVisibility: { ...context.homeApp.panelVisibility, [event.panel]: !context.homeApp.panelVisibility[event.panel] },
-    },
-  }),
+ action: (context, event) => ({
+  homeApp: {
+   ...context.homeApp,
+   panelVisibility: { ...context.homeApp.panelVisibility, [event.panel]: !context.homeApp.panelVisibility[event.panel] },
+  },
+ }),
 });
 ```
 
@@ -1648,10 +1648,10 @@ File providers abstract file storage for kits, supporting multiple backends.
 
 ```typescript
 interface FileProvider {
-  upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
-  download: (kitId: string, fileId: string, path: string) => Promise<Blob>;
-  delete: (kitId: string, fileId: string, path: string) => Promise<void>;
-  getUrl: (kitId: string, fileId: string, path: string) => string;
+ upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
+ download: (kitId: string, fileId: string, path: string) => Promise<Blob>;
+ delete: (kitId: string, fileId: string, path: string) => Promise<void>;
+ getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 ```
 
@@ -1736,9 +1736,9 @@ The UI adapts to user expertise level, showing different tooltip content.
 
 ```typescript
 enum Expertise {
-  BEGINNER = "beginner", // Full tooltips with tutorials
-  NORMAL = "normal", // Standard tooltips
-  EXPERT = "expert", // No tooltips
+ BEGINNER = "beginner", // Full tooltips with tutorials
+ NORMAL = "normal", // Standard tooltips
+ EXPERT = "expert", // No tooltips
 }
 ```
 
@@ -1819,27 +1819,27 @@ type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Con
 type Severity = "error" | "warning";
 
 interface SemioDomainLocation {
-  entityKind: SemioEntityKind;
-  entityGuid?: Guid;
-  field?: string;
+ entityKind: SemioEntityKind;
+ entityGuid?: Guid;
+ field?: string;
 }
 
 interface Fix {
-  title: string;
-  diff: KitDiff;
+ title: string;
+ diff: KitDiff;
 }
 
 interface Problem {
-  constraintId: string;
-  severity: Severity;
-  message: string;
-  location: SemioDomainLocation;
-  relatedGuids?: Guid[];
-  fixes: Fix[];
+ constraintId: string;
+ severity: Severity;
+ message: string;
+ location: SemioDomainLocation;
+ relatedGuids?: Guid[];
+ fixes: Fix[];
 }
 
 interface ValidationResult {
-  problems: Problem[];
+ problems: Problem[];
 }
 ```
 
@@ -1847,12 +1847,12 @@ interface ValidationResult {
 
 ```typescript
 interface ValidationContext {
-  kit: Kit;
-  typesByGuid: Map<Guid, Type>;
-  designsByGuid: Map<Guid, Design>;
-  piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
-  connectorsByTypeGuid: Map<Guid, Connector[]>;
-  modelsByTypeGuid: Map<Guid, Model[]>;
+ kit: Kit;
+ typesByGuid: Map<Guid, Type>;
+ designsByGuid: Map<Guid, Design>;
+ piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
+ connectorsByTypeGuid: Map<Guid, Connector[]>;
+ modelsByTypeGuid: Map<Guid, Model[]>;
 }
 ```
 
@@ -1997,7 +1997,7 @@ Layer paths within a design must be unique.
 ```typescript
 const result = validateSemioKit(kit);
 if (hasSemioErrors(result)) {
-  console.error("Validation errors found:", result.problems);
+ console.error("Validation errors found:", result.problems);
 }
 ```
 
@@ -2013,13 +2013,13 @@ const fixedKit = applyKitDiff(kit, fix.diff);
 
 ```typescript
 const customConstraint: Constraint = (ctx) => {
-  const problems: Problem[] = [];
-  // Custom validation logic
-  return problems;
+ const problems: Problem[] = [];
+ // Custom validation logic
+ return problems;
 };
 
 const result = validateSemioKit(kit, {
-  constraints: [...defaultConstraints, customConstraint],
+ constraints: [...defaultConstraints, customConstraint],
 });
 ```
 
@@ -2034,10 +2034,10 @@ Example:
 
 ```typescript
 export const semioCustomConstraint: Constraint = (ctx) => {
-  const problems: Problem[] = [];
-  // Validation logic
-  // Use semioMakeFix to create fixes
-  return problems;
+ const problems: Problem[] = [];
+ // Validation logic
+ // Use semioMakeFix to create fixes
+ return problems;
 };
 ```
 
@@ -2160,8 +2160,8 @@ import { validateSemioKit, applyKitDiff } from "semio/js";
 
 const result = validateSemioKit(kit);
 if (result.problems.length > 0) {
-  const fix = result.problems[0].fixes[0];
-  const fixedKit = applyKitDiff(kit, fix.diff);
+ const fix = result.problems[0].fixes[0];
+ const fixedKit = applyKitDiff(kit, fix.diff);
 }
 ```
 
@@ -2311,5 +2311,4 @@ cd semio/js && npm run preflight
 
 </details>
 
-# Specs
-
+# 💯Requirements

@@ -88,14 +88,14 @@ Let me walk you through 🚶
        - [🔁 Refactoring](#-refactoring-)
        - [🐛 Bug Fixes](#-bug-fixes-)
      - [⌨️️ Tools](#-tools-)
-      - [🌐 Web-Chat](#-web-chat-)
-        - [❄ ChatGPT](#-chatgpt-)
-        - [🌟 Gemini](#-gemini-)
-        - [AI studio](#-ai-studio-)
-      - [💻 Editor](#-editor-)
-        - [✈ Copilot](#-copilot-)
-        - [🖱️️ Cursor](#-cursor-)
-      - [🌊 Windsurf](#-windsurf-)
+     - [🌐 Web-Chat](#-web-chat-)
+       - [❄ ChatGPT](#-chatgpt-)
+       - [🌟 Gemini](#-gemini-)
+       - [AI studio](#-ai-studio-)
+     - [💻 Editor](#-editor-)
+       - [✈ Copilot](#-copilot-)
+       - [🖱️️ Cursor](#-cursor-)
+     - [🌊 Windsurf](#-windsurf-)
      - [⌨️️ CLI](#-cli-)
        - [⌨️️ Claude Code](#-claude-code-)
        - [🧾 Codex](#-codex-)
@@ -105,7 +105,7 @@ Let me walk you through 🚶
        - [↕ Reorderer](#-reorderer-)
        - [🔁 Formatter](#-formatter-)
      - [🤖 Models](#-models-)
-    - [🔄 CI/CD](#-cicd-)
+   - [🔄 CI/CD](#-cicd-)
 1. [💯 Brand](#-brand-)
    - [✍ Concept](#%EF%B8%8F-concept-)
      - [✅ Do](#-do-)
@@ -127,7 +127,7 @@ Let me walk you through 🚶
 
 # 🛍 Products [↑](#-overview)
 
-> Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [bundles](#-bundles-) 🪢
+> Do you wonder how semio is interopable? The reason are shared [specification](#-requirements-), [ecosystems](#%EF%B8%8F-ecosystems-) and [bundles](#-bundles-) 🪢
 
 ## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
@@ -181,9 +181,9 @@ A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) an
 
 A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semio 🔀
 
-# 📄 Specs [↑](#-overview)
+# 📄 Requirements [↑](#-overview)
 
-## 📦 Kit [↑](#-specs-)
+## 📦 Kit [↑](#-requirements-)
 
 A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
 
@@ -195,7 +195,7 @@ The SQL-schema of `kit.db` is found in [`./semio/sqlite/schema.sql`](./semio/sql
 
 For Inter-Process-Communication (IPC) the JSON-schema in [`./semio/jsonschema/kit.json`](./semio/jsonschema/kit.json) is used 📄
 
-## 🏘 Design [↑](#-specs-)
+## 🏘 Design [↑](#-requirements-)
 
 A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
 
@@ -209,7 +209,7 @@ The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://
 
 Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#-plane-) 🛂
 
-## 🏠 Type [↑](#-specs-)
+## 🏠 Type [↑](#-requirements-)
 
 A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
 
@@ -219,7 +219,7 @@ _Children_ of a _parent_ are \_subtypes.
 
 A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
 
-## 🔗 Connection [↑](#-specs-)
+## 🔗 Connection [↑](#-requirements-)
 
 A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
 
@@ -231,7 +231,7 @@ The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarch
 
 A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
 
-## ⭕ Piece [↑](#-specs-)
+## ⭕ Piece [↑](#-requirements-)
 
 A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
 
@@ -241,7 +241,7 @@ A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
 The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
-## ⚓ Connector [↑](#-specs-)
+## ⚓ Connector [↑](#-requirements-)
 
 A [`connector`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
 
@@ -255,7 +255,7 @@ It is enough for one [`connector`](#-port-) to be compatible with another [`conn
 
 A [`connector`](#-port-) can have [`props`](#-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
-## 💾 Model [↑](#-specs-)
+## 💾 Model [↑](#-requirements-)
 
 A [`model`](#-model-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
 
@@ -263,7 +263,7 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
 
 The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 🏷️ Attribute [↑](#-specs-)
+## 🏷️ Attribute [↑](#-requirements-)
 
 A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
@@ -288,23 +288,23 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 
 A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔
 
-## 🏷️ Tag [↑](#-specs-)
+## 🏷️ Tag [↑](#-requirements-)
 
 A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
 
-## ◳ Plane [↑](#-specs-)
+## ◳ Plane [↑](#-requirements-)
 
 A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈
 
 The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
 
-## 🔗 Url [↑](#-specs-)
+## 🔗 Url [↑](#-requirements-)
 
 A [`url`](#-url-) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
 
 A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
 
-## 🔢 Quality [↑](#-specs-)
+## 🔢 Quality [↑](#-requirements-)
 
 A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
 
@@ -312,43 +312,43 @@ A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and h
 
 The **kind** determines which entities the quality can be applied to using a bitwise enum system 🔢
 
-## 📊 Benchmark [↑](#-specs-)
+## 📊 Benchmark [↑](#-requirements-)
 
 A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-quality-) with a **name**, optional **icon**, and **range** (min/max with exclusion flags) 🏆
 
 Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
 
-## 🏷️ Concept [↑](#-specs-)
+## 🏷️ Concept [↑](#-requirements-)
 
 A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
 
 Concepts enable hierarchical organization and categorization of design elements beyond simple naming 📂
 
-## 👤 Author [↑](#-specs-)
+## 👤 Author [↑](#-requirements-)
 
 An [`author`](#-author-) has a **name** and **email** and can be associated with [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) with a **rank** indicating contribution level 👨‍💻
 
 Authors provide attribution and contact information for design ownership and collaboration 🤝
 
-## 📋 Layer [↑](#-specs-)
+## 📋 Layer [↑](#-requirements-)
 
 A [`layer`](#-layer-) is an organizational grouping within a [`design`](#%EF%B8%8F-design-) with a **name**, optional **description**, and **color** for visual organization 🎨
 
 Layers provide a way to group and manage pieces logically within complex designs 📑
 
-## 👥 Group [↑](#-specs-)
+## 👥 Group [↑](#-requirements-)
 
 A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`](#%EF%B8%8F-design-) with optional **name**, **description**, **color**, and **attributes** 👥
 
 Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
 
-## ⚙️️ Prop [↑](#-specs-)
+## ⚙️️ Prop [↑](#-requirements-)
 
 A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
 
 Props define measurable characteristics of connectors using the quality system for standardized measurement 📐
 
-## 📈 Stat [↑](#-specs-)
+## 📈 Stat [↑](#-requirements-)
 
 A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
 
@@ -566,7 +566,7 @@ It is perfect to find the latest activities and the history 🔍
 
 ### 📢 Release [↑](#-gitstyle-)
 
-Every release contains a set of matching [specs](#-specs-), [bundles](#-bundles-), [examples](#-examples-) and [docs](#-docs-) 📦
+Every release contains a set of matching [requirements](#-requirements-), [bundles](#-bundles-), [examples](#-examples-) and [docs](#-docs-) 📦
 
 The release notes follow this format:
 

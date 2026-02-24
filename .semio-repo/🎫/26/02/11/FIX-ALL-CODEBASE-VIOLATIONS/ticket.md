@@ -12,11 +12,11 @@ Fixed all 14014 breachs to 0.
 
 - Updated TypeScript definition regex to handle async/abstract/declare/default keywords
 - Added `isTestOrBenchmarkFile()` and `isExportedDefinition()` helper functions
-- Section summary/specs check now skips test/benchmark files
+- Section summary/requirements check now skips test/benchmark files
 - Orphan definition check now skips test/benchmark files
-- Definition summary/specs check now skips test files and non-exported definitions
+- Definition summary/requirements check now skips test files and non-exported definitions
 - Updated `isTestOrBenchmarkFile()` to detect test directories (`.Tests/`, `.Benchmark/`)
-- Added `requiresDefinitionSpecs()` to only enforce specs on behavioral definitions (functions, classes, methods)
+- Added `requiresDefinitionRequirements()` to only enforce requirements on behavioral definitions (functions, classes, methods)
 - Fixed all remaining breachs file-by-file
 
 ## Log
@@ -24,7 +24,7 @@ Fixed all 14014 breachs to 0.
 - Ran autofix: 14,014 → 13,930 breachs
 - Fixed small breachs (headers, contributors, comments, sections, READMEs): 13,930 → 12,720
 - Policy refinement (test files, exported-only): 12,720 → 8,600
-- Policy refinement (test directories, behavioral-only specs): 8,600 → TBD
+- Policy refinement (test directories, behavioral-only requirements): 8,600 → TBD
 - File-by-file documentation fixes: TBD → 0
 
 ## Todos
@@ -34,7 +34,7 @@ Fixed all 14014 breachs to 0.
 - [x] Policy: Skip test/benchmark files for section and definition checks
 - [x] Policy: Only check exported/public definitions
 - [ ] Policy: Detect test directories (.Tests/, .Benchmark/)
-- [ ] Policy: Only require specs for behavioral definitions (function/class/method)
+- [ ] Policy: Only require requirements for behavioral definitions (function/class/method)
 - [ ] Fix remaining breachs file-by-file
 - [ ] Verify zero breachs
 

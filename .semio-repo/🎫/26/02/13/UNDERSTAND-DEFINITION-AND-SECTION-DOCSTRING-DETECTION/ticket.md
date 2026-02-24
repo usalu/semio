@@ -26,10 +26,10 @@ None (read-only investigation).
 - `BreachCodeSectionMissingIdentification` = "code/section/missing-identification"
 - `BreachCodeSectionWrongFormat` = "code/section/wrong-format"
 - `BreachCodeSectionWrongFormatSummaryTooLong` = "code/section/wrong-format/summary/too-long-summary"
-- `BreachCodeSectionWrongFormatSpecsSplitBlock` = "code/section/wrong-format/specs/split-block"
+- `BreachCodeSectionWrongFormatRequirementsSplitBlock` = "code/section/wrong-format/requirements/split-block"
 - `BreachCodeSectionWrongFormatDocs` = "code/section/wrong-format/docs"
 - `BreachCodeSectionMissingSummary` = "code/section/missing-summary"
-- `BreachCodeSectionMissingSpecs` = "code/section/missing-specs"
+- `BreachCodeSectionMissingRequirements` = "code/section/missing-requirements"
 - `BreachCodeSectionMissingDocs` = "code/section/missing-docs"
 
 **Definition breachs:**
@@ -38,7 +38,7 @@ None (read-only investigation).
 - `BreachCodeDefWrongFormat` = "code/definition/wrong-format"
 - `BreachCodeDefNotNativeDocstring` = "code/definition/wrong-format/not-native-docstring"
 - `BreachCodeDefMissingSummary` = "code/definition/missing-summary"
-- `BreachCodeDefMissingSpecs` = "code/definition/missing-specs"
+- `BreachCodeDefMissingRequirements` = "code/definition/missing-requirements"
 - `BreachCodeDefMissingDocs` = "code/definition/missing-docs"
 
 **Comment breachs:**
@@ -57,7 +57,7 @@ func codePolicy(ctx *PolicyContext) []Breach {
     breachs = append(breachs, headerPolicy(ctx)...)
     breachs = append(breachs, sectionPolicy(ctx)...)
     breachs = append(breachs, commentPolicy(ctx)...)
-    breachs = append(breachs, specsPolicy(ctx)...)
+    breachs = append(breachs, requirementsPolicy(ctx)...)
     breachs = append(breachs, emojiPolicy(ctx)...)
     breachs = append(breachs, docsPolicy(ctx)...)
     return breachs
@@ -71,11 +71,11 @@ Inside `sectionPolicy`, for each real definition range:
 1. Skips test/benchmark files
 2. Skips non-exported definitions (via `isExportedDefinition`)
 3. Native docstring detection by language:
-   - **TypeScript**: Checks if prev line ends with `**/` or `*/`, then scans back for `/**` opener. Parses content for identification `[...](semiorepo://definition/...)`, specs (RFC2119 keywords via `isSpecText`), and summary.
+   - **TypeScript**: Checks if prev line ends with `**/` or `*/`, then scans back for `/**` opener. Parses content for identification `[...](semiorepo://definition/...)`, requirements (RFC2119 keywords via `isSpecText`), and summary.
    - **C#/Rust**: Checks if prev line starts with `///`, then scans back through `///` lines.
    - **Go/Python**: Automatically set `isNativeDocstring = true` (their comment prefix IS the native docstring format).
-4. If NOT native docstring but has summary/specs/identification: emits `BreachCodeDefNotNativeDocstring`
-5. Checks for `hasIdentification`, `hasSummary`, `hasSpecs` and emits corresponding breachs.
+4. If NOT native docstring but has summary/requirements/identification: emits `BreachCodeDefNotNativeDocstring`
+5. Checks for `hasIdentification`, `hasSummary`, `hasRequirements` and emits corresponding breachs.
 
 ### 4. Section Policy - Section Checking (main.go:14295-14380)
 
@@ -152,7 +152,7 @@ Marks lines that are "definition doc" lines (immune from comment-ban):
 **TypeScript (semio/js/semio.ts)**:
 
 - Section: `// [🔖path#Name](semiorepo://section/...)` + `// Summary text.`
-- Definition: JSDoc `/** ... **/` with summary, specs (MUST/SHOULD), and `*  * [🛠️...](...)`
+- Definition: JSDoc `/** ... **/` with summary, requirements (MUST/SHOULD), and `*  * [🛠️...](...)`
 
 **Python (semio/py/semio.py)**:
 
@@ -161,8 +161,8 @@ Marks lines that are "definition doc" lines (immune from comment-ban):
 
 **C# (semio/net/Semio/Semio.cs)**:
 
-- Section: `/// [🔖path#Name](semiorepo://section/...)` + `/// Specs...` + `/// Summary.`
-- Definition: `/// Summary.` + `/// Specs.` + `/// [🛠️...](...)` above class/method
+- Section: `/// [🔖path#Name](semiorepo://section/...)` + `/// Requirements...` + `/// Summary.`
+- Definition: `/// Summary.` + `/// Requirements.` + `/// [🛠️...](...)` above class/method
 
 **Go (semio/go/semio.go)**:
 
@@ -174,7 +174,7 @@ Marks lines that are "definition doc" lines (immune from comment-ban):
 ### 10. Key Helper Functions
 
 - `isExportedDefinition(name, line, langName)` — language-specific check (export, Uppercase, public, pub)
-- `requiresDefinitionSpecs(line, langName)` — whether a def needs specs (functions/classes yes, enums/interfaces no)
+- `requiresDefinitionRequirements(line, langName)` — whether a def needs requirements (functions/classes yes, enums/interfaces no)
 - `isSpecText(text)` — detects RFC 2119 keywords (MUST, SHOULD, MAY, SHALL, REQUIRED, RECOMMENDED, etc.)
 - `isTestOrBenchmarkFile(file)` — skips test/benchmark files for definition checks
 

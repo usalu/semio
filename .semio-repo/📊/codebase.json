@@ -68246,9 +68246,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli💻maingo#Types#Policies§requiresDefinitionSpecs",
-      "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§requiresDefinitionSpecs",
-      "uri": "semiorepo://file/semio-repo/cli/main.go§requiresDefinitionSpecs",
+      "id": "🧰semiorepo⌨️cli💻maingo#Types#Policies§requiresDefinitionRequirements",
+      "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§requiresDefinitionRequirements",
+      "uri": "semiorepo://file/semio-repo/cli/main.go§requiresDefinitionRequirements",
       "metrics": {
         "definitions": 0,
         "lines": 25,
@@ -68316,9 +68316,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli💻maingo#Types#Policies§specsPolicy",
-      "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§specsPolicy",
-      "uri": "semiorepo://file/semio-repo/cli/main.go§specsPolicy",
+      "id": "🧰semiorepo⌨️cli💻maingo#Types#Policies§requirementsPolicy",
+      "path": "🧰semiorepo⌨️cli💻maingo#Types#Policies§requirementsPolicy",
+      "uri": "semiorepo://file/semio-repo/cli/main.go§requirementsPolicy",
       "metrics": {
         "definitions": 0,
         "lines": 108,
@@ -73716,9 +73716,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionMissingSummaryAndSpecs",
-      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionMissingSummaryAndSpecs",
-      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestDefinitionMissingSummaryAndSpecs",
+      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionMissingSummaryAndRequirements",
+      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionMissingSummaryAndRequirements",
+      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestDefinitionMissingSummaryAndRequirements",
       "metrics": {
         "definitions": 0,
         "lines": 28,
@@ -73756,9 +73756,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionWithSummaryAndSpecs",
-      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionWithSummaryAndSpecs",
-      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestDefinitionWithSummaryAndSpecs",
+      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionWithSummaryAndRequirements",
+      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestDefinitionWithSummaryAndRequirements",
+      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestDefinitionWithSummaryAndRequirements",
       "metrics": {
         "definitions": 0,
         "lines": 26,
@@ -73826,9 +73826,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestFormatHeaderEmptySpecs",
-      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestFormatHeaderEmptySpecs",
-      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestFormatHeaderEmptySpecs",
+      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestFormatHeaderEmptyRequirements",
+      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestFormatHeaderEmptyRequirements",
+      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestFormatHeaderEmptyRequirements",
       "metrics": {
         "definitions": 0,
         "lines": 10,
@@ -73996,9 +73996,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionMissingSummaryAndSpecs",
-      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionMissingSummaryAndSpecs",
-      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestSectionMissingSummaryAndSpecs",
+      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionMissingSummaryAndRequirements",
+      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionMissingSummaryAndRequirements",
+      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestSectionMissingSummaryAndRequirements",
       "metrics": {
         "definitions": 0,
         "lines": 28,
@@ -74016,9 +74016,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionWithSummaryAndSpecs",
-      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionWithSummaryAndSpecs",
-      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestSectionWithSummaryAndSpecs",
+      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionWithSummaryAndRequirements",
+      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSectionWithSummaryAndRequirements",
+      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestSectionWithSummaryAndRequirements",
       "metrics": {
         "definitions": 0,
         "lines": 26,
@@ -74046,9 +74046,9 @@
       }
     },
     {
-      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSpecsBreach",
-      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestSpecsBreach",
-      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestSpecsBreach",
+      "id": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestRequirementsBreach",
+      "path": "🧰semiorepo⌨️cli🥼maintestgo#Policy Tests§TestRequirementsBreach",
+      "uri": "semiorepo://file/semio-repo/cli/main_test.go§TestRequirementsBreach",
       "metrics": {
         "definitions": 0,
         "lines": 267,
@@ -86730,7 +86730,7 @@
       "month": "02",
       "day": "09",
       "slug": "CREATE-BUNDLE-README-FILES",
-      "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Specs sections.",
+      "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Requirements sections.",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -86832,7 +86832,7 @@
       "month": "02",
       "day": "09",
       "slug": "EXTENDED-SOURCE-CODE-HEADERS",
-      "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Specs section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
+      "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Requirements section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
       "llm": "sonnet-4-5",
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "status": "closed"
@@ -87076,7 +87076,7 @@
       "status": "closed"
     },
     {
-      "id": "🎫inlinespecsmigration",
+      "id": "🎫inlinerequirementsmigration",
       "path": "/workspaces/semio/.semio-repo/🎫/26/02/09/INLINE-SPECS-MIGRATION/ticket.md",
       "uri": "semiorepo://file//workspaces/semio/.semio-repo/🎫/26/02/09/INLINE-SPECS-MIGRATION/ticket.md",
       "date": {
@@ -87087,7 +87087,7 @@
       "month": "02",
       "day": "09",
       "slug": "INLINE-SPECS-MIGRATION",
-      "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new specs statute for the code policy that validates specs are implementation-agnostic and properly located. Bundle specs go to .bundle.md files, folder specs to .folder.md files, file specs to header Specs sections, section specs under section starts, and definition specs in language-native docstrings. Extend existing tests to cover the new statute.",
+      "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new requirements statute for the code policy that validates requirements are implementation-agnostic and properly located. Bundle requirements go to .bundle.md files, folder requirements to .folder.md files, file requirements to header Requirements sections, section requirements under section starts, and definition requirements in language-native docstrings. Extend existing tests to cover the new statute.",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -87263,7 +87263,7 @@
       "status": "closed"
     },
     {
-      "id": "🎫researchspecsmappinginagentsmd",
+      "id": "🎫researchrequirementsmappinginagentsmd",
       "path": "/workspaces/semio/.semio-repo/🎫/26/02/09/RESEARCH-SPECS-MAPPING-IN-AGENTS-MD/ticket.md",
       "uri": "semiorepo://file//workspaces/semio/.semio-repo/🎫/26/02/09/RESEARCH-SPECS-MAPPING-IN-AGENTS-MD/ticket.md",
       "date": {
@@ -87274,7 +87274,7 @@
       "month": "02",
       "day": "09",
       "slug": "RESEARCH-SPECS-MAPPING-IN-AGENTS-MD",
-      "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which specs belong to which files/bundles/folders/sections",
+      "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which requirements belong to which files/bundles/folders/sections",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -87444,7 +87444,7 @@
       "month": "02",
       "day": "11",
       "slug": "COMPREHENSIVE-FILE-SECTION-DEFINITION-VIOLATIONS",
-      "prompt": "Implement comprehensive statutes for files (missing header, wrong header, missing id, wrong id, missing contributors, missing summary, missing license, wrong license, missing specs, missing docs), sections (wrong format, missing summary, missing specs, missing docs), and definitions (wrong format, missing summary, missing specs, missing docs). Ensure every project, bundle, folder, file, section, and definition has proper summary, specs, todos, and docs. Extend tests to cover all statutes.",
+      "prompt": "Implement comprehensive statutes for files (missing header, wrong header, missing id, wrong id, missing contributors, missing summary, missing license, wrong license, missing requirements, missing docs), sections (wrong format, missing summary, missing requirements, missing docs), and definitions (wrong format, missing summary, missing requirements, missing docs). Ensure every project, bundle, folder, file, section, and definition has proper summary, requirements, todos, and docs. Extend tests to cover all statutes.",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -87512,7 +87512,7 @@
       "month": "02",
       "day": "11",
       "slug": "FIX-ALL-CODEBASE-VIOLATIONS",
-      "prompt": "Fix all breachs from all statutes. Summarize, document and migrate existing specs into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
+      "prompt": "Fix all breachs from all statutes. Summarize, document and migrate existing requirements into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -87597,7 +87597,7 @@
       "month": "02",
       "day": "11",
       "slug": "FIX-CODE-VIOLATIONS-IN-QUALITY-TSX-AND-DOCS-TSX",
-      "prompt": "Fix all code breachs in semio/js/sketchpad/Quality.tsx and semio/js/sketchpad/Docs.tsx by adding missing section summaries and definition summaries/specs",
+      "prompt": "Fix all code breachs in semio/js/sketchpad/Quality.tsx and semio/js/sketchpad/Docs.tsx by adding missing section summaries and definition summaries/requirements",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -87682,7 +87682,7 @@
       "month": "02",
       "day": "11",
       "slug": "FIX-KITSELECTIONHELPER-VIOLATIONS",
-      "prompt": "Fix all 56 code breachs in semio/js/sketchpad/kitSelectionHelper.ts by adding section summaries and definition summaries/specs",
+      "prompt": "Fix all 56 code breachs in semio/js/sketchpad/kitSelectionHelper.ts by adding section summaries and definition summaries/requirements",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -88021,7 +88021,7 @@
       "month": "02",
       "day": "12",
       "slug": "FIX-ENGINE-PY-CODE-VIOLATIONS",
-      "prompt": "Fix ALL 120 code breachs in semio/engine/engine.py by adding section summaries and definition summaries with specs",
+      "prompt": "Fix ALL 120 code breachs in semio/engine/engine.py by adding section summaries and definition summaries with requirements",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -88123,7 +88123,7 @@
       "month": "02",
       "day": "12",
       "slug": "REFACTOR-VIOLATION-KINDS-AND-DOCUMENTATION-MECHANISMS",
-      "prompt": "Refactor statute tree for File/Section/Definition with new statutes (Missing Header Region, Wrong Header Region Format, Missing Identification, Wrong Identification with Id/Uri subkinds, Section Wrong Format subkinds for Summary/Specs/Docs, Too Long Summary, Split Block). Implement and test README.md mechanism for bundles/folders, file header mechanism, section mechanism, and definition docstring mechanism for all languages. Extend existing test coverage.",
+      "prompt": "Refactor statute tree for File/Section/Definition with new statutes (Missing Header Region, Wrong Header Region Format, Missing Identification, Wrong Identification with Id/Uri subkinds, Section Wrong Format subkinds for Summary/Requirements/Docs, Too Long Summary, Split Block). Implement and test README.md mechanism for bundles/folders, file header mechanism, section mechanism, and definition docstring mechanism for all languages. Extend existing test coverage.",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -88277,7 +88277,7 @@
       "month": "02",
       "day": "13",
       "slug": "ENFORCE-UNIFORM-COMMENT-AND-DOCSTRING-FORMAT",
-      "prompt": "Enforce uniform comment/docstring format across all languages: no blank lines in comments/docstrings, fix header format, add missing C# and Rust docstrings, abstract format for all languages, enforce section/definition ordering with identification/summary/specs/todos/docs structure",
+      "prompt": "Enforce uniform comment/docstring format across all languages: no blank lines in comments/docstrings, fix header format, add missing C# and Rust docstrings, abstract format for all languages, enforce section/definition ordering with identification/summary/requirements/todos/docs structure",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -88401,7 +88401,7 @@
       "status": "closed"
     },
     {
-      "id": "🎫investigatespecsviolationtestfailures",
+      "id": "🎫investigaterequirementsviolationtestfailures",
       "path": "/workspaces/semio/.semio-repo/🎫/26/02/13/INVESTIGATE-SPECS-VIOLATION-TEST-FAILURES/ticket.md",
       "uri": "semiorepo://file//workspaces/semio/.semio-repo/🎫/26/02/13/INVESTIGATE-SPECS-VIOLATION-TEST-FAILURES/ticket.md",
       "date": {
@@ -88412,7 +88412,7 @@
       "month": "02",
       "day": "13",
       "slug": "INVESTIGATE-SPECS-VIOLATION-TEST-FAILURES",
-      "prompt": "Investigate why TestSpecsBreach/non-spec_JSDoc_still_flagged and TestSpecsBreach/non-spec_inline_comment_still_flagged are failing",
+      "prompt": "Investigate why TestRequirementsBreach/non-spec_JSDoc_still_flagged and TestRequirementsBreach/non-spec_inline_comment_still_flagged are failing",
       "llm": "opus-4-6",
       "author": "usalu",
       "status": "closed"
@@ -88537,7 +88537,7 @@
       "status": "open"
     },
     {
-      "id": "🎫adaptallidsystemimplementationstoupdatedspecs",
+      "id": "🎫adaptallidsystemimplementationstoupdatedrequirements",
       "path": "/workspaces/semio/.semio-repo/🎫/26/02/14/ADAPT-ALL-ID-SYSTEM-IMPLEMENTATIONS-TO-UPDATED-SPECS/ticket.md",
       "uri": "semiorepo://file//workspaces/semio/.semio-repo/🎫/26/02/14/ADAPT-ALL-ID-SYSTEM-IMPLEMENTATIONS-TO-UPDATED-SPECS/ticket.md",
       "date": {
@@ -88548,7 +88548,7 @@
       "month": "02",
       "day": "14",
       "slug": "ADAPT-ALL-ID-SYSTEM-IMPLEMENTATIONS-TO-UPDATED-SPECS",
-      "prompt": "Adapt all implementations and tests across Go, JS, TS, Python, C#, Rust and semio-repo CLI to the majorly updated ID system specs with entity-emoji-prefix format. Includes entity kinds, resource kinds, diffable entities, flat string slugging rules, and interaction support.",
+      "prompt": "Adapt all implementations and tests across Go, JS, TS, Python, C#, Rust and semio-repo CLI to the majorly updated ID system requirements with entity-emoji-prefix format. Includes entity kinds, resource kinds, diffable entities, flat string slugging rules, and interaction support.",
       "llm": "opus-4-6",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "status": "open"
@@ -88656,7 +88656,7 @@
       "status": "closed"
     },
     {
-      "id": "🎫updateentityidspecs",
+      "id": "🎫updateentityidrequirements",
       "path": "/workspaces/semio/.semio-repo/🎫/26/02/14/UPDATE-ENTITY-ID-SPECS/ticket.md",
       "uri": "semiorepo://file//workspaces/semio/.semio-repo/🎫/26/02/14/UPDATE-ENTITY-ID-SPECS/ticket.md",
       "date": {
@@ -88668,12 +88668,12 @@
       "month": "02",
       "day": "14",
       "slug": "UPDATE-ENTITY-ID-SPECS",
-      "prompt": "Update all entity ID generation to match the new specs: new entity kinds (root, year, month, day, hour, minute, second, line, range, todo, breach, interaction), new ID formats with hierarchical parent prefixes, new resource/diffable kind lists. Update GetArtifactID, GetID methods, entity kind enums, and write comprehensive tests for every list/tree command with exact IDs.",
+      "prompt": "Update all entity ID generation to match the new requirements: new entity kinds (root, year, month, day, hour, minute, second, line, range, todo, breach, interaction), new ID formats with hierarchical parent prefixes, new resource/diffable kind lists. Update GetArtifactID, GetID methods, entity kind enums, and write comprehensive tests for every list/tree command with exact IDs.",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "status": "closed"
     },
     {
-      "id": "🎫adaptentityidspecs",
+      "id": "🎫adaptentityidrequirements",
       "path": "/workspaces/semio/.semio-repo/🎫/26/02/15/ADAPT-ENTITY-ID-SPECS/ticket.md",
       "uri": "semiorepo://file//workspaces/semio/.semio-repo/🎫/26/02/15/ADAPT-ENTITY-ID-SPECS/ticket.md",
       "date": {
@@ -88685,7 +88685,7 @@
       "month": "02",
       "day": "15",
       "slug": "ADAPT-ENTITY-ID-SPECS",
-      "prompt": "Adapt all implementations and tests to match the updated semio repo entity ID specs. Update GetArtifactID, Flat, tests, and all related code.",
+      "prompt": "Adapt all implementations and tests to match the updated semio repo entity ID requirements. Update GetArtifactID, Flat, tests, and all related code.",
       "author": "usalu",
       "status": "closed"
     },
@@ -88770,7 +88770,7 @@
       "month": "02",
       "day": "15",
       "slug": "REFACTOR-ENTITY-IDS-AND-TEST-COVERAGE",
-      "prompt": "Adapt all entity ID implementations and tests to match updated semio repo specs. Flat strings are slugged and lowercased. Every ID is full, globally unique and treelike. Extract all IDs and refactor/extend existing tests.",
+      "prompt": "Adapt all entity ID implementations and tests to match updated semio repo requirements. Flat strings are slugged and lowercased. Every ID is full, globally unique and treelike. Extract all IDs and refactor/extend existing tests.",
       "author": "usalu",
       "status": "closed"
     },

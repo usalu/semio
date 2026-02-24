@@ -4,4 +4,4 @@ SQLite schema definitions for semio domain data.
 
 # Docs
 
-# Specs
+# 💯Requirements

@@ -16,7 +16,7 @@ Create a comprehensive update script (`update.ts`) that updates all dependencies
 4. **go (go.mod)**: go/cli, go/mcp, ./semio-repo/cli, go/semio
 5. **C# (.csproj)**: net/Semio, net/Semio.Grasshopper, net/Semio.Tests, net/Semio.Grasshopper.Tests
 
-## Requirements
+## 💯Requirements
 
 1. Update dependencies in manifest files (not just lock files)
 2. Support excluding specific packages from updates (pinned dependencies)
@@ -31,13 +31,13 @@ Define excluded dependencies per project:
 
 ```json
 {
-  "exclude": {
-    "net/Semio.Grasshopper/Semio.Grasshopper.csproj": ["Grasshopper", "System.Drawing.Common", "System.Resources.Extensions"]
-  },
-  "preserveLocalVersions": {
-    "npm": ["*"],
-    "go": ["github.com/usalu/semio/*"]
-  }
+ "exclude": {
+  "net/Semio.Grasshopper/Semio.Grasshopper.csproj": ["Grasshopper", "System.Drawing.Common", "System.Resources.Extensions"]
+ },
+ "preserveLocalVersions": {
+  "npm": ["*"],
+  "go": ["github.com/usalu/semio/*"]
+ }
 }
 ```
 

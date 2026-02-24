@@ -211,24 +211,24 @@ def process_definitions(filepath):
 
     # Get definitions needing summaries
     missing_summary = {}
-    missing_specs = {}
+    missing_requirements = {}
     for v in breachs:
         if v["kind"]["id"] == "🚫Code#Definition#Missing Summary":
             missing_summary[v["line"]] = (
                 v["excerpt"] if v.get("excerpt") else v["summary"].split('"')[1]
             )
-        if v["kind"]["id"] == "🚫Code#Definition#Missing Specs":
-            missing_specs[v["line"]] = (
+        if v["kind"]["id"] == "🚫Code#Definition#Missing Requirements":
+            missing_requirements[v["line"]] = (
                 v["excerpt"] if v.get("excerpt") else v["summary"].split('"')[1]
             )
 
-    if not missing_summary and not missing_specs:
+    if not missing_summary and not missing_requirements:
         print(f"No definition breachs found in {filepath}")
         return
 
     insertions = []
     for lineno in sorted(
-        set(list(missing_summary.keys()) + list(missing_specs.keys()))
+        set(list(missing_summary.keys()) + list(missing_requirements.keys()))
     ):
         idx = lineno - 1
         if idx >= len(lines):
@@ -244,7 +244,7 @@ def process_definitions(filepath):
         if m:
             name = m.group(1)
         else:
-            name = missing_summary.get(lineno, missing_specs.get(lineno, ""))
+            name = missing_summary.get(lineno, missing_requirements.get(lineno, ""))
 
         is_class = bool(re.search(r"(?:class|struct|record)\s+", line))
         is_interface = bool(re.search(r"interface\s+", line))
@@ -255,7 +255,12 @@ def process_definitions(filepath):
             summary = DEF_SUMMARIES.get(name, f"{name} definition.")
             texts.append(f"{indent}// {summary}")
 
-        if lineno in missing_specs and is_class and not is_interface and not is_enum:
+        if (
+            lineno in missing_requirements
+            and is_class
+            and not is_interface
+            and not is_enum
+        ):
             spec = DEF_SPECS.get(
                 name, f"Implementations MUST conform to the {name} contract."
             )

@@ -1,8 +1,8 @@
 {
-  "title": "Research Specs Mapping in AGENTS.md",
+  "title": "Research Requirements Mapping in AGENTS.md",
   "status": "closed",
-  "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which specs belong to which files/bundles/folders/sections",
-  "summary": "Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their owning bundles/files with implementation-specificity analysis. Domain model specs (Design through Stat, 16 sections) are clean. Repo CLI specs (Code Hygiene, Tree, Tooling, Repo Tooling, Artifact Kind Derivation) are heavily implementation-specific. Detailed line ranges, primary files, and cleaning needs documented in ticket.",
+  "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which requirements belong to which files/bundles/folders/sections",
+  "summary": "Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their owning bundles/files with implementation-specificity analysis. Domain model requirements (Design through Stat, 16 sections) are clean. Repo CLI requirements (Code Hygiene, Tree, Tooling, Repo Tooling, Artifact Kind Derivation) are heavily implementation-specific. Detailed line ranges, primary files, and cleaning needs documented in ticket.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/468"
   },
@@ -15,7 +15,7 @@
       "system": "linux",
       "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
-      "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which specs belong to which files/bundles/folders/sections",
+      "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which requirements belong to which files/bundles/folders/sections",
       "llm": "opus-4-6",
       "diff": {
         "bundles": {

@@ -4,4 +4,4 @@ Rust library for semio domain models.
 
 # Docs
 
-# Specs
+# 💯Requirements

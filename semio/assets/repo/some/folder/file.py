@@ -22,17 +22,20 @@
 
 # endregion License
 
-# region Specs
-# endregion Specs
+# region Requirements
+# endregion Requirements
 
 # endregion Header
 
 # region Functions
 
+
 def hello_world():
     print("Hello, World!")
 
+
 def add(a: int, b: int) -> int:
     return a + b
+
 
 # endregion Functions

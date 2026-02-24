@@ -2478,14 +2478,14 @@ func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
 				projectName := args[0]
 				kind := args[2]
 				switch kind {
-				case "specs":
-					return GenerateProjectSpecs(projectName)
+				case "requirements":
+					return GenerateProjectRequirements(projectName)
 				case "docs":
 					return GenerateProjectDocs(projectName)
 				case "todos":
 					return GenerateProjectTodos(projectName)
 				default:
-					return fmt.Errorf("unknown generate kind %q (use specs, docs, or todos)", kind)
+					return fmt.Errorf("unknown generate kind %q (use requirements, docs, or todos)", kind)
 				}
 			}
 			return cmd.Help()
@@ -2642,7 +2642,7 @@ func ExtractFileHeaderSummary(filePath string) string {
 	return ""
 }
 
-func ExtractFileHeaderSpecs(filePath string) string {
+func ExtractFileHeaderRequirements(filePath string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
 	if err != nil {
@@ -2691,7 +2691,7 @@ func ExtractFileHeaderSpecs(filePath string) string {
 	if len(currentBlock) > 0 {
 		blocks = append(blocks, commentBlock{lines: currentBlock})
 	}
-	var specsLines []string
+	var requirementsLines []string
 	for _, block := range blocks {
 		hasSpec := false
 		for _, l := range block.lines {
@@ -2701,13 +2701,13 @@ func ExtractFileHeaderSpecs(filePath string) string {
 			}
 		}
 		if hasSpec {
-			specsLines = append(specsLines, block.lines...)
+			requirementsLines = append(requirementsLines, block.lines...)
 		}
 	}
-	return strings.TrimSpace(strings.Join(specsLines, "\n"))
+	return strings.TrimSpace(strings.Join(requirementsLines, "\n"))
 }
 
-func ExtractSectionLeadComments(content string, section Section, prefix string) (specs string, summary string) {
+func ExtractSectionLeadComments(content string, section Section, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
 	lowerName := strings.ToLower(section.Name)
 	if lowerName == "header" || lowerName == "license" {
@@ -2742,7 +2742,7 @@ func ExtractSectionLeadComments(content string, section Section, prefix string) 
 	return strings.TrimSpace(strings.Join(specLines, "\n")), strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
 
-func ExtractDefinitionDocstring(content string, def Definition, prefix string) (specs string, summary string) {
+func ExtractDefinitionDocstring(content string, def Definition, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
 	for i := def.StartLine - 2; i >= 0; i-- {
 		line := strings.TrimSpace(lines[i])
@@ -2757,12 +2757,12 @@ func ExtractDefinitionDocstring(content string, def Definition, prefix string) (
 			continue
 		}
 		if isSpecText(commentText) {
-			specs = commentText + "\n" + specs
+			requirements = commentText + "\n" + requirements
 		} else {
 			summary = commentText + "\n" + summary
 		}
 	}
-	return strings.TrimSpace(specs), strings.TrimSpace(summary)
+	return strings.TrimSpace(requirements), strings.TrimSpace(summary)
 }
 
 func findProjectByName(name string) *Project {
@@ -2819,7 +2819,7 @@ type EntityEntry struct {
 	Text string
 }
 
-func GenerateProjectSpecs(projectName string) error {
+func GenerateProjectRequirements(projectName string) error {
 	project := findProjectByName(projectName)
 	if project == nil {
 		return fmt.Errorf("project %q not found", projectName)
@@ -2827,28 +2827,28 @@ func GenerateProjectSpecs(projectName string) error {
 	var entries []EntityEntry
 	projectReadmePath := filepath.Join(rootDir, project.Root, "README.md")
 	if content, err := ReadTextFile(projectReadmePath); err == nil {
-		specs := ExtractMarkdownSection(content, "Specs")
-		if specs != "" {
+		requirements := ExtractMarkdownSection(content, "Requirements")
+		if requirements != "" {
 			p := &Project{Name: project.Name, Root: project.Root, Kind: project.Kind}
-			entries = append(entries, EntityEntry{ID: p.GetID(), URI: p.GetURI(), Text: specs})
+			entries = append(entries, EntityEntry{ID: p.GetID(), URI: p.GetURI(), Text: requirements})
 		}
 	}
 	for _, bundle := range project.Bundles {
 		readmePath := filepath.Join(rootDir, bundle.Root, "README.md")
 		if content, err := ReadTextFile(readmePath); err == nil {
-			specs := ExtractMarkdownSection(content, "Specs")
-			if specs != "" {
-				entries = append(entries, EntityEntry{ID: bundle.GetID(), URI: bundle.GetURI(), Text: specs})
+			requirements := ExtractMarkdownSection(content, "Requirements")
+			if requirements != "" {
+				entries = append(entries, EntityEntry{ID: bundle.GetID(), URI: bundle.GetURI(), Text: requirements})
 			}
 		}
 		folderReadmes := findFolderReadmes(bundle.Root)
 		for _, frp := range folderReadmes {
 			if content, err := ReadTextFile(filepath.Join(rootDir, frp)); err == nil {
-				specs := ExtractMarkdownSection(content, "Specs")
-				if specs != "" {
+				requirements := ExtractMarkdownSection(content, "Requirements")
+				if requirements != "" {
 					folderPath := filepath.Dir(frp)
 					f := &Folder{Path: folderPath, Name: filepath.Base(folderPath)}
-					entries = append(entries, EntityEntry{ID: f.GetID(), URI: f.GetURI(), Text: specs})
+					entries = append(entries, EntityEntry{ID: f.GetID(), URI: f.GetURI(), Text: requirements})
 				}
 			}
 		}
@@ -2858,9 +2858,9 @@ func GenerateProjectSpecs(projectName string) error {
 		if file.Kind != FileKindCode && file.Kind != FileKindScript {
 			continue
 		}
-		headerSpecs := ExtractFileHeaderSpecs(file.Path)
-		if headerSpecs != "" {
-			entries = append(entries, EntityEntry{ID: file.ID, URI: file.URI, Text: headerSpecs})
+		headerRequirements := ExtractFileHeaderRequirements(file.Path)
+		if headerRequirements != "" {
+			entries = append(entries, EntityEntry{ID: file.ID, URI: file.URI, Text: headerRequirements})
 		}
 		absPath := filepath.Join(rootDir, file.Path)
 		content, err := ReadTextFile(absPath)
@@ -2880,10 +2880,10 @@ func GenerateProjectSpecs(projectName string) error {
 					walkSections(s.Children)
 					continue
 				}
-				specs, _ := ExtractSectionLeadComments(content, s, prefix)
-				if specs != "" {
+				requirements, _ := ExtractSectionLeadComments(content, s, prefix)
+				if requirements != "" {
 					s.FilePath = file.Path
-					entries = append(entries, EntityEntry{ID: s.GetID(), URI: s.GetURI(), Text: specs})
+					entries = append(entries, EntityEntry{ID: s.GetID(), URI: s.GetURI(), Text: requirements})
 				}
 				walkSections(s.Children)
 			}
@@ -2900,15 +2900,15 @@ func GenerateProjectSpecs(projectName string) error {
 					StartLine: dr.Start,
 					EndLine:   dr.End,
 				}
-				specs, _ := ExtractDefinitionDocstring(content, def, prefix)
-				if specs != "" {
-					entries = append(entries, EntityEntry{ID: def.GetID(), URI: def.GetURI(), Text: specs})
+				requirements, _ := ExtractDefinitionDocstring(content, def, prefix)
+				if requirements != "" {
+					entries = append(entries, EntityEntry{ID: def.GetID(), URI: def.GetURI(), Text: requirements})
 				}
 			}
 		}
 	}
 	var sb strings.Builder
-	sb.WriteString("# \U0001F4AF Specs\n")
+	sb.WriteString("# \U0001F4AF Requirements\n")
 	for _, e := range entries {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
 		sb.WriteString(e.Text + "\n")
@@ -7879,7 +7879,7 @@ const (
 	EmojiFolderRequired       = "🛅"
 	EmojiFolderRoot           = "🌱"
 	EmojiFileCode             = "💻"
-	EmojiFileTest             = "🥼"
+	EmojiFileTest             = "🧪"
 	EmojiFileScript           = "📜"
 	EmojiFileDocs             = "📃"
 	EmojiFileConfig           = "⚙️"
@@ -7954,7 +7954,7 @@ func DeriveFileKind(name string) string {
 	}
 
 	if strings.HasSuffix(nameNoExt, ".test") || strings.HasSuffix(nameNoExt, ".spec") ||
-		strings.HasSuffix(nameNoExt, ".tests") || strings.HasSuffix(nameNoExt, ".specs") ||
+		strings.HasSuffix(nameNoExt, ".tests") || strings.HasSuffix(nameNoExt, ".requirements") ||
 		strings.HasSuffix(nameNoExt, "_test") || strings.HasSuffix(nameNoExt, "_tests") ||
 		strings.HasSuffix(nameNoExt, "_spec") || strings.HasSuffix(nameNoExt, "_benchmark") ||
 		strings.HasSuffix(nameNoExt, ".benchmark") ||
@@ -10424,7 +10424,7 @@ type LanguagePlugin interface {
 	FormatSectionStart(name string) string
 	FormatSectionEnd(name string) string
 	FormatSectionBoth(name string) string
-	FormatHeader(fileId, fileUri, summary, contributors, license, specs string) string
+	FormatHeader(fileId, fileUri, summary, contributors, license, requirements string) string
 	PolicySectionStartMatch(line string) (matched bool, name string)
 	PolicySectionEndMatch(line string) (matched bool, name string)
 	ExtraOrphanDefinitions(lines []string) []DefinitionRange
@@ -10570,7 +10570,7 @@ func (l *BaseLanguage) FormatSectionBoth(name string) string {
 // FormatHeader MUST produce a well-formed header string.
 // FormatHeader formats the header into its string representation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatheader](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FormatHeader)
-func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, specs string) string {
+func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, requirements string) string {
 	if !l.supportsHeaders {
 		return ""
 	}
@@ -10603,8 +10603,8 @@ func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, lice
 		}
 		b.WriteString("\n")
 	}
-	if specs != "" {
-		for _, line := range strings.Split(specs, "\n") {
+	if requirements != "" {
+		for _, line := range strings.Split(requirements, "\n") {
 			if line == "" {
 				b.WriteString(cp + "\n")
 			} else {
@@ -12931,7 +12931,7 @@ const (
 	BreachCodeFileMissingSummary                    Statute = "code/file/missing-summary"
 	BreachCodeFileMissingLicense                    Statute = "code/file/missing-license"
 	BreachCodeFileWrongLicense                      Statute = "code/file/wrong-license"
-	BreachCodeFileMissingSpecs                      Statute = "code/file/missing-specs"
+	BreachCodeFileMissingRequirements                      Statute = "code/file/missing-requirements"
 	BreachCodeFileMissingDocs                       Statute = "code/file/missing-docs"
 	BreachCodeSectionEmpty                          Statute = "code/section/empty"
 	BreachCodeSectionOrphanDefinition               Statute = "code/section/orphan-definition"
@@ -12943,10 +12943,10 @@ const (
 	BreachCodeSectionWrongIdentificationUri         Statute = "code/section/wrong-identification/uri"
 	BreachCodeSectionWrongFormat                    Statute = "code/section/wrong-format"
 	BreachCodeSectionWrongFormatSummaryTooLong      Statute = "code/section/wrong-format/summary/too-long-summary"
-	BreachCodeSectionWrongFormatSpecsSplitBlock     Statute = "code/section/wrong-format/specs/split-block"
+	BreachCodeSectionWrongFormatRequirementsSplitBlock     Statute = "code/section/wrong-format/requirements/split-block"
 	BreachCodeSectionWrongFormatDocs                Statute = "code/section/wrong-format/docs"
 	BreachCodeSectionMissingSummary                 Statute = "code/section/missing-summary"
-	BreachCodeSectionMissingSpecs                   Statute = "code/section/missing-specs"
+	BreachCodeSectionMissingRequirements                   Statute = "code/section/missing-requirements"
 	BreachCodeSectionMissingDocs                    Statute = "code/section/missing-docs"
 	BreachCodeDefMissingIdentification              Statute = "code/definition/missing-identification"
 	BreachCodeDefWrongIdentificationId              Statute = "code/definition/wrong-identification/id"
@@ -12954,12 +12954,12 @@ const (
 	BreachCodeDefWrongFormat                        Statute = "code/definition/wrong-format"
 	BreachCodeDefNotNativeDocstring                 Statute = "code/definition/wrong-format/not-native-docstring"
 	BreachCodeDefMissingSummary                     Statute = "code/definition/missing-summary"
-	BreachCodeDefMissingSpecs                       Statute = "code/definition/missing-specs"
+	BreachCodeDefMissingRequirements                       Statute = "code/definition/missing-requirements"
 	BreachCodeDefMissingDocs                        Statute = "code/definition/missing-docs"
 	BreachCodeCommentInline                         Statute = "code/comment/inline"
 	BreachCodeCommentBlock                          Statute = "code/comment/block"
 	BreachCodeCommentJSDoc                          Statute = "code/comment/jsdoc"
-	BreachCodeSpecsSyntax                           Statute = "code/specs/implementation-syntax"
+	BreachCodeRequirementsSyntax                           Statute = "code/requirements/implementation-syntax"
 	BreachCodeDocsMissingReadme                     Statute = "code/docs/missing-readme"
 	BreachDevDocsMissingFile                        Statute = "dev-docs/missing-file"
 	BreachDevDocsMissingFolder                      Statute = "dev-docs/missing-folder"
@@ -13012,8 +13012,8 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 	BreachCodeFileWrongHeaderRegionFormat: {
 		Kind:        BreachCodeFileWrongHeaderRegionFormat,
 		Priority:    BreachPriorityLow,
-		Reason:      "Header region format is incorrect (missing License or Specs subregion)",
-		Solution:    "Add License and Specs subregions inside Header",
+		Reason:      "Header region format is incorrect (missing License or Requirements subregion)",
+		Solution:    "Add License and Requirements subregions inside Header",
 		Autofixable: false,
 	},
 	BreachCodeFileMissingIdentification: {
@@ -13065,11 +13065,11 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Replace license with AGPL-3.0-or-later",
 		Autofixable: true,
 	},
-	BreachCodeFileMissingSpecs: {
-		Kind:        BreachCodeFileMissingSpecs,
+	BreachCodeFileMissingRequirements: {
+		Kind:        BreachCodeFileMissingRequirements,
 		Priority:    BreachPriorityLow,
-		Reason:      "Specs subregion is required inside Header",
-		Solution:    "Add Specs subregion inside Header",
+		Reason:      "Requirements subregion is required inside Header",
+		Solution:    "Add Requirements subregion inside Header",
 		Autofixable: false,
 	},
 	BreachCodeFileMissingDocs: {
@@ -13128,8 +13128,8 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Shorten the section summary to 256 characters or less",
 		Autofixable: false,
 	},
-	BreachCodeSectionWrongFormatSpecsSplitBlock: {
-		Kind:        BreachCodeSectionWrongFormatSpecsSplitBlock,
+	BreachCodeSectionWrongFormatRequirementsSplitBlock: {
+		Kind:        BreachCodeSectionWrongFormatRequirementsSplitBlock,
 		Priority:    BreachPriorityLow,
 		Reason:      "Spec comment block must be contiguous without blank lines",
 		Solution:    "Remove blank lines between spec comment lines",
@@ -13170,11 +13170,11 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Add summary comment after section region start marker",
 		Autofixable: true,
 	},
-	BreachCodeSectionMissingSpecs: {
-		Kind:        BreachCodeSectionMissingSpecs,
+	BreachCodeSectionMissingRequirements: {
+		Kind:        BreachCodeSectionMissingRequirements,
 		Priority:    BreachPriorityLow,
-		Reason:      "Section must have specs comments after the summary",
-		Solution:    "Add specs comments after section summary",
+		Reason:      "Section must have requirements comments after the summary",
+		Solution:    "Add requirements comments after section summary",
 		Autofixable: false,
 	},
 	BreachCodeSectionMissingDocs: {
@@ -13226,11 +13226,11 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Add summary line to definition docstring",
 		Autofixable: true,
 	},
-	BreachCodeDefMissingSpecs: {
-		Kind:        BreachCodeDefMissingSpecs,
+	BreachCodeDefMissingRequirements: {
+		Kind:        BreachCodeDefMissingRequirements,
 		Priority:    BreachPriorityLow,
-		Reason:      "Definition must have specs in its docstring",
-		Solution:    "Add specs to definition docstring",
+		Reason:      "Definition must have requirements in its docstring",
+		Solution:    "Add requirements to definition docstring",
 		Autofixable: true,
 	},
 	BreachCodeDefMissingDocs: {
@@ -13261,18 +13261,18 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Remove JSDoc comment",
 		Autofixable: true,
 	},
-	BreachCodeSpecsSyntax: {
-		Kind:        BreachCodeSpecsSyntax,
+	BreachCodeRequirementsSyntax: {
+		Kind:        BreachCodeRequirementsSyntax,
 		Priority:    BreachPriorityLow,
-		Reason:      "Specs must be implementation-agnostic and must not contain code syntax",
+		Reason:      "Requirements must be implementation-agnostic and must not contain code syntax",
 		Solution:    "Remove backticks, function calls, and other code syntax from spec text",
 		Autofixable: false,
 	},
 	BreachCodeDocsMissingReadme: {
 		Kind:        BreachCodeDocsMissingReadme,
 		Priority:    BreachPriorityLow,
-		Reason:      "Bundle or folder is missing a README.md with summary and specs",
-		Solution:    "Add a README.md with # Summary and # Specs sections",
+		Reason:      "Bundle or folder is missing a README.md with summary and requirements",
+		Solution:    "Add a README.md with # Summary and # 💯Requirements sections",
 		Autofixable: false,
 	},
 	BreachCodeUnicodeEmojiVariation: {
@@ -15392,7 +15392,7 @@ var policies = []PolicyDef{
 					BreachCodeFileMissingSummary,
 					BreachCodeFileMissingLicense,
 					BreachCodeFileWrongLicense,
-					BreachCodeFileMissingSpecs,
+					BreachCodeFileMissingRequirements,
 					BreachCodeFileMissingDocs,
 				},
 			},
@@ -15421,10 +15421,10 @@ var policies = []PolicyDef{
 								},
 							},
 							{
-								Name:        "Specs",
-								Description: "Section specs format breachs",
+								Name:        "Requirements",
+								Description: "Section requirements format breachs",
 								Kinds: []Statute{
-									BreachCodeSectionWrongFormatSpecsSplitBlock,
+									BreachCodeSectionWrongFormatRequirementsSplitBlock,
 								},
 							},
 						},
@@ -15444,7 +15444,7 @@ var policies = []PolicyDef{
 					BreachCodeSectionWrongIdentificationId,
 					BreachCodeSectionWrongIdentificationUri,
 					BreachCodeSectionMissingSummary,
-					BreachCodeSectionMissingSpecs,
+					BreachCodeSectionMissingRequirements,
 					BreachCodeSectionMissingDocs,
 				},
 			},
@@ -15475,7 +15475,7 @@ var policies = []PolicyDef{
 					BreachCodeDefWrongIdentificationId,
 					BreachCodeDefWrongIdentificationUri,
 					BreachCodeDefMissingSummary,
-					BreachCodeDefMissingSpecs,
+					BreachCodeDefMissingRequirements,
 					BreachCodeDefMissingDocs,
 				},
 			},
@@ -15490,11 +15490,11 @@ var policies = []PolicyDef{
 				},
 			},
 			{
-				Name:        "Specs",
+				Name:        "Requirements",
 				Description: "Specification content breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Kinds: []Statute{
-					BreachCodeSpecsSyntax,
+					BreachCodeRequirementsSyntax,
 				},
 			},
 			{
@@ -16552,7 +16552,7 @@ func isExportedDefinition(name string, line string, langName string) bool {
 	}
 }
 
-func requiresDefinitionSpecs(line string, langName string) bool {
+func requiresDefinitionRequirements(line string, langName string) bool {
 	trimmed := strings.TrimSpace(line)
 	switch langName {
 	case "typescript":
@@ -16927,7 +16927,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 				continue
 			}
 			hasSummary := false
-			hasSpecs := false
+			hasRequirements := false
 			hasIdentification := false
 			identificationLine := 0
 			identifiedID := ""
@@ -16974,7 +16974,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 								identifiedURI = uriValue
 								identificationLine = scanIdx + 1
 							} else if isSpecText(content) {
-								hasSpecs = true
+								hasRequirements = true
 							} else {
 								hasSummary = true
 							}
@@ -17011,7 +17011,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 							identifiedURI = uriValue
 							identificationLine = lineIndex + 1
 						} else if isSpecText(commentText) {
-							hasSpecs = true
+							hasRequirements = true
 						} else {
 							hasSummary = true
 						}
@@ -17069,7 +17069,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 									identifiedURI = uriValue
 									identificationLine = bodyIdx + 1
 								} else if isSpecText(content) {
-									hasSpecs = true
+									hasRequirements = true
 								} else {
 									hasSummary = true
 								}
@@ -17084,7 +17084,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 									identifiedURI = uriValue
 									identificationLine = bodyIdx + 1
 								} else if isSpecText(firstContent) {
-									hasSpecs = true
+									hasRequirements = true
 								} else {
 									hasSummary = true
 								}
@@ -17104,7 +17104,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 											identifiedURI = uriValue
 											identificationLine = scanIdx + 1
 										} else if isSpecText(content) {
-											hasSpecs = true
+											hasRequirements = true
 										} else {
 											hasSummary = true
 										}
@@ -17121,7 +17121,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 									identifiedURI = uriValue
 									identificationLine = scanIdx + 1
 								} else if isSpecText(sline) {
-									hasSpecs = true
+									hasRequirements = true
 								} else {
 									hasSummary = true
 								}
@@ -17172,13 +17172,13 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 						continue
 					}
 					if isSpecText(commentText) {
-						hasSpecs = true
+						hasRequirements = true
 					} else {
 						hasSummary = true
 					}
 				}
 			}
-			if !isNativeDocstring && (hasSummary || hasSpecs || hasIdentification) {
+			if !isNativeDocstring && (hasSummary || hasRequirements || hasIdentification) {
 				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is not using native docstring format in %s:%d", def.name, file, def.start),
 					BreachCodeDefNotNativeDocstring,
@@ -17228,10 +17228,10 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 					BreachCodeDefMissingSummary,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
-			if !hasSpecs && requiresDefinitionSpecs(defLine, language.Name()) {
+			if !hasRequirements && requiresDefinitionRequirements(defLine, language.Name()) {
 				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is missing spec comments in %s:%d", def.name, file, def.start),
-					BreachCodeDefMissingSpecs,
+					BreachCodeDefMissingRequirements,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
 		}
@@ -17305,7 +17305,7 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen]
 }
 
-func specsPolicy(ctx *PolicyContext) []Breach {
+func requirementsPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
@@ -17331,10 +17331,10 @@ func specsPolicy(ctx *PolicyContext) []Breach {
 			}
 		}
 		if headerSection != nil {
-			specsChildFound := false
+			requirementsChildFound := false
 			for _, child := range headerSection.Children {
-				if strings.ToLower(child.Name) == "specs" {
-					specsChildFound = true
+				if strings.ToLower(child.Name) == "requirements" {
+					requirementsChildFound = true
 					for i := child.StartLine + 1; i < child.EndLine && i <= len(lines); i++ {
 						line := strings.TrimSpace(lines[i-1])
 						if line == "" {
@@ -17347,14 +17347,14 @@ func specsPolicy(ctx *PolicyContext) []Breach {
 						if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
 							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
-								BreachCodeSpecsSyntax,
-								fmt.Sprintf("%s#Header/Specs", file), i, 0, commentText))
+								BreachCodeRequirementsSyntax,
+								fmt.Sprintf("%s#Header/Requirements", file), i, 0, commentText))
 						}
 					}
 					break
 				}
 			}
-			if !specsChildFound {
+			if !requirementsChildFound {
 				for i := headerSection.StartLine + 1; i < headerSection.EndLine && i <= len(lines); i++ {
 					line := strings.TrimSpace(lines[i-1])
 					if line == "" {
@@ -17373,14 +17373,14 @@ func specsPolicy(ctx *PolicyContext) []Breach {
 					if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
 						breachs = append(breachs, ctx.CreateBreach(
 							fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
-							BreachCodeSpecsSyntax,
+							BreachCodeRequirementsSyntax,
 							fmt.Sprintf("%s#Header", file), i, 0, commentText))
 					}
 				}
 			}
 		}
-		var checkSectionSpecs func(s Section)
-		checkSectionSpecs = func(s Section) {
+		var checkSectionRequirements func(s Section)
+		checkSectionRequirements = func(s Section) {
 			if strings.ToLower(s.Name) == "header" {
 				return
 			}
@@ -17399,16 +17399,16 @@ func specsPolicy(ctx *PolicyContext) []Breach {
 				if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
 					breachs = append(breachs, ctx.CreateBreach(
 						fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
-						BreachCodeSpecsSyntax,
+						BreachCodeRequirementsSyntax,
 						fmt.Sprintf("%s#%s", file, s.Name), i, 0, commentText))
 				}
 			}
 			for _, child := range s.Children {
-				checkSectionSpecs(child)
+				checkSectionRequirements(child)
 			}
 		}
 		for _, s := range sections {
-			checkSectionSpecs(s)
+			checkSectionRequirements(s)
 		}
 	}
 	return ctx.FilterIgnored(breachs)
@@ -17419,7 +17419,7 @@ func codePolicy(ctx *PolicyContext) []Breach {
 	breachs = append(breachs, headerPolicy(ctx)...)
 	breachs = append(breachs, sectionPolicy(ctx)...)
 	breachs = append(breachs, commentPolicy(ctx)...)
-	breachs = append(breachs, specsPolicy(ctx)...)
+	breachs = append(breachs, requirementsPolicy(ctx)...)
 	breachs = append(breachs, emojiPolicy(ctx)...)
 	breachs = append(breachs, docsPolicy(ctx)...)
 	return breachs
@@ -17494,7 +17494,7 @@ func docsPolicy(ctx *PolicyContext) []Breach {
 		absPath := filepath.Join(ctx.RootDir, readmePath)
 		if _, err := os.Stat(absPath); os.IsNotExist(err) {
 			breachs = append(breachs, ctx.CreateBreach(
-				fmt.Sprintf("Bundle %q is missing README.md with # Summary and # Specs sections", bundle.Name),
+				fmt.Sprintf("Bundle %q is missing README.md with # Summary and # 💯Requirements sections", bundle.Name),
 				BreachCodeDocsMissingReadme,
 				readmePath, 0, 0, ""))
 			continue
@@ -17506,9 +17506,9 @@ func docsPolicy(ctx *PolicyContext) []Breach {
 				BreachCodeDocsMissingReadme,
 				readmePath, 0, 0, ""))
 		}
-		if !strings.Contains(content, "# Specs") {
+		if !strings.Contains(content, "# 💯Requirements") {
 			breachs = append(breachs, ctx.CreateBreach(
-				fmt.Sprintf("Bundle %q README.md is missing # Specs section", bundle.Name),
+				fmt.Sprintf("Bundle %q README.md is missing # 💯Requirements section", bundle.Name),
 				BreachCodeDocsMissingReadme,
 				readmePath, 0, 0, ""))
 		}
@@ -19501,7 +19501,7 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖ticketfileresolution](semiorepo://section/semio-repo/cli/main.go/Types/Tickets/Ticket%20File%20Resolution)
 // Ticket file input normalization for close operations.
-// Specs: Accept repo-relative paths, absolute paths, semiorepo file URIs, and file artifact IDs.
+// Requirements: Accept repo-relative paths, absolute paths, semiorepo file URIs, and file artifact IDs.
 // Docs: Used by ticket close to map file identifiers to repo paths.
 
 func normalizeTicketFileInput(filePath string) string {
@@ -25302,7 +25302,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 						commentTexts = append([]string{text}, commentTexts...)
 					}
 					if len(commentTexts) > 0 {
-						var cSummary, cSpecs, cTodos []string
+						var cSummary, cRequirements, cTodos []string
 						var cId string
 						inTodo := false
 						for _, cl := range commentTexts {
@@ -25321,7 +25321,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 								continue
 							}
 							if isSpecText(cl) {
-								cSpecs = append(cSpecs, cl)
+								cRequirements = append(cRequirements, cl)
 							} else {
 								cSummary = append(cSummary, cl)
 							}
@@ -25396,7 +25396,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 							}
 							break
 						}
-						var eSummary, eSpecs, eTodos []string
+						var eSummary, eRequirements, eTodos []string
 						var eId string
 						if existingDocStart >= 0 && existingDocEnd >= 0 {
 							for lineIdx := existingDocStart; lineIdx <= existingDocEnd; lineIdx++ {
@@ -25410,7 +25410,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 								if strings.HasPrefix(trimmed, "[") && strings.Contains(trimmed, "](semiorepo://definition/") {
 									eId = trimmed
 								} else if isSpecText(trimmed) {
-									eSpecs = append(eSpecs, trimmed)
+									eRequirements = append(eRequirements, trimmed)
 								} else if strings.HasPrefix(trimmed, "TODO:") || strings.HasPrefix(trimmed, "TODO ") {
 									eTodos = append(eTodos, trimmed)
 								} else {
@@ -25422,9 +25422,9 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 						if len(mergedSummary) == 0 {
 							mergedSummary = cSummary
 						}
-						mergedSpecs := cSpecs
-						if len(mergedSpecs) == 0 {
-							mergedSpecs = eSpecs
+						mergedRequirements := cRequirements
+						if len(mergedRequirements) == 0 {
+							mergedRequirements = eRequirements
 						}
 						mergedTodos := cTodos
 						if len(mergedTodos) == 0 {
@@ -25438,7 +25438,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 						for _, sl := range mergedSummary {
 							docLines = append(docLines, sl)
 						}
-						for _, sp := range mergedSpecs {
+						for _, sp := range mergedRequirements {
 							docLines = append(docLines, sp)
 						}
 						for _, td := range mergedTodos {
@@ -25705,7 +25705,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 					}
 				}
 			}
-		case BreachCodeDefMissingSpecs:
+		case BreachCodeDefMissingRequirements:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				defName := ""
 				if idx := strings.Index(v.Scope, "::"); idx >= 0 {
@@ -26083,16 +26083,16 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 						newLines = append(newLines, lines[licenseSec.EndLine-1:]...)
 						lines = newLines
 					} else {
-						specsSec := (*Section)(nil)
+						requirementsSec := (*Section)(nil)
 						for i := range headerSec.Children {
-							if strings.ToLower(headerSec.Children[i].Name) == "specs" {
-								specsSec = &headerSec.Children[i]
+							if strings.ToLower(headerSec.Children[i].Name) == "requirements" {
+								requirementsSec = &headerSec.Children[i]
 								break
 							}
 						}
 						insertBefore := headerSec.EndLine - 1
-						if specsSec != nil {
-							insertBefore = specsSec.StartLine - 1
+						if requirementsSec != nil {
+							insertBefore = requirementsSec.StartLine - 1
 						}
 						regionStart := language.FormatSectionStart("License")
 						regionEnd := language.FormatSectionEnd("License")
@@ -33094,7 +33094,7 @@ func filterConsideredFiles(files []string) []string {
 }
 
 // GitIndexRef is the git ref for the staging index. Used for unstaged-only diffs (index vs working tree).
-// Specs: ticket close and interaction finish use only unstaged diffs; git diff runs without tree-ish for index vs working tree.
+// Requirements: ticket close and interaction finish use only unstaged diffs; git diff runs without tree-ish for index vs working tree.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🪨gitindexref](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GitIndexRef)
 const GitIndexRef = ":0"
 
@@ -34483,21 +34483,25 @@ func runNx(target string, args ...string) error {
 type HookEvent string
 
 const (
-	HookGitCommitStarting         HookEvent = "git.commit.starting"
-	HookGitCommitEnded            HookEvent = "git.commit.ended"
-	HookAgentStarted              HookEvent = "agent.started"
-	HookAgentEnded                HookEvent = "agent.ended"
-	HookAgentPromptSubmitting     HookEvent = "agent.prompt.submitting"
-	HookAgentCompacting           HookEvent = "agent.compacting"
-	HookAgentToolStarting         HookEvent = "agent.tool.starting"
-	HookAgentToolEnded            HookEvent = "agent.tool.ended"
-	HookAgentToolPlanUpdating     HookEvent = "agent.tool.plan.updating"
-	HookAgentToolSearching        HookEvent = "agent.tool.searching"
-	HookAgentToolSearched         HookEvent = "agent.tool.searching.ended"
-	HookAgentToolCodeEditing      HookEvent = "agent.tool.code.editing"
-	HookAgentToolCodeEdited       HookEvent = "agent.tool.code.edited"
-	HookAgentToolTerminalStarting HookEvent = "agent.tool.terminal.starting"
-	HookAgentToolTerminalEnded    HookEvent = "agent.tool.terminal.ended"
+	HookGitCommitStarting            HookEvent = "git.commit.starting"
+	HookGitCommitEnded               HookEvent = "git.commit.ended"
+	HookAgentStarted                 HookEvent = "agent.started"
+	HookAgentEnded                   HookEvent = "agent.ended"
+	HookAgentPromptSubmitting        HookEvent = "agent.prompt.submitting"
+	HookAgentCompacting              HookEvent = "agent.compacting"
+	HookAgentToolStarting            HookEvent = "agent.tool.starting"
+	HookAgentToolEnded               HookEvent = "agent.tool.ended"
+	HookAgentToolPlanUpdating        HookEvent = "agent.tool.plan.updating"
+	HookAgentToolSearchStarting      HookEvent = "agent.tool.search.starting"
+	HookAgentToolSearchEnded         HookEvent = "agent.tool.search.ended"
+	HookAgentToolCodeEditStarting    HookEvent = "agent.tool.code.edit.starting"
+	HookAgentToolCodeEditEnded       HookEvent = "agent.tool.code.edit.ended"
+	HookAgentToolTestStarting        HookEvent = "agent.tool.test.starting"
+	HookAgentToolTestEnded           HookEvent = "agent.tool.test.ended"
+	HookAgentToolBuildStarting       HookEvent = "agent.tool.build.starting"
+	HookAgentToolBuildEnded          HookEvent = "agent.tool.build.ended"
+	HookAgentToolTerminalStarting    HookEvent = "agent.tool.terminal.starting"
+	HookAgentToolTerminalEnded       HookEvent = "agent.tool.terminal.ended"
 )
 
 // AllHookEvents lists every valid hook event slug.
@@ -34512,10 +34516,14 @@ var AllHookEvents = []HookEvent{
 	HookAgentToolStarting,
 	HookAgentToolEnded,
 	HookAgentToolPlanUpdating,
-	HookAgentToolSearching,
-	HookAgentToolSearched,
-	HookAgentToolCodeEditing,
-	HookAgentToolCodeEdited,
+	HookAgentToolSearchStarting,
+	HookAgentToolSearchEnded,
+	HookAgentToolCodeEditStarting,
+	HookAgentToolCodeEditEnded,
+	HookAgentToolTestStarting,
+	HookAgentToolTestEnded,
+	HookAgentToolBuildStarting,
+	HookAgentToolBuildEnded,
 	HookAgentToolTerminalStarting,
 	HookAgentToolTerminalEnded,
 }
@@ -34643,28 +34651,26 @@ type HookResultAgentToolPlanUpdating struct {
 	Steps []HookPlanStep `json:"steps,omitempty"`
 }
 
-// HookResultAgentToolSearching represents the result of an agent tool searching event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearching](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearching)
-type HookResultAgentToolSearching struct {
+// HookResultAgentToolSearchStarting represents the result of an agent tool search starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearchStarting)
+type HookResultAgentToolSearchStarting struct {
 	HookResultAgentBase
-	Query   string   `json:"query,omitempty"`
-	Include []string `json:"include,omitempty"`
-	Exclude []string `json:"exclude,omitempty"`
+	Pages  []string `json:"pages,omitempty"`
+	Ranges []string `json:"ranges,omitempty"`
 }
 
-// HookResultAgentToolSearched represents the result of an agent tool searching ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearched](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearched)
-type HookResultAgentToolSearched struct {
+// HookResultAgentToolSearchEnded represents the result of an agent tool search ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearchEnded)
+type HookResultAgentToolSearchEnded struct {
 	HookResultAgentBase
-	Query    string          `json:"query,omitempty"`
-	Include  []string        `json:"include,omitempty"`
-	Exclude  []string        `json:"exclude,omitempty"`
-	Response json.RawMessage `json:"response,omitempty"`
+	Pages  []string `json:"pages,omitempty"`
+	Ranges []string `json:"ranges,omitempty"`
+	Error  string   `json:"error,omitempty"`
 }
 
-// HookResultAgentToolCodeEditing represents the result of an agent tool code editing event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeediting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditing)
-type HookResultAgentToolCodeEditing struct {
+// HookResultAgentToolCodeEditStarting represents the result of an agent tool code edit starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditStarting)
+type HookResultAgentToolCodeEditStarting struct {
 	HookResultAgentBase
 	Path string `json:"path,omitempty"`
 	Old  string `json:"old,omitempty"`
@@ -34672,13 +34678,44 @@ type HookResultAgentToolCodeEditing struct {
 	All  bool   `json:"all,omitempty"`
 }
 
-// HookResultAgentToolCodeEdited represents the result of an agent tool code edited event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeedited](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEdited)
-type HookResultAgentToolCodeEdited struct {
+// HookResultAgentToolCodeEditEnded represents the result of an agent tool code edit ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditEnded)
+type HookResultAgentToolCodeEditEnded struct {
 	HookResultAgentBase
 	Path string `json:"path,omitempty"`
 	Old  string `json:"old,omitempty"`
 	New  string `json:"new,omitempty"`
+}
+
+// HookResultAgentToolTestStarting represents the result of an agent tool test starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolteststarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTestStarting)
+type HookResultAgentToolTestStarting struct {
+	HookResultAgentBase
+	Tests   []string `json:"tests,omitempty"`
+	Timeout string   `json:"timeout,omitempty"`
+}
+
+// HookResultAgentToolTestEnded represents the result of an agent tool test ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttooltestended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTestEnded)
+type HookResultAgentToolTestEnded struct {
+	HookResultAgentBase
+	Succeeded []string `json:"succeeded,omitempty"`
+	Failed    []string `json:"failed,omitempty"`
+}
+
+// HookResultAgentToolBuildStarting represents the result of an agent tool build starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolbuildstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolBuildStarting)
+type HookResultAgentToolBuildStarting struct {
+	HookResultAgentBase
+	Bundles []string `json:"bundles,omitempty"`
+}
+
+// HookResultAgentToolBuildEnded represents the result of an agent tool build ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolbuildended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolBuildEnded)
+type HookResultAgentToolBuildEnded struct {
+	HookResultAgentBase
+	Succeeded []string `json:"succeeded,omitempty"`
+	Failed    []string `json:"failed,omitempty"`
 }
 
 // HookResultAgentToolTerminalStarting represents the result of an agent tool terminal starting event.
@@ -34922,6 +34959,8 @@ const (
 	ToolKindPlan       ToolKind = "plan"
 	ToolKindCodeSearch ToolKind = "code_search"
 	ToolKindCodeEdit   ToolKind = "code_edit"
+	ToolKindTest       ToolKind = "test"
+	ToolKindBuild      ToolKind = "build"
 	ToolKindTerminal   ToolKind = "terminal"
 	ToolKindGeneric    ToolKind = "generic"
 )
@@ -34936,12 +34975,17 @@ func classifyTool(toolName string) ToolKind {
 	case "read_file", "grep_search", "file_search", "semantic_search", "list_dir",
 		"get_errors", "read", "readfile", "searchfiles", "grepsearch", "listdir",
 		"list_code_usages", "get_search_view_results",
-		"geterrors", "getsearchviewresults", "listcodeusages":
+		"geterrors", "getsearchviewresults", "listcodeusages",
+		"fetch_webpage", "open_simple_browser":
 		return ToolKindCodeSearch
 	case "replace_string_in_file", "create_file", "multi_replace_string_in_file",
 		"edit", "write", "editfile", "createfile", "multiedit", "create_directory",
 		"editfiles", "createdirectory":
 		return ToolKindCodeEdit
+	case "runtests", "run_tests":
+		return ToolKindTest
+	case "run_task", "create_and_run_task":
+		return ToolKindBuild
 	case "run_in_terminal", "get_terminal_output", "bash", "terminal",
 		"runinterminal", "getterminaloutput", "createandlaunchtask":
 		return ToolKindTerminal
@@ -35024,9 +35068,13 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 	case ToolKindPlan:
 		return HookAgentToolPlanUpdating
 	case ToolKindCodeSearch:
-		return HookAgentToolSearching
+		return HookAgentToolSearchStarting
 	case ToolKindCodeEdit:
-		return HookAgentToolCodeEditing
+		return HookAgentToolCodeEditStarting
+	case ToolKindTest:
+		return HookAgentToolTestStarting
+	case ToolKindBuild:
+		return HookAgentToolBuildStarting
 	case ToolKindTerminal:
 		return HookAgentToolTerminalStarting
 	default:
@@ -35039,9 +35087,13 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 func resolvePostToolUse(kind ToolKind) HookEvent {
 	switch kind {
 	case ToolKindCodeSearch:
-		return HookAgentToolSearched
+		return HookAgentToolSearchEnded
 	case ToolKindCodeEdit:
-		return HookAgentToolCodeEdited
+		return HookAgentToolCodeEditEnded
+	case ToolKindTest:
+		return HookAgentToolTestEnded
+	case ToolKindBuild:
+		return HookAgentToolBuildEnded
 	case ToolKindTerminal:
 		return HookAgentToolTerminalEnded
 	default:
@@ -35101,23 +35153,23 @@ func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, e
 	case "afterMCPExecution":
 		return HookAgentToolEnded, "", nil
 	case "beforeReadFile", "beforeTabFileRead":
-		return HookAgentToolSearching, "", nil
+		return HookAgentToolSearchStarting, "", nil
 	case "afterFileEdit", "afterTabFileEdit":
-		return HookAgentToolCodeEdited, "", nil
+		return HookAgentToolCodeEditEnded, "", nil
 	case "beforeShellExecution":
 		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearching, "", nil
+			return HookAgentToolSearchStarting, "", nil
 		}
 		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEditing, "", nil
+			return HookAgentToolCodeEditStarting, "", nil
 		}
 		return HookAgentToolTerminalStarting, "", nil
 	case "afterShellExecution":
 		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearched, "", nil
+			return HookAgentToolSearchEnded, "", nil
 		}
 		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEdited, "", nil
+			return HookAgentToolCodeEditEnded, "", nil
 		}
 		return HookAgentToolTerminalEnded, "", nil
 	case "afterAgentResponse", "afterAgentThought":
@@ -35142,27 +35194,27 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 	case "post_mcp_tool_use":
 		return resolvePostToolUse(kind), "", nil
 	case "pre_read_code":
-		return HookAgentToolSearching, "", nil
+		return HookAgentToolSearchStarting, "", nil
 	case "post_read_code":
-		return HookAgentToolSearched, "", nil
+		return HookAgentToolSearchEnded, "", nil
 	case "pre_write_code":
-		return HookAgentToolCodeEditing, "", nil
+		return HookAgentToolCodeEditStarting, "", nil
 	case "post_write_code":
-		return HookAgentToolCodeEdited, "", nil
+		return HookAgentToolCodeEditEnded, "", nil
 	case "pre_run_command":
 		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearching, "", nil
+			return HookAgentToolSearchStarting, "", nil
 		}
 		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEditing, "", nil
+			return HookAgentToolCodeEditStarting, "", nil
 		}
 		return HookAgentToolTerminalStarting, "", nil
 	case "post_run_command":
 		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearched, "", nil
+			return HookAgentToolSearchEnded, "", nil
 		}
 		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEdited, "", nil
+			return HookAgentToolCodeEditEnded, "", nil
 		}
 		return HookAgentToolTerminalEnded, "", nil
 	default:
@@ -35247,17 +35299,25 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 		return "PreCompact"
 	case HookAgentToolPlanUpdating:
 		return "PreToolUse"
-	case HookAgentToolSearching:
+	case HookAgentToolSearchStarting:
 		return "PreToolUse"
-	case HookAgentToolSearched:
+	case HookAgentToolSearchEnded:
 		return "PostToolUse"
-	case HookAgentToolCodeEditing:
+	case HookAgentToolCodeEditStarting:
 		return "PreToolUse"
-	case HookAgentToolCodeEdited:
+	case HookAgentToolCodeEditEnded:
 		return "PostToolUse"
 	case HookAgentToolTerminalStarting:
 		return "PreToolUse"
 	case HookAgentToolTerminalEnded:
+		return "PostToolUse"
+	case HookAgentToolTestStarting:
+		return "PreToolUse"
+	case HookAgentToolTestEnded:
+		return "PostToolUse"
+	case HookAgentToolBuildStarting:
+		return "PreToolUse"
+	case HookAgentToolBuildEnded:
 		return "PostToolUse"
 	default:
 		return ""
@@ -35470,39 +35530,63 @@ func dispatchHook(hctx HookContext) HookResult {
 			HookResultAgentBase: agentBase("agent.tool.plan.updating acknowledged"),
 			Steps:               extractPlanStepsFromInput(hctx.Input, hctx.ToolArgs),
 		}
-	case HookAgentToolSearching:
-		query, include, exclude := extractCodeSearchFromInput(hctx.Input, hctx.ToolArgs)
-		return HookResultAgentToolSearching{
+	case HookAgentToolSearchStarting:
+		pages, ranges := extractSearchFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolSearchStarting{
 			HookResultAgentBase: agentBase(""),
-			Query:               query,
-			Include:             include,
-			Exclude:             exclude,
+			Pages:               pages,
+			Ranges:              ranges,
 		}
-	case HookAgentToolSearched:
-		query, include, exclude := extractCodeSearchFromInput(hctx.Input, hctx.ToolArgs)
-		return HookResultAgentToolSearched{
+	case HookAgentToolSearchEnded:
+		pages, ranges := extractSearchFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolSearchEnded{
 			HookResultAgentBase: agentBase(""),
-			Query:               query,
-			Include:             include,
-			Exclude:             exclude,
-			Response:            extractToolResponseFromStdin(hctx.Input),
+			Pages:               pages,
+			Ranges:              ranges,
+			Error:               extractSearchErrorFromInput(hctx.Input),
 		}
-	case HookAgentToolCodeEditing:
+	case HookAgentToolCodeEditStarting:
 		path, old, new_, all := extractCodeEditFromInput(hctx.Input, hctx.ToolArgs)
-		return HookResultAgentToolCodeEditing{
+		return HookResultAgentToolCodeEditStarting{
 			HookResultAgentBase: agentBase(""),
 			Path:                path,
 			Old:                 old,
 			New:                 new_,
 			All:                 all,
 		}
-	case HookAgentToolCodeEdited:
+	case HookAgentToolCodeEditEnded:
 		path, old, new_, _ := extractCodeEditFromInput(hctx.Input, hctx.ToolArgs)
-		return HookResultAgentToolCodeEdited{
+		return HookResultAgentToolCodeEditEnded{
 			HookResultAgentBase: agentBase(""),
 			Path:                path,
 			Old:                 old,
 			New:                 new_,
+		}
+	case HookAgentToolTestStarting:
+		tests, timeout := extractTestStartingFromInput(hctx.Input, hctx.ToolArgs)
+		return HookResultAgentToolTestStarting{
+			HookResultAgentBase: agentBase(""),
+			Tests:               tests,
+			Timeout:             timeout,
+		}
+	case HookAgentToolTestEnded:
+		succeeded, failed := extractTestEndedFromInput(hctx.Input)
+		return HookResultAgentToolTestEnded{
+			HookResultAgentBase: agentBase(""),
+			Succeeded:           succeeded,
+			Failed:              failed,
+		}
+	case HookAgentToolBuildStarting:
+		return HookResultAgentToolBuildStarting{
+			HookResultAgentBase: agentBase(""),
+			Bundles:             extractBuildBundlesFromInput(hctx.Input, hctx.ToolArgs),
+		}
+	case HookAgentToolBuildEnded:
+		succeeded, failed := extractBuildEndedFromInput(hctx.Input)
+		return HookResultAgentToolBuildEnded{
+			HookResultAgentBase: agentBase(""),
+			Succeeded:           succeeded,
+			Failed:              failed,
 		}
 	case HookAgentToolTerminalStarting:
 		if blocked, reason := IsToolBlocked(hctx.ToolName, hctx.ToolArgs); blocked {
@@ -35751,7 +35835,7 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 	return steps
 }
 
-func extractCodeSearchFromInput(input json.RawMessage, toolArgs string) (query string, include []string, exclude []string) {
+func extractSearchFromInput(input json.RawMessage, toolArgs string) (pages []string, ranges []string) {
 	var toolInput map[string]interface{}
 	if len(input) > 0 {
 		var data map[string]interface{}
@@ -35765,48 +35849,209 @@ func extractCodeSearchFromInput(input json.RawMessage, toolArgs string) (query s
 		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
 	}
 	if toolInput == nil {
-		return "", nil, nil
+		return nil, nil
 	}
-	for _, k := range []string{"query", "pattern", "filePath", "path", "file_path"} {
+	var filePath string
+	for _, k := range []string{"filePath", "path", "file_path"} {
 		if v, ok := toolInput[k].(string); ok && v != "" {
-			query = v
+			filePath = v
 			break
 		}
 	}
-	if startLine, ok := toolInput["startLine"].(float64); ok && startLine > 0 {
-		if endLine, ok := toolInput["endLine"].(float64); ok && endLine > 0 {
-			if startLine == endLine {
-				query = fmt.Sprintf("%s#L%d", query, int(startLine))
+	if filePath != "" {
+		startLine, hasStart := toolInput["startLine"].(float64)
+		endLine, hasEnd := toolInput["endLine"].(float64)
+		if hasStart && startLine > 0 {
+			if hasEnd && endLine > 0 {
+				if startLine == endLine {
+					ranges = append(ranges, fmt.Sprintf("%s#L%d", filePath, int(startLine)))
+				} else {
+					ranges = append(ranges, fmt.Sprintf("%s#L%d-L%d", filePath, int(startLine), int(endLine)))
+				}
 			} else {
-				query = fmt.Sprintf("%s#L%d-L%d", query, int(startLine), int(endLine))
+				ranges = append(ranges, fmt.Sprintf("%s#L%d", filePath, int(startLine)))
 			}
 		} else {
-			query = fmt.Sprintf("%s#L%d", query, int(startLine))
+			pages = append(pages, filePath)
+		}
+	}
+	for _, k := range []string{"query", "pattern"} {
+		if v, ok := toolInput[k].(string); ok && v != "" {
+			pages = append(pages, v)
+			break
 		}
 	}
 	for _, k := range []string{"includePattern", "include", "glob"} {
 		if v, ok := toolInput[k].(string); ok && v != "" {
-			include = append(include, v)
+			pages = append(pages, v)
 		} else if arr, ok := toolInput[k].([]interface{}); ok {
 			for _, item := range arr {
 				if s, ok := item.(string); ok && s != "" {
-					include = append(include, s)
+					pages = append(pages, s)
 				}
 			}
 		}
 	}
-	for _, k := range []string{"excludePattern", "exclude"} {
+	return pages, ranges
+}
+
+func extractSearchErrorFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"error", "errorMessage", "error_message"} {
+		if v, ok := data[key].(string); ok && v != "" {
+			return v
+		}
+	}
+	if toolOutput, ok := data["tool_output"].(string); ok {
+		lower := strings.ToLower(toolOutput)
+		if strings.Contains(lower, "error") || strings.Contains(lower, "failed") {
+			return toolOutput
+		}
+	}
+	return ""
+}
+
+func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (tests []string, timeout string) {
+	var toolInput map[string]interface{}
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+				toolInput = ti
+			}
+		}
+	}
+	if toolInput == nil && toolArgs != "" {
+		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
+	}
+	if toolInput == nil {
+		return nil, ""
+	}
+	for _, k := range []string{"files", "testNames", "test_names", "tests"} {
+		if arr, ok := toolInput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					tests = append(tests, s)
+				}
+			}
+		} else if v, ok := toolInput[k].(string); ok && v != "" {
+			tests = append(tests, v)
+		}
+	}
+	for _, k := range []string{"timeout", "timeoutMs"} {
 		if v, ok := toolInput[k].(string); ok && v != "" {
-			exclude = append(exclude, v)
-		} else if arr, ok := toolInput[k].([]interface{}); ok {
+			timeout = v
+			break
+		}
+		if v, ok := toolInput[k].(float64); ok {
+			timeout = fmt.Sprintf("%d", int64(v))
+			break
+		}
+	}
+	return tests, timeout
+}
+
+func extractTestEndedFromInput(input json.RawMessage) (succeeded []string, failed []string) {
+	if len(input) == 0 {
+		return nil, nil
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return nil, nil
+	}
+	toolOutput := data
+	if to, ok := data["tool_output"].(map[string]interface{}); ok {
+		toolOutput = to
+	}
+	for _, k := range []string{"succeeded", "passed", "passing"} {
+		if arr, ok := toolOutput[k].([]interface{}); ok {
 			for _, item := range arr {
 				if s, ok := item.(string); ok && s != "" {
-					exclude = append(exclude, s)
+					succeeded = append(succeeded, s)
 				}
 			}
 		}
 	}
-	return query, include, exclude
+	for _, k := range []string{"failed", "failing", "errors"} {
+		if arr, ok := toolOutput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					failed = append(failed, s)
+				}
+			}
+		}
+	}
+	return succeeded, failed
+}
+
+func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []string {
+	var toolInput map[string]interface{}
+	if len(input) > 0 {
+		var data map[string]interface{}
+		if err := json.Unmarshal(input, &data); err == nil {
+			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+				toolInput = ti
+			}
+		}
+	}
+	if toolInput == nil && toolArgs != "" {
+		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
+	}
+	if toolInput == nil {
+		return nil
+	}
+	var bundles []string
+	for _, k := range []string{"bundles", "targets", "projects", "label"} {
+		if arr, ok := toolInput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					bundles = append(bundles, s)
+				}
+			}
+		} else if v, ok := toolInput[k].(string); ok && v != "" {
+			bundles = append(bundles, v)
+		}
+	}
+	return bundles
+}
+
+func extractBuildEndedFromInput(input json.RawMessage) (succeeded []string, failed []string) {
+	if len(input) == 0 {
+		return nil, nil
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return nil, nil
+	}
+	toolOutput := data
+	if to, ok := data["tool_output"].(map[string]interface{}); ok {
+		toolOutput = to
+	}
+	for _, k := range []string{"succeeded", "passed", "built"} {
+		if arr, ok := toolOutput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					succeeded = append(succeeded, s)
+				}
+			}
+		}
+	}
+	for _, k := range []string{"failed", "errors"} {
+		if arr, ok := toolOutput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					failed = append(failed, s)
+				}
+			}
+		}
+	}
+	return succeeded, failed
 }
 
 func extractCodeEditFromInput(input json.RawMessage, toolArgs string) (path string, old string, new_ string, all bool) {
@@ -36258,32 +36503,34 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 		}
 	}
 	switch r := result.(type) {
-	case HookResultAgentToolSearching:
-		q := r.Query
-		if len(r.Include) > 0 {
-			q = strings.Join(r.Include, ", ")
-			if r.Query != "" {
-				q = r.Query + " in " + q
+	case HookResultAgentToolSearchStarting:
+		q := strings.Join(r.Pages, ", ")
+		if len(r.Ranges) > 0 {
+			if q != "" {
+				q += " " + strings.Join(r.Ranges, ", ")
+			} else {
+				q = strings.Join(r.Ranges, ", ")
 			}
 		}
 		event.Query = q
 		applyHookPathToAgentDiffModified(agent, hctx.FilePath)
-	case HookResultAgentToolSearched:
-		q := r.Query
-		if len(r.Include) > 0 {
-			q = strings.Join(r.Include, ", ")
-			if r.Query != "" {
-				q = r.Query + " in " + q
+	case HookResultAgentToolSearchEnded:
+		q := strings.Join(r.Pages, ", ")
+		if len(r.Ranges) > 0 {
+			if q != "" {
+				q += " " + strings.Join(r.Ranges, ", ")
+			} else {
+				q = strings.Join(r.Ranges, ", ")
 			}
 		}
 		event.Query = q
 		applyHookPathToAgentDiffModified(agent, hctx.FilePath)
-	case HookResultAgentToolCodeEditing:
+	case HookResultAgentToolCodeEditStarting:
 		if r.Path != "" {
 			event.File = normalizeHookPath(r.Path)
 			applyHookPathToAgentDiffModified(agent, r.Path)
 		}
-	case HookResultAgentToolCodeEdited:
+	case HookResultAgentToolCodeEditEnded:
 		if r.Path != "" {
 			event.File = normalizeHookPath(r.Path)
 			applyHookPathToAgentDiffModified(agent, r.Path)
@@ -36311,6 +36558,22 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 			event.New = resolveCodeBlockRefs(r.Path, r.New, newContent)
 			applyCodeBlockRefsToAgentDiff(agent, event.Old)
 			applyCodeBlockRefsToAgentDiff(agent, event.New)
+		}
+	case HookResultAgentToolTestStarting:
+		if len(r.Tests) > 0 {
+			event.Query = strings.Join(r.Tests, ", ")
+		}
+	case HookResultAgentToolTestEnded:
+		if len(r.Succeeded) > 0 || len(r.Failed) > 0 {
+			event.Query = fmt.Sprintf("succeeded:%d failed:%d", len(r.Succeeded), len(r.Failed))
+		}
+	case HookResultAgentToolBuildStarting:
+		if len(r.Bundles) > 0 {
+			event.Query = strings.Join(r.Bundles, ", ")
+		}
+	case HookResultAgentToolBuildEnded:
+		if len(r.Succeeded) > 0 || len(r.Failed) > 0 {
+			event.Query = fmt.Sprintf("succeeded:%d failed:%d", len(r.Succeeded), len(r.Failed))
 		}
 	case HookResultAgentToolTerminalStarting:
 		if r.Command != "" {
@@ -36407,12 +36670,17 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
   agent.ended                  Agent session stopped
   agent.prompt.submitting      User submitting a prompt
   agent.compacting             Context compaction event
-  agent.tool.starting          Tool starting (generic, excludes plan, code, terminal)
-  agent.tool.ended             Tool completed (generic, excludes plan, code, terminal)
+  agent.tool.starting          Tool starting (generic, excludes plan, search, code, test, build, terminal)
+  agent.tool.ended             Tool completed (generic, excludes plan, search, code, test, build, terminal)
   agent.tool.plan.updating     Plan/task list updating
-  agent.tool.searching         Code search/read operation
-  agent.tool.code.editing      Code edit starting
-  agent.tool.code.edited       Code edit completed
+  agent.tool.search.starting   Code search/read starting
+  agent.tool.search.ended      Code search/read ended
+  agent.tool.code.edit.starting Code edit starting
+  agent.tool.code.edit.ended   Code edit completed
+  agent.tool.test.starting     Test starting
+  agent.tool.test.ended        Test completed
+  agent.tool.build.starting    Build starting
+  agent.tool.build.ended       Build completed
   agent.tool.terminal.starting Terminal command starting (supports blocking)
   agent.tool.terminal.ended    Terminal command completed
 
@@ -38622,7 +38890,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 		}
 	}
 
-	fileEmojis := []string{"💻", "🥼", "📜", "📃", "⚙️", "💾", "⚖️", "📄"}
+	fileEmojis := []string{"💻", "🧪", "📜", "📃", "⚙️", "💾", "⚖️", "📄"}
 	for _, e := range fileEmojis {
 		if strings.HasPrefix(clean, e) {
 			rest := clean[len(e):]

@@ -36,9 +36,8 @@ We are building a general tool that abstracts source control managment tools lik
 It should provide task-focused and simplified
 The workflow in git is:
 Every person has a working branch `{{contributor-name}}/latest`.
-Whenever a person starts working `{{contributor-name}}/latest` is fast-forwarded to the latest `main`. 
+Whenever a person starts working `{{contributor-name}}/latest` is fast-forwarded to the latest `main`.
 Every time a person finished working, then a temporary branch `{{contributor}}/YY/MM/DD` is created at the current `{{contributor-name}}/latest`
-
 
 We want to develop a general hook system that works accross all ai tools (claude code, vscode agent, cursor agent, windsurf agent, droid). One go binary exposes general hooks that can be reused accross platforms. How would you design the system? It needs to be compatible with the following apis:
 https://code.visualstudio.com/docs/copilot/customization/hooks
@@ -68,6 +67,8 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 - Id system should be slugged to make sure no illegal characters are used.
 
+# 🛠️ Changes
+
 ## [👤semio](semiorepo://project/semio)
 
 ## [👤semio📚js](semiorepo://project/semio/bundle/js)
@@ -81,6 +82,7 @@ Update tree to not have sections but every section should have a tree. A tab sho
 ## 🧰semiorepo⌨️cli💻maingo
 
 The goal in `ticket.json` should be a proper id "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+
 ```json
 {
   "title": "Fix ID System and Emoji Prefixes",
@@ -93,141 +95,139 @@ The goal in `ticket.json` should be a proper id "🎯aioptimizedrepo🎯repoclie
 
 ```json
 {
-  "raw": {
-    "timestamp": "2026-02-23T23:56:38.536Z",
-    "hookEventName": "PostToolUse",
-    "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
-    "tool_name": "grep_search",
-    "tool_input": {
-      "maxResults": 20,
-      "includePattern": "**/semio-repo/cli/main.go",
-      "isRegexp": true,
-      "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
-    },
-    "tool_response": "",
-    "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
-    "cwd": "/workspaces/semio"
+ "raw": {
+  "timestamp": "2026-02-23T23:56:38.536Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
+  "tool_name": "grep_search",
+  "tool_input": {
+   "maxResults": 20,
+   "includePattern": "**/semio-repo/cli/main.go",
+   "isRegexp": true,
+   "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
   },
-  "event": {
-    "allowed": true,
-    "client": "copilot-chat",
-    "include": [
-      "**/semio-repo/cli/main.go"
-    ],
-    "kind": "agent.tool.searching.ended",
-    "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
-    "response": "",
-    "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
-    "timestamp": "2026-02-23T23:56:39Z",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
-  },
-  "response": {
-    "allowed": true
-  }
+  "tool_response": "",
+  "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "include": ["**/semio-repo/cli/main.go"],
+  "kind": "agent.tool.searching.ended",
+  "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
+  "response": "",
+  "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "timestamp": "2026-02-23T23:56:39Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
 ```json
 {
-  "raw": {
-    "timestamp": "2026-02-23T23:56:38.536Z",
-    "hookEventName": "PostToolUse",
-    "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
-    "tool_name": "grep_search",
-    "tool_input": {
-      "maxResults": 20,
-      "includePattern": "**/semio-repo/cli/main.go",
-      "isRegexp": true,
-      "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
-    },
-    "tool_response": "",
-    "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
-    "cwd": "/workspaces/semio"
+ "raw": {
+  "timestamp": "2026-02-23T23:56:38.536Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
+  "tool_name": "grep_search",
+  "tool_input": {
+   "maxResults": 20,
+   "includePattern": "**/semio-repo/cli/main.go",
+   "isRegexp": true,
+   "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
   },
-  "event": {
-    "allowed": true,
-    "client": "copilot-chat",
-    "include": ["🧰semiorepo⌨️cli💻maingo"],
-    "kind": "agent.tool.searching.ended",
-    "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
-    "response": "",
-    "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
-    "timestamp": "2026-02-23T23:56:39Z",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
-  },
-  "response": {
-    "allowed": true
-  }
+  "tool_response": "",
+  "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "include": ["🧰semiorepo⌨️cli💻maingo"],
+  "kind": "agent.tool.searching.ended",
+  "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
+  "response": "",
+  "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "timestamp": "2026-02-23T23:56:39Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
 ```json
 {
-  "raw": {
-    "timestamp": "2026-02-23T16:35:17.038Z",
-    "hookEventName": "PreToolUse",
-    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-    "tool_name": "replace_string_in_file",
-    "tool_input": {
-      "filePath": "/workspaces/semio/semio-repo/cli/main_test.go",
-      "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-      "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
-    },
-    "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
-    "cwd": "/workspaces/semio"
+ "raw": {
+  "timestamp": "2026-02-23T16:35:17.038Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "tool_name": "replace_string_in_file",
+  "tool_input": {
+   "filePath": "/workspaces/semio/semio-repo/cli/main_test.go",
+   "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+   "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
   },
-  "event": {
-    "allowed": true,
-    "client": "copilot-chat",
-    "kind": "agent.tool.code.editing",
-    "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-    "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-    "path": "/workspaces/semio/semio-repo/cli/main_test.go",
-    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "timestamp": "2026-02-23T16:35:17Z",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl"
-  },
-  "response": {
-    "allowed": true
-  }
+  "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.tool.code.editing",
+  "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "path": "/workspaces/semio/semio-repo/cli/main_test.go",
+  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "timestamp": "2026-02-23T16:35:17Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
+
 should be:
+
 ```json
 {
-  "raw": {
-    "timestamp": "2026-02-23T16:35:17.038Z",
-    "hookEventName": "PreToolUse",
-    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-    "tool_name": "replace_string_in_file",
-    "tool_input": {
-      "filePath": "/workspaces/semio/semio-repo/cli/main_test.go",
-      "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-      "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
-    },
-    "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
-    "cwd": "/workspaces/semio"
+ "raw": {
+  "timestamp": "2026-02-23T16:35:17.038Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "tool_name": "replace_string_in_file",
+  "tool_input": {
+   "filePath": "/workspaces/semio/semio-repo/cli/main_test.go",
+   "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+   "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
   },
-  "event": {
-    "kind": "agent.tool.code.editing",
-    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "file": "🧰semiorepo⌨️cli🥼maintestgo",
-    "sections": ["🧰semiorepo⌨️cli🥼maintestgo🔖"],
-    "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-    "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-    "timestamp": "2026-02-23T16:35:17Z",
-  },
-  "response": {
-    "allowed": true
-  }
+  "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.code.editing",
+  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "file": "🧰semiorepo⌨️cli🥼maintestgo",
+  "sections": ["🧰semiorepo⌨️cli🥼maintestgo🔖"],
+  "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".semio-repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "timestamp": "2026-02-23T16:35:17Z"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
-
-
 
 The data is not cleanly modeled.
 
@@ -238,7 +238,9 @@ The data is not cleanly modeled.
   "pattern": "sed -n '14860,14880p' semio-repo/cli/main_test.go"
 },
 ```
+
 should be:
+
 ```json
 {
   "kind": "agent.tool.search.starting",
@@ -247,7 +249,7 @@ should be:
 },
 ```
 
-```json
+````json
 {
   "kind": "agent.tool.terminal.starting",
   "timestamp": "2026-02-23T15:41:00Z",
@@ -297,41 +299,42 @@ Everything like this:
     "allowed": true
   }
 }
-```
+````
+
 should be this:
+
 ```json
 {
-  "raw": {
-    "timestamp": "2026-02-23T16:23:51.780Z",
-    "hookEventName": "PostToolUse",
-    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-    "tool_name": "run_in_terminal",
-    "tool_input": {
-      "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5",
-      "explanation": "Find where HookResultAgentStarted is created",
-      "goal": "Check if Kind is set",
-      "isBackground": false,
-      "timeout": 5000
-    },
-    "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
-    "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
-    "cwd": "/workspaces/semio"
+ "raw": {
+  "timestamp": "2026-02-23T16:23:51.780Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "tool_name": "run_in_terminal",
+  "tool_input": {
+   "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5",
+   "explanation": "Find where HookResultAgentStarted is created",
+   "goal": "Check if Kind is set",
+   "isBackground": false,
+   "timeout": 5000
   },
-  "event": {
-    "kind": "agent.tool.searching",
-    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "timestamp": "2026-02-23T16:23:52Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-    "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5"
-  },
-  "response": {
-    "allowed": true
-  }
+  "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
+  "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.searching",
+  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "timestamp": "2026-02-23T16:23:52Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' semio-repo/cli/main.go | head -5"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
-
 
 ```go
 // #region 🔖Header
@@ -358,7 +361,7 @@ should be this:
 
 should be
 
-```go
+````go
 // #region 🔖Header
 // [🧰semiorepo⌨️cli💻maingo](semiorepo://file/semio-repo/cli/main.go)
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
@@ -405,7 +408,8 @@ All searching patterns with line numbers should be displayed like this:
     "query": "/workspaces/semio/semio-repo/cli/main.go",
     "response": ""
   }
-```
+````
+
 ```json
 {
   "kind": "agent.tool.searching",
@@ -422,82 +426,85 @@ All searching patterns with line numbers should be displayed like this:
 Agents MUST NOT actively track plan/progress/changes. Everything is tracked over agent hooks. Remove `ticket.md` in the mechanism and update all docs.
 
 The logging path of agent of hooks should change to
+
 - .semio-repo
   - 📜
     - 🪝
       - 🤖
         - {{session-id}}
-          - {{timestamp}}_{{semio-repo-agent-hook-event-kind}}.json
+          - {{timestamp}}\_{{semio-repo-agent-hook-event-kind}}.json
       - 🔀
         - {{change-id}}
-          - {{timestamp}}_{{semio-repo-vcs-hook-event-kind}}.json
+          - {{timestamp}}\_{{semio-repo-vcs-hook-event-kind}}.json
 
-The mapping of the native agent hooks to the general hook system MUST be tested for every single native hook event with real data. Use the `./.semio-repo/📜/*.json` files for real data. 
+The mapping of the native agent hooks to the general hook system MUST be tested for every single native hook event with real data. Use the `./.semio-repo/📜/*.json` files for real data.
 
 Logs MUST be clean and just have input, event and response data.
 e.g.
+
 ```json
 {
-  "context": {
-    "event": "agent.ended",
-    "client": "copilot-chat",
-    "timestamp": "2026-02-20T09:11:47Z",
-    "repoRoot": "/workspaces/semio",
-    "input": {
-      "timestamp": "2026-02-20T09:11:46.811Z",
-      "hookEventName": "Stop",
-      "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
-      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
-      "stop_hook_active": false,
-      "cwd": "/workspaces/semio"
-    }
-  },
-  "result": {
-    "allowed": true,
-    "raw": {
-      "timestamp": "2026-02-20T09:11:46.811Z",
-      "hookEventName": "Stop",
-      "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
-      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
-      "stop_hook_active": false,
-      "cwd": "/workspaces/semio"
-    },
-    "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
-    "timestamp": "2026-02-20T09:11:47Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
-  }
-}
-```
-should be:
-```json
-{
+ "context": {
+  "event": "agent.ended",
+  "client": "copilot-chat",
+  "timestamp": "2026-02-20T09:11:47Z",
+  "repoRoot": "/workspaces/semio",
   "input": {
-     "timestamp": "2026-02-20T09:11:46.811Z",
-      "hookEventName": "Stop",
-      "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
-      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
-      "stop_hook_active": false,
-      "cwd": "/workspaces/semio"
-  },
-  "event": {
-    "kind": "agent.ended",
-    "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
-    "timestamp": "2026-02-20T09:11:46.811Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
-  },
-  "response": {
+   "timestamp": "2026-02-20T09:11:46.811Z",
+   "hookEventName": "Stop",
+   "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+   "stop_hook_active": false,
+   "cwd": "/workspaces/semio"
   }
+ },
+ "result": {
+  "allowed": true,
+  "raw": {
+   "timestamp": "2026-02-20T09:11:46.811Z",
+   "hookEventName": "Stop",
+   "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+   "stop_hook_active": false,
+   "cwd": "/workspaces/semio"
+  },
+  "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
+  "timestamp": "2026-02-20T09:11:47Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
+ }
 }
 ```
 
-Extend the cli by a general project specs, docs and todo generation system.
+should be:
+
+```json
+{
+ "input": {
+  "timestamp": "2026-02-20T09:11:46.811Z",
+  "hookEventName": "Stop",
+  "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+  "stop_hook_active": false,
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.ended",
+  "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
+  "timestamp": "2026-02-20T09:11:46.811Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
+ },
+ "response": {}
+}
+```
+
+Extend the cli by a general project requirements, docs and todo generation system.
 
 ```bash
 ./semio-repo/cli/cli project <project-name> generate <kind>
 
-./semio-repo/cli/cli project semio generate specs
+./semio-repo/cli/cli project semio generate requirements
 ./semio-repo/cli/cli project semio-repo generate docs
 ./semio-repo/cli/cli project coda generate todos
 ```
@@ -505,6 +512,7 @@ Extend the cli by a general project specs, docs and todo generation system.
 ---
 
 `DOCS.md`
+
 ```md
 # 📚 Docs
 
@@ -514,8 +522,9 @@ Extend the cli by a general project specs, docs and todo generation system.
 ```
 
 `SPECS.MD`
+
 ```md
-# 💯 Specs
+# 💯 Requirements
 
 ## [{{ENTITYID}}]({{ENTITYURI}})
 
@@ -523,20 +532,20 @@ Extend the cli by a general project specs, docs and todo generation system.
 ```
 
 `TODOS.md`
+
 ```md
 # 🔳 TODOs
 
 ## [{{ENTITYID}}]({{ENTITYURI}})
 
 ### TODO: {{TODOTITLE}}
+
 {{TODODESCRIPTION}}
 ```
 
 You MUST implement, test and run it for all projects.
 
 The information is sourced from the code:
-
-
 
 Create a `generate <kind> ` command that generates.
 
@@ -619,7 +628,7 @@ The id system should be changed. From now on all bundles MUST have a parent proj
 For this purpose introduce the virtual `🥇mono` project and virtual `🪆repo` bundle. Files and folders that are on the root level are children of the `🪆repo` bundle.
 Every bundle has a virtual folder called `🌱root` that is the parent of all files that are on the root folder level of the bundle.
 This makes it much easier because the hierarchy PROJECT - BUNDLE - FOLDER - FILE is now strict.
-Adjust the cli and the vscode extension accordingly. 
+Adjust the cli and the vscode extension accordingly.
 
 ---
 
@@ -651,10 +660,9 @@ should be:
 │   │   │   │   └── 🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
 ```
 
-
 ---
 
-The semio repo specs were majorly updated.
+The semio repo requirements were majorly updated.
 
 You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
 
@@ -676,7 +684,6 @@ relations:
   related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
 
 Only stop once you have tests every single list and tree command to have exactly this ids:
-
 
 The uri system (mcp, rest, rdf) is:
 
@@ -794,30 +801,30 @@ All agent terminal events should have command and
 
 ```json
 {
-  "input": {
-    "timestamp": "2026-02-21T23:09:35.693Z",
-    "hookEventName": "PreToolUse",
-    "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
-    "tool_name": "run_in_terminal",
-    "tool_input": {
-      "command": "cd /workspaces/semio \u0026\u0026 ls semio-repo/cli/",
-      "explanation": "List the semio-repo/cli directory to understand its structure",
-      "goal": "Understand CLI structure",
-      "isBackground": false,
-      "timeout": 5000
-    },
-    "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
-    "cwd": "/workspaces/semio"
+ "input": {
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+  "tool_name": "run_in_terminal",
+  "tool_input": {
+   "command": "cd /workspaces/semio \u0026\u0026 ls semio-repo/cli/",
+   "explanation": "List the semio-repo/cli directory to understand its structure",
+   "goal": "Understand CLI structure",
+   "isBackground": false,
+   "timeout": 5000
   },
-  "event": {
-    "kind": "agent.tool.terminal.starting",
-    "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-    "timestamp": "2026-02-21T23:09:35.693Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl"
-  },
-  "response": {}
+  "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.terminal.starting",
+  "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl"
+ },
+ "response": {}
 }
 ```
 
@@ -825,37 +832,36 @@ should be
 
 ```json
 {
-  "input": {
-    "timestamp": "2026-02-21T23:09:35.693Z",
-    "hookEventName": "PreToolUse",
-    "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
-    "tool_name": "run_in_terminal",
-    "tool_input": {
-      "command": "cd /workspaces/semio \u0026\u0026 ls semio-repo/cli/",
-      "explanation": "List the semio-repo/cli directory to understand its structure",
-      "goal": "Understand CLI structure",
-      "isBackground": false,
-      "timeout": 5000
-    },
-    "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
-    "cwd": "/workspaces/semio"
+ "input": {
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+  "tool_name": "run_in_terminal",
+  "tool_input": {
+   "command": "cd /workspaces/semio \u0026\u0026 ls semio-repo/cli/",
+   "explanation": "List the semio-repo/cli directory to understand its structure",
+   "goal": "Understand CLI structure",
+   "isBackground": false,
+   "timeout": 5000
   },
-  "event": {
-    "kind": "agent.tool.terminal.starting",
-    "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-    "timestamp": "2026-02-21T23:09:35.693Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
-    "command": "cd /workspaces/semio && ls semio-repo/cli/",
-    "timeout": 5000 // when timeout is set then it is no background task
-  },
-  "response": {}
+  "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.terminal.starting",
+  "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+  "command": "cd /workspaces/semio && ls semio-repo/cli/",
+  "timeout": 5000 // when timeout is set then it is no background task
+ },
+ "response": {}
 }
 ```
 
 ---
-
 
 ticket
 
@@ -987,8 +993,6 @@ The api for hooks maps to native events:
 You MUST make sure that the hooks return exactly this information (additionally make sure to add raw as a field where you add the raw input json and leave it for logging for now):
 
 Events
-
-
 
 Hooks:
 
@@ -1179,17 +1183,18 @@ Note that TODO, STATUTE, BREACH are not shown because they can be children of mo
 
 ## 🧰semiorepo⌨️cli💻maingo🔖commands
 
-Rename `tree` to command to `search`. 
+Rename `tree` to command to `search`.
 
-Remove all documentation about `--no-management`. It is a hidden feature. Only leave it for users that know it. 
+Remove all documentation about `--no-management`. It is a hidden feature. Only leave it for users that know it.
 
-Remove all documentation about `list`. It is a hidden feature. Only leave it for users that know it. 
+Remove all documentation about `list`. It is a hidden feature. Only leave it for users that know it.
 
-Remove the `format` flag option from any documentation. It is a hidden feature. Only leave it for users that know it. 
+Remove the `format` flag option from any documentation. It is a hidden feature. Only leave it for users that know it.
 
 ## 🧰semiorepo⌨️cli💻maingo🔖mcp
 
 Remove tools from mcp:
+
 - analyze
 - contributor add
 - contributor delete
@@ -1197,7 +1202,7 @@ Remove tools from mcp:
 - file create
 - file delete
 - file move
-- folder 
+- folder
 - graphql
 - move
 - policy check
@@ -1479,7 +1484,7 @@ The comments and docstrings MUST start immediately after the start marker. No bl
 Every definition or section must have exactly one blank line between.
 The first comment line of a section is the identification `[<SECTIONID>](<SECTIONURI>)`.
 The second comment line is the summary. It must not contain new lines.
-The next lines until `TODO:` are the specs.
+The next lines until `TODO:` are the requirements.
 Every TODO has exactly two lines with `TODO: <TODONAME>`. The next line is the description.
 The remaining lines are the docs.
 e.g. in typescript:
@@ -1560,7 +1565,7 @@ Once the breachs show up, you MUST fix all the files to match the new format.
 
 template:
 
-You MUST make sure that project, bundle, folder, file, section and definition have the right mechanism to have a summary, specs, todos and docs. Files additionally have id, contributors, license.
+You MUST make sure that project, bundle, folder, file, section and definition have the right mechanism to have a summary, requirements, todos and docs. Files additionally have id, contributors, license.
 
 Every file should look like this:
 
@@ -1589,21 +1594,21 @@ You MAY leave existing policies, statute groups and statutes if they are not aff
       - Contributors
       - License # Autofixable from the bundle license file
       - Summary
-      - Specs
+      - Requirements
       - Docs
   - Section
     - Wrong
       - Format
         - Summary
           - Too Long Summary # Autofixable by removing the line breaks between the blocks
-        - Specs
+        - Requirements
           - Split Block # Autofixable by removing the line breaks between the blocks
         - Docs
   - Definition
     - Wrong Format
     - Missing
       - Summary
-      - Specs
+      - Requirements
       - Docs
 
 e.g. in README.md for bundles and folders:
@@ -1613,7 +1618,7 @@ e.g. in README.md for bundles and folders:
 
 <BUNDLEORFOLDERSUMMARY>
 
-### Specs
+### 💯Requirements
 
 <BUNDLEORFOLDERSPECS>
 <BUNDLEORFOLDERSPECS>
@@ -1783,34 +1788,34 @@ $ ./semio-repo/cli/cli policy tree
     - [🚫Code#Comment#Jsdoc](semiorepo://statute/CODE/COMMENT/JSDOC) - `JSDoc comments are forbidden`
   - definition
     - [🚫Code#Definition#Missing Docs](semiorepo://statute/CODE/DEFINITION/MISSING-DOCS) - `Definition must be documented in bundle README.md Docs section`
-    - [🚫Code#Definition#Missing Specs](semiorepo://statute/CODE/DEFINITION/MISSING-SPECS) - `Definition must have specs in its docstring`
+    - [🚫Code#Definition#Missing Requirements](semiorepo://statute/CODE/DEFINITION/MISSING-SPECS) - `Definition must have requirements in its docstring`
     - [🚫Code#Definition#Missing Summary](semiorepo://statute/CODE/DEFINITION/MISSING-SUMMARY) - `Definition must have a summary in its docstring`
     - [🚫Code#Definition#Wrong Format](semiorepo://statute/CODE/DEFINITION/WRONG-FORMAT) - `Definition does not have a proper docstring`
   - docs
-    - [🚫Code#Docs#Missing Readme](semiorepo://statute/CODE/DOCS/MISSING-README) - `Bundle or folder is missing a README.md with summary and specs`
+    - [🚫Code#Docs#Missing Readme](semiorepo://statute/CODE/DOCS/MISSING-README) - `Bundle or folder is missing a README.md with summary and requirements`
   - file
     - [🚫Code#File#Missing Contributors](semiorepo://statute/CODE/FILE/MISSING-CONTRIBUTORS) - `Contributors must be documented in header`
     - [🚫Code#File#Missing Docs](semiorepo://statute/CODE/FILE/MISSING-DOCS) - `File must be documented in bundle README.md Docs section`
     - [🚫Code#File#Missing Header](semiorepo://statute/CODE/FILE/MISSING-HEADER) - `Header region with license, filename, and contributors is required`
     - [🚫Code#File#Missing Id](semiorepo://statute/CODE/FILE/MISSING-ID) - `File header must contain an artifact ID`
     - [🚫Code#File#Missing License](semiorepo://statute/CODE/FILE/MISSING-LICENSE) - `License text is required in header License subregion`
-    - [🚫Code#File#Missing Specs](semiorepo://statute/CODE/FILE/MISSING-SPECS) - `Specs subregion is required inside Header`
+    - [🚫Code#File#Missing Requirements](semiorepo://statute/CODE/FILE/MISSING-SPECS) - `Requirements subregion is required inside Header`
     - [🚫Code#File#Missing Summary](semiorepo://statute/CODE/FILE/MISSING-SUMMARY) - `Summary must be documented in header`
-    - [🚫Code#File#Wrong Header Format](semiorepo://statute/CODE/FILE/WRONG-HEADER-FORMAT) - `Header region format is incorrect (missing License or Specs subregion)`
+    - [🚫Code#File#Wrong Header Format](semiorepo://statute/CODE/FILE/WRONG-HEADER-FORMAT) - `Header region format is incorrect (missing License or Requirements subregion)`
     - [🚫Code#File#Wrong Id](semiorepo://statute/CODE/FILE/WRONG-ID) - `File header must contain the correct artifact ID`
     - [🚫Code#File#Wrong License](semiorepo://statute/CODE/FILE/WRONG-LICENSE) - `License must be AGPL-3.0-or-later`
   - section
     - [🚫Code#Section#Empty](semiorepo://statute/CODE/SECTION/EMPTY) - `Empty sections should be removed`
     - [🚫Code#Section#Missing Docs](semiorepo://statute/CODE/SECTION/MISSING-DOCS) - `Section must be documented in bundle README.md Docs section`
     - [🚫Code#Section#Missing End Name](semiorepo://statute/CODE/SECTION/MISSING-END-NAME) - `Section end marker should have matching name`
-    - [🚫Code#Section#Missing Specs](semiorepo://statute/CODE/SECTION/MISSING-SPECS) - `Section must have specs comments after the summary`
+    - [🚫Code#Section#Missing Requirements](semiorepo://statute/CODE/SECTION/MISSING-SPECS) - `Section must have requirements comments after the summary`
     - [🚫Code#Section#Missing Start Name](semiorepo://statute/CODE/SECTION/MISSING-START-NAME) - `Section start marker must have a name`
     - [🚫Code#Section#Missing Summary](semiorepo://statute/CODE/SECTION/MISSING-SUMMARY) - `Section must have a summary comment after the region start`
     - [🚫Code#Section#Name Mismatch](semiorepo://statute/CODE/SECTION/NAME-MISMATCH) - `Section start and end names must match`
     - [🚫Code#Section#Orphan Definition](semiorepo://statute/CODE/SECTION/ORPHAN-DEFINITION) - `All code must be inside named sections`
     - [🚫Code#Section#Wrong Format](semiorepo://statute/CODE/SECTION/WRONG-FORMAT) - `Section region marker format is incorrect`
-  - specs
-    - [🚫Code#Specs#Implementation Syntax](semiorepo://statute/CODE/SPECS/IMPLEMENTATION-SYNTAX) - `Specs must be implementation-agnostic and must not contain code syntax`
+  - requirements
+    - [🚫Code#Requirements#Implementation Syntax](semiorepo://statute/CODE/SPECS/IMPLEMENTATION-SYNTAX) - `Requirements must be implementation-agnostic and must not contain code syntax`
   - unicode
     - [🚫Code#Unicode#Emoji Variation](semiorepo://statute/CODE/UNICODE/EMOJI-VARIATION) - `Emoji variation selectors (VS15/VS16) are forbidden`
 - [🛡️/dev-docs](semiorepo://policy/DEV-DOCS) - `Validates README.md and AGENTS.md documentation structure`
@@ -1920,7 +1925,7 @@ All source code headers should be extended/changed/refactored to look like this:
 
 // #endregion 🔖License
 
-// #region 🔖Specs
+// #region 🔖Requirements
 
 // <FILEWIDEREQUIRMENT1>
 // …
@@ -1930,7 +1935,7 @@ All source code headers should be extended/changed/refactored to look like this:
 
 // …
 
-// #region 🔖Specs
+// #region 🔖Requirements
 
 // #endregion 🔖Header
 ```

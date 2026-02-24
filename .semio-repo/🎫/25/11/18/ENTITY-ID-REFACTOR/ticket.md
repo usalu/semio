@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Entity ID Refactor Plan
 
 **Date:** 2025-11-18  
@@ -39,7 +40,7 @@ Refactor all entity references from simple GUID strings to structured ID objects
 
 ### 1.1. Entity Hierarchy
 
-All entities that reference other entities (in order from specs):
+All entities that reference other entities (in order from requirements):
 
 1. **Attribute** - self-contained (no refs)
 2. **Coord** - self-contained

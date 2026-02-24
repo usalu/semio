@@ -2,8 +2,8 @@
 
 // 💻test.ts
 
-// #region 🔖Specs
-// #endregion 🔖Specs
+// #region 🔖Requirements
+// #endregion 🔖Requirements
 
 // #endregion 🔖Header
 
