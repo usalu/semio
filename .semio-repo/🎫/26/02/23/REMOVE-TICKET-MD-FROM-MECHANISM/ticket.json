@@ -6,24 +6,5 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/658"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "sessions": [
-    {
-      "id": "",
-      "client": "copilot-chat",
-      "llm": "opus-4-6",
-      "prompts": [
-        {
-          "timestamp": "",
-          "prompt": "Remove ticket.md from the ticket mechanism and update all docs.",
-          "events": [
-            {
-              "kind": "",
-              "timestamp": "2025-02-23T13:00:00Z"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
 }

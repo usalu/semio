@@ -63,12 +63,12 @@
         "title": "semio-repo: Analyze Current File"
       },
       {
-        "command": "semio.fix",
-        "title": "semio-repo: Fix Codebase Problems"
+        "command": "semio.autofix",
+        "title": "semio-repo: Autofix Codebase Problems"
       },
       {
-        "command": "semio.fixFile",
-        "title": "semio-repo: Fix Current File Problems"
+        "command": "semio.autofixFile",
+        "title": "semio-repo: Autofix Current File Problems"
       },
       {
         "command": "semio.policyList",
@@ -228,6 +228,14 @@
       {
         "command": "semio.refreshDiagnostics",
         "title": "semio-repo: Refresh Diagnostics"
+      },
+      {
+        "command": "semio.summarize",
+        "title": "semio-repo: Summarize Entity"
+      },
+      {
+        "command": "semio.open",
+        "title": "semio-repo: Open Entity"
       },
       {
         "command": "semio.navigateToRepo",
@@ -642,8 +650,8 @@
         "title": "\u2699\ufe0f"
       },
       {
-        "command": "semio.filter.toggle.file.test",
-        "toggled": "semio.filter.file.test",
+        "command": "semio.filter.toggle.file.lab",
+        "toggled": "semio.filter.file.lab",
         "title": "\ud83e\uddea"
       },
       {
@@ -745,7 +753,7 @@
       "view/item/context": [
         {
           "command": "semio.refreshItem",
-          "when": "view == semio.monorepo && viewItem =~ /^(root_projects|root_goals|root_tickets|root_policies|root_contributors|root_commits|project|bundle|folder|file|section)$/",
+          "when": "view == semio.monorepo && viewItem =~ /^(root_codebase|root_goals|root_tickets|root_policies|root_contributors|root_commits|project|bundle|folder|file|section)$/",
           "group": "inline@98"
         },
         {
@@ -874,8 +882,8 @@
           "group": "inline@3"
         },
         {
-          "command": "semio.filter.toggle.file.test",
-          "toggled": "semio.filter.file.test",
+          "command": "semio.filter.toggle.file.lab",
+          "toggled": "semio.filter.file.lab",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@4"
         },

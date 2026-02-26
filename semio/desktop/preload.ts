@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🖱️desktop💻preloadts](semiorepo://file/semio/desktop/preload.ts)
+// [👤semio🖱️desktop💻preload](semiorepo://p/u/semio/b/u/desktop/f/preload.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Preload
-
-// [👤semio🖱️desktop💻preloadts🔖preload](semiorepo://section/semio/desktop/preload.ts/Preload)
+// [👤semio🖱️desktop💻preload🔖preload](semiorepo://p/u/semio/b/u/desktop/f/preload.ts/s/Preload)
 // Electron preload script exposing window controls and OS APIs to the renderer.
 // Preload MUST use contextBridge to safely expose IPC methods.
 

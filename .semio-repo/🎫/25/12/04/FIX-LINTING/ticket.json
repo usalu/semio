@@ -1,18 +1,6 @@
 {
   "title": "\"Fix TypeScript, C# and Python linting errors\"",
   "status": "closed",
-  "prompt": "\"Fix TypeScript, C# and Python linting errors\"",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.865Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "\"Fix TypeScript, C# and Python linting errors\"",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\"Fix TypeScript, C# and Python linting errors\"",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningtypeapp"
 }

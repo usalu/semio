@@ -1,18 +1,6 @@
 {
   "title": "Fix window background colors via useLevel",
   "status": "closed",
-  "prompt": "\"Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).\"",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-18T15:11:24.199Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
-      "prompt": "\"Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).\"",
-      "llm": "gpt-5.2-codex"
-    }
-  ]
+  "description": "\"Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).\"",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

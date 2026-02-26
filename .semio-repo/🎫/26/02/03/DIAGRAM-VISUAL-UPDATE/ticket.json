@@ -1,20 +1,7 @@
 {
   "title": "Diagram Visual Update",
   "status": "open",
-  "prompt": "",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/327"
-  },
-  "interactions": [
-    {
-      "kind": "",
-      "date": "",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "system": "",
-      "client": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
-      "prompt": "Create a plan to change the current visual look of the nodes and edges in the diagram window in kit editor. I want to change how nodes look and how they connect to each other through the current proximity connect. Each shape should have N points which functions as snapping point where edges connect to the nearest of these N points of each shape. A circle would have 4 points. A rectangle 4 as well one on the middle of each edge. Try two other shapes. I want to implement it as a strategy where later on new shapes will be defined in the future. For now Designs should be a circle, Types are rectangular, files are triangles with three points and all the rest would be long rectangle with four points as well.",
-      "llm": "gemini-3-pro"
-    }
-  ]
+  }
 }

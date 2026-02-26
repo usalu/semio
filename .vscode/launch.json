@@ -499,6 +499,23 @@
       }
     },
     {
+      "name": "mcp dev",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
+      "env": {
+        "HOST": "0.0.0.0",
+        "CLIENT_PORT": "6274",
+        "SERVER_PORT": "6277"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Go dev",
       "type": "go",
       "request": "launch",

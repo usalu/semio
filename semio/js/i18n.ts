@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js💻i18nts](semiorepo://file/semio/js/i18n.ts)
+// [👤semio📚js💻i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖I18n
-
-// [👤semio📚js💻i18nts🔖i18n](semiorepo://section/semio/js/i18n.ts/I18n)
+// [👤semio📚js💻i18n🔖i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n)
 // Initializes i18next with language detection, React bindings and expertise-aware label hooks.
 // MUST fall back to English when the detected language is unavailable.
 
@@ -56,7 +54,7 @@ i18n
  *
  * MUST map to the key structure in locale JSON files.
  *
- *  * [👤semio📚js💻i18nts🔖i18n🛠️expertise](semiorepo://definition/semio/js/i18n.ts/I18n/Expertise)
+ *  * [👤semio📚js💻i18n🔖i18n🛠️expertise](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/Expertise)
  **/
 export enum Expertise {
   BEGINNER = "beginner",
@@ -64,8 +62,12 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
-// Mutable holder for the active expertise provider function.
-// MUST be set via setExpertiseProvider before expertise-dependent labels are resolved.
+/**
+ * Mutable holder for the active expertise provider function.
+// [👤semio📚js💻i18n🔖i18n🪨getexpertisefunction](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/getExpertiseFunction)
+ *
+ * MUST be set via setExpertiseProvider before expertise-dependent labels are resolved.
+ **/
 let getExpertiseFunction: (() => Expertise) | undefined;
 
 /**
@@ -73,7 +75,7 @@ let getExpertiseFunction: (() => Expertise) | undefined;
  *
  * MUST be called once during app initialization.
  *
- *  * [👤semio📚js💻i18nts🔖i18n🛠️setexpertiseprovider](semiorepo://definition/semio/js/i18n.ts/I18n/setExpertiseProvider)
+ *  * [👤semio📚js💻i18n🔖i18n🛠️setexpertiseprovider](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/setExpertiseProvider)
  **/
 export function setExpertiseProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
@@ -84,7 +86,7 @@ export function setExpertiseProvider(fn: () => Expertise) {
  *
  * MUST fall back to normal expertise when no provider is set.
  *
- *  * [👤semio📚js💻i18nts🔖i18n🛠️uselabel](semiorepo://definition/semio/js/i18n.ts/I18n/useLabel)
+ *  * [👤semio📚js💻i18n🔖i18n🛠️uselabel](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/useLabel)
  **/
 export function useLabel(id: string): string | undefined {
   const { t } = useI18nTranslation();
@@ -123,7 +125,7 @@ export function useLabel(id: string): string | undefined {
  *
  * MUST return undefined when no hotkey is configured.
  *
- *  * [👤semio📚js💻i18nts🔖i18n🛠️usehotkey](semiorepo://definition/semio/js/i18n.ts/I18n/useHotkey)
+ *  * [👤semio📚js💻i18n🔖i18n🛠️usehotkey](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/useHotkey)
  **/
 export function useHotkey(id: string): string | undefined {
   const { t } = useI18nTranslation();

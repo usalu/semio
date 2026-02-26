@@ -1,18 +1,6 @@
 {
   "title": "\"Kit diagram: sync icons, dragging, filtering, selection with table\"",
   "status": "closed",
-  "prompt": "\"Kit diagram: sync icons, dragging, filtering, selection with table\"",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T16:28:40.318Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "c44e5e38193be007ca56cc649aa2f58238c1ec40",
-      "prompt": "\"Kit diagram: sync icons, dragging, filtering, selection with table\"",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\"Kit diagram: sync icons, dragging, filtering, selection with table\"",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

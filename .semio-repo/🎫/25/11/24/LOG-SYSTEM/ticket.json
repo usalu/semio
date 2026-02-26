@@ -1,18 +1,6 @@
 {
   "title": "\u003ee-",
   "status": "closed",
-  "prompt": "\u003ee-",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.71Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "\u003ee-",
-      "llm": "sonnet-4"
-    }
-  ]
+  "description": "\u003ee-",
+  "goal": "🎯aioptimizedrepo"
 }

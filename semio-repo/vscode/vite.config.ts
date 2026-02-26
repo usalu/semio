@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [🧰semiorepo🖱️vscode⚙️viteconfigts](semiorepo://file/semio-repo/vscode/vite.config.ts)
+// [🧰semiorepo🖱️vscode⚙️viteconfigts](semiorepo://p/i/semio-repo/b/u/vscode/f/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration](semiorepo://section/semio-repo/vscode/vite.config.ts/Configuration)
+// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration](semiorepo://p/i/semio-repo/b/u/vscode/f/vite.config.ts/s/Configuration)
 // Vite build configuration for the VS Code extension.
 // Configuration MUST output a CJS bundle targeting Node 18.
 
@@ -29,11 +27,19 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 
-// Absolute file path of the current module.
-// Path MUST be derived from import.meta.url.
+/**
+ * Absolute file path of the current module.
+// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration🪨filename](semiorepo://p/i/semio-repo/b/u/vscode/f/vite.config.ts/s/Configuration/d/i/__filename)
+ *
+ * Path MUST be derived from import.meta.url.
+ **/
 const __filename = fileURLToPath(import.meta.url);
-// Absolute directory path of the current module.
-// Path MUST be derived from __filename.
+/**
+ * Absolute directory path of the current module.
+// [🧰semiorepo🖱️vscode⚙️viteconfigts🔖configuration🪨dirname](semiorepo://p/i/semio-repo/b/u/vscode/f/vite.config.ts/s/Configuration/d/i/__dirname)
+ *
+ * Path MUST be derived from __filename.
+ **/
 const __dirname = path.dirname(__filename);
 
 // Vite configuration for building the VS Code extension as a CJS bundle.

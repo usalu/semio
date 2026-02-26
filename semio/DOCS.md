@@ -1,6 +1,6 @@
 # 📚 Docs
 
-## [👤semio🏪assets](semiorepo://bundle/semio/assets)
+## [👤semio🏪assets](semiorepo://p/u/semio/b/a/assets)
 
 ## Badges
 
@@ -35,7 +35,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitPortsByGuid`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
 
-## [👤semio🖱️desktop](semiorepo://bundle/semio/desktop)
+## [👤semio🖱️desktop](semiorepo://p/u/semio/b/u/desktop)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -50,7 +50,7 @@ Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `Metabolis
 
 </details>
 
-## [👤semio🌐docs](semiorepo://bundle/semio/docs)
+## [👤semio🌐docs](semiorepo://p/u/semio/b/w/docs)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -69,7 +69,7 @@ Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `Metabolis
 
 </details>
 
-## [👤semio📚engine](semiorepo://bundle/semio/engine)
+## [👤semio📚engine](semiorepo://p/u/semio/b/l/engine)
 
 ## Files
 
@@ -78,7 +78,7 @@ Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `Metabolis
 - `generate-schemas.ts` - Generates GraphQL, JSON, and SQL schemas from TypeScript definitions
 - `sqliteschema.ts` - SQLite schema generation utilities
 
-## [👤semio📚js](semiorepo://bundle/semio/js)
+## [👤semio📚js](semiorepo://p/u/semio/b/l/js)
 
 ## 📁js/semio/
 
@@ -104,9 +104,9 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - **Field<T> Type**: Alternative object-based pattern with always-defined `set` (no-op when disabled):
     ```typescript
     interface Field<T> {
-      value: T;
-      canSet: boolean;
-      set: (next: T) => void;
+     value: T;
+     canSet: boolean;
+     set: (next: T) => void;
     }
     const field = useDesignAppSelectionField();
     field.set(newSelection); // Safe - no-op if canSet is false
@@ -306,13 +306,13 @@ import { registerEventHandler } from "./shared";
 
 // Register handler for a specific event type
 registerEventHandler("MYAPP.TOGGLE_PANEL", {
-  guard: (context, event) => context.myApp !== undefined, // optional
-  action: (context, event) => ({
-    myApp: {
-      ...context.myApp,
-      panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
-    },
-  }),
+ guard: (context, event) => context.myApp !== undefined, // optional
+ action: (context, event) => ({
+  myApp: {
+   ...context.myApp,
+   panelVisibility: { ...context.myApp.panelVisibility, [event.panel]: !context.myApp.panelVisibility[event.panel] },
+  },
+ }),
 });
 ```
 
@@ -415,16 +415,16 @@ import { FC } from "react";
 import { AppConfig } from "../registry";
 
 const App: FC = () => {
-  // ...
+ // ...
 };
 
 export const config: AppConfig = {
-  id: "myapp",
-  component: App,
-  routeSegments: [{ path: "my/:id", paramName: "id" }],
-  getPanels: (t) => [{ key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }],
-  matchesPath: (pathParts) => pathParts[0] === "my",
-  order: 50,
+ id: "myapp",
+ component: App,
+ routeSegments: [{ path: "my/:id", paramName: "id" }],
+ getPanels: (t) => [{ key: "details", icon: Info, tooltip: t("panels.details"), hotkey: "⌘L" }],
+ matchesPath: (pathParts) => pathParts[0] === "my",
+ order: 50,
 };
 
 export default App;
@@ -869,12 +869,12 @@ Sketchpad UI elements resolve transactions via React context (not props):
 
 ```typescript
 interface AppEdit<TSelectionDiff> {
-  do: AppStep<TSelectionDiff>;
-  undo: AppStep<TSelectionDiff>;
+ do: AppStep<TSelectionDiff>;
+ undo: AppStep<TSelectionDiff>;
 }
 
 interface AppStep<TSelectionDiff> {
-  selectionDiff?: TSelectionDiff;
+ selectionDiff?: TSelectionDiff;
 }
 ```
 
@@ -919,13 +919,13 @@ The `KitDiffAppStore` extends AppStore for apps that modify kits (designs, types
 
 ```typescript
 interface KitDiffAppEdit<TSelectionDiff> {
-  do: KitDiffAppStep<TSelectionDiff>;
-  undo: KitDiffAppStep<TSelectionDiff>;
+ do: KitDiffAppStep<TSelectionDiff>;
+ undo: KitDiffAppStep<TSelectionDiff>;
 }
 
 interface KitDiffAppStep<TSelectionDiff> {
-  kitDiff?: KitDiff;
-  selectionDiff?: TSelectionDiff;
+ kitDiff?: KitDiff;
+ selectionDiff?: TSelectionDiff;
 }
 ```
 
@@ -1152,10 +1152,10 @@ Transaction state is embedded in each app's state port via `AppTransactionState`
 
 ```typescript
 interface AppTransactionState<TEdit = any> {
-  isTransactionActive: boolean;
-  currentTransactionStack: TEdit[]; // Edits in current active transaction
-  pastTransactionStack: TEdit[]; // Finalized transactions (for undo)
-  redoStack: TEdit[]; // Undone transactions (for redo)
+ isTransactionActive: boolean;
+ currentTransactionStack: TEdit[]; // Edits in current active transaction
+ pastTransactionStack: TEdit[]; // Finalized transactions (for undo)
+ redoStack: TEdit[]; // Undone transactions (for redo)
 }
 ```
 
@@ -1174,12 +1174,12 @@ Long-running async operations (kit import, file upload) are tracked via `backgro
 
 ```typescript
 backgroundOperations: Record<
-  string,
-  {
-    type: string;
-    status: "pending" | "running" | "completed" | "failed";
-    error?: string;
-  }
+ string,
+ {
+  type: string;
+  status: "pending" | "running" | "completed" | "failed";
+  error?: string;
+ }
 >;
 ```
 
@@ -1265,9 +1265,9 @@ Collection diffs (`*sDiff`) track changes to arrays/lists:
 
 ```typescript
 interface CollectionDiff<T> {
-  removed?: TId[]; // IDs of removed items
-  updated?: { id: TId; diff: TDiff }[]; // Updated items with their diffs
-  added?: T[]; // Newly added items
+ removed?: TId[]; // IDs of removed items
+ updated?: { id: TId; diff: TDiff }[]; // Updated items with their diffs
+ added?: T[]; // Newly added items
 }
 ```
 
@@ -1289,12 +1289,12 @@ Each app exports a `config: AppConfig`:
 
 ```typescript
 interface AppConfig {
-  id: string; // Unique app identifier
-  component: ComponentType; // React component
-  routeSegments: RouteSegment[]; // Route path segments
-  getPanels: (t: TFunction) => PanelDefinition[]; // Panel definitions
-  matchesPath: (pathParts: string[]) => boolean; // Path matcher
-  order?: number; // Display order
+ id: string; // Unique app identifier
+ component: ComponentType; // React component
+ routeSegments: RouteSegment[]; // Route path segments
+ getPanels: (t: TFunction) => PanelDefinition[]; // Panel definitions
+ matchesPath: (pathParts: string[]) => boolean; // Path matcher
+ order?: number; // Display order
 }
 ```
 
@@ -1304,9 +1304,9 @@ Route segments define the app's URL structure:
 
 ```typescript
 interface RouteSegment {
-  path: string; // React Router path pattern
-  paramName?: string; // Parameter name (e.g., "id")
-  scopeProvider?: ComponentType<{ guid: string; children: ReactNode }>; // Scope wrapper
+ path: string; // React Router path pattern
+ paramName?: string; // Parameter name (e.g., "id")
+ scopeProvider?: ComponentType<{ guid: string; children: ReactNode }>; // Scope wrapper
 }
 ```
 
@@ -1374,14 +1374,14 @@ Alternative object-based pattern with always-defined `set` function (no-op when 
 
 ```typescript
 interface Field<T> {
-  value: T;
-  canSet: boolean;
-  set: (next: T) => void;
+ value: T;
+ canSet: boolean;
+ set: (next: T) => void;
 }
 
 interface ActionField {
-  canExecute: boolean;
-  execute: () => void;
+ canExecute: boolean;
+ execute: () => void;
 }
 ```
 
@@ -1403,12 +1403,12 @@ interface ActionField {
 
 ```typescript
 interface UseDesignAppFieldOptions<T, TEvent> {
-  selector: (s: DesignAppState) => T;
-  fallback: T;
-  canEventType: TEvent["type"];
-  createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
-  createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
-  useWildcardFallback?: boolean;
+ selector: (s: DesignAppState) => T;
+ fallback: T;
+ canEventType: TEvent["type"];
+ createCanEvent: (kitGuid: Guid, designGuid: Guid) => TEvent;
+ createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
+ useWildcardFallback?: boolean;
 }
 
 function useDesignAppField<T, TEvent>(options: UseDesignAppFieldOptions<T, TEvent>): Field<T>;
@@ -1418,55 +1418,55 @@ function useDesignAppField<T, TEvent>(options: UseDesignAppFieldOptions<T, TEven
 
 ```typescript
 enum Theme {
-  SYSTEM = "system",
-  LIGHT = "light",
-  DARK = "dark",
+ SYSTEM = "system",
+ LIGHT = "light",
+ DARK = "dark",
 }
 enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
+ BEGINNER = "beginner",
+ NORMAL = "normal",
+ EXPERT = "expert",
 }
 enum Mode {
-  USER = "user",
-  DEV = "dev",
+ USER = "user",
+ DEV = "dev",
 }
 enum StoreStatus {
-  IDLE = "idle",
-  LOADING = "loading",
-  ERROR = "error",
-  READY = "ready",
+ IDLE = "idle",
+ LOADING = "loading",
+ ERROR = "error",
+ READY = "ready",
 }
 enum ToolKind {
-  SELECTION_NORMAL,
-  SELECTION_ADDITIVE,
-  SELECTION_SUBTRACTIVE,
-  LASSO_RECTANGULAR,
-  LASSO_FREEFORM,
-  CONNECTOR,
+ SELECTION_NORMAL,
+ SELECTION_ADDITIVE,
+ SELECTION_SUBTRACTIVE,
+ LASSO_RECTANGULAR,
+ LASSO_FREEFORM,
+ CONNECTOR,
 }
 enum WindowKind {
-  TABLE = "table",
-  SCENE = "scene",
-  DIAGRAM = "diagram",
-  CUSTOM = "custom",
+ TABLE = "table",
+ SCENE = "scene",
+ DIAGRAM = "diagram",
+ CUSTOM = "custom",
 }
 enum PanelPosition {
-  LEFT = "left",
-  RIGHT = "right",
-  MIDDLE = "middle",
-  BOTTOM = "bottom",
+ LEFT = "left",
+ RIGHT = "right",
+ MIDDLE = "middle",
+ BOTTOM = "bottom",
 }
 enum PanelKind {
-  WORKBENCH,
-  TOOLS,
-  TOOLBAR,
-  HUD,
-  STATS,
-  DETAILS,
-  CHAT,
-  SETTINGS,
-  PARAMS,
+ WORKBENCH,
+ TOOLS,
+ TOOLBAR,
+ HUD,
+ STATS,
+ DETAILS,
+ CHAT,
+ SETTINGS,
+ PARAMS,
 }
 ```
 
@@ -1476,33 +1476,33 @@ Panels are configured via `PanelKind` with predefined positions and behaviors:
 
 ```typescript
 interface PanelKindConfig {
-  icon: ComponentType<{ size?: number }>;
-  position: PanelPosition;
-  group?: string;
-  isTransparent?: boolean;
-  isGroupable?: boolean;
-  hotkey?: string;
+ icon: ComponentType<{ size?: number }>;
+ position: PanelPosition;
+ group?: string;
+ isTransparent?: boolean;
+ isGroupable?: boolean;
+ hotkey?: string;
 }
 
 interface PanelVisibility {
-  toolbar?: boolean;
-  workbench?: boolean;
-  tools?: boolean;
-  hud?: boolean;
-  stats?: boolean;
-  details?: boolean;
-  chat?: boolean;
-  settings?: boolean;
-  params?: boolean;
+ toolbar?: boolean;
+ workbench?: boolean;
+ tools?: boolean;
+ hud?: boolean;
+ stats?: boolean;
+ details?: boolean;
+ chat?: boolean;
+ settings?: boolean;
+ params?: boolean;
 }
 
 interface PanelSection {
-  id: string;
-  content: ReactNode | (() => ReactNode);
-  specificity?: number;
-  defaultOpen?: boolean;
-  order?: number;
-  actions?: Array<{ id: string; icon: ReactNode; onClick: () => void }>;
+ id: string;
+ content: ReactNode | (() => ReactNode);
+ specificity?: number;
+ defaultOpen?: boolean;
+ order?: number;
+ actions?: Array<{ id: string; icon: ReactNode; onClick: () => void }>;
 }
 ```
 
@@ -1519,22 +1519,22 @@ Tools define interaction modes within apps:
 
 ```typescript
 interface Tool<TState = any> {
-  id: ToolKind | string;
-  icon?: ReactNode;
-  render: (context: ToolRenderContext<TState>) => { scene?: ReactNode; diagram?: ReactNode | null; table?: ReactNode | null };
+ id: ToolKind | string;
+ icon?: ReactNode;
+ render: (context: ToolRenderContext<TState>) => { scene?: ReactNode; diagram?: ReactNode | null; table?: ReactNode | null };
 }
 
 interface ToolMode {
-  id: string;
-  icon?: ReactNode;
-  label?: string;
-  tooltipId?: string;
+ id: string;
+ icon?: ReactNode;
+ label?: string;
+ tooltipId?: string;
 }
 
 interface ToolDefinition {
-  id: string;
-  defaultMode: ToolKind | string;
-  modes: ToolMode[];
+ id: string;
+ defaultMode: ToolKind | string;
+ modes: ToolMode[];
 }
 ```
 
@@ -1544,19 +1544,19 @@ Each app has a typed ID structure:
 
 ```typescript
 interface KitAppId {
-  kit: Guid;
+ kit: Guid;
 }
 interface TypeAppId {
-  kit: Guid;
-  type: Guid;
+ kit: Guid;
+ type: Guid;
 }
 interface DesignAppId {
-  kit: Guid;
-  design: Guid;
+ kit: Guid;
+ design: Guid;
 }
 interface QualityAppId {
-  kit: Guid;
-  quality: Guid;
+ kit: Guid;
+ quality: Guid;
 }
 ```
 
@@ -1593,16 +1593,16 @@ Caches computed values that depend on Y.js paths:
 
 ```typescript
 class DerivedNode<T> {
-  snapshot(): T;
-  subscribe(cb: () => void): Disposable;
-  dispose(): void;
+ snapshot(): T;
+ subscribe(cb: () => void): Disposable;
+ dispose(): void;
 }
 
 class DerivedStore {
-  getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T>;
-  get<T>(key: string): DerivedNode<T> | undefined;
-  delete(key: string): boolean;
-  clear(): void;
+ getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T>;
+ get<T>(key: string): DerivedNode<T> | undefined;
+ delete(key: string): boolean;
+ clear(): void;
 }
 ```
 
@@ -1620,19 +1620,19 @@ Apps register plugins that contribute event handlers, guards, and state factorie
 
 ```typescript
 interface AppPlugin {
-  id: string; // e.g., "home", "kit", "design"
-  namespace: string; // e.g., "HOME", "KIT", "DESIGN"
-  machine: AppMachineContribution;
-  registerStores?: () => void;
-  onRegister?: () => void;
+ id: string; // e.g., "home", "kit", "design"
+ namespace: string; // e.g., "HOME", "KIT", "DESIGN"
+ machine: AppMachineContribution;
+ registerStores?: () => void;
+ onRegister?: () => void;
 }
 
 interface AppMachineContribution {
-  actions?: Record<string, (context: any, event: any) => any>;
-  guards?: Record<string, (context: any, event: any) => boolean>;
-  eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
-  selectors?: Record<string, (context: any, ...args: any[]) => any>;
-  createDefaultState?: () => any;
+ actions?: Record<string, (context: any, event: any) => any>;
+ guards?: Record<string, (context: any, event: any) => boolean>;
+ eventHandlers?: Record<string, { guard?: string; actions?: string | string[] }>;
+ selectors?: Record<string, (context: any, ...args: any[]) => any>;
+ createDefaultState?: () => any;
 }
 ```
 
@@ -1650,8 +1650,8 @@ Dynamic event dispatch for app-specific events:
 
 ```typescript
 interface EventHandlerConfig<TContext = any, TEvent = any> {
-  guard?: (context: TContext, event: TEvent) => boolean;
-  action: (context: TContext, event: TEvent) => Partial<TContext>;
+ guard?: (context: TContext, event: TEvent) => boolean;
+ action: (context: TContext, event: TEvent) => Partial<TContext>;
 }
 ```
 
@@ -1659,12 +1659,12 @@ interface EventHandlerConfig<TContext = any, TEvent = any> {
 
 ```typescript
 registerEventHandler("HOME.TOGGLE_PANEL", {
-  action: (context, event) => ({
-    homeApp: {
-      ...context.homeApp,
-      panelVisibility: { ...context.homeApp.panelVisibility, [event.panel]: !context.homeApp.panelVisibility[event.panel] },
-    },
-  }),
+ action: (context, event) => ({
+  homeApp: {
+   ...context.homeApp,
+   panelVisibility: { ...context.homeApp.panelVisibility, [event.panel]: !context.homeApp.panelVisibility[event.panel] },
+  },
+ }),
 });
 ```
 
@@ -1709,10 +1709,10 @@ File providers abstract file storage for kits, supporting multiple backends.
 
 ```typescript
 interface FileProvider {
-  upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
-  download: (kitId: string, fileId: string, path: string) => Promise<Blob>;
-  delete: (kitId: string, fileId: string, path: string) => Promise<void>;
-  getUrl: (kitId: string, fileId: string, path: string) => string;
+ upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
+ download: (kitId: string, fileId: string, path: string) => Promise<Blob>;
+ delete: (kitId: string, fileId: string, path: string) => Promise<void>;
+ getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 ```
 
@@ -1797,9 +1797,9 @@ The UI adapts to user expertise level, showing different tooltip content.
 
 ```typescript
 enum Expertise {
-  BEGINNER = "beginner", // Full tooltips with tutorials
-  NORMAL = "normal", // Standard tooltips
-  EXPERT = "expert", // No tooltips
+ BEGINNER = "beginner", // Full tooltips with tutorials
+ NORMAL = "normal", // Standard tooltips
+ EXPERT = "expert", // No tooltips
 }
 ```
 
@@ -1880,27 +1880,27 @@ type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Con
 type Severity = "error" | "warning";
 
 interface SemioDomainLocation {
-  entityKind: SemioEntityKind;
-  entityGuid?: Guid;
-  field?: string;
+ entityKind: SemioEntityKind;
+ entityGuid?: Guid;
+ field?: string;
 }
 
 interface Fix {
-  title: string;
-  diff: KitDiff;
+ title: string;
+ diff: KitDiff;
 }
 
 interface Problem {
-  constraintId: string;
-  severity: Severity;
-  message: string;
-  location: SemioDomainLocation;
-  relatedGuids?: Guid[];
-  fixes: Fix[];
+ constraintId: string;
+ severity: Severity;
+ message: string;
+ location: SemioDomainLocation;
+ relatedGuids?: Guid[];
+ fixes: Fix[];
 }
 
 interface ValidationResult {
-  problems: Problem[];
+ problems: Problem[];
 }
 ```
 
@@ -1908,12 +1908,12 @@ interface ValidationResult {
 
 ```typescript
 interface ValidationContext {
-  kit: Kit;
-  typesByGuid: Map<Guid, Type>;
-  designsByGuid: Map<Guid, Design>;
-  piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
-  connectorsByTypeGuid: Map<Guid, Connector[]>;
-  modelsByTypeGuid: Map<Guid, Model[]>;
+ kit: Kit;
+ typesByGuid: Map<Guid, Type>;
+ designsByGuid: Map<Guid, Design>;
+ piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
+ connectorsByTypeGuid: Map<Guid, Connector[]>;
+ modelsByTypeGuid: Map<Guid, Model[]>;
 }
 ```
 
@@ -2058,7 +2058,7 @@ Layer paths within a design must be unique.
 ```typescript
 const result = validateSemioKit(kit);
 if (hasSemioErrors(result)) {
-  console.error("Validation errors found:", result.problems);
+ console.error("Validation errors found:", result.problems);
 }
 ```
 
@@ -2074,13 +2074,13 @@ const fixedKit = applyKitDiff(kit, fix.diff);
 
 ```typescript
 const customConstraint: Constraint = (ctx) => {
-  const problems: Problem[] = [];
-  // Custom validation logic
-  return problems;
+ const problems: Problem[] = [];
+ // Custom validation logic
+ return problems;
 };
 
 const result = validateSemioKit(kit, {
-  constraints: [...defaultConstraints, customConstraint],
+ constraints: [...defaultConstraints, customConstraint],
 });
 ```
 
@@ -2095,10 +2095,10 @@ Example:
 
 ```typescript
 export const semioCustomConstraint: Constraint = (ctx) => {
-  const problems: Problem[] = [];
-  // Validation logic
-  // Use semioMakeFix to create fixes
-  return problems;
+ const problems: Problem[] = [];
+ // Validation logic
+ // Use semioMakeFix to create fixes
+ return problems;
 };
 ```
 
@@ -2221,8 +2221,8 @@ import { validateSemioKit, applyKitDiff } from "semio/js";
 
 const result = validateSemioKit(kit);
 if (result.problems.length > 0) {
-  const fix = result.problems[0].fixes[0];
-  const fixedKit = applyKitDiff(kit, fix.diff);
+ const fix = result.problems[0].fixes[0];
+ const fixedKit = applyKitDiff(kit, fix.diff);
 }
 ```
 
@@ -2372,7 +2372,7 @@ cd semio/js && npm run preflight
 
 </details>
 
-## [👤semio📚js🗃️sketchpad](semiorepo://folder/semio/js/sketchpad)
+## [👤semio📚js🗃️sketchpad](semiorepo://p/u/semio/b/l/js/f/sketchpad)
 
 ## elements.tsx
 
@@ -2390,7 +2390,7 @@ Kit app hover state covers all artifact kinds and is updated via table and diagr
 
 Home command hooks forward hover events, including clear, into the Sketchpad state machine.
 
-## [👤semio📚net](semiorepo://bundle/semio/net)
+## [👤semio📚net](semiorepo://p/u/semio/b/l/net)
 
 ## Semio.cs
 
@@ -2429,3341 +2429,3341 @@ Components use virtual methods to define their inputs/outputs:
 
 Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
 
-## [👤semio🏪assets💻iconsts](semiorepo://file/semio/assets/icons.ts)
+## [👤semio🏪assets💻iconsts](semiorepo://p/u/semio/b/a/assets/f/icons.ts)
 
 Re-exports Lucide React icons with domain-specific semantic aliases.
 
-## [👤semio🏪assets💻iconsts🔖exports](semiorepo://section/Exports)
+## [👤semio🏪assets💻iconsts🔖exports](semiorepo://p/u/semio/b/a/assets/f/icons.ts/s/Exports)
 
 Re-exports of Lucide React icons with semantic aliases for the UI.
 
-## [👤semio🏪assets💻indexts](semiorepo://file/semio/assets/index.ts)
+## [👤semio🏪assets💻indexts](semiorepo://p/u/semio/b/a/assets/f/index.ts)
 
 Barrel export for all asset modules including icons, fonts, models and images.
 
-## [👤semio🏪assets💻indexts🛠️buildlookup](semiorepo://definition/semio/assets/index.ts/buildLookup)
+## [👤semio🏪assets💻indexts🛠️buildlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/i/buildLookup)
 
 Builds guid and name lookup maps from an item array
 
-## [👤semio🏪assets💻indexts🪨typelookup](semiorepo://definition/semio/assets/index.ts/typeLookup)
+## [👤semio🏪assets💻indexts🪨typelookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/c/typeLookup)
 
 Type lookup maps by guid and name
 
-## [👤semio🏪assets💻indexts🪨designlookup](semiorepo://definition/semio/assets/index.ts/designLookup)
+## [👤semio🏪assets💻indexts🪨designlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/c/designLookup)
 
 Design lookup maps by guid and name
 
-## [👤semio🏪assets💻indexts🪨portlookup](semiorepo://definition/semio/assets/index.ts/portLookup)
+## [👤semio🏪assets💻indexts🪨portlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/c/portLookup)
 
 Port lookup maps by guid and name
 
-## [👤semio🏪assets💻indexts🪨nakagincapsuletowerdesign](semiorepo://definition/semio/assets/index.ts/nakaginCapsuleTowerDesign)
+## [👤semio🏪assets💻indexts🪨nakagincapsuletowerdesign](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/c/nakaginCapsuleTowerDesign)
 
 Nakagin Capsule Tower root design reference
 
-## [👤semio🏪assets💻indexts🪨nakagincapsuletowerflatdesign](semiorepo://definition/semio/assets/index.ts/nakaginCapsuleTowerFlatDesign)
+## [👤semio🏪assets💻indexts🪨nakagincapsuletowerflatdesign](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/c/nakaginCapsuleTowerFlatDesign)
 
 Nakagin Capsule Tower Flat variant design reference
 
-## [👤semio🏪assets🛅logo💻logots](semiorepo://file/semio/assets/logo/logo.ts)
+## [👤semio🏪assets🛅logo💻logots](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts)
 
 Generates animated SVG logo from static SVG input with keyframe sequences.
 
-## [👤semio🏪assets🛅logo💻logots🔖types](semiorepo://section/Types)
+## [👤semio🏪assets🛅logo💻logots🔖types](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
 
 Type definitions for SVG transform, group, and keyframe data structures.
 
-## [👤semio🏪assets🛅logo💻logots🔖logogeneration](semiorepo://section/Logo%20Generation)
+## [👤semio🏪assets🛅logo💻logots🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
 
 Functions for parsing SVG files and generating animated SVG logos.
 
-## [👤semio🏪assets🛅logo💻logots🔖parsesvg](semiorepo://section/Parse%20SVG)
+## [👤semio🏪assets🛅logo💻logots🔖parsesvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Parse%20SVG)
 
 Parses an SVG file and returns keyframe data with group transforms and paths.
 
-## [👤semio🏪assets🛅logo💻logots🔖generatekeyframesequence](semiorepo://section/Generate%20Keyframe%20Sequence)
+## [👤semio🏪assets🛅logo💻logots🔖generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Generate%20Keyframe%20Sequence)
 
 Generates a palindromic keyframe sequence with triple repetition per frame.
 
-## [👤semio🏪assets🛅logo💻logots🔖createanimatedsvg](semiorepo://section/Create%20Animated%20SVG)
+## [👤semio🏪assets🛅logo💻logots🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Create%20Animated%20SVG)
 
 Creates an animated SVG file with SMIL animations from keyframe data.
 
-## [👤semio🏪assets🛅logo💻logots✂️transformdata](semiorepo://definition/semio/assets/logo/logo.ts/TransformData)
+## [👤semio🏪assets🛅logo💻logots✂️transformdata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/d/f/TransformData)
 
 Type definitions for SVG transform, group, and keyframe data structures.
 
-## [👤semio🏪assets🛅logo💻logots🛠️transformtomatrix](semiorepo://definition/semio/assets/logo/logo.ts/transformToMatrix)
+## [👤semio🏪assets🛅logo💻logots🛠️transformtomatrix](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/d/i/transformToMatrix)
 
 Functions for parsing SVG files and generating animated SVG logos.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻fileemptyregiontsx](semiorepo://file/semio/assets/repo/some/folder/file_empty_region.tsx)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻fileemptyregiontsx](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_empty_region.tsx)
 
 An empty region TypeScript file for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx](semiorepo://file/semio/assets/repo/some/folder/file_fixable.tsx)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx)
 
 A fixable TypeScript file for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixableexpectedtsx](semiorepo://file/semio/assets/repo/some/folder/file_fixable_expected.tsx)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixableexpectedtsx](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable_expected.tsx)
 
 A fixable TypeScript file for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs](semiorepo://file/semio/assets/repo/some/folder/file_fixed.cs)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs)
 
 A fixed CSharp class for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🛠️fixedclass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/FixedClass)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🛠️fixedclass](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/d/i/FixedClass)
 
 / <summary>Represents a fixed value container.</summary>
 / <remarks>
-/ [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes🛠️fixedclass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/Classes/FixedClass)
+/ [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🔖classes🛠️fixedclass](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/s/Classes/d/i/FixedClass)
 / </remarks>
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo](semiorepo://file/semio/assets/repo/some/folder/file_fixed.go)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go)
 
 A fixed Go module for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖package](semiorepo://section/Package)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖package](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Package)
 
 Package declaration for fixed module.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖functions](semiorepo://section/Functions)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions)
 
 Utility functions for fixed values.
 FixedValue returns a constant integer.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🛠️fixedvalue](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.go/FixedValue)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🛠️fixedvalue](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/d/i/FixedValue)
 
 FixedValue returns a constant integer.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy](semiorepo://file/semio/assets/repo/some/folder/file_fixed.py)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py)
 
 A fixed Python module for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy🔖functions](semiorepo://section/Functions)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions)
 
 Utility functions for fixed values.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx](semiorepo://file/semio/assets/repo/some/folder/file_fixed.tsx)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx)
 
 A fixed TypeScript component for testing.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖types](semiorepo://section/Types)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖types](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Types)
 
 Type definitions for the fixed component.
 Properties of a fixed component.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖components](semiorepo://section/Components)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖components](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Components)
 
 Rendering components for fixed types.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx✂️fixedtype](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.tsx/FixedType)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx✂️fixedtype](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/d/f/FixedType)
 
 Properties of a fixed component.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx✂️fixedkind](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.tsx/FixedKind)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx✂️fixedkind](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/d/f/FixedKind)
 
 Kind alternatives for fixed types.
 
-## [👤semio🖱️desktop💻forgeenvdts](semiorepo://file/semio/desktop/forge.env.d.ts)
+## [👤semio🖱️desktop💻forgeenvdts](semiorepo://p/u/semio/b/u/desktop/f/forge.env.d.ts)
 
 Type declarations for Electron Forge environment variables.
 
-## [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://section/Electron%20Fuses)
+## [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://p/u/semio/b/u/desktop/f/forge.env.d.ts/s/Electron%20Fuses)
 
 Type declarations for Electron Forge fuse options.
 
-## [👤semio🖱️desktop💻maints](semiorepo://file/semio/desktop/main.ts)
+## [👤semio🖱️desktop💻maints](semiorepo://p/u/semio/b/u/desktop/f/main.ts)
 
 Entry point for the Electron main process managing windows and lifecycle.
 
-## [👤semio🖱️desktop💻maints🔖mainprocess](semiorepo://section/Main%20Process)
+## [👤semio🖱️desktop💻maints🔖mainprocess](semiorepo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process)
 
 Electron main process that creates the browser window and registers IPC handlers.
 
-## [👤semio🖱️desktop💻maints🛠️createwindow](semiorepo://definition/semio/desktop/main.ts/createWindow)
+## [👤semio🖱️desktop💻maints🛠️createwindow](semiorepo://p/u/semio/b/u/desktop/f/main.ts/d/i/createWindow)
 
 Creates the main Electron browser window with preload and vite integration.
 
-## [👤semio🖱️desktop💻preloadts](semiorepo://file/semio/desktop/preload.ts)
+## [👤semio🖱️desktop💻preloadts](semiorepo://p/u/semio/b/u/desktop/f/preload.ts)
 
 Electron preload script exposing safe APIs to the renderer process.
 
-## [👤semio🖱️desktop💻preloadts🔖preload](semiorepo://section/Preload)
+## [👤semio🖱️desktop💻preloadts🔖preload](semiorepo://p/u/semio/b/u/desktop/f/preload.ts/s/Preload)
 
 Electron preload script exposing window controls and OS APIs to the renderer.
 
-## [👤semio🖱️desktop💻renderertsx](semiorepo://file/semio/desktop/renderer.tsx)
+## [👤semio🖱️desktop💻renderertsx](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx)
 
 Entry point for the Electron renderer process mounting the React app.
 
-## [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://section/Renderer)
+## [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer)
 
 Electron renderer process that mounts the Sketchpad React app with window controls.
 
-## [👤semio🖱️desktop💻renderertsx🛠️invokewindowcontrol](semiorepo://definition/semio/desktop/renderer.tsx/invokeWindowControl)
+## [👤semio🖱️desktop💻renderertsx🛠️invokewindowcontrol](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/i/invokeWindowControl)
 
 Invokes a window control action via the preload bridge.
 
-## [👤semio🖱️desktop💻renderertsx🪨windowevents](semiorepo://definition/semio/desktop/renderer.tsx/windowEvents)
+## [👤semio🖱️desktop💻renderertsx🪨windowevents](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/c/windowEvents)
 
 Window event handlers for minimize, maximize and close actions.
 
-## [👤semio🖱️desktop💻renderertsx🪨os](semiorepo://definition/semio/desktop/renderer.tsx/os)
+## [👤semio🖱️desktop💻renderertsx🪨os](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/c/os)
 
 OS bridge for retrieving the current user identity.
 
-## [👤semio🖱️desktop💻renderertsx🛠️app](semiorepo://definition/semio/desktop/renderer.tsx/App)
+## [👤semio🖱️desktop💻renderertsx🛠️app](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/i/App)
 
 Root React component that loads the user identity and renders the sketchpad.
 
-## [👤semio🌐docs💻indextsx](semiorepo://file/semio/docs/index.tsx)
+## [👤semio🌐docs💻indextsx](semiorepo://p/u/semio/b/w/docs/f/index.tsx)
 
 Entry point for the documentation site React app.
 
-## [👤semio🌐docs💻indextsx🔖entrypoint](semiorepo://section/Entrypoint)
+## [👤semio🌐docs💻indextsx🔖entrypoint](semiorepo://p/u/semio/b/w/docs/f/index.tsx/s/Entrypoint)
 
 Docs entrypoint that mounts the Sketchpad React component with StrictMode.
 
-## [👤semio📚engine💻buildts](semiorepo://file/semio/engine/build.ts)
+## [👤semio📚engine💻buildts](semiorepo://p/u/semio/b/l/engine/f/build.ts)
 
 Build script for the semio engine Python package.
 
-## [👤semio📚engine💻buildts🪨cwd](semiorepo://definition/semio/engine/build.ts/cwd)
+## [👤semio📚engine💻buildts🪨cwd](semiorepo://p/u/semio/b/l/engine/f/build.ts/d/c/cwd)
 
 Engine build working directory.
 
-## [👤semio📚engine💻buildts🪨args](semiorepo://definition/semio/engine/build.ts/args)
+## [👤semio📚engine💻buildts🪨args](semiorepo://p/u/semio/b/l/engine/f/build.ts/d/c/args)
 
 PyInstaller CLI arguments for bundling the engine binary.
 
-## [👤semio📚engine💻generateschemasts](semiorepo://file/semio/engine/generate-schemas.ts)
+## [👤semio📚engine💻generateschemasts](semiorepo://p/u/semio/b/l/engine/f/generate-schemas.ts)
 
 Generates JSON schemas from the engine's Python models.
 
-## [👤semio📚engine💻postbuildts](semiorepo://file/semio/engine/post-build.ts)
+## [👤semio📚engine💻postbuildts](semiorepo://p/u/semio/b/l/engine/f/post-build.ts)
 
 Post-build script for engine artifact processing and packaging.
 
-## [👤semio📚engine💻postbuildts🪨cwd](semiorepo://definition/semio/engine/post-build.ts/cwd)
+## [👤semio📚engine💻postbuildts🪨cwd](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/cwd)
 
 Post-build working directory.
 
-## [👤semio📚engine💻postbuildts🪨exepath](semiorepo://definition/semio/engine/post-build.ts/exePath)
+## [👤semio📚engine💻postbuildts🪨exepath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/exePath)
 
 Path to the PyInstaller-produced engine executable.
 
-## [👤semio📚engine💻postbuildts🪨internalpath](semiorepo://definition/semio/engine/post-build.ts/internalPath)
+## [👤semio📚engine💻postbuildts🪨internalpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/internalPath)
 
 Path to the PyInstaller internal dependencies folder.
 
-## [👤semio📚engine💻postbuildts🪨grasshopperbinpath](semiorepo://definition/semio/engine/post-build.ts/grasshopperBinPath)
+## [👤semio📚engine💻postbuildts🪨grasshopperbinpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/grasshopperBinPath)
 
 Grasshopper plugin binary output directory.
 
-## [👤semio📚engine💻postbuildts🪨grasshopperexepath](semiorepo://definition/semio/engine/post-build.ts/grasshopperExePath)
+## [👤semio📚engine💻postbuildts🪨grasshopperexepath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/grasshopperExePath)
 
 Target path for the engine executable in the Grasshopper bin folder.
 
-## [👤semio📚engine💻postbuildts🪨grasshopperinternalpath](semiorepo://definition/semio/engine/post-build.ts/grasshopperInternalPath)
+## [👤semio📚engine💻postbuildts🪨grasshopperinternalpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/grasshopperInternalPath)
 
 Target path for the internal dependencies in the Grasshopper bin folder.
 
-## [👤semio📚engine💻sqliteschemats](semiorepo://file/semio/engine/sqliteschema.ts)
+## [👤semio📚engine💻sqliteschemats](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts)
 
 Exports the SQLite schema definition for the engine database.
 
-## [👤semio📚engine💻sqliteschemats🪨dbpath](semiorepo://definition/semio/engine/sqliteschema.ts/dbPath)
+## [👤semio📚engine💻sqliteschemats🪨dbpath](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/d/c/dbPath)
 
 Path to the debug SQLite database.
 
-## [👤semio📚engine💻sqliteschemats🪨outputpath](semiorepo://definition/semio/engine/sqliteschema.ts/outputPath)
+## [👤semio📚engine💻sqliteschemats🪨outputpath](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/d/c/outputPath)
 
 Path to the exported SQL schema file.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs](semiorepo://file/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs)
 
 Main Grasshopper plugin providing domain components for Rhino.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️goo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Goo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️goo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Goo)
 
 / Generic Grasshopper data wrapper for semio entity types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️goo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/Goo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️goo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/Goo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️param](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Param)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️param](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Param)
 
 / Generic Grasshopper parameter for semio entity types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️param](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/Param)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️param](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/Param)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️enumgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EnumGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️enumgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EnumGoo)
 
 / Generic Grasshopper data wrapper for enum values.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️enumgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EnumGoo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️enumgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EnumGoo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️enumparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EnumParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️enumparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EnumParam)
 
 / Generic Grasshopper parameter for enum values.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️enumparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EnumParam)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️enumparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EnumParam)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️passthroughcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/PassthroughComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️passthroughcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/PassthroughComponent)
 
 / Abstract Grasshopper component that passes input through transformation.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️passthroughcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/PassthroughComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️passthroughcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/PassthroughComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/IdGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdGoo)
 
 / Generic Grasshopper data wrapper for entity ID types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/IdGoo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/IdGoo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/IdParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdParam)
 
 / Generic Grasshopper parameter for entity ID types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/IdParam)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/IdParam)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/IdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdComponent)
 
 / Abstract Grasshopper component for constructing entity IDs.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/IdComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/IdComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/DiffGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffGoo)
 
 / Generic Grasshopper data wrapper for entity diff types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DiffGoo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffGoo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/DiffParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffParam)
 
 / Generic Grasshopper parameter for entity diff types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DiffParam)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffParam)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/DiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffComponent)
 
 / Abstract Grasshopper component for constructing entity diffs.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DiffComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializecomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/SerializeComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeComponent)
 
 / Abstract Grasshopper component for serializing entities to JSON.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializecomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/SerializeComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializecomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/DeserializeComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeComponent)
 
 / Abstract Grasshopper component for deserializing entities from JSON.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializecomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DeserializeComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DeserializeComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializediffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/SerializeDiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeDiffComponent)
 
 / Abstract Grasshopper component for serializing diffs to JSON.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializediffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/SerializeDiffComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeDiffComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializediffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/DeserializeDiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeDiffComponent)
 
 / Abstract Grasshopper component for deserializing diffs from JSON.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializediffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DeserializeDiffComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DeserializeDiffComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializeidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/SerializeIdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeIdComponent)
 
 / Abstract Grasshopper component for serializing entity IDs to JSON.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializeidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/SerializeIdComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeIdComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializeidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/DeserializeIdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeIdComponent)
 
 / Abstract Grasshopper component for deserializing entity IDs from JSON.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializeidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DeserializeIdComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DeserializeIdComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitygoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitygoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityGoo)
 
 / Generic Grasshopper data wrapper with built-in entity validation.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitygoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityGoo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitygoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityGoo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityParam)
 
 / Generic Grasshopper parameter with entity validation support.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityParam)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityParam)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitycomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitycomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityComponent)
 
 / Abstract Grasshopper component for constructing validated entities.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitycomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitycomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityIdGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdGoo)
 
 / Generic Grasshopper data wrapper for validated entity ID types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityIdGoo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityIdGoo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityIdParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdParam)
 
 / Generic Grasshopper parameter for validated entity ID types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityIdParam)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityIdParam)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityIdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdComponent)
 
 / Abstract Grasshopper component for constructing validated entity IDs.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityIdComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityIdComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityDiffGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffGoo)
 
 / Generic Grasshopper data wrapper for validated entity diff types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityDiffGoo)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityDiffGoo)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityDiffParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffParam)
 
 / Generic Grasshopper parameter for validated entity diff types.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityDiffParam)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityDiffParam)
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/EntityDiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffComponent)
 
 / Abstract Grasshopper component for constructing validated entity diffs.
-/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityDiffComponent)
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityDiffComponent)
 
-## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs](semiorepo://file/semio/gh/Semio.Grasshopper/build-value-lists.ts)
+## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts)
 
 Generates Grasshopper value list presets from domain data.
 
-## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🪨builddir](semiorepo://definition/semio/gh/Semio.Grasshopper/build-value-lists.ts/buildDir)
+## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🪨builddir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/d/c/buildDir)
 
 Build output directory for generated value list files.
 
-## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🛠️convertcsvtovaluelist](semiorepo://definition/semio/gh/Semio.Grasshopper/build-value-lists.ts/convertCsvToValueList)
+## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🛠️convertcsvtovaluelist](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/d/i/convertCsvToValueList)
 
 Converts a CSV file into a Grasshopper value list text format.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts](semiorepo://file/semio/gh/Semio.Grasshopper/build.ts)
+## [👤semio📚gh🛅semiograsshopper💻buildts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts)
 
 Build script for the Grasshopper plugin assembly.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨cwd](semiorepo://definition/semio/gh/Semio.Grasshopper/build.ts/cwd)
+## [👤semio📚gh🛅semiograsshopper💻buildts🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/cwd)
 
 Grasshopper build working directory.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨msbuild](semiorepo://definition/semio/gh/Semio.Grasshopper/build.ts/msbuild)
+## [👤semio📚gh🛅semiograsshopper💻buildts🪨msbuild](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/msbuild)
 
 MSBuild executable path for Visual Studio 2022.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨yakdistfolder](semiorepo://definition/semio/gh/Semio.Grasshopper/build.ts/yakDistFolder)
+## [👤semio📚gh🛅semiograsshopper💻buildts🪨yakdistfolder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/yakDistFolder)
 
 Yak distribution output folder path.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨binfolder](semiorepo://definition/semio/gh/Semio.Grasshopper/build.ts/binFolder)
+## [👤semio📚gh🛅semiograsshopper💻buildts🪨binfolder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/binFolder)
 
 Debug build output folder containing compiled binaries.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨files](semiorepo://definition/semio/gh/Semio.Grasshopper/build.ts/files)
+## [👤semio📚gh🛅semiograsshopper💻buildts🪨files](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/files)
 
 List of all files in the build output folder.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/build.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts)
 
 Build script for Yak package distribution of the Grasshopper plugin.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨cwd](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/build.ts/cwd)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/d/c/cwd)
 
 Yak build working directory.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨distdir](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/build.ts/distDir)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨distdir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/d/c/distDir)
 
 Distribution directory for the Yak package output.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/build.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/d/c/yak)
 
 Yak CLI executable path for Rhino 8.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻logints](semiorepo://file/semio/gh/Semio.Grasshopper/yak/login.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻logints](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts)
 
 Authenticates with the Yak package server for plugin publishing.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/login.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/d/c/yak)
 
 Yak CLI executable path for Rhino 8.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/publish.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts)
 
 Publishes the Grasshopper plugin package to the Yak server.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨cwd](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/publish.ts/cwd)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/cwd)
 
 Distribution directory containing the built Yak package.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨manifestcontent](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/publish.ts/manifestContent)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨manifestcontent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/manifestContent)
 
 Manifest content read from the distribution folder.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨versionmatch](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/publish.ts/versionMatch)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨versionmatch](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/versionMatch)
 
 Version regex match result from the manifest.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨version](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/publish.ts/version)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/version)
 
 Extracted version string from the manifest.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨buildname](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/publish.ts/buildName)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨buildname](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/buildName)
 
 Yak package filename following the naming convention.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/publish.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/yak)
 
 Yak CLI executable path for Rhino 8.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/test-push.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts)
 
 Tests the Yak package push workflow for the Grasshopper plugin.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/test-push.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/d/c/yak)
 
 Yak CLI executable path for Rhino 8.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🪨packagefile](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/test-push.ts/packageFile)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🪨packagefile](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/d/c/packageFile)
 
 Yak package filename from CLI argument or default.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/test-search.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts)
 
 Tests Yak package search functionality for the Grasshopper plugin.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🔖script](semiorepo://section/Script)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🔖script](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/s/Script)
 
 Test script for searching the Yak package manager test server.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/test-search.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/d/c/yak)
 
 Path to the Yak package manager executable.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/unyank.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts)
 
 Restores a previously yanked version of the Grasshopper Yak package.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/unyank.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/d/c/yak)
 
 Yak CLI executable path for Rhino 7.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🪨version](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/unyank.ts/version)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/d/c/version)
 
 Semio package version from CLI argument or default.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/yank.ts)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts)
 
 Yanks a specific version of the Grasshopper Yak package from the registry.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🪨yak](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/yank.ts/yak)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts/d/c/yak)
 
 Yak CLI executable path for Rhino 7.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🪨version](semiorepo://definition/semio/gh/Semio.Grasshopper/yak/yank.ts/version)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts/d/c/version)
 
 Semio package version from CLI argument or default.
 
-## [👤semio📚go💻kitsqlitego](semiorepo://file/semio/go/kit_sqlite.go)
+## [👤semio📚go💻kitsqlitego](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go)
 
 SQLite-backed persistence layer for kit import and export operations.
 
-## [👤semio📚go💻kitsqlitego🛠️kitfromsqlite](semiorepo://definition/semio/go/kit_sqlite.go/KitFromSqlite)
+## [👤semio📚go💻kitsqlitego🛠️kitfromsqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitFromSqlite)
 
 KitFromSqlite reads a Kit from a SQLite database file
 
-## [👤semio📚go💻kitsqlitego🛠️loadtypes](semiorepo://definition/semio/go/kit_sqlite.go/loadTypes)
+## [👤semio📚go💻kitsqlitego🛠️loadtypes](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadTypes)
 
 loadTypes loads all types belonging to a kit from the database
 
-## [👤semio📚go💻kitsqlitego🛠️loaddesigns](semiorepo://definition/semio/go/kit_sqlite.go/loadDesigns)
+## [👤semio📚go💻kitsqlitego🛠️loaddesigns](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadDesigns)
 
 loadDesigns loads all designs belonging to a kit from the database
 
-## [👤semio📚go💻kitsqlitego🛠️loadpieces](semiorepo://definition/semio/go/kit_sqlite.go/loadPieces)
+## [👤semio📚go💻kitsqlitego🛠️loadpieces](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadPieces)
 
 loadPieces loads all pieces belonging to a design from the database
 
-## [👤semio📚go💻kitsqlitego🛠️loadconnections](semiorepo://definition/semio/go/kit_sqlite.go/loadConnections)
+## [👤semio📚go💻kitsqlitego🛠️loadconnections](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadConnections)
 
 loadConnections loads all connections belonging to a design from the database
 
-## [👤semio📚go💻kitsqlitego🛠️loadconnectors](semiorepo://definition/semio/go/kit_sqlite.go/loadConnectors)
+## [👤semio📚go💻kitsqlitego🛠️loadconnectors](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadConnectors)
 
 loadConnectors loads all connectors belonging to a type from the database
 
-## [👤semio📚go💻kitsqlitego🛠️kittosqlite](semiorepo://definition/semio/go/kit_sqlite.go/KitToSqlite)
+## [👤semio📚go💻kitsqlitego🛠️kittosqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToSqlite)
 
 KitToSqlite writes a Kit to a SQLite database file
 
-## [👤semio📚go💻kitsqlitego🛠️kitfromzip](semiorepo://definition/semio/go/kit_sqlite.go/KitFromZip)
+## [👤semio📚go💻kitsqlitego🛠️kitfromzip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitFromZip)
 
 KitFromZip extracts a Kit and its files from a zip archive
 
-## [👤semio📚go💻kitsqlitego🛠️kittozip](semiorepo://definition/semio/go/kit_sqlite.go/KitToZip)
+## [👤semio📚go💻kitsqlitego🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToZip)
 
 KitToZip packages a Kit and its files into a zip archive
 
-## [👤semio📚go💻semiogo](semiorepo://file/semio/go/semio.go)
+## [👤semio📚go💻semiogo](semiorepo://p/u/semio/b/l/go/f/semio.go)
 
 Core domain library in Go implementing the semio data model and operations.
 
-## [👤semio📚go💻semiogo🔖utils](semiorepo://section/Utils)
+## [👤semio📚go💻semiogo🔖utils](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Utils)
 
 Guid generates a new random 128-bit hex-encoded unique identifier.
 
-## [👤semio📚go💻semiogo🔖entityids](semiorepo://section/Entity%20IDs)
+## [👤semio📚go💻semiogo🔖entityids](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Entity%20IDs)
 
 AttributeId identifies an attribute entity by GUID.
 
-## [👤semio📚go💻semiogo🔖weakentities](semiorepo://section/Weak%20Entities)
+## [👤semio📚go💻semiogo🔖weakentities](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Weak%20Entities)
 
 Coord represents a 2D coordinate with U and V components.
 
-## [👤semio📚go💻semiogo🔖attribute](semiorepo://section/Attribute)
+## [👤semio📚go💻semiogo🔖attribute](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Attribute)
 
 Attribute represents a key-value metadata entry with optional definition.
 
-## [👤semio📚go💻semiogo🔖location](semiorepo://section/Location)
+## [👤semio📚go💻semiogo🔖location](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Location)
 
 Location represents a geographic location with longitude, latitude and optional altitude.
 
-## [👤semio📚go💻semiogo🔖author](semiorepo://section/Author)
+## [👤semio📚go💻semiogo🔖author](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Author)
 
 Author represents a named authorship entity with optional email.
 
-## [👤semio📚go💻semiogo🔖file](semiorepo://section/File)
+## [👤semio📚go💻semiogo🔖file](semiorepo://p/u/semio/b/l/go/f/semio.go/s/File)
 
 File represents a file reference entity with name, remote URL and metadata.
 
-## [👤semio📚go💻semiogo🔖folder](semiorepo://section/Folder)
+## [👤semio📚go💻semiogo🔖folder](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Folder)
 
 Folder represents a folder hierarchy entity with name and parent reference.
 
-## [👤semio📚go💻semiogo🔖benchmark](semiorepo://section/Benchmark)
+## [👤semio📚go💻semiogo🔖benchmark](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Benchmark)
 
 Benchmark represents a named metric threshold with min and max bounds.
 
-## [👤semio📚go💻semiogo🔖quality](semiorepo://section/Quality)
+## [👤semio📚go💻semiogo🔖quality](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Quality)
 
 QualityKind is a bitfield enum for quality scope classification.
 
-## [👤semio📚go💻semiogo🔖port](semiorepo://section/Port)
+## [👤semio📚go💻semiogo🔖port](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Port)
 
 Port represents a named connector port with compatible port references.
 
-## [👤semio📚go💻semiogo🔖prop](semiorepo://section/Prop)
+## [👤semio📚go💻semiogo🔖prop](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Prop)
 
 Prop represents a quality property value with optional unit.
 
-## [👤semio📚go💻semiogo🔖tag](semiorepo://section/Tag)
+## [👤semio📚go💻semiogo🔖tag](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Tag)
 
 Tag represents a named classification tag with optional description and icon.
 
-## [👤semio📚go💻semiogo🔖concept](semiorepo://section/Concept)
+## [👤semio📚go💻semiogo🔖concept](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Concept)
 
 Concept represents a named categorization concept with optional description.
 
-## [👤semio📚go💻semiogo🔖model](semiorepo://section/Model)
+## [👤semio📚go💻semiogo🔖model](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Model)
 
 Model represents a 3D model reference associated with a file and tags.
 
-## [👤semio📚go💻semiogo🔖connector](semiorepo://section/Connector)
+## [👤semio📚go💻semiogo🔖connector](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Connector)
 
 Connector represents a spatial connection point on a type with position and direction.
 
-## [👤semio📚go💻semiogo🔖type](semiorepo://section/Type)
+## [👤semio📚go💻semiogo🔖type](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Type)
 
 Type represents a component type with models, connectors and hierarchical inheritance.
 
-## [👤semio📚go💻semiogo🔖layer](semiorepo://section/Layer)
+## [👤semio📚go💻semiogo🔖layer](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Layer)
 
 Layer represents a named layer with visibility, lock and color properties.
 
-## [👤semio📚go💻semiogo🔖piece](semiorepo://section/Piece)
+## [👤semio📚go💻semiogo🔖piece](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Piece)
 
 Piece represents a placed component instance within a design.
 
-## [👤semio📚go💻semiogo🔖group](semiorepo://section/Group)
+## [👤semio📚go💻semiogo🔖group](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Group)
 
 Group represents a named collection of pieces within a design.
 
-## [👤semio📚go💻semiogo🔖side](semiorepo://section/Side)
+## [👤semio📚go💻semiogo🔖side](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Side)
 
 Side represents one end of a connection referencing a piece and optional connector.
 
-## [👤semio📚go💻semiogo🔖connection](semiorepo://section/Connection)
+## [👤semio📚go💻semiogo🔖connection](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Connection)
 
 Connection represents a spatial relationship between two pieces with transform parameters.
 
-## [👤semio📚go💻semiogo🔖stat](semiorepo://section/Stat)
+## [👤semio📚go💻semiogo🔖stat](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Stat)
 
 Stat represents a statistical quality measurement with min and max bounds.
 
-## [👤semio📚go💻semiogo🔖design](semiorepo://section/Design)
+## [👤semio📚go💻semiogo🔖design](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Design)
 
 Design represents an assembly of pieces, connections, layers and groups.
 
-## [👤semio📚go💻semiogo🔖kit](semiorepo://section/Kit)
+## [👤semio📚go💻semiogo🔖kit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit)
 
 Kit represents the root container for all domain entities.
 
-## [👤semio📚go💻semiogo🔖serialization](semiorepo://section/Serialization)
+## [👤semio📚go💻semiogo🔖serialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Serialization)
 
 SerializeKit marshals a kit to indented JSON bytes.
 
-## [👤semio📚go💻semiogo🔖helpers](semiorepo://section/Helpers)
+## [👤semio📚go💻semiogo🔖helpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Helpers)
 
 FindTypeInKit returns a pointer to the type with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🔖factories](semiorepo://section/Factories)
+## [👤semio📚go💻semiogo🔖factories](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Factories)
 
 NewKit creates a new kit with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🔖kitoperations](semiorepo://section/Kit%20Operations)
+## [👤semio📚go💻semiogo🔖kitoperations](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations)
 
 AreKitsEqual compares two kits for structural equality.
 
-## [👤semio📚go💻semiogo🔖kitdiffhelpers](semiorepo://section/Kit%20Diff%20Helpers)
+## [👤semio📚go💻semiogo🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)
 
 AddTypeToKit creates a diff that adds a single type to a kit.
 
-## [👤semio📚go💻semiogo🔖validation](semiorepo://section/Validation)
+## [👤semio📚go💻semiogo🔖validation](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation)
 
 SemioEntityKind enumerates the kinds of semio domain entities.
 
-## [👤semio📚go💻semiogo🔖validationserialization](semiorepo://section/Validation%20Serialization)
+## [👤semio📚go💻semiogo🔖validationserialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation%20Serialization)
 
 ProblemSerialized is the JSON-serializable representation of a validation problem.
 
-## [👤semio📚go💻semiogo🪨assetspath](semiorepo://definition/semio/go/semio.go/AssetsPath)
+## [👤semio📚go💻semiogo🪨assetspath](semiorepo://p/u/semio/b/l/go/f/semio.go/d/c/AssetsPath)
 
 AssetsPath holds the data fields for a AssetsPath record.
 
-## [👤semio📚go💻semiogo🛠️guid](semiorepo://definition/semio/go/semio.go/Guid)
+## [👤semio📚go💻semiogo🛠️guid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Guid)
 
 Guid generates a new random 128-bit hex-encoded unique identifier.
 
-## [👤semio📚go💻semiogo🛠️normalize](semiorepo://definition/semio/go/semio.go/Normalize)
+## [👤semio📚go💻semiogo🛠️normalize](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Normalize)
 
 Normalize converts a string to lowercase trimmed form.
 
-## [👤semio📚go💻semiogo🛠️round](semiorepo://definition/semio/go/semio.go/Round)
+## [👤semio📚go💻semiogo🛠️round](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Round)
 
 Round rounds a float64 to the specified number of decimal places.
 
-## [👤semio📚go💻semiogo🛠️deepequal](semiorepo://definition/semio/go/semio.go/DeepEqual)
+## [👤semio📚go💻semiogo🛠️deepequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeepEqual)
 
 DeepEqual compares two values for deep equality via JSON serialization.
 
-## [👤semio📚go💻semiogo✂️attributeid](semiorepo://definition/semio/go/semio.go/AttributeId)
+## [👤semio📚go💻semiogo✂️attributeid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AttributeId)
 
 AttributeId identifies an attribute entity by GUID.
 
-## [👤semio📚go💻semiogo✂️locationid](semiorepo://definition/semio/go/semio.go/LocationId)
+## [👤semio📚go💻semiogo✂️locationid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LocationId)
 
 LocationId identifies a location entity by GUID.
 
-## [👤semio📚go💻semiogo✂️authorid](semiorepo://definition/semio/go/semio.go/AuthorId)
+## [👤semio📚go💻semiogo✂️authorid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AuthorId)
 
 AuthorId identifies an author entity by GUID.
 
-## [👤semio📚go💻semiogo✂️fileid](semiorepo://definition/semio/go/semio.go/FileId)
+## [👤semio📚go💻semiogo✂️fileid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FileId)
 
 FileId identifies a file entity by GUID.
 
-## [👤semio📚go💻semiogo✂️folderid](semiorepo://definition/semio/go/semio.go/FolderId)
+## [👤semio📚go💻semiogo✂️folderid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FolderId)
 
 FolderId identifies a folder entity by GUID.
 
-## [👤semio📚go💻semiogo✂️benchmarkid](semiorepo://definition/semio/go/semio.go/BenchmarkId)
+## [👤semio📚go💻semiogo✂️benchmarkid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/BenchmarkId)
 
 BenchmarkId identifies a benchmark entity by GUID.
 
-## [👤semio📚go💻semiogo✂️qualityid](semiorepo://definition/semio/go/semio.go/QualityId)
+## [👤semio📚go💻semiogo✂️qualityid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/QualityId)
 
 QualityId identifies a quality entity by GUID.
 
-## [👤semio📚go💻semiogo✂️portid](semiorepo://definition/semio/go/semio.go/PortId)
+## [👤semio📚go💻semiogo✂️portid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PortId)
 
 PortId identifies a port entity by GUID.
 
-## [👤semio📚go💻semiogo✂️propid](semiorepo://definition/semio/go/semio.go/PropId)
+## [👤semio📚go💻semiogo✂️propid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PropId)
 
 PropId identifies a prop entity by GUID.
 
-## [👤semio📚go💻semiogo✂️tagid](semiorepo://definition/semio/go/semio.go/TagId)
+## [👤semio📚go💻semiogo✂️tagid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TagId)
 
 TagId identifies a tag entity by GUID.
 
-## [👤semio📚go💻semiogo✂️conceptid](semiorepo://definition/semio/go/semio.go/ConceptId)
+## [👤semio📚go💻semiogo✂️conceptid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConceptId)
 
 ConceptId identifies a concept entity by GUID.
 
-## [👤semio📚go💻semiogo✂️modelid](semiorepo://definition/semio/go/semio.go/ModelId)
+## [👤semio📚go💻semiogo✂️modelid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ModelId)
 
 ModelId identifies a model entity by GUID.
 
-## [👤semio📚go💻semiogo✂️connectorid](semiorepo://definition/semio/go/semio.go/ConnectorId)
+## [👤semio📚go💻semiogo✂️connectorid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectorId)
 
 ConnectorId identifies a connector entity by GUID.
 
-## [👤semio📚go💻semiogo✂️typeid](semiorepo://definition/semio/go/semio.go/TypeId)
+## [👤semio📚go💻semiogo✂️typeid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TypeId)
 
 TypeId identifies a type entity by GUID.
 
-## [👤semio📚go💻semiogo✂️layerid](semiorepo://definition/semio/go/semio.go/LayerId)
+## [👤semio📚go💻semiogo✂️layerid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LayerId)
 
 LayerId identifies a layer entity by GUID.
 
-## [👤semio📚go💻semiogo✂️pieceid](semiorepo://definition/semio/go/semio.go/PieceId)
+## [👤semio📚go💻semiogo✂️pieceid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PieceId)
 
 PieceId identifies a piece entity by GUID.
 
-## [👤semio📚go💻semiogo✂️groupid](semiorepo://definition/semio/go/semio.go/GroupId)
+## [👤semio📚go💻semiogo✂️groupid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/GroupId)
 
 GroupId identifies a group entity by GUID.
 
-## [👤semio📚go💻semiogo✂️sideid](semiorepo://definition/semio/go/semio.go/SideId)
+## [👤semio📚go💻semiogo✂️sideid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/SideId)
 
 SideId identifies a connection side by piece, design piece and connector references.
 
-## [👤semio📚go💻semiogo✂️connectionid](semiorepo://definition/semio/go/semio.go/ConnectionId)
+## [👤semio📚go💻semiogo✂️connectionid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectionId)
 
 ConnectionId identifies a connection entity by GUID.
 
-## [👤semio📚go💻semiogo✂️statid](semiorepo://definition/semio/go/semio.go/StatId)
+## [👤semio📚go💻semiogo✂️statid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/StatId)
 
 StatId identifies a stat entity by GUID.
 
-## [👤semio📚go💻semiogo✂️designid](semiorepo://definition/semio/go/semio.go/DesignId)
+## [👤semio📚go💻semiogo✂️designid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/DesignId)
 
 DesignId identifies a design entity by GUID.
 
-## [👤semio📚go💻semiogo✂️kitid](semiorepo://definition/semio/go/semio.go/KitId)
+## [👤semio📚go💻semiogo✂️kitid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/KitId)
 
 KitId identifies a kit entity by GUID.
 
-## [👤semio📚go💻semiogo✂️coord](semiorepo://definition/semio/go/semio.go/Coord)
+## [👤semio📚go💻semiogo✂️coord](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Coord)
 
 Coord represents a 2D coordinate with U and V components.
 
-## [👤semio📚go💻semiogo✂️vec](semiorepo://definition/semio/go/semio.go/Vec)
+## [👤semio📚go💻semiogo✂️vec](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Vec)
 
 Vec represents a 2D vector with U and V components.
 
-## [👤semio📚go💻semiogo✂️point](semiorepo://definition/semio/go/semio.go/Point)
+## [👤semio📚go💻semiogo✂️point](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Point)
 
 Point represents a 3D point with X, Y and Z components.
 
-## [👤semio📚go💻semiogo✂️vector](semiorepo://definition/semio/go/semio.go/Vector)
+## [👤semio📚go💻semiogo✂️vector](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Vector)
 
 Vector represents a 3D vector with X, Y and Z components.
 
-## [👤semio📚go💻semiogo✂️plane](semiorepo://definition/semio/go/semio.go/Plane)
+## [👤semio📚go💻semiogo✂️plane](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Plane)
 
 Plane represents a 3D plane defined by origin, X-axis and Y-axis.
 
-## [👤semio📚go💻semiogo✂️camera](semiorepo://definition/semio/go/semio.go/Camera)
+## [👤semio📚go💻semiogo✂️camera](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Camera)
 
 Camera represents a 3D camera with position, forward and up vectors.
 
-## [👤semio📚go💻semiogo✂️attribute](semiorepo://definition/semio/go/semio.go/Attribute)
+## [👤semio📚go💻semiogo✂️attribute](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Attribute)
 
 Attribute represents a key-value metadata entry with optional definition.
 
-## [👤semio📚go💻semiogo✂️attributediff](semiorepo://definition/semio/go/semio.go/AttributeDiff)
+## [👤semio📚go💻semiogo✂️attributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AttributeDiff)
 
 AttributeDiff represents changes to an attribute entity.
 
-## [👤semio📚go💻semiogo✂️attributesdiff](semiorepo://definition/semio/go/semio.go/AttributesDiff)
+## [👤semio📚go💻semiogo✂️attributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AttributesDiff)
 
 AttributesDiff represents a collection of attribute additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️location](semiorepo://definition/semio/go/semio.go/Location)
+## [👤semio📚go💻semiogo✂️location](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Location)
 
 Location represents a geographic location with longitude, latitude and optional altitude.
 
-## [👤semio📚go💻semiogo✂️locationdiff](semiorepo://definition/semio/go/semio.go/LocationDiff)
+## [👤semio📚go💻semiogo✂️locationdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LocationDiff)
 
 LocationDiff represents changes to a location entity.
 
-## [👤semio📚go💻semiogo✂️author](semiorepo://definition/semio/go/semio.go/Author)
+## [👤semio📚go💻semiogo✂️author](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Author)
 
 Author represents a named authorship entity with optional email.
 
-## [👤semio📚go💻semiogo✂️authordiff](semiorepo://definition/semio/go/semio.go/AuthorDiff)
+## [👤semio📚go💻semiogo✂️authordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AuthorDiff)
 
 AuthorDiff represents changes to an author entity.
 
-## [👤semio📚go💻semiogo✂️authorsdiff](semiorepo://definition/semio/go/semio.go/AuthorsDiff)
+## [👤semio📚go💻semiogo✂️authorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AuthorsDiff)
 
 AuthorsDiff represents a collection of author additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️file](semiorepo://definition/semio/go/semio.go/File)
+## [👤semio📚go💻semiogo✂️file](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/File)
 
 File represents a file reference entity with name, remote URL and metadata.
 
-## [👤semio📚go💻semiogo✂️filediff](semiorepo://definition/semio/go/semio.go/FileDiff)
+## [👤semio📚go💻semiogo✂️filediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FileDiff)
 
 FileDiff represents changes to a file entity.
 
-## [👤semio📚go💻semiogo✂️filesdiff](semiorepo://definition/semio/go/semio.go/FilesDiff)
+## [👤semio📚go💻semiogo✂️filesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FilesDiff)
 
 FilesDiff represents a collection of file additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️folder](semiorepo://definition/semio/go/semio.go/Folder)
+## [👤semio📚go💻semiogo✂️folder](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Folder)
 
 Folder represents a folder hierarchy entity with name and parent reference.
 
-## [👤semio📚go💻semiogo✂️folderdiff](semiorepo://definition/semio/go/semio.go/FolderDiff)
+## [👤semio📚go💻semiogo✂️folderdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FolderDiff)
 
 FolderDiff represents changes to a folder entity.
 
-## [👤semio📚go💻semiogo✂️foldersdiff](semiorepo://definition/semio/go/semio.go/FoldersDiff)
+## [👤semio📚go💻semiogo✂️foldersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FoldersDiff)
 
 FoldersDiff represents a collection of folder additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️benchmark](semiorepo://definition/semio/go/semio.go/Benchmark)
+## [👤semio📚go💻semiogo✂️benchmark](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Benchmark)
 
 Benchmark represents a named metric threshold with min and max bounds.
 
-## [👤semio📚go💻semiogo✂️benchmarkdiff](semiorepo://definition/semio/go/semio.go/BenchmarkDiff)
+## [👤semio📚go💻semiogo✂️benchmarkdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/BenchmarkDiff)
 
 BenchmarkDiff represents changes to a benchmark entity.
 
-## [👤semio📚go💻semiogo✂️benchmarksdiff](semiorepo://definition/semio/go/semio.go/BenchmarksDiff)
+## [👤semio📚go💻semiogo✂️benchmarksdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/BenchmarksDiff)
 
 BenchmarksDiff represents a collection of benchmark additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️qualitykind](semiorepo://definition/semio/go/semio.go/QualityKind)
+## [👤semio📚go💻semiogo✂️qualitykind](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/QualityKind)
 
 QualityKind is a bitfield enum for quality scope classification.
 
-## [👤semio📚go💻semiogo✂️quality](semiorepo://definition/semio/go/semio.go/Quality)
+## [👤semio📚go💻semiogo✂️quality](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Quality)
 
 Quality represents a measurable property with formula, units and benchmarks.
 
-## [👤semio📚go💻semiogo✂️qualitydiff](semiorepo://definition/semio/go/semio.go/QualityDiff)
+## [👤semio📚go💻semiogo✂️qualitydiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/QualityDiff)
 
 QualityDiff represents changes to a quality entity.
 
-## [👤semio📚go💻semiogo✂️qualitiesdiff](semiorepo://definition/semio/go/semio.go/QualitiesDiff)
+## [👤semio📚go💻semiogo✂️qualitiesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/QualitiesDiff)
 
 QualitiesDiff represents a collection of quality additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️port](semiorepo://definition/semio/go/semio.go/Port)
+## [👤semio📚go💻semiogo✂️port](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Port)
 
 Port represents a named connector port with compatible port references.
 
-## [👤semio📚go💻semiogo✂️portdiff](semiorepo://definition/semio/go/semio.go/PortDiff)
+## [👤semio📚go💻semiogo✂️portdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PortDiff)
 
 PortDiff represents changes to a port entity.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/UnmarshalJSON)
+## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://definition/semio/go/semio.go/HasField)
+## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField returns whether a JSON field was present in the unmarshaled data.
 
-## [👤semio📚go💻semiogo✂️portsdiff](semiorepo://definition/semio/go/semio.go/PortsDiff)
+## [👤semio📚go💻semiogo✂️portsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PortsDiff)
 
 PortsDiff represents a collection of port additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️prop](semiorepo://definition/semio/go/semio.go/Prop)
+## [👤semio📚go💻semiogo✂️prop](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Prop)
 
 Prop represents a quality property value with optional unit.
 
-## [👤semio📚go💻semiogo✂️propdiff](semiorepo://definition/semio/go/semio.go/PropDiff)
+## [👤semio📚go💻semiogo✂️propdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PropDiff)
 
 PropDiff represents changes to a prop entity.
 
-## [👤semio📚go💻semiogo✂️propsdiff](semiorepo://definition/semio/go/semio.go/PropsDiff)
+## [👤semio📚go💻semiogo✂️propsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PropsDiff)
 
 PropsDiff represents a collection of prop additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️tag](semiorepo://definition/semio/go/semio.go/Tag)
+## [👤semio📚go💻semiogo✂️tag](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Tag)
 
 Tag represents a named classification tag with optional description and icon.
 
-## [👤semio📚go💻semiogo✂️tagdiff](semiorepo://definition/semio/go/semio.go/TagDiff)
+## [👤semio📚go💻semiogo✂️tagdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TagDiff)
 
 TagDiff represents changes to a tag entity.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/UnmarshalJSON)
+## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://definition/semio/go/semio.go/HasField)
+## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField returns whether a JSON field was present in the unmarshaled data.
 
-## [👤semio📚go💻semiogo✂️tagsdiff](semiorepo://definition/semio/go/semio.go/TagsDiff)
+## [👤semio📚go💻semiogo✂️tagsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TagsDiff)
 
 TagsDiff represents a collection of tag additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️concept](semiorepo://definition/semio/go/semio.go/Concept)
+## [👤semio📚go💻semiogo✂️concept](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Concept)
 
 Concept represents a named categorization concept with optional description.
 
-## [👤semio📚go💻semiogo✂️conceptdiff](semiorepo://definition/semio/go/semio.go/ConceptDiff)
+## [👤semio📚go💻semiogo✂️conceptdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConceptDiff)
 
 ConceptDiff represents changes to a concept entity.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/UnmarshalJSON)
+## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://definition/semio/go/semio.go/HasField)
+## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField returns whether a JSON field was present in the unmarshaled data.
 
-## [👤semio📚go💻semiogo✂️conceptsdiff](semiorepo://definition/semio/go/semio.go/ConceptsDiff)
+## [👤semio📚go💻semiogo✂️conceptsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConceptsDiff)
 
 ConceptsDiff represents a collection of concept additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️model](semiorepo://definition/semio/go/semio.go/Model)
+## [👤semio📚go💻semiogo✂️model](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Model)
 
 Model represents a 3D model reference associated with a file and tags.
 
-## [👤semio📚go💻semiogo✂️modeldiff](semiorepo://definition/semio/go/semio.go/ModelDiff)
+## [👤semio📚go💻semiogo✂️modeldiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ModelDiff)
 
 ModelDiff represents changes to a model entity.
 
-## [👤semio📚go💻semiogo✂️modelsdiff](semiorepo://definition/semio/go/semio.go/ModelsDiff)
+## [👤semio📚go💻semiogo✂️modelsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ModelsDiff)
 
 ModelsDiff represents a collection of model additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️connector](semiorepo://definition/semio/go/semio.go/Connector)
+## [👤semio📚go💻semiogo✂️connector](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Connector)
 
 Connector represents a spatial connection point on a type with position and direction.
 
-## [👤semio📚go💻semiogo✂️pointdiff](semiorepo://definition/semio/go/semio.go/PointDiff)
+## [👤semio📚go💻semiogo✂️pointdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PointDiff)
 
 PointDiff represents changes to a 3D point.
 
-## [👤semio📚go💻semiogo✂️vectordiff](semiorepo://definition/semio/go/semio.go/VectorDiff)
+## [👤semio📚go💻semiogo✂️vectordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/VectorDiff)
 
 VectorDiff represents changes to a 3D vector.
 
-## [👤semio📚go💻semiogo✂️connectordiff](semiorepo://definition/semio/go/semio.go/ConnectorDiff)
+## [👤semio📚go💻semiogo✂️connectordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectorDiff)
 
 ConnectorDiff represents changes to a connector entity.
 
-## [👤semio📚go💻semiogo✂️connectorsdiff](semiorepo://definition/semio/go/semio.go/ConnectorsDiff)
+## [👤semio📚go💻semiogo✂️connectorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectorsDiff)
 
 ConnectorsDiff represents a collection of connector additions, removals and updates.
 
-## [👤semio📚go💻semiogo🛠️type](semiorepo://definition/semio/go/semio.go/Type)
+## [👤semio📚go💻semiogo🛠️type](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Type)
 
 Type represents a component type with models, connectors and hierarchical inheritance.
 
-## [👤semio📚go💻semiogo✂️typediff](semiorepo://definition/semio/go/semio.go/TypeDiff)
+## [👤semio📚go💻semiogo✂️typediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TypeDiff)
 
 TypeDiff represents changes to a type entity.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/UnmarshalJSON)
+## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://definition/semio/go/semio.go/HasField)
+## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField returns whether a JSON field was present in the unmarshaled data.
 
-## [👤semio📚go💻semiogo✂️typesdiff](semiorepo://definition/semio/go/semio.go/TypesDiff)
+## [👤semio📚go💻semiogo✂️typesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TypesDiff)
 
 TypesDiff represents a collection of type additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️layer](semiorepo://definition/semio/go/semio.go/Layer)
+## [👤semio📚go💻semiogo✂️layer](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Layer)
 
 Layer represents a named layer with visibility, lock and color properties.
 
-## [👤semio📚go💻semiogo✂️layerdiff](semiorepo://definition/semio/go/semio.go/LayerDiff)
+## [👤semio📚go💻semiogo✂️layerdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LayerDiff)
 
 LayerDiff represents changes to a layer entity.
 
-## [👤semio📚go💻semiogo✂️layersdiff](semiorepo://definition/semio/go/semio.go/LayersDiff)
+## [👤semio📚go💻semiogo✂️layersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LayersDiff)
 
 LayersDiff represents a collection of layer additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️piece](semiorepo://definition/semio/go/semio.go/Piece)
+## [👤semio📚go💻semiogo✂️piece](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Piece)
 
 Piece represents a placed component instance within a design.
 
-## [👤semio📚go💻semiogo✂️coorddiff](semiorepo://definition/semio/go/semio.go/CoordDiff)
+## [👤semio📚go💻semiogo✂️coorddiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/CoordDiff)
 
 CoordDiff represents changes to a 2D coordinate.
 
-## [👤semio📚go💻semiogo✂️planediff](semiorepo://definition/semio/go/semio.go/PlaneDiff)
+## [👤semio📚go💻semiogo✂️planediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PlaneDiff)
 
 PlaneDiff represents changes to a 3D plane.
 
-## [👤semio📚go💻semiogo✂️piecediff](semiorepo://definition/semio/go/semio.go/PieceDiff)
+## [👤semio📚go💻semiogo✂️piecediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PieceDiff)
 
 PieceDiff represents changes to a piece entity.
 
-## [👤semio📚go💻semiogo✂️piecesdiff](semiorepo://definition/semio/go/semio.go/PiecesDiff)
+## [👤semio📚go💻semiogo✂️piecesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PiecesDiff)
 
 PiecesDiff represents a collection of piece additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️group](semiorepo://definition/semio/go/semio.go/Group)
+## [👤semio📚go💻semiogo✂️group](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Group)
 
 Group represents a named collection of pieces within a design.
 
-## [👤semio📚go💻semiogo✂️groupdiff](semiorepo://definition/semio/go/semio.go/GroupDiff)
+## [👤semio📚go💻semiogo✂️groupdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/GroupDiff)
 
 GroupDiff represents changes to a group entity.
 
-## [👤semio📚go💻semiogo✂️groupsdiff](semiorepo://definition/semio/go/semio.go/GroupsDiff)
+## [👤semio📚go💻semiogo✂️groupsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/GroupsDiff)
 
 GroupsDiff represents a collection of group additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️side](semiorepo://definition/semio/go/semio.go/Side)
+## [👤semio📚go💻semiogo✂️side](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Side)
 
 Side represents one end of a connection referencing a piece and optional connector.
 
-## [👤semio📚go💻semiogo✂️sidediff](semiorepo://definition/semio/go/semio.go/SideDiff)
+## [👤semio📚go💻semiogo✂️sidediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/SideDiff)
 
 SideDiff represents changes to a connection side.
 
-## [👤semio📚go💻semiogo✂️connection](semiorepo://definition/semio/go/semio.go/Connection)
+## [👤semio📚go💻semiogo✂️connection](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Connection)
 
 Connection represents a spatial relationship between two pieces with transform parameters.
 
-## [👤semio📚go💻semiogo✂️connectiondiff](semiorepo://definition/semio/go/semio.go/ConnectionDiff)
+## [👤semio📚go💻semiogo✂️connectiondiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectionDiff)
 
 ConnectionDiff represents changes to a connection entity.
 
-## [👤semio📚go💻semiogo✂️connectionsdiff](semiorepo://definition/semio/go/semio.go/ConnectionsDiff)
+## [👤semio📚go💻semiogo✂️connectionsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectionsDiff)
 
 ConnectionsDiff represents a collection of connection additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️stat](semiorepo://definition/semio/go/semio.go/Stat)
+## [👤semio📚go💻semiogo✂️stat](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Stat)
 
 Stat represents a statistical quality measurement with min and max bounds.
 
-## [👤semio📚go💻semiogo✂️statdiff](semiorepo://definition/semio/go/semio.go/StatDiff)
+## [👤semio📚go💻semiogo✂️statdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/StatDiff)
 
 StatDiff represents changes to a stat entity.
 
-## [👤semio📚go💻semiogo✂️statsdiff](semiorepo://definition/semio/go/semio.go/StatsDiff)
+## [👤semio📚go💻semiogo✂️statsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/StatsDiff)
 
 StatsDiff represents a collection of stat additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️design](semiorepo://definition/semio/go/semio.go/Design)
+## [👤semio📚go💻semiogo✂️design](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Design)
 
 Design represents an assembly of pieces, connections, layers and groups.
 
-## [👤semio📚go💻semiogo✂️cameradiff](semiorepo://definition/semio/go/semio.go/CameraDiff)
+## [👤semio📚go💻semiogo✂️cameradiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/CameraDiff)
 
 CameraDiff represents changes to a camera view.
 
-## [👤semio📚go💻semiogo✂️designdiff](semiorepo://definition/semio/go/semio.go/DesignDiff)
+## [👤semio📚go💻semiogo✂️designdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/DesignDiff)
 
 DesignDiff represents changes to a design entity.
 
-## [👤semio📚go💻semiogo✂️designsdiff](semiorepo://definition/semio/go/semio.go/DesignsDiff)
+## [👤semio📚go💻semiogo✂️designsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/DesignsDiff)
 
 DesignsDiff represents a collection of design additions, removals and updates.
 
-## [👤semio📚go💻semiogo✂️kit](semiorepo://definition/semio/go/semio.go/Kit)
+## [👤semio📚go💻semiogo✂️kit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Kit)
 
 Kit represents the root container for all domain entities.
 
-## [👤semio📚go💻semiogo✂️kitdiff](semiorepo://definition/semio/go/semio.go/KitDiff)
+## [👤semio📚go💻semiogo✂️kitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/KitDiff)
 
 KitDiff represents changes to a kit entity.
 
-## [👤semio📚go💻semiogo✂️kitsdiff](semiorepo://definition/semio/go/semio.go/KitsDiff)
+## [👤semio📚go💻semiogo✂️kitsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/KitsDiff)
 
 KitsDiff represents a collection of kit additions, removals and updates.
 
-## [👤semio📚go💻semiogo🛠️serializekit](semiorepo://definition/semio/go/semio.go/SerializeKit)
+## [👤semio📚go💻semiogo🛠️serializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKit)
 
 SerializeKit marshals a kit to indented JSON bytes.
 
-## [👤semio📚go💻semiogo🛠️deserializekit](semiorepo://definition/semio/go/semio.go/DeserializeKit)
+## [👤semio📚go💻semiogo🛠️deserializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeserializeKit)
 
 DeserializeKit unmarshals JSON bytes into a kit.
 
-## [👤semio📚go💻semiogo🛠️serializekitdiff](semiorepo://definition/semio/go/semio.go/SerializeKitDiff)
+## [👤semio📚go💻semiogo🛠️serializekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKitDiff)
 
 SerializeKitDiff marshals a kit diff to indented JSON bytes.
 
-## [👤semio📚go💻semiogo🛠️deserializekitdiff](semiorepo://definition/semio/go/semio.go/DeserializeKitDiff)
+## [👤semio📚go💻semiogo🛠️deserializekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeserializeKitDiff)
 
 DeserializeKitDiff unmarshals JSON bytes into a kit diff.
 
-## [👤semio📚go💻semiogo🛠️findtypeinkit](semiorepo://definition/semio/go/semio.go/FindTypeInKit)
+## [👤semio📚go💻semiogo🛠️findtypeinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindTypeInKit)
 
 FindTypeInKit returns a pointer to the type with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️finddesigninkit](semiorepo://definition/semio/go/semio.go/FindDesignInKit)
+## [👤semio📚go💻semiogo🛠️finddesigninkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindDesignInKit)
 
 FindDesignInKit returns a pointer to the design with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findpieceindesign](semiorepo://definition/semio/go/semio.go/FindPieceInDesign)
+## [👤semio📚go💻semiogo🛠️findpieceindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindPieceInDesign)
 
 FindPieceInDesign returns a pointer to the piece with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findconnectionindesign](semiorepo://definition/semio/go/semio.go/FindConnectionInDesign)
+## [👤semio📚go💻semiogo🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConnectionInDesign)
 
 FindConnectionInDesign returns a pointer to the connection with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findconnectorintype](semiorepo://definition/semio/go/semio.go/FindConnectorInType)
+## [👤semio📚go💻semiogo🛠️findconnectorintype](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConnectorInType)
 
 FindConnectorInType returns a pointer to the connector with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findfileinkit](semiorepo://definition/semio/go/semio.go/FindFileInKit)
+## [👤semio📚go💻semiogo🛠️findfileinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindFileInKit)
 
 FindFileInKit returns a pointer to the file with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findfolderinkit](semiorepo://definition/semio/go/semio.go/FindFolderInKit)
+## [👤semio📚go💻semiogo🛠️findfolderinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindFolderInKit)
 
 FindFolderInKit returns a pointer to the folder with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findqualityinkit](semiorepo://definition/semio/go/semio.go/FindQualityInKit)
+## [👤semio📚go💻semiogo🛠️findqualityinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindQualityInKit)
 
 FindQualityInKit returns a pointer to the quality with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findportinkit](semiorepo://definition/semio/go/semio.go/FindPortInKit)
+## [👤semio📚go💻semiogo🛠️findportinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindPortInKit)
 
 FindPortInKit returns a pointer to the port with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findtaginkit](semiorepo://definition/semio/go/semio.go/FindTagInKit)
+## [👤semio📚go💻semiogo🛠️findtaginkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindTagInKit)
 
 FindTagInKit returns a pointer to the tag with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findconceptinkit](semiorepo://definition/semio/go/semio.go/FindConceptInKit)
+## [👤semio📚go💻semiogo🛠️findconceptinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConceptInKit)
 
 FindConceptInKit returns a pointer to the concept with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️findauthorinkit](semiorepo://definition/semio/go/semio.go/FindAuthorInKit)
+## [👤semio📚go💻semiogo🛠️findauthorinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindAuthorInKit)
 
 FindAuthorInKit returns a pointer to the author with the given GUID or nil.
 
-## [👤semio📚go💻semiogo🛠️newkit](semiorepo://definition/semio/go/semio.go/NewKit)
+## [👤semio📚go💻semiogo🛠️newkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewKit)
 
 NewKit creates a new kit with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newtype](semiorepo://definition/semio/go/semio.go/NewType)
+## [👤semio📚go💻semiogo🛠️newtype](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewType)
 
 NewType creates a new type with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newdesign](semiorepo://definition/semio/go/semio.go/NewDesign)
+## [👤semio📚go💻semiogo🛠️newdesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewDesign)
 
 NewDesign creates a new design with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newpiece](semiorepo://definition/semio/go/semio.go/NewPiece)
+## [👤semio📚go💻semiogo🛠️newpiece](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewPiece)
 
 NewPiece creates a new piece with a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newconnection](semiorepo://definition/semio/go/semio.go/NewConnection)
+## [👤semio📚go💻semiogo🛠️newconnection](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConnection)
 
 NewConnection creates a new connection between two pieces by their GUIDs.
 
-## [👤semio📚go💻semiogo🛠️newconnector](semiorepo://definition/semio/go/semio.go/NewConnector)
+## [👤semio📚go💻semiogo🛠️newconnector](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConnector)
 
 NewConnector creates a new connector with position, direction and parameter t.
 
-## [👤semio📚go💻semiogo🛠️newfile](semiorepo://definition/semio/go/semio.go/NewFile)
+## [👤semio📚go💻semiogo🛠️newfile](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewFile)
 
 NewFile creates a new file with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newfolder](semiorepo://definition/semio/go/semio.go/NewFolder)
+## [👤semio📚go💻semiogo🛠️newfolder](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewFolder)
 
 NewFolder creates a new folder with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newquality](semiorepo://definition/semio/go/semio.go/NewQuality)
+## [👤semio📚go💻semiogo🛠️newquality](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewQuality)
 
 NewQuality creates a new quality with the given key, name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newport](semiorepo://definition/semio/go/semio.go/NewPort)
+## [👤semio📚go💻semiogo🛠️newport](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewPort)
 
 NewPort creates a new port with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newtag](semiorepo://definition/semio/go/semio.go/NewTag)
+## [👤semio📚go💻semiogo🛠️newtag](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewTag)
 
 NewTag creates a new tag with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newconcept](semiorepo://definition/semio/go/semio.go/NewConcept)
+## [👤semio📚go💻semiogo🛠️newconcept](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConcept)
 
 NewConcept creates a new concept with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️newauthor](semiorepo://definition/semio/go/semio.go/NewAuthor)
+## [👤semio📚go💻semiogo🛠️newauthor](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewAuthor)
 
 NewAuthor creates a new author with the given name and a generated GUID.
 
-## [👤semio📚go💻semiogo🛠️arekitsequal](semiorepo://definition/semio/go/semio.go/AreKitsEqual)
+## [👤semio📚go💻semiogo🛠️arekitsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreKitsEqual)
 
 AreKitsEqual compares two kits for structural equality.
 
-## [👤semio📚go💻semiogo🛠️arekitdiffsequal](semiorepo://definition/semio/go/semio.go/AreKitDiffsEqual)
+## [👤semio📚go💻semiogo🛠️arekitdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreKitDiffsEqual)
 
 AreKitDiffsEqual compares two kit diffs for structural equality.
 
-## [👤semio📚go💻semiogo🛠️getkitdiff](semiorepo://definition/semio/go/semio.go/GetKitDiff)
+## [👤semio📚go💻semiogo🛠️getkitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GetKitDiff)
 
 GetKitDiff computes the diff between a before and after kit state.
 
-## [👤semio📚go💻semiogo🛠️inversekitdiff](semiorepo://definition/semio/go/semio.go/InverseKitDiff)
+## [👤semio📚go💻semiogo🛠️inversekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/InverseKitDiff)
 
 InverseKitDiff computes the reverse diff that undoes an applied diff.
 
-## [👤semio📚go💻semiogo🛠️applykitdiff](semiorepo://definition/semio/go/semio.go/ApplyKitDiff)
+## [👤semio📚go💻semiogo🛠️applykitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyKitDiff)
 
 ApplyKitDiff applies a diff to a base kit producing the updated kit.
 
-## [👤semio📚go💻semiogo🛠️filterdesignswithoutparent](semiorepo://definition/semio/go/semio.go/FilterDesignsWithoutParent)
+## [👤semio📚go💻semiogo🛠️filterdesignswithoutparent](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FilterDesignsWithoutParent)
 
 FilterDesignsWithoutParent returns only root-level designs with no parent.
 
-## [👤semio📚go💻semiogo🛠️addtypetokit](semiorepo://definition/semio/go/semio.go/AddTypeToKit)
+## [👤semio📚go💻semiogo🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTypeToKit)
 
 AddTypeToKit creates a diff that adds a single type to a kit.
 
-## [👤semio📚go💻semiogo🛠️removetypefromkit](semiorepo://definition/semio/go/semio.go/RemoveTypeFromKit)
+## [👤semio📚go💻semiogo🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTypeFromKit)
 
 RemoveTypeFromKit creates a diff that removes a type by GUID.
 
-## [👤semio📚go💻semiogo🛠️adddesigntokit](semiorepo://definition/semio/go/semio.go/AddDesignToKit)
+## [👤semio📚go💻semiogo🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddDesignToKit)
 
 AddDesignToKit creates a diff that adds a single design to a kit.
 
-## [👤semio📚go💻semiogo🛠️removedesignfromkit](semiorepo://definition/semio/go/semio.go/RemoveDesignFromKit)
+## [👤semio📚go💻semiogo🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveDesignFromKit)
 
 RemoveDesignFromKit creates a diff that removes a design by GUID.
 
-## [👤semio📚go💻semiogo🛠️addfiletokit](semiorepo://definition/semio/go/semio.go/AddFileToKit)
+## [👤semio📚go💻semiogo🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddFileToKit)
 
 AddFileToKit creates a diff that adds a single file to a kit.
 
-## [👤semio📚go💻semiogo🛠️removefilefromkit](semiorepo://definition/semio/go/semio.go/RemoveFileFromKit)
+## [👤semio📚go💻semiogo🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveFileFromKit)
 
 RemoveFileFromKit creates a diff that removes a file by GUID.
 
-## [👤semio📚go💻semiogo🛠️addporttokit](semiorepo://definition/semio/go/semio.go/AddPortToKit)
+## [👤semio📚go💻semiogo🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddPortToKit)
 
 AddPortToKit creates a diff that adds a single port to a kit.
 
-## [👤semio📚go💻semiogo🛠️removeportfromkit](semiorepo://definition/semio/go/semio.go/RemovePortFromKit)
+## [👤semio📚go💻semiogo🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemovePortFromKit)
 
 RemovePortFromKit creates a diff that removes a port by GUID.
 
-## [👤semio📚go💻semiogo🛠️addtagtokit](semiorepo://definition/semio/go/semio.go/AddTagToKit)
+## [👤semio📚go💻semiogo🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTagToKit)
 
 AddTagToKit creates a diff that adds a single tag to a kit.
 
-## [👤semio📚go💻semiogo🛠️removetagfromkit](semiorepo://definition/semio/go/semio.go/RemoveTagFromKit)
+## [👤semio📚go💻semiogo🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTagFromKit)
 
 RemoveTagFromKit creates a diff that removes a tag by GUID.
 
-## [👤semio📚go💻semiogo🛠️addconcepttokit](semiorepo://definition/semio/go/semio.go/AddConceptToKit)
+## [👤semio📚go💻semiogo🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddConceptToKit)
 
 AddConceptToKit creates a diff that adds a single concept to a kit.
 
-## [👤semio📚go💻semiogo🛠️removeconceptfromkit](semiorepo://definition/semio/go/semio.go/RemoveConceptFromKit)
+## [👤semio📚go💻semiogo🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveConceptFromKit)
 
 RemoveConceptFromKit creates a diff that removes a concept by GUID.
 
-## [👤semio📚go💻semiogo✂️semioentitykind](semiorepo://definition/semio/go/semio.go/SemioEntityKind)
+## [👤semio📚go💻semiogo✂️semioentitykind](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/SemioEntityKind)
 
 SemioEntityKind enumerates the kinds of semio domain entities.
 
-## [👤semio📚go💻semiogo✂️severity](semiorepo://definition/semio/go/semio.go/Severity)
+## [👤semio📚go💻semiogo✂️severity](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Severity)
 
 Severity enumerates validation problem severity levels.
 
-## [👤semio📚go💻semiogo✂️domainlocation](semiorepo://definition/semio/go/semio.go/DomainLocation)
+## [👤semio📚go💻semiogo✂️domainlocation](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/DomainLocation)
 
 DomainLocation identifies the entity and field where a validation problem occurs.
 
-## [👤semio📚go💻semiogo✂️fix](semiorepo://definition/semio/go/semio.go/Fix)
+## [👤semio📚go💻semiogo✂️fix](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Fix)
 
 Fix represents a suggested correction for a validation problem.
 
-## [👤semio📚go💻semiogo✂️problem](semiorepo://definition/semio/go/semio.go/Problem)
+## [👤semio📚go💻semiogo✂️problem](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Problem)
 
 Problem represents a single validation constraint breach.
 
-## [👤semio📚go💻semiogo✂️validationresult](semiorepo://definition/semio/go/semio.go/ValidationResult)
+## [👤semio📚go💻semiogo✂️validationresult](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ValidationResult)
 
 ValidationResult contains all problems found during kit validation.
 
-## [👤semio📚go💻semiogo✂️validationcontext](semiorepo://definition/semio/go/semio.go/ValidationContext)
+## [👤semio📚go💻semiogo✂️validationcontext](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ValidationContext)
 
 ValidationContext provides indexed access to kit entities for constraint evaluation.
 
-## [👤semio📚go💻semiogo✂️constraint](semiorepo://definition/semio/go/semio.go/Constraint)
+## [👤semio📚go💻semiogo✂️constraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Constraint)
 
 Constraint is a function that evaluates a validation rule against a kit context.
 
-## [👤semio📚go💻semiogo🛠️guiduniquenessconstraint](semiorepo://definition/semio/go/semio.go/GuidUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️guiduniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GuidUniquenessConstraint)
 
 GuidUniquenessConstraint checks that all entity GUIDs are unique within a kit.
 
-## [👤semio📚go💻semiogo🛠️typenameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/TypeNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️typenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/TypeNameUniquenessConstraint)
 
 TypeNameUniquenessConstraint checks that sibling type names are unique.
 
-## [👤semio📚go💻semiogo🛠️designnameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/DesignNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️designnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DesignNameUniquenessConstraint)
 
 DesignNameUniquenessConstraint checks that sibling design names are unique.
 
-## [👤semio📚go💻semiogo🛠️piecenameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/PieceNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️piecenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/PieceNameUniquenessConstraint)
 
 PieceNameUniquenessConstraint checks that piece names are unique within each design.
 
-## [👤semio📚go💻semiogo🛠️qualitynameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/QualityNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️qualitynameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/QualityNameUniquenessConstraint)
 
 QualityNameUniquenessConstraint checks that quality names are unique within a kit.
 
-## [👤semio📚go💻semiogo🛠️portnameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/PortNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️portnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/PortNameUniquenessConstraint)
 
 PortNameUniquenessConstraint checks that port names are unique within a kit.
 
-## [👤semio📚go💻semiogo🛠️filenameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/FileNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️filenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FileNameUniquenessConstraint)
 
 FileNameUniquenessConstraint checks that file names are unique within a kit.
 
-## [👤semio📚go💻semiogo🛠️foldernameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/FolderNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️foldernameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FolderNameUniquenessConstraint)
 
 FolderNameUniquenessConstraint checks that sibling folder names are unique.
 
-## [👤semio📚go💻semiogo🛠️connectornameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/ConnectorNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️connectornameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ConnectorNameUniquenessConstraint)
 
 ConnectorNameUniquenessConstraint checks that connector names are unique within each type.
 
-## [👤semio📚go💻semiogo🛠️modelnameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/ModelNameUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️modelnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ModelNameUniquenessConstraint)
 
 ModelNameUniquenessConstraint checks that model names are unique within each type.
 
-## [👤semio📚go💻semiogo🛠️layerpathuniquenessconstraint](semiorepo://definition/semio/go/semio.go/LayerPathUniquenessConstraint)
+## [👤semio📚go💻semiogo🛠️layerpathuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/LayerPathUniquenessConstraint)
 
 LayerPathUniquenessConstraint checks that layer paths are unique within each design.
 
-## [👤semio📚go💻semiogo🪨defaultconstraints](semiorepo://definition/semio/go/semio.go/DefaultConstraints)
+## [👤semio📚go💻semiogo🪨defaultconstraints](semiorepo://p/u/semio/b/l/go/f/semio.go/d/c/DefaultConstraints)
 
 DefaultConstraints lists all built-in validation constraints.
 
-## [👤semio📚go💻semiogo🛠️validatekit](semiorepo://definition/semio/go/semio.go/ValidateKit)
+## [👤semio📚go💻semiogo🛠️validatekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ValidateKit)
 
 ValidateKit validates a kit using the default set of constraints.
 
-## [👤semio📚go💻semiogo🛠️validatekitwithconstraints](semiorepo://definition/semio/go/semio.go/ValidateKitWithConstraints)
+## [👤semio📚go💻semiogo🛠️validatekitwithconstraints](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ValidateKitWithConstraints)
 
 ValidateKitWithConstraints validates a kit using the provided constraints.
 
-## [👤semio📚go💻semiogo🛠️haserrors](semiorepo://definition/semio/go/semio.go/HasErrors)
+## [👤semio📚go💻semiogo🛠️haserrors](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasErrors)
 
 HasErrors returns true if the validation result contains any error-severity problems.
 
-## [👤semio📚go💻semiogo✂️problemserialized](semiorepo://definition/semio/go/semio.go/ProblemSerialized)
+## [👤semio📚go💻semiogo✂️problemserialized](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ProblemSerialized)
 
 ProblemSerialized is the JSON-serializable representation of a validation problem.
 
-## [👤semio📚go💻semiogo✂️validationresultserialized](semiorepo://definition/semio/go/semio.go/ValidationResultSerialized)
+## [👤semio📚go💻semiogo✂️validationresultserialized](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ValidationResultSerialized)
 
 ValidationResultSerialized is the JSON-serializable representation of a validation result.
 
-## [👤semio📚go💻semiogo🛠️tovalidationresult](semiorepo://definition/semio/go/semio.go/ToValidationResult)
+## [👤semio📚go💻semiogo🛠️tovalidationresult](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ToValidationResult)
 
 ToValidationResult converts a validation result to its serializable form.
 
-## [👤semio📚go💻semiogo🛠️arevalidationresultsequal](semiorepo://definition/semio/go/semio.go/AreValidationResultsEqual)
+## [👤semio📚go💻semiogo🛠️arevalidationresultsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreValidationResultsEqual)
 
 AreValidationResultsEqual compares two serialized validation results for equality.
 
-## [👤semio📚go💻semiogo🛠️flattendesign](semiorepo://definition/semio/go/semio.go/FlattenDesign)
+## [👤semio📚go💻semiogo🛠️flattendesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FlattenDesign)
 
 FlattenDesign computes absolute planes and centers for all pieces in a design.
 
-## [👤semio📚go💻semiogo🛠️applydesigndiff](semiorepo://definition/semio/go/semio.go/ApplyDesignDiff)
+## [👤semio📚go💻semiogo🛠️applydesigndiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyDesignDiff)
 
 ApplyDesignDiff applies a design diff to a base design.
 
-## [👤semio📚js💻devts](semiorepo://file/semio/js/dev.ts)
+## [👤semio📚js💻devts](semiorepo://p/u/semio/b/l/js/f/dev.ts)
 
 Development server entry point for the JavaScript workspace.
 
-## [👤semio📚js💻devts🔖dev](semiorepo://section/Dev)
+## [👤semio📚js💻devts🔖dev](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev)
 
 Spawns parallel sketchpad and storybook dev servers.
 
-## [👤semio📚js💻devts🪨iswindows](semiorepo://definition/semio/js/dev.ts/isWindows)
+## [👤semio📚js💻devts🪨iswindows](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/isWindows)
 
 Whether the current platform is Windows.
 
-## [👤semio📚js💻devts🪨npmcmd](semiorepo://definition/semio/js/dev.ts/npmCmd)
+## [👤semio📚js💻devts🪨npmcmd](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/npmCmd)
 
 Platform-specific npm command name.
 
-## [👤semio📚js💻devts🪨vite](semiorepo://definition/semio/js/dev.ts/vite)
+## [👤semio📚js💻devts🪨vite](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/vite)
 
 Spawned sketchpad dev server process.
 
-## [👤semio📚js💻devts🪨storybook](semiorepo://definition/semio/js/dev.ts/storybook)
+## [👤semio📚js💻devts🪨storybook](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/storybook)
 
 Spawned storybook dev server process.
 
-## [👤semio📚js💻globaldts](semiorepo://file/semio/js/global.d.ts)
+## [👤semio📚js💻globaldts](semiorepo://p/u/semio/b/l/js/f/global.d.ts)
 
 Global type declarations for the JavaScript workspace.
 
-## [👤semio📚js💻i18nts](semiorepo://file/semio/js/i18n.ts)
+## [👤semio📚js💻i18nts](semiorepo://p/u/semio/b/l/js/f/i18n.ts)
 
 Internationalization setup and translation utilities for the UI.
 
-## [👤semio📚js💻i18nts🔖i18n](semiorepo://section/I18n)
+## [👤semio📚js💻i18nts🔖i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n)
 
 Initializes i18next with language detection, React bindings and expertise-aware label hooks.
 
-## [👤semio📚js💻i18nts🪨getexpertisefunction](semiorepo://definition/semio/js/i18n.ts/getExpertiseFunction)
+## [👤semio📚js💻i18nts🪨getexpertisefunction](semiorepo://p/u/semio/b/l/js/f/i18n.ts/d/c/getExpertiseFunction)
 
 Mutable holder for the active expertise provider function.
 
-## [👤semio📚js💻indexts](semiorepo://file/semio/js/index.ts)
+## [👤semio📚js💻indexts](semiorepo://p/u/semio/b/l/js/f/index.ts)
 
 Barrel export for the core JavaScript workspace modules.
 
-## [👤semio📚js💻indexts🔖exports](semiorepo://section/Exports)
+## [👤semio📚js💻indexts🔖exports](semiorepo://p/u/semio/b/l/js/f/index.ts/s/Exports)
 
 Public API surface re-exporting sketchpad components, semio domain, and shared configs.
 
-## [👤semio📚js💻semiots](semiorepo://file/semio/js/semio.ts)
+## [👤semio📚js💻semiots](semiorepo://p/u/semio/b/l/js/f/semio.ts)
 
 Core domain model types, schemas and utilities for the semio platform.
 
-## [👤semio📚js💻sitetsx](semiorepo://file/semio/js/site.tsx)
+## [👤semio📚js💻sitetsx](semiorepo://p/u/semio/b/l/js/f/site.tsx)
 
 Landing page and marketing site React component.
 
-## [👤semio📚js💻sitetsx🔖entrypoint](semiorepo://section/Entrypoint)
+## [👤semio📚js💻sitetsx🔖entrypoint](semiorepo://p/u/semio/b/l/js/f/site.tsx/s/Entrypoint)
 
 Site entrypoint that mounts the Sketchpad React component into the DOM.
 
-## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
+## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx)
 
 Design app providing diagram and scene windows for editing designs.
 
-## [👤semio📚js🗃️sketchpad💻docstsx](semiorepo://file/semio/js/sketchpad/Docs.tsx)
+## [👤semio📚js🗃️sketchpad💻docstsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx)
 
 Documentation viewer app with workbench and detail panels.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx](semiorepo://file/semio/js/sketchpad/Feedback.tsx)
+## [👤semio📚js🗃️sketchpad💻feedbacktsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx)
 
 Feedback collection app with rating hooks and submission forms.
 
-## [👤semio📚js🗃️sketchpad💻hometsx](semiorepo://file/semio/js/sketchpad/Home.tsx)
+## [👤semio📚js🗃️sketchpad💻hometsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx)
 
 Home screen app showing recent projects and getting started content.
 
-## [👤semio📚js🗃️sketchpad💻kittsx](semiorepo://file/semio/js/sketchpad/Kit.tsx)
+## [👤semio📚js🗃️sketchpad💻kittsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx)
 
 Kit editor app for managing types, designs and qualities.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx](semiorepo://file/semio/js/sketchpad/Quality.tsx)
+## [👤semio📚js🗃️sketchpad💻qualitytsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx)
 
 Quality inspection app for viewing and editing quality attributes.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx](semiorepo://file/semio/js/sketchpad/Sketchpad.tsx)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx)
 
 Main sketchpad container managing app tabs, panels and window layout.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖imports](semiorepo://section/Imports)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Imports)
 
 External and internal module imports.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖utilities](semiorepo://section/Utilities)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖utilities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities)
 
 Utility functions used across sketchpad components.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://section/Store)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store)
 
 Reactive stores backed by Yjs for collaborative state management.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://section/Store)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store)
 
 Reactive stores backed by Yjs for collaborative state management.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖plainappstorenoyjs](semiorepo://section/Plain%20App%20Store%20(No%20YJS))
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖plainappstorenoyjs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Plain%20App%20Store%20(No%20YJS))
 
 Non-YJS application stores using plain in-memory state with transaction support.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖fileprovider](semiorepo://section/File%20Provider)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖fileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/File%20Provider)
 
 In-memory file storage provider for temporary or test scenarios.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖memoryfileprovider](semiorepo://section/Memory%20File%20Provider)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖memoryfileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Memory%20File%20Provider)
 
 In-memory file storage provider for temporary or test scenarios.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖localfileproviderindexeddb](semiorepo://section/Local%20File%20Provider%20(IndexedDB))
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖localfileproviderindexeddb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Local%20File%20Provider%20(IndexedDB))
 
 Browser-local file storage provider backed by IndexedDB.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖remotefileprovider](semiorepo://section/Remote%20File%20Provider)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖remotefileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Remote%20File%20Provider)
 
 Remote file storage provider backed by a REST API.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖compositefileprovider](semiorepo://section/Composite%20File%20Provider)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖compositefileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Composite%20File%20Provider)
 
 Composite file storage provider that delegates to multiple underlying providers.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖kits](semiorepo://section/Kits)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖kits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kits)
 
 Yjs-backed attribute store for kit metadata.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖coord](semiorepo://section/Coord)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖coord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Coord)
 
 Yjs-backed coordinate store managing u/v values.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖vec](semiorepo://section/Vec)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖vec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Vec)
 
 Yjs-backed 3D vector component store managing x/y/z values.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖point](semiorepo://section/Point)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖point](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Point)
 
 Yjs-backed 3D point store managing x/y/z coordinates.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖vector](semiorepo://section/Vector)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖vector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Vector)
 
 Yjs-backed 3D direction vector store managing x/y/z components.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖plane](semiorepo://section/Plane)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖plane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Plane)
 
 Yjs-backed 3D plane store managing origin point and direction vectors.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖camera](semiorepo://section/Camera)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖camera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Camera)
 
 Yjs-backed camera store managing view target and perspective planes.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖location](semiorepo://section/Location)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖location](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Location)
 
 Yjs-backed location store managing geographical and licensing metadata.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖author](semiorepo://section/Author)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖author](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Author)
 
 Yjs-backed author store managing author identity and attributes.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖file](semiorepo://section/File)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖file](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/File)
 
 Yjs-backed file store managing file metadata and content references.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖folder](semiorepo://section/Folder)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖folder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Folder)
 
 Yjs-backed folder store managing folder hierarchy and file references.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖benchmark](semiorepo://section/Benchmark)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖benchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Benchmark)
 
 Yjs-backed benchmark store managing performance measurement data.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖quality](semiorepo://section/Quality)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Quality)
 
 Yjs-backed quality store managing quality criteria definitions.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖prop](semiorepo://section/Prop)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖prop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Prop)
 
 Yjs-backed prop store managing design property definitions.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖model](semiorepo://section/Model)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖model](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Model)
 
 Yjs-backed model store managing 3D model representations.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖connector](semiorepo://section/Connector)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖connector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector)
 
 Yjs-backed connector store managing type connectors and their ports.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖type](semiorepo://section/Type)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖type](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type)
 
 Yjs-backed type store managing architectural type definitions and connectors.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖layer](semiorepo://section/Layer)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖layer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Layer)
 
 Yjs-backed layer store managing visibility layers in designs.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖piece](semiorepo://section/Piece)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖piece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece)
 
 Yjs-backed piece store managing design piece instances and their transforms.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖group](semiorepo://section/Group)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖group](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group)
 
 Yjs-backed group store managing piece grouping within designs.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖side](semiorepo://section/Side)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖side](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Side)
 
 Side store managing connection endpoints for pieces.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖connection](semiorepo://section/Connection)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖connection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection)
 
 Yjs-backed connection store managing piece-to-piece connections.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖stat](semiorepo://section/Stat)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖stat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Stat)
 
 Yjs-backed stat store managing statistical measurement data.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖design](semiorepo://section/Design)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖design](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
 
 Yjs-backed design store managing complete design layouts with pieces and connections.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖ypathapi](semiorepo://section/YPath%20API)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖ypathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/YPath%20API)
 
 Path-based observation and subscription API for deep design Yjs map access.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖kit](semiorepo://section/Kit)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)
 
 Yjs-backed kit store managing the complete kit data structure.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖ypathapi](semiorepo://section/YPath%20API)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖ypathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/YPath%20API)
 
 Path-based observation and subscription API for deep kit Yjs map access.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖targetedkithooks](semiorepo://section/Targeted%20Kit%20Hooks)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖targetedkithooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Targeted%20Kit%20Hooks)
 
 React hooks for accessing specific kit data through scope providers.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖commands](semiorepo://section/Commands)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
 
 Kit command definitions for import, export, and sync operations.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖machine](semiorepo://section/Machine)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖machine](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine)
 
 Type definitions for app state, machine input, and context structures.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖types](semiorepo://section/Types)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Types)
 
 Type definitions for app state, machine input, and context structures.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖appstatetypes](semiorepo://section/App%20State%20Types)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖appstatetypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20State%20Types)
 
 State shape interfaces for all application views: home, kit, design, type, quality.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖helpers](semiorepo://section/Helpers)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖helpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Helpers)
 
 Helper functions for path migration, default state creation, and store initialization.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpadmachine](semiorepo://section/Sketchpad%20Machine)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpadmachine](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Machine)
 
 XState state machine definition for the sketchpad application lifecycle.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpadselectors](semiorepo://section/Sketchpad%20Selectors)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpadselectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Selectors)
 
 Selector functions for extracting state from the sketchpad machine context.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖factory](semiorepo://section/Factory)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖factory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Factory)
 
 Factory function to instantiate the sketchpad actor.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖legacytypeexports](semiorepo://section/Legacy%20Type%20Exports)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖legacytypeexports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Legacy%20Type%20Exports)
 
 Legacy type exports for backward compatibility with existing consumers.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖actortypes](semiorepo://section/Actor%20Types)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖actortypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Actor%20Types)
 
 Type aliases for the sketchpad XState actor references and snapshots.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖apps](semiorepo://section/Apps)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖apps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps)
 
 App-specific hooks for design, type, kit, and sketchpad views.
 Design app hooks for piece and connection selection, hover, and diff state.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖design](semiorepo://section/Design)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖design](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
 
 Design app hooks for piece and connection selection, hover, and diff state.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpad](semiorepo://section/Sketchpad)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad)
 
 Core reactive observation, synchronization hooks, and sketchpad store implementation.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖xstatehooks](semiorepo://section/XState%20Hooks)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/XState%20Hooks)
 
 React hooks for accessing XState sketchpad actor state and sending events.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖commands](semiorepo://section/Commands)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
 
 Exported sketchpad command map for theme, language, mode, device, and navigation.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖appsregistry](semiorepo://section/Apps%20Registry)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖appsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps%20Registry)
 
 Dynamic app panel loader for registering app-specific panels.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖navbar](semiorepo://section/Navbar)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Navbar)
 
 Focus-based navigation context provider for navbar breadcrumbs and search.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sidepaneltabs](semiorepo://section/SidePanel%20Tabs)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sidepaneltabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/SidePanel%20Tabs)
 
 Context provider managing side panel and HUD panel tab registration.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖origin](semiorepo://section/Origin)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖origin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Origin)
 
 Context provider for tracking the origin URL of the sketchpad instance.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖footeritems](semiorepo://section/Footer%20Items)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖footeritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Footer%20Items)
 
 Context provider for dynamically registering footer bar items.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖globalfooteritems](semiorepo://section/Global%20Footer%20Items)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Global%20Footer%20Items)
 
 Global footer items component that registers persistent footer entries.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖conceptfilter](semiorepo://section/ConceptFilter)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖conceptfilter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ConceptFilter)
 
 Filter component for narrowing results by architectural concepts.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖toolgroup](semiorepo://section/ToolGroup)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖toolgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ToolGroup)
 
 Toolbar group component for switching between tool modes.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖dragdrop](semiorepo://section/DragDrop)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖dragdrop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop)
 
 Context provider for drag-and-drop type placement interactions.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖hotkeys](semiorepo://section/Hotkeys)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖hotkeys](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Hotkeys)
 
 Keyboard shortcut hook with configurable hotkey overrides.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖canvas](semiorepo://section/Canvas)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Canvas)
 
 Canvas layout components for window management and multi-pane rendering.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖approuter](semiorepo://section/App%20Router)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20Router)
 
 React Router integration with scope providers and route-based app switching.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpadcomponents](semiorepo://section/Sketchpad%20Components)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖sketchpadcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Components)
 
 Top-level sketchpad React components for rendering the complete application.
 
-## [👤semio📚js🗃️sketchpad💻sketchpadtsx🛠️gettoolbargroupicon](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/getToolbarGroupIcon)
+## [👤semio📚js🗃️sketchpad💻sketchpadtsx🛠️gettoolbargroupicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/d/i/getToolbarGroupIcon)
 
 Utility functions used across sketchpad components.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx](semiorepo://file/semio/js/sketchpad/Tutorials.tsx)
+## [👤semio📚js🗃️sketchpad💻tutorialstsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx)
 
 Interactive tutorial system with step-by-step guided workflows.
 
-## [👤semio📚js🗃️sketchpad💻typetsx](semiorepo://file/semio/js/sketchpad/Type.tsx)
+## [👤semio📚js🗃️sketchpad💻typetsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx)
 
 Type editor app for defining and editing type properties and ports.
 
-## [👤semio📚js🗃️sketchpad🗃️apps💻indexts](semiorepo://file/semio/js/sketchpad/apps/index.ts)
+## [👤semio📚js🗃️sketchpad🗃️apps💻indexts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts)
 
 Barrel export for all sketchpad app components.
 
-## [👤semio📚js🗃️sketchpad🗃️apps💻indexts🔖exports](semiorepo://section/Exports)
+## [👤semio📚js🗃️sketchpad🗃️apps💻indexts🔖exports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts/s/Exports)
 
 Re-exports of app plugin utilities and types from the shared module.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx](semiorepo://file/semio/js/sketchpad/elements.tsx)
+## [👤semio📚js🗃️sketchpad💻elementstsx](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx)
 
 Shared UI elements and primitive components for sketchpad apps.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖imports](semiorepo://section/Imports)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Imports)
 
 External library and internal module imports used across all sections.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](semiorepo://section/Section%20Specificity)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity)
 
 Enum defining priority levels for section content ownership.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext](semiorepo://section/Interaction%20Context)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context)
 
 React context for tracking active UI interactions.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext](semiorepo://section/Level%20Context)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context)
 
 React context for UI depth level tracking.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖element](semiorepo://section/Element)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖element](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element)
 
 Core element types, transaction context, and level-based CSS class helpers.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖command](semiorepo://section/Command)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command)
 
 Command palette UI built on cmdk primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](semiorepo://section/Footer)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer)
 
 Status bar component at the bottom of the layout.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](semiorepo://section/Layout)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout)
 
 Top-level layout orchestrating navbar, panels, canvas, and footer.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](semiorepo://section/Popover)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover)
 
 Floating popover component built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip](semiorepo://section/Tooltip)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)
 
 Tooltip components with expertise-level adaptive content.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖basecomponents](semiorepo://section/Base%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖basecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components)
 
 Foundational internal components like Label.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents](semiorepo://section/Display%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components)
 
 Read-only display wrappers for tooltips and callouts.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖aside](semiorepo://section/Aside)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖aside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aside)
 
 Callout boxes for notes, tips, cautions, and dangers.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖avatar](semiorepo://section/Avatar)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖avatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Avatar)
 
 User avatar components with image, fallback, drag, and table variants.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖card](semiorepo://section/Card)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖card](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Card)
 
 Card container and grid layout for content blocks.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖spinner](semiorepo://section/Spinner)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Spinner)
 
 Animated loading spinner in small, medium, or large sizes.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖loadingrow](semiorepo://section/LoadingRow)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖loadingrow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LoadingRow)
 
 Skeleton loading row with pulsing icon and name.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖diagramnode](semiorepo://section/DiagramNode)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/DiagramNode)
 
 Individual diagram node element with selection and hover states.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖hovercard](semiorepo://section/HoverCard)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖hovercard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HoverCard)
 
 Hover-triggered card built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖icons](semiorepo://section/Icons)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖icons](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Icons)
 
 Cursor icon component for collaborative pointer display.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖section](semiorepo://section/Section)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section)
 
 Collapsible section container with heading and specificity.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖steps](semiorepo://section/Steps)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Steps)
 
 Ordered step list container for tutorial or wizard flows.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents](semiorepo://section/Input%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components)
 
 Compact action button group with dropdown support.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖actiongroup](semiorepo://section/ActionGroup)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ActionGroup)
 
 Compact action button group with dropdown support.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖combobox](semiorepo://section/Combobox)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Combobox)
 
 Searchable dropdown with popover options list.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖input](semiorepo://section/Input)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input)
 
 Text input field with label, validation, and clear support.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖select](semiorepo://section/Select)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Select)
 
 Dropdown select built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖slider](semiorepo://section/Slider)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖slider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Slider)
 
 Range slider built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖stepper](semiorepo://section/Stepper)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Stepper)
 
 Numeric stepper with increment/decrement and drag adjustment.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖textarea](semiorepo://section/Textarea)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Textarea)
 
 Multi-line text input with label and validation.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖toggle](semiorepo://section/Toggle)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖toggle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Toggle)
 
 Toggle button with pressed/unpressed states.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖togglegroup](semiorepo://section/ToggleGroup)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ToggleGroup)
 
 Group of mutually exclusive or multi-select toggles.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents](semiorepo://section/Aggregation%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components)
 
 Collapsible accordion built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖accordion](semiorepo://section/Accordion)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖accordion](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Accordion)
 
 Collapsible accordion built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖collapsible](semiorepo://section/Collapsible)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖collapsible](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Collapsible)
 
 Collapsible section built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖dialog](semiorepo://section/Dialog)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖dialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog)
 
 Modal dialog built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖resizable](semiorepo://section/Resizable)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖resizable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Resizable)
 
 Resizable panel layout built on react-resizable-panels.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖scrollable](semiorepo://section/Scrollable)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable)
 
 Custom scrollable area built on Radix ScrollArea.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖band](semiorepo://section/Band)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band)
 
 Horizontal band of navigation items with labels and icons.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖strip](semiorepo://section/Strip)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip)
 
 Vertical strip of icon items for compact navigation.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖navbar](semiorepo://section/Navbar)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar)
 
 Top navigation bar with icon items.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖tabs](semiorepo://section/Tabs)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs)
 
 Tab container built on Radix primitives.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖tree](semiorepo://section/Tree)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)
 
 Hierarchical tree view with sections, items, and file trees.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents](semiorepo://section/Navigation%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components)
 
 Breadcrumb trail for hierarchical page navigation.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖breadcrumb](semiorepo://section/Breadcrumb)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖breadcrumb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Breadcrumb)
 
 Breadcrumb trail for hierarchical page navigation.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖pagenavigation](semiorepo://section/PageNavigation)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖pagenavigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PageNavigation)
 
 Previous/next page navigation links.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents](semiorepo://section/Panel%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components)
 
 Resizable dockable panel with sections and collapse support.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖panel](semiorepo://section/Panel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel)
 
 Resizable dockable panel with sections and collapse support.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖panelgroup](semiorepo://section/PanelGroup)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PanelGroup)
 
 Flex container grouping multiple panels together.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖leftpanel](semiorepo://section/LeftPanel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LeftPanel)
 
 Left-docked panel variant with right resize handle.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖rightpanel](semiorepo://section/RightPanel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/RightPanel)
 
 Right-docked panel variant with left resize handle.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖middlepanel](semiorepo://section/MiddlePanel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/MiddlePanel)
 
 Center panel variant without resize handles.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖bottompanel](semiorepo://section/BottomPanel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/BottomPanel)
 
 Bottom-docked panel variant with top resize handle.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖sidepanel](semiorepo://section/SidePanel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/SidePanel)
 
 Collapsible side panel with tabbed content.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖hudpanel](semiorepo://section/HudPanel)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HudPanel)
 
 Floating heads-up display panel with tabs.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents](semiorepo://section/Window%20Components)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components)
 
 Draggable, resizable floating window with dashed border.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖window](semiorepo://section/Window)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window)
 
 Draggable, resizable floating window with dashed border.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖page](semiorepo://section/Page)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Page)
 
 Full-page content wrapper with frontmatter and footer.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖diagram](semiorepo://section/Diagram)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Diagram)
 
 Interactive node-edge diagram built on ReactFlow and D3 force.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖table](semiorepo://section/Table)
+## [👤semio📚js🗃️sketchpad💻elementstsx🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Table)
 
 Sortable, hierarchical data table with drag-drop support.
 
-## [👤semio📚js🗃️sketchpad💻kitselectionhelperts](semiorepo://file/semio/js/sketchpad/kitSelectionHelper.ts)
+## [👤semio📚js🗃️sketchpad💻kitselectionhelperts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts)
 
 Geometry and selection utilities for kit diagram interactions.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts](semiorepo://file/semio/js/sketchpad/portColor.ts)
+## [👤semio📚js🗃️sketchpad💻portcolorts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts)
 
 Color mapping utilities for port visualization in diagrams.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🔖portcolor](semiorepo://section/Port%20Color)
+## [👤semio📚js🗃️sketchpad💻portcolorts🔖portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
 
 Assigns deterministic HSL color tones to ports based on compatibility groups.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🪨defaultportguid](semiorepo://definition/semio/js/sketchpad/portColor.ts/DEFAULT_PORT_GUID)
+## [👤semio📚js🗃️sketchpad💻portcolorts🪨defaultportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/c/DEFAULT_PORT_GUID)
 
 Sentinel GUID for ports without an assigned identity.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️normalizeguid](semiorepo://definition/semio/js/sketchpad/portColor.ts/normalizeGuid)
+## [👤semio📚js🗃️sketchpad💻portcolorts🛠️normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/normalizeGuid)
 
 Trims and normalizes a GUID string, returning undefined for empty values.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️normalizeportref](semiorepo://definition/semio/js/sketchpad/portColor.ts/normalizePortRef)
+## [👤semio📚js🗃️sketchpad💻portcolorts🛠️normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/normalizePortRef)
 
 Extracts a GUID from a string or object with a guid property.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️hashstring](semiorepo://definition/semio/js/sketchpad/portColor.ts/hashString)
+## [👤semio📚js🗃️sketchpad💻portcolorts🛠️hashstring](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/hashString)
 
 Produces a deterministic non-negative integer hash from a string.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️gettoneforkey](semiorepo://definition/semio/js/sketchpad/portColor.ts/getToneForKey)
+## [👤semio📚js🗃️sketchpad💻portcolorts🛠️gettoneforkey](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/getToneForKey)
 
 Generates an HSL color tone from a port group key.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️createportgroupmap](semiorepo://definition/semio/js/sketchpad/portColor.ts/createPortGroupMap)
+## [👤semio📚js🗃️sketchpad💻portcolorts🛠️createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/createPortGroupMap)
 
 Builds a union-find map grouping compatible ports by root GUID.
 
-## [👤semio📚js🗃️sketchpad💻sharedts](semiorepo://file/semio/js/sketchpad/shared.ts)
+## [👤semio📚js🗃️sketchpad💻sharedts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts)
 
 Shared state management types, hooks and store factories for sketchpad.
 
-## [👤semio📚js💻viteenvdts](semiorepo://file/semio/js/vite-env.d.ts)
+## [👤semio📚js💻viteenvdts](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts)
 
 Vite client type declarations for the JavaScript workspace.
 
-## [👤semio📚js💻viteenvdts🔖declarations](semiorepo://section/Declarations)
+## [👤semio📚js💻viteenvdts🔖declarations](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts/s/Declarations)
 
 Ambient module declarations for non-standard import types.
 
-## [👤semio🛂jsonschema💻buildts](semiorepo://file/semio/jsonschema/build.ts)
+## [👤semio🛂jsonschema💻buildts](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts)
 
 Build script for generating and exporting JSON Schema definitions.
 
-## [👤semio🛂jsonschema💻buildts🪨inputfilepath](semiorepo://definition/semio/jsonschema/build.ts/inputFilePath)
+## [👤semio🛂jsonschema💻buildts🪨inputfilepath](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/inputFilePath)
 
 Input JSON Schema file path.
 
-## [👤semio🛂jsonschema💻buildts🪨outputfilepath](semiorepo://definition/semio/jsonschema/build.ts/outputFilePath)
+## [👤semio🛂jsonschema💻buildts🪨outputfilepath](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/outputFilePath)
 
 Output file path for the unescaped JSON Schema.
 
-## [👤semio🛂jsonschema💻buildts🪨jsoncontent](semiorepo://definition/semio/jsonschema/build.ts/jsonContent)
+## [👤semio🛂jsonschema💻buildts🪨jsoncontent](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/jsonContent)
 
 Raw JSON content read from the input schema file.
 
-## [👤semio🛂jsonschema💻buildts🪨unescapedcontent](semiorepo://definition/semio/jsonschema/build.ts/unescapedContent)
+## [👤semio🛂jsonschema💻buildts🪨unescapedcontent](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/unescapedContent)
 
 Unescaped JSON content with backslash sequences resolved.
 
-## [👤semio📚net🛅semio💻semiocs](semiorepo://file/semio/net/Semio/Semio.cs)
+## [👤semio📚net🛅semio💻semiocs](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs)
 
 Core .NET library implementing the semio domain model and serialization.
 
-## [👤semio📚net🛅semio💻semiocs🛠️symbol](semiorepo://definition/semio/net/Semio/Semio.cs/Symbol)
+## [👤semio📚net🛅semio💻semiocs🛠️symbol](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Symbol)
 
 / <summary>Abstract base for all expression tree nodes.</summary>
 / <remarks>
-/ [👤semio📚net🛅semio💻semiocs🔖utility🔖expressions🛠️symbol](semiorepo://definition/semio/net/Semio/Semio.cs/Utility/Expressions/Symbol)
+/ [👤semio📚net🛅semio💻semiocs🔖utility🔖expressions🛠️symbol](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions/d/i/Symbol)
 / </remarks>
 
-## [👤semio📚net🛅semio💻semiocs🛠️entity](semiorepo://definition/semio/net/Semio/Semio.cs/Entity)
+## [👤semio📚net🛅semio💻semiocs🛠️entity](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Entity)
 
 / Abstract generic base class providing equality, hashing, cloning, and validation.
-/ [👤semio📚net🛅semio💻semiocs🔖entitying🛠️entity](semiorepo://definition/semio/net/Semio/Semio.cs/Entitying/Entity)
+/ [👤semio📚net🛅semio💻semiocs🔖entitying🛠️entity](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Entity)
 
-## [👤semio📚net🛅semio💻semiocs🛠️entityvalidator](semiorepo://definition/semio/net/Semio/Semio.cs/EntityValidator)
+## [👤semio📚net🛅semio💻semiocs🛠️entityvalidator](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/EntityValidator)
 
 / FluentValidation validator base for Entity subclasses.
-/ [👤semio📚net🛅semio💻semiocs🔖entitying🛠️entityvalidator](semiorepo://definition/semio/net/Semio/Semio.cs/Entitying/EntityValidator)
+/ [👤semio📚net🛅semio💻semiocs🔖entitying🛠️entityvalidator](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/EntityValidator)
 
-## [👤semio📚net🛅semio💻buildts](semiorepo://file/semio/net/Semio/build.ts)
+## [👤semio📚net🛅semio💻buildts](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts)
 
 Build script for the Semio .NET library assembly.
 
-## [👤semio📚net🛅semio💻buildts🪨msbuild](semiorepo://definition/semio/net/Semio/build.ts/msbuild)
+## [👤semio📚net🛅semio💻buildts🪨msbuild](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/d/c/msbuild)
 
 MSBuild executable path for Visual Studio 2022.
 
-## [👤semio🌐play💻indextsx](semiorepo://file/semio/play/index.tsx)
+## [👤semio🌐play💻indextsx](semiorepo://p/u/semio/b/w/play/f/index.tsx)
 
 Entry point for the playground React app for interactive experimentation.
 
-## [👤semio🌐play💻indextsx🔖entrypoint](semiorepo://section/Entrypoint)
+## [👤semio🌐play💻indextsx🔖entrypoint](semiorepo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
 
 Play application entrypoint registering sketchpad apps and rendering the root.
 
-## [👤semio📚py💻semiopy🔖imports](semiorepo://section/Imports)
+## [👤semio📚py💻semiopy🔖imports](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Imports)
 
 Standard library, third-party and framework imports.
 
-## [👤semio📚py💻semiopy🔖typehints](semiorepo://section/Type%20Hints)
+## [👤semio📚py💻semiopy🔖typehints](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Type%20Hints)
 
 Custom type hint aliases used throughout the module.
 
-## [👤semio📚py💻semiopy🔖constants](semiorepo://section/Constants)
+## [👤semio📚py💻semiopy🔖constants](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Constants)
 
 Global constants for limits, paths, encodings and configuration.
 
-## [👤semio📚py💻semiopy🔖utility](semiorepo://section/Utility)
+## [👤semio📚py💻semiopy🔖utility](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Utility)
 
 General-purpose utility functions for encoding, formatting and transformation.
 
-## [👤semio📚py💻semiopy🔖logging](semiorepo://section/Logging)
+## [👤semio📚py💻semiopy🔖logging](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Logging)
 
 Module-level logger configuration.
 
-## [👤semio📚py💻semiopy🔖exceptions](semiorepo://section/Exceptions)
+## [👤semio📚py💻semiopy🔖exceptions](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions)
 
 Custom exception hierarchy for server, client and specification errors.
 
-## [👤semio📚py💻semiopy🔖modeling](semiorepo://section/Modeling)
+## [👤semio📚py💻semiopy🔖modeling](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling)
 
 Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
-## [👤semio📚py💻semiopy🔖primitives](semiorepo://section/Primitives)
+## [👤semio📚py💻semiopy🔖primitives](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Primitives)
 
 Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
-## [👤semio📚py💻semiopy🔖graphql](semiorepo://section/Graphql)
+## [👤semio📚py💻semiopy🔖graphql](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Graphql)
 
 GraphQL node base classes for pydantic, sqlalchemy and relay integration.
 
-## [👤semio📚py💻semiopy🔖domain](semiorepo://section/Domain)
+## [👤semio📚py💻semiopy🔖domain](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain)
 
 Attribute entity with key-value pairs and definitions.
 
-## [👤semio📚py💻semiopy🔖attribute](semiorepo://section/Attribute)
+## [👤semio📚py💻semiopy🔖attribute](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Attribute)
 
 Attribute entity with key-value pairs and definitions.
 
-## [👤semio📚py💻semiopy🔖tag](semiorepo://section/Tag)
+## [👤semio📚py💻semiopy🔖tag](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Tag)
 
 Tag entity for categorizing and labeling kit elements.
 
-## [👤semio📚py💻semiopy🔖concept](semiorepo://section/Concept)
+## [👤semio📚py💻semiopy🔖concept](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Concept)
 
 Concept entity for semantic grouping of design elements.
 
-## [👤semio📚py💻semiopy🔖coord](semiorepo://section/Coord)
+## [👤semio📚py💻semiopy🔖coord](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Coord)
 
 Coordinate primitive for three-dimensional values.
 
-## [👤semio📚py💻semiopy🔖point](semiorepo://section/Point)
+## [👤semio📚py💻semiopy🔖point](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Point)
 
 Point primitive representing a position in 3D space.
 
-## [👤semio📚py💻semiopy🔖vector](semiorepo://section/Vector)
+## [👤semio📚py💻semiopy🔖vector](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Vector)
 
 Vector primitive representing a direction in 3D space.
 
-## [👤semio📚py💻semiopy🔖plane](semiorepo://section/Plane)
+## [👤semio📚py💻semiopy🔖plane](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Plane)
 
 Plane primitive representing an oriented coordinate frame in 3D space.
 
-## [👤semio📚py💻semiopy🔖location](semiorepo://section/Location)
+## [👤semio📚py💻semiopy🔖location](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Location)
 
 Location entity for geographic coordinates with longitude, latitude and altitude.
 
-## [👤semio📚py💻semiopy🔖author](semiorepo://section/Author)
+## [👤semio📚py💻semiopy🔖author](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Author)
 
 Author entity for tracking contributor identity and rank.
 
-## [👤semio📚py💻semiopy🔖artifactauthor](semiorepo://section/ArtifactAuthor)
+## [👤semio📚py💻semiopy🔖artifactauthor](semiorepo://p/u/semio/b/l/py/f/semio.py/s/ArtifactAuthor)
 
 Artifact-author association entity linking artifacts to authors by email.
 
-## [👤semio📚py💻semiopy🔖file](semiorepo://section/File)
+## [👤semio📚py💻semiopy🔖file](semiorepo://p/u/semio/b/l/py/f/semio.py/s/File)
 
 File entity for managing binary assets with metadata and hashing.
 
-## [👤semio📚py💻semiopy🔖folder](semiorepo://section/Folder)
+## [👤semio📚py💻semiopy🔖folder](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Folder)
 
 Folder entity for hierarchical organization of kit content.
 
-## [👤semio📚py💻semiopy🔖benchmark](semiorepo://section/Benchmark)
+## [👤semio📚py💻semiopy🔖benchmark](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Benchmark)
 
 Benchmark entity for defining performance metrics with min-max bounds.
 
-## [👤semio📚py💻semiopy🔖quality](semiorepo://section/Quality)
+## [👤semio📚py💻semiopy🔖quality](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Quality)
 
 Quality entity for defining measurable properties with units and constraints.
 
-## [👤semio📚py💻semiopy🔖prop](semiorepo://section/Prop)
+## [👤semio📚py💻semiopy🔖prop](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Prop)
 
 Prop entity for key-value property pairs with units.
 
-## [👤semio📚py💻semiopy🔖model](semiorepo://section/Model)
+## [👤semio📚py💻semiopy🔖model](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Model)
 
 Model entity for 3D geometry representations linked to files.
 
-## [👤semio📚py💻semiopy🔖port](semiorepo://section/Port)
+## [👤semio📚py💻semiopy🔖port](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Port)
 
 Port entity for defining connection interfaces on types.
 
-## [👤semio📚py💻semiopy🔖connector](semiorepo://section/Connector)
+## [👤semio📚py💻semiopy🔖connector](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Connector)
 
 Compatible port entity for specifying allowed port pairings on connectors.
 
-## [👤semio📚py💻semiopy🔖compatibleport](semiorepo://section/CompatiblePort)
+## [👤semio📚py💻semiopy🔖compatibleport](semiorepo://p/u/semio/b/l/py/f/semio.py/s/CompatiblePort)
 
 Compatible port entity for specifying allowed port pairings on connectors.
 
-## [👤semio📚py💻semiopy🔖type](semiorepo://section/Type)
+## [👤semio📚py💻semiopy🔖type](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Type)
 
 Type entity for defining reusable parametric building blocks.
 
-## [👤semio📚py💻semiopy🔖layer](semiorepo://section/Layer)
+## [👤semio📚py💻semiopy🔖layer](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Layer)
 
 Layer entity for organizing design elements into visibility groups.
 
-## [👤semio📚py💻semiopy🔖piece](semiorepo://section/Piece)
+## [👤semio📚py💻semiopy🔖piece](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Piece)
 
 Piece entity for placed instances of types within a design.
 
-## [👤semio📚py💻semiopy🔖group](semiorepo://section/Group)
+## [👤semio📚py💻semiopy🔖group](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Group)
 
 Group entity for named collections of pieces in a design.
 
-## [👤semio📚py💻semiopy🔖side](semiorepo://section/Side)
+## [👤semio📚py💻semiopy🔖side](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Side)
 
 Side primitive for identifying a specific connector on a specific piece.
 
-## [👤semio📚py💻semiopy🔖connection](semiorepo://section/Connection)
+## [👤semio📚py💻semiopy🔖connection](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Connection)
 
 Connection entity for linking two pieces through their connectors.
 
-## [👤semio📚py💻semiopy🔖stat](semiorepo://section/Stat)
+## [👤semio📚py💻semiopy🔖stat](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Stat)
 
 Stat entity for recording computed statistics with bounds.
 
-## [👤semio📚py💻semiopy🔖design](semiorepo://section/Design)
+## [👤semio📚py💻semiopy🔖design](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Design)
 
 Design entity for composing pieces and connections into assemblies.
 
-## [👤semio📚py💻semiopy🔖kit](semiorepo://section/Kit)
+## [👤semio📚py💻semiopy🔖kit](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit)
 
 Kit entity for packaging types, designs, qualities and metadata.
 
-## [👤semio📚py💻semiopy🔖designfamilyhelpers](semiorepo://section/Design%20Family%20Helpers)
+## [👤semio📚py💻semiopy🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Design%20Family%20Helpers)
 
 Helper functions for querying design hierarchies and families.
 
-## [👤semio📚py💻semiopy🔖typefamilyhelpers](semiorepo://section/Type%20Family%20Helpers)
+## [👤semio📚py💻semiopy🔖typefamilyhelpers](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Type%20Family%20Helpers)
 
 Helper functions for querying type hierarchies and families.
 
-## [👤semio📚py💻semiopy🔖movedgraphenenodes](semiorepo://section/Moved%20Graphene%20Nodes)
+## [👤semio📚py💻semiopy🔖movedgraphenenodes](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Moved%20Graphene%20Nodes)
 
 Graphene node definitions moved here due to forward-reference resolution order.
 
-## [👤semio📚py💻semiopy🔖validation](semiorepo://section/Validation)
+## [👤semio📚py💻semiopy🔖validation](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Validation)
 
 Validation logic for checking kit constraints and uniqueness rules.
 
-## [👤semio📚py💻semiopy🔖dictbasedvalidation](semiorepo://section/Dict-based%20Validation)
+## [👤semio📚py💻semiopy🔖dictbasedvalidation](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Dict-based%20Validation)
 
 Dictionary-based validation functions for kit data integrity.
 
-## [👤semio📚py💻semiopy🔖graphoperations](semiorepo://section/Graph%20Operations)
+## [👤semio📚py💻semiopy🔖graphoperations](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Graph%20Operations)
 
 Graph construction and traversal for piece connectivity analysis.
 
-## [👤semio📚py💻semiopy🔖flattendesign](semiorepo://section/FlattenDesign)
+## [👤semio📚py💻semiopy🔖flattendesign](semiorepo://p/u/semio/b/l/py/f/semio.py/s/FlattenDesign)
 
 Design flattening to resolve nested sub-designs into a single coordinate space.
 
-## [👤semio📚py💻semiopy🔖kitdiffoperations](semiorepo://section/Kit%20Diff%20Operations)
+## [👤semio📚py💻semiopy🔖kitdiffoperations](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit%20Diff%20Operations)
 
 Diffing and patching operations for comparing and merging kit versions.
 
-## [👤semio📚py💻semiopy🔖kitimportexport](semiorepo://section/Kit%20Import/Export)
+## [👤semio📚py💻semiopy🔖kitimportexport](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit%20Import/Export)
 
 Import and export utilities for kit serialization and deserialization.
 
-## [👤semio📚py💻semiopy🔖spatialmath](semiorepo://section/Spatial%20Math)
+## [👤semio📚py💻semiopy🔖spatialmath](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Spatial%20Math)
 
 Spatial math utilities for vector normalization and plane computation.
 
-## [👤semio📚rs💻semiors🔖utilityfunctions](semiorepo://section/Utility%20Functions)
+## [👤semio📚rs💻semiors🔖utilityfunctions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions)
 
 / <summary>Guid holds the data fields for a Guid record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️guid](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/Guid)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/Guid)
 / </remarks>
 
-## [👤semio📚rs💻semiors🔖finderfunctions](semiorepo://section/Finder%20Functions)
+## [👤semio📚rs💻semiors🔖finderfunctions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions)
 
 / <summary>find_type_in_kit holds the data fields for a find_type_in_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtypeinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_type_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtypeinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_type_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🔖serialization](semiorepo://section/Serialization)
+## [👤semio📚rs💻semiors🔖serialization](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization)
 
 / <summary>serialize_kit holds the data fields for a serialize_kit record.</summary>
-/ [👤semio📚rs💻semiors🔖serialization🛠️serializekit](semiorepo://definition/semio/rs/semio.rs/Serialization/serialize_kit)
+/ [👤semio📚rs💻semiors🔖serialization🛠️serializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_kit)
 
-## [👤semio📚rs💻semiors🔖hasguidtrait](semiorepo://section/HasGuid%20Trait)
+## [👤semio📚rs💻semiors🔖hasguidtrait](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait)
 
 / <summary>HasGuid holds the data fields for a HasGuid record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖hasguidtrait🛠️hasguid](semiorepo://definition/semio/rs/semio.rs/HasGuid%20Trait/HasGuid)
+/ [👤semio📚rs💻semiors🔖hasguidtrait🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
 / </remarks>
 
-## [👤semio📚rs💻semiors🔖applydiff](semiorepo://section/ApplyDiff)
+## [👤semio📚rs💻semiors🔖applydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff)
 
 / <summary>apply_collection_diff holds the data fields for a apply_collection_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applycollectiondiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_collection_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applycollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_collection_diff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🔖flattendesign](semiorepo://section/FlattenDesign)
+## [👤semio📚rs💻semiors🔖flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
 
 / <summary>FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
-/ [👤semio📚rs💻semiors🔖flattendesign🛠️flattenedpiece](semiorepo://definition/semio/rs/semio.rs/FlattenDesign/FlattenedPiece)
+/ [👤semio📚rs💻semiors🔖flattendesign🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/FlattenedPiece)
 
-## [👤semio📚rs💻semiors🪨semioerror](semiorepo://definition/semio/rs/semio.rs/SemioError)
+## [👤semio📚rs💻semiors🪨semioerror](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/c/SemioError)
 
 / <summary>SemioError holds the data fields for a SemioError record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖errortypes🛠️semioerror](semiorepo://definition/semio/rs/semio.rs/Error%20Types/SemioError)
+/ [👤semio📚rs💻semiors🔖errortypes🛠️semioerror](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types/d/i/SemioError)
 / </remarks>
 
-## [👤semio📚rs💻semiors✂️result](semiorepo://definition/semio/rs/semio.rs/Result)
+## [👤semio📚rs💻semiors✂️result](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/Result)
 
 / <summary>Result holds the data fields for a Result record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖errortypes🛠️result](semiorepo://definition/semio/rs/semio.rs/Error%20Types/Result)
+/ [👤semio📚rs💻semiors🔖errortypes🛠️result](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types/d/i/Result)
 / </remarks>
 
-## [👤semio📚rs💻semiors✂️guid](semiorepo://definition/semio/rs/semio.rs/Guid)
+## [👤semio📚rs💻semiors✂️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/Guid)
 
 / <summary>Guid holds the data fields for a Guid record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️guid](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/Guid)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/Guid)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️guid](semiorepo://definition/semio/rs/semio.rs/guid)
+## [👤semio📚rs💻semiors🛠️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/guid)
 
 / <summary>guid holds the data fields for a guid record.</summary>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️guid](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/guid)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/guid)
 
-## [👤semio📚rs💻semiors🛠️normalize](semiorepo://definition/semio/rs/semio.rs/normalize)
+## [👤semio📚rs💻semiors🛠️normalize](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/normalize)
 
 / <summary>normalize holds the data fields for a normalize record.</summary>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️normalize](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/normalize)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️normalize](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/normalize)
 
-## [👤semio📚rs💻semiors🛠️round](semiorepo://definition/semio/rs/semio.rs/round)
+## [👤semio📚rs💻semiors🛠️round](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/round)
 
 / <summary>round holds the data fields for a round record.</summary>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️round](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/round)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️round](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/round)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️jaccard](semiorepo://definition/semio/rs/semio.rs/jaccard)
+## [👤semio📚rs💻semiors🛠️jaccard](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/jaccard)
 
 / <summary>jaccard holds the data fields for a jaccard record.</summary>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️jaccard](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/jaccard)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️jaccard](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/jaccard)
 
-## [👤semio📚rs💻semiors🛠️deepequal](semiorepo://definition/semio/rs/semio.rs/deep_equal)
+## [👤semio📚rs💻semiors🛠️deepequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deep_equal)
 
 / <summary>deep_equal holds the data fields for a deep_equal record.</summary>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️deepequal](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/deep_equal)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️deepequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/deep_equal)
 
-## [👤semio📚rs💻semiors🛠️generateuniquename](semiorepo://definition/semio/rs/semio.rs/generate_unique_name)
+## [👤semio📚rs💻semiors🛠️generateuniquename](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/generate_unique_name)
 
 / <summary>generate_unique_name performs the generate_unique_name operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️generateuniquename](semiorepo://definition/semio/rs/semio.rs/Utility%20Functions/generate_unique_name)
+/ [👤semio📚rs💻semiors🔖utilityfunctions🛠️generateuniquename](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/generate_unique_name)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️attribute](semiorepo://definition/semio/rs/semio.rs/Attribute)
+## [👤semio📚rs💻semiors🛠️attribute](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Attribute)
 
 / <summary>Attribute holds the data fields for a Attribute record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypesattribute🛠️attribute](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Attribute/Attribute)
+/ [👤semio📚rs💻semiors🔖modeltypesattribute🛠️attribute](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute/d/i/Attribute)
 
-## [👤semio📚rs💻semiors🛠️attributeid](semiorepo://definition/semio/rs/semio.rs/AttributeId)
+## [👤semio📚rs💻semiors🛠️attributeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AttributeId)
 
 / <summary>AttributeId holds the data fields for a AttributeId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesattribute🛠️attributeid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Attribute/AttributeId)
+/ [👤semio📚rs💻semiors🔖modeltypesattribute🛠️attributeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute/d/i/AttributeId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️coord](semiorepo://definition/semio/rs/semio.rs/Coord)
+## [👤semio📚rs💻semiors🛠️coord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Coord)
 
 / <summary>Coord holds the data fields for a Coord record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypescoord🛠️coord](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Coord/Coord)
+/ [👤semio📚rs💻semiors🔖modeltypescoord🛠️coord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord/d/i/Coord)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️vector](semiorepo://definition/semio/rs/semio.rs/Vector)
+## [👤semio📚rs💻semiors🛠️vector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Vector)
 
 / <summary>Vector holds the data fields for a Vector record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesvector🛠️vector](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Vector/Vector)
+/ [👤semio📚rs💻semiors🔖modeltypesvector🛠️vector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector/d/i/Vector)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️plane](semiorepo://definition/semio/rs/semio.rs/Plane)
+## [👤semio📚rs💻semiors🛠️plane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Plane)
 
 / <summary>Plane holds the data fields for a Plane record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypesplane🛠️plane](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Plane/Plane)
+/ [👤semio📚rs💻semiors🔖modeltypesplane🛠️plane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane/d/i/Plane)
 
-## [👤semio📚rs💻semiors🛠️camera](semiorepo://definition/semio/rs/semio.rs/Camera)
+## [👤semio📚rs💻semiors🛠️camera](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Camera)
 
 / <summary>Camera holds the data fields for a Camera record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypescamera🛠️camera](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Camera/Camera)
+/ [👤semio📚rs💻semiors🔖modeltypescamera🛠️camera](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera/d/i/Camera)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️locationid](semiorepo://definition/semio/rs/semio.rs/LocationId)
+## [👤semio📚rs💻semiors🛠️locationid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LocationId)
 
 / <summary>LocationId holds the data fields for a LocationId record.</summary>
 / <summary>LocationId holds the data fields for a LocationId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️locationid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/LocationId)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️locationid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/LocationId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️location](semiorepo://definition/semio/rs/semio.rs/Location)
+## [👤semio📚rs💻semiors🛠️location](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Location)
 
 / <summary>Location holds the data fields for a Location record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️location](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/Location)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️location](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/Location)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️authorid](semiorepo://definition/semio/rs/semio.rs/AuthorId)
+## [👤semio📚rs💻semiors🛠️authorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AuthorId)
 
 / <summary>AuthorId holds the data fields for a AuthorId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️authorid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/AuthorId)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️authorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/AuthorId)
 
-## [👤semio📚rs💻semiors🛠️author](semiorepo://definition/semio/rs/semio.rs/Author)
+## [👤semio📚rs💻semiors🛠️author](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Author)
 
 / <summary>Author holds the data fields for a Author record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️author](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/Author)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️author](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/Author)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️folderid](semiorepo://definition/semio/rs/semio.rs/FolderId)
+## [👤semio📚rs💻semiors🛠️folderid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FolderId)
 
 / <summary>FolderId holds the data fields for a FolderId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️folderid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/FolderId)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️folderid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/FolderId)
 
-## [👤semio📚rs💻semiors🛠️folder](semiorepo://definition/semio/rs/semio.rs/Folder)
+## [👤semio📚rs💻semiors🛠️folder](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Folder)
 
 / <summary>Folder holds the data fields for a Folder record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️folder](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/Folder)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️folder](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/Folder)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️fileid](semiorepo://definition/semio/rs/semio.rs/FileId)
+## [👤semio📚rs💻semiors🛠️fileid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FileId)
 
 / <summary>FileId holds the data fields for a FileId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️fileid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/FileId)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️fileid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/FileId)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️file](semiorepo://definition/semio/rs/semio.rs/File)
+## [👤semio📚rs💻semiors🛠️file](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/File)
 
 / <summary>File holds the data fields for a File record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️file](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/File)
+/ [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder🛠️file](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/File)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️qualityid](semiorepo://definition/semio/rs/semio.rs/QualityId)
+## [👤semio📚rs💻semiors🛠️qualityid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/QualityId)
 
 / <summary>QualityId holds the data fields for a QualityId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️qualityid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/QualityId)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️qualityid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/QualityId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🪨qualitykind](semiorepo://definition/semio/rs/semio.rs/QualityKind)
+## [👤semio📚rs💻semiors🪨qualitykind](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/c/QualityKind)
 
 / <summary>QualityKind holds the data fields for a QualityKind record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️qualitykind](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/QualityKind)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️qualitykind](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/QualityKind)
 
-## [👤semio📚rs💻semiors🛠️quality](semiorepo://definition/semio/rs/semio.rs/Quality)
+## [👤semio📚rs💻semiors🛠️quality](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Quality)
 
 / <summary>Quality holds the data fields for a Quality record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️quality](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/Quality)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️quality](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Quality)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️portid](semiorepo://definition/semio/rs/semio.rs/PortId)
+## [👤semio📚rs💻semiors🛠️portid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PortId)
 
 / <summary>PortId holds the data fields for a PortId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️portid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/PortId)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️portid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/PortId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️port](semiorepo://definition/semio/rs/semio.rs/Port)
+## [👤semio📚rs💻semiors🛠️port](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Port)
 
 / <summary>Port holds the data fields for a Port record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️port](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/Port)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️port](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Port)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️tagid](semiorepo://definition/semio/rs/semio.rs/TagId)
+## [👤semio📚rs💻semiors🛠️tagid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TagId)
 
 / <summary>TagId holds the data fields for a TagId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️tagid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/TagId)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️tagid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/TagId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️tag](semiorepo://definition/semio/rs/semio.rs/Tag)
+## [👤semio📚rs💻semiors🛠️tag](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Tag)
 
 / <summary>Tag holds the data fields for a Tag record.</summary>
 / <summary>Tag holds the data fields for a Tag record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️tag](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/Tag)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️tag](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Tag)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️conceptid](semiorepo://definition/semio/rs/semio.rs/ConceptId)
+## [👤semio📚rs💻semiors🛠️conceptid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConceptId)
 
 / <summary>ConceptId holds the data fields for a ConceptId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️conceptid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/ConceptId)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️conceptid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/ConceptId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️concept](semiorepo://definition/semio/rs/semio.rs/Concept)
+## [👤semio📚rs💻semiors🛠️concept](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Concept)
 
 / <summary>Concept holds the data fields for a Concept record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️concept](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/Concept)
+/ [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept🛠️concept](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Concept)
 / </remarks>
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️propid](semiorepo://definition/semio/rs/semio.rs/PropId)
+## [👤semio📚rs💻semiors🛠️propid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PropId)
 
 / <summary>PropId holds the data fields for a PropId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️propid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Prop,%20Model,%20Connector/PropId)
+/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️propid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/PropId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️prop](semiorepo://definition/semio/rs/semio.rs/Prop)
+## [👤semio📚rs💻semiors🛠️prop](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Prop)
 
 / <summary>Prop holds the data fields for a Prop record.</summary>
 / <summary>Prop holds the data fields for a Prop record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️prop](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Prop,%20Model,%20Connector/Prop)
+/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️prop](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/Prop)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️modelid](semiorepo://definition/semio/rs/semio.rs/ModelId)
+## [👤semio📚rs💻semiors🛠️modelid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ModelId)
 
 / <summary>ModelId holds the data fields for a ModelId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️modelid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Prop,%20Model,%20Connector/ModelId)
+/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️modelid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/ModelId)
 
-## [👤semio📚rs💻semiors🛠️model](semiorepo://definition/semio/rs/semio.rs/Model)
+## [👤semio📚rs💻semiors🛠️model](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Model)
 
 / <summary>Model holds the data fields for a Model record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️model](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Prop,%20Model,%20Connector/Model)
+/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️model](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/Model)
 / </remarks>
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️connectorid](semiorepo://definition/semio/rs/semio.rs/ConnectorId)
+## [👤semio📚rs💻semiors🛠️connectorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectorId)
 
 / <summary>ConnectorId holds the data fields for a ConnectorId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️connectorid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Prop,%20Model,%20Connector/ConnectorId)
+/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️connectorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/ConnectorId)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️connector](semiorepo://definition/semio/rs/semio.rs/Connector)
+## [👤semio📚rs💻semiors🛠️connector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Connector)
 
 / <summary>Connector holds the data fields for a Connector record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️connector](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Prop,%20Model,%20Connector/Connector)
+/ [👤semio📚rs💻semiors🔖modeltypespropmodelconnector🛠️connector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/Connector)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️typeid](semiorepo://definition/semio/rs/semio.rs/TypeId)
+## [👤semio📚rs💻semiors🛠️typeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TypeId)
 
 / <summary>TypeId holds the data fields for a TypeId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypestype🛠️typeid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Type/TypeId)
+/ [👤semio📚rs💻semiors🔖modeltypestype🛠️typeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type/d/i/TypeId)
 
-## [👤semio📚rs💻semiors🛠️type](semiorepo://definition/semio/rs/semio.rs/Type)
+## [👤semio📚rs💻semiors🛠️type](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Type)
 
 / <summary>Type holds the data fields for a Type record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypestype🛠️type](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Type/Type)
+/ [👤semio📚rs💻semiors🔖modeltypestype🛠️type](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type/d/i/Type)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️layerid](semiorepo://definition/semio/rs/semio.rs/LayerId)
+## [👤semio📚rs💻semiors🛠️layerid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LayerId)
 
 / <summary>LayerId holds the data fields for a LayerId record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️layerid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/LayerId)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️layerid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/LayerId)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️layer](semiorepo://definition/semio/rs/semio.rs/Layer)
+## [👤semio📚rs💻semiors🛠️layer](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Layer)
 
 / <summary>Layer holds the data fields for a Layer record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️layer](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/Layer)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️layer](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Layer)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️pieceid](semiorepo://definition/semio/rs/semio.rs/PieceId)
+## [👤semio📚rs💻semiors🛠️pieceid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PieceId)
 
 / <summary>PieceId holds the data fields for a PieceId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️pieceid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/PieceId)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️pieceid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/PieceId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️designid](semiorepo://definition/semio/rs/semio.rs/DesignId)
+## [👤semio📚rs💻semiors🛠️designid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DesignId)
 
 / <summary>DesignId holds the data fields for a DesignId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️designid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/DesignId)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️designid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/DesignId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️piece](semiorepo://definition/semio/rs/semio.rs/Piece)
+## [👤semio📚rs💻semiors🛠️piece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Piece)
 
 / <summary>Piece holds the data fields for a Piece record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️piece](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/Piece)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️piece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Piece)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️groupid](semiorepo://definition/semio/rs/semio.rs/GroupId)
+## [👤semio📚rs💻semiors🛠️groupid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/GroupId)
 
 / <summary>GroupId holds the data fields for a GroupId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️groupid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/GroupId)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️groupid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/GroupId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️group](semiorepo://definition/semio/rs/semio.rs/Group)
+## [👤semio📚rs💻semiors🛠️group](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Group)
 
 / <summary>Group holds the data fields for a Group record.</summary>
 / <summary>Group holds the data fields for a Group record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️group](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/Group)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️group](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Group)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️side](semiorepo://definition/semio/rs/semio.rs/Side)
+## [👤semio📚rs💻semiors🛠️side](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Side)
 
 / <summary>Side holds the data fields for a Side record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️side](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/Side)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️side](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Side)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️connectionid](semiorepo://definition/semio/rs/semio.rs/ConnectionId)
+## [👤semio📚rs💻semiors🛠️connectionid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectionId)
 
 / <summary>ConnectionId holds the data fields for a ConnectionId record.</summary>
 / <summary>ConnectionId holds the data fields for a ConnectionId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️connectionid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/ConnectionId)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️connectionid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/ConnectionId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️connection](semiorepo://definition/semio/rs/semio.rs/Connection)
+## [👤semio📚rs💻semiors🛠️connection](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Connection)
 
 / <summary>Connection holds the data fields for a Connection record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️connection](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/Connection)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️connection](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Connection)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️statid](semiorepo://definition/semio/rs/semio.rs/StatId)
+## [👤semio📚rs💻semiors🛠️statid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/StatId)
 
 / <summary>StatId holds the data fields for a StatId record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️statid](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/StatId)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️statid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/StatId)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️stat](semiorepo://definition/semio/rs/semio.rs/Stat)
+## [👤semio📚rs💻semiors🛠️stat](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Stat)
 
 / <summary>Stat holds the data fields for a Stat record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️stat](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/Stat)
+/ [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat🛠️stat](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Stat)
 / </remarks>
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️design](semiorepo://definition/semio/rs/semio.rs/Design)
+## [👤semio📚rs💻semiors🛠️design](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Design)
 
 / <summary>Design holds the data fields for a Design record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖modeltypesdesign🛠️design](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Design/Design)
+/ [👤semio📚rs💻semiors🔖modeltypesdesign🛠️design](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Design/d/i/Design)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️kit](semiorepo://definition/semio/rs/semio.rs/Kit)
+## [👤semio📚rs💻semiors🛠️kit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Kit)
 
 / <summary>Kit holds the data fields for a Kit record.</summary>
-/ [👤semio📚rs💻semiors🔖modeltypeskit🛠️kit](semiorepo://definition/semio/rs/semio.rs/Model%20Types%20-%20Kit/Kit)
+/ [👤semio📚rs💻semiors🔖modeltypeskit🛠️kit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/d/i/Kit)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findtypeinkit](semiorepo://definition/semio/rs/semio.rs/find_type_in_kit)
+## [👤semio📚rs💻semiors🛠️findtypeinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_type_in_kit)
 
 / <summary>find_type_in_kit holds the data fields for a find_type_in_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtypeinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_type_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtypeinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_type_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findtypeinkitmut](semiorepo://definition/semio/rs/semio.rs/find_type_in_kit_mut)
+## [👤semio📚rs💻semiors🛠️findtypeinkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_type_in_kit_mut)
 
 / <summary>find_type_in_kit_mut holds the data fields for a find_type_in_kit_mut record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtypeinkitmut](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_type_in_kit_mut)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtypeinkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_type_in_kit_mut)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️finddesigninkit](semiorepo://definition/semio/rs/semio.rs/find_design_in_kit)
+## [👤semio📚rs💻semiors🛠️finddesigninkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_design_in_kit)
 
 / <summary>find_design_in_kit holds the data fields for a find_design_in_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️finddesigninkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_design_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️finddesigninkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_design_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️finddesigninkitmut](semiorepo://definition/semio/rs/semio.rs/find_design_in_kit_mut)
+## [👤semio📚rs💻semiors🛠️finddesigninkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_design_in_kit_mut)
 
 / <summary>find_design_in_kit_mut holds the data fields for a find_design_in_kit_mut record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️finddesigninkitmut](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_design_in_kit_mut)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️finddesigninkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_design_in_kit_mut)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findpieceindesign](semiorepo://definition/semio/rs/semio.rs/find_piece_in_design)
+## [👤semio📚rs💻semiors🛠️findpieceindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_piece_in_design)
 
 / <summary>find_piece_in_design holds the data fields for a find_piece_in_design record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findpieceindesign](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_piece_in_design)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findpieceindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_piece_in_design)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findpieceindesignmut](semiorepo://definition/semio/rs/semio.rs/find_piece_in_design_mut)
+## [👤semio📚rs💻semiors🛠️findpieceindesignmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_piece_in_design_mut)
 
 / <summary>find_piece_in_design_mut performs the find_piece_in_design_mut operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findpieceindesignmut](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_piece_in_design_mut)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findpieceindesignmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_piece_in_design_mut)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findconnectionindesign](semiorepo://definition/semio/rs/semio.rs/find_connection_in_design)
+## [👤semio📚rs💻semiors🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_connection_in_design)
 
 / <summary>find_connection_in_design holds the data fields for a find_connection_in_design record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findconnectionindesign](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_connection_in_design)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_connection_in_design)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findconnectorintype](semiorepo://definition/semio/rs/semio.rs/find_connector_in_type)
+## [👤semio📚rs💻semiors🛠️findconnectorintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_connector_in_type)
 
 / <summary>find_connector_in_type holds the data fields for a find_connector_in_type record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findconnectorintype](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_connector_in_type)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findconnectorintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_connector_in_type)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findmodelintype](semiorepo://definition/semio/rs/semio.rs/find_model_in_type)
+## [👤semio📚rs💻semiors🛠️findmodelintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_model_in_type)
 
 / <summary>find_model_in_type holds the data fields for a find_model_in_type record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findmodelintype](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_model_in_type)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findmodelintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_model_in_type)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findfileinkit](semiorepo://definition/semio/rs/semio.rs/find_file_in_kit)
+## [👤semio📚rs💻semiors🛠️findfileinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_file_in_kit)
 
 / <summary>find_file_in_kit performs the find_file_in_kit operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findfileinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_file_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findfileinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_file_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findfolderinkit](semiorepo://definition/semio/rs/semio.rs/find_folder_in_kit)
+## [👤semio📚rs💻semiors🛠️findfolderinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_folder_in_kit)
 
 / <summary>find_folder_in_kit holds the data fields for a find_folder_in_kit record.</summary>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findfolderinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_folder_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findfolderinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_folder_in_kit)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findauthorinkit](semiorepo://definition/semio/rs/semio.rs/find_author_in_kit)
+## [👤semio📚rs💻semiors🛠️findauthorinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_author_in_kit)
 
 / <summary>find_author_in_kit performs the find_author_in_kit operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findauthorinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_author_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findauthorinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_author_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findtaginkit](semiorepo://definition/semio/rs/semio.rs/find_tag_in_kit)
+## [👤semio📚rs💻semiors🛠️findtaginkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_tag_in_kit)
 
 / <summary>find_tag_in_kit holds the data fields for a find_tag_in_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtaginkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_tag_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findtaginkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_tag_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findconceptinkit](semiorepo://definition/semio/rs/semio.rs/find_concept_in_kit)
+## [👤semio📚rs💻semiors🛠️findconceptinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_concept_in_kit)
 
 / <summary>find_concept_in_kit holds the data fields for a find_concept_in_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findconceptinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_concept_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findconceptinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_concept_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findqualityinkit](semiorepo://definition/semio/rs/semio.rs/find_quality_in_kit)
+## [👤semio📚rs💻semiors🛠️findqualityinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_quality_in_kit)
 
 / <summary>find_quality_in_kit holds the data fields for a find_quality_in_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findqualityinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_quality_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findqualityinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_quality_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findinterfaceinkit](semiorepo://definition/semio/rs/semio.rs/find_interface_in_kit)
+## [👤semio📚rs💻semiors🛠️findinterfaceinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_interface_in_kit)
 
 / <summary>find_interface_in_kit performs the find_interface_in_kit operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findinterfaceinkit](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_interface_in_kit)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findinterfaceinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_interface_in_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findlayerindesign](semiorepo://definition/semio/rs/semio.rs/find_layer_in_design)
+## [👤semio📚rs💻semiors🛠️findlayerindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_layer_in_design)
 
 / <summary>find_layer_in_design holds the data fields for a find_layer_in_design record.</summary>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findlayerindesign](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_layer_in_design)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findlayerindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_layer_in_design)
 
-## [👤semio📚rs💻semiors🛠️findgroupindesign](semiorepo://definition/semio/rs/semio.rs/find_group_in_design)
+## [👤semio📚rs💻semiors🛠️findgroupindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_group_in_design)
 
 / <summary>find_group_in_design holds the data fields for a find_group_in_design record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findgroupindesign](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_group_in_design)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findgroupindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_group_in_design)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️findstatindesign](semiorepo://definition/semio/rs/semio.rs/find_stat_in_design)
+## [👤semio📚rs💻semiors🛠️findstatindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_stat_in_design)
 
 / <summary>find_stat_in_design holds the data fields for a find_stat_in_design record.</summary>
-/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findstatindesign](semiorepo://definition/semio/rs/semio.rs/Finder%20Functions/find_stat_in_design)
+/ [👤semio📚rs💻semiors🔖finderfunctions🛠️findstatindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_stat_in_design)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️serializekit](semiorepo://definition/semio/rs/semio.rs/serialize_kit)
+## [👤semio📚rs💻semiors🛠️serializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_kit)
 
 / <summary>serialize_kit holds the data fields for a serialize_kit record.</summary>
-/ [👤semio📚rs💻semiors🔖serialization🛠️serializekit](semiorepo://definition/semio/rs/semio.rs/Serialization/serialize_kit)
+/ [👤semio📚rs💻semiors🔖serialization🛠️serializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_kit)
 
-## [👤semio📚rs💻semiors🛠️deserializekit](semiorepo://definition/semio/rs/semio.rs/deserialize_kit)
+## [👤semio📚rs💻semiors🛠️deserializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_kit)
 
 / <summary>deserialize_kit holds the data fields for a deserialize_kit record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️deserializekit](semiorepo://definition/semio/rs/semio.rs/Serialization/deserialize_kit)
+/ [👤semio📚rs💻semiors🔖serialization🛠️deserializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/deserialize_kit)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️serializedesign](semiorepo://definition/semio/rs/semio.rs/serialize_design)
+## [👤semio📚rs💻semiors🛠️serializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_design)
 
 / <summary>serialize_design performs the serialize_design operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️serializedesign](semiorepo://definition/semio/rs/semio.rs/Serialization/serialize_design)
+/ [👤semio📚rs💻semiors🔖serialization🛠️serializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_design)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️deserializedesign](semiorepo://definition/semio/rs/semio.rs/deserialize_design)
+## [👤semio📚rs💻semiors🛠️deserializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_design)
 
 / <summary>deserialize_design holds the data fields for a deserialize_design record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️deserializedesign](semiorepo://definition/semio/rs/semio.rs/Serialization/deserialize_design)
+/ [👤semio📚rs💻semiors🔖serialization🛠️deserializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/deserialize_design)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️serializetype](semiorepo://definition/semio/rs/semio.rs/serialize_type)
+## [👤semio📚rs💻semiors🛠️serializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_type)
 
 / <summary>serialize_type holds the data fields for a serialize_type record.</summary>
 / <summary>serialize_type performs the serialize_type operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️serializetype](semiorepo://definition/semio/rs/semio.rs/Serialization/serialize_type)
+/ [👤semio📚rs💻semiors🔖serialization🛠️serializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_type)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️deserializetype](semiorepo://definition/semio/rs/semio.rs/deserialize_type)
+## [👤semio📚rs💻semiors🛠️deserializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_type)
 
 / <summary>deserialize_type holds the data fields for a deserialize_type record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️deserializetype](semiorepo://definition/semio/rs/semio.rs/Serialization/deserialize_type)
+/ [👤semio📚rs💻semiors🔖serialization🛠️deserializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/deserialize_type)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️arekitsequal](semiorepo://definition/semio/rs/semio.rs/are_kits_equal)
+## [👤semio📚rs💻semiors🛠️arekitsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_kits_equal)
 
 / <summary>are_kits_equal performs the are_kits_equal operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️arekitsequal](semiorepo://definition/semio/rs/semio.rs/Serialization/are_kits_equal)
+/ [👤semio📚rs💻semiors🔖serialization🛠️arekitsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/are_kits_equal)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️aredesignsequal](semiorepo://definition/semio/rs/semio.rs/are_designs_equal)
+## [👤semio📚rs💻semiors🛠️aredesignsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_designs_equal)
 
 / <summary>are_designs_equal holds the data fields for a are_designs_equal record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️aredesignsequal](semiorepo://definition/semio/rs/semio.rs/Serialization/are_designs_equal)
+/ [👤semio📚rs💻semiors🔖serialization🛠️aredesignsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/are_designs_equal)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️aretypesequal](semiorepo://definition/semio/rs/semio.rs/are_types_equal)
+## [👤semio📚rs💻semiors🛠️aretypesequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_types_equal)
 
 / <summary>are_types_equal holds the data fields for a are_types_equal record.</summary>
-/ [👤semio📚rs💻semiors🔖serialization🛠️aretypesequal](semiorepo://definition/semio/rs/semio.rs/Serialization/are_types_equal)
+/ [👤semio📚rs💻semiors🔖serialization🛠️aretypesequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/are_types_equal)
 
-## [👤semio📚rs💻semiors🪨supportedmodelextensions](semiorepo://definition/semio/rs/semio.rs/SUPPORTED_MODEL_EXTENSIONS)
+## [👤semio📚rs💻semiors🪨supportedmodelextensions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/c/SUPPORTED_MODEL_EXTENSIONS)
 
 / <summary>SUPPORTED_MODEL_EXTENSIONS holds the data fields for a SUPPORTED_MODEL_EXTENSIONS record.</summary>
-/ [👤semio📚rs💻semiors🔖serialization🛠️supportedmodelextensions](semiorepo://definition/semio/rs/semio.rs/Serialization/SUPPORTED_MODEL_EXTENSIONS)
+/ [👤semio📚rs💻semiors🔖serialization🛠️supportedmodelextensions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/SUPPORTED_MODEL_EXTENSIONS)
 
-## [👤semio📚rs💻semiors🛠️issupportedmodelextension](semiorepo://definition/semio/rs/semio.rs/is_supported_model_extension)
+## [👤semio📚rs💻semiors🛠️issupportedmodelextension](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/is_supported_model_extension)
 
 / <summary>is_supported_model_extension performs the is_supported_model_extension operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖serialization🛠️issupportedmodelextension](semiorepo://definition/semio/rs/semio.rs/Serialization/is_supported_model_extension)
+/ [👤semio📚rs💻semiors🔖serialization🛠️issupportedmodelextension](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/is_supported_model_extension)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️removeditem](semiorepo://definition/semio/rs/semio.rs/RemovedItem)
+## [👤semio📚rs💻semiors🛠️removeditem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/RemovedItem)
 
 / <summary>RemovedItem holds the data fields for a RemovedItem record.</summary>
 / <summary>RemovedItem holds the data fields for a RemovedItem record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️removeditem](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/RemovedItem)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️removeditem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/RemovedItem)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️diffupdate](semiorepo://definition/semio/rs/semio.rs/DiffUpdate)
+## [👤semio📚rs💻semiors🛠️diffupdate](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffUpdate)
 
 / <summary>DiffUpdate holds the data fields for a DiffUpdate record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️diffupdate](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/DiffUpdate)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️diffupdate](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DiffUpdate)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️collectiondiff](semiorepo://definition/semio/rs/semio.rs/CollectionDiff)
+## [👤semio📚rs💻semiors🛠️collectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/CollectionDiff)
 
 / <summary>CollectionDiff holds the data fields for a CollectionDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️collectiondiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/CollectionDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️collectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/CollectionDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️attributediff](semiorepo://definition/semio/rs/semio.rs/AttributeDiff)
+## [👤semio📚rs💻semiors🛠️attributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AttributeDiff)
 
 / <summary>AttributeDiff holds the data fields for a AttributeDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️attributediff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/AttributeDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️attributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️propdiff](semiorepo://definition/semio/rs/semio.rs/PropDiff)
+## [👤semio📚rs💻semiors🛠️propdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PropDiff)
 
 / <summary>PropDiff holds the data fields for a PropDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️propdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/PropDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️propdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️connectordiff](semiorepo://definition/semio/rs/semio.rs/ConnectorDiff)
+## [👤semio📚rs💻semiors🛠️connectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectorDiff)
 
 / <summary>ConnectorDiff holds the data fields for a ConnectorDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️connectordiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/ConnectorDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️connectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️modeldiff](semiorepo://definition/semio/rs/semio.rs/ModelDiff)
+## [👤semio📚rs💻semiors🛠️modeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ModelDiff)
 
 / <summary>ModelDiff holds the data fields for a ModelDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️modeldiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/ModelDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️modeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️typediff](semiorepo://definition/semio/rs/semio.rs/TypeDiff)
+## [👤semio📚rs💻semiors🛠️typediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TypeDiff)
 
 / <summary>TypeDiff holds the data fields for a TypeDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️typediff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/TypeDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️typediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️sidediff](semiorepo://definition/semio/rs/semio.rs/SideDiff)
+## [👤semio📚rs💻semiors🛠️sidediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/SideDiff)
 
 / <summary>SideDiff holds the data fields for a SideDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️sidediff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/SideDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️sidediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️connectiondiff](semiorepo://definition/semio/rs/semio.rs/ConnectionDiff)
+## [👤semio📚rs💻semiors🛠️connectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectionDiff)
 
 / <summary>ConnectionDiff holds the data fields for a ConnectionDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️connectiondiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/ConnectionDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️connectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️piecediff](semiorepo://definition/semio/rs/semio.rs/PieceDiff)
+## [👤semio📚rs💻semiors🛠️piecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PieceDiff)
 
 / <summary>PieceDiff holds the data fields for a PieceDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️piecediff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/PieceDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️piecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️layerdiff](semiorepo://definition/semio/rs/semio.rs/LayerDiff)
+## [👤semio📚rs💻semiors🛠️layerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LayerDiff)
 
 / <summary>LayerDiff holds the data fields for a LayerDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️layerdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/LayerDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️layerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️groupdiff](semiorepo://definition/semio/rs/semio.rs/GroupDiff)
+## [👤semio📚rs💻semiors🛠️groupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/GroupDiff)
 
 / <summary>GroupDiff holds the data fields for a GroupDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️groupdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/GroupDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️groupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️statdiff](semiorepo://definition/semio/rs/semio.rs/StatDiff)
+## [👤semio📚rs💻semiors🛠️statdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/StatDiff)
 
 / <summary>StatDiff holds the data fields for a StatDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️statdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/StatDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️statdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️designdiff](semiorepo://definition/semio/rs/semio.rs/DesignDiff)
+## [👤semio📚rs💻semiors🛠️designdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DesignDiff)
 
 / <summary>DesignDiff holds the data fields for a DesignDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️designdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/DesignDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️designdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️tagdiff](semiorepo://definition/semio/rs/semio.rs/TagDiff)
+## [👤semio📚rs💻semiors🛠️tagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TagDiff)
 
 / <summary>TagDiff holds the data fields for a TagDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️tagdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/TagDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️tagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️conceptdiff](semiorepo://definition/semio/rs/semio.rs/ConceptDiff)
+## [👤semio📚rs💻semiors🛠️conceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConceptDiff)
 
 / <summary>ConceptDiff holds the data fields for a ConceptDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️conceptdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/ConceptDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️conceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️portdiff](semiorepo://definition/semio/rs/semio.rs/PortDiff)
+## [👤semio📚rs💻semiors🛠️portdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PortDiff)
 
 / <summary>PortDiff holds the data fields for a PortDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️portdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/PortDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️portdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️qualitydiff](semiorepo://definition/semio/rs/semio.rs/QualityDiff)
+## [👤semio📚rs💻semiors🛠️qualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/QualityDiff)
 
 / <summary>QualityDiff holds the data fields for a QualityDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️qualitydiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/QualityDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️qualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️filediff](semiorepo://definition/semio/rs/semio.rs/FileDiff)
+## [👤semio📚rs💻semiors🛠️filediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FileDiff)
 
 / <summary>FileDiff holds the data fields for a FileDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️filediff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/FileDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️filediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️folderdiff](semiorepo://definition/semio/rs/semio.rs/FolderDiff)
+## [👤semio📚rs💻semiors🛠️folderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FolderDiff)
 
 / <summary>FolderDiff holds the data fields for a FolderDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️folderdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/FolderDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️folderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️authordiff](semiorepo://definition/semio/rs/semio.rs/AuthorDiff)
+## [👤semio📚rs💻semiors🛠️authordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AuthorDiff)
 
 / <summary>AuthorDiff holds the data fields for a AuthorDiff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️authordiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/AuthorDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️authordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorDiff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️kitdiff](semiorepo://definition/semio/rs/semio.rs/KitDiff)
+## [👤semio📚rs💻semiors🛠️kitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/KitDiff)
 
 / <summary>KitDiff holds the data fields for a KitDiff record.</summary>
-/ [👤semio📚rs💻semiors🔖difftypes🛠️kitdiff](semiorepo://definition/semio/rs/semio.rs/Diff%20Types/KitDiff)
+/ [👤semio📚rs💻semiors🔖difftypes🛠️kitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitDiff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors✂️hasguid](semiorepo://definition/semio/rs/semio.rs/HasGuid)
+## [👤semio📚rs💻semiors✂️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/HasGuid)
 
 / <summary>HasGuid holds the data fields for a HasGuid record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖hasguidtrait🛠️hasguid](semiorepo://definition/semio/rs/semio.rs/HasGuid%20Trait/HasGuid)
+/ [👤semio📚rs💻semiors🔖hasguidtrait🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
 / </remarks>
 
-## [👤semio📚rs💻semiors✂️diffhasguid](semiorepo://definition/semio/rs/semio.rs/DiffHasGuid)
+## [👤semio📚rs💻semiors✂️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/DiffHasGuid)
 
 / <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖hasguidtrait🛠️diffhasguid](semiorepo://definition/semio/rs/semio.rs/HasGuid%20Trait/DiffHasGuid)
+/ [👤semio📚rs💻semiors🔖hasguidtrait🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applycollectiondiff](semiorepo://definition/semio/rs/semio.rs/apply_collection_diff)
+## [👤semio📚rs💻semiors🛠️applycollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_collection_diff)
 
 / <summary>apply_collection_diff holds the data fields for a apply_collection_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applycollectiondiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_collection_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applycollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_collection_diff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyattributediff](semiorepo://definition/semio/rs/semio.rs/apply_attribute_diff)
+## [👤semio📚rs💻semiors🛠️applyattributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_attribute_diff)
 
 / <summary>apply_attribute_diff performs the apply_attribute_diff operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyattributediff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_attribute_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyattributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_attribute_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applypropdiff](semiorepo://definition/semio/rs/semio.rs/apply_prop_diff)
+## [👤semio📚rs💻semiors🛠️applypropdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_prop_diff)
 
 / <summary>apply_prop_diff holds the data fields for a apply_prop_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applypropdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_prop_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applypropdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_prop_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyconnectordiff](semiorepo://definition/semio/rs/semio.rs/apply_connector_diff)
+## [👤semio📚rs💻semiors🛠️applyconnectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_connector_diff)
 
 / <summary>apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyconnectordiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_connector_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyconnectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_connector_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applymodeldiff](semiorepo://definition/semio/rs/semio.rs/apply_model_diff)
+## [👤semio📚rs💻semiors🛠️applymodeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_model_diff)
 
 / <summary>apply_model_diff performs the apply_model_diff operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applymodeldiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_model_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applymodeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_model_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applytypediff](semiorepo://definition/semio/rs/semio.rs/apply_type_diff)
+## [👤semio📚rs💻semiors🛠️applytypediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_type_diff)
 
 / <summary>apply_type_diff holds the data fields for a apply_type_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applytypediff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_type_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applytypediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_type_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applylayerdiff](semiorepo://definition/semio/rs/semio.rs/apply_layer_diff)
+## [👤semio📚rs💻semiors🛠️applylayerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_layer_diff)
 
 / <summary>apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applylayerdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_layer_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applylayerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_layer_diff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applygroupdiff](semiorepo://definition/semio/rs/semio.rs/apply_group_diff)
+## [👤semio📚rs💻semiors🛠️applygroupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_group_diff)
 
 / <summary>apply_group_diff holds the data fields for a apply_group_diff record.</summary>
 / <summary>apply_group_diff performs the apply_group_diff operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applygroupdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_group_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applygroupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_group_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applystatdiff](semiorepo://definition/semio/rs/semio.rs/apply_stat_diff)
+## [👤semio📚rs💻semiors🛠️applystatdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_stat_diff)
 
 / <summary>apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applystatdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_stat_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applystatdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_stat_diff)
 
-## [👤semio📚rs💻semiors🛠️applypiecediff](semiorepo://definition/semio/rs/semio.rs/apply_piece_diff)
+## [👤semio📚rs💻semiors🛠️applypiecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_piece_diff)
 
 / <summary>apply_piece_diff holds the data fields for a apply_piece_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applypiecediff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_piece_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applypiecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_piece_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyconnectiondiff](semiorepo://definition/semio/rs/semio.rs/apply_connection_diff)
+## [👤semio📚rs💻semiors🛠️applyconnectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_connection_diff)
 
 / <summary>apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyconnectiondiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_connection_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyconnectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_connection_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applydesigndiff](semiorepo://definition/semio/rs/semio.rs/apply_design_diff)
+## [👤semio📚rs💻semiors🛠️applydesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_design_diff)
 
 / <summary>apply_design_diff performs the apply_design_diff operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applydesigndiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_design_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applydesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_design_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applytagdiff](semiorepo://definition/semio/rs/semio.rs/apply_tag_diff)
+## [👤semio📚rs💻semiors🛠️applytagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_tag_diff)
 
 / <summary>apply_tag_diff holds the data fields for a apply_tag_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applytagdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_tag_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applytagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_tag_diff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyconceptdiff](semiorepo://definition/semio/rs/semio.rs/apply_concept_diff)
+## [👤semio📚rs💻semiors🛠️applyconceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_concept_diff)
 
 / <summary>apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyconceptdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_concept_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyconceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_concept_diff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyinterfacediff](semiorepo://definition/semio/rs/semio.rs/apply_interface_diff)
+## [👤semio📚rs💻semiors🛠️applyinterfacediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_interface_diff)
 
 / <summary>apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyinterfacediff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_interface_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyinterfacediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_interface_diff)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyqualitydiff](semiorepo://definition/semio/rs/semio.rs/apply_quality_diff)
+## [👤semio📚rs💻semiors🛠️applyqualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_quality_diff)
 
 / <summary>apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyqualitydiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_quality_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyqualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_quality_diff)
 
-## [👤semio📚rs💻semiors🛠️applyfilediff](semiorepo://definition/semio/rs/semio.rs/apply_file_diff)
+## [👤semio📚rs💻semiors🛠️applyfilediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_file_diff)
 
 / <summary>apply_file_diff holds the data fields for a apply_file_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyfilediff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_file_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyfilediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_file_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyfolderdiff](semiorepo://definition/semio/rs/semio.rs/apply_folder_diff)
+## [👤semio📚rs💻semiors🛠️applyfolderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_folder_diff)
 
 / <summary>apply_folder_diff performs the apply_folder_diff operation.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyfolderdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_folder_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyfolderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_folder_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️applyauthordiff](semiorepo://definition/semio/rs/semio.rs/apply_author_diff)
+## [👤semio📚rs💻semiors🛠️applyauthordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_author_diff)
 
 / <summary>apply_author_diff holds the data fields for a apply_author_diff record.</summary>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applyauthordiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_author_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applyauthordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_author_diff)
 
-## [👤semio📚rs💻semiors🛠️applykitdiff](semiorepo://definition/semio/rs/semio.rs/apply_kit_diff)
+## [👤semio📚rs💻semiors🛠️applykitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_kit_diff)
 
 / <summary>apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖applydiff🛠️applykitdiff](semiorepo://definition/semio/rs/semio.rs/ApplyDiff/apply_kit_diff)
+/ [👤semio📚rs💻semiors🔖applydiff🛠️applykitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_kit_diff)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️flattenedpiece](semiorepo://definition/semio/rs/semio.rs/FlattenedPiece)
+## [👤semio📚rs💻semiors🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FlattenedPiece)
 
 / <summary>FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
-/ [👤semio📚rs💻semiors🔖flattendesign🛠️flattenedpiece](semiorepo://definition/semio/rs/semio.rs/FlattenDesign/FlattenedPiece)
+/ [👤semio📚rs💻semiors🔖flattendesign🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/FlattenedPiece)
 
-## [👤semio📚rs💻semiors🛠️flattendesign](semiorepo://definition/semio/rs/semio.rs/flatten_design)
+## [👤semio📚rs💻semiors🛠️flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/flatten_design)
 
 / <summary>flatten_design holds the data fields for a flatten_design record.</summary>
-/ [👤semio📚rs💻semiors🔖flattendesign🛠️flattendesign](semiorepo://definition/semio/rs/semio.rs/FlattenDesign/flatten_design)
+/ [👤semio📚rs💻semiors🔖flattendesign🛠️flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/flatten_design)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️validationproblem](semiorepo://definition/semio/rs/semio.rs/ValidationProblem)
+## [👤semio📚rs💻semiors🛠️validationproblem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationProblem)
 
 / <summary>ValidationProblem holds the data fields for a ValidationProblem record.</summary>
 / <remarks>
 / </remarks>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖validationtypes🛠️validationproblem](semiorepo://definition/semio/rs/semio.rs/Validation%20Types/ValidationProblem)
+/ [👤semio📚rs💻semiors🔖validationtypes🛠️validationproblem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/ValidationProblem)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️validationfix](semiorepo://definition/semio/rs/semio.rs/ValidationFix)
+## [👤semio📚rs💻semiors🛠️validationfix](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationFix)
 
 / <summary>ValidationFix holds the data fields for a ValidationFix record.</summary>
 / <remarks>
-/ [👤semio📚rs💻semiors🔖validationtypes🛠️validationfix](semiorepo://definition/semio/rs/semio.rs/Validation%20Types/ValidationFix)
+/ [👤semio📚rs💻semiors🔖validationtypes🛠️validationfix](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/ValidationFix)
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️validationresult](semiorepo://definition/semio/rs/semio.rs/ValidationResult)
+## [👤semio📚rs💻semiors🛠️validationresult](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationResult)
 
 / <summary>ValidationResult holds the data fields for a ValidationResult record.</summary>
-/ [👤semio📚rs💻semiors🔖validationtypes🛠️validationresult](semiorepo://definition/semio/rs/semio.rs/Validation%20Types/ValidationResult)
+/ [👤semio📚rs💻semiors🔖validationtypes🛠️validationresult](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/ValidationResult)
 / <remarks>
 / </remarks>
 
-## [👤semio📚rs💻semiors🛠️validatekit](semiorepo://definition/semio/rs/semio.rs/validate_kit)
+## [👤semio📚rs💻semiors🛠️validatekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/validate_kit)
 
 / <summary>validate_kit holds the data fields for a validate_kit record.</summary>
-/ [👤semio📚rs💻semiors🔖validationtypes🛠️validatekit](semiorepo://definition/semio/rs/semio.rs/Validation%20Types/validate_kit)
+/ [👤semio📚rs💻semiors🔖validationtypes🛠️validatekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/validate_kit)
 
-## [👤semio📚rs💻semiors🛠️sqlite](semiorepo://definition/semio/rs/semio.rs/sqlite)
+## [👤semio📚rs💻semiors🛠️sqlite](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/sqlite)
 
 / <summary>sqlite holds the data fields for a sqlite record.</summary>
-/ [👤semio📚rs💻semiors🔖sqliteimport🔖export🛠️sqlite](semiorepo://definition/semio/rs/semio.rs/SQLite%20Import/Export/sqlite)
+/ [👤semio📚rs💻semiors🔖sqliteimport🔖export🛠️sqlite](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export/d/i/sqlite)
 
-## [👤semio📚rs💻semiors🛠️ziproundtrip](semiorepo://definition/semio/rs/semio.rs/zip_roundtrip)
+## [👤semio📚rs💻semiors🛠️ziproundtrip](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/zip_roundtrip)
 
 / <summary>zip_roundtrip holds the data fields for a zip_roundtrip record.</summary>
-/ [👤semio📚rs💻semiors🔖zipimport🔖export🛠️ziproundtrip](semiorepo://definition/semio/rs/semio.rs/Zip%20Import/Export/zip_roundtrip)
+/ [👤semio📚rs💻semiors🔖zipimport🔖export🛠️ziproundtrip](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export/d/i/zip_roundtrip)
 
-## [👤semio📚rs💻semiors🛠️wasm](semiorepo://definition/semio/rs/semio.rs/wasm)
+## [👤semio📚rs💻semiors🛠️wasm](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/wasm)
 
 / <summary>wasm holds the data fields for a wasm record.</summary>
-/ [👤semio📚rs💻semiors🔖wasmbindings🛠️wasm](semiorepo://definition/semio/rs/semio.rs/WASM%20Bindings/wasm)
+/ [👤semio📚rs💻semiors🔖wasmbindings🛠️wasm](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings/d/i/wasm)
 
-## [👤semio🖱️sketchpad💻indextsx](semiorepo://file/semio/sketchpad/index.tsx)
+## [👤semio🖱️sketchpad💻indextsx](semiorepo://p/u/semio/b/u/sketchpad/f/index.tsx)
 
 Entry point for the standalone sketchpad web application.
 
-## [👤semio🖱️sketchpad💻indextsx🔖entrypoint](semiorepo://section/Entrypoint)
+## [👤semio🖱️sketchpad💻indextsx🔖entrypoint](semiorepo://p/u/semio/b/u/sketchpad/f/index.tsx/s/Entrypoint)
 
 Sketchpad application entrypoint registering apps and rendering the root.

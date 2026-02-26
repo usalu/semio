@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [🧰semiorepo🖱️vscode💻codegents](semiorepo://file/semio-repo/vscode/codegen.ts)
+// [🧰semiorepo🖱️vscode💻codegen](semiorepo://p/i/semio-repo/b/u/vscode/f/codegen.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,15 +19,18 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [🧰semiorepo🖱️vscode💻codegents🔖configuration](semiorepo://section/semio-repo/vscode/codegen.ts/Configuration)
+// [🧰semiorepo🖱️vscode💻codegen🔖configuration](semiorepo://p/i/semio-repo/b/u/vscode/f/codegen.ts/s/Configuration)
 // GraphQL code generation configuration for the VS Code extension.
 // Configuration MUST generate typed client code from the GraphQL schema.
 
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
-// GraphQL codegen configuration targeting the schema and query documents.
-// Config MUST reference the GraphQL schema and generate client preset output.
+/**
+ * GraphQL codegen configuration targeting the schema and query documents.
+// [🧰semiorepo🖱️vscode💻codegen🔖configuration🪨config](semiorepo://p/i/semio-repo/b/u/vscode/f/codegen.ts/s/Configuration/d/i/config)
+ *
+ * Config MUST reference the GraphQL schema and generate client preset output.
+ **/
 const config: CodegenConfig = {
   schema: "../graphql/schema.graphql",
   documents: ["queries.ts"],

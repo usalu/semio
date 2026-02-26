@@ -1,0 +1,13 @@
+{
+  "title": "Add Agent Thinking Hook Events",
+  "status": "closed",
+  "description": "Add new semio repo hook events agent.thinking.starting and agent.thinking.ended for thinking agents. Map cursor afterAgentThought to agent.thinking.ended instead of agent.ended. Add HookResultAgentThinkingStarting and HookResultAgentThinkingEnded result types with message field containing thinking text. Update all tests.",
+  "summary": "Added agent.thinking.starting and agent.thinking.ended hook events with HookAgentThinkingStarting/Ended constants, result structs, extractThinkingTextFromInput helper (reads from text or native.event.text), remapped cursor afterAgentThought to HookAgentThinkingEnded, updated help text and all tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/724"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪17721958060097293995373624244609097808"
+  ]
+}

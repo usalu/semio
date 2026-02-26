@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-
-// [👤semio📚engine🥼testts](semiorepo://file/semio/engine/test.ts)
+// [👤semio📚engine🥼testts](semiorepo://p/u/semio/b/l/engine/f/test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +18,6 @@
 // #endregion 🔖Header
 
 // #region 🔖Test Runner
-
 import { execSync } from "child_process";
 
 execSync("poetry run pytest --cov --cov-config=pyproject.toml --cov-report html", {

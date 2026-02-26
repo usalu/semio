@@ -1,18 +1,6 @@
 {
   "title": "\"Tags, Concepts become kit entities; Models link to files with guid\"",
   "status": "closed",
-  "prompt": "\"Tags, Concepts become kit entities; Models link to files with guid\"",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.796Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "\"Tags, Concepts become kit entities; Models link to files with guid\"",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\"Tags, Concepts become kit entities; Models link to files with guid\"",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism"
 }

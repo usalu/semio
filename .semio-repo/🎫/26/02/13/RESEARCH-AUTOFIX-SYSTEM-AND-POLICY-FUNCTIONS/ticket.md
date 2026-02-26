@@ -125,7 +125,7 @@ func FileHeaderId(path string) string {
 
 GetArtifactID for "file" returns: `fileKindEmoji(data)` + path
 
-- code → 💻, test → 🧪, script → 📜, docs → 📃, config → ⚙️, resource → 💾, license → ⚖️
+- code → 💻, test → 🥼, script → 📜, docs → 📃, config → ⚙️, resource → 💾, license → ⚖️
   So: `FileHeaderId("some/folder/file.tsx")` → `💻some/folder/file.tsx`
 
 ### 7. FileHeaderUri (L20324)

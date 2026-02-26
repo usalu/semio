@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [🧰semiorepo📚go💻emitgo](semiorepo://file/semio-repo/go/emit.go)
+// [🧰semiorepo📚go💻emit](semiorepo://p/i/semio-repo/b/l/go/f/emit.go)
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // GPL-3.0
 // Client helper to POST events to the semio-repo server.
@@ -18,7 +18,7 @@ import (
 
 // Emit posts an event to the semio-repo server. No-op when SEMIO_SERVER_ADDR is unset.
 // Emit MUST perform the Emit operation.
-// [🧰semiorepo📚go💻emitgo🛠️emit](semiorepo://definition/semio-repo/go/emit.go/Emit)
+// [🧰semiorepo📚go💻emit🛠️emit](semiorepo://p/i/semio-repo/b/l/go/f/emit.go/d/i/Emit)
 func Emit(kind EventKind, source string, payload interface{}) {
 	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
 	if addr == "" {

@@ -1,6 +1,5 @@
 #region 🔖Header
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs](semiorepo://file/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 #endregion 🔖Header
 
 #region 🔖Imports
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖imports](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Imports)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖imports](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Imports)
 // Callers MUST import all required namespaces listed here.
 using System.Diagnostics;
 using System.Drawing;
@@ -43,15 +41,13 @@ using System.Text.RegularExpressions;
 #endregion 🔖Imports
 
 #region 🔖Namespace
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖namespace](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Namespace)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖namespace](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Namespace)
 // Implementations MUST reside in this namespace.
 namespace Semio.Grasshopper;
 #endregion 🔖Namespace
 
 #region 🔖Constants
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖constants](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Constants)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖constants](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Constants)
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -85,8 +81,7 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 #endregion 🔖Constants
 
 #region 🔖Utility
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖utility](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Utility)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖utility](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Utility)
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -210,8 +205,7 @@ public static class Utility
 #endregion 🔖Utility
 
 #region 🔖Converters
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖converters](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Converters)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖converters](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Converters)
 // Implementations MUST convert between semio and Grasshopper data types.
 
 public static class RhinoConverter
@@ -239,13 +233,12 @@ public static class RhinoConverter
 #endregion 🔖Converters
 
 #region 🔖Bases
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases)
 // Implementations MUST extend these abstract base classes for Goo, Param, and Component.
 
 /// Generic Grasshopper data wrapper for semio entity types.
 /// Implementations MUST override CastFrom and CastTo for type conversion.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️goo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/Goo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️goo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/Goo)
 public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEntity>, new()
 {
     public Goo() { Value = new TEntity(); }
@@ -296,7 +289,7 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
 
 /// Generic Grasshopper parameter for semio entity types.
 /// Implementations MUST provide component exposure and icon metadata.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️param](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/Param)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️param](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/Param)
 public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : Goo<TModel> where TModel : Entity<TModel>, new()
 {
     protected abstract string ModelName { get; }
@@ -315,7 +308,7 @@ public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo 
 
 /// Generic Grasshopper data wrapper for enum values.
 /// Implementations MUST convert between string names and enum values.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️enumgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EnumGoo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️enumgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EnumGoo)
 public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
 {
     public EnumGoo() { }
@@ -343,7 +336,7 @@ public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
 
 /// Generic Grasshopper parameter for enum values.
 /// Implementations MUST restrict input to valid enum members.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️enumparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EnumParam)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️enumparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EnumParam)
 public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
     where TEnumGoo : EnumGoo<TEnum>, new()
     where TEnum : struct, Enum
@@ -363,7 +356,7 @@ public abstract class Component : GH_Component
 
 /// Abstract Grasshopper component that passes input through transformation.
 /// Implementations MUST transform input data and output the result.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️passthroughcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/PassthroughComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️passthroughcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/PassthroughComponent)
 public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -436,7 +429,7 @@ public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
 
 /// Generic Grasshopper data wrapper for entity ID types.
 /// Implementations MUST wrap entity ID types for Grasshopper data flow.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/IdGoo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️idgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/IdGoo)
 public abstract class IdGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>, new()
 {
     public IdGoo() : base() { }
@@ -445,7 +438,7 @@ public abstract class IdGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>,
 
 /// Generic Grasshopper parameter for entity ID types.
 /// Implementations MUST provide type-safe parameter access for IDs.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/IdParam)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️idparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/IdParam)
 public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Entity<TModel>, new()
 {
     protected IdParam() : base() { }
@@ -456,7 +449,7 @@ public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : I
 
 /// Abstract Grasshopper component for constructing entity IDs.
 /// Implementations MUST register input parameters matching ID fields.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️idcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/IdComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️idcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/IdComponent)
 public abstract class IdComponent<TParam, TGoo, TModel> : PassthroughComponent<TParam, TGoo, TModel>
     where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -466,7 +459,7 @@ public abstract class IdComponent<TParam, TGoo, TModel> : PassthroughComponent<T
 
 /// Generic Grasshopper data wrapper for entity diff types.
 /// Implementations MUST wrap entity diff types for Grasshopper data flow.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DiffGoo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️diffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffGoo)
 public abstract class DiffGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>, new()
 {
     public DiffGoo() : base() { }
@@ -475,7 +468,7 @@ public abstract class DiffGoo<TModel> : Goo<TModel> where TModel : Entity<TModel
 
 /// Generic Grasshopper parameter for entity diff types.
 /// Implementations MUST provide type-safe parameter access for diffs.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DiffParam)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️diffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffParam)
 public abstract class DiffParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Entity<TModel>, new()
 {
     protected DiffParam() : base() { }
@@ -484,7 +477,7 @@ public abstract class DiffParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo :
 
 /// Abstract Grasshopper component for constructing entity diffs.
 /// Implementations MUST register input parameters matching diff fields.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️diffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DiffComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️diffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffComponent)
 public abstract class DiffComponent<TParam, TGoo, TModel> : PassthroughComponent<TParam, TGoo, TModel>
     where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -493,7 +486,7 @@ public abstract class DiffComponent<TParam, TGoo, TModel> : PassthroughComponent
 }
 /// Abstract Grasshopper component for serializing entities to JSON.
 /// Implementations MUST convert entities to valid JSON strings.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializecomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/SerializeComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeComponent)
 public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -533,7 +526,7 @@ public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingCompon
 
 /// Abstract Grasshopper component for deserializing entities from JSON.
 /// Implementations MUST parse JSON strings into entity instances.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializecomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DeserializeComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️deserializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DeserializeComponent)
 public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -571,7 +564,7 @@ public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComp
 
 /// Abstract Grasshopper component for serializing diffs to JSON.
 /// Implementations MUST convert diffs to valid JSON strings.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializediffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/SerializeDiffComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️serializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeDiffComponent)
 public abstract class SerializeDiffComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
     where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -589,7 +582,7 @@ public abstract class SerializeDiffComponent<TParam, TGoo, TModel> : SerializeCo
 
 /// Abstract Grasshopper component for deserializing diffs from JSON.
 /// Implementations MUST parse JSON strings into diff instances.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializediffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DeserializeDiffComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️deserializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DeserializeDiffComponent)
 public abstract class DeserializeDiffComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
     where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -607,7 +600,7 @@ public abstract class DeserializeDiffComponent<TParam, TGoo, TModel> : Deseriali
 
 /// Abstract Grasshopper component for serializing entity IDs to JSON.
 /// Implementations MUST convert entity IDs to valid JSON strings.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️serializeidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/SerializeIdComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️serializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeIdComponent)
 public abstract class SerializeIdComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
     where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -624,7 +617,7 @@ public abstract class SerializeIdComponent<TParam, TGoo, TModel> : SerializeComp
 
 /// Abstract Grasshopper component for deserializing entity IDs from JSON.
 /// Implementations MUST parse JSON strings into entity ID instances.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️deserializeidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/DeserializeIdComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️deserializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DeserializeIdComponent)
 public abstract class DeserializeIdComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
     where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -641,7 +634,7 @@ public abstract class DeserializeIdComponent<TParam, TGoo, TModel> : Deserialize
 
 /// Generic Grasshopper data wrapper with built-in entity validation.
 /// Implementations MUST validate entities before exposing them downstream.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitygoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityGoo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entitygoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityGoo)
 public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : Goo<TEntity>
     where TEntity : Entity<TEntity>, new()
     where TEntityDiff : Entity<TEntityDiff>, new()
@@ -653,7 +646,7 @@ public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : Goo<TEntity>
 
 /// Generic Grasshopper parameter with entity validation support.
 /// Implementations MUST enforce entity validation on parameter access.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityParam)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entityparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityParam)
 public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Param<TGoo, TEntity>
     where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>
     where TEntity : Entity<TEntity>, new()
@@ -665,7 +658,7 @@ public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Param
 
 /// Abstract Grasshopper component for constructing validated entities.
 /// Implementations MUST validate constructed entities before output.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitycomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entitycomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityComponent)
 public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntityId> : PassthroughComponent<TParam, TGoo, TEntity>
     where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>, new()
     where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>, new()
@@ -678,7 +671,7 @@ public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntit
 
 /// Generic Grasshopper data wrapper for validated entity ID types.
 /// Implementations MUST validate entity IDs before exposing them downstream.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityIdGoo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entityidgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityIdGoo)
 public abstract class EntityIdGoo<TEntity, TEntityDiff, TEntityId> : IdGoo<TEntityId>
     where TEntity : Entity<TEntity>, new()
     where TEntityDiff : Entity<TEntityDiff>, new()
@@ -690,7 +683,7 @@ public abstract class EntityIdGoo<TEntity, TEntityDiff, TEntityId> : IdGoo<TEnti
 
 /// Generic Grasshopper parameter for validated entity ID types.
 /// Implementations MUST enforce entity ID validation on parameter access.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityIdParam)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entityidparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityIdParam)
 public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : IdParam<TIdGoo, TEntityId>
     where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>
     where TEntity : Entity<TEntity>, new()
@@ -702,7 +695,7 @@ public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : I
 
 /// Abstract Grasshopper component for constructing validated entity IDs.
 /// Implementations MUST validate constructed entity IDs before output.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entityidcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityIdComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entityidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityIdComponent)
 public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, TEntityId> : IdComponent<TIdParam, TIdGoo, TEntityId>
     where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>, new()
     where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>, new()
@@ -715,7 +708,7 @@ public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, 
 
 /// Generic Grasshopper data wrapper for validated entity diff types.
 /// Implementations MUST validate entity diffs before exposing them downstream.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffgoo](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityDiffGoo)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entitydiffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityDiffGoo)
 public abstract class EntityDiffGoo<TEntity, TEntityDiff, TEntityId> : DiffGoo<TEntityDiff>
     where TEntity : Entity<TEntity>, new()
     where TEntityDiff : Entity<TEntityDiff>, new()
@@ -727,7 +720,7 @@ public abstract class EntityDiffGoo<TEntity, TEntityDiff, TEntityId> : DiffGoo<T
 
 /// Generic Grasshopper parameter for validated entity diff types.
 /// Implementations MUST enforce entity diff validation on parameter access.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffparam](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityDiffParam)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entitydiffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityDiffParam)
 public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffParam<TDiffGoo, TEntityDiff>
     where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>
     where TEntity : Entity<TEntity>, new()
@@ -739,7 +732,7 @@ public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
 
 /// Abstract Grasshopper component for constructing validated entity diffs.
 /// Implementations MUST validate constructed entity diffs before output.
-/// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖bases🛠️entitydiffcomponent](semiorepo://definition/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Bases/EntityDiffComponent)
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️entitydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/EntityDiffComponent)
 public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffComponent<TDiffParam, TDiffGoo, TEntityDiff>
     where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>, new()
     where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>, new()
@@ -753,8 +746,7 @@ public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntity
 #endregion 🔖Bases
 
 #region 🔖Attribute
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖attribute](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Attribute)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖attribute](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Attribute)
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeGoo : Goo<Attribute>
@@ -1046,8 +1038,7 @@ public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeD
 #endregion 🔖Attribute
 
 #region 🔖Coord
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖coord](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Coord)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖coord](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Coord)
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class CoordGoo : Goo<Coord>
@@ -1136,8 +1127,7 @@ public class DeserializeCoordComponent : DeserializeComponent<CoordParam, CoordG
 #endregion 🔖Coord
 
 #region 🔖Location
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖location](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Location)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖location](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Location)
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationGoo : Goo<Location>
@@ -1229,8 +1219,7 @@ public class DeserializeLocationComponent : DeserializeComponent<LocationParam, 
 #endregion 🔖Location
 
 #region 🔖Author
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖author](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Author)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖author](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Author)
 // Implementations MUST provide author identity with name and contact.
 
 public class AuthorGoo : Goo<Author>
@@ -1362,8 +1351,7 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 #endregion 🔖Author
 
 #region 🔖File
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖file](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/File)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖file](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/File)
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileGoo : Goo<File>
@@ -1623,8 +1611,7 @@ public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam
 #endregion 🔖File
 
 #region 🔖Folder
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖folder](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Folder)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖folder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Folder)
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderGoo : Goo<Folder>
@@ -1909,8 +1896,7 @@ public class DeserializeFoldersDiffComponent : DeserializeComponent<FoldersDiffP
 #endregion 🔖Folder
 
 #region 🔖Benchmark
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖benchmark](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Benchmark)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖benchmark](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Benchmark)
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkGoo : Goo<Benchmark>
@@ -1973,8 +1959,7 @@ public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkParam
 #endregion 🔖Benchmark
 
 #region 🔖QualityKind
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖qualitykind](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/QualityKind)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖qualitykind](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/QualityKind)
 // Implementations MUST categorize quality metrics by kind.
 
 public class QualityKindGoo : EnumGoo<QualityKind>
@@ -1991,8 +1976,7 @@ public class QualityKindParam : EnumParam<QualityKindGoo, QualityKind>
 #endregion 🔖QualityKind
 
 #region 🔖Quality
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖quality](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Quality)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖quality](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Quality)
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityGoo : Goo<Quality>
@@ -2250,8 +2234,7 @@ public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffP
 #endregion 🔖Quality
 
 #region 🔖Tag
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖tag](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Tag)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖tag](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Tag)
 // Implementations MUST provide lightweight labels for categorizing entities.
 
 public class TagGoo : Goo<Tag>
@@ -2400,8 +2383,7 @@ public class TagIdParam : IdParam<TagIdGoo, TagId>
 #endregion 🔖Tag
 
 #region 🔖Prop
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖prop](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Prop)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖prop](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Prop)
 // Implementations MUST bind a property name to an expression value.
 
 public class PropGoo : Goo<Prop>
@@ -2470,8 +2452,7 @@ public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo,
 #endregion 🔖Prop
 
 #region 🔖Model
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖model](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Model)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖model](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Model)
 // Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelGoo : Goo<Model>
@@ -2765,8 +2746,7 @@ public class DeserializeModelsDiffComponent : DeserializeComponent<ModelsDiffPar
 #endregion 🔖Model
 
 #region 🔖Connector
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖connector](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Connector)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖connector](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Connector)
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorGoo : Goo<Connector>
@@ -3123,8 +3103,7 @@ public class DeserializePortsDiffComponent : DeserializeComponent<ConnectorsDiff
 #endregion 🔖Connector
 
 #region 🔖Concept
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖concept](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Concept)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖concept](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Concept)
 // Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptGoo : Goo<Concept>
@@ -3273,8 +3252,7 @@ public class ConceptIdParam : IdParam<ConceptIdGoo, ConceptId>
 #endregion 🔖Concept
 
 #region 🔖Port
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖port](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Port)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖port](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Port)
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortGoo : Goo<Port>
@@ -3428,8 +3406,7 @@ public class PortIdParam : IdParam<PortIdGoo, PortId>
 #endregion 🔖Port
 
 #region 🔖Type
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖type](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Type)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖type](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Type)
 // Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeGoo : Goo<Type>
@@ -3814,8 +3791,7 @@ public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam
 #endregion 🔖Type
 
 #region 🔖Layer
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖layer](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Layer)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖layer](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Layer)
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerGoo : Goo<Layer>
@@ -3932,8 +3908,7 @@ public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerG
 #endregion 🔖Layer
 
 #region 🔖Group
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖group](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Group)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖group](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Group)
 // Implementations MUST group pieces by name within a design.
 
 public class GroupGoo : Goo<Group>
@@ -4043,8 +4018,7 @@ public class DeserializeGroupComponent : DeserializeComponent<GroupParam, GroupG
 #endregion 🔖Group
 
 #region 🔖Piece
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖piece](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Piece)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖piece](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Piece)
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceGoo : Goo<Piece>
@@ -4396,8 +4370,7 @@ public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffPar
 #endregion 🔖Piece
 
 #region 🔖Side
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖side](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Side)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖side](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Side)
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideGoo : Goo<Side>
@@ -4556,8 +4529,7 @@ public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, 
 #endregion 🔖Side
 
 #region 🔖Connection
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖connection](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Connection)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖connection](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Connection)
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionGoo : Goo<Connection>
@@ -4932,8 +4904,7 @@ public class DeserializeConnectionsDiffComponent : DeserializeComponent<Connecti
 #endregion 🔖Connection
 
 #region 🔖Stat
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖stat](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Stat)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖stat](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Stat)
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatGoo : Goo<Stat>
@@ -5048,8 +5019,7 @@ public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo,
 #endregion 🔖Stat
 
 #region 🔖Design
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖design](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Design)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖design](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Design)
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignGoo : Goo<Design>
@@ -5408,8 +5378,7 @@ public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffP
 #endregion 🔖Design
 
 #region 🔖Kit
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖kit](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Kit)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖kit](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Kit)
 // Implementations MUST collect types and designs into a reusable library.
 
 public class KitGoo : Goo<Kit>
@@ -5748,8 +5717,7 @@ public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, 
 #endregion 🔖Kit
 
 #region 🔖Scripting
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖scripting](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Scripting)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖scripting](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Scripting)
 // Callers MUST use these helpers for C# script component integration.
 
 public abstract class ScriptingComponent : Component
@@ -5932,8 +5900,7 @@ public class TruncateTextComponent : ScriptingComponent
 #endregion 🔖Scripting
 
 #region 🔖Engine
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖engine](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Engine)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖engine](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Engine)
 // Implementations MUST communicate with the engine for kit and design operations.
 
 public abstract class EngineComponent : Component
@@ -6022,8 +5989,7 @@ public abstract class EngineComponent : Component
 }
 
 #region 🔖Persistence
-
-// [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🔖engine🔖persistence](semiorepo://section/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs/Engine/Persistence)
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖engine🔖persistence](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Engine/s/Persistence)
 // Implementations MUST persist Grasshopper documents for saving and loading kits.
 
 public abstract class PersistenceComponent : EngineComponent

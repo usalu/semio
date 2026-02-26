@@ -24,6 +24,10 @@ fi
 #region 🔖Node
 echo "Installing npm dependencies..."
 npm install
+#region 🔖GeminiCli
+echo "Installing Gemini CLI..."
+npm install -g @google/gemini-cli
+#endregion 🔖GeminiCli
 #endregion 🔖Node
 #region 🔖Python
 echo "Setting up Python environment..."
@@ -65,5 +69,11 @@ npm run build
 npm run package
 cd ../..
 #endregion 🔖VSCode
+#region 🔖Antigravity
+echo "Installing Antigravity server..."
+curl -sL "https://raw.githubusercontent.com/hucaico/demo-devcontainer/main/server-install.sh" -o /tmp/server-install.sh
+chmod +x /tmp/server-install.sh
+/tmp/server-install.sh || true
+#endregion 🔖Antigravity
 echo "Development environment ready!"
 #endregion 🔖PostCreate

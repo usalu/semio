@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [⚙️vitestconfigts](semiorepo://file/vitest.config.ts)
+// [⚙️vitestconfigts](semiorepo://f/vitest.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [⚙️vitestconfigts🔖configuration](semiorepo://section/vitest.config.ts/Configuration)
+// [⚙️vitestconfigts🔖configuration](semiorepo://f/vitest.config.ts/s/Configuration)
 // Root Vitest configuration aggregating all workspace test projects.
 // Configuration MUST reference all workspace vite config files that define tests.
 
@@ -29,9 +27,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: [
-      "./semio/js/vite.config.ts",
-    ],
+    projects: ["./semio/js/vite.config.ts"],
   },
 });
 

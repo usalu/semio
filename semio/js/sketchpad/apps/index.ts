@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js🗃️sketchpad🗃️apps💻indexts](semiorepo://file/semio/js/sketchpad/apps/index.ts)
+// [👤semio📚js🗃️sketchpad🗃️apps💻index](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Exports
-
-// [👤semio📚js🗃️sketchpad🗃️apps💻indexts🔖exports](semiorepo://section/semio/js/sketchpad/apps/index.ts/Exports)
+// [👤semio📚js🗃️sketchpad🗃️apps💻index🔖exports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts/s/Exports)
 // Re-exports of app plugin utilities and types from the shared module.
 // Exports MUST expose only the public API surface of the shared module.
 

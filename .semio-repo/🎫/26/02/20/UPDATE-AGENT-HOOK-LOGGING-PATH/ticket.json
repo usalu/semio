@@ -6,26 +6,5 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/637"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "sessions": [
-    {
-      "id": "2d0aa326-749f-4af6-b65d-e1f3ee70b2ec",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "cursor-chat"
-    },
-    {
-      "id": "1771809474140256626-5384260020574710735",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "codex",
-      "llm": "gpt-5-3-codex",
-      "prompts": [
-        {
-          "timestamp": "2026-02-23T01:17:54Z",
-          "prompt": "Fix ticket sessions to align with hook session IDs and stop duplicate session accumulation"
-        }
-      ]
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
 }

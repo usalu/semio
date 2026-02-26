@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js⚙️playwrightconfigts](semiorepo://file/semio/js/playwright.config.ts)
+// [👤semio📚js⚙️playwrightconfigts](semiorepo://p/u/semio/b/l/js/f/playwright.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Playwright Configuration
-
-// [👤semio📚js⚙️playwrightconfigts🔖playwrightconfiguration](semiorepo://section/semio/js/playwright.config.ts/Playwright%20Configuration)
+// [👤semio📚js⚙️playwrightconfigts🔖playwrightconfiguration](semiorepo://p/u/semio/b/l/js/f/playwright.config.ts/s/Playwright%20Configuration)
 // Configures Playwright for end-to-end browser tests against the sketchpad dev server.
 // MUST use a single worker to avoid port conflicts.
 
@@ -49,14 +47,10 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
-          args: [
-            "--enable-gpu",
-            "--disable-software-rasterizer",
-          ],
+          args: ["--enable-gpu", "--disable-software-rasterizer"],
         },
       },
     },
-
   ],
 
   webServer: {

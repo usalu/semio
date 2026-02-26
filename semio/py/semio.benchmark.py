@@ -1,6 +1,5 @@
 # region Header
-
-# [👤semio📚py🥼semiobenchmarkpy](semiorepo://file/semio/py/semio.benchmark.py)
+# [👤semio📚py🥼semiobenchmarkpy](semiorepo://p/u/semio/b/l/py/f/semio.benchmark.py)
 
 # 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -25,6 +24,7 @@ from semio import Kit, validateKit, validateKitDict, flattenDesignDict, _applyDe
 ASSETS_DIR = "../assets/semio"
 ITERATIONS = 3
 
+
 def load_json(filename: str) -> dict:
     path = os.path.join(ASSETS_DIR, filename)
     if not os.path.exists(path):
@@ -32,14 +32,15 @@ def load_json(filename: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 def load_kit(filename: str) -> dict:
     data = load_json(filename)
     if "guid" in data and "uri" not in data:
         data["uri"] = data["guid"]
     for key in ["types", "designs", "files", "folders", "authors", "concepts", "models", "connectors", "pieces", "connections", "layers", "groups", "stats", "ports", "qualities", "attributes"]:
-            if key not in data or data[key] is None:
-                data[key] = []
-    
+        if key not in data or data[key] is None:
+            data[key] = []
+
     for collection in ["types", "designs", "folders"]:
         if collection in data:
             for item in data[collection]:
@@ -52,12 +53,11 @@ def load_kit(filename: str) -> dict:
         for t in data["types"]:
             if "models" in t:
                 for m in t["models"]:
-
                     if "file" in m and isinstance(m["file"], dict) and "guid" in m["file"]:
                         m["file"] = m["file"]["guid"]
                     if "file" not in m or m["file"] is None:
-                         m["file"] = ""
-                         
+                        m["file"] = ""
+
                     if "url" not in m or m["url"] is None:
                         m["url"] = ""
 
@@ -74,6 +74,7 @@ def load_kit(filename: str) -> dict:
 
     return data
 
+
 def bench(name: str, func):
     start = time.perf_counter()
     for _ in range(ITERATIONS):
@@ -81,6 +82,7 @@ def bench(name: str, func):
     end = time.perf_counter()
     duration = (end - start) / ITERATIONS
     print(f"{name},{duration:.6f}")
+
 
 def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
     parent_guid = None
@@ -91,7 +93,7 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
                 break
         if not parent_guid:
             raise ValueError(f"Parent {parent_name} not found")
-            
+
     for d in kit.get("designs", []):
         if d.get("name") == name:
             p = d.get("parent")
@@ -105,14 +107,15 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
                     return d
     raise ValueError(f"Design {name} not found")
 
+
 def main():
     kit_metabolism = load_kit("kit_metabolism.json")
     kit_invalid = load_kit("kit_invalid.json")
-    
+
     kit_obj = Kit.parse(kit_metabolism)
-    
+
     kit_invalid_obj = Kit.parse(kit_invalid)
-    
+
     def test_roundtrip():
         from semio import import_kit, export_kit
 
@@ -121,57 +124,63 @@ def main():
         export_kit(kit, files, "temp_benchmark_metabolism.zip")
         if os.path.exists("temp_benchmark_metabolism.zip"):
             os.remove("temp_benchmark_metabolism.zip")
-        
+
     bench("Roundtrip/Metabolism", test_roundtrip)
 
     diff_forward = load_json("diff_kit_metabolism.json")
     diff_inverse = load_json("diff_kit_metabolism_inverted.json")
-    
+
     def test_diff_metabolism():
         k2 = applyKitDiffDict(kit_metabolism, diff_forward)
         applyKitDiffDict(k2, diff_inverse)
-        
+
     bench("Diff/Metabolism", test_diff_metabolism)
-    
+
     d1 = find_design(kit_metabolism, "Nakagin Capsule Tower")
+
     def test_flatten_nakagin():
         flattenDesignDict(kit_metabolism, d1["guid"])
-        
+
     bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
-    
+
     d2 = find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
+
     def test_flatten_nakagin_slanted():
         flattenDesignDict(kit_metabolism, d2["guid"])
-        
+
     bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
 
     d3 = find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
+
     def test_flatten_nakagin_twisted():
         flattenDesignDict(kit_metabolism, d3["guid"])
-        
+
     bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
 
     d4 = find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
+
     def test_flatten_nakagin_dancing():
         flattenDesignDict(kit_metabolism, d4["guid"])
-        
+
     bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
 
     d5 = find_design(kit_metabolism, "Capsule Dream")
+
     def test_flatten_capsule_dream():
         flattenDesignDict(kit_metabolism, d5["guid"])
-        
+
     bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
-    
+
     def test_validate_invalid():
         validateKit(kit_invalid_obj)
-        
+
     bench("Validation/Invalid Kit", test_validate_invalid)
-    
+
     def test_validate_metabolism():
         validateKit(kit_obj)
-        
+
     bench("Validation/Metabolism", test_validate_metabolism)
+
 
 if __name__ == "__main__":
     main()

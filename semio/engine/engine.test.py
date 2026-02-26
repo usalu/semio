@@ -1,6 +1,5 @@
 # region Header
-
-# [👤semio📚engine🥼enginetestpy](semiorepo://file/semio/engine/engine.test.py)
+# [👤semio📚engine🥼enginetestpy](semiorepo://p/u/semio/b/l/engine/f/engine.test.py)
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -18,7 +17,6 @@
 # endregion Header
 
 # region Imports
-
 from __future__ import annotations
 
 import json
@@ -34,18 +32,18 @@ from starlette.testclient import TestClient
 # endregion Imports
 
 # region Constants
-
 ASSETS_DIR = pathlib.Path(__file__).parent.parent.parent / "assets" / "semio"
 KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
 
 # endregion Constants
 
-# region Fixtures
 
+# region Fixtures
 @pytest.fixture
 def kitMetabolismJson() -> dict:
     with open(KIT_METABOLISM_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 @pytest.fixture
 def minimalKitJson() -> dict:
@@ -54,24 +52,28 @@ def minimalKitJson() -> dict:
         "version": "1.0.0",
     }
 
+
 @pytest.fixture
 def tempKitPath() -> pathlib.Path:
     tmpDir = tempfile.mkdtemp()
     yield pathlib.Path(tmpDir)
     shutil.rmtree(tmpDir, ignore_errors=True)
 
+
 @pytest.fixture
 def restClient() -> TestClient:
     return TestClient(engine.rest)
+
 
 @pytest.fixture
 def graphqlClient() -> TestClient:
     return TestClient(engine.engine)
 
+
 # endregion Fixtures
 
-# region Encoding Tests
 
+# region Encoding Tests
 class TestEncoding:
     def test_encode_basic(self):
         assert engine.encode("hello") == "hello"
@@ -94,10 +96,11 @@ class TestEncoding:
         for s in testStrings:
             assert engine.decode(engine.encode(s)) == s
 
+
 # endregion Encoding Tests
 
-# region OperationBuilder Tests
 
+# region OperationBuilder Tests
 class TestOperationBuilder:
     def test_parse_kit_operation(self):
         code = "C%3A%5Ctest%5Ckit"
@@ -126,10 +129,11 @@ class TestOperationBuilder:
         assert operation["kind"] == "designs"
         assert "kitUri" in operation
 
+
 # endregion OperationBuilder Tests
 
-# region Store Tests
 
+# region Store Tests
 class TestSqliteStore:
     def test_store_factory_absolute_path(self, tempKitPath: pathlib.Path):
         engine.StoreFactory.cache_clear()
@@ -156,20 +160,22 @@ class TestSqliteStore:
         store.initialize()
         assert store.initialized()
 
+
 # endregion Store Tests
 
-# region StoreKind Tests
 
+# region StoreKind Tests
 class TestStoreKind:
     def test_store_kind_values(self):
         assert engine.StoreKind.DATABASE.value == "database"
         assert engine.StoreKind.REST.value == "rest"
         assert engine.StoreKind.GRAPHQL.value == "graphql"
 
+
 # endregion StoreKind Tests
 
-# region CommandKind Tests
 
+# region CommandKind Tests
 class TestCommandKind:
     def test_command_kind_values(self):
         assert engine.CommandKind.QUERY.value == "query"
@@ -177,10 +183,11 @@ class TestCommandKind:
         assert engine.CommandKind.UPDATE.value == "update"
         assert engine.CommandKind.DELETE.value == "delete"
 
+
 # endregion CommandKind Tests
 
-# region REST API Tests
 
+# region REST API Tests
 class TestRestApi:
     def test_get_kit_not_found(self, restClient: TestClient, tempKitPath: pathlib.Path):
         nonExistentPath = str(tempKitPath / "nonexistent")
@@ -188,10 +195,11 @@ class TestRestApi:
         response = restClient.get(f"/kits/{encodedUri}")
         assert response.status_code in [400, 404, 500]
 
+
 # endregion REST API Tests
 
-# region GraphQL Tests
 
+# region GraphQL Tests
 class TestGraphQL:
     def test_graphql_schema_exists(self):
         assert engine.graphqlSchema is not None
@@ -200,10 +208,11 @@ class TestGraphQL:
         assert hasattr(engine.Query, "kit")
         assert hasattr(engine.Query, "node")
 
+
 # endregion GraphQL Tests
 
-# region MCP Tests
 
+# region MCP Tests
 class TestMcp:
     def test_mcp_instance_exists(self):
         assert engine.mcp is not None
@@ -238,16 +247,15 @@ class TestMcp:
         result = engine.inverse_kit_diff(minimalKitJson, diff)
         assert isinstance(result, dict)
 
+
 # endregion MCP Tests
 
-# region Cache Tests
 
+# region Cache Tests
 class TestCache:
     def test_cache_dir_encoding(self):
         remoteUri = "https://example.com/kit.zip"
-        expectedDir = os.path.join(
-            os.path.expanduser("~/.semio/cache"), engine.encode(remoteUri)
-        )
+        expectedDir = os.path.join(os.path.expanduser("~/.semio/cache"), engine.encode(remoteUri))
         assert engine.cacheDir(remoteUri) == expectedDir
 
     def test_cache_rejects_non_remote(self, tempKitPath: pathlib.Path):
@@ -260,10 +268,11 @@ class TestCache:
         with pytest.raises(engine.OnlyRemoteKitsCanBeCached):
             engine.cache(nonZipUri)
 
+
 # endregion Cache Tests
 
-# region SSLMode Tests
 
+# region SSLMode Tests
 class TestSSLMode:
     def test_ssl_mode_values(self):
         assert engine.SSLMode.DISABLE.value == "disable"
@@ -273,10 +282,11 @@ class TestSSLMode:
         assert engine.SSLMode.VERIFY_CA.value == "verify-ca"
         assert engine.SSLMode.VERIFY_FULL.value == "verify-full"
 
+
 # endregion SSLMode Tests
 
-# region Error Classes Tests
 
+# region Error Classes Tests
 class TestErrors:
     def test_kit_not_found_error(self):
         error = engine.KitNotFound("test/path")
@@ -294,10 +304,11 @@ class TestErrors:
         error = engine.LocalKitUriIsNotAbsolute("relative/path")
         assert "relative/path" in str(error)
 
+
 # endregion Error Classes Tests
 
-# region Assistant Tests
 
+# region Assistant Tests
 class TestAssistant:
     def test_encode_for_prompt(self):
         assert engine.encodeForPrompt("hello;world") == "hello,world"
@@ -315,9 +326,7 @@ class TestAssistant:
     def test_design_generation_prompt_template_renders(self):
         types = []
         description = "Test description"
-        result = engine.designGenerationPromptTemplate.render(
-            description=description, types=types
-        )
+        result = engine.designGenerationPromptTemplate.render(description=description, types=types)
         assert "Test description" in result
 
     def test_design_response_format_is_valid_json(self):
@@ -325,10 +334,11 @@ class TestAssistant:
         assert "name" in engine.designResponseFormat
         assert engine.designResponseFormat["name"] == "design"
 
+
 # endregion Assistant Tests
 
-# region Engine Configuration Tests
 
+# region Engine Configuration Tests
 class TestEngineConfiguration:
     def test_engine_app_exists(self):
         assert engine.engine is not None
@@ -342,10 +352,11 @@ class TestEngineConfiguration:
     def test_graphql_schema_exists(self):
         assert engine.graphqlSchema is not None
 
+
 # endregion Engine Configuration Tests
 
-# region Integration Tests
 
+# region Integration Tests
 class TestIntegration:
     def test_store_initialization_and_semio_check(self, tempKitPath: pathlib.Path):
         store = engine.SqliteStore.fromUri(str(tempKitPath))
@@ -358,5 +369,6 @@ class TestIntegration:
         resultStore, resultOperation = engine.storeAndOperationFromCode(code)
         assert resultOperation["kind"] == "kit"
         assert resultOperation["kitUri"] == str(tempKitPath)
+
 
 # endregion Integration Tests

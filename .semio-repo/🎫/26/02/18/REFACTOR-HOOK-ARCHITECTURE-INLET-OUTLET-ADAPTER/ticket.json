@@ -6,25 +6,5 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/625"
   },
-  "goal": "DEVOPS",
-  "sessions": [
-    {
-      "id": "167906cd-0550-4387-96af-2cc20cb48fe3",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "claude-code"
-    },
-    {
-      "id": "2f1e87c2-af13-4067-9aa6-15f0af84010c",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "copilot-chat"
-    },
-    {
-      "id": "8a40542e-eef5-4a5a-82ae-63137d6bd78e",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "copilot-chat"
-    }
-  ]
+  "goal": "🎯devops"
 }

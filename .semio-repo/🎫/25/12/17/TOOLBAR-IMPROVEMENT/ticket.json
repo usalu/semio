@@ -1,18 +1,6 @@
 {
   "title": "Improve and extend toolbar mechanism across all sketchpad apps",
   "status": "closed",
-  "prompt": "Improve and extend toolbar mechanism across all sketchpad apps",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-17T18:39:17.532Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "Improve and extend toolbar mechanism across all sketchpad apps",
-      "llm": "sonnet-4"
-    }
-  ]
+  "description": "Improve and extend toolbar mechanism across all sketchpad apps",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

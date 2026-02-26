@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js💻viteenvdts](semiorepo://file/semio/js/vite-env.d.ts)
+// [👤semio📚js💻viteenvd](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Declarations
-
-// [👤semio📚js💻viteenvdts🔖declarations](semiorepo://section/semio/js/vite-env.d.ts/Declarations)
+// [👤semio📚js💻viteenvd🔖declarations](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts/s/Declarations)
 // Ambient module declarations for non-standard import types.
 // Declarations MUST cover all custom asset import suffixes used in the project.
 

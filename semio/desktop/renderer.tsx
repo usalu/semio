@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🖱️desktop💻renderertsx](semiorepo://file/semio/desktop/renderer.tsx)
+// [👤semio🖱️desktop💻renderer](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Renderer
-
-// [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://section/semio/desktop/renderer.tsx/Renderer)
+// [👤semio🖱️desktop💻renderer🔖renderer](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer)
 // Electron renderer process that mounts the Sketchpad React app with window controls.
 // MUST resolve the user identity before rendering the sketchpad.
 
@@ -45,8 +43,12 @@ declare global {
   }
 }
 
-// Invokes a window control action via the preload bridge.
-// MUST fall back gracefully when window controls are unavailable.
+/**
+ * Invokes a window control action via the preload bridge.
+// [👤semio🖱️desktop💻renderer🔖renderer🛠️invokewindowcontrol](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/invokeWindowControl)
+ *
+ * MUST fall back gracefully when window controls are unavailable.
+ **/
 const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   if (window.windowControls) {
     return window.windowControls[action]();
@@ -55,22 +57,34 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   return Promise.resolve();
 };
 
-// Window event handlers for minimize, maximize and close actions.
-// MUST delegate to invokeWindowControl for each action.
+/**
+ * Window event handlers for minimize, maximize and close actions.
+// [👤semio🖱️desktop💻renderer🔖renderer🪨windowevents](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/windowEvents)
+ *
+ * MUST delegate to invokeWindowControl for each action.
+ **/
 const windowEvents = {
   minimize: () => invokeWindowControl("minimize"),
   maximize: () => invokeWindowControl("maximize"),
   close: () => invokeWindowControl("close"),
 };
 
-// OS bridge for retrieving the current user identity.
-// MUST use the preload-exposed getUserId API.
+/**
+ * OS bridge for retrieving the current user identity.
+// [👤semio🖱️desktop💻renderer🔖renderer🪨os](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/os)
+ *
+ * MUST use the preload-exposed getUserId API.
+ **/
 const os = {
   getUserId: async () => await window.os.getUserId(),
 };
 
-// Root React component that loads the user identity and renders the sketchpad.
-// MUST show a loading state until the user ID is resolved.
+/**
+ * Root React component that loads the user identity and renders the sketchpad.
+// [👤semio🖱️desktop💻renderer🔖renderer🛠️app](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/App)
+ *
+ * MUST show a loading state until the user ID is resolved.
+ **/
 function App() {
   const [userId, setUserId] = useState<string>("");
 

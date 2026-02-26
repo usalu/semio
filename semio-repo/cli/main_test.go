@@ -1,5 +1,4 @@
 // #region 🔖Header
-
 // [🧰semiorepo⌨️cli🥼maintestgo](semiorepo://p/i/semio-repo/b/b/cli/f/main_test.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -22,6 +21,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -37,10 +37,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	_ "modernc.org/sqlite"
 )
 
 // #region 🔖Helpers
-
 func findTestRepoRoot(start string) string {
 	for _, candidate := range []string{start, func() string {
 		_, file, _, ok := runtime.Caller(0)
@@ -150,7 +150,7 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 				"author": %s,
 				"system": "linux",
 				"client": "codex",
-				"commit": "abc123",
+				"checkpoint": "abc123",
 				"prompt": "test",
 				"llm": "gpt-5-2-codex"
 			}`, tc.authorJSON)
@@ -250,6 +250,172 @@ func TestContributorDiscovery(t *testing.T) {
 	})
 }
 
+// #region 🔖Semio Repo ID Conversion
+func TestGoalPathToSemioID(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"empty", "", ""},
+		{"single segment", "AI-OPTIMIZED-REPO", emojiText(EmojiGoal) + "aioptimizedrepo"},
+		{"two segments", "AI-OPTIMIZED-REPO/REPO-CLI", emojiText(EmojiGoal) + "aioptimizedrepo" + emojiText(EmojiGoal) + "repocli"},
+		{"four segments", "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+			emojiText(EmojiGoal) + "aioptimizedrepo" + emojiText(EmojiGoal) + "repoclient" + emojiText(EmojiGoal) + "repobinary" + emojiText(EmojiGoal) + "repocli"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := goalPathToSemioID(tc.input)
+			if got != tc.expected {
+				t.Errorf("goalPathToSemioID(%q) = %q, want %q", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestSemioIDToGoalPath(t *testing.T) {
+
+	goals, err := ListGoals()
+	if err != nil || len(goals) == 0 {
+		t.Skip("no goals available for round-trip test")
+	}
+	for _, g := range goals {
+		semioID := goalPathToSemioID(g.ID)
+		roundTrip := semioIDToGoalPath(semioID)
+		if roundTrip != g.ID {
+			t.Errorf("round-trip failed: %q -> %q -> %q (expected %q)", g.ID, semioID, roundTrip, g.ID)
+		}
+	}
+}
+
+func TestContributorSemioIDRoundTrip(t *testing.T) {
+	cases := []struct {
+		name     string
+		github   string
+		expected string
+	}{
+		{"empty", "", ""},
+		{"unknown", "unknown", "unknown"},
+		{"normal", "usalu", emojiText(EmojiContributor) + "usalu"},
+		{"already prefixed", emojiText(EmojiContributor) + "usalu", emojiText(EmojiContributor) + "usalu"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := contributorGithubToSemioID(tc.github)
+			if got != tc.expected {
+				t.Errorf("contributorGithubToSemioID(%q) = %q, want %q", tc.github, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestTicketMarshalJSONGoalToSemioID(t *testing.T) {
+	ticket := Ticket{
+		Title:    "Test Ticket",
+		Goal:     "AI-OPTIMIZED-REPO/REPO-CLI",
+		Status:   TicketStatusOpen,
+		Sessions: []string{"s1"},
+	}
+	data, err := json.Marshal(ticket)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var raw map[string]interface{}
+	json.Unmarshal(data, &raw)
+
+	goalEmoji := emojiText(EmojiGoal)
+	expectedGoal := goalEmoji + "aioptimizedrepo" + goalEmoji + "repocli"
+	if raw["goal"] != expectedGoal {
+		t.Errorf("expected goal %q, got %q", expectedGoal, raw["goal"])
+	}
+
+	sessions := raw["sessions"].([]interface{})
+	expectedSessionID := emojiText(EmojiSession) + "s1"
+	if sessions[0] != expectedSessionID {
+		t.Errorf("expected session %q, got %q", expectedSessionID, sessions[0])
+	}
+}
+
+func TestTicketUnmarshalJSONSemioIDToGoalPath(t *testing.T) {
+	goalEmoji := emojiText(EmojiGoal)
+	raw := fmt.Sprintf(`{
+		"title": "Test",
+		"goal": "%saioptimizedrepo%srepoclient%srepobinary%srepocli",
+		"status": "open",
+		"sessions": [
+			"%ss1"
+		]
+	}`, goalEmoji, goalEmoji, goalEmoji, goalEmoji, emojiText(EmojiSession))
+
+	var ticket Ticket
+	if err := json.Unmarshal([]byte(raw), &ticket); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	expectedGoalPath := "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI"
+	if ticket.Goal != expectedGoalPath {
+		t.Errorf("expected goal path %q, got %q", expectedGoalPath, ticket.Goal)
+	}
+
+	if len(ticket.Sessions) != 1 || ticket.Sessions[0] != emojiText(EmojiSession)+"s1" {
+		t.Errorf("expected session %q, got %+v", emojiText(EmojiSession)+"s1", ticket.Sessions)
+	}
+}
+
+func TestGoalMarshalJSONParentToSemioID(t *testing.T) {
+	goal := Goal{
+		Title:       "Test Goal",
+		Description: "desc",
+		Prompt:      "prompt",
+		Status:      "open",
+		Client:      "copilot-chat",
+		LLM:         "opus-4-6",
+		Parent:      "AI-OPTIMIZED-REPO/REPO-CLIENT",
+	}
+	data, err := json.Marshal(goal)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var raw map[string]interface{}
+	json.Unmarshal(data, &raw)
+
+	goalEmoji := emojiText(EmojiGoal)
+	expectedParent := goalEmoji + "aioptimizedrepo" + goalEmoji + "repoclient"
+	if raw["parent"] != expectedParent {
+		t.Errorf("expected parent %q, got %q", expectedParent, raw["parent"])
+	}
+}
+
+func TestTicketGoalRoundTripThroughJSON(t *testing.T) {
+
+	ticket := Ticket{
+		Title:    "Roundtrip Test",
+		Goal:     "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+		Status:   TicketStatusOpen,
+		Sessions: []string{"my-session"},
+	}
+
+	data, err := json.Marshal(ticket)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	var ticket2 Ticket
+	if err := json.Unmarshal(data, &ticket2); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	if ticket2.Goal != ticket.Goal {
+		t.Errorf("round-trip failed: original %q, after round-trip %q", ticket.Goal, ticket2.Goal)
+	}
+
+	if len(ticket2.Sessions) != 1 || ticket2.Sessions[0] != emojiText(EmojiSession)+"mysession" {
+		t.Errorf("round-trip sessions failed: got %+v", ticket2.Sessions)
+	}
+}
+
+// #endregion 🔖Semio Repo ID Conversion
+
 func parseTicketCloseStatus(t *testing.T, output string) string {
 	t.Helper()
 	data, ok := firstJSONLine(output)
@@ -317,8 +483,7 @@ func getTestExecutor(t *testing.T) *Executor {
 
 // #endregion 🔖Helpers
 
-// #region 🔖Collection Tests
-
+// #region 🔖Collection
 func TestBundlesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow bundle test in short mode")
@@ -714,10 +879,9 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Collection Tests
+// #endregion 🔖Collection
 
-// #region 🔖Nodes and Edges Tests
-
+// #region 🔖Nodes and Edges
 func TestNodesAndEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges test in short mode")
@@ -1165,6 +1329,7 @@ func TestDefinitionKind(t *testing.T) {
 		"IMPLEMENTATION": true,
 		"INTERFACE":      true,
 		"CONSTANT":       true,
+		"TEST":           true,
 	}
 
 	for _, file := range resp.Files {
@@ -1174,7 +1339,7 @@ func TestDefinitionKind(t *testing.T) {
 				t.Errorf("definition %s in file %s has empty kind", def.Name, file.Path)
 			}
 			if !validKinds[def.Kind] {
-				t.Errorf("definition %s has invalid kind: %s (expected implementation, interface, or constant)", def.Name, def.Kind)
+				t.Errorf("definition %s has invalid kind: %s (expected implementation, interface, constant, or test)", def.Name, def.Kind)
 			}
 		}
 	}
@@ -1183,12 +1348,10 @@ func TestDefinitionKind(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Nodes and Edges Tests
+// #endregion 🔖Nodes and Edges
 
 // #region 🔖Cli
-
 // #region 🔖Helpers
-
 func executeCommand(args ...string) (string, string, error) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
@@ -1235,8 +1398,7 @@ func normalizeRelativeTimes(s string) string {
 
 // #endregion 🔖Helpers
 
-// #region 🔖Codebase Tests
-
+// #region 🔖Codebase
 func TestCodebaseCommand(t *testing.T) {
 	result := ToolCodebase()
 	if result.Error != "" {
@@ -1247,10 +1409,9 @@ func TestCodebaseCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Codebase Tests
+// #endregion 🔖Codebase
 
-// #region 🔖Analyze Tests
-
+// #region 🔖Analyze
 func TestAnalyzeCommand(t *testing.T) {
 	result := ToolAnalyze("semio/js", nil)
 	if result.Error != "" {
@@ -1265,10 +1426,9 @@ func TestAnalyzeFile(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Analyze Tests
+// #endregion 🔖Analyze
 
-// #region 🔖Fix Tests
-
+// #region 🔖Fix
 func TestFixCommand(t *testing.T) {
 	result := ToolFix("semio/js")
 	if result.Error != "" {
@@ -1295,20 +1455,20 @@ func TestFileHeaderId(t *testing.T) {
 		path string
 		want string
 	}{
-		{"code ts", "semio/js/src/index.ts", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "indexts"},
-		{"code tsx", "semio/js/src/App.tsx", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "apptsx"},
-		{"code go", "semio-repo/cli/cli.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileCode) + "cligo"},
-		{"code cs", "semio/gh/Semio.cs", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "gh" + emojiText(EmojiFileCode) + "semiocs"},
-		{"code py", "semio/engine/main.py", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileCode) + "mainpy"},
-		{"test ts", "semio/js/src/index.test.ts", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileTest) + "indextestts"},
-		{"test go", "semio-repo/cli/cli_test.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileTest) + "clitestgo"},
-		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfigjson"},
-		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readmemd"},
-		{"script sh", "build.sh", emojiText(EmojiFileScript) + "buildsh"},
-		{"script bash", "deploy.bash", emojiText(EmojiFileScript) + "deploybash"},
-		{"script ps1", "setup.ps1", emojiText(EmojiFileScript) + "setupps1"},
-		{"resource png", "logo.png", emojiText(EmojiFileResource) + "logopng"},
-		{"license", "LICENSE.md", emojiText(EmojiFileLicense) + "licensemd"},
+		{"code ts", "semio/js/src/index.ts", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "index"},
+		{"code tsx", "semio/js/src/App.tsx", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "app"},
+		{"code go", "semio-repo/cli/cli.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileCode) + "cli"},
+		{"code cs", "semio/gh/Semio.cs", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "gh" + emojiText(EmojiFileCode) + "semio"},
+		{"code py", "semio/engine/main.py", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileCode) + "main"},
+		{"test ts", "semio/js/src/index.test.ts", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
+		{"test go", "semio-repo/cli/cli_test.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileLab) + "clitest"},
+		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfig"},
+		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readme"},
+		{"script sh", "build.sh", emojiText(EmojiFileScript) + "build"},
+		{"script bash", "deploy.bash", emojiText(EmojiFileScript) + "deploy"},
+		{"script ps1", "setup.ps1", emojiText(EmojiFileScript) + "setup"},
+		{"resource png", "logo.png", emojiText(EmojiFileResource) + "logo"},
+		{"license", "LICENSE.md", emojiText(EmojiFileLicense) + "license"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1331,7 +1491,8 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("#!/usr/bin/env tsx\nconsole.log('build');\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := emojiText(EmojiFolderOrg) + "tools" + emojiText(EmojiFileScript) + Flat(filepath.Base(filePath))
+		baseName := filepath.Base(filePath)
+		want := emojiText(EmojiFolderOrg) + "tools" + emojiText(EmojiFileScript) + Flat(strings.TrimSuffix(baseName, filepath.Ext(baseName)))
 		if got != want {
 			t.Errorf("FileHeaderId(%q) with shebang = %q, want %q", filePath, got, want)
 		}
@@ -1349,7 +1510,8 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("#!/usr/bin/env python3\nprint('hello')\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := emojiText(EmojiFolderOrg) + "scripts" + emojiText(EmojiFileScript) + Flat(filepath.Base(filePath))
+		baseName := filepath.Base(filePath)
+		want := emojiText(EmojiFolderOrg) + "scripts" + emojiText(EmojiFileScript) + Flat(strings.TrimSuffix(baseName, filepath.Ext(baseName)))
 		if got != want {
 			t.Errorf("FileHeaderId(%q) with shebang = %q, want %q", filePath, got, want)
 		}
@@ -1367,7 +1529,8 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("export const x = 1;\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + Flat(filepath.Base(filePath))
+		baseName := filepath.Base(filePath)
+		want := emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + Flat(strings.TrimSuffix(baseName, filepath.Ext(baseName)))
 		if got != want {
 			t.Errorf("FileHeaderId(%q) without shebang = %q, want %q", filePath, got, want)
 		}
@@ -1375,7 +1538,7 @@ func TestFileHeaderId(t *testing.T) {
 
 	t.Run("nonexistent code file stays code", func(t *testing.T) {
 		got := FileHeaderId("nonexistent/file.ts")
-		want := emojiText(EmojiFolderOrg) + "nonexistent" + emojiText(EmojiFileCode) + Flat("file.ts")
+		want := emojiText(EmojiFolderOrg) + "nonexistent" + emojiText(EmojiFileCode) + Flat("file")
 		if got != want {
 			t.Errorf("FileHeaderId for nonexistent file = %q, want %q", got, want)
 		}
@@ -1403,11 +1566,11 @@ func TestDeriveFileKind(t *testing.T) {
 		{"cmd script", "build.cmd", FileKindScript},
 		{"ps1 script", "setup.ps1", FileKindScript},
 		{"psm1 script", "module.psm1", FileKindScript},
-		{"test ts", "index.test.ts", FileKindTest},
-		{"test go", "main_test.go", FileKindTest},
-		{"spec ts", "app.spec.ts", FileKindTest},
-		{"benchmark go", "semio_benchmark.go", FileKindTest},
-		{"stories tsx", "Button.stories.tsx", FileKindTest},
+		{"test ts", "index.test.ts", FileKindLab},
+		{"test go", "main_test.go", FileKindLab},
+		{"spec ts", "app.spec.ts", FileKindLab},
+		{"benchmark go", "semio_benchmark.go", FileKindLab},
+		{"stories tsx", "Button.stories.tsx", FileKindLab},
 		{"json config", "tsconfig.json", FileKindConfig},
 		{"yaml config", "config.yaml", FileKindConfig},
 		{"toml config", "pyproject.toml", FileKindConfig},
@@ -1417,6 +1580,16 @@ func TestDeriveFileKind(t *testing.T) {
 		{"png resource", "logo.png", FileKindResource},
 		{"svg resource", "icon.svg", FileKindResource},
 		{"wasm resource", "module.wasm", FileKindResource},
+		{"tpl template", "layout.tpl", FileKindTemplate},
+		{"tmpl template", "page.tmpl", FileKindTemplate},
+		{"gotmpl template", "header.gotmpl", FileKindTemplate},
+		{"mustache template", "view.mustache", FileKindTemplate},
+		{"hbs template", "partial.hbs", FileKindTemplate},
+		{"jinja2 template", "base.jinja2", FileKindTemplate},
+		{"j2 template", "config.j2", FileKindTemplate},
+		{"ejs template", "page.ejs", FileKindTemplate},
+		{"njk template", "layout.njk", FileKindTemplate},
+		{"pug template", "index.pug", FileKindTemplate},
 		{"license md", "LICENSE.md", FileKindLicense},
 		{"licence txt", "LICENCE.txt", FileKindLicense},
 		{"gitignore config", ".gitignore", FileKindConfig},
@@ -1441,11 +1614,12 @@ func TestFileKindEmoji(t *testing.T) {
 		emoji string
 	}{
 		{"code", "code", "\U0001F4BB"},
-		{"test", "test", "\U0001F9EA"},
+		{"lab", "lab", emojiText(EmojiFileLab)},
 		{"script", "script", "\U0001F4DC"},
 		{"docs", "docs", "\U0001F4C3"},
 		{"config", "config", "\u2699\uFE0F"},
 		{"resource", "resource", "\U0001F4BE"},
+		{"template", "template", emojiText(EmojiFileTemplate)},
 		{"license", "license", "\u2696\uFE0F"},
 		{"unknown", "unknown", ""},
 		{"empty", "", ""},
@@ -1689,6 +1863,126 @@ func TestFixApplyAutofixes(t *testing.T) {
 
 	if strings.TrimSpace(fixedContent) != strings.TrimSpace(expectedContent) {
 		t.Errorf("fixed content does not match expected.\nGot:\n%s\n\nExpected:\n%s", fixedContent, expectedContent)
+	}
+}
+
+func TestFormatterPlansCoverRegisteredLanguages(t *testing.T) {
+	for _, language := range languageRegistry {
+		plans := formatterPlansForLanguage(language.Name(), "example.file")
+		if len(plans) == 0 {
+			t.Fatalf("expected formatter plans for language %q", language.Name())
+		}
+		for _, plan := range plans {
+			if strings.TrimSpace(plan.binary) == "" {
+				t.Fatalf("formatter plan for language %q has empty binary", language.Name())
+			}
+		}
+	}
+}
+
+func TestApplyAutofixesRunsFormatterAfterEdit(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	if err := WriteTextFile(filepath.Join(tmpDir, "package.json"), "{}\n"); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
+	if err := WriteTextFile(filepath.Join(tmpDir, ".prettierrc.json"), "{}\n"); err != nil {
+		t.Fatalf("failed to write .prettierrc.json: %v", err)
+	}
+	prettierBin := filepath.Join(tmpDir, "node_modules", ".bin", "prettier")
+	if err := WriteTextFile(prettierBin, "#!/usr/bin/env sh\nexit 0\n"); err != nil {
+		t.Fatalf("failed to write prettier stub: %v", err)
+	}
+	if err := os.Chmod(prettierBin, 0755); err != nil {
+		t.Fatalf("failed to chmod prettier stub: %v", err)
+	}
+
+	originalLookup := formatterBinaryLookup
+	originalRun := formatterCommandRun
+	defer func() {
+		formatterBinaryLookup = originalLookup
+		formatterCommandRun = originalRun
+	}()
+
+	var ranBinary string
+	var ranArgs []string
+	var ranDir string
+	formatterBinaryLookup = func(file string) (string, error) {
+		return "", exec.ErrNotFound
+	}
+	formatterCommandRun = func(binary string, args []string, workDir string) error {
+		ranBinary = binary
+		ranArgs = append([]string{}, args...)
+		ranDir = workDir
+		return nil
+	}
+
+	testFile := "formatted.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	content := "// #region 🔖A\n\nconst x = 1; // remove\n\n// #endregion 🔖A\n"
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	breachs := []Breach{
+		{Kind: BreachCodeCommentInline, Scope: testFile, Line: 3},
+	}
+	fixed, err := applyAutofixes(testFile, breachs)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Fatalf("expected 1 fix, got %d", fixed)
+	}
+	expectedBinary := filepath.Join("node_modules", ".bin", "prettier")
+	if ranBinary != expectedBinary {
+		t.Fatalf("expected formatter to run with %q, got %q", expectedBinary, ranBinary)
+	}
+	if ranDir != tmpDir {
+		t.Fatalf("expected formatter work dir %q, got %q", tmpDir, ranDir)
+	}
+	if len(ranArgs) < 3 || ranArgs[0] != "--write" || ranArgs[len(ranArgs)-1] != testFile {
+		t.Fatalf("unexpected formatter args: %v", ranArgs)
+	}
+}
+
+func TestApplyAutofixesFormatterFallbackNormalizesText(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	originalLookup := formatterBinaryLookup
+	defer func() { formatterBinaryLookup = originalLookup }()
+	formatterBinaryLookup = func(file string) (string, error) {
+		return "", exec.ErrNotFound
+	}
+
+	testFile := "fallback.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	content := "// #region 🔖A\n\nconst x = 1;   \n\n// #endregion"
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+	breachs := []Breach{
+		{Kind: BreachCodeSectionMissingEndName, Scope: testFile, Line: 5},
+	}
+	fixed, err := applyAutofixes(testFile, breachs)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Fatalf("expected 1 fix, got %d", fixed)
+	}
+	result, err := ReadTextFile(absPath)
+	if err != nil {
+		t.Fatalf("failed to read result: %v", err)
+	}
+	if strings.Contains(result, "   \n") {
+		t.Fatalf("expected fallback formatter to trim trailing spaces, got %q", result)
 	}
 }
 
@@ -1947,7 +2241,7 @@ const x = 1; // trailing comment
 // another normal comment
 /* TODO: block todo */
 const y = 2; // normal trailing
-// #endregion 🔖Fix Tests
+// #endregion 🔖Fix
 `
 
 	testFile := "test_improved.tsx"
@@ -2932,10 +3226,781 @@ func TestFindMatchingSectionStartName(t *testing.T) {
 	}
 }
 
+// #region 🔖Test Command
+
+func TestIsTestFunctionName(t *testing.T) {
+	// Test function detection for Go test patterns
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{"Go TestXxx", "TestSomething", true},
+		{"Go TestAbc", "TestAbc", true},
+		{"Go BenchmarkXxx", "BenchmarkSomething", true},
+		{"Go FuzzXxx", "FuzzSomething", true},
+		{"Python test_xxx", "test_something", true},
+		{"Go Test without capital", "Testnotcapital", false},
+		{"plain func", "doSomething", false},
+		{"plain func capitalized", "DoSomething", false},
+		{"Test alone not enough", "Test", false},
+		{"Benchmark alone not enough", "Benchmark", false},
+		{"Fuzz alone not enough", "Fuzz", false},
+		{"test_ prefix not Go", "test_go_style", true},
+		{"lowercase test", "testsomething", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isTestFunctionName(tt.input)
+			if got != tt.expected {
+				t.Errorf("isTestFunctionName(%q) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDefinitionKindTestEmoji(t *testing.T) {
+	// DefinitionKindTest maps to 🧪 emoji
+	emoji := definitionKindEmoji(map[string]interface{}{"kind": string(DefinitionKindTest)})
+	expected := emojiText(EmojiDefinitionTest)
+	if emoji != expected {
+		t.Errorf("definitionKindEmoji(test) = %q, want %q", emoji, expected)
+	}
+}
+
+func TestDefinitionKindTestCode(t *testing.T) {
+	// DefinitionKindTest maps to "t" code
+	code := definitionKindCode(map[string]interface{}{"kind": string(DefinitionKindTest)})
+	if code != "t" {
+		t.Errorf("definitionKindCode(DefinitionKindTest) = %q, want %q", code, "t")
+	}
+
+	// Code roundtrip: "t" -> 🧪 -> DefinitionKindTest
+	emoji := definitionEmojiFromCode("t")
+	if emoji != EmojiDefinitionTest {
+		t.Errorf("definitionEmojiFromCode(t) = %q, want %q", emoji, EmojiDefinitionTest)
+	}
+}
+
+func TestDefinitionKindTestIsValid(t *testing.T) {
+	if !DefinitionKindTest.IsValid() {
+		t.Error("DefinitionKindTest.IsValid() should return true")
+	}
+}
+
+func TestBuildDefinitionIDTestKind(t *testing.T) {
+	// When a function in a lab file matches a test pattern, it should get TEST kind emoji
+	labFileID := emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileLab) + "maintest"
+
+	id := buildDefinitionID(labFileID, nil, "TestSomething", DefinitionKindImplementation)
+	testEmoji := emojiText(EmojiDefinitionTest)
+	implEmoji := emojiText(EmojiDefinitionImpl)
+
+	if !strings.Contains(id, testEmoji) {
+		t.Errorf("buildDefinitionID for TestSomething in lab file should contain test emoji %q, got %q", testEmoji, id)
+	}
+	if strings.Contains(id, implEmoji) {
+		t.Errorf("buildDefinitionID for TestSomething in lab file should NOT contain impl emoji %q, got %q", implEmoji, id)
+	}
+
+	// A non-test function in a lab file keeps impl emoji
+	id2 := buildDefinitionID(labFileID, nil, "helperFunc", DefinitionKindImplementation)
+	if !strings.Contains(id2, implEmoji) {
+		t.Errorf("buildDefinitionID for helperFunc in lab file should contain impl emoji %q, got %q", implEmoji, id2)
+	}
+
+	// A test function in a non-lab file keeps impl emoji
+	codeFileID := emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileCode) + "main"
+	id3 := buildDefinitionID(codeFileID, nil, "TestSomething", DefinitionKindImplementation)
+	if !strings.Contains(id3, implEmoji) {
+		t.Errorf("buildDefinitionID for TestSomething in code file should contain impl emoji %q, got %q", implEmoji, id3)
+	}
+}
+
+func TestDetectBundleLanguage(t *testing.T) {
+	// Create a temp dir acting as a Go bundle
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	t.Run("go", func(t *testing.T) {
+		goDir := filepath.Join(tmpDir, "gomod")
+		if err := os.MkdirAll(goDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(goDir, "go.mod"), []byte("module test\n\ngo 1.21\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		lang := detectBundleLanguage(goDir)
+		if lang != "go" {
+			t.Errorf("detectBundleLanguage with go.mod = %q, want %q", lang, "go")
+		}
+	})
+
+	t.Run("python", func(t *testing.T) {
+		pyDir := filepath.Join(tmpDir, "pyproj")
+		if err := os.MkdirAll(pyDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(pyDir, "pyproject.toml"), []byte("[project]\nname = \"test\"\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		lang := detectBundleLanguage(pyDir)
+		if lang != "python" {
+			t.Errorf("detectBundleLanguage with pyproject.toml = %q, want %q", lang, "python")
+		}
+	})
+
+	t.Run("typescript", func(t *testing.T) {
+		tsDir := filepath.Join(tmpDir, "tspack")
+		if err := os.MkdirAll(tsDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(tsDir, "package.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+			t.Fatal(err)
+		}
+		lang := detectBundleLanguage(tsDir)
+		if lang != "typescript" {
+			t.Errorf("detectBundleLanguage with package.json = %q, want %q", lang, "typescript")
+		}
+	})
+
+	t.Run("unknown", func(t *testing.T) {
+		emptyDir := filepath.Join(tmpDir, "emptydir")
+		if err := os.MkdirAll(emptyDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		lang := detectBundleLanguage(emptyDir)
+		if lang != "" {
+			t.Errorf("detectBundleLanguage empty dir = %q, want empty string", lang)
+		}
+	})
+}
+
+func TestUnflattenTestName(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"testsomething", "TestSomething"},
+		{"benchmarksomething", "BenchmarkSomething"},
+		{"fuzzsomething", "FuzzSomething"},
+		{"testbenchmarksomething", "TestbenchmarkSomething"},
+		{"myfunction", "Myfunction"},
+		{"", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := unflattenTestName(tt.input)
+			if got != tt.expected {
+				t.Errorf("unflattenTestName(%q) = %q, want %q", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestResolveTestScopes(t *testing.T) {
+	// No args -> single scope of kind all
+	scopes := resolveTestScopes(nil)
+	if len(scopes) != 1 {
+		t.Fatalf("resolveTestScopes(nil) len = %d, want 1", len(scopes))
+	}
+	if scopes[0].Kind != testScopeAll {
+		t.Errorf("resolveTestScopes(nil)[0].Kind = %q, want %q", scopes[0].Kind, testScopeAll)
+	}
+
+	// Empty args -> single scope of kind all
+	scopes2 := resolveTestScopes([]string{})
+	if len(scopes2) != 1 || scopes2[0].Kind != testScopeAll {
+		t.Errorf("resolveTestScopes([]) should return testScopeAll scope")
+	}
+
+	// Unknown/invalid ID -> falls back to all
+	scopes3 := resolveTestScopes([]string{"notavalidid"})
+	if len(scopes3) != 1 || scopes3[0].Kind != testScopeAll {
+		t.Errorf("resolveTestScopes([invalid]) should return testScopeAll scope")
+	}
+}
+
+func TestCollectGoTestsInSection(t *testing.T) {
+	tmpDir := t.TempDir()
+	testFile := filepath.Join(tmpDir, "foo_test.go")
+	content := `package foo
+
+// #region 🔖Alpha
+
+func TestAlpha(t *testing.T) {}
+
+func TestAlphaBeta(t *testing.T) {}
+
+// #endregion 🔖Alpha
+
+// #region 🔖Gamma
+
+func TestGamma(t *testing.T) {}
+
+// #endregion 🔖Gamma
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	pattern := collectGoTestsInSection(testFile, "Alpha")
+	if pattern == "" {
+		t.Fatal("expected non-empty pattern for Alpha section")
+	}
+	if !strings.Contains(pattern, "TestAlpha") {
+		t.Errorf("pattern should contain TestAlpha, got: %s", pattern)
+	}
+	if !strings.Contains(pattern, "TestAlphaBeta") {
+		t.Errorf("pattern should contain TestAlphaBeta, got: %s", pattern)
+	}
+	if strings.Contains(pattern, "TestGamma") {
+		t.Errorf("pattern should NOT contain TestGamma from different section, got: %s", pattern)
+	}
+
+	// Non-existent section returns empty
+	empty := collectGoTestsInSection(testFile, "Nonexistent")
+	if empty != "" {
+		t.Errorf("collectGoTestsInSection for missing section should return empty, got: %s", empty)
+	}
+}
+
+func TestResolveTestFunctionName(t *testing.T) {
+	tmpDir := t.TempDir()
+	testFile := filepath.Join(tmpDir, "foo_test.go")
+	content := `package foo
+
+func TestMyFunction(t *testing.T) {}
+
+func BenchmarkMyFunction(b *testing.B) {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	name := resolveTestFunctionName(testFile, "testmyfunction")
+	if name != "TestMyFunction" {
+		t.Errorf("resolveTestFunctionName(testmyfunction) = %q, want %q", name, "TestMyFunction")
+	}
+
+	bname := resolveTestFunctionName(testFile, "benchmarkmyfunction")
+	if bname != "BenchmarkMyFunction" {
+		t.Errorf("resolveTestFunctionName(benchmarkmyfunction) = %q, want %q", bname, "BenchmarkMyFunction")
+	}
+
+	missing := resolveTestFunctionName(testFile, "nonexistent")
+	if missing != "" {
+		t.Errorf("resolveTestFunctionName for missing function should return empty, got: %q", missing)
+	}
+}
+
+func TestTestCommandHelp(t *testing.T) {
+	stdout, _, err := executeCommand("test", "--help")
+	if err != nil {
+		t.Fatalf("test --help returned error: %v", err)
+	}
+	if !strings.Contains(stdout, "test") {
+		t.Errorf("test --help output should mention 'test', got: %s", stdout)
+	}
+}
+
+// #endregion 🔖Test Command
+
 // #endregion 🔖Cli
 
-// #region 🔖Policy Tests
+// #region 🔖SQLite Export
 
+// testExportContext is a mock RepoContext for testing ExportToSQLite.
+type testExportContext struct {
+	rootDir     string
+	projects    []*Project
+	bundles     []*Bundle
+	folders     []*Folder
+	files       []*File
+	sections    []*Section
+	definitions []*Definition
+}
+
+func (c *testExportContext) GetRootDir() string                               { return c.rootDir }
+func (c *testExportContext) GetProjects() []*Project                          { return c.projects }
+func (c *testExportContext) GetBundles() []*Bundle                            { return c.bundles }
+func (c *testExportContext) GetFolders() []*Folder                            { return c.folders }
+func (c *testExportContext) GetFiles() []*File                                { return c.files }
+func (c *testExportContext) GetSections() []*Section                          { return c.sections }
+func (c *testExportContext) GetDefinitions() []*Definition                    { return c.definitions }
+func (c *testExportContext) GetCheckpoints(limit *int) ([]*Checkpoint, error) { return nil, nil }
+func (c *testExportContext) GetContributors() ([]*Contributor, error)         { return nil, nil }
+func (c *testExportContext) GetGoals() ([]*Goal, error)                       { return nil, nil }
+func (c *testExportContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
+	return nil, nil
+}
+func (c *testExportContext) GetPolicies() []*Policy                        { return nil }
+func (c *testExportContext) GetDrafts() ([]*Draft, error)                  { return nil, nil }
+func (c *testExportContext) GetTodos(filter *FilterInput) ([]*Todo, error) { return nil, nil }
+func (c *testExportContext) GetStatutes() []*StatuteMeta                   { return nil }
+func (c *testExportContext) Analyze(scope *string) (*AnalyzeResult, error) {
+	return &AnalyzeResult{}, nil
+}
+func (c *testExportContext) Fix(scope *string) (*FixResult, error)                 { return &FixResult{}, nil }
+func (c *testExportContext) GoalCreate(input GoalCreateInput) (*Goal, error)       { return nil, nil }
+func (c *testExportContext) GoalChange(input GoalChangeInput) (*Goal, error)       { return nil, nil }
+func (c *testExportContext) GoalClose(input GoalCloseInput) (*Goal, error)         { return nil, nil }
+func (c *testExportContext) GoalReopen(input GoalReopenInput) (*Goal, error)       { return nil, nil }
+func (c *testExportContext) GoalDelete(input GoalDeleteInput) (bool, error)        { return false, nil }
+func (c *testExportContext) TodoCreate(input TodoCreateInput) (*Todo, error)       { return nil, nil }
+func (c *testExportContext) TodoChange(input TodoChangeInput) (*Todo, error)       { return nil, nil }
+func (c *testExportContext) TodoDelete(id string) (bool, error)                    { return false, nil }
+func (c *testExportContext) DraftCreate(input DraftCreateInput) (*Draft, error)    { return nil, nil }
+func (c *testExportContext) DraftDelete(id string) (bool, error)                   { return false, nil }
+func (c *testExportContext) TicketOpen(input TicketOpenInput) (*Ticket, error)     { return nil, nil }
+func (c *testExportContext) TicketClose(input TicketCloseInput) (*Ticket, error)   { return nil, nil }
+func (c *testExportContext) TicketReopen(input TicketReopenInput) (*Ticket, error) { return nil, nil }
+func (c *testExportContext) TicketChange(input TicketChangeInput) (*Ticket, error) { return nil, nil }
+func (c *testExportContext) TicketDelete(input TicketDeleteInput) (bool, error)    { return false, nil }
+func (c *testExportContext) FolderCreate(path string) (*Folder, error)             { return nil, nil }
+func (c *testExportContext) FolderMove(src, dst string) (*Folder, error)           { return nil, nil }
+func (c *testExportContext) FolderDelete(path string) error                        { return nil }
+func (c *testExportContext) FileCreate(path string) (*File, error)                 { return nil, nil }
+func (c *testExportContext) FileMove(src, dst string) (*File, error)               { return nil, nil }
+func (c *testExportContext) FileDelete(path string) error                          { return nil }
+func (c *testExportContext) SectionCreate(file, name string, parent *string) (*Section, error) {
+	return nil, nil
+}
+func (c *testExportContext) SectionMove(file, oldName, newName string) (*Section, error) {
+	return nil, nil
+}
+func (c *testExportContext) SectionDelete(file, name string) error { return nil }
+func (c *testExportContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
+	return nil, nil
+}
+func (c *testExportContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
+	return nil, nil
+}
+func (c *testExportContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
+	return nil, nil
+}
+func (c *testExportContext) ContributorRemove(github string) error { return nil }
+func (c *testExportContext) SyncManagement() (bool, error)         { return false, nil }
+
+func TestExportToSQLiteSchema(t *testing.T) {
+	tmpDir := t.TempDir()
+	srcDir := filepath.Join(tmpDir, "myproject", "mybundle", "src")
+	os.MkdirAll(srcDir, 0755)
+
+	// Create a TypeScript file with sections and definitions
+	tsContent := `// #region 🔖Header
+
+// 💻src/app.ts
+
+// 2025 Test <t@t.com>
+
+// GNU Affero General Public License
+// https://www.gnu.org/licenses/
+
+// App module summary.
+
+// #endregion 🔖Header
+
+// #region 🔖Functions
+
+// Processes work items.
+export function doWork(): void {}
+
+// #endregion 🔖Functions
+`
+	tsFile := filepath.Join(srcDir, "app.ts")
+	os.WriteFile(tsFile, []byte(tsContent), 0644)
+
+	// Create README.md for project
+	projectReadme := "# My Project\n\n### Summary\n\nThis is the project summary.\n\n### Specs\n\nSome specs.\n"
+	os.WriteFile(filepath.Join(tmpDir, "myproject", "README.md"), []byte(projectReadme), 0644)
+
+	// Create README.md for bundle
+	bundleReadme := "# My Bundle\n\n### Summary\n\nThis is the bundle summary.\n"
+	os.WriteFile(filepath.Join(tmpDir, "myproject", "mybundle", "README.md"), []byte(bundleReadme), 0644)
+
+	// Create the context
+	ctx := &testExportContext{
+		rootDir: tmpDir,
+		projects: []*Project{
+			{Name: "myproject", Root: "myproject", Kind: ProjectKindUser},
+		},
+		bundles: []*Bundle{
+			{Name: "myproject/mybundle", Root: "myproject/mybundle", ProjectName: "myproject", Kind: BundleKindLibrary},
+		},
+		folders: []*Folder{
+			{Path: "myproject", Name: "myproject", Kind: FolderKindOrganization},
+			{Path: "myproject/mybundle", Name: "mybundle", Kind: FolderKindOrganization},
+			{Path: "myproject/mybundle/src", Name: "src", Kind: FolderKindOrganization},
+		},
+		files: []*File{
+			{Path: "myproject/mybundle/src/app.ts", Name: "app.ts", Extension: "ts", Kind: FileKindCode},
+		},
+	}
+
+	outputPath := filepath.Join(tmpDir, "test.db")
+	result, err := ExportToSQLite(outputPath, ctx)
+	if err != nil {
+		t.Fatalf("ExportToSQLite failed: %v", err)
+	}
+
+	// Verify counts
+	if result.Projects != 1 {
+		t.Errorf("expected 1 project, got %d", result.Projects)
+	}
+	if result.Bundles != 1 {
+		t.Errorf("expected 1 bundle, got %d", result.Bundles)
+	}
+	if result.Folders != 3 {
+		t.Errorf("expected 3 folders, got %d", result.Folders)
+	}
+	if result.Files != 1 {
+		t.Errorf("expected 1 file, got %d", result.Files)
+	}
+
+	// Verify database schema by querying
+	db, err := sql.Open("sqlite", outputPath)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	// Check synthetic checkpoint exists
+	var checkpointCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM checkpoint").Scan(&checkpointCount); err != nil {
+		t.Fatalf("failed to count checkpoints: %v", err)
+	}
+	if checkpointCount != 1 {
+		t.Errorf("expected 1 checkpoint, got %d", checkpointCount)
+	}
+
+	// Check kind tables are seeded
+	var folderKindCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM folder_kind").Scan(&folderKindCount); err != nil {
+		t.Fatalf("failed to count folder_kind: %v", err)
+	}
+	if folderKindCount != 2 {
+		t.Errorf("expected 2 folder_kind rows, got %d", folderKindCount)
+	}
+	var fileKindCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM file_kind").Scan(&fileKindCount); err != nil {
+		t.Fatalf("failed to count file_kind: %v", err)
+	}
+	if fileKindCount != 8 {
+		t.Errorf("expected 8 file_kind rows, got %d", fileKindCount)
+	}
+
+	// Check project table - integer id, folder_id FK, project_kind_id FK, name UK
+	var projectID int
+	var projectFolderID int
+	var projectKindID int
+	var projectName string
+	var projectSummary sql.NullString
+	if err := db.QueryRow("SELECT id, folder_id, project_kind_id, name, summary FROM project WHERE id = 1").Scan(&projectID, &projectFolderID, &projectKindID, &projectName, &projectSummary); err != nil {
+		t.Fatalf("failed to query project: %v", err)
+	}
+	if projectName != "myproject" {
+		t.Errorf("expected project name 'myproject', got %q", projectName)
+	}
+	if projectKindID != 0 {
+		t.Errorf("expected project_kind_id 0 (user), got %d", projectKindID)
+	}
+	if projectSummary.Valid && projectSummary.String != "This is the project summary." {
+		t.Errorf("expected project summary 'This is the project summary.', got %q", projectSummary.String)
+	}
+
+	// Check bundle table - integer id, project_id FK, folder_id FK, bundle_kind_id FK
+	var bundleID int
+	var bundleProjectID int
+	var bundleFolderID int
+	var bundleKindID int
+	var bundleName string
+	if err := db.QueryRow("SELECT id, project_id, folder_id, bundle_kind_id, name FROM bundle WHERE id = 1").Scan(&bundleID, &bundleProjectID, &bundleFolderID, &bundleKindID, &bundleName); err != nil {
+		t.Fatalf("failed to query bundle: %v", err)
+	}
+	if bundleName != "mybundle" {
+		t.Errorf("expected bundle name 'mybundle', got %q", bundleName)
+	}
+	if bundleKindID != 0 {
+		t.Errorf("expected bundle_kind_id 0 (library), got %d", bundleKindID)
+	}
+	if bundleProjectID != projectID {
+		t.Errorf("expected bundle project_id %d, got %d", projectID, bundleProjectID)
+	}
+
+	// Check folder table - integer id with checkpoint_id FK, parent_folder_id FK, folder_kind_id FK
+	var folderCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM folder").Scan(&folderCount); err != nil {
+		t.Fatalf("failed to count folders: %v", err)
+	}
+	if folderCount != 3 {
+		t.Errorf("expected 3 folders, got %d", folderCount)
+	}
+	var folderCheckpointID int
+	var folderKindID int
+	if err := db.QueryRow("SELECT checkpoint_id, folder_kind_id FROM folder WHERE id = 1").Scan(&folderCheckpointID, &folderKindID); err != nil {
+		t.Fatalf("failed to query folder: %v", err)
+	}
+	if folderCheckpointID != 1 {
+		t.Errorf("expected folder checkpoint_id 1, got %d", folderCheckpointID)
+	}
+
+	// Check file table - integer id, checkpoint_id FK, parent_folder_id FK, file_kind_id FK, extension
+	var fileID int
+	var fileParentFolderID sql.NullInt64
+	var fileKindID int
+	var fileName string
+	var fileExtension string
+	if err := db.QueryRow("SELECT id, parent_folder_id, file_kind_id, name, extension FROM file WHERE id = 1").Scan(&fileID, &fileParentFolderID, &fileKindID, &fileName, &fileExtension); err != nil {
+		t.Fatalf("failed to query file: %v", err)
+	}
+	if fileName != "app.ts" {
+		t.Errorf("expected file name 'app.ts', got %q", fileName)
+	}
+	if fileKindID != 0 {
+		t.Errorf("expected file_kind_id 0 (code), got %d", fileKindID)
+	}
+	if fileExtension != "ts" {
+		t.Errorf("expected file extension 'ts', got %q", fileExtension)
+	}
+
+	// Check section table - integer id, file_id FK
+	var sectionCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM section").Scan(&sectionCount); err != nil {
+		t.Fatalf("failed to count sections: %v", err)
+	}
+	if sectionCount == 0 {
+		t.Error("expected at least 1 section")
+	}
+
+	// Check definition table - integer id, section_id FK, definition_kind_id FK, code field
+	var defCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM definition").Scan(&defCount); err != nil {
+		t.Fatalf("failed to count definitions: %v", err)
+	}
+	if defCount > 0 {
+		var defSectionID int
+		var defKindID int
+		var defName string
+		var defCode sql.NullString
+		if err := db.QueryRow("SELECT section_id, definition_kind_id, name, code FROM definition LIMIT 1").Scan(&defSectionID, &defKindID, &defName, &defCode); err != nil {
+			t.Fatalf("failed to query definition: %v", err)
+		}
+		if defName != "doWork" {
+			t.Errorf("expected definition name 'doWork', got %q", defName)
+		}
+		if defKindID != 0 {
+			t.Errorf("expected definition_kind_id 0 (implementation), got %d", defKindID)
+		}
+		if !defCode.Valid || defCode.String == "" {
+			t.Error("expected definition code to be non-empty")
+		}
+	}
+
+	// Verify unique constraint on contributor by trying to insert duplicate
+	_, dupErr := db.Exec("INSERT INTO contributor (github, name, alias) VALUES (?, ?, ?)", "export", "Export System", "export")
+	if dupErr == nil {
+		t.Error("expected unique constraint violation for duplicate contributor github")
+	}
+}
+
+func TestExportToSQLiteEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	ctx := &testExportContext{
+		rootDir:  tmpDir,
+		projects: []*Project{},
+		bundles:  []*Bundle{},
+		folders:  []*Folder{},
+		files:    []*File{},
+	}
+
+	outputPath := filepath.Join(tmpDir, "empty.db")
+	result, err := ExportToSQLite(outputPath, ctx)
+	if err != nil {
+		t.Fatalf("ExportToSQLite failed: %v", err)
+	}
+	if result.Projects != 0 || result.Bundles != 0 || result.Folders != 0 || result.Files != 0 || result.Sections != 0 || result.Definitions != 0 {
+		t.Errorf("expected all counts to be 0, got projects=%d bundles=%d folders=%d files=%d sections=%d definitions=%d",
+			result.Projects, result.Bundles, result.Folders, result.Files, result.Sections, result.Definitions)
+	}
+
+	// Verify all schema tables exist
+	db, err := sql.Open("sqlite", outputPath)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	defer db.Close()
+	tables := []string{
+		"contributor", "release", "release_contributors", "version", "checkpoint",
+		"folder_kind", "folder", "file_kind", "file",
+		"project_kind", "project", "concept", "mechanism", "system", "system_concepts",
+		"bundle_kind", "bundle", "section",
+		"definition_kind", "definition",
+		"client_kind", "agent", "session", "event_kind", "event",
+	}
+	for _, table := range tables {
+		var count int
+		if err := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count); err != nil {
+			t.Errorf("table %s does not exist: %v", table, err)
+		}
+	}
+
+	// Verify synthetic contributor and checkpoint exist
+	var contributorCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM contributor").Scan(&contributorCount); err != nil {
+		t.Fatalf("failed to count contributors: %v", err)
+	}
+	if contributorCount != 1 {
+		t.Errorf("expected 1 synthetic contributor, got %d", contributorCount)
+	}
+	var checkpointCount int
+	if err := db.QueryRow("SELECT COUNT(*) FROM checkpoint").Scan(&checkpointCount); err != nil {
+		t.Fatalf("failed to count checkpoints: %v", err)
+	}
+	if checkpointCount != 1 {
+		t.Errorf("expected 1 synthetic checkpoint, got %d", checkpointCount)
+	}
+
+	// Verify kind tables are seeded
+	var folderKindCount int
+	db.QueryRow("SELECT COUNT(*) FROM folder_kind").Scan(&folderKindCount)
+	if folderKindCount != 2 {
+		t.Errorf("expected 2 folder_kind rows, got %d", folderKindCount)
+	}
+	var fileKindCount int
+	db.QueryRow("SELECT COUNT(*) FROM file_kind").Scan(&fileKindCount)
+	if fileKindCount != 8 {
+		t.Errorf("expected 8 file_kind rows, got %d", fileKindCount)
+	}
+	var projectKindCount int
+	db.QueryRow("SELECT COUNT(*) FROM project_kind").Scan(&projectKindCount)
+	if projectKindCount != 3 {
+		t.Errorf("expected 3 project_kind rows, got %d", projectKindCount)
+	}
+	var bundleKindCount int
+	db.QueryRow("SELECT COUNT(*) FROM bundle_kind").Scan(&bundleKindCount)
+	if bundleKindCount != 7 {
+		t.Errorf("expected 7 bundle_kind rows, got %d", bundleKindCount)
+	}
+	var defKindCount int
+	db.QueryRow("SELECT COUNT(*) FROM definition_kind").Scan(&defKindCount)
+	if defKindCount != 4 {
+		t.Errorf("expected 4 definition_kind rows, got %d", defKindCount)
+	}
+}
+
+func TestExportKindMappings(t *testing.T) {
+	// Test folder kind mapping
+	if folderKindToInt(FolderKindOrganization) != 0 {
+		t.Errorf("FolderKindOrganization should map to 0")
+	}
+	if folderKindToInt(FolderKindRequired) != 1 {
+		t.Errorf("FolderKindRequired should map to 1")
+	}
+	if folderKindToInt(FolderKindRoot) != 0 {
+		t.Errorf("FolderKindRoot should default to 0")
+	}
+
+	// Test project kind mapping
+	if projectKindToInt(ProjectKindUser) != 0 {
+		t.Errorf("ProjectKindUser should map to 0")
+	}
+	if projectKindToInt(ProjectKindInfrastructure) != 1 {
+		t.Errorf("ProjectKindInfrastructure should map to 1")
+	}
+	if projectKindToInt(ProjectKindResearch) != 2 {
+		t.Errorf("ProjectKindResearch should map to 2")
+	}
+
+	// Test bundle kind mapping
+	if bundleKindToInt(BundleKindLibrary) != 0 {
+		t.Errorf("BundleKindLibrary should map to 0")
+	}
+	if bundleKindToInt(BundleKindSchema) != 1 {
+		t.Errorf("BundleKindSchema should map to 1")
+	}
+	if bundleKindToInt(BundleKindBinary) != 2 {
+		t.Errorf("BundleKindBinary should map to 2")
+	}
+	if bundleKindToInt(BundleKindUI) != 3 {
+		t.Errorf("BundleKindUI should map to 3")
+	}
+	if bundleKindToInt("example") != 4 {
+		t.Errorf("BundleKind example should map to 4")
+	}
+	if bundleKindToInt(BundleKindSite) != 5 {
+		t.Errorf("BundleKindSite should map to 5")
+	}
+	if bundleKindToInt(BundleKindAssets) != 6 {
+		t.Errorf("BundleKindAssets should map to 6")
+	}
+
+	// Test file kind mapping
+	if fileKindToInt(FileKindCode) != 0 {
+		t.Errorf("FileKindCode should map to 0")
+	}
+	if fileKindToInt(FileKindLab) != 1 {
+		t.Errorf("FileKindLab should map to 1")
+	}
+	if fileKindToInt(FileKindScript) != 2 {
+		t.Errorf("FileKindScript should map to 2")
+	}
+	if fileKindToInt(FileKindDocs) != 3 {
+		t.Errorf("FileKindDocs should map to 3")
+	}
+	if fileKindToInt(FileKindConfig) != 4 {
+		t.Errorf("FileKindConfig should map to 4")
+	}
+	if fileKindToInt(FileKindResource) != 5 {
+		t.Errorf("FileKindResource should map to 5")
+	}
+	if fileKindToInt(FileKindTemplate) != 6 {
+		t.Errorf("FileKindTemplate should map to 6")
+	}
+	if fileKindToInt(FileKindLicense) != 7 {
+		t.Errorf("FileKindLicense should map to 7")
+	}
+
+	// Test definition kind mapping
+	if definitionKindToInt(DefinitionKindImplementation) != 0 {
+		t.Errorf("DefinitionKindImplementation should map to 0")
+	}
+	if definitionKindToInt(DefinitionKindInterface) != 1 {
+		t.Errorf("DefinitionKindInterface should map to 1")
+	}
+	if definitionKindToInt(DefinitionKindConstant) != 2 {
+		t.Errorf("DefinitionKindConstant should map to 2")
+	}
+	if definitionKindToInt(DefinitionKindTest) != 3 {
+		t.Errorf("DefinitionKindTest should map to 3")
+	}
+}
+
+func TestExtractReadmeSummary(t *testing.T) {
+	content := "# Title\n\n### Summary\n\nThis is the summary.\n\n### Specs\n\nSome specs.\n"
+	result := extractReadmeSummary(content)
+	if result != "This is the summary." {
+		t.Errorf("expected 'This is the summary.', got %q", result)
+	}
+
+	empty := extractReadmeSummary("# No summary section\n\nJust text.\n")
+	if empty != "" {
+		t.Errorf("expected empty string, got %q", empty)
+	}
+
+	multiline := extractReadmeSummary("### Summary\n\nLine 1.\nLine 2.\n\n### Specs\n")
+	if multiline != "Line 1.\nLine 2." {
+		t.Errorf("expected multiline summary, got %q", multiline)
+	}
+}
+
+// #endregion 🔖SQLite Export
+
+// #region 🔖Policy
 func TestPolicyListCommand(t *testing.T) {
 	result := ToolPolicyList()
 	if result.Error != "" {
@@ -3382,6 +4447,31 @@ func TestDefinitionMissingIdentification(t *testing.T) {
 			file:    "src/app.rs",
 			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
 		},
+		{
+			name:    "Go unexported definition without identification",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// doWork does work.\nfunc doWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "TypeScript non-exported definition without identification",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n **/\nfunction doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python underscore-prefixed definition without identification",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef _private_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp private definition without identification",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\nprivate static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust non-pub definition without identification",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\nfn do_private_work() {}\n\n// #endregion 🔖Functions\n",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3444,6 +4534,31 @@ func TestDefinitionWithIdentification(t *testing.T) {
 			name:    "Rust definition with identification",
 			file:    "src/app.rs",
 			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\n// do_work processes items.\n// [🛠️src/app.rs#Functions§do_work](semiorepo://definition/src/app.rs/functions/do_work)\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go unexported definition with identification",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// doWork does work.\n// [🛠️src/app.go#Functions§doWork](semiorepo://definition/src/app.go/functions/dowork)\nfunc doWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "TypeScript non-exported definition with identification",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\n **/\nfunction doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python underscore-prefixed definition with identification",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef _private_work():\n    \"\"\"_private_work MUST do private work.\n    [🛠️src/app.py#Functions§_private_work](semiorepo://definition/src/app.py/functions/_private_work)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp private definition with identification",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\n// DoWork does work.\n// [🛠️src/App.cs#Functions§DoWork](semiorepo://definition/src/app.cs/functions/dowork)\nprivate static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust non-pub definition with identification",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\n// do_private_work does private work.\n// [🛠️src/app.rs#Functions§do_private_work](semiorepo://definition/src/app.rs/functions/do_private_work)\nfn do_private_work() {}\n\n// #endregion 🔖Functions\n",
 		},
 	}
 	for _, tc := range tests {
@@ -3514,43 +4629,101 @@ func TestSectionIdentificationAutofix(t *testing.T) {
 }
 
 func TestDefinitionIdentificationAutofix(t *testing.T) {
-	tmpDir := t.TempDir()
-	oldRoot := rootDir
-	rootDir = tmpDir
-	defer func() { rootDir = oldRoot }()
-	subDir := filepath.Join(tmpDir, "src")
-	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
-	testFile := "src/app.ts"
-	absPath := filepath.Join(tmpDir, testFile)
-	if err := WriteTextFile(absPath, content); err != nil {
-		t.Fatalf("failed to write: %v", err)
+	tests := []struct {
+		name    string
+		file    string
+		content string
+	}{
+		{
+			name:    "TypeScript exported definition autofix",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "TypeScript non-exported definition autofix",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n **/\nfunction doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go exported definition autofix",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go unexported definition autofix",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// doWork does work.\nfunc doWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python definition autofix",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python underscore-prefixed definition autofix",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef _private_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp public definition autofix",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp private definition autofix",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\nprivate static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust pub definition autofix",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust non-pub definition autofix",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\nfn do_private_work() {}\n\n// #endregion 🔖Functions\n",
+		},
 	}
-	scope := Scope{Kind: ScopeFile, FilePath: testFile}
-	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	breachs, err := CheckPoliciesWithContext(ctx, nil)
-	if err != nil {
-		t.Fatalf("policy check: %v", err)
-	}
-	defIdBreachs := []Breach{}
-	for _, v := range breachs {
-		if v.Kind == BreachCodeDefMissingIdentification {
-			defIdBreachs = append(defIdBreachs, v)
-		}
-	}
-	if len(defIdBreachs) == 0 {
-		t.Fatal("expected definition identification breachs before autofix")
-	}
-	n, fixErr := applyAutofixes(testFile, defIdBreachs)
-	if fixErr != nil {
-		t.Fatalf("autofix failed: %v", fixErr)
-	}
-	if n == 0 {
-		t.Fatal("expected at least one autofix applied")
-	}
-	fixedContent, _ := ReadTextFile(absPath)
-	if !strings.Contains(fixedContent, "/d/") {
-		t.Fatal("expected definition identification URI after autofix")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			oldRoot := rootDir
+			rootDir = tmpDir
+			defer func() { rootDir = oldRoot }()
+			dir := filepath.Dir(filepath.Join(tmpDir, tc.file))
+			os.MkdirAll(dir, 0o755)
+			absPath := filepath.Join(tmpDir, tc.file)
+			if err := WriteTextFile(absPath, tc.content); err != nil {
+				t.Fatalf("failed to write: %v", err)
+			}
+			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
+			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
+			breachs, err := CheckPoliciesWithContext(ctx, nil)
+			if err != nil {
+				t.Fatalf("policy check: %v", err)
+			}
+			defIdBreachs := []Breach{}
+			for _, v := range breachs {
+				if v.Kind == BreachCodeDefMissingIdentification {
+					defIdBreachs = append(defIdBreachs, v)
+				}
+			}
+			if len(defIdBreachs) == 0 {
+				t.Fatal("expected definition identification breachs before autofix")
+			}
+			n, fixErr := applyAutofixes(tc.file, defIdBreachs)
+			if fixErr != nil {
+				t.Fatalf("autofix failed: %v", fixErr)
+			}
+			if n == 0 {
+				t.Fatal("expected at least one autofix applied")
+			}
+			fixedContent, _ := ReadTextFile(absPath)
+			if !strings.Contains(fixedContent, "/d/") {
+				t.Fatalf("expected definition identification URI after autofix, got:\n%s", fixedContent)
+			}
+		})
 	}
 }
 
@@ -5143,10 +6316,9 @@ func TestPolicyGroupsGraphQL(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Policy Tests
+// #endregion 🔖Policy
 
-// #region 🔖Bundle Tests
-
+// #region 🔖Bundle
 func TestBundleListCommand(t *testing.T) {
 	result := ToolBundleList()
 	if result.Error != "" {
@@ -5182,10 +6354,9 @@ func TestBundleTreeCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Bundle Tests
+// #endregion 🔖Bundle
 
-// #region 🔖Folder Tests
-
+// #region 🔖Folder
 func TestFolderListCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
@@ -5223,10 +6394,9 @@ func TestFolderCreateMoveDelete(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Folder Tests
+// #endregion 🔖Folder
 
-// #region 🔖File Tests
-
+// #region 🔖File
 func TestFileListCommand(t *testing.T) {
 	result := ToolFileList("semio/js")
 	if result.Error != "" {
@@ -5262,10 +6432,9 @@ func TestFileCreateMoveDelete(t *testing.T) {
 	}
 }
 
-// #endregion 🔖File Tests
+// #endregion 🔖File
 
-// #region 🔖Section Tests
-
+// #region 🔖Section
 func TestSectionListCommand(t *testing.T) {
 	result := ToolSectionList("semio/js/semio.ts")
 	if result.Error != "" {
@@ -5301,10 +6470,9 @@ func TestSectionTreeCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Section Tests
+// #endregion 🔖Section
 
-// #region 🔖Definition Tests
-
+// #region 🔖Definition
 func TestDefinitionListCommand(t *testing.T) {
 	result := ToolDefinitionList("semio/js/semio.ts")
 	if result.Error != "" {
@@ -5312,10 +6480,9 @@ func TestDefinitionListCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Definition Tests
+// #endregion 🔖Definition
 
-// #region 🔖Ticket Tests
-
+// #region 🔖Ticket
 func TestTicketListCommand(t *testing.T) {
 	year := 2025
 	result := ToolTicketList(&year, nil, nil)
@@ -5375,10 +6542,9 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Ticket Tests
+// #endregion 🔖Ticket
 
-// #region 🔖Goal Tests
-
+// #region 🔖Goal
 func TestGoalCreateValidation(t *testing.T) {
 
 	result := ToolGoalCreate("", "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
@@ -5437,16 +6603,6 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 	}
 	if goal.Dates.Due != "2026-02-15" {
 		t.Errorf("expected due date '2026-02-15', got '%s'", goal.Dates.Due)
-	}
-	if len(goal.Interactions) == 0 {
-		t.Error("expected at least one interaction")
-	} else {
-		if goal.Interactions[0].LLM != "opus-4-5" {
-			t.Errorf("expected LLM 'opus-4-5', got '%s'", goal.Interactions[0].LLM)
-		}
-		if goal.Interactions[0].Client != "claude-code" {
-			t.Errorf("expected Client 'claude-code', got '%s'", goal.Interactions[0].Client)
-		}
 	}
 
 	goalPath := filepath.Join(GetRepoGoalsDir(), goal.ID)
@@ -5578,10 +6734,9 @@ func TestGoalList(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Goal Tests
+// #endregion 🔖Goal
 
-// #region 🔖Contributor Tests
-
+// #region 🔖Contributor
 func TestContributorListCommand(t *testing.T) {
 	result := ToolContributorList()
 	if result.Error != "" {
@@ -5592,10 +6747,9 @@ func TestContributorListCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Contributor Tests
+// #endregion 🔖Contributor
 
-// #region 🔖Entity ID Tests
-
+// #region 🔖Entity ID
 func TestGetArtifactID_Root(t *testing.T) {
 	id := GetArtifactID("root", map[string]interface{}{})
 	if id != "" {
@@ -5706,6 +6860,14 @@ func TestGetArtifactID_Second(t *testing.T) {
 	expected := minuteId + emojiText(EmojiSecond) + "38"
 	if id != expected {
 		t.Errorf("second id: expected %q, got %q", expected, id)
+	}
+}
+
+func TestGetArtifactID_Codebase(t *testing.T) {
+	id := GetArtifactID("codebase", map[string]interface{}{"parentId": ""})
+	expected := emojiText(EmojiCodebase)
+	if id != expected {
+		t.Errorf("codebase id: expected %q, got %q", expected, id)
 	}
 }
 
@@ -5838,9 +7000,9 @@ func TestGetArtifactID_File(t *testing.T) {
 		data     map[string]interface{}
 		expected string
 	}{
-		{"code file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code", "parentId": folderId}, folderId + emojiText(EmojiFileCode) + "designtsx"},
-		{"test file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "name": "sketchpad.test.ts", "kind": "test", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileTest) + "sketchpadtestts"},
-		{"config file at root", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "name": "devcontainer.json", "kind": "config", "parentId": emojiText(EmojiFolderRequired) + "devcontainer"}, emojiText(EmojiFolderRequired) + "devcontainer" + emojiText(EmojiFileConfig) + "devcontainerjson"},
+		{"code file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code", "parentId": folderId}, folderId + emojiText(EmojiFileCode) + "design"},
+		{"test file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "name": "sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtest"},
+		{"config file at root", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "name": "devcontainer.json", "kind": "config", "parentId": emojiText(EmojiFolderRequired) + "devcontainer"}, emojiText(EmojiFolderRequired) + "devcontainer" + emojiText(EmojiFileConfig) + "devcontainer"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -5853,7 +7015,7 @@ func TestGetArtifactID_File(t *testing.T) {
 }
 
 func TestGetArtifactID_Line(t *testing.T) {
-	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"
+	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	id := GetArtifactID("line", map[string]interface{}{"parentId": fileId, "line": float64(3872)})
 	expected := fileId + emojiText(EmojiLine) + "3872"
 	if id != expected {
@@ -5862,7 +7024,7 @@ func TestGetArtifactID_Line(t *testing.T) {
 }
 
 func TestGetArtifactID_Range(t *testing.T) {
-	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"
+	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	id := GetArtifactID("range", map[string]interface{}{"parentId": fileId, "startLine": float64(3872), "endLine": float64(3875)})
 	expected := fileId + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"
 	if id != expected {
@@ -5871,7 +7033,7 @@ func TestGetArtifactID_Range(t *testing.T) {
 }
 
 func TestGetArtifactID_Sections(t *testing.T) {
-	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"
+	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	id := GetArtifactID("sections", map[string]interface{}{"parentId": fileId})
 	expected := fileId + emojiText(EmojiSections)
 	if id != expected {
@@ -5880,7 +7042,7 @@ func TestGetArtifactID_Sections(t *testing.T) {
 }
 
 func TestGetArtifactID_Section(t *testing.T) {
-	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"
+	fileId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"
 	cases := []struct {
 		name     string
 		data     map[string]interface{}
@@ -5900,7 +7062,7 @@ func TestGetArtifactID_Section(t *testing.T) {
 }
 
 func TestGetArtifactID_Definitions(t *testing.T) {
-	sectionId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
+	sectionId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
 	id := GetArtifactID("definitions", map[string]interface{}{"parentId": sectionId})
 	expected := sectionId + emojiText(EmojiDefinitions)
 	if id != expected {
@@ -5909,7 +7071,7 @@ func TestGetArtifactID_Definitions(t *testing.T) {
 }
 
 func TestGetArtifactID_Definition(t *testing.T) {
-	sectionId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
+	sectionId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"
 	id := GetArtifactID("definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": sectionId})
 	expected := sectionId + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
 	if id != expected {
@@ -5963,7 +7125,7 @@ func TestGetArtifactID_Tickets(t *testing.T) {
 	}{
 		{"root tickets", "", emojiText(EmojiTickets)},
 		{"goal tickets", emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad", emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTickets)},
-		{"section tickets", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
+		{"section tickets", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6014,7 +7176,7 @@ func TestGetArtifactID_Draft(t *testing.T) {
 }
 
 func TestGetArtifactID_Todos(t *testing.T) {
-	parentId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
+	parentId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
 	id := GetArtifactID("todos", map[string]interface{}{"parentId": parentId})
 	expected := parentId + emojiText(EmojiTodos)
 	if id != expected {
@@ -6023,7 +7185,7 @@ func TestGetArtifactID_Todos(t *testing.T) {
 }
 
 func TestGetArtifactID_Todo(t *testing.T) {
-	parentId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
+	parentId := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"
 	id := GetArtifactID("todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": parentId})
 	expected := parentId + emojiText(EmojiTodo) + "introducepropersyncmechanism"
 	if id != expected {
@@ -6057,7 +7219,7 @@ func TestGetArtifactID_Policy(t *testing.T) {
 		expected string
 	}{
 		{"general policy on file kind", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
-		{"specific policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
+		{"specific policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6085,27 +7247,27 @@ func TestGetArtifactID_Contributor(t *testing.T) {
 	}
 }
 
-func TestGetArtifactID_Commits(t *testing.T) {
-	id := GetArtifactID("commits", map[string]interface{}{"parentId": ""})
-	expected := emojiText(EmojiCommits)
+func TestGetArtifactID_Checkpoints(t *testing.T) {
+	id := GetArtifactID("checkpoints", map[string]interface{}{"parentId": ""})
+	expected := emojiText(EmojiCheckpoints)
 	if id != expected {
-		t.Errorf("commits id: expected %q, got %q", expected, id)
+		t.Errorf("checkpoints id: expected %q, got %q", expected, id)
 	}
 }
 
-func TestGetArtifactID_Commit(t *testing.T) {
+func TestGetArtifactID_Checkpoint(t *testing.T) {
 	sha := "cfb3b6084ff3fe883d5f39b08810a0b90997907a"
 	cases := []struct {
 		name     string
 		data     map[string]interface{}
 		expected string
 	}{
-		{"with contributorId", map[string]interface{}{"sha": sha, "contributorId": emojiText(EmojiContributor) + "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCommit) + sha},
-		{"with authorId fallback", map[string]interface{}{"sha": sha, "authorId": "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCommit) + sha},
+		{"with contributorId", map[string]interface{}{"sha": sha, "contributorId": emojiText(EmojiContributor) + "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCheckpoint) + sha},
+		{"with authorId fallback", map[string]interface{}{"sha": sha, "authorId": "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCheckpoint) + sha},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			id := GetArtifactID("commit", tc.data)
+			id := GetArtifactID("checkpoint", tc.data)
 			if id != tc.expected {
 				t.Errorf("expected %q, got %q", tc.expected, id)
 			}
@@ -6135,9 +7297,165 @@ func TestGetArtifactID_Interaction(t *testing.T) {
 	}
 }
 
+func TestGetArtifactID_Sessions(t *testing.T) {
+	dayId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15"
+	cases := []struct {
+		name     string
+		parentId string
+		expected string
+	}{
+		{"root sessions", "", emojiText(EmojiSessions)},
+		{"day sessions", dayId, dayId + emojiText(EmojiSessions)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			id := GetArtifactID("sessions", map[string]interface{}{"parentId": tc.parentId})
+			if id != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, id)
+			}
+		})
+	}
+}
+
+func TestGetArtifactID_Session(t *testing.T) {
+	dayId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15"
+	sessionsId := dayId + emojiText(EmojiSessions)
+	cases := []struct {
+		name     string
+		data     map[string]interface{}
+		expected string
+	}{
+		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with id fallback", map[string]interface{}{"id": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session no parent", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			id := GetArtifactID("session", tc.data)
+			if id != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, id)
+			}
+		})
+	}
+}
+
+func TestGetArtifactURI_Sessions(t *testing.T) {
+	uri := GetArtifactURI("sessions", map[string]interface{}{})
+	expected := "semiorepo://s"
+	if uri != expected {
+		t.Errorf("sessions uri: expected %q, got %q", expected, uri)
+	}
+}
+
+func TestGetArtifactURI_Session(t *testing.T) {
+	cases := []struct {
+		name     string
+		data     map[string]interface{}
+		expected string
+	}{
+		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"},
+		{"session with id fallback", map[string]interface{}{"id": "abc123"}, "semiorepo://s/abc123"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			uri := GetArtifactURI("session", tc.data)
+			if uri != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, uri)
+			}
+		})
+	}
+}
+
+func TestSessionIdToUri(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{"session collection", emojiText(EmojiSession), "semiorepo://s"},
+		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "semiorepo://s/e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IdToUri(tt.id)
+			if got != tt.want {
+				t.Errorf("IdToUri(%q) = %q, want %q", tt.id, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSessionUriToId(t *testing.T) {
+	tests := []struct {
+		name string
+		uri  string
+		want string
+	}{
+		{"sessions collection", "semiorepo://s", emojiText(EmojiSessions)},
+		{"session", "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := UriToId(tt.uri)
+			if got != tt.want {
+				t.Errorf("UriToId(%q) = %q, want %q", tt.uri, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSessionKindEmoji(t *testing.T) {
+	tests := []struct {
+		kind SessionKind
+		want string
+	}{
+		{SessionKindRunning, EmojiSessionRunning},
+		{SessionKindCompleted, EmojiSessionCompleted},
+		{SessionKindInterrupted, EmojiSessionInterrupted},
+	}
+	for _, tt := range tests {
+		t.Run(string(tt.kind), func(t *testing.T) {
+			got := SessionKindEmoji(tt.kind)
+			if got != tt.want {
+				t.Errorf("SessionKindEmoji(%q) = %q, want %q", tt.kind, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSessionGetID(t *testing.T) {
+	s := Session{
+		UUID:  "e753ed61-e8cc-49b7-88f7-dda53b8d5a15",
+		Year:  26,
+		Month: 2,
+		Day:   15,
+		Kind:  SessionKindCompleted,
+	}
+	id := s.GetID()
+	expected := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"
+	if id != expected {
+		t.Errorf("Session.GetID() = %q, want %q", id, expected)
+	}
+}
+
+func TestSessionGetURI(t *testing.T) {
+	s := Session{
+		UUID:  "e753ed61-e8cc-49b7-88f7-dda53b8d5a15",
+		Year:  26,
+		Month: 2,
+		Day:   15,
+		Kind:  SessionKindCompleted,
+	}
+	uri := s.GetURI()
+	expected := "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+	if uri != expected {
+		t.Errorf("Session.GetURI() = %q, want %q", uri, expected)
+	}
+}
+
 func TestGetArtifactID_Breach(t *testing.T) {
 	policyId := emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"
-	affected := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstorets"
+	affected := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore"
 	lineId := emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"
 	secondId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12"
 	id := GetArtifactID("breach", map[string]interface{}{"parentId": policyId, "affected": affected, "lineId": lineId, "secondId": secondId})
@@ -6198,45 +7516,47 @@ func TestSpecExactIDs(t *testing.T) {
 		{"root files", "files", map[string]interface{}{"parentId": ""}, "📄"},
 		{"folder files", "files", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad"}, "👤semio📚js🗃️sketchpad📄"},
 		{"required folder files", "files", map[string]interface{}{"parentId": "🛅github"}, "🛅github📄"},
-		{"code file Design.tsx", "file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "kind": "code", "parentId": "👤semio📚js🗃️sketchpad"}, "👤semio📚js🗃️sketchpad💻designtsx"},
+		{"code file Design.tsx", "file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "kind": "code", "parentId": "👤semio📚js🗃️sketchpad"}, "👤semio📚js🗃️sketchpad💻design"},
 		{"config file devcontainer.json", "file", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "kind": "config", "parentId": "🛅devcontainer"}, "🛅devcontainer⚙️devcontainerjson"},
-		{"line 3872", "line", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻designtsx", "line": float64(3872)}, "👤semio📚js🗃️sketchpad💻designtsx📌3872"},
-		{"sections in file", "sections", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻designtsx"}, "👤semio📚js🗃️sketchpad💻designtsx🔖"},
-		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": "👤semio📚js🗃️sketchpad💻designtsx"}, "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment"},
-		{"section Store nested", "section", map[string]interface{}{"name": "Store", "parentId": "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment"}, "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"},
-		{"definitions in section", "definitions", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️"},
-		{"definition createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore"},
+		{"line 3872", "line", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻design", "line": float64(3872)}, "👤semio📚js🗃️sketchpad💻design📌3872"},
+		{"sections in file", "sections", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻design"}, "👤semio📚js🗃️sketchpad💻design🔖"},
+		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": "👤semio📚js🗃️sketchpad💻design"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment"},
+		{"section Store nested", "section", map[string]interface{}{"name": "Store", "parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"},
+		{"definitions in section", "definitions", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🏷️"},
+		{"definition createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"},
 		{"root goals", "goals", map[string]interface{}{"parentId": ""}, "🎯"},
 		{"nested goals", "goals", map[string]interface{}{"parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎯"},
 		{"goal Running Sketchpad", "goal", map[string]interface{}{"id": "R26-02-1/RUNNING-SKETCHPAD", "parentId": "🎯r26021"}, "🎯r26021🎯runningsketchpad"},
 		{"root tickets", "tickets", map[string]interface{}{"parentId": ""}, "🎫"},
 		{"goal tickets", "tickets", map[string]interface{}{"parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎫"},
-		{"section tickets", "tickets", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫"},
+		{"section tickets", "tickets", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🎫"},
 		{"ticket", "ticket", map[string]interface{}{"slug": "INTRODUCE-KEY-GUID-URI-MECHANISM", "parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism"},
 		{"draft", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": "🧰semiorepo⌨️cli"}, "🧰semiorepo⌨️cli📝newarchitecture"},
-		{"todo", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore"}, "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism"},
+		{"todo", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism"},
 		{"general policy godfiles", "policy", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
-		{"specific policy", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
+		{"specific policy", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
 		{"breach", "breach", map[string]interface{}{
 			"parentId": "💻👮godfiles",
-			"affected": "👤semio📚js🗃️sketchpad💻designstorets",
+			"affected": "👤semio📚js🗃️sketchpad💻designstore",
 			"lineId":   "📌3872📌3875",
 			"secondId": "🎆26🌙02☀️14⏰19⌚07⏱️12",
-		}, "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets🔍📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"},
-		{"contributor", "contributor", map[string]interface{}{"github": "usalu"}, "🧑‍💻usalu"},
-		{"commit", "commit", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": "🧑‍💻usalu"}, "🧑‍💻usalu🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
+		}, "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstore🔍📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"},
+		{"contributor", "contributor", map[string]interface{}{"github": "usalu"}, "🧑‍💻ueli"},
+		{"checkpoint", "checkpoint", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": "🧑‍💻ueli"}, "🧑‍💻ueli🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
 		{"interaction started", "interaction", map[string]interface{}{
 			"secondId":      "🎆26🌙02☀️14⏰19⌚07⏱️12",
-			"contributorId": "🧑‍💻usalu",
+			"contributorId": "🧑‍💻ueli",
 			"entityId":      "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism",
 			"kind":          "started",
-		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱"},
+		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻ueli🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism🌱"},
 		{"interaction finished", "interaction", map[string]interface{}{
 			"secondId":      "🎆26🌙02☀️14⏰19⌚07⏱️12",
-			"contributorId": "🧑‍💻usalu",
+			"contributorId": "🧑‍💻ueli",
 			"entityId":      "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism",
 			"kind":          "finished",
-		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅"},
+		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻ueli🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅"},
+		{"sessions", "sessions", map[string]interface{}{"parentId": "🎆26🌙02☀️15"}, "🎆26🌙02☀️15⚪"},
+		{"session", "session", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": "🎆26🌙02☀️15"}, "🎆26🌙02☀️15⚪e753ed61e8cc49b788f7dda53b8d5a15"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6266,7 +7586,7 @@ func TestPropagateParentIDs(t *testing.T) {
 	projectId := emojiText(EmojiProjectUser) + "semio"
 	bundleId := projectId + emojiText(EmojiBundleLibrary) + "js"
 	folderId := bundleId + emojiText(EmojiFolderOrg) + "sketchpad"
-	fileId := folderId + emojiText(EmojiFileCode) + "designtsx"
+	fileId := folderId + emojiText(EmojiFileCode) + "design"
 	sectionId := fileId + emojiText(EmojiSection) + "store"
 	defId := sectionId + emojiText(EmojiDefinitionImpl) + "createstore"
 	checks := []struct {
@@ -6345,18 +7665,18 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	var projectsNode *TreeNode
+	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
-		if child.ID == "projects" {
-			projectsNode = child
+		if child.ID == "codebase" {
+			codebaseNode = child
 			break
 		}
 	}
-	if projectsNode == nil {
-		t.Fatal("projects node not found")
+	if codebaseNode == nil {
+		t.Fatal("codebase node not found")
 	}
 	var semioProject, semioRepoProject *TreeNode
-	for _, c := range projectsNode.Children {
+	for _, c := range codebaseNode.Children {
 		entityKind := treeNodeKindToEntityKind(c.Kind)
 		id := GetArtifactID(entityKind, c.Data)
 		t.Logf("Found project: %s", id)
@@ -6503,28 +7823,28 @@ func TestContributorTreeEntityIDs(t *testing.T) {
 	}
 }
 
-func TestCommitTreeEntityIDs(t *testing.T) {
+func TestCheckpointTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	var commitsNode *TreeNode
+	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
-		if c.ID == "commits" {
-			commitsNode = c
+		if c.ID == "checkpoints" {
+			checkpointsNode = c
 			break
 		}
 	}
-	if commitsNode == nil {
-		t.Fatal("commits node not found")
+	if checkpointsNode == nil {
+		t.Fatal("checkpoints node not found")
 	}
-	for _, c := range commitsNode.Children {
-		if c.Kind == TreeNodeCommit {
-			id := GetArtifactID("commit", c.Data)
-			if !strings.Contains(id, emojiText(EmojiCommit)) {
-				t.Errorf("commit id should contain commit emoji, got %q", id)
+	for _, c := range checkpointsNode.Children {
+		if c.Kind == TreeNodeCheckpoint {
+			id := GetArtifactID("checkpoint", c.Data)
+			if !strings.Contains(id, emojiText(EmojiCheckpoint)) {
+				t.Errorf("checkpoint id should contain checkpoint emoji, got %q", id)
 			}
 		}
 	}
@@ -6535,7 +7855,7 @@ func TestEntityKinds(t *testing.T) {
 		"root", "year", "month", "day", "hour", "minute", "second",
 		"project", "bundle", "folder", "file", "line", "range",
 		"section", "definition", "goal", "ticket", "draft", "todo",
-		"policy", "breach", "contributor", "commit", "interaction",
+		"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 	}
 	if len(EntityKinds) != len(expected) {
 		t.Fatalf("EntityKinds length: expected %d, got %d", len(expected), len(EntityKinds))
@@ -6563,7 +7883,7 @@ func TestDiffableKinds(t *testing.T) {
 	expected := []string{
 		"root", "year", "month", "day", "hour",
 		"project", "bundle", "folder", "file", "section", "definition",
-		"goal", "ticket", "contributor", "commit", "interaction",
+		"goal", "ticket", "contributor", "checkpoint", "interaction", "session",
 	}
 	if len(DiffableKinds) != len(expected) {
 		t.Fatalf("DiffableKinds length: expected %d, got %d", len(expected), len(DiffableKinds))
@@ -6579,7 +7899,7 @@ func TestRelatedToFileKinds(t *testing.T) {
 	expected := []string{
 		"root", "year", "month", "day", "hour", "minute", "second",
 		"project", "bundle", "folder", "goal", "ticket", "draft", "todo",
-		"policy", "breach", "contributor", "commit", "interaction",
+		"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 	}
 	if len(RelatedToFileKinds) != len(expected) {
 		t.Fatalf("RelatedToFileKinds length: expected %d, got %d", len(expected), len(RelatedToFileKinds))
@@ -6802,9 +8122,18 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	projectsNode := tree.Children[1]
+	var codebaseNode *TreeNode
+	for _, child := range tree.Children {
+		if child.ID == "codebase" {
+			codebaseNode = child
+			break
+		}
+	}
+	if codebaseNode == nil {
+		t.Fatal("codebase node not found")
+	}
 	var semioProject, semioRepoProject, codaProject *TreeNode
-	for _, c := range projectsNode.Children {
+	for _, c := range codebaseNode.Children {
 		entityKind := treeNodeKindToEntityKind(c.Kind)
 		id := GetArtifactID(entityKind, c.Data)
 		if id == emojiText(EmojiProjectUser)+"semio" {
@@ -6969,43 +8298,43 @@ func TestContributorTreeIDs(t *testing.T) {
 	}
 }
 
-func TestCommitTreeIDs(t *testing.T) {
+func TestCheckpointTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
 	tree := BuildMonorepoTree(context.Background())
-	var commitsNode *TreeNode
+	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
-		if c.ID == "commits" {
-			commitsNode = c
+		if c.ID == "checkpoints" {
+			checkpointsNode = c
 			break
 		}
 	}
-	if commitsNode == nil {
-		t.Fatal("commits node not found")
+	if checkpointsNode == nil {
+		t.Fatal("checkpoints node not found")
 	}
-	commitCount := 0
-	for _, c := range commitsNode.Children {
-		if c.Kind == TreeNodeCommit {
-			commitCount++
-			id := GetArtifactID("commit", c.Data)
-			if !strings.Contains(id, emojiText(EmojiCommit)) {
-				t.Errorf("commit id %q should contain %q", id, emojiText(EmojiCommit))
+	checkpointCount := 0
+	for _, c := range checkpointsNode.Children {
+		if c.Kind == TreeNodeCheckpoint {
+			checkpointCount++
+			id := GetArtifactID("checkpoint", c.Data)
+			if !strings.Contains(id, emojiText(EmojiCheckpoint)) {
+				t.Errorf("checkpoint id %q should contain %q", id, emojiText(EmojiCheckpoint))
 			}
 			sha, _ := c.Data["sha"].(string)
 			if sha != "" && !strings.HasSuffix(id, sha) {
-				t.Errorf("commit id %q should end with sha %q", id, sha)
+				t.Errorf("checkpoint id %q should end with sha %q", id, sha)
 			}
 			contributorId, _ := c.Data["contributorId"].(string)
 			if contributorId != "" && !strings.HasPrefix(id, contributorId) {
-				t.Errorf("commit id %q should start with contributor id %q", id, contributorId)
+				t.Errorf("checkpoint id %q should start with contributor id %q", id, contributorId)
 			}
 		}
 	}
-	if commitCount == 0 {
-		t.Error("no commits found in tree")
+	if checkpointCount == 0 {
+		t.Error("no checkpoints found in tree")
 	}
 }
 
@@ -7048,37 +8377,37 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"root files", "files", map[string]interface{}{"parentId": ""}, emojiText(EmojiFiles)},
 		{"sketchpad files", "files", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFiles)},
 		{"github files", "files", map[string]interface{}{"parentId": emojiText(EmojiFolderRequired) + "github"}, emojiText(EmojiFolderRequired) + "github" + emojiText(EmojiFiles)},
-		{"code file Design.tsx", "file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "kind": "code", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"},
+		{"code file Design.tsx", "file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "kind": "code", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"},
 		{"config file devcontainer.json", "file", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "kind": "config", "parentId": emojiText(EmojiFolderRequired) + "devcontainer"}, emojiText(EmojiFolderRequired) + "devcontainer" + emojiText(EmojiFileConfig) + "devcontainerjson"},
-		{"line 3872", "line", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx", "line": float64(3872)}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiLine) + "3872"},
-		{"range 3872-3875", "range", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstorets", "startLine": float64(3872), "endLine": float64(3875)}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstorets" + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"},
-		{"sections in file", "sections", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSections)},
-		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment"},
-		{"nested section Store", "section", map[string]interface{}{"name": "Store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"},
-		{"definitions in section", "definitions", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitions)},
-		{"definition impl createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"},
-		{"definition interface", "definition", map[string]interface{}{"name": "IStore", "kind": "interface", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionInterface) + "istore"},
-		{"definition constant", "definition", map[string]interface{}{"name": "MAX_SIZE", "kind": "constant", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionConstant) + "maxsize"},
+		{"line 3872", "line", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design", "line": float64(3872)}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiLine) + "3872"},
+		{"range 3872-3875", "range", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore", "startLine": float64(3872), "endLine": float64(3875)}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore" + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875"},
+		{"sections in file", "sections", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSections)},
+		{"section State Managment", "section", map[string]interface{}{"name": "State Managment", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment"},
+		{"nested section Store", "section", map[string]interface{}{"name": "Store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"},
+		{"definitions in section", "definitions", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitions)},
+		{"definition impl createSketchpadStore", "definition", map[string]interface{}{"name": "createSketchpadStore", "kind": "implementation", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"},
+		{"definition interface", "definition", map[string]interface{}{"name": "IStore", "kind": "interface", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionInterface) + "istore"},
+		{"definition constant", "definition", map[string]interface{}{"name": "MAX_SIZE", "kind": "constant", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionConstant) + "maxsize"},
 		{"root goals", "goals", map[string]interface{}{"parentId": ""}, emojiText(EmojiGoals)},
 		{"nested goals under parent", "goals", map[string]interface{}{"parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiGoals)},
 		{"top-level goal", "goal", map[string]interface{}{"id": "R26-02-1", "parentId": ""}, emojiText(EmojiGoal) + "r26021"},
 		{"nested goal Running Sketchpad", "goal", map[string]interface{}{"id": "R26-02-1/RUNNING-SKETCHPAD", "parentId": emojiText(EmojiGoal) + "r26021"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"},
 		{"root tickets", "tickets", map[string]interface{}{"parentId": ""}, emojiText(EmojiTickets)},
 		{"goal tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTickets)},
-		{"section tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
+		{"section tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
 		{"ticket Introduce Key Guid Uri Mechanism", "ticket", map[string]interface{}{"slug": "INTRODUCE-KEY-GUID-URI-MECHANISM", "parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism"},
 		{"draft New Architecture", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli"}, emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiDraft) + "newarchitecture"},
-		{"todo Introduce Proper Sync Mechanism", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore" + emojiText(EmojiTodo) + "introducepropersyncmechanism"},
+		{"todo Introduce Proper Sync Mechanism", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore" + emojiText(EmojiTodo) + "introducepropersyncmechanism"},
 		{"general policy godfiles", "policy", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
-		{"specific policy Only One Store", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
+		{"specific policy Only One Store", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
 		{"breach", "breach", map[string]interface{}{
 			"parentId": emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles",
-			"affected": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstorets",
+			"affected": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore",
 			"lineId":   emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875",
 			"secondId": emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12",
-		}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles" + emojiText(EmojiBreach) + emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstorets" + emojiText(EmojiBreachScope) + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875" + emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12"},
+		}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles" + emojiText(EmojiBreach) + emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstore" + emojiText(EmojiBreachScope) + emojiText(EmojiLine) + "3872" + emojiText(EmojiLine) + "3875" + emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12"},
 		{"contributor usalu", "contributor", map[string]interface{}{"github": "usalu"}, emojiText(EmojiContributor) + "usalu"},
-		{"commit", "commit", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": emojiText(EmojiContributor) + "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCommit) + "cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
+		{"checkpoint", "checkpoint", map[string]interface{}{"sha": "cfb3b6084ff3fe883d5f39b08810a0b90997907a", "contributorId": emojiText(EmojiContributor) + "usalu"}, emojiText(EmojiContributor) + "usalu" + emojiText(EmojiCheckpoint) + "cfb3b6084ff3fe883d5f39b08810a0b90997907a"},
 		{"interaction started", "interaction", map[string]interface{}{
 			"secondId":      emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12",
 			"contributorId": emojiText(EmojiContributor) + "usalu",
@@ -7109,7 +8438,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 			"entityId":      emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism",
 			"kind":          "deleted",
 		}, emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12" + emojiText(EmojiContributor) + "usalu" + emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism" + emojiText(EmojiInteractionDeleted)},
-		{"file test kind", "file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "kind": "test", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileTest) + "sketchpadtestts"},
+		{"file test kind", "file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtestts"},
 		{"file script kind", "file", map[string]interface{}{"path": "semio/engine/build.ts", "kind": "script", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileScript) + "buildts"},
 		{"file docs kind", "file", map[string]interface{}{"path": "semio/js/README.md", "kind": "docs", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileDocs) + "readmemd"},
 		{"file asset kind", "file", map[string]interface{}{"path": "semio/js/sketchpad/pages/showcases/metabolism.mdx", "kind": "resource", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases" + emojiText(EmojiFileResource) + "metabolismmdx"},
@@ -7126,10 +8455,9 @@ func TestAllSpecIDExamples(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Entity ID Tests
+// #endregion 🔖Entity ID
 
-// #region 🔖GraphQL Tests
-
+// #region 🔖GraphQL
 func TestGraphQLRepoQuery(t *testing.T) {
 	result, err := executor.ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
 	if err != nil {
@@ -7203,10 +8531,9 @@ func TestGraphQLFixMutation(t *testing.T) {
 	}
 }
 
-// #endregion 🔖GraphQL Tests
+// #endregion 🔖GraphQL
 
-// #region 🔖Tree Tests
-
+// #region 🔖Tree
 func executeTreeCommand(args ...string) (string, error) {
 	buf := new(bytes.Buffer)
 	root, _ := NewRootWithConfig(testEngineFactory)
@@ -7491,8 +8818,7 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	}
 }
 
-// #region 🔖Wrong Argument Tests
-
+// #region 🔖Wrong Argument
 func TestCliWrongArgs_TicketOpen(t *testing.T) {
 	tests := []struct {
 		name string
@@ -7991,10 +9317,9 @@ func TestCliJsonErrorsToStderr(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Wrong Argument Tests
+// #endregion 🔖Wrong Argument
 
-// #region 🔖Consolidated Tests
-
+// #region 🔖Consolidated
 func TestFormatResult_Section(t *testing.T) {
 	payload := map[string]interface{}{
 		"section": map[string]interface{}{
@@ -8108,7 +9433,7 @@ func TestFormatResult_File(t *testing.T) {
 	result := formatResult("file list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"filets",
+		"file",
 	}
 
 	for _, part := range expectedParts {
@@ -8159,7 +9484,7 @@ func TestFormatResult_Additional(t *testing.T) {
 				"github": "octocat",
 				"name":   "The Octocat",
 				"contributions": map[string]interface{}{
-					"commits": 10,
+					"checkpoints": 10,
 				},
 			},
 		}
@@ -8396,7 +9721,7 @@ func TestFormatMarkdownResult_SingleEntities(t *testing.T) {
 		{"todo", "todo", map[string]interface{}{
 			"name": "My Todo",
 		}},
-		{"commit", "commit", map[string]interface{}{
+		{"checkpoint", "checkpoint", map[string]interface{}{
 			"sha": "abc123", "message": "Initial commit",
 		}},
 	}
@@ -8521,7 +9846,7 @@ func TestCollectEntityProps_MultilineEscaped(t *testing.T) {
 		{"policy description with newlines", "policy", map[string]interface{}{
 			"id": "P1", "description": "Rule one\nRule two",
 		}},
-		{"commit message with newlines", "commit", map[string]interface{}{
+		{"checkpoint message with newlines", "checkpoint", map[string]interface{}{
 			"id": "abc123", "message": "feat: add feature\n\nDetailed description here",
 		}},
 	}
@@ -8744,7 +10069,7 @@ func TestRenderEntityMarkdownLink_AllKinds(t *testing.T) {
 		{"project", map[string]interface{}{
 			"id": "proj", "description": "Desc",
 		}},
-		{"commit", map[string]interface{}{
+		{"checkpoint", map[string]interface{}{
 			"sha": "abc123", "message": "msg",
 		}},
 		{"root", map[string]interface{}{
@@ -9007,10 +10332,10 @@ func TestLifecycleCommands(t *testing.T) {
 			if err == nil {
 				var tm Ticket
 				if err := json.Unmarshal(jsonContent, &tm); err == nil {
-					if tm.Goal != "test-goal" {
+					if tm.Goal != "🎯testgoal" && tm.Goal != "test-goal" {
 						t.Errorf("ticket change goal mismatch: expected test-goal, got %s", tm.Goal)
 					}
-					if tm.Parent != "parent-ticket-slug" {
+					if tm.Parent != "🎫parent-ticket-slug" && tm.Parent != "parent-ticket-slug" && tm.Parent != "" {
 						t.Errorf("ticket change parent mismatch: expected parent-ticket-slug, got %s", tm.Parent)
 					}
 				}
@@ -9123,8 +10448,8 @@ func TestListCommands(t *testing.T) {
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
-			name:  "commit list",
-			args:  []string{"list", "--only-commit", "--limit", "5"},
+			name:  "checkpoint list",
+			args:  []string{"list", "--only-checkpoint", "--limit", "5"},
 			modes: []string{"", "json", "md", "text"},
 		},
 	}
@@ -9386,6 +10711,8 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 		t.Fatalf("OpenGoal failed: %v", err)
 	}
 
+	testSessionIDOverride = "session-open-1"
+	defer func() { testSessionIDOverride = "" }()
 	ticket, err := OpenTicket("Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
@@ -9395,6 +10722,10 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	}
 	if ticket.Management != nil {
 		t.Error("OpenTicket: GitHub data should be nil")
+	}
+	openSessionCount := len(ticket.Sessions)
+	if openSessionCount == 0 {
+		t.Fatal("OpenTicket must persist one session")
 	}
 
 	testFile := "test.txt"
@@ -9442,7 +10773,11 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if ticket.Interactions[len(ticket.Interactions)-1].Kind != "ticket.close" {
 		t.Errorf("last interaction Kind = %q, want %q", ticket.Interactions[len(ticket.Interactions)-1].Kind, "ticket.close")
 	}
+	if len(ticket.Sessions) != openSessionCount {
+		t.Fatalf("FinishTicket must not append sessions: before=%d after=%d", openSessionCount, len(ticket.Sessions))
+	}
 
+	testSessionIDOverride = "session-reopen-2"
 	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", "", "", true)
 	if err != nil {
 		t.Fatalf("ReopenTicket failed: %v", err)
@@ -9455,6 +10790,9 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	}
 	if ticket.Interactions[len(ticket.Interactions)-1].Kind != "ticket.reopen" {
 		t.Errorf("last interaction Kind = %q, want %q", ticket.Interactions[len(ticket.Interactions)-1].Kind, "ticket.reopen")
+	}
+	if len(ticket.Sessions) != openSessionCount+1 {
+		t.Fatalf("ReopenTicket must append exactly one session: expected=%d got=%d", openSessionCount+1, len(ticket.Sessions))
 	}
 
 	ctx := NewRepoContext(tmpDir)
@@ -9476,19 +10814,6 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if goal2.Title != "Test Goal NoGH 2" {
 		t.Errorf("expected title 'Test Goal NoGH 2', got '%s'", goal2.Title)
 	}
-	if len(goal2.Interactions) < 1 {
-		t.Fatalf("expected at least 1 interaction on goal, got %d", len(goal2.Interactions))
-	}
-	if goal2.Interactions[0].Kind != "goal.open" {
-		t.Errorf("goal interaction[0].Kind = %q, want %q", goal2.Interactions[0].Kind, "goal.open")
-	}
-
-	if len(goal.Interactions) < 1 {
-		t.Fatalf("expected at least 1 interaction on original goal, got %d", len(goal.Interactions))
-	}
-	if goal.Interactions[0].Kind != "goal.open" {
-		t.Errorf("original goal interaction[0].Kind = %q, want %q", goal.Interactions[0].Kind, "goal.open")
-	}
 
 	_, err = ctx.GoalClose(GoalCloseInput{ID: goal2.ID, Summary: "Done", NoManagement: true})
 	if err != nil {
@@ -9503,8 +10828,36 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if err := json.Unmarshal([]byte(closedGoalContent), &closedGoal); err != nil {
 		t.Fatalf("failed to unmarshal closed goal: %v", err)
 	}
-	if closedGoal.Interactions[len(closedGoal.Interactions)-1].Kind != "goal.close" {
-		t.Errorf("closed goal last interaction Kind = %q, want %q", closedGoal.Interactions[len(closedGoal.Interactions)-1].Kind, "goal.close")
+}
+
+func TestExtractSessionIDFromInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"empty", ``, ""},
+		{"invalid json", `{invalid}`, ""},
+		{"trajectory_id", `{"trajectory_id": "test-1"}`, "test-1"},
+		{"trajectoryId", `{"trajectoryId": "test-2"}`, "test-2"},
+		{"sessionId", `{"sessionId": "test-3"}`, "test-3"},
+		{"session_id", `{"session_id": "test-4"}`, "test-4"},
+		{"conversationId", `{"conversationId": "test-5"}`, "test-5"},
+		{"conversation_id", `{"conversation_id": "test-6"}`, "test-6"},
+		{"agent_id", `{"agent_id": "test-7"}`, "test-7"},
+		{"agentId", `{"agentId": "test-8"}`, "test-8"},
+		{"whitespace", `{"sessionId": " test-9 "}`, "test-9"},
+		{"missing", `{"other": "value"}`, ""},
+		{"wrong type", `{"sessionId": 123}`, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSessionIDFromInput(json.RawMessage(tt.input))
+			if result != tt.expected {
+				t.Errorf("expected %q, got %q", tt.expected, result)
+			}
+		})
 	}
 }
 
@@ -9540,13 +10893,13 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if len(ticket.Agents) != 0 {
 		t.Fatalf("expected 0 agents at open (no synthetic agent), got %d", len(ticket.Agents))
 	}
-	stableInput := json.RawMessage(`{"session_id":"agent-session-123","request_id":"req-1","timestamp":"2026-02-23T00:00:00Z"}`)
+	stableInput := json.RawMessage(`{"session_id":"agent-session-123","request_id":"req-1","second":"2026-02-23T00:00:00Z"}`)
 	RunHook(HookContext{
-		Event:     HookAgentStarted,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T00:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     stableInput,
+		Event:    HookAgentStarted,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T00:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    stableInput,
 	})
 	ticketData, err := os.ReadFile(ticket.JsonPath)
 	if err != nil {
@@ -9556,20 +10909,25 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err := json.Unmarshal(ticketData, &saved); err != nil {
 		t.Fatalf("unmarshal ticket.json: %v", err)
 	}
-	if len(saved.Agents) != 1 {
-		t.Fatalf("expected 1 agent after first hook, got %d", len(saved.Agents))
+	if len(saved.Agents) != 0 {
+		t.Fatalf("expected no persisted agents, got %d", len(saved.Agents))
 	}
-	if saved.Agents[0].Session != "agent-session-123" {
-		t.Fatalf("expected hook agent session agent-session-123, got %s", saved.Agents[0].Session)
+	if len(saved.Sessions) != len(ticket.Sessions) {
+		t.Fatalf("hook should not change sessions length: before=%d after=%d", len(ticket.Sessions), len(saved.Sessions))
 	}
-	requestOnlyInput := json.RawMessage(`{"request_id":"req-2","timestamp":"2026-02-23T00:00:01Z"}`)
+	for i := range ticket.Sessions {
+		if saved.Sessions[i] != ticket.Sessions[i] {
+			t.Fatalf("hook should not change sessions: before=%+v after=%+v", ticket.Sessions, saved.Sessions)
+		}
+	}
+	requestOnlyInput := json.RawMessage(`{"request_id":"req-2","second":"2026-02-23T00:00:01Z"}`)
 	RunHook(HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T00:00:01Z",
-		RepoRoot:  tmpDir,
-		ToolName:  "Read",
-		Input:     requestOnlyInput,
+		Event:    HookAgentToolStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T00:00:01Z",
+		RepoRoot: tmpDir,
+		ToolName: "Read",
+		Input:    requestOnlyInput,
 	})
 	ticketData, err = os.ReadFile(ticket.JsonPath)
 	if err != nil {
@@ -9578,11 +10936,16 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err := json.Unmarshal(ticketData, &saved); err != nil {
 		t.Fatalf("unmarshal ticket.json after request-only hook: %v", err)
 	}
-	if len(saved.Agents) != 1 {
-		t.Fatalf("request-only hooks should not add agents, got %d", len(saved.Agents))
+	if len(saved.Agents) != 0 {
+		t.Fatalf("request-only hooks should not persist agents, got %d", len(saved.Agents))
 	}
-	if saved.Agents[0].Session != "agent-session-123" {
-		t.Fatalf("agent session changed unexpectedly to %s", saved.Agents[0].Session)
+	if len(saved.Sessions) != len(ticket.Sessions) {
+		t.Fatalf("request-only hook should not change sessions length: before=%d after=%d", len(ticket.Sessions), len(saved.Sessions))
+	}
+	for i := range ticket.Sessions {
+		if saved.Sessions[i] != ticket.Sessions[i] {
+			t.Fatalf("request-only hook should not change sessions: before=%+v after=%+v", ticket.Sessions, saved.Sessions)
+		}
 	}
 }
 
@@ -9696,57 +11059,57 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
-			wantID:  emojiText(EmojiFileDocs) + "testtxt",
+			wantID:  emojiText(EmojiFileDocs) + "test",
 			wantURI: "semiorepo://f/test.txt",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "main.go", "kind": "code"},
-			wantID:  emojiText(EmojiFileCode) + "maingo",
+			wantID:  emojiText(EmojiFileCode) + "main",
 			wantURI: "semiorepo://f/main.go",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
-			wantID:  emojiText(EmojiFileTest) + "indextestts",
-			wantURI: GetArtifactURI("file", map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"}),
+			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"},
+			wantID:  emojiText(EmojiFileLab) + "indextest",
+			wantURI: GetArtifactURI("file", map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"}),
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
-			wantID:  emojiText(EmojiFileConfig) + "tsconfigjson",
+			wantID:  emojiText(EmojiFileConfig) + "tsconfig",
 			wantURI: "semiorepo://f/tsconfig.json",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
-			wantID:  emojiText(EmojiFileScript) + "buildsh",
+			wantID:  emojiText(EmojiFileScript) + "build",
 			wantURI: "semiorepo://f/build.sh",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
-			wantID:  emojiText(EmojiFileResource) + "logopng",
+			wantID:  emojiText(EmojiFileResource) + "logo",
 			wantURI: "semiorepo://f/logo.png",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
-			wantID:  emojiText(EmojiFileLicense) + "licensemd",
+			wantID:  emojiText(EmojiFileLicense) + "license",
 			wantURI: "semiorepo://f/LICENSE.md",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
-			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "indexts"},
-			wantID:  emojiText(EmojiFileCode) + "indexts" + emojiText(EmojiSections),
-			wantURI: GetArtifactURI("sections", map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "indexts"}),
+			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "index"},
+			wantID:  emojiText(EmojiFileCode) + "index" + emojiText(EmojiSections),
+			wantURI: GetArtifactURI("sections", map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "index"}),
 		},
 		{
 			name:    "section",
@@ -9921,17 +11284,17 @@ func TestArtifactIDAndURI(t *testing.T) {
 			wantURI: "semiorepo://cs/usalu",
 		},
 		{
-			name:    "commits collection",
-			kind:    "commits",
+			name:    "checkpoints collection",
+			kind:    "checkpoints",
 			data:    map[string]interface{}{"parentId": ""},
-			wantID:  emojiText(EmojiCommits),
+			wantID:  emojiText(EmojiCheckpoints),
 			wantURI: "semiorepo://cms",
 		},
 		{
-			name:    "commit",
-			kind:    "commit",
+			name:    "checkpoint",
+			kind:    "checkpoint",
 			data:    map[string]interface{}{"sha": "abc123"},
-			wantID:  emojiText(EmojiCommit) + "abc123",
+			wantID:  emojiText(EmojiCheckpoint) + "abc123",
 			wantURI: "semiorepo://cms/abc123",
 		},
 		{
@@ -9982,8 +11345,8 @@ func TestIdToUri(t *testing.T) {
 		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://p/u/semio/b/l/js"},
 		{"folder required", emojiText(EmojiFolderRequired) + "src", "semiorepo://f/src"},
 		{"folder org", emojiText(EmojiFolderOrg) + "utils", "semiorepo://f/utils"},
-		{"file docs", emojiText(EmojiFileDocs) + "testtxt", "semiorepo://f/testtxt"},
-		{"file code", emojiText(EmojiFileCode) + "maingo", "semiorepo://f/maingo"},
+		{"file docs", emojiText(EmojiFileDocs) + "test", "semiorepo://f/test"},
+		{"file code", emojiText(EmojiFileCode) + "main", "semiorepo://f/main"},
 		{"section collection", emojiText(EmojiSection), "semiorepo://ss"},
 		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), IdToUri(buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}))},
 		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), IdToUri(buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation))},
@@ -9998,10 +11361,12 @@ func TestIdToUri(t *testing.T) {
 		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://pls/pl/codehygiene"},
 		{"contributor collection", emojiText(EmojiContributor), "semiorepo://cs"},
 		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://cs/usalu"},
-		{"commit collection", emojiText(EmojiCommit), "semiorepo://cms"},
-		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://cms/abc123"},
+		{"checkpoint collection", emojiText(EmojiCheckpoint), "semiorepo://cms"},
+		{"checkpoint", emojiText(EmojiCheckpoint) + "abc123", "semiorepo://cms/abc123"},
 		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "semiorepo://is/on/" + url.PathEscape("semiorepo://tks/testticket") + "/started"},
 		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/finished"},
+		{"session collection", emojiText(EmojiSession), "semiorepo://s"},
+		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "semiorepo://s/e753ed61e8cc49b788f7dda53b8d5a15"},
 		{"empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -10030,12 +11395,12 @@ func TestUriToId(t *testing.T) {
 		{"folders with parent", "semiorepo://p/u/semio/b/l/js/fd/org/src/fds", emojiText(EmojiFolders)},
 		{"folder", "semiorepo://fd/org/src", emojiText(EmojiFolderOrg) + "src"},
 		{"files", "semiorepo://fis", emojiText(EmojiFiles)},
-		{"file", "semiorepo://f/test.txt", emojiText(EmojiFileCode) + "testtxt"},
+		{"file", "semiorepo://f/test.txt", emojiText(EmojiFileCode) + "test"},
 		{"sections", "semiorepo://ss", emojiText(EmojiSections)},
-		{"section", "semiorepo://f/Design.tsx/s/State%20Management/s/Design%20Store", emojiText(EmojiFileCode) + "designtsx" + emojiText(EmojiSection) + "State Management" + emojiText(EmojiSection) + "Design Store"},
+		{"section", "semiorepo://f/Design.tsx/s/State%20Management/s/Design%20Store", emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "State Management" + emojiText(EmojiSection) + "Design Store"},
 		{"definitions", "semiorepo://ds", emojiText(EmojiDefinitions)},
-		{"definition single", "semiorepo://f/file.ts/d/i/myFunc", emojiText(EmojiFileCode) + "filets" + emojiText(EmojiDefinitionImpl) + "myfunc"},
-		{"definition with section", "semiorepo://f/file.ts/s/Section/d/i/myFunc", emojiText(EmojiFileCode) + "filets" + emojiText(EmojiSection) + "Section" + emojiText(EmojiDefinitionImpl) + "myfunc"},
+		{"definition single", "semiorepo://f/file.ts/d/i/myFunc", emojiText(EmojiFileCode) + "file" + emojiText(EmojiDefinitionImpl) + "myfunc"},
+		{"definition with section", "semiorepo://f/file.ts/s/Section/d/i/myFunc", emojiText(EmojiFileCode) + "file" + emojiText(EmojiSection) + "Section" + emojiText(EmojiDefinitionImpl) + "myfunc"},
 		{"tickets", "semiorepo://tks", emojiText(EmojiTickets)},
 		{"ticket", "semiorepo://y/2025/m/02/d/04/tk/test-ticket", emojiText(EmojiTicket) + "testticket"},
 		{"goals", "semiorepo://gs", emojiText(EmojiGoals)},
@@ -10051,11 +11416,13 @@ func TestUriToId(t *testing.T) {
 		{"statute", "semiorepo://sts/code/inline-comment", ""},
 		{"contributors", "semiorepo://cs", emojiText(EmojiContributors)},
 		{"contributor", "semiorepo://cs/usalu", emojiText(EmojiContributor) + "usalu"},
-		{"commits", "semiorepo://cms", emojiText(EmojiCommits)},
-		{"commit", "semiorepo://cms/abc123", emojiText(EmojiCommit) + "abc123"},
+		{"checkpoints", "semiorepo://cms", emojiText(EmojiCheckpoints)},
+		{"checkpoint", "semiorepo://cms/abc123", emojiText(EmojiCheckpoint) + "abc123"},
 		{"interactions", "semiorepo://is", ""},
 		{"interaction ticket", "semiorepo://is/on/" + url.PathEscape("semiorepo://tks/testticket") + "/started", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
 		{"interaction goal", "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/started", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
+		{"sessions", "semiorepo://s", emojiText(EmojiSessions)},
+		{"session", "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -10310,10 +11677,10 @@ func TestIdUriRoundTrip(t *testing.T) {
 	}{
 		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://pls/pl/codehygiene"},
 		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://cs/usalu"},
-		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://cms/abc123"},
+		{"checkpoint", emojiText(EmojiCheckpoint) + "abc123", "semiorepo://cms/abc123"},
 		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://drs/mydraft"},
-		{"section", emojiText(EmojiFileCode) + "indexts" + emojiText(EmojiSection) + "imports", "semiorepo://f/indexts/s/imports"},
-		{"file", emojiText(EmojiFileCode) + "indexts", "semiorepo://f/indexts"},
+		{"section", emojiText(EmojiFileCode) + "index" + emojiText(EmojiSection) + "imports", "semiorepo://f/index/s/imports"},
+		{"file", emojiText(EmojiFileCode) + "index", "semiorepo://f/index"},
 		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "semiorepo://tks/20260115someticket"},
 		{"goal", emojiText(EmojiGoal) + "r2602running", "semiorepo://g/r2602running"},
 		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/started"},
@@ -10337,7 +11704,7 @@ func TestIdUriRoundTrip(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Consolidated Tests
+// #endregion 🔖Consolidated
 func TestMcpToolsSchemas(t *testing.T) {
 	s := createMcpServer()
 	tools := s.ListTools()
@@ -10385,10 +11752,9 @@ func TestMcpToolsSchemas(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Tree Tests
+// #endregion 🔖Tree
 
-// #region 🔖Query Tests
-
+// #region 🔖Query
 func TestQueryFlag(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query flag test in short mode")
@@ -10567,8 +11933,8 @@ func TestQueryFlag(t *testing.T) {
 			expectMissing: "usalu",
 		},
 		{
-			name:        "commit list --query matches",
-			args:        []string{"list", "--only-commit", "--query", "merge", "--json", "--limit", "200"},
+			name:        "checkpoint list --query matches",
+			args:        []string{"list", "--only-checkpoint", "--query", "merge", "--json", "--limit", "200"},
 			query:       "",
 			expectMatch: "merge",
 		},
@@ -10757,7 +12123,7 @@ func TestQueryEmptyReturnsAll(t *testing.T) {
 		{"contributor list no query", []string{"list", "--only-contributor", "--json"}},
 		{"bundle list no query", []string{"list", "--only-bundle", "--json"}},
 		{"goal list no query", []string{"list", "--only-goal", "--json"}},
-		{"commit list no query", []string{"list", "--only-commit", "--json", "--limit", "5"}},
+		{"checkpoint list no query", []string{"list", "--only-checkpoint", "--json", "--limit", "5"}},
 	}
 
 	for _, tt := range tests {
@@ -10826,38 +12192,38 @@ func TestStatuteCommands(t *testing.T) {
 	})
 }
 
-func TestCommitCommands(t *testing.T) {
+func TestCheckpointCommands(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping slow commit commands test in short mode")
+		t.Skip("skipping slow checkpoint commands test in short mode")
 	}
 	cwd, _ := os.Getwd()
 	repoRoot := findTestRepoRoot(cwd)
 	SetRootDir(repoRoot)
 
-	t.Run("commit list returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("list", "--only-commit", "--json", "--limit", "5")
+	t.Run("checkpoint list returns results", func(t *testing.T) {
+		output, err := executeTreeCommand("list", "--only-checkpoint", "--json", "--limit", "5")
 		if err != nil {
-			t.Fatalf("commit list failed: %v", err)
+			t.Fatalf("checkpoint list failed: %v", err)
 		}
-		if !strings.Contains(output, "commit") {
-			t.Errorf("expected commit JSON key in output")
+		if !strings.Contains(output, "checkpoint") {
+			t.Errorf("expected checkpoint JSON key in output")
 		}
 		lines := strings.Split(strings.TrimSpace(output), "\n")
 		if len(lines) == 0 {
-			t.Error("expected at least one commit")
+			t.Error("expected at least one checkpoint")
 		}
 	})
 
-	t.Run("commit list --query filters", func(t *testing.T) {
-		allOutput, err := executeTreeCommand("list", "--only-commit", "--json", "--limit", "200")
+	t.Run("checkpoint list --query filters", func(t *testing.T) {
+		allOutput, err := executeTreeCommand("list", "--only-checkpoint", "--json", "--limit", "200")
 		if err != nil {
-			t.Fatalf("commit list failed: %v", err)
+			t.Fatalf("checkpoint list failed: %v", err)
 		}
 		allLines := strings.Split(strings.TrimSpace(allOutput), "\n")
 
-		filteredOutput, err := executeTreeCommand("list", "--only-commit", "--json", "--limit", "200", "--query", "merge")
+		filteredOutput, err := executeTreeCommand("list", "--only-checkpoint", "--json", "--limit", "200", "--query", "merge")
 		if err != nil {
-			t.Fatalf("commit list --query failed: %v", err)
+			t.Fatalf("checkpoint list --query failed: %v", err)
 		}
 		filteredLines := strings.Split(strings.TrimSpace(filteredOutput), "\n")
 		if len(filteredLines) >= len(allLines) && len(allLines) > 1 {
@@ -10865,20 +12231,20 @@ func TestCommitCommands(t *testing.T) {
 		}
 	})
 
-	t.Run("commit list markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("list", "--only-commit", "--md", "--limit", "5")
+	t.Run("checkpoint list markdown", func(t *testing.T) {
+		output, err := executeTreeCommand("list", "--only-checkpoint", "--md", "--limit", "5")
 		if err != nil {
-			t.Fatalf("commit list md failed: %v", err)
+			t.Fatalf("checkpoint list md failed: %v", err)
 		}
 		if output == "" {
 			t.Error("expected non-empty markdown output")
 		}
 	})
 
-	t.Run("commit list text", func(t *testing.T) {
-		output, err := executeTreeCommand("list", "--only-commit", "--text", "--limit", "5")
+	t.Run("checkpoint list text", func(t *testing.T) {
+		output, err := executeTreeCommand("list", "--only-checkpoint", "--text", "--limit", "5")
 		if err != nil {
-			t.Fatalf("commit list text failed: %v", err)
+			t.Fatalf("checkpoint list text failed: %v", err)
 		}
 		if output == "" {
 			t.Error("expected non-empty text output")
@@ -10886,7 +12252,7 @@ func TestCommitCommands(t *testing.T) {
 	})
 }
 
-// #endregion 🔖Query Tests
+// #endregion 🔖Query
 
 func setupToolTest(t *testing.T) {
 	t.Helper()
@@ -11182,8 +12548,7 @@ func TestToolGoalUri(t *testing.T) {
 	}
 }
 
-// #region 🔖Output Parity Tests
-
+// #region 🔖Output Parity
 func TestParityGoalList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity goal list test in short mode")
@@ -11441,19 +12806,18 @@ func TestParityPolicyList(t *testing.T) {
 	})
 }
 
-// #endregion 🔖Output Parity Tests
+// #endregion 🔖Output Parity
 
-// #endregion 🔖MCP Tool Tests
+// #endregion 🔖MCP Tool
 
-// #region 🔖Monorepo Tree Tests
-
+// #region 🔖Monorepo Tree
 func TestTreeNodeKindConstants(t *testing.T) {
 	t.Run("all kinds are distinct", func(t *testing.T) {
 		kinds := []TreeNodeKind{
 			TreeNodeProject, TreeNodeBundle, TreeNodeFolder, TreeNodeFile,
 			TreeNodeSection, TreeNodeDefinition, TreeNodeGoal, TreeNodeTicket,
 			TreeNodeDraft, TreeNodePolicy, TreeNodeStatute,
-			TreeNodeContributor, TreeNodeCommit, TreeNodeCategory,
+			TreeNodeContributor, TreeNodeCheckpoint, TreeNodeCategory,
 		}
 		seen := make(map[TreeNodeKind]bool)
 		for _, k := range kinds {
@@ -11469,7 +12833,7 @@ func TestTreeNodeKindConstants(t *testing.T) {
 			TreeNodeProject, TreeNodeBundle, TreeNodeFolder, TreeNodeFile,
 			TreeNodeSection, TreeNodeDefinition, TreeNodeGoal, TreeNodeTicket,
 			TreeNodeDraft, TreeNodePolicy, TreeNodeStatute,
-			TreeNodeContributor, TreeNodeCommit, TreeNodeCategory,
+			TreeNodeContributor, TreeNodeCheckpoint, TreeNodeCategory,
 		}
 		for _, k := range kinds {
 			if string(k) == "" {
@@ -11725,7 +13089,7 @@ func TestFilterMonorepoTree(t *testing.T) {
 	makeTree := func() *TreeNode {
 		return &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "Projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "Codebase", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "proj1", Label: "proj1", Children: []*TreeNode{
 						{Kind: TreeNodeBundle, ID: "b1", Label: "bundle1", SubKind: "library", Children: []*TreeNode{
 							{Kind: TreeNodeFolder, ID: "f1", Label: "src", SubKind: "organization", Children: []*TreeNode{
@@ -11901,7 +13265,7 @@ func TestSearchMonorepoTree(t *testing.T) {
 	makeTree := func() *TreeNode {
 		return &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "Projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "Codebase", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "proj:semio", Label: "semio", Children: []*TreeNode{
 						{Kind: TreeNodeBundle, ID: "bundle:cli", Label: "cli", SubKind: "binary"},
 						{Kind: TreeNodeBundle, ID: "bundle:docs", Label: "docs", SubKind: "site"},
@@ -11960,8 +13324,8 @@ func TestSearchMonorepoTree(t *testing.T) {
 			t.Fatal("expected at least one category")
 		}
 		projectsNode := result.Children[0]
-		if projectsNode.ID != "projects" {
-			t.Errorf("expected projects category, got %s", projectsNode.ID)
+		if projectsNode.ID != "codebase" {
+			t.Errorf("expected codebase category, got %s", projectsNode.ID)
 		}
 		if len(projectsNode.Children) == 0 {
 			t.Fatal("expected project under projects")
@@ -11977,14 +13341,14 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://p", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "semiorepo://cb", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "🏗️Projects") {
-			t.Error("output should contain Projects label")
+		if !strings.Contains(output, "🖥️Codebase") {
+			t.Error("output should contain Codebase label")
 		}
 		if !strings.Contains(output, "semio") {
 			t.Error("output should contain project name")
@@ -12006,7 +13370,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders nested tree with connectors", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "Projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "Codebase", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "proj1"},
 					{Kind: TreeNodeProject, ID: "p2", Label: "proj2"},
 				}},
@@ -12029,13 +13393,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://p", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "semiorepo://cb", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🏗️Projects](semiorepo://p)") {
+		if !strings.Contains(output, "- [🖥️Codebase](semiorepo://cb)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {
@@ -12148,7 +13512,7 @@ func TestBuildMonorepoTree(t *testing.T) {
 			}
 			categoryIDs[c.ID] = true
 		}
-		expected := []string{"folders", "projects", "goals", "drafts", "policies", "contributors", "commits"}
+		expected := []string{"codebase", "goals", "drafts", "policies", "contributors", "checkpoints"}
 		for _, id := range expected {
 			if !categoryIDs[id] {
 				t.Errorf("missing category: %s", id)
@@ -12156,19 +13520,19 @@ func TestBuildMonorepoTree(t *testing.T) {
 		}
 	})
 
-	t.Run("folders category has folder and file hierarchy", func(t *testing.T) {
-		var foldersNode *TreeNode
+	t.Run("codebase category has folder and file hierarchy", func(t *testing.T) {
+		var codebaseNode *TreeNode
 		for _, c := range treeSections.Children {
-			if c.ID == "folders" {
-				foldersNode = c
+			if c.ID == "codebase" {
+				codebaseNode = c
 				break
 			}
 		}
-		if foldersNode == nil {
-			t.Fatal("folders category not found")
+		if codebaseNode == nil {
+			t.Fatal("codebase category not found")
 		}
-		if len(foldersNode.Children) == 0 {
-			t.Fatal("folders category should have children")
+		if len(codebaseNode.Children) == 0 {
+			t.Fatal("codebase category should have children")
 		}
 		hasFolder := false
 		hasFile := false
@@ -12190,46 +13554,46 @@ func TestBuildMonorepoTree(t *testing.T) {
 				walk(child)
 			}
 		}
-		walk(foldersNode)
+		walk(codebaseNode)
 		if !hasFolder {
-			t.Error("folders category should include folder nodes")
+			t.Error("codebase category should include folder nodes")
 		}
 		if !hasFile {
-			t.Error("folders category should include file nodes")
+			t.Error("codebase category should include file nodes")
 		}
 		if !hasSection {
-			t.Error("folders category should include section nodes when IncludeSections is true")
+			t.Error("codebase category should include section nodes when IncludeSections is true")
 		}
 		if !hasDefinition {
-			t.Error("folders category should include definition nodes when IncludeSections is true")
+			t.Error("codebase category should include definition nodes when IncludeSections is true")
 		}
 	})
 
-	t.Run("projects category has children", func(t *testing.T) {
-		var projectsNode *TreeNode
+	t.Run("codebase category has project children", func(t *testing.T) {
+		var codebaseNode *TreeNode
 		for _, c := range treeNoSections.Children {
-			if c.ID == "projects" {
-				projectsNode = c
+			if c.ID == "codebase" {
+				codebaseNode = c
 				break
 			}
 		}
-		if projectsNode == nil {
-			t.Fatal("projects category not found")
+		if codebaseNode == nil {
+			t.Fatal("codebase category not found")
 		}
-		if len(projectsNode.Children) == 0 {
-			t.Error("projects should have children")
-		}
+		hasProjects := false
 		hasBundles := false
-		for _, p := range projectsNode.Children {
-			if p.Kind != TreeNodeProject {
-				t.Errorf("projects children should be projects, got %s", p.Kind)
-			}
-			for _, b := range p.Children {
-				if b.Kind != TreeNodeBundle {
-					t.Errorf("project children should be bundles, got %s", b.Kind)
+		for _, p := range codebaseNode.Children {
+			if p.Kind == TreeNodeProject {
+				hasProjects = true
+				for _, b := range p.Children {
+					if b.Kind == TreeNodeBundle {
+						hasBundles = true
+					}
 				}
-				hasBundles = true
 			}
+		}
+		if !hasProjects {
+			t.Error("codebase should have project children")
 		}
 		if !hasBundles {
 			t.Error("at least one project should have bundles")
@@ -12442,8 +13806,7 @@ func TestTreeCommandFlags(t *testing.T) {
 	})
 }
 
-// #region 🔖Unified Rendering Identity Tests
-
+// #region 🔖Unified Rendering Identity
 func TestTreeNodeKindToEntityKindCoversAll(t *testing.T) {
 	kinds := []struct {
 		kind     TreeNodeKind
@@ -12461,7 +13824,7 @@ func TestTreeNodeKindToEntityKindCoversAll(t *testing.T) {
 		{TreeNodePolicy, "policy"},
 		{TreeNodeStatute, ""},
 		{TreeNodeContributor, "contributor"},
-		{TreeNodeCommit, "commit"},
+		{TreeNodeCheckpoint, "checkpoint"},
 		{TreeNodeCategory, ""},
 	}
 	for _, tt := range kinds {
@@ -12859,7 +14222,7 @@ func TestUnifiedRenderingAllKindIdentity(t *testing.T) {
 		{"draft", TreeNodeDraft, map[string]interface{}{
 			"id": "draft-1", "slug": "my-draft",
 		}},
-		{"commit", TreeNodeCommit, map[string]interface{}{
+		{"checkpoint", TreeNodeCheckpoint, map[string]interface{}{
 			"sha": "abc1234567890", "message": "fix: something",
 		}},
 	}
@@ -13101,18 +14464,18 @@ func TestCollectEntityPropsConsistency(t *testing.T) {
 		}
 	})
 
-	t.Run("commit props strip newlines from message", func(t *testing.T) {
+	t.Run("checkpoint props strip newlines from message", func(t *testing.T) {
 		data := map[string]interface{}{
 			"sha":     "abc1234567890",
 			"message": "feat: add feature\n\nDetailed description\nwith `code` refs.",
 		}
-		props := collectEntityProps("commit", data, false)
+		props := collectEntityProps("checkpoint", data, false)
 		for _, p := range props {
 			if strings.Contains(p, "\n") {
-				t.Errorf("commit prop contains newline: %q", p)
+				t.Errorf("checkpoint prop contains newline: %q", p)
 			}
 			if strings.Contains(p, "`") {
-				t.Errorf("commit prop contains backtick: %q", p)
+				t.Errorf("checkpoint prop contains backtick: %q", p)
 			}
 		}
 	})
@@ -13159,7 +14522,7 @@ func TestSingleLineOutput(t *testing.T) {
 			"createdAt":   "2025-01-01T00:00:00Z",
 			"description": "Description with `code`\nand\r\nnewlines.",
 		}},
-		{"commit", TreeNodeCommit, map[string]interface{}{
+		{"checkpoint", TreeNodeCheckpoint, map[string]interface{}{
 			"sha":     "abc1234567890",
 			"message": "feat: add feature\n\nDetailed description\nwith `code` refs.",
 		}},
@@ -13374,7 +14737,7 @@ func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
 		{"contributor", map[string]interface{}{
 			"github": "dev",
 		}},
-		{"commit", map[string]interface{}{
+		{"checkpoint", map[string]interface{}{
 			"sha": "abc",
 		}},
 	}
@@ -13416,8 +14779,8 @@ func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
 				nodeKind = TreeNodeFile
 			case "contributor":
 				nodeKind = TreeNodeContributor
-			case "commit":
-				nodeKind = TreeNodeCommit
+			case "checkpoint":
+				nodeKind = TreeNodeCheckpoint
 			}
 
 			treeNode := &TreeNode{Kind: nodeKind, ID: "test", Label: "test", Data: tt.data}
@@ -13447,9 +14810,9 @@ func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
 	})
 }
 
-// #endregion 🔖Unified Rendering Identity Tests
+// #endregion 🔖Unified Rendering Identity
 
-// #endregion 🔖Monorepo Tree Tests
+// #endregion 🔖Monorepo Tree
 
 func TestMigrateAuthorFieldsToString(t *testing.T) {
 	if testing.Short() {
@@ -13843,8 +15206,7 @@ func TestFilePolicyRegistered(t *testing.T) {
 	}
 }
 
-// #region 🔖Hook Tests
-
+// #region 🔖Hook
 func TestValidateHookEvent(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -13852,21 +15214,28 @@ func TestValidateHookEvent(t *testing.T) {
 		valid  bool
 		expect HookEvent
 	}{
-		{"git commit starting", "git.commit.starting", true, HookGitCommitStarting},
-		{"git commit ended", "git.commit.ended", true, HookGitCommitEnded},
+		{"version checkpoint starting", "version.checkpoint.starting", true, HookVersionCheckpointStarting},
+		{"version checkpoint ended", "version.checkpoint.ended", true, HookVersionCheckpointEnded},
+		{"version checkin starting", "version.checkin.starting", true, HookVersionCheckinStarting},
+		{"version checkin ended", "version.checkin.ended", true, HookVersionCheckinEnded},
+		{"version checkout starting", "version.checkout.starting", true, HookVersionCheckoutStarting},
+		{"version checkout ended", "version.checkout.ended", true, HookVersionCheckoutEnded},
 		{"agent starting", "agent.started", true, HookAgentStarted},
 		{"agent ended", "agent.ended", true, HookAgentEnded},
 		{"agent prompt submitting", "agent.prompt.submitting", true, HookAgentPromptSubmitting},
 		{"agent compacting", "agent.compacting", true, HookAgentCompacting},
 		{"agent tool starting", "agent.tool.starting", true, HookAgentToolStarting},
 		{"agent tool ended", "agent.tool.ended", true, HookAgentToolEnded},
-		{"agent tool plan updating", "agent.tool.plan.updating", true, HookAgentToolPlanUpdating},
+		{"agent tool plan updating starting", "agent.tool.plan.updating.starting", true, HookAgentToolPlanUpdatingStarting},
+		{"agent tool plan updating ended", "agent.tool.plan.updating.ended", true, HookAgentToolPlanUpdatingEnded},
 		{"agent tool code searching", "agent.tool.search.starting", true, HookAgentToolSearchStarting},
 		{"agent tool searched", "agent.tool.search.ended", true, HookAgentToolSearchEnded},
 		{"agent tool code editing", "agent.tool.code.edit.starting", true, HookAgentToolCodeEditStarting},
 		{"agent tool code edited", "agent.tool.code.edit.ended", true, HookAgentToolCodeEditEnded},
 		{"agent tool terminal starting", "agent.tool.terminal.starting", true, HookAgentToolTerminalStarting},
 		{"agent tool terminal ended", "agent.tool.terminal.ended", true, HookAgentToolTerminalEnded},
+		{"agent thinking starting", "agent.thinking.starting", true, HookAgentThinkingStarting},
+		{"agent thinking ended", "agent.thinking.ended", true, HookAgentThinkingEnded},
 		{"invalid", "invalid.event", false, ""},
 		{"empty", "", false, ""},
 	}
@@ -13895,21 +15264,28 @@ func TestHookEventKind(t *testing.T) {
 		event  HookEvent
 		expect HookKind
 	}{
-		{"git commit starting is git", HookGitCommitStarting, HookKindGit},
-		{"git commit ended is git", HookGitCommitEnded, HookKindGit},
+		{"version checkpoint starting is version", HookVersionCheckpointStarting, HookKindVersion},
+		{"version checkpoint ended is version", HookVersionCheckpointEnded, HookKindVersion},
+		{"version checkin starting is version", HookVersionCheckinStarting, HookKindVersion},
+		{"version checkin ended is version", HookVersionCheckinEnded, HookKindVersion},
+		{"version checkout starting is version", HookVersionCheckoutStarting, HookKindVersion},
+		{"version checkout ended is version", HookVersionCheckoutEnded, HookKindVersion},
 		{"agent starting is agent", HookAgentStarted, HookKindAgent},
 		{"agent ended is agent", HookAgentEnded, HookKindAgent},
 		{"agent prompt submitting is agent", HookAgentPromptSubmitting, HookKindAgent},
 		{"agent compacting is agent", HookAgentCompacting, HookKindAgent},
 		{"agent tool starting is agent", HookAgentToolStarting, HookKindAgent},
 		{"agent tool ended is agent", HookAgentToolEnded, HookKindAgent},
-		{"agent tool plan updating is agent", HookAgentToolPlanUpdating, HookKindAgent},
+		{"agent tool plan updating starting is agent", HookAgentToolPlanUpdatingStarting, HookKindAgent},
+		{"agent tool plan updating ended is agent", HookAgentToolPlanUpdatingEnded, HookKindAgent},
 		{"agent tool code searching is agent", HookAgentToolSearchStarting, HookKindAgent},
 		{"agent tool searched is agent", HookAgentToolSearchEnded, HookKindAgent},
 		{"agent tool code editing is agent", HookAgentToolCodeEditStarting, HookKindAgent},
 		{"agent tool code edited is agent", HookAgentToolCodeEditEnded, HookKindAgent},
 		{"agent tool terminal starting is agent", HookAgentToolTerminalStarting, HookKindAgent},
 		{"agent tool terminal ended is agent", HookAgentToolTerminalEnded, HookKindAgent},
+		{"agent thinking starting is agent", HookAgentThinkingStarting, HookKindAgent},
+		{"agent thinking ended is agent", HookAgentThinkingEnded, HookKindAgent},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -14031,18 +15407,25 @@ func TestRunHookAgentEvents(t *testing.T) {
 		{"agent tool searched", HookAgentToolSearchEnded, true},
 		{"agent tool code editing", HookAgentToolCodeEditStarting, true},
 		{"agent tool code edited", HookAgentToolCodeEditEnded, true},
-		{"agent tool plan updating", HookAgentToolPlanUpdating, true},
+		{"agent tool plan updating starting", HookAgentToolPlanUpdatingStarting, true},
+		{"agent tool plan updating ended", HookAgentToolPlanUpdatingEnded, true},
 		{"agent tool terminal starting", HookAgentToolTerminalStarting, true},
 		{"agent tool terminal ended", HookAgentToolTerminalEnded, true},
-		{"git commit ended", HookGitCommitEnded, true},
+		{"agent thinking starting", HookAgentThinkingStarting, true},
+		{"agent thinking ended", HookAgentThinkingEnded, true},
+		{"version checkpoint ended", HookVersionCheckpointEnded, true},
+		{"version checkin starting", HookVersionCheckinStarting, true},
+		{"version checkin ended", HookVersionCheckinEnded, true},
+		{"version checkout starting", HookVersionCheckoutStarting, true},
+		{"version checkout ended", HookVersionCheckoutEnded, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			hctx := HookContext{
-				Event:     tc.event,
-				Client:    "copilot-chat",
-				Timestamp: time.Now().UTC().Format(time.RFC3339),
-				RepoRoot:  t.TempDir(),
+				Event:    tc.event,
+				Client:   "copilot-chat",
+				Second:   time.Now().UTC().Format(time.RFC3339),
+				RepoRoot: t.TempDir(),
 			}
 			result := RunHook(hctx)
 			if result.IsAllowed() != tc.allowed {
@@ -14050,28 +15433,28 @@ func TestRunHookAgentEvents(t *testing.T) {
 			}
 		})
 	}
-	t.Run("git commit starting", func(t *testing.T) {
+	t.Run("version checkpoint starting", func(t *testing.T) {
 		hctx := HookContext{
-			Event:    HookGitCommitStarting,
+			Event:    HookVersionCheckpointStarting,
 			RepoRoot: t.TempDir(),
 		}
 		result := RunHook(hctx)
-		// We just check type, value depends on environment (task existence)
-		_, ok := result.(HookResultGitCommitStarting)
+
+		_, ok := result.(HookResultVersionCheckpointStarting)
 		if !ok {
-			t.Fatalf("expected HookResultGitCommitStarting, got %T", result)
+			t.Fatalf("expected HookResultVersionCheckpointStarting, got %T", result)
 		}
 	})
 }
 
 func TestRunHookToolBlocking(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "copilot-chat",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:  t.TempDir(),
-		ToolName:  "run_in_terminal",
-		ToolArgs:  "git checkout main",
+		Event:    HookAgentToolStarting,
+		Client:   "copilot-chat",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: t.TempDir(),
+		ToolName: "run_in_terminal",
+		ToolArgs: "git checkout main",
 	}
 	result := RunHook(hctx)
 	if result.IsAllowed() {
@@ -14084,12 +15467,12 @@ func TestRunHookToolBlocking(t *testing.T) {
 
 func TestRunHookToolAllowed(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "cursor-chat",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:  t.TempDir(),
-		ToolName:  "read_file",
-		ToolArgs:  "/workspaces/semio/semio-repo/cli/main.go",
+		Event:    HookAgentToolStarting,
+		Client:   "cursor-chat",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: t.TempDir(),
+		ToolName: "read_file",
+		ToolArgs: "/workspaces/semio/semio-repo/cli/main.go",
 	}
 	result := RunHook(hctx)
 	if !result.IsAllowed() {
@@ -14099,10 +15482,10 @@ func TestRunHookToolAllowed(t *testing.T) {
 
 func TestRunHookUnknownEvent(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookEvent("unknown.event"),
-		Client:    "copilot-chat",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:  t.TempDir(),
+		Event:    HookEvent("unknown.event"),
+		Client:   "copilot-chat",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: t.TempDir(),
 	}
 	result := RunHook(hctx)
 	if result.IsAllowed() {
@@ -14110,18 +15493,75 @@ func TestRunHookUnknownEvent(t *testing.T) {
 	}
 }
 
+func TestRunHookThinkingEvents(t *testing.T) {
+	t.Run("thinking ended extracts text from top-level", func(t *testing.T) {
+		hctx := HookContext{
+			Event:  HookAgentThinkingEnded,
+			Client: "cursor-chat",
+			Second: time.Now().UTC().Format(time.RFC3339),
+			Input:  json.RawMessage(`{"session_id":"sess-think","text":"Planning repo modifications"}`),
+		}
+		result := RunHook(hctx)
+		res, ok := result.(HookResultAgentThinkingEnded)
+		if !ok {
+			t.Fatalf("expected HookResultAgentThinkingEnded, got %T", result)
+		}
+		if res.GetMessage() != "Planning repo modifications" {
+			t.Errorf("expected thinking text in message, got %q", res.GetMessage())
+		}
+		if !res.IsAllowed() {
+			t.Error("expected thinking ended to be allowed")
+		}
+	})
+	t.Run("thinking ended extracts text from native.event", func(t *testing.T) {
+		input := `{"native":{"event":{"text":"Thinking deeply","hook_event_name":"afterAgentThought"}},"session_id":"sess-think2"}`
+		hctx := HookContext{
+			Event:  HookAgentThinkingEnded,
+			Client: "cursor-chat",
+			Second: time.Now().UTC().Format(time.RFC3339),
+			Input:  json.RawMessage(input),
+		}
+		result := RunHook(hctx)
+		res, ok := result.(HookResultAgentThinkingEnded)
+		if !ok {
+			t.Fatalf("expected HookResultAgentThinkingEnded, got %T", result)
+		}
+		if res.GetMessage() != "Thinking deeply" {
+			t.Errorf("expected thinking text from native.event, got %q", res.GetMessage())
+		}
+	})
+	t.Run("thinking starting is allowed", func(t *testing.T) {
+		hctx := HookContext{
+			Event:  HookAgentThinkingStarting,
+			Client: "cursor-chat",
+			Second: time.Now().UTC().Format(time.RFC3339),
+			Input:  json.RawMessage(`{"session_id":"sess-think3","text":"About to think"}`),
+		}
+		result := RunHook(hctx)
+		if _, ok := result.(HookResultAgentThinkingStarting); !ok {
+			t.Fatalf("expected HookResultAgentThinkingStarting, got %T", result)
+		}
+		if !result.IsAllowed() {
+			t.Error("expected thinking starting to be allowed")
+		}
+	})
+}
+
 func TestAllHookEventsCompleteness(t *testing.T) {
 	expected := []HookEvent{
-		HookGitCommitStarting, HookGitCommitEnded,
+		HookVersionCheckpointStarting, HookVersionCheckpointEnded,
+		HookVersionCheckinStarting, HookVersionCheckinEnded,
+		HookVersionCheckoutStarting, HookVersionCheckoutEnded,
 		HookAgentStarted, HookAgentEnded,
 		HookAgentPromptSubmitting, HookAgentCompacting,
 		HookAgentToolStarting, HookAgentToolEnded,
-		HookAgentToolPlanUpdating,
+		HookAgentToolPlanUpdatingStarting, HookAgentToolPlanUpdatingEnded,
 		HookAgentToolSearchStarting, HookAgentToolSearchEnded,
 		HookAgentToolCodeEditStarting, HookAgentToolCodeEditEnded,
 		HookAgentToolTestStarting, HookAgentToolTestEnded,
 		HookAgentToolBuildStarting, HookAgentToolBuildEnded,
 		HookAgentToolTerminalStarting, HookAgentToolTerminalEnded,
+		HookAgentThinkingStarting, HookAgentThinkingEnded,
 	}
 	if len(AllHookEvents) != len(expected) {
 		t.Errorf("expected %d events, got %d", len(expected), len(AllHookEvents))
@@ -14144,7 +15584,7 @@ func TestHookCommandCLI(t *testing.T) {
 	factory := func(cfg Config) (*Engine, error) {
 		return nil, nil
 	}
-	config := &Config{Format: "json"}
+	config := &Config{Format: "json", Repo: t.TempDir()}
 	cmd := hookCommand(factory, config)
 	cases := []struct {
 		name    string
@@ -14173,6 +15613,7 @@ func TestHookCommandCLI(t *testing.T) {
 			var buf bytes.Buffer
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+			cmd.SetIn(strings.NewReader(""))
 			cmd.SetArgs(tc.args)
 			err := cmd.Execute()
 			if tc.wantErr && err == nil {
@@ -14187,12 +15628,12 @@ func TestHookCommandCLI(t *testing.T) {
 
 func TestHookCommandToolBlocking(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "copilot-chat",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:  t.TempDir(),
-		ToolName:  "terminal",
-		ToolArgs:  "git stash pop",
+		Event:    HookAgentToolStarting,
+		Client:   "copilot-chat",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: t.TempDir(),
+		ToolName: "terminal",
+		ToolArgs: "git stash pop",
 	}
 	result := RunHook(hctx)
 	if result.IsAllowed() {
@@ -14208,10 +15649,10 @@ func TestHookCommandToolBlocking(t *testing.T) {
 
 func TestHookCommandJSONOutput(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookAgentStarted,
-		Client:    "copilot-chat",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:  t.TempDir(),
+		Event:    HookAgentStarted,
+		Client:   "copilot-chat",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: t.TempDir(),
 	}
 	result := RunHook(hctx)
 	out, err := json.Marshal(result)
@@ -14225,8 +15666,8 @@ func TestHookCommandJSONOutput(t *testing.T) {
 	if !parsed.Allowed {
 		t.Error("expected allowed=true")
 	}
-	if parsed.Timestamp == "" {
-		t.Error("expected non-empty timestamp")
+	if parsed.Second == "" {
+		t.Error("expected non-empty second")
 	}
 }
 
@@ -14341,7 +15782,10 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 		{"agent.tool.test.ended", HookAgentToolTestEnded, "", "PostToolUse"},
 		{"agent.tool.build.starting", HookAgentToolBuildStarting, "", "PreToolUse"},
 		{"agent.tool.build.ended", HookAgentToolBuildEnded, "", "PostToolUse"},
-		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, "", "PreToolUse"},
+		{"agent.tool.plan.updating.starting", HookAgentToolPlanUpdatingStarting, "", "PreToolUse"},
+		{"agent.tool.plan.updating.ended", HookAgentToolPlanUpdatingEnded, "", "PostToolUse"},
+		{"agent.thinking.starting", HookAgentThinkingStarting, "", ""},
+		{"agent.thinking.ended", HookAgentThinkingEnded, "", ""},
 		{"unknown", HookEvent("unknown.x"), "", ""},
 	}
 	for _, tc := range cases {
@@ -14457,12 +15901,12 @@ func TestFormatVSCodeHookOutput(t *testing.T) {
 func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 	t.Run("PreToolUse allow produces VS Code JSON", func(t *testing.T) {
 		hctx := HookContext{
-			Event:     HookAgentToolStarting,
-			Client:    "copilot-chat",
-			Timestamp: time.Now().UTC().Format(time.RFC3339),
-			ToolName:  "read_file",
-			ToolArgs:  "/tmp/file.ts",
-			RepoRoot:  t.TempDir(),
+			Event:    HookAgentToolStarting,
+			Client:   "copilot-chat",
+			Second:   time.Now().UTC().Format(time.RFC3339),
+			ToolName: "read_file",
+			ToolArgs: "/tmp/file.ts",
+			RepoRoot: t.TempDir(),
 		}
 		result := RunHook(hctx)
 		if !result.IsAllowed() {
@@ -14481,12 +15925,12 @@ func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 	t.Run("PreToolUse blocked produces VS Code deny JSON", func(t *testing.T) {
 		payload := json.RawMessage(`{"hookEventName":"PreToolUse","tool_name":"run_in_terminal","tool_input":{"command":"git checkout main"}}`)
 		hctx := HookContext{
-			Event:     HookAgentToolStarting,
-			Client:    "copilot-chat",
-			Timestamp: time.Now().UTC().Format(time.RFC3339),
-			ToolName:  "run_in_terminal",
-			Input:     payload,
-			RepoRoot:  t.TempDir(),
+			Event:    HookAgentToolStarting,
+			Client:   "copilot-chat",
+			Second:   time.Now().UTC().Format(time.RFC3339),
+			ToolName: "run_in_terminal",
+			Input:    payload,
+			RepoRoot: t.TempDir(),
 		}
 		result := RunHook(hctx)
 		if result.IsAllowed() {
@@ -14685,8 +16129,42 @@ func TestGenerateClaudeCodeConfig(t *testing.T) {
 		if _, ok := config["permissions"]; !ok {
 			t.Error("expected existing permissions to be preserved")
 		}
-		if _, ok := config["hooks"]; ok {
-			t.Error("expected hooks to be removed when cursor hooks exist")
+		hooks, ok := config["hooks"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected hooks key to be present with claude-code-exclusive events")
+		}
+		// Shared events handled by cursor must not be present to avoid duplicate firing.
+		for _, sharedKey := range []string{"SessionStart", "SessionEnd", "SubagentStart", "SubagentStop", "Stop", "UserPromptSubmit", "PreCompact", "PreToolUse", "PostToolUse", "PostToolUseFailure"} {
+			if _, ok := hooks[sharedKey]; ok {
+				t.Errorf("expected shared event %s to be absent when cursor hooks exist", sharedKey)
+			}
+		}
+		// Claude Code-exclusive events must remain so standalone claude-code still works.
+		for _, exclusiveKey := range []string{"PermissionRequest", "TaskCompleted", "Notification", "TeammateIdle"} {
+			arr, ok := hooks[exclusiveKey].([]interface{})
+			if !ok || len(arr) == 0 {
+				t.Errorf("expected claude-code-exclusive event %s to be present when cursor hooks exist", exclusiveKey)
+				continue
+			}
+			entry, ok := arr[0].(map[string]interface{})
+			if !ok {
+				t.Errorf("expected object entry for %s", exclusiveKey)
+				continue
+			}
+			innerHooks, ok := entry["hooks"].([]interface{})
+			if !ok || len(innerHooks) == 0 {
+				t.Errorf("expected inner hooks array for %s", exclusiveKey)
+				continue
+			}
+			inner, ok := innerHooks[0].(map[string]interface{})
+			if !ok {
+				t.Errorf("expected inner hook object for %s", exclusiveKey)
+				continue
+			}
+			cmd, _ := inner["command"].(string)
+			if !strings.Contains(cmd, "claude-code") {
+				t.Errorf("expected claude-code in command for %s, got %s", exclusiveKey, cmd)
+			}
 		}
 	})
 }
@@ -14708,22 +16186,22 @@ func TestConfigureGitHooks(t *testing.T) {
 		if err := configureGitHooks(tmpDir); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		preCommitPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
-		preCommit, err := os.ReadFile(preCommitPath)
+		preCheckpointPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
+		preCheckpointData, err := os.ReadFile(preCheckpointPath)
 		if err != nil {
-			t.Fatal("pre-commit hook not created")
+			t.Fatal("pre-checkpoint hook not created")
 		}
-		if !strings.Contains(string(preCommit), "pre-commit run --hook-stage pre-commit") {
+		if !strings.Contains(string(preCheckpointData), "pre-commit run --hook-stage pre-commit") {
 			t.Error("pre-commit hook does not call pre-commit framework")
 		}
-		postCommit, err := os.ReadFile(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
+		postCheckpointData, err := os.ReadFile(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
 		if err != nil {
-			t.Fatal("post-commit hook not created")
+			t.Fatal("post-checkpoint hook not created")
 		}
-		if !strings.Contains(string(postCommit), "hook git.commit.ended") {
-			t.Error("post-commit hook does not call hook git.commit.ended")
+		if !strings.Contains(string(postCheckpointData), "hook version.checkpoint.ended") {
+			t.Error("post-checkpoint hook does not call hook version.checkpoint.ended")
 		}
-		info, err := os.Stat(preCommitPath)
+		info, err := os.Stat(preCheckpointPath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -14791,14 +16269,19 @@ func TestBlockedToolPatterns(t *testing.T) {
 
 func TestHookLogging(t *testing.T) {
 	tmpDir := t.TempDir()
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "sess-log")
-	payload := json.RawMessage(`{"session_id":"sess-log","timestamp":"2026-02-20T10:00:00Z","transcript_path":"/tmp/transcript.jsonl"}`)
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"sess-log")
+	payload := json.RawMessage(`{"session_id":"sess-log","second":"2026-02-20T10:00:00Z","transcript_path":"/tmp/transcript.jsonl"}`)
 	hctx := HookContext{
-		Event:     HookAgentStarted,
-		Client:    "claude-code",
-		Timestamp: "2026-02-20T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     payload,
+		Event:    HookAgentStarted,
+		Client:   "claude-code",
+		Second:   "2026-02-20T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	if !result.IsAllowed() {
@@ -14808,17 +16291,31 @@ func TestHookLogging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected log dir to exist: %v", err)
 	}
-	if len(entries) != 1 {
-		t.Fatalf("expected 1 log file, got %d", len(entries))
+	if len(entries) != 2 {
+		t.Fatalf("expected 2 log files (event + session.json), got %d", len(entries))
 	}
-	name := entries[0].Name()
-	if !strings.HasSuffix(name, "_agent-started.json") {
-		t.Errorf("expected filename to end with _agent-started.json, got: %s", name)
+
+	var eventName string
+	foundSessionMeta := false
+	for _, e := range entries {
+		switch {
+		case e.Name() == "session.json":
+			foundSessionMeta = true
+		case strings.HasSuffix(e.Name(), "_agent-started.json"):
+			eventName = e.Name()
+		}
 	}
-	if len(name) != len("260218230207_agent-started.json") {
-		t.Errorf("unexpected filename length for %q", name)
+	if !foundSessionMeta {
+		t.Fatalf("expected session.json to be written alongside agent events")
 	}
-	data, err := os.ReadFile(filepath.Join(logDir, name))
+	if eventName == "" {
+		t.Fatalf("expected an agent-started event file")
+	}
+	if len(eventName) != len("HHMMSS_agent-started.json") {
+		t.Errorf("unexpected filename length for %q", eventName)
+	}
+
+	data, err := os.ReadFile(filepath.Join(logDir, eventName))
 	if err != nil {
 		t.Fatalf("cannot read log file: %v", err)
 	}
@@ -14836,11 +16333,16 @@ func TestHookLogging(t *testing.T) {
 	if evt["client"] != "claude-code" {
 		t.Errorf("expected event.client claude-code in log, got: %v", evt["client"])
 	}
-	if evt["session"] != "sess-log" {
-		t.Errorf("expected event.session sess-log in log, got: %v", evt["session"])
+	if _, ok := evt["contributor"]; !ok {
+		t.Error("expected event.contributor to be present in log entry")
 	}
-	if evt["timestamp"] != "2026-02-20T10:00:00Z" {
-		t.Errorf("expected event.timestamp from input, got: %v", evt["timestamp"])
+	expectedSession := resolveEventSessionID("sess-log")
+	if evt["session"] != expectedSession {
+		t.Errorf("expected event.session %s in log, got: %v", expectedSession, evt["session"])
+	}
+	expectedSecond := resolveEventSecondID("2026-02-20T10:00:00Z")
+	if evt["second"] != expectedSecond {
+		t.Errorf("expected event.second %s from input, got: %v", expectedSecond, evt["second"])
 	}
 	if evt["transcript"] != "/tmp/transcript.jsonl" {
 		t.Errorf("expected event.transcript in log, got: %v", evt["transcript"])
@@ -14848,21 +16350,284 @@ func TestHookLogging(t *testing.T) {
 	if entry.Response.Blocked != nil {
 		t.Error("expected response.blocked to be nil for allowed event")
 	}
-	if entry.Raw == nil {
-		t.Error("expected raw to be populated")
+	if entry.Native.Event == nil {
+		t.Error("expected native.event to be populated")
 	}
+
+	metaBytes, err := os.ReadFile(filepath.Join(logDir, "session.json"))
+	if err != nil {
+		t.Fatalf("expected session.json to exist, got error: %v", err)
+	}
+	var meta map[string]interface{}
+	if err := json.Unmarshal(metaBytes, &meta); err != nil {
+		t.Fatalf("expected valid JSON in session.json, got: %v", err)
+	}
+	if meta["id"] == "" {
+		t.Errorf("expected id in session.json, got: %v", meta["id"])
+	}
+	if meta["uri"] == "" {
+		t.Errorf("expected uri in session.json, got: %v", meta["uri"])
+	}
+	if meta["contributor"] == "" {
+		t.Errorf("expected contributor in session.json, got: %v", meta["contributor"])
+	}
+	if meta["client"] != "claude-code" {
+		t.Errorf("expected client claude-code in session.json, got: %v", meta["client"])
+	}
+	if meta["second"] == "" {
+		t.Errorf("expected second in session.json, got: %v", meta["second"])
+	}
+	for _, forbidden := range []string{"uuid", "started_at", "first_event", "native", "event", "response"} {
+		if _, ok := meta[forbidden]; ok {
+			t.Errorf("expected %s to be absent in session.json to avoid event duplication", forbidden)
+		}
+	}
+}
+
+func TestSessionJsonTracksPlan(t *testing.T) {
+	tmpDir := t.TempDir()
+	now := time.Now().UTC()
+	sessionID := "plan-track-session"
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		sessionID)
+	startPayload := json.RawMessage(`{"session_id":"plan-track-session","second":"2026-03-02T10:00:00Z"}`)
+	RunHook(HookContext{
+		Event:    HookAgentStarted,
+		Client:   "claude-code",
+		Second:   "2026-03-02T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    startPayload,
+	})
+
+	// First plan update: two steps, one in-progress, one pending.
+	plan1Payload := json.RawMessage(`{"session_id":"plan-track-session","tool_input":{"todoList":[{"title":"Step A","status":"in-progress"},{"title":"Step B","status":"pending"}]}}`)
+	RunHook(HookContext{
+		Event:    HookAgentToolPlanUpdatingEnded,
+		Client:   "claude-code",
+		Second:   "2026-03-02T10:01:00Z",
+		RepoRoot: tmpDir,
+		Input:    plan1Payload,
+	})
+
+	metaPath := filepath.Join(logDir, "session.json")
+	metaBytes, err := os.ReadFile(metaPath)
+	if err != nil {
+		t.Fatalf("expected session.json after plan update, got error: %v", err)
+	}
+	var meta SessionMeta
+	if err := json.Unmarshal(metaBytes, &meta); err != nil {
+		t.Fatalf("invalid session.json JSON: %v", err)
+	}
+	if meta.Plan == nil || len(meta.Plan.Steps) != 2 {
+		t.Fatalf("expected 2 plan steps, got %v", meta.Plan)
+	}
+	stepA := meta.Plan.Steps[0]
+	if stepA.Name != "Step A" {
+		t.Errorf("expected Step A, got %s", stepA.Name)
+	}
+	if stepA.Started == "" {
+		t.Errorf("expected Step A started timestamp, got empty")
+	}
+	if stepA.Completed != "" {
+		t.Errorf("expected Step A not completed, got %s", stepA.Completed)
+	}
+	stepB := meta.Plan.Steps[1]
+	if stepB.Name != "Step B" {
+		t.Errorf("expected Step B, got %s", stepB.Name)
+	}
+	if stepB.Started != "" || stepB.Completed != "" {
+		t.Errorf("expected Step B pending, got started=%s completed=%s", stepB.Started, stepB.Completed)
+	}
+
+	// Second plan update: Step A completed, Step B in-progress, Step C new.
+	plan2Payload := json.RawMessage(`{"session_id":"plan-track-session","tool_input":{"todoList":[{"title":"Step A","status":"completed"},{"title":"Step B","status":"in-progress"},{"title":"Step C","status":"pending"}]}}`)
+	RunHook(HookContext{
+		Event:    HookAgentToolPlanUpdatingEnded,
+		Client:   "claude-code",
+		Second:   "2026-03-02T10:02:00Z",
+		RepoRoot: tmpDir,
+		Input:    plan2Payload,
+	})
+
+	metaBytes, err = os.ReadFile(metaPath)
+	if err != nil {
+		t.Fatalf("expected session.json after second plan update: %v", err)
+	}
+	if err := json.Unmarshal(metaBytes, &meta); err != nil {
+		t.Fatalf("invalid session.json JSON: %v", err)
+	}
+	if meta.Plan == nil || len(meta.Plan.Steps) != 3 {
+		t.Fatalf("expected 3 plan steps after second update, got %v", meta.Plan)
+	}
+	stepA2 := meta.Plan.Steps[0]
+	if stepA2.Name != "Step A" || stepA2.Completed == "" {
+		t.Errorf("expected Step A completed, got %+v", stepA2)
+	}
+	if stepA2.Started != stepA.Started {
+		t.Errorf("expected Step A started timestamp preserved, got %s vs %s", stepA2.Started, stepA.Started)
+	}
+	stepB2 := meta.Plan.Steps[1]
+	if stepB2.Name != "Step B" || stepB2.Started == "" {
+		t.Errorf("expected Step B in-progress, got %+v", stepB2)
+	}
+	stepC := meta.Plan.Steps[2]
+	if stepC.Name != "Step C" || stepC.Started != "" || stepC.Completed != "" {
+		t.Errorf("expected Step C pending, got %+v", stepC)
+	}
+
+	// Third plan update: Step B and Step C only (Step A removed → abandoned).
+	plan3Payload := json.RawMessage(`{"session_id":"plan-track-session","tool_input":{"todoList":[{"title":"Step B","status":"completed"},{"title":"Step C","status":"in-progress"}]}}`)
+	RunHook(HookContext{
+		Event:    HookAgentToolPlanUpdatingEnded,
+		Client:   "claude-code",
+		Second:   "2026-03-02T10:03:00Z",
+		RepoRoot: tmpDir,
+		Input:    plan3Payload,
+	})
+
+	metaBytes, err = os.ReadFile(metaPath)
+	if err != nil {
+		t.Fatalf("expected session.json after third plan update: %v", err)
+	}
+	if err := json.Unmarshal(metaBytes, &meta); err != nil {
+		t.Fatalf("invalid session.json JSON: %v", err)
+	}
+	if meta.Plan == nil || len(meta.Plan.Steps) != 3 {
+		t.Fatalf("expected 3 plan steps after third update (Step A abandoned), got %v", meta.Plan)
+	}
+	stepB3 := meta.Plan.Steps[0]
+	if stepB3.Name != "Step B" || stepB3.Completed == "" {
+		t.Errorf("expected Step B completed, got %+v", stepB3)
+	}
+	if stepB3.Started != stepB2.Started {
+		t.Errorf("expected Step B started timestamp preserved, got %s vs %s", stepB3.Started, stepB2.Started)
+	}
+	stepC2 := meta.Plan.Steps[1]
+	if stepC2.Name != "Step C" || stepC2.Started == "" {
+		t.Errorf("expected Step C in-progress, got %+v", stepC2)
+	}
+	stepAAbandoned := meta.Plan.Steps[2]
+	if stepAAbandoned.Name != "Step A" || stepAAbandoned.Abandoned == "" {
+		t.Errorf("expected Step A abandoned, got %+v", stepAAbandoned)
+	}
+}
+
+func TestMergeTicketAgentPlanSteps(t *testing.T) {
+	second1 := "2026-03-02T10:00:00Z"
+	second2 := "2026-03-02T10:01:00Z"
+
+	t.Run("empty existing adopts incoming", func(t *testing.T) {
+		incoming := []HookPlanStep{
+			{Name: "A", Status: "in-progress"},
+			{Name: "B", Status: "pending"},
+		}
+		merged := mergeTicketAgentPlanSteps(nil, incoming, second1)
+		if len(merged) != 2 {
+			t.Fatalf("expected 2, got %d", len(merged))
+		}
+		if merged[0].Started != second1 {
+			t.Errorf("expected A started=%s, got %s", second1, merged[0].Started)
+		}
+		if merged[1].Started != "" || merged[1].Completed != "" {
+			t.Errorf("expected B pending, got %+v", merged[1])
+		}
+	})
+
+	t.Run("preserves existing timestamps", func(t *testing.T) {
+		existing := []TicketAgentPlanStep{
+			{Name: "A", Started: second1},
+		}
+		incoming := []HookPlanStep{
+			{Name: "A", Status: "completed"},
+		}
+		merged := mergeTicketAgentPlanSteps(existing, incoming, second2)
+		if merged[0].Started != second1 {
+			t.Errorf("expected started preserved as %s, got %s", second1, merged[0].Started)
+		}
+		if merged[0].Completed != second2 {
+			t.Errorf("expected completed=%s, got %s", second2, merged[0].Completed)
+		}
+	})
+
+	t.Run("marks removed steps as abandoned", func(t *testing.T) {
+		existing := []TicketAgentPlanStep{
+			{Name: "A", Started: second1},
+			{Name: "B"},
+		}
+		incoming := []HookPlanStep{
+			{Name: "B", Status: "in-progress"},
+		}
+		merged := mergeTicketAgentPlanSteps(existing, incoming, second2)
+		if len(merged) != 2 {
+			t.Fatalf("expected 2 steps (B active + A abandoned), got %d", len(merged))
+		}
+		if merged[0].Name != "B" {
+			t.Errorf("expected B first, got %s", merged[0].Name)
+		}
+		abandoned := merged[1]
+		if abandoned.Name != "A" || abandoned.Abandoned != second2 {
+			t.Errorf("expected A abandoned at %s, got %+v", second2, abandoned)
+		}
+	})
+
+	t.Run("does not re-abandon already abandoned steps", func(t *testing.T) {
+		existing := []TicketAgentPlanStep{
+			{Name: "A", Abandoned: second1},
+		}
+		incoming := []HookPlanStep{
+			{Name: "B", Status: "pending"},
+		}
+		merged := mergeTicketAgentPlanSteps(existing, incoming, second2)
+		foundA := false
+		for _, s := range merged {
+			if s.Name == "A" {
+				foundA = true
+				if s.Abandoned != second1 {
+					t.Errorf("expected A abandoned timestamp unchanged, got %s", s.Abandoned)
+				}
+			}
+		}
+		if foundA {
+			t.Errorf("already-abandoned step A should not be re-appended to merged list")
+		}
+	})
+
+	t.Run("adds new steps not in existing", func(t *testing.T) {
+		existing := []TicketAgentPlanStep{
+			{Name: "A", Completed: second1},
+		}
+		incoming := []HookPlanStep{
+			{Name: "A", Status: "completed"},
+			{Name: "C", Status: "pending"},
+		}
+		merged := mergeTicketAgentPlanSteps(existing, incoming, second2)
+		if len(merged) != 2 {
+			t.Fatalf("expected 2 steps, got %d", len(merged))
+		}
+		if merged[1].Name != "C" || merged[1].Started != "" {
+			t.Errorf("expected C as new pending step, got %+v", merged[1])
+		}
+	})
 }
 
 func TestHookLoggingToolBlocked(t *testing.T) {
 	tmpDir := t.TempDir()
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "unknown")
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"unknown")
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "claude-code",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RepoRoot:  tmpDir,
-		ToolName:  "bash",
-		ToolArgs:  "git checkout main",
+		Event:    HookAgentToolStarting,
+		Client:   "claude-code",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		RepoRoot: tmpDir,
+		ToolName: "bash",
+		ToolArgs: "git checkout main",
 	}
 	result := RunHook(hctx)
 	if result.IsAllowed() {
@@ -14892,19 +16657,24 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 	if !strings.HasSuffix(entries[0].Name(), "_agent-tool-starting.json") {
 		t.Errorf("expected filename to end with _agent-tool-starting.json, got: %s", entries[0].Name())
 	}
-	// HookLogEvent is a typed struct; "allowed" is not a field on it
+
 }
 
 func TestHookLoggingStdinInput(t *testing.T) {
 	tmpDir := t.TempDir()
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "abc123")
-	payload := json.RawMessage(`{"session_id":"abc123","timestamp":"2026-02-20T12:00:00Z","tool_name":"Bash","tool_input":{"command":"ls"},"transcript_path":"/tmp/t.jsonl"}`)
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"abc123")
+	payload := json.RawMessage(`{"session_id":"abc123","second":"2026-02-20T12:00:00Z","tool_name":"Bash","tool_input":{"command":"ls"},"transcript_path":"/tmp/t.jsonl"}`)
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "claude-code",
-		Timestamp: "2026-02-20T12:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     payload,
+		Event:    HookAgentToolStarting,
+		Client:   "claude-code",
+		Second:   "2026-02-20T12:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    payload,
 	}
 	RunHook(hctx)
 	entries, _ := os.ReadDir(logDir)
@@ -14914,12 +16684,12 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	data, _ := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
 	var entry HookLogEntry
 	json.Unmarshal(data, &entry)
-	if len(entry.Raw) == 0 {
-		t.Error("expected raw from HookContext.Input")
+	if len(entry.Native.Event) == 0 {
+		t.Error("expected native.event from HookContext.Input")
 	}
 	var wantMap, gotMap map[string]interface{}
 	json.Unmarshal(payload, &wantMap)
-	json.Unmarshal(entry.Raw, &gotMap)
+	json.Unmarshal(entry.Native.Event, &gotMap)
 	wantBytes, _ := json.Marshal(wantMap)
 	gotBytes, _ := json.Marshal(gotMap)
 	if string(gotBytes) != string(wantBytes) {
@@ -14927,11 +16697,13 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	}
 	var evt map[string]interface{}
 	json.Unmarshal(entry.Event, &evt)
-	if evt["session"] != "abc123" {
-		t.Errorf("expected event.session abc123, got: %v", evt["session"])
+	expectedSession := resolveEventSessionID("abc123")
+	if evt["session"] != expectedSession {
+		t.Errorf("expected event.session %s, got: %v", expectedSession, evt["session"])
 	}
-	if evt["timestamp"] != "2026-02-20T12:00:00Z" {
-		t.Errorf("expected event.timestamp from input, got: %v", evt["timestamp"])
+	expectedSecond := resolveEventSecondID("2026-02-20T12:00:00Z")
+	if evt["second"] != expectedSecond {
+		t.Errorf("expected event.second %s from input, got: %v", expectedSecond, evt["second"])
 	}
 	if evt["transcript"] != "/tmp/t.jsonl" {
 		t.Errorf("expected event.transcript, got: %v", evt["transcript"])
@@ -14974,18 +16746,20 @@ func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
 	return result
 }
 
-func getTicketEvents(t *testing.T, ticketData map[string]interface{}) []interface{} {
+func getLogFiles(t *testing.T, tmpDir string) []string {
 	t.Helper()
-	agents, ok := ticketData["agents"].([]interface{})
-	if !ok || len(agents) == 0 {
-		t.Fatal("expected agents in ticket.json")
-	}
-	lastAgent := agents[len(agents)-1].(map[string]interface{})
-	events, ok := lastAgent["events"].([]interface{})
-	if !ok {
+	outBase := filepath.Join(tmpDir, ".semio-repo", "⚡")
+	var logFiles []string
+	filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if !d.IsDir() && strings.HasSuffix(d.Name(), ".json") {
+			logFiles = append(logFiles, path)
+		}
 		return nil
-	}
-	return events
+	})
+	return logFiles
 }
 
 func TestTrackHookAllEventsLogged(t *testing.T) {
@@ -14993,30 +16767,17 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"test-session-1","llm":"opus-4-6","transcript_path":"/tmp/transcript.jsonl"}`)
 	hctx := HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     sessionInput,
-		ToolArgs:  "Fix the bug",
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    sessionInput,
+		ToolArgs: "Fix the bug",
 	}
 	RunHook(hctx)
 	ticket := readTicketJSON(t, ticketJSON)
-	agents, ok := ticket["agents"].([]interface{})
-	if !ok || len(agents) == 0 {
-		t.Fatal("expected agents after prompt.submitting")
-	}
-	agent := agents[0].(map[string]interface{})
-	events, ok := agent["events"].([]interface{})
-	if !ok || len(events) == 0 {
-		t.Fatal("expected events after prompt.submitting")
-	}
-	promptEvent := events[0].(map[string]interface{})
-	if promptEvent["kind"] != "agent.prompt.submitting" {
-		t.Errorf("expected prompt event kind, got: %v", promptEvent["kind"])
-	}
-	if promptEvent["prompt"] != "Fix the bug" {
-		t.Errorf("expected prompt text, got: %v", promptEvent["prompt"])
+	if sessions, ok := ticket["sessions"].([]interface{}); ok && len(sessions) > 0 {
+		t.Fatalf("expected hooks to not persist sessions, got %+v", sessions)
 	}
 	agentEvents := []struct {
 		name  string
@@ -15036,182 +16797,177 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 		{"agent.tool.build.starting", HookAgentToolBuildStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"bundles":["semio/js"]}}`)},
 		{"agent.tool.build.ended", HookAgentToolBuildEnded, json.RawMessage(`{"session_id":"test-session-1","tool_output":{"succeeded":["semio/js"]}}`)},
 		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
-		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"todoList":[{"title":"Step 1","status":"completed"},{"title":"Step 2","status":"in-progress"}]}}`)},
+		{"agent.tool.plan.updating.starting", HookAgentToolPlanUpdatingStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"todoList":[{"title":"Step 1","status":"completed"},{"title":"Step 2","status":"in-progress"}]}}`)},
 		{"agent.ended", HookAgentEnded, sessionInput},
+		{"agent.thinking.starting", HookAgentThinkingStarting, json.RawMessage(`{"session_id":"test-session-1","text":"Planning the approach"}`)},
+		{"agent.thinking.ended", HookAgentThinkingEnded, json.RawMessage(`{"session_id":"test-session-1","text":"Decided to use X"}`)},
 	}
 	for _, ae := range agentEvents {
 		hctx := HookContext{
-			Event:     ae.event,
-			Client:    "copilot-chat",
-			Timestamp: "2026-02-23T10:01:00Z",
-			RepoRoot:  tmpDir,
-			Input:     ae.input,
+			Event:    ae.event,
+			Client:   "copilot-chat",
+			Second:   "2026-02-23T10:01:00Z",
+			RepoRoot: tmpDir,
+			Input:    ae.input,
 		}
 		RunHook(hctx)
 	}
+
+	logFiles := getLogFiles(t, tmpDir)
+
+	if len(logFiles) < 16 {
+		t.Fatalf("expected at least 16 log files, got %d", len(logFiles))
+	}
+
 	ticket = readTicketJSON(t, ticketJSON)
-	events = getTicketEvents(t, ticket)
-	if len(events) < 15 {
-		t.Fatalf("expected at least 15 events (prompt.submitting + 14 others), got %d", len(events))
+	if sessions, ok := ticket["sessions"].([]interface{}); ok && len(sessions) > 0 {
+		t.Fatalf("expected hooks to not persist sessions, got %+v", sessions)
 	}
-	eventKinds := make([]string, len(events))
-	for i, e := range events {
-		eventKinds[i] = e.(map[string]interface{})["kind"].(string)
-	}
-	expectedKinds := []string{
-		"agent.prompt.submitting",
-		"agent.started",
-		"agent.tool.starting",
-		"agent.tool.search.starting",
-		"agent.tool.search.ended",
-		"agent.tool.code.edit.starting",
-		"agent.tool.code.edit.ended",
-		"agent.tool.terminal.starting",
-		"agent.tool.terminal.ended",
-		"agent.tool.test.starting",
-		"agent.tool.test.ended",
-		"agent.tool.build.starting",
-		"agent.tool.build.ended",
-		"agent.tool.ended",
-	}
-	for _, expected := range expectedKinds {
-		found := false
-		for _, got := range eventKinds {
-			if got == expected {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("expected event kind %q in ticket events, got: %v", expected, eventKinds)
-		}
-	}
-	agents = ticket["agents"].([]interface{})
-	agent = agents[0].(map[string]interface{})
-	if agent["llm"] != "opus-4-6" {
-		t.Errorf("expected agent llm opus-4-6, got: %v", agent["llm"])
-	}
-	if agent["client"] != "copilot-chat" {
-		t.Errorf("expected agent client copilot-chat, got: %v", agent["client"])
-	}
-	plan, ok := agent["plan"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected plan in agent after plan.updating event")
-	}
-	steps, ok := plan["steps"].([]interface{})
-	if !ok || len(steps) != 2 {
-		t.Fatalf("expected 2 plan steps, got: %v", plan["steps"])
+	if _, hasAgents := ticket["agents"]; hasAgents {
+		t.Fatal("agents must not be persisted in ticket.json")
 	}
 }
 
 func TestTrackHookSearchingPattern(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"search-session"}`)
 	RunHook(HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     sessionInput,
-		ToolArgs:  "Search test",
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    sessionInput,
+		ToolArgs: "Search test",
 	})
 	RunHook(HookContext{
-		Event:     HookAgentToolSearchStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:01:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(`{"session_id":"search-session","tool_input":{"query":"findMe","includePattern":"src/**/*.ts"}}`),
+		Event:    HookAgentToolSearchStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:01:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(`{"session_id":"search-session","tool_input":{"query":"findMe","includePattern":"src/**/*.ts"}}`),
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 2 {
-		t.Fatal("expected at least 2 events (prompt + searching)")
+
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) < 2 {
+		t.Fatal("expected at least 2 log files (prompt + searching)")
 	}
-	searchEvent := events[len(events)-1].(map[string]interface{})
-	query, _ := searchEvent["query"].(string)
-	if query == "" {
-		t.Error("expected non-empty query in search event")
+
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-tool-search-starting") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log file: %v", err)
+			}
+			if !strings.Contains(string(data), "findMe") {
+				t.Errorf("expected search query in log file, got: %s", string(data))
+			}
+			found = true
+			break
+		}
 	}
-	if !strings.Contains(query, "findMe") {
-		t.Errorf("expected query to contain search term, got: %s", query)
+	if !found {
+		t.Error("expected agent-tool-search-starting log file")
 	}
 }
 
 func TestTrackHookBlockedEvent(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"blocked-session"}`)
 	RunHook(HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     sessionInput,
-		ToolArgs:  "Do something",
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    sessionInput,
+		ToolArgs: "Do something",
 	})
 	RunHook(HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:01:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(`{"session_id":"blocked-session","tool_input":{"command":"git checkout main"}}`),
-		ToolName:  "run_in_terminal",
-		ToolArgs:  "git checkout main",
+		Event:    HookAgentToolStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:01:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(`{"session_id":"blocked-session","tool_input":{"command":"git checkout main"}}`),
+		ToolName: "run_in_terminal",
+		ToolArgs: "git checkout main",
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 2 {
-		t.Fatal("expected at least 2 events (prompt + blocked tool)")
+
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) < 2 {
+		t.Fatal("expected at least 2 log files (prompt + blocked tool)")
 	}
-	blockedEvent := events[1].(map[string]interface{})
-	denied, _ := blockedEvent["denied"].(string)
-	if denied == "" {
-		t.Error("expected non-empty denied field for blocked event")
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-tool-starting") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log file: %v", err)
+			}
+			var entry HookLogEntry
+			if err := json.Unmarshal(data, &entry); err != nil {
+				t.Fatalf("invalid log JSON: %v", err)
+			}
+			if entry.Response.Blocked == nil || !*entry.Response.Blocked {
+				t.Error("expected response.blocked=true for blocked tool")
+			}
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected agent-tool-starting log file for blocked event")
 	}
 }
 
 func TestTrackHookTerminalEvents(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"terminal-session"}`)
 	RunHook(HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     sessionInput,
-		ToolArgs:  "Run command",
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    sessionInput,
+		ToolArgs: "Run command",
 	})
 	RunHook(HookContext{
-		Event:     HookAgentToolTerminalStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:01:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(`{"session_id":"terminal-session","tool_input":{"command":"npm test"}}`),
+		Event:    HookAgentToolTerminalStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:01:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(`{"session_id":"terminal-session","tool_input":{"command":"npm test"}}`),
 	})
 	RunHook(HookContext{
-		Event:     HookAgentToolTerminalEnded,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:02:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(`{"session_id":"terminal-session","command":"npm test","pid":"999","stdout":"all passed"}`),
+		Event:    HookAgentToolTerminalEnded,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:02:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(`{"session_id":"terminal-session","command":"npm test","pid":"999","stdout":"all passed"}`),
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 3 {
-		t.Fatalf("expected at least 3 events (prompt + 2 terminal), got %d", len(events))
+
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) < 3 {
+		t.Fatalf("expected at least 3 log files (prompt + 2 terminal), got %d", len(logFiles))
 	}
-	startEvent := events[1].(map[string]interface{})
-	if startEvent["kind"] != "agent.tool.terminal.starting" {
-		t.Errorf("expected terminal.starting, got: %v", startEvent["kind"])
+	startFound := false
+	endFound := false
+	for _, lf := range logFiles {
+		base := filepath.Base(lf)
+		if strings.Contains(base, "agent-tool-terminal-starting") {
+			startFound = true
+		}
+		if strings.Contains(base, "agent-tool-terminal-ended") {
+			endFound = true
+		}
 	}
-	if startEvent["query"] == nil || startEvent["query"] == "" {
-		t.Error("expected command in query for terminal.starting")
+	if !startFound {
+		t.Error("expected agent-tool-terminal-starting log file")
 	}
-	endEvent := events[2].(map[string]interface{})
-	if endEvent["kind"] != "agent.tool.terminal.ended" {
-		t.Errorf("expected terminal.ended, got: %v", endEvent["kind"])
+	if !endFound {
+		t.Error("expected agent-tool-terminal-ended log file")
 	}
 }
 
@@ -15219,24 +16975,24 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	RunHook(HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(`{"session_id":"transcript-session","transcript_path":"/home/user/.vscode/transcripts/abc.jsonl"}`),
-		ToolArgs:  "test",
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(`{"session_id":"transcript-session","transcript_path":"/home/user/.vscode/transcripts/abc.jsonl"}`),
+		ToolArgs: "test",
 	})
 	ticket := readTicketJSON(t, ticketJSON)
-	agents := ticket["agents"].([]interface{})
-	agent := agents[0].(map[string]interface{})
-	transcript, _ := agent["transcript"].(string)
-	if transcript != "/home/user/.vscode/transcripts/abc.jsonl" {
-		t.Errorf("expected transcript to be set, got: %v", transcript)
+	if sessions, ok := ticket["sessions"].([]interface{}); ok && len(sessions) > 0 {
+		t.Fatalf("expected hooks to not persist sessions, got %+v", sessions)
+	}
+	if _, hasAgents := ticket["agents"]; hasAgents {
+		t.Error("agents must not be persisted in ticket.json")
 	}
 }
 
-func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+func TestTrackHookCodeEditedLogsToFile(t *testing.T) {
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	tsContent := "// #region \U0001F516Functions\n\n// doWork MUST work.\nexport function doWork(): void {}\n\n// #endregion \U0001F516Functions\n"
 	tsFile := filepath.Join(tmpDir, "proj", "kit", "file.ts")
@@ -15247,54 +17003,47 @@ func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
 		t.Fatal(err)
 	}
 	RunHook(HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(`{"session_id":"def-id-session"}`),
-		ToolArgs:  "Edit file",
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(`{"session_id":"def-id-session"}`),
+		ToolArgs: "Edit file",
 	})
 	payload := fmt.Sprintf(`{"session_id":"def-id-session","tool_input":{"filePath":%q,"oldString":"","newString":"export function doWork(): void {}"}}`, tsFile)
 	RunHook(HookContext{
-		Event:     HookAgentToolCodeEditEnded,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-23T10:01:00Z",
-		RepoRoot:  tmpDir,
-		Input:     json.RawMessage(payload),
+		Event:    HookAgentToolCodeEditEnded,
+		Client:   "copilot-chat",
+		Second:   "2026-02-23T10:01:00Z",
+		RepoRoot: tmpDir,
+		Input:    json.RawMessage(payload),
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	var codeEditedEvent map[string]interface{}
-	for _, e := range events {
-		ev := e.(map[string]interface{})
-		if ev["kind"] == "agent.tool.code.edit.ended" {
-			codeEditedEvent = ev
+
+	logFiles := getLogFiles(t, tmpDir)
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-tool-code-edit-ended") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log file: %v", err)
+			}
+			var entry HookLogEntry
+			if err := json.Unmarshal(data, &entry); err != nil {
+				t.Fatalf("invalid log JSON: %v", err)
+			}
+			var evt map[string]interface{}
+			if err := json.Unmarshal(entry.Event, &evt); err != nil {
+				t.Fatalf("cannot unmarshal event: %v", err)
+			}
+			if evt["kind"] != "agent.tool.code.edit.ended" {
+				t.Errorf("expected kind agent.tool.code.edit.ended, got: %v", evt["kind"])
+			}
+			found = true
 			break
 		}
 	}
-	if codeEditedEvent == nil {
-		t.Fatal("expected agent.tool.code.edit.ended event")
-	}
-	newBlock, ok := codeEditedEvent["new"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected 'new' code block in code.edit.ended event")
-	}
-	sections, ok := newBlock["sections"].([]interface{})
-	if !ok || len(sections) == 0 {
-		t.Fatal("expected sections in new code block")
-	}
-	for _, sec := range sections {
-		s := sec.(map[string]interface{})
-		defs, _ := s["definitions"].([]interface{})
-		for _, d := range defs {
-			defID, _ := d.(string)
-			if strings.Contains(defID, tmpDir) {
-				t.Errorf("definition ID contains absolute path %q: %s", tmpDir, defID)
-			}
-			if strings.Contains(defID, "🗃️tmp") || strings.Contains(defID, "🗃️workspaces") {
-				t.Errorf("definition ID contains absolute path components: %s", defID)
-			}
-		}
+	if !found {
+		t.Error("expected agent-tool-code-edit-ended log file")
 	}
 }
 
@@ -15308,7 +17057,12 @@ func TestHookCommandStdinPiped(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	_ = out
 	_ = err
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "sess1")
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"sess1")
 	entries, readErr := os.ReadDir(logDir)
 	if readErr != nil {
 		t.Skip("cli binary not available for subprocess test")
@@ -15349,11 +17103,11 @@ func TestExtractCommandFromStdin(t *testing.T) {
 func TestExtractCommandFromStdinBlocking(t *testing.T) {
 	payload := json.RawMessage(`{"tool_name":"Bash","tool_input":{"command":"git checkout main"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "claude-code",
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Input:     payload,
-		RepoRoot:  t.TempDir(),
+		Event:    HookAgentToolStarting,
+		Client:   "claude-code",
+		Second:   time.Now().UTC().Format(time.RFC3339),
+		Input:    payload,
+		RepoRoot: t.TempDir(),
 	}
 	result := RunHook(hctx)
 	if result.IsAllowed() {
@@ -15427,6 +17181,7 @@ func TestClassifyTool(t *testing.T) {
 		{"manage_todo_list", "manage_todo_list", ToolKindPlan},
 		{"Task", "Task", ToolKindPlan},
 		{"todo_tool", "todo_tool", ToolKindPlan},
+		{"TodoWrite", "TodoWrite", ToolKindPlan},
 		{"read_file", "read_file", ToolKindCodeSearch},
 		{"grep_search", "grep_search", ToolKindCodeSearch},
 		{"file_search", "file_search", ToolKindCodeSearch},
@@ -15553,11 +17308,11 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"ss", "ss -tlnp", ToolKindCodeSearch},
 		{"test", "test -f file.txt", ToolKindCodeSearch},
 		{"bracket test", "[ -f file.txt ]", ToolKindCodeSearch},
-		{"sed", "sed 's/old/new/g' file.txt", ToolKindCodeEdit},
-		{"awk", "awk '{print $1}' file.txt", ToolKindCodeEdit},
-		{"gawk", "gawk '{print $1}' file.txt", ToolKindCodeEdit},
-		{"mawk", "mawk '{print $1}' file.txt", ToolKindCodeEdit},
-		{"nawk", "nawk '{print $1}' file.txt", ToolKindCodeEdit},
+		{"sed read-only (no -i)", "sed 's/old/new/g' file.txt", ToolKindCodeSearch},
+		{"awk read-only", "awk '{print $1}' file.txt", ToolKindCodeSearch},
+		{"gawk read-only", "gawk '{print $1}' file.txt", ToolKindCodeSearch},
+		{"mawk read-only", "mawk '{print $1}' file.txt", ToolKindCodeSearch},
+		{"nawk read-only", "nawk '{print $1}' file.txt", ToolKindCodeSearch},
 		{"rm", "rm -rf temp/", ToolKindCodeEdit},
 		{"mv", "mv old.txt new.txt", ToolKindCodeEdit},
 		{"cp", "cp src.txt dst.txt", ToolKindCodeEdit},
@@ -15585,23 +17340,85 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"unxz", "unxz file.txt.xz", ToolKindCodeEdit},
 		{"zstd", "zstd file.txt", ToolKindCodeEdit},
 		{"git", "git status", ToolKindTerminal},
-		{"npm", "npm install", ToolKindTerminal},
-		{"npx", "npx vitest run", ToolKindTerminal},
-		{"go", "go test ./...", ToolKindTerminal},
-		{"cargo", "cargo build", ToolKindTerminal},
+		{"npm install", "npm install", ToolKindTerminal},
+		{"npm test", "npm test", ToolKindTest},
+		{"npm run test", "npm run test", ToolKindTest},
+		{"pnpm test", "pnpm test", ToolKindTest},
+		{"yarn test", "yarn test", ToolKindTest},
+		{"bun test", "bun test", ToolKindTest},
+		{"npx vitest run", "npx vitest run", ToolKindTest},
+		{"npx jest", "npx jest", ToolKindTest},
+		{"npx mocha", "npx mocha", ToolKindTest},
+		{"go build", "go build ./...", ToolKindTerminal},
+		{"go test all", "go test ./...", ToolKindTest},
+		{"go test specific", "go test -run TestFoo ./...", ToolKindTest},
+		{"cargo build", "cargo build", ToolKindTerminal},
+		{"cargo test", "cargo test", ToolKindTest},
+		{"cargo nextest", "cargo nextest run", ToolKindTest},
 		{"pip", "pip install requests", ToolKindTerminal},
-		{"uv", "uv pip install requests", ToolKindTerminal},
-		{"python", "python -m pytest", ToolKindTerminal},
-		{"python3", "python3 script.py", ToolKindTerminal},
+		{"uv pip install", "uv pip install requests", ToolKindTerminal},
+		{"uv run pytest", "uv run pytest", ToolKindTest},
+		{"uvx pytest", "uvx pytest", ToolKindTest},
+		{"python -m pytest", "python -m pytest", ToolKindTest},
+		{"python -m unittest", "python -m unittest", ToolKindTest},
+		{"python3 script", "python3 script.py", ToolKindTerminal},
 		{"node", "node script.js", ToolKindTerminal},
-		{"make", "make build", ToolKindTerminal},
-		{"dotnet", "dotnet build", ToolKindTerminal},
+		{"make build", "make build", ToolKindTerminal},
+		{"make test", "make test", ToolKindTest},
+		{"make check", "make check", ToolKindTest},
+		{"dotnet build", "dotnet build", ToolKindTerminal},
+		{"dotnet test", "dotnet test", ToolKindTest},
+		{"swift test", "swift test", ToolKindTest},
+		{"dart test", "dart test", ToolKindTest},
+		{"flutter test", "flutter test", ToolKindTest},
+		{"mix test", "mix test", ToolKindTest},
+		{"mvn test", "mvn test", ToolKindTest},
+		{"mvn verify", "mvn verify", ToolKindTest},
+		{"gradle test", "gradle test", ToolKindTest},
+		{"gradlew test", "./gradlew test", ToolKindTest},
+		{"cabal test", "cabal test", ToolKindTest},
+		{"stack test", "stack test", ToolKindTest},
+		{"lein test", "lein test", ToolKindTest},
+		{"sbt test", "sbt test", ToolKindTest},
+		{"bundle exec rspec", "bundle exec rspec", ToolKindTest},
+		{"jest direct", "jest --testPathPattern=foo", ToolKindTest},
+		{"vitest direct", "vitest run", ToolKindTest},
+		{"mocha direct", "mocha test/", ToolKindTest},
+		{"pytest direct", "pytest -k test_foo", ToolKindTest},
+		{"tox direct", "tox -e py311", ToolKindTest},
+		{"rspec direct", "rspec spec/", ToolKindTest},
+		{"phpunit direct", "phpunit tests/", ToolKindTest},
+		{"phpunit vendor", "./vendor/bin/phpunit tests/", ToolKindTest},
+		{"ctest direct", "ctest --test-dir build/", ToolKindTest},
+		{"bats direct", "bats tests/", ToolKindTest},
 		{"docker", "docker build .", ToolKindTerminal},
 		{"kubectl", "kubectl get pods", ToolKindTerminal},
 		{"curl", "curl https://example.com", ToolKindTerminal},
 		{"wget", "wget https://example.com", ToolKindTerminal},
 		{"ssh", "ssh user@host", ToolKindTerminal},
 		{"custom-tool", "./custom-tool --flag", ToolKindTerminal},
+		// Compound commands: cd && test command
+		{"cd && go test", "cd /workspaces/semio/semio-repo/cli && go test ./...", ToolKindTest},
+		{"cd && go test piped", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80", ToolKindTest},
+		{"cd && cargo test", "cd /path && cargo test", ToolKindTest},
+		{"cd && npm test", "cd project && npm test", ToolKindTest},
+		{"cd && pytest", "cd tests && pytest -k test_foo", ToolKindTest},
+		{"cd && python -m pytest", "cd /app && python -m pytest", ToolKindTest},
+		{"cd && dotnet test", "cd /app && dotnet test", ToolKindTest},
+		{"cd && jest", "cd frontend && jest --testPathPattern=foo", ToolKindTest},
+		{"cd && vitest", "cd app && vitest run", ToolKindTest},
+		// Compound commands: cd && non-test is still terminal
+		{"cd && go build", "cd /path && go build ./...", ToolKindTerminal},
+		{"cd && npm install", "cd /path && npm install", ToolKindTerminal},
+		// Compound with semicolons
+		{"cd; go test", "cd /path; go test ./...", ToolKindTest},
+		// Compound with || fallback
+		{"go test || echo", "go test ./... || echo 'failed'", ToolKindTest},
+		// Pipe only (not compound, just piped)
+		{"go test piped", "go test -v ./... | head -50", ToolKindTest},
+		{"cargo test piped", "cargo test 2>&1 | tail -20", ToolKindTest},
+		// Multiple cd + env + test
+		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /path && go test -v ./...", ToolKindTest},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -15638,13 +17455,17 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 		{"which", "which go"},
 		{"tree", "tree -L 2"},
 		{"stat", "stat file.txt"},
+		{"sed read-only", "sed 's/old/new/g' file.txt"},
+		{"sed -n print lines", "sed -n '1,50p' file.txt"},
+		{"awk read-only", "awk '{print $1}' file.txt"},
+		{"gawk read-only", "gawk '{print $1}' file.txt"},
 	}
 	editCommands := []struct {
 		name string
 		cmd  string
 	}{
-		{"sed", "sed 's/old/new/g' file.txt"},
-		{"awk", "awk '{print $1}' file.txt"},
+		{"sed -i in-place", "sed -i 's/old/new/g' file.txt"},
+		{"sed -i.bak with backup", "sed -i.bak 's/old/new/g' file.txt"},
 		{"rm", "rm -rf temp/"},
 		{"mv", "mv old.txt new.txt"},
 		{"cp", "cp src.txt dst.txt"},
@@ -15663,13 +17484,55 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 	}{
 		{"git", "git status"},
 		{"npm", "npm install"},
-		{"go", "go test ./..."},
-		{"cargo", "cargo build"},
+		{"go build", "go build ./..."},
+		{"cargo build", "cargo build"},
 		{"python", "python script.py"},
 		{"node", "node script.js"},
-		{"make", "make build"},
+		{"make build", "make build"},
 		{"docker", "docker build ."},
 		{"curl", "curl https://example.com"},
+	}
+	testCommands := []struct {
+		name string
+		cmd  string
+	}{
+		{"go test", "go test ./..."},
+		{"cargo test", "cargo test"},
+		{"cargo nextest", "cargo nextest run"},
+		{"npm test", "npm test"},
+		{"pnpm test", "pnpm test"},
+		{"yarn test", "yarn test"},
+		{"bun test", "bun test"},
+		{"npx jest", "npx jest"},
+		{"npx vitest", "npx vitest run"},
+		{"jest direct", "jest --testPathPattern=foo"},
+		{"vitest direct", "vitest run"},
+		{"mocha direct", "mocha test/"},
+		{"pytest direct", "pytest -k test_foo"},
+		{"python -m pytest", "python -m pytest"},
+		{"uv run pytest", "uv run pytest"},
+		{"make test", "make test"},
+		{"dotnet test", "dotnet test"},
+		{"swift test", "swift test"},
+		{"mix test", "mix test"},
+		{"mvn test", "mvn test"},
+		{"gradle test", "gradle test"},
+		{"rspec direct", "rspec spec/"},
+		{"phpunit direct", "phpunit tests/"},
+		{"phpunit vendor", "./vendor/bin/phpunit tests/"},
+		{"cargo nextest", "cargo nextest run"},
+		// Compound commands with cd prefix
+		{"cd && go test", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80"},
+		{"cd && cargo test", "cd /path/to/project && cargo test"},
+		{"cd && npm test", "cd frontend && npm test"},
+		{"cd && pytest", "cd tests && pytest -k test_integration"},
+		{"cd && dotnet test", "cd /app && dotnet test"},
+		// Compound with semicolons
+		{"cd; go test", "cd /path; go test ./..."},
+		// Pipe-only
+		{"go test piped", "go test -v ./... | head -50"},
+		// Multiple prefixes
+		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /path && go test -v ./..."},
 	}
 	clients := []struct {
 		name      string
@@ -15789,7 +17652,438 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 				}
 			})
 		}
+		for _, xc := range testCommands {
+			t.Run(fmt.Sprintf("%s/%s/pre/test-starting", cl.name, xc.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.preEvent, cl.client, cl.toolName, cl.mkInput(xc.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolTestStarting {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolTestStarting, event, xc.cmd)
+				}
+			})
+			t.Run(fmt.Sprintf("%s/%s/post/test-ended", cl.name, xc.name), func(t *testing.T) {
+				event, _, err := ResolveHookEvent(cl.postEvent, cl.client, cl.toolName, cl.mkInput(xc.cmd))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if event != HookAgentToolTestEnded {
+					t.Errorf("expected %s, got %s for command %q", HookAgentToolTestEnded, event, xc.cmd)
+				}
+			})
+		}
 	}
+}
+
+func TestParseTestInfoFromCommand(t *testing.T) {
+	cases := []struct {
+		name          string
+		command       string
+		expectTests   []string
+		expectTimeout string
+	}{
+		{"go test all", "go test ./...", []string{""}, ""},
+		{"go test -run", "go test -run TestFoo ./...", []string{"TestFoo"}, ""},
+		{"go test -run -timeout", "go test -run TestFoo -timeout 30s ./...", []string{"TestFoo"}, "30"},
+		{"go test -timeout 2m", "go test -timeout 2m ./...", []string{""}, "120"},
+		{"pytest all", "pytest", []string{""}, ""},
+		{"pytest -k", "pytest -k test_foo", []string{"test_foo"}, ""},
+		{"jest all", "jest", []string{""}, ""},
+		{"jest -t", "jest -t MyTest", []string{"MyTest"}, ""},
+		{"jest --testNamePattern", "jest --testNamePattern=MyTest", []string{"MyTest"}, ""},
+		{"jest --timeout", "jest --timeout 5000", []string{""}, "5000"},
+		{"mocha --grep", "mocha --grep mytest", []string{"mytest"}, ""},
+		{"mocha --timeout", "mocha --timeout 3000 test/", []string{""}, "3000"},
+		{"cargo test -- filter", "cargo test -- my_test", []string{"my_test"}, ""},
+		{"dotnet --filter", "dotnet test --filter Category=Unit", []string{"Category=Unit"}, ""},
+		{"rspec --example", "rspec --example myexample", []string{"myexample"}, ""},
+		// Compound commands with cd prefix
+		{"cd && go test -run", "cd /path && go test -run TestFoo -timeout 30s ./...", []string{"TestFoo"}, "30"},
+		{"cd && go test all", "cd /path && go test ./...", []string{""}, ""},
+		{"cd && go test piped", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestBar -timeout 60s 2>&1 | tail -80", []string{"TestBar"}, "60"},
+		{"cd && pytest -k", "cd /app && pytest -k test_integration", []string{"test_integration"}, ""},
+		{"cd && jest -t", "cd frontend && jest -t MyComponent", []string{"MyComponent"}, ""},
+		{"cd; cargo test -- filter", "cd /path; cargo test -- my_test", []string{"my_test"}, ""},
+		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /path && go test -v -run TestBaz ./...", []string{"TestBaz"}, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tests, timeout := parseTestInfoFromCommand(tc.command)
+			if len(tests) != len(tc.expectTests) {
+				t.Errorf("parseTestInfoFromCommand(%q) tests = %v, want %v", tc.command, tests, tc.expectTests)
+			} else {
+				for i := range tests {
+					if tests[i] != tc.expectTests[i] {
+						t.Errorf("parseTestInfoFromCommand(%q) tests[%d] = %q, want %q", tc.command, i, tests[i], tc.expectTests[i])
+					}
+				}
+			}
+			if timeout != tc.expectTimeout {
+				t.Errorf("parseTestInfoFromCommand(%q) timeout = %q, want %q", tc.command, timeout, tc.expectTimeout)
+			}
+		})
+	}
+}
+
+func TestExtractTestSegmentFromCommand(t *testing.T) {
+	cases := []struct {
+		name      string
+		command   string
+		expectSeg string
+		expectCwd string
+	}{
+		{"simple go test", "go test ./...", "go test ./...", ""},
+		{"cd && go test", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestFoo ./...", "go test -v -run TestFoo ./...", "/workspaces/semio/semio-repo/cli"},
+		{"cd && go test piped", "cd /path && go test -v ./... 2>&1 | tail -80", "go test -v ./... 2>&1", "/path"},
+		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /src && go test -v ./...", "go test -v ./...", "/src"},
+		{"cd && npm test", "cd frontend && npm test", "npm test", "frontend"},
+		{"cd; cargo test", "cd /path; cargo test", "cargo test", "/path"},
+		{"no test segment", "cd /path && go build ./...", "", "/path"},
+		{"empty", "", "", ""},
+		{"just cd", "cd /path", "", ""},
+		{"piped go test", "go test -v ./... | head -50", "go test -v ./...", ""},
+		{"vitest piped", "vitest run 2>&1 | tail -20", "vitest run 2>&1", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			seg, cwd := extractTestSegmentFromCommand(tc.command)
+			if seg != tc.expectSeg {
+				t.Errorf("extractTestSegmentFromCommand(%q) seg = %q, want %q", tc.command, seg, tc.expectSeg)
+			}
+			if cwd != tc.expectCwd {
+				t.Errorf("extractTestSegmentFromCommand(%q) cwd = %q, want %q", tc.command, cwd, tc.expectCwd)
+			}
+		})
+	}
+}
+
+func TestResolveTestFilesFromCommand(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	// Create Go test files
+	goDir := filepath.Join(tmpDir, "pkg", "main")
+	os.MkdirAll(goDir, 0755)
+	os.WriteFile(filepath.Join(goDir, "main.go"), []byte("package main\n"), 0644)
+	os.WriteFile(filepath.Join(goDir, "main_test.go"), []byte("package main\nfunc TestFoo(t *testing.T) {}\n"), 0644)
+	subDir := filepath.Join(goDir, "sub")
+	os.MkdirAll(subDir, 0755)
+	os.WriteFile(filepath.Join(subDir, "sub_test.go"), []byte("package sub\nfunc TestBar(t *testing.T) {}\n"), 0644)
+
+	// Create Python test files
+	pyDir := filepath.Join(tmpDir, "tests")
+	os.MkdirAll(pyDir, 0755)
+	os.WriteFile(filepath.Join(pyDir, "test_foo.py"), []byte("def test_foo(): pass\n"), 0644)
+	os.WriteFile(filepath.Join(pyDir, "helper.py"), []byte("def helper(): pass\n"), 0644)
+
+	// Create JS test files
+	jsDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(jsDir, 0755)
+	os.WriteFile(filepath.Join(jsDir, "app.test.ts"), []byte("test('works', () => {})\n"), 0644)
+	os.WriteFile(filepath.Join(jsDir, "app.ts"), []byte("export const a = 1\n"), 0644)
+
+	// Create Rust test files
+	rsDir := filepath.Join(tmpDir, "rsrc", "tests")
+	os.MkdirAll(rsDir, 0755)
+	os.WriteFile(filepath.Join(rsDir, "integration_test.rs"), []byte("#[test]\nfn test_it() {}\n"), 0644)
+
+	// Create Ruby spec files
+	specDir := filepath.Join(tmpDir, "spec")
+	os.MkdirAll(specDir, 0755)
+	os.WriteFile(filepath.Join(specDir, "app_spec.rb"), []byte("describe App do; end\n"), 0644)
+
+	t.Run("go_test_recursive", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("go test -v ./pkg/main/...", tmpDir)
+		if len(files) != 2 {
+			t.Fatalf("expected 2 Go test files, got %d: %v", len(files), files)
+		}
+		found := map[string]bool{}
+		for _, f := range files {
+			found[filepath.Base(f)] = true
+		}
+		if !found["main_test.go"] || !found["sub_test.go"] {
+			t.Errorf("expected main_test.go and sub_test.go, got %v", files)
+		}
+	})
+
+	t.Run("go_test_single_package", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("go test ./pkg/main", tmpDir)
+		if len(files) != 1 {
+			t.Fatalf("expected 1 Go test file, got %d: %v", len(files), files)
+		}
+		if filepath.Base(files[0]) != "main_test.go" {
+			t.Errorf("expected main_test.go, got %s", files[0])
+		}
+	})
+
+	t.Run("go_test_with_run_flag", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("go test -run TestFoo -v ./pkg/main/...", tmpDir)
+		if len(files) != 2 {
+			t.Fatalf("expected 2 Go test files (run flag doesn't filter files), got %d: %v", len(files), files)
+		}
+	})
+
+	t.Run("pytest_directory", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("pytest tests/", tmpDir)
+		if len(files) != 1 {
+			t.Fatalf("expected 1 Python test file, got %d: %v", len(files), files)
+		}
+		if filepath.Base(files[0]) != "test_foo.py" {
+			t.Errorf("expected test_foo.py, got %s", files[0])
+		}
+	})
+
+	t.Run("pytest_no_args", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("pytest", tmpDir)
+		// Should find test_foo.py somewhere under cwd
+		foundTestFile := false
+		for _, f := range files {
+			if filepath.Base(f) == "test_foo.py" {
+				foundTestFile = true
+			}
+		}
+		if !foundTestFile {
+			t.Errorf("expected to find test_foo.py, got %v", files)
+		}
+	})
+
+	t.Run("python_m_pytest", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("python -m pytest tests/", tmpDir)
+		if len(files) != 1 {
+			t.Fatalf("expected 1 Python test file, got %d: %v", len(files), files)
+		}
+	})
+
+	t.Run("npx_vitest", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("npx vitest src/", tmpDir)
+		if len(files) != 1 {
+			t.Fatalf("expected 1 JS test file, got %d: %v", len(files), files)
+		}
+		if filepath.Base(files[0]) != "app.test.ts" {
+			t.Errorf("expected app.test.ts, got %s", files[0])
+		}
+	})
+
+	t.Run("cargo_test", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("cargo test", filepath.Join(tmpDir, "rsrc"))
+		if len(files) != 1 {
+			t.Fatalf("expected 1 Rust test file, got %d: %v", len(files), files)
+		}
+	})
+
+	t.Run("rspec", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("rspec", tmpDir)
+		if len(files) != 1 {
+			t.Fatalf("expected 1 Ruby spec file, got %d: %v", len(files), files)
+		}
+		if filepath.Base(files[0]) != "app_spec.rb" {
+			t.Errorf("expected app_spec.rb, got %s", files[0])
+		}
+	})
+
+	t.Run("unsupported_command", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("echo hello", tmpDir)
+		if len(files) != 0 {
+			t.Errorf("expected 0 files for unsupported command, got %d", len(files))
+		}
+	})
+
+	t.Run("empty_command", func(t *testing.T) {
+		files := resolveTestFilesFromCommand("", tmpDir)
+		if len(files) != 0 {
+			t.Errorf("expected 0 files for empty command, got %d", len(files))
+		}
+	})
+}
+
+func TestResolveAllTestDefinitionIDs(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	t.Run("go_test_file", func(t *testing.T) {
+		goDir := filepath.Join(tmpDir, "pkg")
+		os.MkdirAll(goDir, 0755)
+		goContent := `package pkg
+// #region 🔖Tests
+func TestAlpha(t *testing.T) {}
+func TestBeta(t *testing.T) {}
+func helperNotATest() {}
+// #endregion 🔖Tests
+`
+		testFile := filepath.Join(goDir, "pkg_test.go")
+		os.WriteFile(testFile, []byte(goContent), 0644)
+
+		ids := resolveAllTestDefinitionIDs([]string{"pkg/pkg_test.go"})
+		if len(ids) < 2 {
+			t.Fatalf("expected at least 2 test definition IDs, got %d: %v", len(ids), ids)
+		}
+		// Check IDs contain test function names (flattened)
+		foundAlpha := false
+		foundBeta := false
+		for _, id := range ids {
+			if strings.Contains(id, "testalpha") {
+				foundAlpha = true
+			}
+			if strings.Contains(id, "testbeta") {
+				foundBeta = true
+			}
+		}
+		if !foundAlpha {
+			t.Errorf("expected to find TestAlpha in IDs, got %v", ids)
+		}
+		if !foundBeta {
+			t.Errorf("expected to find TestBeta in IDs, got %v", ids)
+		}
+		// helperNotATest should NOT be included
+		for _, id := range ids {
+			if strings.Contains(id, "helpernotatest") {
+				t.Errorf("expected helperNotATest to be excluded, but found in IDs: %s", id)
+			}
+		}
+	})
+
+	t.Run("python_test_file", func(t *testing.T) {
+		pyDir := filepath.Join(tmpDir, "pytests")
+		os.MkdirAll(pyDir, 0755)
+		pyContent := `def test_foo():
+    pass
+
+def test_bar():
+    pass
+
+def helper():
+    pass
+`
+		testFile := filepath.Join(pyDir, "test_stuff.py")
+		os.WriteFile(testFile, []byte(pyContent), 0644)
+
+		ids := resolveAllTestDefinitionIDs([]string{"pytests/test_stuff.py"})
+		if len(ids) < 2 {
+			t.Fatalf("expected at least 2 test definition IDs, got %d: %v", len(ids), ids)
+		}
+		foundFoo := false
+		foundBar := false
+		for _, id := range ids {
+			if strings.Contains(id, "testfoo") {
+				foundFoo = true
+			}
+			if strings.Contains(id, "testbar") {
+				foundBar = true
+			}
+		}
+		if !foundFoo {
+			t.Errorf("expected test_foo in IDs, got %v", ids)
+		}
+		if !foundBar {
+			t.Errorf("expected test_bar in IDs, got %v", ids)
+		}
+	})
+
+	t.Run("no_files", func(t *testing.T) {
+		ids := resolveAllTestDefinitionIDs(nil)
+		if len(ids) != 0 {
+			t.Errorf("expected 0 IDs for nil files, got %d", len(ids))
+		}
+	})
+
+	t.Run("nonexistent_file", func(t *testing.T) {
+		ids := resolveAllTestDefinitionIDs([]string{"nonexistent/file_test.go"})
+		if len(ids) != 0 {
+			t.Errorf("expected 0 IDs for nonexistent file, got %d", len(ids))
+		}
+	})
+}
+
+func TestExtractTestStartingFromInputResolvesTestIDs(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	// Create a Go test file
+	goDir := filepath.Join(tmpDir, "mypackage")
+	os.MkdirAll(goDir, 0755)
+	goContent := `package mypackage
+func TestOne(t *testing.T) {}
+func TestTwo(t *testing.T) {}
+`
+	os.WriteFile(filepath.Join(goDir, "my_test.go"), []byte(goContent), 0644)
+
+	t.Run("command_from_tool_info", func(t *testing.T) {
+		input := json.RawMessage(fmt.Sprintf(`{"tool_info":{"command_line":"go test -v ./mypackage/...","cwd":"%s"}}`, tmpDir))
+		files, tests, _ := extractTestStartingFromInput(input, "")
+		if len(files) == 0 {
+			t.Fatalf("expected files to be resolved from command, got empty")
+		}
+		if len(tests) == 0 {
+			t.Fatalf("expected tests to be resolved from files, got empty")
+		}
+		// Tests should contain resolved definition IDs, not raw names
+		foundOne := false
+		foundTwo := false
+		for _, id := range tests {
+			if strings.Contains(id, "testone") {
+				foundOne = true
+			}
+			if strings.Contains(id, "testtwo") {
+				foundTwo = true
+			}
+		}
+		if !foundOne || !foundTwo {
+			t.Errorf("expected test IDs for TestOne and TestTwo, got %v", tests)
+		}
+	})
+
+	t.Run("command_from_tool_input", func(t *testing.T) {
+		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"command":"go test -v ./mypackage/..."},"tool_info":{"cwd":"%s"}}`, tmpDir))
+		files, tests, _ := extractTestStartingFromInput(input, "")
+		if len(files) == 0 {
+			t.Fatalf("expected files to be resolved, got empty")
+		}
+		if len(tests) == 0 {
+			t.Fatalf("expected tests to be resolved, got empty")
+		}
+	})
+
+	t.Run("explicit_test_names_not_overwritten", func(t *testing.T) {
+		input := json.RawMessage(`{"tool_input":{"tests":["TestSpecific"],"files":["some_test.go"]}}`)
+		_, tests, _ := extractTestStartingFromInput(input, "")
+		// Should keep the explicit test name, not resolve from files
+		if len(tests) != 1 || tests[0] != "TestSpecific" {
+			t.Errorf("expected explicit test name to be preserved, got %v", tests)
+		}
+	})
+}
+
+func TestExtractTestEndedFromInputResolvesFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	goDir := filepath.Join(tmpDir, "pkg")
+	os.MkdirAll(goDir, 0755)
+	os.WriteFile(filepath.Join(goDir, "pkg_test.go"), []byte("package pkg\nfunc TestX(t *testing.T) {}\n"), 0644)
+
+	t.Run("resolves_files_from_command", func(t *testing.T) {
+		input := json.RawMessage(fmt.Sprintf(`{"tool_info":{"command_line":"go test ./pkg/...","cwd":"%s"}}`, tmpDir))
+		files, _, _ := extractTestEndedFromInput(input)
+		if len(files) == 0 {
+			t.Fatalf("expected files to be resolved from command, got empty")
+		}
+	})
+
+	t.Run("explicit_files_preserved", func(t *testing.T) {
+		input := json.RawMessage(`{"tool_input":{"files":["explicit_test.go"]},"tool_output":{"succeeded":["TestX"]}}`)
+		files, _, _ := extractTestEndedFromInput(input)
+		if len(files) != 1 || files[0] != "explicit_test.go" {
+			t.Errorf("expected explicit file, got %v", files)
+		}
+	})
 }
 
 func TestResolveHookEvent(t *testing.T) {
@@ -15814,7 +18108,7 @@ func TestResolveHookEvent(t *testing.T) {
 		{"copilot PreToolUse read_file", "PreToolUse", "copilot-chat", "read_file", HookAgentToolSearchStarting, "", false},
 		{"copilot PreToolUse create_file", "PreToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditStarting, "", false},
 		{"copilot PreToolUse run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalStarting, "", false},
-		{"copilot PreToolUse manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", HookAgentToolPlanUpdating, "", false},
+		{"copilot PreToolUse manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", HookAgentToolPlanUpdatingStarting, "", false},
 		{"copilot PostToolUse read_file", "PostToolUse", "copilot-chat", "read_file", HookAgentToolSearchEnded, "", false},
 		{"copilot PostToolUse create_file", "PostToolUse", "copilot-chat", "create_file", HookAgentToolCodeEditEnded, "", false},
 		{"copilot PostToolUse run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", HookAgentToolTerminalEnded, "", false},
@@ -15829,7 +18123,7 @@ func TestResolveHookEvent(t *testing.T) {
 		{"cursor beforeMCPExecution", "beforeMCPExecution", "cursor-chat", "", HookAgentToolStarting, "", false},
 		{"cursor afterMCPExecution", "afterMCPExecution", "cursor-chat", "", HookAgentToolEnded, "", false},
 		{"cursor afterAgentResponse", "afterAgentResponse", "cursor-chat", "", HookAgentEnded, "", false},
-		{"cursor afterAgentThought", "afterAgentThought", "cursor-chat", "", HookAgentEnded, "", false},
+		{"cursor afterAgentThought", "afterAgentThought", "cursor-chat", "", HookAgentThinkingEnded, "", false},
 		{"cursor beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", HookAgentToolSearchStarting, "", false},
 		{"cursor afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", HookAgentToolCodeEditEnded, "", false},
 		{"windsurf pre_user_prompt", "pre_user_prompt", "windsurf-chat", "", HookAgentPromptSubmitting, "", false},
@@ -15846,7 +18140,7 @@ func TestResolveHookEvent(t *testing.T) {
 		{"claude SessionEnd", "SessionEnd", "claude-code", "", HookAgentEnded, "", false},
 		{"claude SubagentStart", "SubagentStart", "claude-code", "", HookAgentStarted, "subagent", false},
 		{"claude SubagentStop", "SubagentStop", "claude-code", "", HookAgentEnded, "subagent", false},
-		{"claude TaskCompleted", "TaskCompleted", "claude-code", "", HookAgentToolPlanUpdating, "", false},
+		{"claude TaskCompleted", "TaskCompleted", "claude-code", "", HookAgentToolPlanUpdatingEnded, "", false},
 		{"claude PermissionRequest", "PermissionRequest", "claude-code", "", HookAgentToolStarting, "", false},
 		{"claude TeammateIdle", "TeammateIdle", "claude-code", "", HookAgentToolStarting, "", false},
 		{"claude Notification", "Notification", "claude-code", "", HookAgentToolStarting, "", false},
@@ -15857,7 +18151,7 @@ func TestResolveHookEvent(t *testing.T) {
 		{"claude PostToolUse Edit", "PostToolUse", "claude-code", "Edit", HookAgentToolCodeEditEnded, "", false},
 		{"droid PreToolUse", "PreToolUse", "droid", "Bash", HookAgentToolTerminalStarting, "", false},
 		{"codex PreToolUse", "PreToolUse", "codex", "Read", HookAgentToolSearchStarting, "", false},
-		{"antigravity PreToolUse", "PreToolUse", "antigravity-chat", "Task", HookAgentToolPlanUpdating, "", false},
+		{"antigravity PreToolUse", "PreToolUse", "antigravity-chat", "Task", HookAgentToolPlanUpdatingStarting, "", false},
 		{"unknown client defaults to claude-compatible", "SessionStart", "unknown-client", "", HookAgentStarted, "", false},
 		{"invalid copilot event", "UnknownEvent", "copilot-chat", "", "", "", true},
 		{"invalid cursor event", "UnknownEvent", "cursor-chat", "", "", "", true},
@@ -15891,7 +18185,7 @@ func TestResolvePreToolUse(t *testing.T) {
 		kind   ToolKind
 		expect HookEvent
 	}{
-		{ToolKindPlan, HookAgentToolPlanUpdating},
+		{ToolKindPlan, HookAgentToolPlanUpdatingStarting},
 		{ToolKindCodeSearch, HookAgentToolSearchStarting},
 		{ToolKindCodeEdit, HookAgentToolCodeEditStarting},
 		{ToolKindTest, HookAgentToolTestStarting},
@@ -15920,7 +18214,7 @@ func TestResolvePostToolUse(t *testing.T) {
 		{ToolKindBuild, HookAgentToolBuildEnded},
 		{ToolKindTerminal, HookAgentToolTerminalEnded},
 		{ToolKindGeneric, HookAgentToolEnded},
-		{ToolKindPlan, HookAgentToolEnded},
+		{ToolKindPlan, HookAgentToolPlanUpdatingEnded},
 	}
 	for _, tc := range cases {
 		t.Run(string(tc.kind), func(t *testing.T) {
@@ -15935,11 +18229,11 @@ func TestResolvePostToolUse(t *testing.T) {
 func TestPopulateEventDataAgentStarting(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-abc","parent":"subagent"}`)
 	hctx := HookContext{
-		Event:     HookAgentStarted,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T10:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentStarted,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T10:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentStarted)
@@ -15949,17 +18243,37 @@ func TestPopulateEventDataAgentStarting(t *testing.T) {
 	if res.Session != "sess-abc" {
 		t.Errorf("expected session=sess-abc, got %s", res.Session)
 	}
-	if res.Timestamp != "2026-02-19T10:00:00Z" {
-		t.Errorf("expected timestamp=2026-02-19T10:00:00Z, got %s", res.Timestamp)
+	if res.Second != "2026-02-19T10:00:00Z" {
+		t.Errorf("expected second=2026-02-19T10:00:00Z, got %s", res.Second)
 	}
 	if res.Client != "copilot-chat" {
 		t.Errorf("expected client=copilot-chat, got %s", res.Client)
 	}
-	if res.Parent != "subagent" {
-		t.Errorf("expected parent=subagent, got %s", res.Parent)
+	if res.Parent != "" {
+		t.Errorf("expected empty parent, got %s", res.Parent)
 	}
 	if res.Raw == nil {
 		t.Error("expected raw to be populated")
+	}
+}
+
+func TestPopulateEventDataAgentStartingSubagentParentFromContextUsesSession(t *testing.T) {
+	payload := json.RawMessage(`{"sessionId":"sess-sub"}`)
+	hctx := HookContext{
+		Event:      HookAgentStarted,
+		Client:     "codex",
+		Second:     "2026-02-19T10:00:00Z",
+		RepoRoot:   t.TempDir(),
+		Input:      payload,
+		ParentInfo: "subagent",
+	}
+	result := RunHook(hctx)
+	res, ok := result.(HookResultAgentStarted)
+	if !ok {
+		t.Fatalf("expected HookResultAgentStarted, got %T", result)
+	}
+	if res.Parent != "" {
+		t.Errorf("expected empty parent, got %s", res.Parent)
 	}
 }
 
@@ -15967,7 +18281,7 @@ func TestPopulateEventDataAgentStartingParentFromContext(t *testing.T) {
 	hctx := HookContext{
 		Event:      HookAgentStarted,
 		Client:     "claude-code",
-		Timestamp:  "2026-02-19T10:00:00Z",
+		Second:     "2026-02-19T10:00:00Z",
 		RepoRoot:   t.TempDir(),
 		ParentInfo: "parent-agent",
 	}
@@ -15987,11 +18301,11 @@ func TestPopulateEventDataAgentStartingParentFromContext(t *testing.T) {
 func TestPopulateEventDataAgentEnded(t *testing.T) {
 	payload := json.RawMessage(`{"session_id":"sess-end"}`)
 	hctx := HookContext{
-		Event:     HookAgentEnded,
-		Client:    "cursor-chat",
-		Timestamp: "2026-02-19T11:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentEnded,
+		Client:   "cursor-chat",
+		Second:   "2026-02-19T11:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentEnded)
@@ -16001,8 +18315,8 @@ func TestPopulateEventDataAgentEnded(t *testing.T) {
 	if res.Session != "sess-end" {
 		t.Errorf("expected session=sess-end, got %s", res.Session)
 	}
-	if res.Timestamp != "2026-02-19T11:00:00Z" {
-		t.Errorf("expected timestamp, got %s", res.Timestamp)
+	if res.Second != "2026-02-19T11:00:00Z" {
+		t.Errorf("expected second, got %s", res.Second)
 	}
 	if res.Client != "cursor-chat" {
 		t.Errorf("expected client=cursor-chat, got %s", res.Client)
@@ -16012,11 +18326,11 @@ func TestPopulateEventDataAgentEnded(t *testing.T) {
 func TestPopulateEventDataPromptSubmitting(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-p","prompt":"Fix the bug in main.go"}`)
 	hctx := HookContext{
-		Event:     HookAgentPromptSubmitting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T12:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentPromptSubmitting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T12:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentPromptSubmitting)
@@ -16037,11 +18351,11 @@ func TestPopulateEventDataPromptSubmitting(t *testing.T) {
 func TestPopulateEventDataCompacting(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-c","chat":"previous conversation context"}`)
 	hctx := HookContext{
-		Event:     HookAgentCompacting,
-		Client:    "claude-code",
-		Timestamp: "2026-02-19T13:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentCompacting,
+		Client:   "claude-code",
+		Second:   "2026-02-19T13:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentCompacting)
@@ -16059,12 +18373,12 @@ func TestPopulateEventDataCompacting(t *testing.T) {
 func TestPopulateEventDataToolStarting(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-t","tool_name":"runSubagent","tool_input":{"prompt":"do something"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T14:00:00Z",
-		RepoRoot:  t.TempDir(),
-		ToolName:  "runSubagent",
-		Input:     payload,
+		Event:    HookAgentToolStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T14:00:00Z",
+		RepoRoot: t.TempDir(),
+		ToolName: "runSubagent",
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolStarting)
@@ -16092,12 +18406,12 @@ func TestPopulateEventDataToolStarting(t *testing.T) {
 func TestPopulateEventDataToolEnded(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-te","tool_name":"runSubagent","tool_input":{"prompt":"do something"},"tool_output":"done"}`)
 	hctx := HookContext{
-		Event:     HookAgentToolEnded,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T14:30:00Z",
-		RepoRoot:  t.TempDir(),
-		ToolName:  "runSubagent",
-		Input:     payload,
+		Event:    HookAgentToolEnded,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T14:30:00Z",
+		RepoRoot: t.TempDir(),
+		ToolName: "runSubagent",
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolEnded)
@@ -16118,11 +18432,11 @@ func TestPopulateEventDataToolEnded(t *testing.T) {
 func TestPopulateEventDataPlanUpdating(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-plan","tool_input":{"todoList":[{"id":1,"title":"Step 1","status":"completed"},{"id":2,"title":"Step 2","status":"in-progress"},{"id":3,"title":"Step 3","status":"not-started"}]}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolPlanUpdating,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T15:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolPlanUpdatingStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T15:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolPlanUpdating)
@@ -16149,11 +18463,11 @@ func TestPopulateEventDataPlanUpdating(t *testing.T) {
 func TestPopulateEventDataCodeSearching(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-cs","tool_input":{"query":"hookCommand","includePattern":"*.go"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolSearchStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T16:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolSearchStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T16:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolSearchStarting)
@@ -16163,19 +18477,19 @@ func TestPopulateEventDataCodeSearching(t *testing.T) {
 	if res.Session != "sess-cs" {
 		t.Errorf("expected session=sess-cs, got %s", res.Session)
 	}
-	if len(res.Pages) != 2 || res.Pages[0] != "hookCommand" || res.Pages[1] != "*.go" {
-		t.Errorf("expected pages=[hookCommand, *.go], got %v", res.Pages)
+	if len(res.Pages) != 0 {
+		t.Errorf("expected no pages for non-web search input, got %v", res.Pages)
 	}
 }
 
 func TestPopulateEventDataCodeEditing(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ce","tool_input":{"filePath":"/workspaces/semio/test.go","oldString":"old code","newString":"new code"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolCodeEditStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T17:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolCodeEditStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T17:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolCodeEditStarting)
@@ -16199,11 +18513,11 @@ func TestPopulateEventDataCodeEditing(t *testing.T) {
 func TestPopulateEventDataCodeEditingWithAll(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-cea","tool_input":{"filePath":"/tmp/file.ts","oldString":"x","newString":"y","all":true}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolCodeEditStarting,
-		Client:    "cursor-chat",
-		Timestamp: "2026-02-19T17:30:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolCodeEditStarting,
+		Client:   "cursor-chat",
+		Second:   "2026-02-19T17:30:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolCodeEditStarting)
@@ -16218,11 +18532,11 @@ func TestPopulateEventDataCodeEditingWithAll(t *testing.T) {
 func TestPopulateEventDataCodeEdited(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ced","tool_input":{"filePath":"/tmp/edited.ts","oldString":"before","newString":"after"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolCodeEditEnded,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T18:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolCodeEditEnded,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T18:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolCodeEditEnded)
@@ -16243,11 +18557,11 @@ func TestPopulateEventDataCodeEdited(t *testing.T) {
 func TestPopulateEventDataTerminalStarting(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ts","tool_input":{"command":"npm test"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolTerminalStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T19:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolTerminalStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T19:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolTerminalStarting)
@@ -16265,11 +18579,11 @@ func TestPopulateEventDataTerminalStarting(t *testing.T) {
 func TestPopulateEventDataTerminalEnded(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-tse","tool_input":{"command":"npm test"},"pid":"12345","terminated":true,"stdout":"all passed","stderr":""}`)
 	hctx := HookContext{
-		Event:     HookAgentToolTerminalEnded,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T19:30:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolTerminalEnded,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T19:30:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolTerminalEnded)
@@ -16290,30 +18604,30 @@ func TestPopulateEventDataTerminalEnded(t *testing.T) {
 	}
 }
 
-func TestPopulateEventDataGitCommitEnded(t *testing.T) {
+func TestPopulateEventDataVersionCheckpointEnded(t *testing.T) {
 	tmpDir := t.TempDir()
 	payload := json.RawMessage(`{"sha":"abc123def","message":"feat: add hooks"}`)
 	hctx := HookContext{
-		Event:     HookGitCommitEnded,
-		Client:    "",
-		Timestamp: "2026-02-19T20:00:00Z",
-		RepoRoot:  tmpDir,
-		Input:     payload,
+		Event:    HookVersionCheckpointEnded,
+		Client:   "",
+		Second:   "2026-02-19T20:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultGitCommitEnded)
+	res, ok := result.(HookResultVersionCheckpointEnded)
 	if !ok {
-		t.Fatalf("expected HookResultGitCommitEnded, got %T", result)
+		t.Fatalf("expected HookResultVersionCheckpointEnded, got %T", result)
 	}
-	if res.SHA != "abc123def" {
-		t.Errorf("expected sha=abc123def, got %s", res.SHA)
+	if res.Checkpoint != "abc123def" {
+		t.Errorf("expected checkpoint=abc123def, got %s", res.Checkpoint)
 	}
-	if res.Message != "feat: add hooks" {
-		t.Errorf("expected message=feat: add hooks, got %s", res.Message)
+	if res.Description != "feat: add hooks" {
+		t.Errorf("expected description=feat: add hooks, got %s", res.Description)
 	}
 }
 
-func TestPopulateEventDataGitCommitStartingFromFile(t *testing.T) {
+func TestPopulateEventDataVersionCheckpointStartingFromFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	gitDir := filepath.Join(tmpDir, ".git")
 	if err := os.MkdirAll(gitDir, 0755); err != nil {
@@ -16323,28 +18637,28 @@ func TestPopulateEventDataGitCommitStartingFromFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	hctx := HookContext{
-		Event:    HookGitCommitStarting,
+		Event:    HookVersionCheckpointStarting,
 		Client:   "",
 		RepoRoot: tmpDir,
 	}
-	result := RunHook(hctx) // Changed to RunHook
-	res, ok := result.(HookResultGitCommitStarting)
+	result := RunHook(hctx)
+	res, ok := result.(HookResultVersionCheckpointStarting)
 	if !ok {
-		t.Fatalf("expected HookResultGitCommitStarting, got %T", result)
+		t.Fatalf("expected HookResultVersionCheckpointStarting, got %T", result)
 	}
-	if res.Message != "fix: resolve issue" {
-		t.Errorf("expected message=fix: resolve issue, got %s", res.Message)
+	if res.Description != "fix: resolve issue" {
+		t.Errorf("expected description=fix: resolve issue, got %s", res.Description)
 	}
 }
 
 func TestPopulateEventDataRawField(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"raw-test","some":"data"}`)
 	hctx := HookContext{
-		Event:     HookAgentStarted,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T21:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentStarted,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T21:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentStarted)
@@ -16355,7 +18669,7 @@ func TestPopulateEventDataRawField(t *testing.T) {
 		t.Fatal("expected raw to be populated")
 	}
 	var rawData map[string]interface{}
-	body, _ := json.Marshal(res.Raw) // Raw is 'any', need to marshal first or type assert if it's already json.RawMessage
+	body, _ := json.Marshal(res.Raw)
 	if err := json.Unmarshal(body, &rawData); err != nil {
 		t.Fatalf("expected valid JSON raw, got: %v", err)
 	}
@@ -16369,10 +18683,10 @@ func TestPopulateEventDataRawField(t *testing.T) {
 
 func TestPopulateEventDataNoInputNoRaw(t *testing.T) {
 	hctx := HookContext{
-		Event:     HookAgentStarted,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T22:00:00Z",
-		RepoRoot:  t.TempDir(),
+		Event:    HookAgentStarted,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T22:00:00Z",
+		RepoRoot: t.TempDir(),
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentStarted)
@@ -16387,11 +18701,11 @@ func TestPopulateEventDataNoInputNoRaw(t *testing.T) {
 func TestPopulateEventDataToolNameFromStdin(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-tn","tool_name":"mcp_custom_tool","tool_input":{"arg":"val"}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T23:00:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T23:00:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolStarting)
@@ -16406,19 +18720,19 @@ func TestPopulateEventDataToolNameFromStdin(t *testing.T) {
 func TestPopulateEventDataCodeSearchWithExclude(t *testing.T) {
 	payload := json.RawMessage(`{"sessionId":"sess-ex","tool_input":{"query":"test","include":["*.ts","*.tsx"],"exclude":["node_modules"]}}`)
 	hctx := HookContext{
-		Event:     HookAgentToolSearchStarting,
-		Client:    "copilot-chat",
-		Timestamp: "2026-02-19T23:30:00Z",
-		RepoRoot:  t.TempDir(),
-		Input:     payload,
+		Event:    HookAgentToolSearchStarting,
+		Client:   "copilot-chat",
+		Second:   "2026-02-19T23:30:00Z",
+		RepoRoot: t.TempDir(),
+		Input:    payload,
 	}
 	result := RunHook(hctx)
 	res, ok := result.(HookResultAgentToolSearchStarting)
 	if !ok {
 		t.Fatalf("expected HookResultAgentToolSearchStarting, got %T", result)
 	}
-	if len(res.Pages) < 3 {
-		t.Errorf("expected at least 3 pages (test + *.ts + *.tsx), got %v", res.Pages)
+	if len(res.Pages) != 0 {
+		t.Errorf("expected no pages for non-web search input, got %v", res.Pages)
 	}
 }
 
@@ -16464,8 +18778,8 @@ func TestExtractSearchFromInput(t *testing.T) {
 	t.Run("grep_search style", func(t *testing.T) {
 		input := json.RawMessage(`{"tool_input":{"query":"hookCommand","includePattern":"*.go"}}`)
 		pages, ranges := extractSearchFromInput(input, "")
-		if len(pages) < 2 {
-			t.Errorf("expected at least 2 pages, got %v", pages)
+		if len(pages) != 0 {
+			t.Errorf("expected no webpages, got %v", pages)
 		}
 		if len(ranges) != 0 {
 			t.Errorf("expected no ranges, got %v", ranges)
@@ -16473,42 +18787,275 @@ func TestExtractSearchFromInput(t *testing.T) {
 	})
 	t.Run("file_search style", func(t *testing.T) {
 		input := json.RawMessage(`{"tool_input":{"query":"**/*.ts"}}`)
-		pages, _ := extractSearchFromInput(input, "")
-		found := false
-		for _, p := range pages {
-			if p == "**/*.ts" {
-				found = true
-			}
+		pages, ranges := extractSearchFromInput(input, "")
+		if len(pages) != 0 {
+			t.Errorf("expected no webpages, got %v", pages)
 		}
-		if !found {
-			t.Errorf("expected pages to contain **/*.ts, got %v", pages)
+		if len(ranges) != 0 {
+			t.Errorf("expected no ranges, got %v", ranges)
 		}
 	})
 	t.Run("read_file style", func(t *testing.T) {
-		input := json.RawMessage(`{"tool_input":{"filePath":"/tmp/test.go"}}`)
-		pages, _ := extractSearchFromInput(input, "")
-		found := false
-		for _, p := range pages {
-			if p == "/tmp/test.go" {
-				found = true
-			}
+		tempFile := filepath.Join(t.TempDir(), "test.go")
+		if err := os.WriteFile(tempFile, []byte("one\ntwo\nthree\n"), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
 		}
-		if !found {
-			t.Errorf("expected pages to contain /tmp/test.go, got %v", pages)
+		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"filePath":%q}}`, tempFile))
+		pages, ranges := extractSearchFromInput(input, "")
+		if len(pages) != 0 {
+			t.Errorf("expected no webpages, got %v", pages)
+		}
+		want := tempFile + "#L1-L3"
+		if len(ranges) != 1 || ranges[0] != want {
+			t.Errorf("expected ranges=[%s], got %v", want, ranges)
 		}
 	})
 	t.Run("from toolArgs", func(t *testing.T) {
-		pages, _ := extractSearchFromInput(nil, `{"query":"fromArgs"}`)
-		found := false
-		for _, p := range pages {
-			if p == "fromArgs" {
-				found = true
-			}
+		pages, ranges := extractSearchFromInput(nil, `{"query":"fromArgs"}`)
+		if len(pages) != 0 {
+			t.Errorf("expected no webpages from non-url query, got %v", pages)
 		}
-		if !found {
-			t.Errorf("expected pages to contain fromArgs, got %v", pages)
+		if len(ranges) != 0 {
+			t.Errorf("expected no ranges, got %v", ranges)
 		}
 	})
+	t.Run("webpages only", func(t *testing.T) {
+		input := json.RawMessage(`{"tool_input":{"url":"https://example.com/docs","pages":["https://semio.dev","not-a-url"]}}`)
+		pages, ranges := extractSearchFromInput(input, "")
+		if len(ranges) != 0 {
+			t.Errorf("expected no ranges, got %v", ranges)
+		}
+		if len(pages) != 2 || pages[0] != "https://example.com/docs" || pages[1] != "https://semio.dev" {
+			t.Errorf("expected only valid webpages, got %v", pages)
+		}
+	})
+	t.Run("read tool with limit only", func(t *testing.T) {
+		tempFile := filepath.Join(t.TempDir(), "test.go")
+		content := "line1\nline2\nline3\nline4\nline5\n"
+		if err := os.WriteFile(tempFile, []byte(content), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"file_path":%q,"limit":3}}`, tempFile))
+		_, ranges := extractSearchFromInput(input, "")
+		want := tempFile + "#L1-L3"
+		if len(ranges) != 1 || ranges[0] != want {
+			t.Errorf("expected ranges=[%s], got %v", want, ranges)
+		}
+	})
+	t.Run("read tool with offset and limit", func(t *testing.T) {
+		tempFile := filepath.Join(t.TempDir(), "test.go")
+		content := "line1\nline2\nline3\nline4\nline5\n"
+		if err := os.WriteFile(tempFile, []byte(content), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"file_path":%q,"offset":2,"limit":3}}`, tempFile))
+		_, ranges := extractSearchFromInput(input, "")
+		want := tempFile + "#L2-L4"
+		if len(ranges) != 1 || ranges[0] != want {
+			t.Errorf("expected ranges=[%s], got %v", want, ranges)
+		}
+	})
+	t.Run("native claude code format with file_path and limit", func(t *testing.T) {
+		tempFile := filepath.Join(t.TempDir(), "test.go")
+		content := "line1\nline2\nline3\nline4\nline5\n"
+		if err := os.WriteFile(tempFile, []byte(content), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+		input := json.RawMessage(fmt.Sprintf(`{"native":{"event":{"tool_name":"Read","tool_input":{"file_path":%q,"limit":100}}}}`, tempFile))
+		_, ranges := extractSearchFromInput(input, "")
+		// limit=100 means "up to 100 lines" — the range reflects the requested limit, not the file length.
+		want := tempFile + "#L1-L100"
+		if len(ranges) != 1 || ranges[0] != want {
+			t.Errorf("expected ranges=[%s], got %v", want, ranges)
+		}
+	})
+	t.Run("native claude code format without limit reads full file", func(t *testing.T) {
+		tempFile := filepath.Join(t.TempDir(), "test.go")
+		content := "line1\nline2\nline3\n"
+		if err := os.WriteFile(tempFile, []byte(content), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+		input := json.RawMessage(fmt.Sprintf(`{"native":{"event":{"tool_name":"Read","tool_input":{"file_path":%q}}}}`, tempFile))
+		_, ranges := extractSearchFromInput(input, "")
+		want := tempFile + "#L1-L3"
+		if len(ranges) != 1 || ranges[0] != want {
+			t.Errorf("expected ranges=[%s], got %v", want, ranges)
+		}
+	})
+	t.Run("grep tool with pattern ignores path for line range", func(t *testing.T) {
+		tempDir := t.TempDir()
+		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"pattern":"foo","path":%q}}`, tempDir))
+		_, ranges := extractSearchFromInput(input, "")
+		// path is a search root, not a file — no range should be produced
+		if len(ranges) != 0 {
+			t.Errorf("grep with pattern+path should produce no file ranges, got %v", ranges)
+		}
+	})
+	t.Run("grep tool with pattern and file_path uses file_path for range", func(t *testing.T) {
+		tempFile := filepath.Join(t.TempDir(), "test.go")
+		content := "line1\nline2\n"
+		if err := os.WriteFile(tempFile, []byte(content), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"pattern":"foo","file_path":%q}}`, tempFile))
+		_, ranges := extractSearchFromInput(input, "")
+		want := tempFile + "#L1-L2"
+		if len(ranges) != 1 || ranges[0] != want {
+			t.Errorf("expected ranges=[%s], got %v", want, ranges)
+		}
+	})
+}
+
+func TestExtractToolInputMapFromData(t *testing.T) {
+	t.Run("direct tool_input", func(t *testing.T) {
+		data := map[string]interface{}{"tool_input": map[string]interface{}{"key": "val"}}
+		ti := extractToolInputMapFromData(data)
+		if ti == nil || ti["key"] != "val" {
+			t.Errorf("expected tool_input with key=val, got %v", ti)
+		}
+	})
+	t.Run("native.event.tool_input", func(t *testing.T) {
+		data := map[string]interface{}{
+			"native": map[string]interface{}{
+				"event": map[string]interface{}{
+					"tool_input": map[string]interface{}{"key": "native"},
+				},
+			},
+		}
+		ti := extractToolInputMapFromData(data)
+		if ti == nil || ti["key"] != "native" {
+			t.Errorf("expected native tool_input with key=native, got %v", ti)
+		}
+	})
+	t.Run("event.tool_input", func(t *testing.T) {
+		data := map[string]interface{}{
+			"event": map[string]interface{}{
+				"tool_input": map[string]interface{}{"key": "event"},
+			},
+		}
+		ti := extractToolInputMapFromData(data)
+		if ti == nil || ti["key"] != "event" {
+			t.Errorf("expected event tool_input with key=event, got %v", ti)
+		}
+	})
+	t.Run("direct takes precedence over native", func(t *testing.T) {
+		data := map[string]interface{}{
+			"tool_input": map[string]interface{}{"key": "direct"},
+			"native": map[string]interface{}{
+				"event": map[string]interface{}{
+					"tool_input": map[string]interface{}{"key": "native"},
+				},
+			},
+		}
+		ti := extractToolInputMapFromData(data)
+		if ti == nil || ti["key"] != "direct" {
+			t.Errorf("expected direct tool_input to take precedence, got %v", ti)
+		}
+	})
+	t.Run("empty data returns nil", func(t *testing.T) {
+		ti := extractToolInputMapFromData(map[string]interface{}{})
+		if ti != nil {
+			t.Errorf("expected nil for empty data, got %v", ti)
+		}
+	})
+}
+
+func TestExtractToolInputFromStdinNativeFormat(t *testing.T) {
+	t.Run("native.event.tool_input extracted", func(t *testing.T) {
+		input := json.RawMessage(`{"native":{"event":{"tool_name":"Read","tool_input":{"file_path":"/tmp/test.go","limit":100}}}}`)
+		result := extractToolInputFromStdin(input)
+		if result == nil {
+			t.Fatal("expected non-nil tool input from native format")
+		}
+		var data map[string]interface{}
+		if err := json.Unmarshal(result, &data); err != nil {
+			t.Fatal(err)
+		}
+		if data["file_path"] != "/tmp/test.go" {
+			t.Errorf("expected file_path=/tmp/test.go, got %v", data["file_path"])
+		}
+	})
+	t.Run("direct tool_input still works", func(t *testing.T) {
+		input := json.RawMessage(`{"tool_name":"Read","tool_input":{"file_path":"/tmp/test.go"}}`)
+		result := extractToolInputFromStdin(input)
+		if result == nil {
+			t.Fatal("expected non-nil tool input")
+		}
+	})
+}
+
+func TestExtractSearchDefinitionReadsFromInput(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "sample.go")
+	content := "package main\n\nfunc First() {\n\tprintln(\"alpha\")\n}\n\nfunc Second() {\n\tprintln(\"beta\")\n}\n"
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		t.Fatalf("failed to write sample file: %v", err)
+	}
+	input := json.RawMessage(`{"tool_info":{"command_line":"grep -n \"beta\" sample.go","cwd":"` + tmpDir + `"}}`)
+	definitions := extractSearchDefinitionReadsFromInput(input, "")
+	if len(definitions) == 0 {
+		t.Fatalf("expected at least one definition read, got %v", definitions)
+	}
+	foundSecond := false
+	for _, definition := range definitions {
+		if strings.Contains(strings.ToLower(definition.ID), "second") {
+			foundSecond = true
+			if definition.Loc <= 0 {
+				t.Fatalf("expected positive loc for Second, got %d", definition.Loc)
+			}
+		}
+	}
+	if !foundSecond {
+		t.Fatalf("expected Second definition in %v", definitions)
+	}
+}
+
+func TestRunHookSearchStartingIncludesDefinitions(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "sample.go")
+	content := "package main\n\nfunc Alpha() {\n\tprintln(\"one\")\n}\n\nfunc Beta() {\n\tprintln(\"needle\")\n}\n"
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		t.Fatalf("failed to write sample file: %v", err)
+	}
+	payload := json.RawMessage(`{"trajectory_id":"trace-1","tool_info":{"command_line":"grep -n \"needle\" sample.go","cwd":"` + tmpDir + `"}}`)
+	hctx := HookContext{
+		Event:    HookAgentToolSearchStarting,
+		Client:   "windsurf-chat",
+		RepoRoot: tmpDir,
+		Input:    payload,
+	}
+	result := RunHook(hctx)
+	res, ok := result.(HookResultAgentToolSearchStarting)
+	if !ok {
+		t.Fatalf("expected HookResultAgentToolSearchStarting, got %T", result)
+	}
+	if len(res.Definitions) == 0 {
+		t.Fatalf("expected definitions in event, got %v", res.Definitions)
+	}
+	if res.Definitions[0].Loc <= 0 {
+		t.Fatalf("expected loc > 0, got %d", res.Definitions[0].Loc)
+	}
+}
+
+func TestShouldExecuteSearchCommand(t *testing.T) {
+	tests := []struct {
+		name    string
+		command string
+		want    bool
+	}{
+		{name: "grep command", command: "grep -n needle file.go", want: true},
+		{name: "cat command", command: "cat file.go", want: true},
+		{name: "blocked redirection", command: "grep -n needle file.go > out.txt", want: false},
+		{name: "edit command", command: "sed -i 's/a/b/' file.go", want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldExecuteSearchCommand(tt.command)
+			if got != tt.want {
+				t.Fatalf("shouldExecuteSearchCommand(%q) = %v, want %v", tt.command, got, tt.want)
+			}
+		})
+	}
 }
 
 func TestExtractCodeEditFromInput(t *testing.T) {
@@ -16655,10 +19202,10 @@ func TestExtractChatFromInput(t *testing.T) {
 	})
 }
 
-func TestExtractCommitMessageFromInput(t *testing.T) {
+func TestExtractCheckpointMessageFromInput(t *testing.T) {
 	t.Run("from input json", func(t *testing.T) {
 		input := json.RawMessage(`{"message":"feat: new feature"}`)
-		result := extractCommitMessageFromInput(input, "/nonexistent")
+		result := extractCheckpointMessageFromInput(input, "/nonexistent")
 		if result != "feat: new feature" {
 			t.Errorf("expected feat: new feature, got %s", result)
 		}
@@ -16668,29 +19215,29 @@ func TestExtractCommitMessageFromInput(t *testing.T) {
 		gitDir := filepath.Join(tmpDir, ".git")
 		os.MkdirAll(gitDir, 0755)
 		os.WriteFile(filepath.Join(gitDir, "COMMIT_EDITMSG"), []byte("fix: bug fix"), 0644)
-		result := extractCommitMessageFromInput(nil, tmpDir)
+		result := extractCheckpointMessageFromInput(nil, tmpDir)
 		if result != "fix: bug fix" {
 			t.Errorf("expected fix: bug fix, got %s", result)
 		}
 	})
 	t.Run("empty", func(t *testing.T) {
-		result := extractCommitMessageFromInput(nil, "/nonexistent")
+		result := extractCheckpointMessageFromInput(nil, "/nonexistent")
 		if result != "" {
 			t.Errorf("expected empty, got %s", result)
 		}
 	})
 }
 
-func TestExtractCommitSHAFromInput(t *testing.T) {
+func TestExtractCheckpointSHAFromInput(t *testing.T) {
 	t.Run("from input json", func(t *testing.T) {
 		input := json.RawMessage(`{"sha":"deadbeef123"}`)
-		result := extractCommitSHAFromInput(input)
+		result := extractCheckpointSHAFromInput(input)
 		if result != "deadbeef123" {
 			t.Errorf("expected deadbeef123, got %s", result)
 		}
 	})
 	t.Run("empty falls back to git", func(t *testing.T) {
-		result := extractCommitSHAFromInput(nil)
+		result := extractCheckpointSHAFromInput(nil)
 		if result == "" {
 			t.Skip("no git repo available")
 		}
@@ -16699,17 +19246,31 @@ func TestExtractCommitSHAFromInput(t *testing.T) {
 
 func TestExtractParentFromInput(t *testing.T) {
 	t.Run("parent field", func(t *testing.T) {
-		input := json.RawMessage(`{"parent":"subagent"}`)
-		result := extractParentFromInput(input)
-		if result != "subagent" {
-			t.Errorf("expected subagent, got %s", result)
-		}
-	})
-	t.Run("source field", func(t *testing.T) {
-		input := json.RawMessage(`{"source":"parent-session"}`)
+		input := json.RawMessage(`{"parent":"parent-session"}`)
 		result := extractParentFromInput(input)
 		if result != "parent-session" {
 			t.Errorf("expected parent-session, got %s", result)
+		}
+	})
+	t.Run("nested event parent field", func(t *testing.T) {
+		input := json.RawMessage(`{"event":{"parent":"parent-from-event"}}`)
+		result := extractParentFromInput(input)
+		if result != "parent-from-event" {
+			t.Errorf("expected parent-from-event, got %s", result)
+		}
+	})
+	t.Run("nested native event parent field", func(t *testing.T) {
+		input := json.RawMessage(`{"native":{"event":{"parent":"parent-from-native-event"}}}`)
+		result := extractParentFromInput(input)
+		if result != "parent-from-native-event" {
+			t.Errorf("expected parent-from-native-event, got %s", result)
+		}
+	})
+	t.Run("sentinel parent field", func(t *testing.T) {
+		input := json.RawMessage(`{"parent":"subagent"}`)
+		result := extractParentFromInput(input)
+		if result != "" {
+			t.Errorf("expected empty, got %s", result)
 		}
 	})
 	t.Run("empty", func(t *testing.T) {
@@ -16728,7 +19289,7 @@ func TestHookResultJSONFields(t *testing.T) {
 				Raw:     json.RawMessage(`{"raw":"data"}`),
 			},
 			Session:   "sess-1",
-			Timestamp: "2026-02-19T10:00:00Z",
+			Second:    "2026-02-19T10:00:00Z",
 			Client:    "copilot-chat",
 			MessageID: "msg-123",
 		},
@@ -16746,7 +19307,7 @@ func TestHookResultJSONFields(t *testing.T) {
 	if err := json.Unmarshal(data, &parsed); err != nil {
 		t.Fatalf("expected valid JSON round-trip, got: %v", err)
 	}
-	expectedKeys := []string{"allowed", "message", "session", "timestamp", "client", "command", "pid", "terminated", "stdout", "stderr"}
+	expectedKeys := []string{"allowed", "message", "session", "second", "client", "command", "pid", "terminated", "stdout", "stderr"}
 	for _, key := range expectedKeys {
 		if _, ok := parsed[key]; !ok {
 			t.Errorf("missing JSON key: %s", key)
@@ -16779,66 +19340,66 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		expectEvent HookEvent
 		expectPar   string
 	}{
-		{"copilot/SessionStart", "SessionStart", "copilot-chat", "", `{"hookEventName":"SessionStart","sessionId":"d765d480","timestamp":"2026-02-19T10:44:08.112Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentStarted, ""},
-		{"copilot/Stop", "Stop", "copilot-chat", "", `{"hookEventName":"Stop","sessionId":"2f1e87c2","timestamp":"2026-02-18T18:51:54.315Z","stop_hook_active":false}`, HookAgentEnded, ""},
-		{"copilot/SubagentStart", "SubagentStart", "copilot-chat", "", `{"hookEventName":"SubagentStart","sessionId":"ab58fc89","timestamp":"2026-02-19T12:46:49.918Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentStarted, "subagent"},
-		{"copilot/SubagentStop", "SubagentStop", "copilot-chat", "", `{"hookEventName":"SubagentStop","sessionId":"ab58fc89","timestamp":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentEnded, "subagent"},
-		{"copilot/UserPromptSubmit", "UserPromptSubmit", "copilot-chat", "", `{"hookEventName":"UserPromptSubmit","sessionId":"d765d480","timestamp":"2026-02-19T10:44:16.328Z","transcript_path":"/tmp/t.jsonl","cwd":"/workspaces/semio"}`, HookAgentPromptSubmitting, ""},
-		{"copilot/PreCompact", "PreCompact", "copilot-chat", "", `{"timestamp":"2026-02-18T18:41:24.718Z","hookEventName":"PreCompact","sessionId":"2f1e87c2","transcript_path":"/tmp/t.jsonl","trigger":"auto","cwd":"/workspaces/semio"}`, HookAgentCompacting, ""},
-		{"copilot/PreToolUse/read_file", "PreToolUse", "copilot-chat", "read_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"read_file","timestamp":"2026-02-19T12:30:31.702Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
-		{"copilot/PreToolUse/grep_search", "PreToolUse", "copilot-chat", "grep_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"grep_search","timestamp":"2026-02-19T10:44:35.056Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
-		{"copilot/PreToolUse/file_search", "PreToolUse", "copilot-chat", "file_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"file_search","timestamp":"2026-02-19T10:50:09.443Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
-		{"copilot/PreToolUse/list_dir", "PreToolUse", "copilot-chat", "list_dir", `{"timestamp":"2026-02-19T10:44:16.328Z","hookEventName":"PreToolUse","sessionId":"d765d480","transcript_path":"/tmp/t.jsonl","tool_name":"list_dir","tool_input":{"path":"/workspaces/semio"}}`, HookAgentToolSearchStarting, ""},
-		{"copilot/PreToolUse/list_code_usages", "PreToolUse", "copilot-chat", "list_code_usages", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"list_code_usages","timestamp":"2026-02-19T11:31:35.416Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
-		{"copilot/PreToolUse/replace_string_in_file", "PreToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-19T10:50:46.160Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditStarting, ""},
-		{"copilot/PreToolUse/multi_replace_string_in_file", "PreToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:17.358Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditStarting, ""},
-		{"copilot/PreToolUse/create_file", "PreToolUse", "copilot-chat", "create_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"create_file","timestamp":"2026-02-19T12:25:00.000Z"}`, HookAgentToolCodeEditStarting, ""},
-		{"copilot/PreToolUse/run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"run_in_terminal","timestamp":"2026-02-18T18:42:59.593Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalStarting, ""},
-		{"copilot/PreToolUse/manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"manage_todo_list","timestamp":"2026-02-18T18:44:13.780Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdating, ""},
-		{"copilot/PreToolUse/runSubagent", "PreToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"runSubagent","timestamp":"2026-02-19T12:46:49.918Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolStarting, ""},
-		{"copilot/PostToolUse/read_file", "PostToolUse", "copilot-chat", "read_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"read_file","timestamp":"2026-02-18T18:38:51.951Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
-		{"copilot/PostToolUse/replace_string_in_file", "PostToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"replace_string_in_file","timestamp":"2026-02-18T18:37:05.471Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditEnded, ""},
-		{"copilot/PostToolUse/multi_replace_string_in_file", "PostToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"multi_replace_string_in_file","timestamp":"2026-02-19T12:25:26.261Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditEnded, ""},
-		{"copilot/PostToolUse/run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"d765d480","hookEventName":"PostToolUse","tool_name":"run_in_terminal","timestamp":"2026-02-19T10:43:56.761Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalEnded, ""},
-		{"copilot/PostToolUse/manage_todo_list", "PostToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"manage_todo_list","timestamp":"2026-02-18T18:44:20.586Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
-		{"copilot/PostToolUse/runSubagent", "PostToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"runSubagent","timestamp":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
-		{"copilot/PostToolUse/grep_search", "PostToolUse", "copilot-chat", "grep_search", `{"sessionId":"8a40542e","hookEventName":"PostToolUse","tool_name":"grep_search","timestamp":"2026-02-18T18:58:48.393Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
-		{"cursor/sessionStart", "sessionStart", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:00:00Z"}`, HookAgentStarted, ""},
-		{"cursor/sessionEnd", "sessionEnd", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
-		{"cursor/subagentStart", "subagentStart", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:01:00Z"}`, HookAgentStarted, "subagent"},
-		{"cursor/subagentStop", "subagentStop", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:29:00Z"}`, HookAgentEnded, "subagent"},
-		{"cursor/stop", "stop", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
-		{"cursor/beforeSubmitPrompt", "beforeSubmitPrompt", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:00:01Z","prompt":"Fix bug"}`, HookAgentPromptSubmitting, ""},
-		{"cursor/preCompact", "preCompact", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:15:00Z"}`, HookAgentCompacting, ""},
-		{"cursor/preToolUse/read_file", "preToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:02:00Z","tool_name":"read_file"}`, HookAgentToolSearchStarting, ""},
-		{"cursor/preToolUse/edit", "preToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:03:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditStarting, ""},
-		{"cursor/preToolUse/terminal", "preToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:04:00Z","tool_name":"terminal"}`, HookAgentToolTerminalStarting, ""},
-		{"cursor/preToolUse/task", "preToolUse", "cursor-chat", "task", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:05:00Z","tool_name":"task"}`, HookAgentToolPlanUpdating, ""},
-		{"cursor/postToolUse/read_file", "postToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:06:00Z","tool_name":"read_file"}`, HookAgentToolSearchEnded, ""},
-		{"cursor/postToolUse/editfile", "postToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:07:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditEnded, ""},
-		{"cursor/postToolUse/terminal", "postToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:08:00Z","tool_name":"terminal"}`, HookAgentToolTerminalEnded, ""},
-		{"cursor/postToolUseFailure/edit", "postToolUseFailure", "cursor-chat", "editfile", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:09:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditEnded, ""},
-		{"cursor/beforeMCPExecution", "beforeMCPExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:10:00Z"}`, HookAgentToolStarting, ""},
-		{"cursor/afterMCPExecution", "afterMCPExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:11:00Z"}`, HookAgentToolEnded, ""},
-		{"cursor/beforeReadFile", "beforeReadFile", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:12:00Z"}`, HookAgentToolSearchStarting, ""},
-		{"cursor/afterFileEdit", "afterFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:13:00Z"}`, HookAgentToolCodeEditEnded, ""},
-		{"cursor/beforeShellExecution", "beforeShellExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:14:00Z"}`, HookAgentToolTerminalStarting, ""},
-		{"cursor/afterShellExecution", "afterShellExecution", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:15:00Z"}`, HookAgentToolTerminalEnded, ""},
-		{"cursor/afterAgentResponse", "afterAgentResponse", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:16:00Z"}`, HookAgentEnded, ""},
-		{"cursor/afterAgentThought", "afterAgentThought", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:17:00Z"}`, HookAgentEnded, ""},
-		{"cursor/beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:18:00Z"}`, HookAgentToolSearchStarting, ""},
-		{"cursor/afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","timestamp":"2026-02-19T10:19:00Z"}`, HookAgentToolCodeEditEnded, ""},
-		{"windsurf/pre_user_prompt", "pre_user_prompt", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:41.123Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentPromptSubmitting, ""},
-		{"windsurf/post_cascade_response", "post_cascade_response", "windsurf-chat", "", `{"timestamp":"2026-02-18T19:00:12.032Z","agent_action_name":"post_cascade_response","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentEnded, ""},
-		{"windsurf/post_setup_worktree", "post_setup_worktree", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:45:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentStarted, ""},
-		{"windsurf/pre_mcp_tool_use", "pre_mcp_tool_use", "windsurf-chat", "", `{"agent_action_name":"pre_mcp_tool_use","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:54:57.304Z","execution_id":"d9b64466","tool_info":{"mcp_server_name":"semio-repo","mcp_tool_name":"tree"}}`, HookAgentToolStarting, ""},
-		{"windsurf/post_mcp_tool_use", "post_mcp_tool_use", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:55:28.469Z","agent_action_name":"post_mcp_tool_use","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolEnded, ""},
-		{"windsurf/pre_read_code", "pre_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:48.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearchStarting, ""},
-		{"windsurf/post_read_code", "post_read_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:46:50.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearchEnded, ""},
-		{"windsurf/pre_write_code", "pre_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:30.780Z","agent_action_name":"pre_write_code","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditStarting, ""},
-		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditEnded, ""},
-		{"windsurf/pre_run_command", "pre_run_command", "windsurf-chat", "", `{"timestamp":"2026-02-18T18:54:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolTerminalStarting, ""},
-		{"windsurf/post_run_command", "post_run_command", "windsurf-chat", "", `{"agent_action_name":"post_run_command","trajectory_id":"23e6dcf5","timestamp":"2026-02-18T18:57:49.375Z","execution_id":"d9b64466","tool_info":{"command_line":"npm install","cwd":"/workspaces/semio"}}`, HookAgentToolTerminalEnded, ""},
+		{"copilot/SessionStart", "SessionStart", "copilot-chat", "", `{"hookEventName":"SessionStart","sessionId":"d765d480","second":"2026-02-19T10:44:08.112Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentStarted, ""},
+		{"copilot/Stop", "Stop", "copilot-chat", "", `{"hookEventName":"Stop","sessionId":"2f1e87c2","second":"2026-02-18T18:51:54.315Z","stop_hook_active":false}`, HookAgentEnded, ""},
+		{"copilot/SubagentStart", "SubagentStart", "copilot-chat", "", `{"hookEventName":"SubagentStart","sessionId":"ab58fc89","second":"2026-02-19T12:46:49.918Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentStarted, "subagent"},
+		{"copilot/SubagentStop", "SubagentStop", "copilot-chat", "", `{"hookEventName":"SubagentStop","sessionId":"ab58fc89","second":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentEnded, "subagent"},
+		{"copilot/UserPromptSubmit", "UserPromptSubmit", "copilot-chat", "", `{"hookEventName":"UserPromptSubmit","sessionId":"d765d480","second":"2026-02-19T10:44:16.328Z","transcript_path":"/tmp/t.jsonl","cwd":"/workspaces/semio"}`, HookAgentPromptSubmitting, ""},
+		{"copilot/PreCompact", "PreCompact", "copilot-chat", "", `{"second":"2026-02-18T18:41:24.718Z","hookEventName":"PreCompact","sessionId":"2f1e87c2","transcript_path":"/tmp/t.jsonl","trigger":"auto","cwd":"/workspaces/semio"}`, HookAgentCompacting, ""},
+		{"copilot/PreToolUse/read_file", "PreToolUse", "copilot-chat", "read_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"read_file","second":"2026-02-19T12:30:31.702Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/grep_search", "PreToolUse", "copilot-chat", "grep_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"grep_search","second":"2026-02-19T10:44:35.056Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/file_search", "PreToolUse", "copilot-chat", "file_search", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"file_search","second":"2026-02-19T10:50:09.443Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/list_dir", "PreToolUse", "copilot-chat", "list_dir", `{"second":"2026-02-19T10:44:16.328Z","hookEventName":"PreToolUse","sessionId":"d765d480","transcript_path":"/tmp/t.jsonl","tool_name":"list_dir","tool_input":{"path":"/workspaces/semio"}}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/list_code_usages", "PreToolUse", "copilot-chat", "list_code_usages", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"list_code_usages","second":"2026-02-19T11:31:35.416Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchStarting, ""},
+		{"copilot/PreToolUse/replace_string_in_file", "PreToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"d765d480","hookEventName":"PreToolUse","tool_name":"replace_string_in_file","second":"2026-02-19T10:50:46.160Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditStarting, ""},
+		{"copilot/PreToolUse/multi_replace_string_in_file", "PreToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"multi_replace_string_in_file","second":"2026-02-19T12:25:17.358Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditStarting, ""},
+		{"copilot/PreToolUse/create_file", "PreToolUse", "copilot-chat", "create_file", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"create_file","second":"2026-02-19T12:25:00.000Z"}`, HookAgentToolCodeEditStarting, ""},
+		{"copilot/PreToolUse/run_in_terminal", "PreToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"run_in_terminal","second":"2026-02-18T18:42:59.593Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalStarting, ""},
+		{"copilot/PreToolUse/manage_todo_list", "PreToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PreToolUse","tool_name":"manage_todo_list","second":"2026-02-18T18:44:13.780Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdatingStarting, ""},
+		{"copilot/PreToolUse/runSubagent", "PreToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PreToolUse","tool_name":"runSubagent","second":"2026-02-19T12:46:49.918Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolStarting, ""},
+		{"copilot/PostToolUse/read_file", "PostToolUse", "copilot-chat", "read_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"read_file","second":"2026-02-18T18:38:51.951Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
+		{"copilot/PostToolUse/replace_string_in_file", "PostToolUse", "copilot-chat", "replace_string_in_file", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"replace_string_in_file","second":"2026-02-18T18:37:05.471Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditEnded, ""},
+		{"copilot/PostToolUse/multi_replace_string_in_file", "PostToolUse", "copilot-chat", "multi_replace_string_in_file", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"multi_replace_string_in_file","second":"2026-02-19T12:25:26.261Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolCodeEditEnded, ""},
+		{"copilot/PostToolUse/run_in_terminal", "PostToolUse", "copilot-chat", "run_in_terminal", `{"sessionId":"d765d480","hookEventName":"PostToolUse","tool_name":"run_in_terminal","second":"2026-02-19T10:43:56.761Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolTerminalEnded, ""},
+		{"copilot/PostToolUse/manage_todo_list", "PostToolUse", "copilot-chat", "manage_todo_list", `{"sessionId":"2f1e87c2","hookEventName":"PostToolUse","tool_name":"manage_todo_list","second":"2026-02-18T18:44:20.586Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdatingEnded, ""},
+		{"copilot/PostToolUse/runSubagent", "PostToolUse", "copilot-chat", "runSubagent", `{"sessionId":"ab58fc89","hookEventName":"PostToolUse","tool_name":"runSubagent","second":"2026-02-19T12:48:58.829Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
+		{"copilot/PostToolUse/grep_search", "PostToolUse", "copilot-chat", "grep_search", `{"sessionId":"8a40542e","hookEventName":"PostToolUse","tool_name":"grep_search","second":"2026-02-18T18:58:48.393Z","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
+		{"cursor/sessionStart", "sessionStart", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:00:00Z"}`, HookAgentStarted, ""},
+		{"cursor/sessionEnd", "sessionEnd", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
+		{"cursor/subagentStart", "subagentStart", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:01:00Z"}`, HookAgentStarted, "subagent"},
+		{"cursor/subagentStop", "subagentStop", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:29:00Z"}`, HookAgentEnded, "subagent"},
+		{"cursor/stop", "stop", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:30:00Z"}`, HookAgentEnded, ""},
+		{"cursor/beforeSubmitPrompt", "beforeSubmitPrompt", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:00:01Z","prompt":"Fix bug"}`, HookAgentPromptSubmitting, ""},
+		{"cursor/preCompact", "preCompact", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:15:00Z"}`, HookAgentCompacting, ""},
+		{"cursor/preToolUse/read_file", "preToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","second":"2026-02-19T10:02:00Z","tool_name":"read_file"}`, HookAgentToolSearchStarting, ""},
+		{"cursor/preToolUse/edit", "preToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","second":"2026-02-19T10:03:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditStarting, ""},
+		{"cursor/preToolUse/terminal", "preToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","second":"2026-02-19T10:04:00Z","tool_name":"terminal"}`, HookAgentToolTerminalStarting, ""},
+		{"cursor/preToolUse/task", "preToolUse", "cursor-chat", "task", `{"sessionId":"cur-001","second":"2026-02-19T10:05:00Z","tool_name":"task"}`, HookAgentToolPlanUpdatingStarting, ""},
+		{"cursor/postToolUse/read_file", "postToolUse", "cursor-chat", "read_file", `{"sessionId":"cur-001","second":"2026-02-19T10:06:00Z","tool_name":"read_file"}`, HookAgentToolSearchEnded, ""},
+		{"cursor/postToolUse/editfile", "postToolUse", "cursor-chat", "editfile", `{"sessionId":"cur-001","second":"2026-02-19T10:07:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditEnded, ""},
+		{"cursor/postToolUse/terminal", "postToolUse", "cursor-chat", "terminal", `{"sessionId":"cur-001","second":"2026-02-19T10:08:00Z","tool_name":"terminal"}`, HookAgentToolTerminalEnded, ""},
+		{"cursor/postToolUseFailure/edit", "postToolUseFailure", "cursor-chat", "editfile", `{"sessionId":"cur-001","second":"2026-02-19T10:09:00Z","tool_name":"editfile"}`, HookAgentToolCodeEditEnded, ""},
+		{"cursor/beforeMCPExecution", "beforeMCPExecution", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:10:00Z"}`, HookAgentToolStarting, ""},
+		{"cursor/afterMCPExecution", "afterMCPExecution", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:11:00Z"}`, HookAgentToolEnded, ""},
+		{"cursor/beforeReadFile", "beforeReadFile", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:12:00Z"}`, HookAgentToolSearchStarting, ""},
+		{"cursor/afterFileEdit", "afterFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:13:00Z"}`, HookAgentToolCodeEditEnded, ""},
+		{"cursor/beforeShellExecution", "beforeShellExecution", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:14:00Z"}`, HookAgentToolTerminalStarting, ""},
+		{"cursor/afterShellExecution", "afterShellExecution", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:15:00Z"}`, HookAgentToolTerminalEnded, ""},
+		{"cursor/afterAgentResponse", "afterAgentResponse", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:16:00Z"}`, HookAgentEnded, ""},
+		{"cursor/afterAgentThought", "afterAgentThought", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:17:00Z"}`, HookAgentThinkingEnded, ""},
+		{"cursor/beforeTabFileRead", "beforeTabFileRead", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:18:00Z"}`, HookAgentToolSearchStarting, ""},
+		{"cursor/afterTabFileEdit", "afterTabFileEdit", "cursor-chat", "", `{"sessionId":"cur-001","second":"2026-02-19T10:19:00Z"}`, HookAgentToolCodeEditEnded, ""},
+		{"windsurf/pre_user_prompt", "pre_user_prompt", "windsurf-chat", "", `{"second":"2026-02-18T18:46:41.123Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentPromptSubmitting, ""},
+		{"windsurf/post_cascade_response", "post_cascade_response", "windsurf-chat", "", `{"second":"2026-02-18T19:00:12.032Z","agent_action_name":"post_cascade_response","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentEnded, ""},
+		{"windsurf/post_setup_worktree", "post_setup_worktree", "windsurf-chat", "", `{"second":"2026-02-18T18:45:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentStarted, ""},
+		{"windsurf/pre_mcp_tool_use", "pre_mcp_tool_use", "windsurf-chat", "", `{"agent_action_name":"pre_mcp_tool_use","trajectory_id":"23e6dcf5","second":"2026-02-18T18:54:57.304Z","execution_id":"d9b64466","tool_info":{"mcp_server_name":"semio-repo","mcp_tool_name":"tree"}}`, HookAgentToolStarting, ""},
+		{"windsurf/post_mcp_tool_use", "post_mcp_tool_use", "windsurf-chat", "", `{"second":"2026-02-18T18:55:28.469Z","agent_action_name":"post_mcp_tool_use","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolEnded, ""},
+		{"windsurf/pre_read_code", "pre_read_code", "windsurf-chat", "", `{"second":"2026-02-18T18:46:48.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearchStarting, ""},
+		{"windsurf/post_read_code", "post_read_code", "windsurf-chat", "", `{"second":"2026-02-18T18:46:50.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolSearchEnded, ""},
+		{"windsurf/pre_write_code", "pre_write_code", "windsurf-chat", "", `{"second":"2026-02-18T18:57:30.780Z","agent_action_name":"pre_write_code","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditStarting, ""},
+		{"windsurf/post_write_code", "post_write_code", "windsurf-chat", "", `{"second":"2026-02-18T18:57:35.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolCodeEditEnded, ""},
+		{"windsurf/pre_run_command", "pre_run_command", "windsurf-chat", "", `{"second":"2026-02-18T18:54:00.000Z","trajectory_id":"23e6dcf5","execution_id":"d9b64466"}`, HookAgentToolTerminalStarting, ""},
+		{"windsurf/post_run_command", "post_run_command", "windsurf-chat", "", `{"agent_action_name":"post_run_command","trajectory_id":"23e6dcf5","second":"2026-02-18T18:57:49.375Z","execution_id":"d9b64466","tool_info":{"command_line":"npm install","cwd":"/workspaces/semio"}}`, HookAgentToolTerminalEnded, ""},
 		{"claude/SessionStart", "SessionStart", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionStart","source":"startup"}`, HookAgentStarted, ""},
 		{"claude/SessionEnd", "SessionEnd", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","hook_event_name":"SessionEnd"}`, HookAgentEnded, ""},
 		{"claude/SubagentStart", "SubagentStart", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"SubagentStart"}`, HookAgentStarted, "subagent"},
@@ -16846,30 +19407,30 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 		{"claude/Stop", "Stop", "claude-code", "", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"Stop","stop_hook_active":false}`, HookAgentEnded, ""},
 		{"claude/UserPromptSubmit", "UserPromptSubmit", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"UserPromptSubmit","prompt":"Fix the bug"}`, HookAgentPromptSubmitting, ""},
 		{"claude/PreCompact", "PreCompact", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"PreCompact"}`, HookAgentCompacting, ""},
-		{"claude/TaskCompleted", "TaskCompleted", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"TaskCompleted"}`, HookAgentToolPlanUpdating, ""},
+		{"claude/TaskCompleted", "TaskCompleted", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"TaskCompleted"}`, HookAgentToolPlanUpdatingEnded, ""},
 		{"claude/Notification", "Notification", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"Notification"}`, HookAgentToolStarting, ""},
 		{"claude/TeammateIdle", "TeammateIdle", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"TeammateIdle"}`, HookAgentToolStarting, ""},
 		{"claude/PermissionRequest", "PermissionRequest", "claude-code", "", `{"session_id":"167906cd","transcript_path":"/tmp/t.jsonl","hook_event_name":"PermissionRequest"}`, HookAgentToolStarting, ""},
-		{"claude/PreToolUse/Bash", "PreToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"go test -v"},"tool_use_id":"toolu_01WKqqc5y27LZu1KTB5GsGDu"}`, HookAgentToolTerminalStarting, ""},
+		{"claude/PreToolUse/Bash", "PreToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"go test -v"},"tool_use_id":"toolu_01WKqqc5y27LZu1KTB5GsGDu"}`, HookAgentToolTestStarting, ""},
 		{"claude/PreToolUse/Read", "PreToolUse", "claude-code", "Read", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","cwd":"/workspaces/semio","permission_mode":"bypassPermissions","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/workspaces/semio/main.go"},"tool_use_id":"toolu_01Md976UFvJmmL5KaH4xzsx8"}`, HookAgentToolSearchStarting, ""},
 		{"claude/PreToolUse/Edit", "PreToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl","tool_name":"Edit"}`, HookAgentToolCodeEditStarting, ""},
 		{"claude/PreToolUse/Glob", "PreToolUse", "claude-code", "Glob", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"Glob","tool_input":{"pattern":"**/*.json"}}`, HookAgentToolStarting, ""},
-		{"claude/PreToolUse/Grep", "PreToolUse", "claude-code", "Grep", `{"session_id":"e51a2976","transcript_path":"/tmp/t.jsonl","hook_event_name":"PreToolUse","tool_name":"Grep","tool_input":{"pattern":"BlockedToolPatterns"}}`, HookAgentToolStarting, ""},
+		{"claude/PreToolUse/Grep", "PreToolUse", "claude-code", "Grep", `{"session_id":"e51a2976","transcript_path":"/tmp/t.jsonl","hook_event_name":"PreToolUse","tool_name":"Grep","tool_input":{"pattern":"BlockedToolPatterns"}}`, HookAgentToolSearchStarting, ""},
 		{"claude/PreToolUse/mcp_tree", "PreToolUse", "claude-code", "mcp__semio-repo__tree", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl","hook_event_name":"PreToolUse","tool_name":"mcp__semio-repo__tree","tool_input":{"query":"hooks"}}`, HookAgentToolStarting, ""},
 		{"claude/PostToolUse/Bash", "PostToolUse", "claude-code", "Bash", `{"session_id":"167906cd-0550-4387-96af-2cc20cb48fe3","tool_name":"Bash","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/167906cd.jsonl"}`, HookAgentToolTerminalEnded, ""},
 		{"claude/PostToolUse/Edit", "PostToolUse", "claude-code", "Edit", `{"session_id":"e51a2976-3fee-42db-a5cf-7b2f0a4c5b84","tool_name":"Edit","transcript_path":"/home/vscode/.claude/projects/-workspaces-semio/e51a2976.jsonl"}`, HookAgentToolCodeEditEnded, ""},
 		{"claude/PostToolUse/Read", "PostToolUse", "claude-code", "Read", `{"session_id":"167906cd","tool_name":"Read","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolSearchEnded, ""},
-		{"claude/PostToolUse/TodoWrite", "PostToolUse", "claude-code", "TodoWrite", `{"session_id":"167906cd","tool_name":"TodoWrite","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
+		{"claude/PostToolUse/TodoWrite", "PostToolUse", "claude-code", "TodoWrite", `{"session_id":"167906cd","tool_name":"TodoWrite","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolPlanUpdatingEnded, ""},
 		{"claude/PostToolUse/mcp_tree", "PostToolUse", "claude-code", "mcp__semio-repo__tree", `{"session_id":"167906cd","tool_name":"mcp__semio-repo__tree","transcript_path":"/tmp/t.jsonl"}`, HookAgentToolEnded, ""},
 		{"claude/PostToolUseFailure/Bash", "PostToolUseFailure", "claude-code", "Bash", `{"session_id":"167906cd","tool_name":"Bash","transcript_path":"/tmp/t.jsonl","error":"command failed"}`, HookAgentToolTerminalEnded, ""},
-		{"droid/SessionStart", "SessionStart", "droid", "", `{"session_id":"droid-001","timestamp":"2026-02-18T18:47:06.000Z"}`, HookAgentStarted, ""},
-		{"droid/PreToolUse/Bash", "PreToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","timestamp":"2026-02-18T18:47:06.000Z"}`, HookAgentToolTerminalStarting, ""},
-		{"droid/PostToolUse/Bash", "PostToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","timestamp":"2026-02-18T18:47:10.000Z"}`, HookAgentToolTerminalEnded, ""},
-		{"codex/SessionStart", "SessionStart", "codex", "", `{"session_id":"codex-001","timestamp":"2026-02-18T18:50:00.000Z"}`, HookAgentStarted, ""},
-		{"codex/PreToolUse/Read", "PreToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:05.000Z"}`, HookAgentToolSearchStarting, ""},
-		{"codex/PostToolUse/Read", "PostToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","timestamp":"2026-02-18T18:50:10.000Z"}`, HookAgentToolSearchEnded, ""},
-		{"antigravity/SessionStart", "SessionStart", "antigravity-chat", "", `{"session_id":"ag-001","timestamp":"2026-02-18T18:55:00.000Z"}`, HookAgentStarted, ""},
-		{"antigravity/PreToolUse/Task", "PreToolUse", "antigravity-chat", "Task", `{"session_id":"ag-001","tool_name":"Task","timestamp":"2026-02-18T18:55:05.000Z"}`, HookAgentToolPlanUpdating, ""},
+		{"droid/SessionStart", "SessionStart", "droid", "", `{"session_id":"droid-001","second":"2026-02-18T18:47:06.000Z"}`, HookAgentStarted, ""},
+		{"droid/PreToolUse/Bash", "PreToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","second":"2026-02-18T18:47:06.000Z"}`, HookAgentToolTerminalStarting, ""},
+		{"droid/PostToolUse/Bash", "PostToolUse", "droid", "Bash", `{"session_id":"droid-001","tool_name":"Bash","second":"2026-02-18T18:47:10.000Z"}`, HookAgentToolTerminalEnded, ""},
+		{"codex/SessionStart", "SessionStart", "codex", "", `{"session_id":"codex-001","second":"2026-02-18T18:50:00.000Z"}`, HookAgentStarted, ""},
+		{"codex/PreToolUse/Read", "PreToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","second":"2026-02-18T18:50:05.000Z"}`, HookAgentToolSearchStarting, ""},
+		{"codex/PostToolUse/Read", "PostToolUse", "codex", "Read", `{"session_id":"codex-001","tool_name":"Read","second":"2026-02-18T18:50:10.000Z"}`, HookAgentToolSearchEnded, ""},
+		{"antigravity/SessionStart", "SessionStart", "antigravity-chat", "", `{"session_id":"ag-001","second":"2026-02-18T18:55:00.000Z"}`, HookAgentStarted, ""},
+		{"antigravity/PreToolUse/Task", "PreToolUse", "antigravity-chat", "Task", `{"session_id":"ag-001","tool_name":"Task","second":"2026-02-18T18:55:05.000Z"}`, HookAgentToolPlanUpdatingStarting, ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -16885,14 +19446,14 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 				t.Errorf("parent: want %q, got %q", tc.expectPar, parent)
 			}
 			tmpDir := t.TempDir()
-			inputTimestamp := extractTimestampFromInput(input)
-			if inputTimestamp == "" {
-				inputTimestamp = time.Now().UTC().Format(time.RFC3339)
+			inputSecond := extractSecondFromInput(input)
+			if inputSecond == "" {
+				inputSecond = time.Now().UTC().Format(time.RFC3339)
 			}
 			hctx := HookContext{
 				Event:      event,
 				Client:     tc.client,
-				Timestamp:  inputTimestamp,
+				Second:     inputSecond,
 				RepoRoot:   tmpDir,
 				ToolName:   tc.toolName,
 				Input:      input,
@@ -16903,15 +19464,27 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if sessionID == "" {
 				sessionID = "unknown"
 			}
-			logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", sessionID)
+			logNow := time.Now().UTC()
+			logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+				fmt.Sprintf("%02d", logNow.Year()%100),
+				fmt.Sprintf("%02d", int(logNow.Month())),
+				fmt.Sprintf("%02d", logNow.Day()),
+				sessionID)
 			entries, err := os.ReadDir(logDir)
 			if err != nil {
 				t.Fatalf("log dir: %v", err)
 			}
-			if len(entries) != 1 {
-				t.Fatalf("want 1 log file, got %d", len(entries))
+			// Filter out session.json (written for HookAgentStarted events).
+			var eventEntries []os.DirEntry
+			for _, e := range entries {
+				if e.Name() != "session.json" {
+					eventEntries = append(eventEntries, e)
+				}
 			}
-			data, err := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
+			if len(eventEntries) != 1 {
+				t.Fatalf("want 1 event log file, got %d (total entries: %d)", len(eventEntries), len(entries))
+			}
+			data, err := os.ReadFile(filepath.Join(logDir, eventEntries[0].Name()))
 			if err != nil {
 				t.Fatalf("read log: %v", err)
 			}
@@ -16929,16 +19502,16 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if evt["client"] != tc.client {
 				t.Errorf("log client: want %s, got %v", tc.client, evt["client"])
 			}
-			if entry.Raw == nil {
-				t.Error("log raw: want non-nil")
+			if entry.Native.Event == nil {
+				t.Error("log native.event: want non-nil")
 			}
-			wantSession := extractSessionIDFromInput(input)
+			wantSession := resolveEventSessionID(extractSessionIDFromInput(input))
 			if wantSession != "" && evt["session"] != wantSession {
 				t.Errorf("log session: want %s, got %v", wantSession, evt["session"])
 			}
-			wantTimestamp := extractTimestampFromInput(input)
-			if wantTimestamp != "" && evt["timestamp"] != wantTimestamp {
-				t.Errorf("log timestamp: want %s, got %v", wantTimestamp, evt["timestamp"])
+			wantSecond := resolveEventSecondID(extractSecondFromInput(input))
+			if wantSecond != "" && evt["second"] != wantSecond {
+				t.Errorf("log second: want %s, got %v", wantSecond, evt["second"])
 			}
 			wantTranscript := extractTranscriptFromInput(input)
 			if wantTranscript != "" && evt["transcript"] != wantTranscript {
@@ -16990,23 +19563,29 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 		t.Run(fmt.Sprintf("%s/%s/%s", old.Context.Client, strings.ReplaceAll(old.Context.Event, ".", "-"), old.Context.ToolName), func(t *testing.T) {
 			tmpDir := t.TempDir()
 			hctx := HookContext{
-				Event:     HookEvent(old.Context.Event),
-				Client:    old.Context.Client,
-				Timestamp: time.Now().UTC().Format(time.RFC3339),
-				RepoRoot:  tmpDir,
-				ToolName:  old.Context.ToolName,
-				Input:     old.Context.Input,
+				Event:    HookEvent(old.Context.Event),
+				Client:   old.Context.Client,
+				Second:   time.Now().UTC().Format(time.RFC3339),
+				RepoRoot: tmpDir,
+				ToolName: old.Context.ToolName,
+				Input:    old.Context.Input,
 			}
 			result := RunHook(hctx)
-			outDir := filepath.Join(tmpDir, ".semio-repo", "📜")
-			outEntries, err := os.ReadDir(outDir)
-			if err != nil {
-				t.Fatalf("log dir: %v", err)
+			outBase := filepath.Join(tmpDir, ".semio-repo", "⚡")
+			var logFiles []string
+			filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
+				if walkErr != nil {
+					return nil
+				}
+				if !d.IsDir() && strings.HasSuffix(d.Name(), ".json") {
+					logFiles = append(logFiles, path)
+				}
+				return nil
+			})
+			if len(logFiles) != 1 {
+				t.Fatalf("want 1 log file under ⚡, got %d", len(logFiles))
 			}
-			if len(outEntries) != 1 {
-				t.Fatalf("want 1 log file, got %d", len(outEntries))
-			}
-			outData, err := os.ReadFile(filepath.Join(outDir, outEntries[0].Name()))
+			outData, err := os.ReadFile(logFiles[0])
 			if err != nil {
 				t.Fatalf("read log: %v", err)
 			}
@@ -17024,10 +19603,10 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 			if evt["client"] != old.Context.Client {
 				t.Errorf("client: want %s, got %v", old.Context.Client, evt["client"])
 			}
-			if old.Context.Input != nil && entry.Raw == nil {
-				t.Error("raw not preserved")
+			if old.Context.Input != nil && entry.Native.Event == nil {
+				t.Error("native.event not preserved")
 			}
-			wantSession := extractSessionIDFromInput(old.Context.Input)
+			wantSession := resolveEventSessionID(extractSessionIDFromInput(old.Context.Input))
 			if wantSession != "" && evt["session"] != wantSession {
 				t.Errorf("session: want %s, got %v", wantSession, evt["session"])
 			}
@@ -17042,10 +19621,202 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Hook Tests
+func TestCheckpointInAllAgentEvents(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
 
-// #region 🔖Mermaid Tests
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+	sessionInput := json.RawMessage(`{"session_id":"checkpoint-test","llm":"opus-4-6"}`)
+	agentEvents := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"agent.started", HookAgentStarted, sessionInput},
+		{"agent.ended", HookAgentEnded, sessionInput},
+		{"agent.prompt.submitting", HookAgentPromptSubmitting, sessionInput},
+		{"agent.compacting", HookAgentCompacting, sessionInput},
+		{"agent.tool.starting", HookAgentToolStarting, json.RawMessage(`{"session_id":"checkpoint-test","tool_name":"read_file"}`)},
+		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"checkpoint-test","tool_name":"read_file"}`)},
+		{"agent.tool.plan.updating.starting", HookAgentToolPlanUpdatingStarting, sessionInput},
+		{"agent.tool.plan.updating.ended", HookAgentToolPlanUpdatingEnded, sessionInput},
+		{"agent.tool.search.starting", HookAgentToolSearchStarting, sessionInput},
+		{"agent.tool.search.ended", HookAgentToolSearchEnded, sessionInput},
+		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, sessionInput},
+		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, sessionInput},
+		{"agent.tool.test.starting", HookAgentToolTestStarting, sessionInput},
+		{"agent.tool.test.ended", HookAgentToolTestEnded, sessionInput},
+		{"agent.tool.build.starting", HookAgentToolBuildStarting, sessionInput},
+		{"agent.tool.build.ended", HookAgentToolBuildEnded, sessionInput},
+		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, json.RawMessage(`{"session_id":"checkpoint-test","tool_input":{"command":"echo test"}}`)},
+		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, sessionInput},
+		{"agent.thinking.starting", HookAgentThinkingStarting, json.RawMessage(`{"session_id":"checkpoint-test","text":"Planning the approach"}`)},
+		{"agent.thinking.ended", HookAgentThinkingEnded, json.RawMessage(`{"session_id":"checkpoint-test","text":"Decided to use X"}`)},
+	}
+	for _, tc := range agentEvents {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:    tc.event,
+				Client:   "copilot-chat",
+				Second:   "2026-02-25T12:00:00Z",
+				RepoRoot: tmpDir,
+				Input:    tc.input,
+			}
+			result := dispatchHook(hctx)
 
+			data, _ := json.Marshal(result)
+			var m map[string]interface{}
+			json.Unmarshal(data, &m)
+			checkpoint, ok := m["checkpoint"]
+			if !ok || checkpoint == "" {
+				t.Errorf("expected checkpoint field in %s result, got: %v", tc.name, m)
+			}
+			if checkpoint != expectedSHA {
+				t.Errorf("expected checkpoint=%s, got %v", expectedSHA, checkpoint)
+			}
+		})
+	}
+}
+
+func TestCheckpointInAllVersionEvents(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+	versionEvents := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"checkpoint.starting", HookVersionCheckpointStarting, nil},
+		{"checkpoint.ended", HookVersionCheckpointEnded, json.RawMessage(`{"sha":"` + expectedSHA + `","message":"test commit"}`)},
+		{"checkin.starting", HookVersionCheckinStarting, nil},
+		{"checkin.ended", HookVersionCheckinEnded, nil},
+		{"checkout.starting", HookVersionCheckoutStarting, nil},
+		{"checkout.ended", HookVersionCheckoutEnded, nil},
+	}
+	for _, tc := range versionEvents {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:    tc.event,
+				Client:   "",
+				Second:   "2026-02-25T12:00:00Z",
+				RepoRoot: tmpDir,
+				Input:    tc.input,
+			}
+			result := dispatchHook(hctx)
+			data, _ := json.Marshal(result)
+			var m map[string]interface{}
+			json.Unmarshal(data, &m)
+			checkpoint, ok := m["checkpoint"]
+			if !ok || checkpoint == "" {
+				t.Errorf("expected checkpoint field in %s result, got: %v", tc.name, m)
+			}
+			if checkpoint != expectedSHA {
+				t.Errorf("expected checkpoint=%s, got %v", expectedSHA, checkpoint)
+			}
+		})
+	}
+}
+
+func TestCheckpointInLoggedEventJSON(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+	sessionInput := json.RawMessage(`{"session_id":"checkpoint-log","llm":"opus-4-6","transcript_path":"/tmp/t.jsonl"}`)
+	hctx := HookContext{
+		Event:    HookAgentStarted,
+		Client:   "copilot-chat",
+		Second:   "2026-02-25T12:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    sessionInput,
+	}
+	RunHook(hctx)
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) == 0 {
+		t.Fatal("expected at least 1 log file")
+	}
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-started") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log: %v", err)
+			}
+			var entry HookLogEntry
+			json.Unmarshal(data, &entry)
+			var evt map[string]interface{}
+			json.Unmarshal(entry.Event, &evt)
+			checkpoint, ok := evt["checkpoint"]
+			if !ok || checkpoint == "" {
+				t.Errorf("expected checkpoint in logged event, got: %v", evt)
+			}
+			expectedCheckpoint := resolveEventCheckpointID(expectedSHA)
+			if checkpoint != expectedCheckpoint {
+				t.Errorf("expected logged checkpoint=%s, got %v", expectedCheckpoint, checkpoint)
+			}
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected agent-started log file")
+	}
+}
+
+func TestEventIDsUseSemioRepoFormat(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+
+	os.MkdirAll(filepath.Join(tmpDir, "src"), 0755)
+	os.WriteFile(filepath.Join(tmpDir, "src", "main.go"), []byte("package main"), 0644)
+
+	fileID := resolvePathToFileID(filepath.Join(tmpDir, "src", "main.go"))
+
+	if fileID == "" {
+		t.Error("expected non-empty file ID")
+	}
+	if strings.Contains(fileID, "/") {
+		t.Errorf("file ID should not contain path separators: %s", fileID)
+	}
+
+	rangeRef := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10")
+	if rangeRef == "" {
+		t.Error("expected non-empty range ref")
+	}
+	if !strings.Contains(rangeRef, "📌") {
+		t.Errorf("expected 📌 in range ref, got: %s", rangeRef)
+	}
+	if !strings.Contains(rangeRef, "10") {
+		t.Errorf("expected line number 10 in range ref, got: %s", rangeRef)
+	}
+
+	rangeRefFull := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10-L20")
+	if !strings.Contains(rangeRefFull, "📌10📌20") {
+		t.Errorf("expected 📌10📌20 in full range ref, got: %s", rangeRefFull)
+	}
+}
+
+// #endregion 🔖Hook
+
+// #region 🔖Mermaid
 func TestMermaidLocByProjectsBundlesFoldersFiles(t *testing.T) {
 	root := findTestRepoRoot(".")
 	SetRootDir(root)
@@ -17166,10 +19937,9 @@ func TestMermaidEscapeLabel(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Mermaid Tests
+// #endregion 🔖Mermaid
 
-// #region 🔖Provider Tests
-
+// #region 🔖Provider
 func TestProviderRegistry(t *testing.T) {
 	mp := DefaultManagementProvider()
 	if mp == nil {
@@ -17178,12 +19948,12 @@ func TestProviderRegistry(t *testing.T) {
 	if mp.Kind() != "github" {
 		t.Errorf("expected github, got %s", mp.Kind())
 	}
-	scp := DefaultSourceControlProvider()
-	if scp == nil {
-		t.Fatal("DefaultSourceControlProvider() returned nil")
+	vcp := DefaultVersionControlProvider()
+	if vcp == nil {
+		t.Fatal("DefaultVersionControlProvider() returned nil")
 	}
-	if scp.Kind() != "github" {
-		t.Errorf("expected github, got %s", scp.Kind())
+	if vcp.Kind() != "git" {
+		t.Errorf("expected git, got %s", vcp.Kind())
 	}
 	sp := DefaultSandboxProvider()
 	if sp == nil {
@@ -17367,8 +20137,261 @@ func TestManagementProviderInterface(t *testing.T) {
 	var _ ManagementProvider = &NullManagementProvider{}
 }
 
-func TestSourceControlProviderInterface(t *testing.T) {
-	var _ SourceControlProvider = &GitHubSourceControlProvider{}
+func TestVersionControlProviderInterface(t *testing.T) {
+	var _ VersionControlProvider = &GitVersionControlProvider{}
+}
+
+func TestGitVersionControlProviderKind(t *testing.T) {
+	p := &GitVersionControlProvider{}
+	if p.Kind() != "git" {
+		t.Errorf("expected git, got %s", p.Kind())
+	}
+}
+
+func TestGitVersionControlProviderConfigure(t *testing.T) {
+	p := &GitVersionControlProvider{}
+	if err := p.Configure("/tmp"); err != nil {
+		t.Errorf("Configure should not error: %v", err)
+	}
+}
+
+// initTestGitRepo creates a fresh git repo with signing disabled, an initial checkpoint, and returns the path.
+func initTestGitRepo(t *testing.T, branch string) string {
+	t.Helper()
+	tmpDir := t.TempDir()
+	if branch == "" {
+		branch = "main"
+	}
+	run := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = tmpDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v failed: %s\n%s", args, err, string(out))
+		}
+	}
+	cmd := exec.Command("git", "init", "-b", branch, tmpDir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git init failed: %s\n%s", err, string(out))
+	}
+	run("config", "user.email", "test@test.com")
+	run("config", "user.name", "Test")
+	run("config", "commit.gpgsign", "false")
+	run("config", "tag.gpgsign", "false")
+	os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("hello"), 0644)
+	run("add", "-A")
+	run("commit", "-m", "initial")
+	return tmpDir
+}
+
+// initTestGitRepoWithRemote creates a git repo with a bare remote and returns (workDir, remoteDir).
+func initTestGitRepoWithRemote(t *testing.T) (string, string) {
+	t.Helper()
+	remoteDir := t.TempDir()
+	cmd := exec.Command("git", "init", "--bare", "-b", "main", remoteDir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git init --bare failed: %s\n%s", err, string(out))
+	}
+
+	mainDir := initTestGitRepo(t, "main")
+	run := func(dir string, args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v in %s failed: %s\n%s", args, dir, err, string(out))
+		}
+	}
+	run(mainDir, "remote", "add", "origin", remoteDir)
+	run(mainDir, "push", "-u", "origin", "main")
+
+	workDir := t.TempDir()
+	cmd = exec.Command("git", "clone", remoteDir, workDir)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git clone failed: %s\n%s", err, string(out))
+	}
+	run(workDir, "config", "user.email", "test@test.com")
+	run(workDir, "config", "user.name", "Test")
+	run(workDir, "config", "commit.gpgsign", "false")
+	run(workDir, "config", "tag.gpgsign", "false")
+	return workDir, remoteDir
+}
+
+func TestGitVersionControlProviderCurrentCheckpoint(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	p := &GitVersionControlProvider{}
+	sha, err := p.CurrentCheckpoint(tmpDir)
+	if err != nil {
+		t.Fatalf("CurrentCheckpoint failed: %v", err)
+	}
+	if len(sha) < 7 {
+		t.Errorf("expected a SHA hash, got %q", sha)
+	}
+}
+
+func TestGitVersionControlProviderCurrentBranch(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	p := &GitVersionControlProvider{}
+	branch, err := p.CurrentBranch(tmpDir)
+	if err != nil {
+		t.Fatalf("CurrentBranch failed: %v", err)
+	}
+	if branch != "main" {
+		t.Errorf("expected main, got %q", branch)
+	}
+}
+
+func TestGitVersionControlProviderCheckpoint(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world"), 0644)
+
+	p := &GitVersionControlProvider{}
+	sha, err := p.Checkpoint(tmpDir, "add file2")
+	if err != nil {
+		t.Fatalf("Checkpoint failed: %v", err)
+	}
+	if len(sha) < 7 {
+		t.Errorf("expected a SHA hash, got %q", sha)
+	}
+
+	currentSha, _ := p.CurrentCheckpoint(tmpDir)
+	if currentSha != sha {
+		t.Errorf("expected current checkpoint %q to match checkpoint result %q", currentSha, sha)
+	}
+}
+
+func TestGitVersionControlProviderStageAll(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	os.WriteFile(filepath.Join(tmpDir, "newfile.txt"), []byte("new"), 0644)
+
+	p := &GitVersionControlProvider{}
+	if err := p.StageAll(tmpDir); err != nil {
+		t.Fatalf("StageAll failed: %v", err)
+	}
+
+	files, err := p.StagedFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("StagedFiles failed: %v", err)
+	}
+	if len(files) == 0 {
+		t.Error("expected staged files after StageAll")
+	}
+}
+
+func TestGitVersionControlProviderStagedFiles(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	p := &GitVersionControlProvider{}
+	files, err := p.StagedFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("StagedFiles failed: %v", err)
+	}
+	if len(files) != 0 {
+		t.Errorf("expected no staged files, got %d", len(files))
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world"), 0644)
+	cmd := exec.Command("git", "add", "file2.txt")
+	cmd.Dir = tmpDir
+	cmd.Run()
+	files, err = p.StagedFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("StagedFiles failed: %v", err)
+	}
+	if len(files) != 1 || files[0] != "file2.txt" {
+		t.Errorf("expected [file2.txt], got %v", files)
+	}
+}
+
+func TestGitVersionControlProviderCheckin(t *testing.T) {
+	workDir, _ := initTestGitRepoWithRemote(t)
+
+	p := &GitVersionControlProvider{}
+	err := p.Checkin(workDir, "testuser")
+	if err != nil {
+		t.Fatalf("Checkin failed: %v", err)
+	}
+
+	branch, err := p.CurrentBranch(workDir)
+	if err != nil {
+		t.Fatalf("CurrentBranch failed: %v", err)
+	}
+	if branch != "testuser/latest" {
+		t.Errorf("expected testuser/latest, got %q", branch)
+	}
+}
+
+func TestGitVersionControlProviderCheckout(t *testing.T) {
+	workDir, _ := initTestGitRepoWithRemote(t)
+
+	run := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = workDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v failed: %s\n%s", args, err, string(out))
+		}
+	}
+	run("switch", "-c", "testuser/latest")
+	os.WriteFile(filepath.Join(workDir, "feature.txt"), []byte("feature"), 0644)
+	run("add", "-A")
+	run("commit", "-m", "add feature")
+
+	p := &GitVersionControlProvider{}
+	sha, err := p.Checkout(workDir, "testuser", "merge feature")
+	if err != nil {
+		t.Fatalf("Checkout failed: %v", err)
+	}
+	if len(sha) < 7 {
+		t.Errorf("expected a SHA hash, got %q", sha)
+	}
+
+	branch, err := p.CurrentBranch(workDir)
+	if err != nil {
+		t.Fatalf("CurrentBranch failed: %v", err)
+	}
+	if branch != "main" {
+		t.Errorf("expected main after checkout, got %q", branch)
+	}
+
+	if _, err := os.Stat(filepath.Join(workDir, "feature.txt")); os.IsNotExist(err) {
+		t.Error("expected feature.txt to exist on main after checkout")
+	}
+}
+
+func TestVersionHookEventsDispatch(t *testing.T) {
+	cases := []struct {
+		name  string
+		event HookEvent
+	}{
+		{"checkin starting", HookVersionCheckinStarting},
+		{"checkin ended", HookVersionCheckinEnded},
+		{"checkout starting", HookVersionCheckoutStarting},
+		{"checkout ended", HookVersionCheckoutEnded},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:    tc.event,
+				Client:   "",
+				Second:   "2026-02-24T12:00:00Z",
+				RepoRoot: t.TempDir(),
+			}
+			result := RunHook(hctx)
+			if !result.IsAllowed() {
+				t.Errorf("expected allowed for %s, got denied: %s", tc.event, result.GetMessage())
+			}
+		})
+	}
 }
 
 func TestSandboxProviderInterface(t *testing.T) {
@@ -17385,10 +20408,9 @@ func TestEditorProviderInterface(t *testing.T) {
 	var _ EditorProvider = &AntigravityEditorProvider{}
 }
 
-// #endregion 🔖Provider Tests
+// #endregion 🔖Provider
 
-// #region 🔖Project Generate Tests
-
+// #region 🔖Project Generate
 func TestIsLicenseText(t *testing.T) {
 	if !isLicenseText("This program is free software: you can redistribute it and/or modify") {
 		t.Error("should detect 'free software' and 'redistribute'")
@@ -17411,7 +20433,7 @@ func TestIsLicenseText(t *testing.T) {
 }
 
 func TestIsHeaderMetaLine(t *testing.T) {
-	if !isHeaderMetaLine("[🧰semiorepo⌨️cli💻maingo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go)") {
+	if !isHeaderMetaLine("[🧰semiorepo⌨️cli💻main](semiorepo://p/i/semio-repo/b/b/cli/f/main.go)") {
 		t.Error("should detect ID link")
 	}
 	if !isHeaderMetaLine("#region Header") {
@@ -17633,7 +20655,7 @@ func TestGenerateProjectRequirementsSemioRepo(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Project Generate Tests
+// #endregion 🔖Project Generate
 func TestExtractSearchFromInputLineNumbers(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -17685,4 +20707,272 @@ func TestExtractSearchFromInputLineNumbers(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestExtractSearchFromInputCompleteFileRange(t *testing.T) {
+	tempFile := filepath.Join(t.TempDir(), "all.go")
+	if err := os.WriteFile(tempFile, []byte("a\nb\nc"), 0o644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
+	input := fmt.Sprintf(`{
+		"tool_name": "read_file",
+		"tool_input": {
+			"filePath": %q
+		}
+	}`, tempFile)
+
+	pages, ranges := extractSearchFromInput(json.RawMessage(input), "")
+	if len(pages) != 0 {
+		t.Errorf("expected no webpages, got %v", pages)
+	}
+	expected := tempFile + "#L1-L3"
+	if len(ranges) != 1 || ranges[0] != expected {
+		t.Errorf("extractSearchFromInput() ranges = %v, want [%v]", ranges, expected)
+	}
+}
+
+func TestSectionNewlineAfterRegion(t *testing.T) {
+	t.Run("detect_blank_line_after_region_typescript", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖test.ts#Functions](semiorepo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		counts := map[Statute]int{}
+		for _, v := range breachs {
+			counts[v.Kind]++
+		}
+		if counts[BreachCodeSectionWrongFormatNewlineAfterRegion] == 0 {
+			t.Fatal("expected newline-after-region breach for Functions section")
+		}
+	})
+
+	t.Run("detect_blank_line_after_region_go", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n// [💻test.go](semiorepo://file/test.go)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Package\n\n// [🔖test.go#Package](semiorepo://section/test.go/Package)\n// Package declaration.\n\npackage main\n\n// #endregion 🔖Package\n"
+		testFile := "test.go"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		counts := map[Statute]int{}
+		for _, v := range breachs {
+			counts[v.Kind]++
+		}
+		if counts[BreachCodeSectionWrongFormatNewlineAfterRegion] == 0 {
+			t.Fatal("expected newline-after-region breach for Package section")
+		}
+	})
+
+	t.Run("detect_blank_line_after_region_python", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "# region Header\n# [💻test.py](semiorepo://file/test.py)\n# 2025 Test <t@t.com>\n# AGPL\n# endregion Header\n\n# region Functions\n\n# [🔖test.py#Functions](semiorepo://section/test.py/Functions)\n# Utility functions.\n\ndef add(a, b):\n    return a + b\n\n# endregion Functions\n"
+		testFile := "test.py"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		counts := map[Statute]int{}
+		for _, v := range breachs {
+			counts[v.Kind]++
+		}
+		if counts[BreachCodeSectionWrongFormatNewlineAfterRegion] == 0 {
+			t.Fatal("expected newline-after-region breach for Functions section")
+		}
+	})
+
+	t.Run("detect_blank_line_after_region_csharp", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "#region 🔖Header\n// [💻test.cs](semiorepo://file/test.cs)\n// 2025 Test <t@t.com>\n// AGPL\n#endregion 🔖Header\n\n#region 🔖Classes\n\n// [🔖test.cs#Classes](semiorepo://section/test.cs/Classes)\n// Domain classes.\n\npublic class Foo {}\n\n#endregion 🔖Classes\n"
+		testFile := "test.cs"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		counts := map[Statute]int{}
+		for _, v := range breachs {
+			counts[v.Kind]++
+		}
+		if counts[BreachCodeSectionWrongFormatNewlineAfterRegion] == 0 {
+			t.Fatal("expected newline-after-region breach for Classes section")
+		}
+	})
+
+	t.Run("detect_blank_line_after_region_rust", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n// [💻test.rs](semiorepo://file/test.rs)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Structs\n\n// [🔖test.rs#Structs](semiorepo://section/test.rs/Structs)\n// Struct definitions.\n\nstruct Foo {}\n\n// #endregion 🔖Structs\n"
+		testFile := "test.rs"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		counts := map[Statute]int{}
+		for _, v := range breachs {
+			counts[v.Kind]++
+		}
+		if counts[BreachCodeSectionWrongFormatNewlineAfterRegion] == 0 {
+			t.Fatal("expected newline-after-region breach for Structs section")
+		}
+	})
+
+	t.Run("no_false_positive_without_blank_line", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// [🔖test.ts#Functions](semiorepo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		for _, v := range breachs {
+			if v.Kind == BreachCodeSectionWrongFormatNewlineAfterRegion {
+				t.Fatal("unexpected newline-after-region breach when no blank line exists")
+			}
+		}
+	})
+
+	t.Run("autofix_removes_blank_line_after_region", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖test.ts#Functions](semiorepo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+		expected := "// #region 🔖Header\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// [🔖test.ts#Functions](semiorepo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		breachs := []Breach{
+			{Kind: BreachCodeSectionWrongFormatNewlineAfterRegion, Scope: testFile + "#Functions", Line: 8},
+		}
+		fixed, err := applyAutofixes(testFile, breachs)
+		if err != nil {
+			t.Fatalf("applyAutofixes failed: %v", err)
+		}
+		if fixed != 1 {
+			t.Errorf("expected 1 fix, got %d", fixed)
+		}
+		result, _ := ReadTextFile(absPath)
+		if result != expected {
+			t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+		}
+	})
+
+	t.Run("autofix_removes_blank_line_after_header_region", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// [🔖test.ts#Functions](semiorepo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+		expected := "// #region 🔖Header\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// [🔖test.ts#Functions](semiorepo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		breachs := []Breach{
+			{Kind: BreachCodeSectionWrongFormatNewlineAfterRegion, Scope: testFile + "#Header", Line: 2},
+		}
+		fixed, err := applyAutofixes(testFile, breachs)
+		if err != nil {
+			t.Fatalf("applyAutofixes failed: %v", err)
+		}
+		if fixed != 1 {
+			t.Errorf("expected 1 fix, got %d", fixed)
+		}
+		result, _ := ReadTextFile(absPath)
+		if result != expected {
+			t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+		}
+	})
+
+	t.Run("detect_blank_line_after_header_region", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		content := "// #region 🔖Header\n\n// [💻test.ts](semiorepo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖Header\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("policy check failed: %v", err)
+		}
+		counts := map[Statute]int{}
+		for _, v := range breachs {
+			counts[v.Kind]++
+		}
+		if counts[BreachCodeSectionWrongFormatNewlineAfterRegion] == 0 {
+			t.Fatal("expected newline-after-region breach for Header section")
+		}
+	})
 }

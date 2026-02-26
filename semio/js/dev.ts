@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js💻devts](semiorepo://file/semio/js/dev.ts)
+// [👤semio📚js💻dev](semiorepo://p/u/semio/b/l/js/f/dev.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,30 +19,45 @@
 // #endregion 🔖Header
 
 // #region 🔖Dev
-
-// [👤semio📚js💻devts🔖dev](semiorepo://section/semio/js/dev.ts/Dev)
+// [👤semio📚js💻dev🔖dev](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev)
 // Spawns parallel sketchpad and storybook dev servers.
 // MUST kill both child processes on SIGINT and SIGTERM.
 
 import { spawn } from "child_process";
 
-// Whether the current platform is Windows.
-// MUST be checked before spawning npm commands.
+/**
+ * Whether the current platform is Windows.
+// [👤semio📚js💻dev🔖dev🪨iswindows](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev/d/i/isWindows)
+ *
+ * MUST be checked before spawning npm commands.
+ **/
 const isWindows = process.platform === "win32";
 
-// Platform-specific npm command name.
-// MUST use .cmd extension on Windows.
+/**
+ * Platform-specific npm command name.
+// [👤semio📚js💻dev🔖dev🪨npmcmd](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev/d/i/npmCmd)
+ *
+ * MUST use .cmd extension on Windows.
+ **/
 const npmCmd = isWindows ? "npm.cmd" : "npm";
 
-// Spawned sketchpad dev server process.
-// MUST inherit stdio for live output.
+/**
+ * Spawned sketchpad dev server process.
+// [👤semio📚js💻dev🔖dev🪨vite](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev/d/i/vite)
+ *
+ * MUST inherit stdio for live output.
+ **/
 const vite = spawn(npmCmd, ["run", "dev:sketchpad"], {
   stdio: "inherit",
   shell: true,
 });
 
-// Spawned storybook dev server process.
-// MUST inherit stdio for live output.
+/**
+ * Spawned storybook dev server process.
+// [👤semio📚js💻dev🔖dev🪨storybook](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev/d/i/storybook)
+ *
+ * MUST inherit stdio for live output.
+ **/
 const storybook = spawn(npmCmd, ["run", "dev:storybook"], {
   stdio: "inherit",
   shell: true,

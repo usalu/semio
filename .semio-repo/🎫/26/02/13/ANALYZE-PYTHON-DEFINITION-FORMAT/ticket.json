@@ -1,93 +1,10 @@
 {
   "title": "Analyze Python Definition Format",
   "status": "closed",
-  "prompt": "Analyze how Python definitions are currently documented and how the CLI detects them, to understand what would need to change for triple-quote docstring support",
+  "description": "Analyze how Python definitions are currently documented and how the CLI detects them, to understand what would need to change for triple-quote docstring support",
   "summary": "Analysis of Python definition format across all 4 Python files and Go CLI detection/autofix code. No code changes made.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/555"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-13 10:14:56",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "fca8a9a0d53f7c789f1f214d7e769920fbe2cea2",
-      "prompt": "Analyze how Python definitions are currently documented and how the CLI detects them, to understand what would need to change for triple-quote docstring support",
-      "llm": "opus-4-6",
-      "diff": {
-        "bundles": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [
-            {
-              "path": "semio/semio/semio-repo/cli",
-              "lines": {
-                "added": 18,
-                "removed": 0
-              }
-            }
-          ],
-          "added": null
-        },
-        "folders": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "files": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [
-            {
-              "path": "💻semio-repo/cli/main.go",
-              "lines": {
-                "added": 23,
-                "removed": 5
-              }
-            }
-          ],
-          "added": []
-        },
-        "sections": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [
-            {
-              "path": "💻semio-repo/cli/main.go#Types#Policies",
-              "lines": {
-                "added": 23,
-                "removed": 5
-              }
-            }
-          ],
-          "added": null
-        },
-        "definitions": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [
-            {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§sectionPolicy",
-              "lines": {
-                "added": 23,
-                "removed": 5
-              }
-            },
-            {
-              "path": "💻semio-repo/cli/main.go#Types#Policies§sectionPolicy",
-              "lines": {
-                "added": 0,
-                "removed": 5
-              }
-            }
-          ],
-          "added": null
-        }
-      }
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism"
 }

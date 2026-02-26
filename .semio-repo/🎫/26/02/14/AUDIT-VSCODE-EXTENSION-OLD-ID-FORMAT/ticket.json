@@ -1,62 +1,10 @@
 {
   "title": "Audit Vscode Extension Old Id Format",
   "status": "closed",
-  "prompt": "Search the VS Code extension files for any code that directly constructs, parses, or pattern-matches on the old ID format and report findings.",
+  "description": "Search the VS Code extension files for any code that directly constructs, parses, or pattern-matches on the old ID format and report findings.",
   "summary": "Audited VS Code extension for old ID format references. Extension is a passive consumer of CLI-generated IDs. Found old-format test data at extension.test.ts lines 839,848,920-927. No ID construction/parsing in the extension itself. All changes needed are in Go CLI GetID() methods.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/568"
   },
-  "goal": "ANALYZING-IDS/ANALYZING-VSCODE-IDS",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-14 15:33:15",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
-      "prompt": "Search the VS Code extension files for any code that directly constructs, parses, or pattern-matches on the old ID format and report findings.",
-      "llm": "opus-4-6"
-    },
-    {
-      "kind": "ticket.close",
-      "date": "2026-02-14 15:34:25",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
-      "diff": {
-        "bundles": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        },
-        "folders": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "files": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "sections": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        },
-        "definitions": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        }
-      }
-    }
-  ]
+  "goal": "🎯analyzingids🎯analyzingvscodeids"
 }

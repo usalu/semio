@@ -1,7 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx](semiorepo://file/semio/assets/repo/some/folder/file_fixed.tsx)
-
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx)
 // 2025 Test User <test@test.com>
 
 // This program is free software: you can redistribute it and/or modify
@@ -20,32 +18,38 @@
 // #endregion 🔖Header
 
 // #region 🔖Types
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖types](semiorepo://section/semio/assets/repo/some/folder/file_fixed.tsx/Types)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖types](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Types)
 // Type definitions for the fixed component.
 // Types MUST be exported when used externally.
 
-// Properties of a fixed component.
-// FixedType MUST have a name and value.
+/**
+ * Properties of a fixed component.
+ * FixedType MUST have a name and value.
+ * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖types✂️fixedtype](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Types/d/i/FixedType)
+ **/
 interface FixedType {
   name: string;
   value: number;
 }
 
-// Kind alternatives for fixed types.
-// FixedKind MUST be one of alpha or beta.
+/**
+ * Kind alternatives for fixed types.
+ * FixedKind MUST be one of alpha or beta.
+ * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖types✂️fixedkind](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Types/d/i/FixedKind)
+ **/
 type FixedKind = "alpha" | "beta";
 
 // #endregion 🔖Types
 
 // #region 🔖Components
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖components](semiorepo://section/semio/assets/repo/some/folder/file_fixed.tsx/Components)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖components](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Components)
 // Rendering components for fixed types.
 // Components MUST accept FixedType props.
 
 /**
  * Renders a fixed component by returning its name.
  * FixedComponent MUST return the name property.
- * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖components🛠️fixedcomponent](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.tsx/Components/FixedComponent)
+ * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖components🛠️fixedcomponent](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Components/d/i/FixedComponent)
  **/
 export function FixedComponent(props: FixedType): string {
   return props.name;

@@ -1,18 +1,6 @@
 {
   "title": "Refactor state management to triadic hooks and proper state machine",
   "status": "closed",
-  "prompt": "Refactor state management to triadic hooks and proper state machine",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.902Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Refactor state management to triadic hooks and proper state machine",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Refactor state management to triadic hooks and proper state machine",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
 }

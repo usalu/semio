@@ -6,20 +6,5 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/665"
   },
-  "goal": "AI-OPTIMIZED-REPO",
-  "sessions": [
-    {
-      "id": "1771857735640-0000000000000000",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "claude-code",
-      "llm": "sonnet-4-6",
-      "prompts": [
-        {
-          "timestamp": "2026-02-23T14:00:00Z",
-          "prompt": "Remove all documentation about --no-management. It is a hidden feature. Only leave it for users that know it."
-        }
-      ]
-    }
-  ]
+  "goal": "🎯aioptimizedrepo"
 }

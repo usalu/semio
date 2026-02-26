@@ -1,18 +1,6 @@
 {
   "title": "\"\"",
   "status": "closed",
-  "prompt": "PIECE-HOVER-FIX",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.763Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "PIECE-HOVER-FIX",
-      "llm": "sonnet-4"
-    }
-  ]
+  "description": "PIECE-HOVER-FIX",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

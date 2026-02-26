@@ -1,18 +1,6 @@
 {
   "title": "Complete Python engine tests to match TypeScript semio.test.ts functionality",
   "status": "closed",
-  "prompt": "Complete Python engine tests to match TypeScript semio.test.ts functionality",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.854Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Complete Python engine tests to match TypeScript semio.test.ts functionality",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Complete Python engine tests to match TypeScript semio.test.ts functionality",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningtypeapp"
 }

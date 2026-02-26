@@ -1,18 +1,6 @@
 {
   "title": "move-dev-deps-to-devdependencies",
   "status": "closed",
-  "prompt": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-01-12T23:11:00Z",
-      "author": "usalu",
-      "system": "",
-      "client": "",
-      "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902",
-      "prompt": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
-      "llm": "opus-4-5"
-    }
-  ]
+  "description": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
+  "goal": "🎯aioptimizedrepo"
 }

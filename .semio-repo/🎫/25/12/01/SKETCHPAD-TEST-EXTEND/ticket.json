@@ -1,18 +1,6 @@
 {
   "title": "Extend sketchpad tests for type app and design app panels",
   "status": "closed",
-  "prompt": "Extend sketchpad tests for type app and design app panels",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.798Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Extend sketchpad tests for type app and design app panels",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Extend sketchpad tests for type app and design app panels",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

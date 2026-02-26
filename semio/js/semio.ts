@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js💻semiots](semiorepo://file/semio/js/semio.ts)
+// [👤semio📚js💻semio](semiorepo://p/u/semio/b/l/js/f/semio.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
-
-// [👤semio📚js💻semiots🔖imports](semiorepo://section/semio/js/semio.ts/Imports)
+// [👤semio📚js💻semio🔖imports](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
 // External dependency imports MUST be declared here.
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
 import { default as animals } from "@semio/assets/lists/animals.json";
@@ -36,25 +34,24 @@ import CONSTANTS from "./constants.json";
 // #endregion 🔖Imports
 
 // #region 🔖Constants
-// [👤semio📚js💻semiots🔖constants](semiorepo://section/semio/js/semio.ts/Constants)
+// [👤semio📚js💻semio🔖constants](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constants)
 // Global constants MUST define shared numeric parameters.
 
 /** Standard icon width in pixels.
- * [👤semio📚js💻semiots🔖constants🪨iconwidth](semiorepo://definition/semio/js/semio.ts/Constants/ICON_WIDTH)
+ * [👤semio📚js💻semio🔖constants🪨iconwidth](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constants/d/i/ICON_WIDTH)
 **/
 export const ICON_WIDTH = CONSTANTS.icon.width;
 /**
  * Numeric tolerance for floating-point comparisons.
  *
- *  * [👤semio📚js💻semiots🔖constants🪨tolerance](semiorepo://definition/semio/js/semio.ts/Constants/TOLERANCE)
+ *  * [👤semio📚js💻semio🔖constants🪨tolerance](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constants/d/i/TOLERANCE)
  **/
 export const TOLERANCE = CONSTANTS.tolerance;
 
 // #endregion 🔖Constants
 
 // #region 🔖Utilities
-
-// [👤semio📚js💻semiots🔖utilities](semiorepo://section/semio/js/semio.ts/Utilities)
+// [👤semio📚js💻semio🔖utilities](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities)
 // General-purpose utility functions MUST be defined here.
 
 /**
@@ -62,7 +59,7 @@ export const TOLERANCE = CONSTANTS.tolerance;
  *
  * MUST merge CSS class names using Tailwind merge.
  *
- *  * [👤semio📚js💻semiots🔖utilities🛠️cn](semiorepo://definition/semio/js/semio.ts/Utilities/cn)
+ *  * [👤semio📚js💻semio🔖utilities🛠️cn](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/cn)
  **/
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -73,10 +70,12 @@ export function cn(...inputs: ClassValue[]) {
  *
  * MUST return a new UUID v7 string.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨guid](semiorepo://definition/semio/js/semio.ts/Utilities/guid)
+ *  * [👤semio📚js💻semio🔖utilities🪨guid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/guid)
  **/
 export const guid = () => uuidv7();
 
+// [👤semio📚js💻semio🔖utilities🛠️seededrandom](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/SeededRandom)
+// SeededRandom holds the data fields for a SeededRandom record.
 class SeededRandom {
   private seed: number;
   constructor(seed: number) {
@@ -93,7 +92,7 @@ class SeededRandom {
  *
  * MUST provide the declared public interface.
  *
- *  * [👤semio📚js💻semiots🔖utilities🛠️generator](semiorepo://definition/semio/js/semio.ts/Utilities/Generator)
+ *  * [👤semio📚js💻semio🔖utilities🛠️generator](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/Generator)
  **/
 export class Generator {
   public static randomId(seed: number = Math.floor(Math.random() * 1000000)): string {
@@ -117,7 +116,7 @@ export class Generator {
  *
  * MUST return empty string for null or undefined.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨normalize](semiorepo://definition/semio/js/semio.ts/Utilities/normalize)
+ *  * [👤semio📚js💻semio🔖utilities🪨normalize](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/normalize)
  **/
 export const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
 /**
@@ -125,7 +124,7 @@ export const normalize = (val: string | undefined | null): string => (val === un
  *
  * MUST round to the nearest tolerance unit.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨round](semiorepo://definition/semio/js/semio.ts/Utilities/round)
+ *  * [👤semio📚js💻semio🔖utilities🪨round](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/round)
  **/
 export const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
 /**
@@ -133,7 +132,7 @@ export const round = (value: number): number => Math.round(value / TOLERANCE) * 
  *
  * MUST compute the Jaccard similarity coefficient.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨jaccard](semiorepo://definition/semio/js/semio.ts/Utilities/jaccard)
+ *  * [👤semio📚js💻semio🔖utilities🪨jaccard](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/jaccard)
  **/
 export const jaccard = (a: string[] | undefined, b: string[] | undefined): number => {
   if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
@@ -151,7 +150,7 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined): numbe
  *
  * MUST recursively compare values for equality.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨deepequal](semiorepo://definition/semio/js/semio.ts/Utilities/deepEqual)
+ *  * [👤semio📚js💻semio🔖utilities🪨deepequal](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/deepEqual)
  **/
 export const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -180,7 +179,7 @@ export const deepEqual = (a: any, b: any): boolean => {
  *
  * MUST compare arrays element by element.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨arraysequal](semiorepo://definition/semio/js/semio.ts/Utilities/arraysEqual)
+ *  * [👤semio📚js💻semio🔖utilities🪨arraysequal](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/arraysEqual)
  **/
 export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
   if (a === b) return true;
@@ -193,7 +192,7 @@ export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean 
  *
  * MUST return a name not in the existing set.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨generateuniquename](semiorepo://definition/semio/js/semio.ts/Utilities/generateUniqueName)
+ *  * [👤semio📚js💻semio🔖utilities🪨generateuniquename](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/generateUniqueName)
  **/
 export const generateUniqueName = (baseName: string, existingNames: string[], separator: string = " "): string => {
   if (!existingNames.includes(baseName)) return baseName;
@@ -207,14 +206,14 @@ export const generateUniqueName = (baseName: string, existingNames: string[], se
 /**
  * Zod schema for DiffStatus validation.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨diffstatusschema](semiorepo://definition/semio/js/semio.ts/Utilities/DiffStatusSchema)
+ *  * [👤semio📚js💻semio🔖utilities🪨diffstatusschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/DiffStatusSchema)
  **/
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
 /**
  * Enumeration of DiffStatus values.
  *
- *  * [👤semio📚js💻semiots🔖utilities🛠️diffstatus](semiorepo://definition/semio/js/semio.ts/Utilities/DiffStatus)
+ *  * [👤semio📚js💻semio🔖utilities🛠️diffstatus](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/DiffStatus)
  **/
 export enum DiffStatus {
   Unchanged = "unchanged",
@@ -228,7 +227,7 @@ export enum DiffStatus {
  *
  * MUST convert to the target representation.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨tothreerotation](semiorepo://definition/semio/js/semio.ts/Utilities/toThreeRotation)
+ *  * [👤semio📚js💻semio🔖utilities🪨tothreerotation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/toThreeRotation)
  **/
 export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
 
@@ -237,7 +236,7 @@ export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0
  *
  * MUST convert to the target representation.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨tosemiorotation](semiorepo://definition/semio/js/semio.ts/Utilities/toSemioRotation)
+ *  * [👤semio📚js💻semio🔖utilities🪨tosemiorotation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/toSemioRotation)
  **/
 export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
 /**
@@ -245,7 +244,7 @@ export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0
  *
  * MUST convert to the target representation.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨tothreequaternion](semiorepo://definition/semio/js/semio.ts/Utilities/toThreeQuaternion)
+ *  * [👤semio📚js💻semio🔖utilities🪨tothreequaternion](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/toThreeQuaternion)
  **/
 export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
 /**
@@ -253,7 +252,7 @@ export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0
  *
  * MUST convert to the target representation.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨tosemioquaternion](semiorepo://definition/semio/js/semio.ts/Utilities/toSemioQuaternion)
+ *  * [👤semio📚js💻semio🔖utilities🪨tosemioquaternion](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/toSemioQuaternion)
  **/
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
 /**
@@ -261,275 +260,274 @@ export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.
  *
  * MUST convert semio vector to Three.js vector.
  *
- *  * [👤semio📚js💻semiots🔖utilities🪨vectortothree](semiorepo://definition/semio/js/semio.ts/Utilities/vectorToThree)
+ *  * [👤semio📚js💻semio🔖utilities🪨vectortothree](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/vectorToThree)
  **/
 export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
 /**
  * Type alias for Guid.
  *
- *  * [👤semio📚js💻semiots🔖utilities🛠️guid](semiorepo://definition/semio/js/semio.ts/Utilities/Guid)
+ *  * [👤semio📚js💻semio🔖utilities🛠️guid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities/d/i/Guid)
  **/
 export type Guid = string;
 
 // #endregion 🔖Utilities
-
 // #region 🔖Entity IDs
 
-// [👤semio📚js💻semiots🔖entityids](semiorepo://section/semio/js/semio.ts/Entity%20IDs)
+// [👤semio📚js💻semio🔖entityids](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs)
 // Entity identifier types and comparison functions MUST be defined here.
 
 /**
  * Identifier type for Attribute entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️attributeid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/AttributeId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️attributeid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/AttributeId)
  **/
 export type AttributeId = { guid: Guid };
 /**
  * Identifier type for Location entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️locationid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/LocationId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️locationid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/LocationId)
  **/
 export type LocationId = { guid: Guid };
 /**
  * Identifier type for Author entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️authorid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/AuthorId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️authorid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/AuthorId)
  **/
 export type AuthorId = { guid: Guid };
 /**
  * Identifier type for File entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️fileid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/FileId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️fileid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/FileId)
  **/
 export type FileId = { guid: Guid };
 /**
  * Identifier type for Folder entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️folderid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/FolderId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️folderid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/FolderId)
  **/
 export type FolderId = { guid: Guid };
 /**
  * Identifier type for Benchmark entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️benchmarkid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/BenchmarkId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️benchmarkid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/BenchmarkId)
  **/
 export type BenchmarkId = { guid: Guid };
 /**
  * Identifier type for Quality entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️qualityid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/QualityId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️qualityid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/QualityId)
  **/
 export type QualityId = { guid: Guid };
 /**
  * Identifier type for Port entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️portid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/PortId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️portid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/PortId)
  **/
 export type PortId = { guid: Guid };
 /**
  * Identifier type for Prop entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️propid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/PropId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️propid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/PropId)
  **/
 export type PropId = { guid: Guid };
 /**
  * Identifier type for Model entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️modelid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ModelId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️modelid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ModelId)
  **/
 export type ModelId = { guid: Guid };
 /**
  * Identifier type for Connector entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️connectorid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ConnectorId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️connectorid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ConnectorId)
  **/
 export type ConnectorId = { guid: Guid };
 /**
  * Identifier type for Type entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️typeid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/TypeId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️typeid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/TypeId)
  **/
 export type TypeId = { guid: Guid };
 /**
  * Identifier type for Layer entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️layerid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/LayerId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️layerid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/LayerId)
  **/
 export type LayerId = { guid: Guid };
 /**
  * Identifier type for Piece entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️pieceid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/PieceId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️pieceid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/PieceId)
  **/
 export type PieceId = { guid: Guid };
 /**
  * Identifier type for Group entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️groupid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/GroupId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️groupid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/GroupId)
  **/
 export type GroupId = { guid: Guid };
 /**
  * Identifier type for Connection entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️connectionid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ConnectionId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️connectionid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ConnectionId)
  **/
 export type ConnectionId = { guid: Guid };
 /**
  * Identifier type for Stat entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️statid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/StatId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️statid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/StatId)
  **/
 export type StatId = { guid: Guid };
 /**
  * Identifier type for Design entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️designid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/DesignId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️designid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/DesignId)
  **/
 export type DesignId = { guid: Guid };
 /**
  * Identifier type for Kit entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️kitid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/KitId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️kitid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/KitId)
  **/
 export type KitId = { guid: Guid };
 /**
  * Identifier type for Tag entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️tagid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/TagId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️tagid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/TagId)
  **/
 export type TagId = { guid: Guid };
 /**
  * Identifier type for Concept entities.
  *
- *  * [👤semio📚js💻semiots🔖entityids🛠️conceptid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ConceptId)
+ *  * [👤semio📚js💻semio🔖entityids🛠️conceptid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ConceptId)
  **/
 export type ConceptId = { guid: Guid };
 
 /**
  * Zod schema for validating Attribute identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨attributeidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/AttributeIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨attributeidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/AttributeIdSchema)
  **/
 export const AttributeIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Location identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨locationidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/LocationIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨locationidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/LocationIdSchema)
  **/
 export const LocationIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Author identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨authoridschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/AuthorIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨authoridschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/AuthorIdSchema)
  **/
 export const AuthorIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating File identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨fileidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/FileIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨fileidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/FileIdSchema)
  **/
 export const FileIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Folder identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨folderidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/FolderIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨folderidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/FolderIdSchema)
  **/
 export const FolderIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Benchmark identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨benchmarkidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/BenchmarkIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨benchmarkidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/BenchmarkIdSchema)
  **/
 export const BenchmarkIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Quality identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨qualityidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/QualityIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨qualityidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/QualityIdSchema)
  **/
 export const QualityIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Port identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨portidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/PortIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨portidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/PortIdSchema)
  **/
 export const PortIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Prop identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨propidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/PropIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨propidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/PropIdSchema)
  **/
 export const PropIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Model identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨modelidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ModelIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨modelidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ModelIdSchema)
  **/
 export const ModelIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Connector identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨connectoridschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ConnectorIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨connectoridschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ConnectorIdSchema)
  **/
 export const ConnectorIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Type identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨typeidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/TypeIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨typeidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/TypeIdSchema)
  **/
 export const TypeIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Layer identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨layeridschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/LayerIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨layeridschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/LayerIdSchema)
  **/
 export const LayerIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Piece identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨pieceidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/PieceIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨pieceidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/PieceIdSchema)
  **/
 export const PieceIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Group identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨groupidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/GroupIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨groupidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/GroupIdSchema)
  **/
 export const GroupIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Connection identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨connectionidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ConnectionIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨connectionidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ConnectionIdSchema)
  **/
 export const ConnectionIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Stat identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨statidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/StatIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨statidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/StatIdSchema)
  **/
 export const StatIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Design identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨designidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/DesignIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨designidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/DesignIdSchema)
  **/
 export const DesignIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Kit identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨kitidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/KitIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨kitidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/KitIdSchema)
  **/
 export const KitIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Tag identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨tagidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/TagIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨tagidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/TagIdSchema)
  **/
 export const TagIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Concept identifiers.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨conceptidschema](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/ConceptIdSchema)
+ *  * [👤semio📚js💻semio🔖entityids🪨conceptidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/ConceptIdSchema)
  **/
 export const ConceptIdSchema = z.object({ guid: z.string() });
 
@@ -538,7 +536,7 @@ export const ConceptIdSchema = z.object({ guid: z.string() });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createattributeid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createAttributeId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createattributeid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createAttributeId)
  **/
 export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
 /**
@@ -546,7 +544,7 @@ export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createlocationid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createLocationId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createlocationid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createLocationId)
  **/
 export const createLocationId = (guid: Guid): LocationId => ({ guid });
 /**
@@ -554,7 +552,7 @@ export const createLocationId = (guid: Guid): LocationId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createauthorid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createAuthorId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createauthorid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createAuthorId)
  **/
 export const createAuthorId = (guid: Guid): AuthorId => ({ guid });
 /**
@@ -562,7 +560,7 @@ export const createAuthorId = (guid: Guid): AuthorId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createfileid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createFileId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createfileid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createFileId)
  **/
 export const createFileId = (guid: Guid): FileId => ({ guid });
 /**
@@ -570,7 +568,7 @@ export const createFileId = (guid: Guid): FileId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createfolderid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createFolderId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createfolderid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createFolderId)
  **/
 export const createFolderId = (guid: Guid): FolderId => ({ guid });
 /**
@@ -578,7 +576,7 @@ export const createFolderId = (guid: Guid): FolderId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createbenchmarkid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createBenchmarkId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createbenchmarkid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createBenchmarkId)
  **/
 export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
 /**
@@ -586,7 +584,7 @@ export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createqualityid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createQualityId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createqualityid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createQualityId)
  **/
 export const createQualityId = (guid: Guid): QualityId => ({ guid });
 /**
@@ -594,7 +592,7 @@ export const createQualityId = (guid: Guid): QualityId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createportid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createPortId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createportid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createPortId)
  **/
 export const createPortId = (guid: Guid): PortId => ({ guid });
 /**
@@ -602,7 +600,7 @@ export const createPortId = (guid: Guid): PortId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createpropid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createPropId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createpropid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createPropId)
  **/
 export const createPropId = (guid: Guid): PropId => ({ guid });
 /**
@@ -610,7 +608,7 @@ export const createPropId = (guid: Guid): PropId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createmodelid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createModelId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createmodelid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createModelId)
  **/
 export const createModelId = (guid: Guid): ModelId => ({ guid });
 /**
@@ -618,7 +616,7 @@ export const createModelId = (guid: Guid): ModelId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createconnectorid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createConnectorId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createconnectorid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createConnectorId)
  **/
 export const createConnectorId = (guid: Guid): ConnectorId => ({ guid });
 /**
@@ -626,7 +624,7 @@ export const createConnectorId = (guid: Guid): ConnectorId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createtypeid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createTypeId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createtypeid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createTypeId)
  **/
 export const createTypeId = (guid: Guid): TypeId => ({ guid });
 /**
@@ -634,7 +632,7 @@ export const createTypeId = (guid: Guid): TypeId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createlayerid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createLayerId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createlayerid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createLayerId)
  **/
 export const createLayerId = (guid: Guid): LayerId => ({ guid });
 /**
@@ -642,7 +640,7 @@ export const createLayerId = (guid: Guid): LayerId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createpieceid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createPieceId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createpieceid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createPieceId)
  **/
 export const createPieceId = (guid: Guid): PieceId => ({ guid });
 /**
@@ -650,7 +648,7 @@ export const createPieceId = (guid: Guid): PieceId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨creategroupid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createGroupId)
+ *  * [👤semio📚js💻semio🔖entityids🪨creategroupid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createGroupId)
  **/
 export const createGroupId = (guid: Guid): GroupId => ({ guid });
 /**
@@ -658,7 +656,7 @@ export const createGroupId = (guid: Guid): GroupId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createconnectionid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createConnectionId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createconnectionid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createConnectionId)
  **/
 export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
 /**
@@ -666,7 +664,7 @@ export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createstatid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createStatId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createstatid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createStatId)
  **/
 export const createStatId = (guid: Guid): StatId => ({ guid });
 /**
@@ -674,7 +672,7 @@ export const createStatId = (guid: Guid): StatId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createdesignid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createDesignId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createdesignid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createDesignId)
  **/
 export const createDesignId = (guid: Guid): DesignId => ({ guid });
 /**
@@ -682,7 +680,7 @@ export const createDesignId = (guid: Guid): DesignId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createkitid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createKitId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createkitid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createKitId)
  **/
 export const createKitId = (guid: Guid): KitId => ({ guid });
 /**
@@ -690,7 +688,7 @@ export const createKitId = (guid: Guid): KitId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createtagid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createTagId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createtagid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createTagId)
  **/
 export const createTagId = (guid: Guid): TagId => ({ guid });
 /**
@@ -698,7 +696,7 @@ export const createTagId = (guid: Guid): TagId => ({ guid });
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨createconceptid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/createConceptId)
+ *  * [👤semio📚js💻semio🔖entityids🪨createconceptid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/createConceptId)
  **/
 export const createConceptId = (guid: Guid): ConceptId => ({ guid });
 
@@ -707,7 +705,7 @@ export const createConceptId = (guid: Guid): ConceptId => ({ guid });
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresameattributeid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameAttributeId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresameattributeid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameAttributeId)
  **/
 export const areSameAttributeId = (a: AttributeId, b: AttributeId): boolean => a.guid === b.guid;
 /**
@@ -715,7 +713,7 @@ export const areSameAttributeId = (a: AttributeId, b: AttributeId): boolean => a
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamelocationid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameLocationId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamelocationid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameLocationId)
  **/
 export const areSameLocationId = (a: LocationId, b: LocationId): boolean => a.guid === b.guid;
 /**
@@ -723,7 +721,7 @@ export const areSameLocationId = (a: LocationId, b: LocationId): boolean => a.gu
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresameauthorid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameAuthorId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresameauthorid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameAuthorId)
  **/
 export const areSameAuthorId = (a: AuthorId, b: AuthorId): boolean => a.guid === b.guid;
 /**
@@ -731,7 +729,7 @@ export const areSameAuthorId = (a: AuthorId, b: AuthorId): boolean => a.guid ===
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamefileid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameFileId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamefileid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameFileId)
  **/
 export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.guid;
 /**
@@ -739,7 +737,7 @@ export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.gui
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamefolderid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameFolderId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamefolderid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameFolderId)
  **/
 export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid === b.guid;
 /**
@@ -747,7 +745,7 @@ export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid ===
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamebenchmarkid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameBenchmarkId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamebenchmarkid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameBenchmarkId)
  **/
 export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
 /**
@@ -755,7 +753,7 @@ export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamequalityid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameQualityId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamequalityid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameQualityId)
  **/
 export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
 /**
@@ -763,7 +761,7 @@ export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid 
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresameportid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSamePortId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresameportid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSamePortId)
  **/
 export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
 /**
@@ -771,7 +769,7 @@ export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.gui
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamepropid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSamePropId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamepropid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSamePropId)
  **/
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
 /**
@@ -779,7 +777,7 @@ export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.gui
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamemodelid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameModelId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamemodelid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameModelId)
  **/
 export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
 /**
@@ -787,7 +785,7 @@ export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresameconnectorid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameConnectorId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresameconnectorid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameConnectorId)
  **/
 export const areSameConnectorId = (a: ConnectorId, b: ConnectorId): boolean => a.guid === b.guid;
 /**
@@ -795,7 +793,7 @@ export const areSameConnectorId = (a: ConnectorId, b: ConnectorId): boolean => a
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresametypeid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameTypeId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresametypeid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameTypeId)
  **/
 export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
 /**
@@ -803,7 +801,7 @@ export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.gui
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamelayerid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameLayerId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamelayerid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameLayerId)
  **/
 export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
 /**
@@ -811,7 +809,7 @@ export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamepieceid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSamePieceId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamepieceid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSamePieceId)
  **/
 export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
 /**
@@ -819,7 +817,7 @@ export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamegroupid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameGroupId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamegroupid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameGroupId)
  **/
 export const areSameGroupId = (a: GroupId, b: GroupId): boolean => a.guid === b.guid;
 /**
@@ -827,7 +825,7 @@ export const areSameGroupId = (a: GroupId, b: GroupId): boolean => a.guid === b.
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresameconnectionid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameConnectionId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresameconnectionid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameConnectionId)
  **/
 export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean => a.guid === b.guid;
 /**
@@ -835,7 +833,7 @@ export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean =
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamestatid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameStatId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamestatid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameStatId)
  **/
 export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.guid;
 /**
@@ -843,7 +841,7 @@ export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.gui
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamedesignid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameDesignId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamedesignid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameDesignId)
  **/
 export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
 /**
@@ -851,7 +849,7 @@ export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid ===
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresamekitid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameKitId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresamekitid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameKitId)
  **/
 export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
 /**
@@ -859,7 +857,7 @@ export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresametagid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameTagId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresametagid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameTagId)
  **/
 export const areSameTagId = (a: TagId, b: TagId): boolean => a.guid === b.guid;
 /**
@@ -867,7 +865,7 @@ export const areSameTagId = (a: TagId, b: TagId): boolean => a.guid === b.guid;
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨aresameconceptid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/areSameConceptId)
+ *  * [👤semio📚js💻semio🔖entityids🪨aresameconceptid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/areSameConceptId)
  **/
 export const areSameConceptId = (a: ConceptId, b: ConceptId): boolean => a.guid === b.guid;
 
@@ -876,7 +874,7 @@ export const areSameConceptId = (a: ConceptId, b: ConceptId): boolean => a.guid 
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getattributeguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getAttributeGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getattributeguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getAttributeGuid)
  **/
 export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
 /**
@@ -884,7 +882,7 @@ export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getlocationguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getLocationGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getlocationguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getLocationGuid)
  **/
 export const getLocationGuid = (id: LocationId): Guid => id.guid;
 /**
@@ -892,7 +890,7 @@ export const getLocationGuid = (id: LocationId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getauthorguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getAuthorGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getauthorguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getAuthorGuid)
  **/
 export const getAuthorGuid = (id: AuthorId): Guid => id.guid;
 /**
@@ -900,7 +898,7 @@ export const getAuthorGuid = (id: AuthorId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getfileguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getFileGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getfileguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getFileGuid)
  **/
 export const getFileGuid = (id: FileId): Guid => id.guid;
 /**
@@ -908,7 +906,7 @@ export const getFileGuid = (id: FileId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getfolderguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getFolderGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getfolderguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getFolderGuid)
  **/
 export const getFolderGuid = (id: FolderId): Guid => id.guid;
 /**
@@ -916,7 +914,7 @@ export const getFolderGuid = (id: FolderId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getbenchmarkguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getBenchmarkGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getbenchmarkguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getBenchmarkGuid)
  **/
 export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
 /**
@@ -924,7 +922,7 @@ export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getqualityguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getQualityGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getqualityguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getQualityGuid)
  **/
 export const getQualityGuid = (id: QualityId): Guid => id.guid;
 /**
@@ -932,7 +930,7 @@ export const getQualityGuid = (id: QualityId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getportguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getPortGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getportguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getPortGuid)
  **/
 export const getPortGuid = (id: PortId): Guid => id.guid;
 /**
@@ -940,7 +938,7 @@ export const getPortGuid = (id: PortId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getpropguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getPropGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getpropguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getPropGuid)
  **/
 export const getPropGuid = (id: PropId): Guid => id.guid;
 /**
@@ -948,7 +946,7 @@ export const getPropGuid = (id: PropId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getmodelguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getModelGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getmodelguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getModelGuid)
  **/
 export const getModelGuid = (id: ModelId): Guid => id.guid;
 /**
@@ -956,7 +954,7 @@ export const getModelGuid = (id: ModelId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getconnectorguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getConnectorGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getconnectorguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getConnectorGuid)
  **/
 export const getConnectorGuid = (id: ConnectorId): Guid => id.guid;
 /**
@@ -964,7 +962,7 @@ export const getConnectorGuid = (id: ConnectorId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨gettypeguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getTypeGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨gettypeguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getTypeGuid)
  **/
 export const getTypeGuid = (id: TypeId): Guid => id.guid;
 /**
@@ -972,7 +970,7 @@ export const getTypeGuid = (id: TypeId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getlayerguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getLayerGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getlayerguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getLayerGuid)
  **/
 export const getLayerGuid = (id: LayerId): Guid => id.guid;
 /**
@@ -980,7 +978,7 @@ export const getLayerGuid = (id: LayerId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getpieceguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getPieceGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getpieceguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getPieceGuid)
  **/
 export const getPieceGuid = (id: PieceId): Guid => id.guid;
 /**
@@ -988,7 +986,7 @@ export const getPieceGuid = (id: PieceId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getgroupguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getGroupGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getgroupguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getGroupGuid)
  **/
 export const getGroupGuid = (id: GroupId): Guid => id.guid;
 /**
@@ -996,7 +994,7 @@ export const getGroupGuid = (id: GroupId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getconnectionguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getConnectionGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getconnectionguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getConnectionGuid)
  **/
 export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
 /**
@@ -1004,7 +1002,7 @@ export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getstatguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getStatGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getstatguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getStatGuid)
  **/
 export const getStatGuid = (id: StatId): Guid => id.guid;
 /**
@@ -1012,7 +1010,7 @@ export const getStatGuid = (id: StatId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getdesignguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getDesignGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getdesignguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getDesignGuid)
  **/
 export const getDesignGuid = (id: DesignId): Guid => id.guid;
 /**
@@ -1020,7 +1018,7 @@ export const getDesignGuid = (id: DesignId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getkitguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getKitGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getkitguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getKitGuid)
  **/
 export const getKitGuid = (id: KitId): Guid => id.guid;
 /**
@@ -1028,7 +1026,7 @@ export const getKitGuid = (id: KitId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨gettagguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getTagGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨gettagguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getTagGuid)
  **/
 export const getTagGuid = (id: TagId): Guid => id.guid;
 /**
@@ -1036,23 +1034,24 @@ export const getTagGuid = (id: TagId): Guid => id.guid;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖entityids🪨getconceptguid](semiorepo://definition/semio/js/semio.ts/Entity%20IDs/getConceptGuid)
+ *  * [👤semio📚js💻semio🔖entityids🪨getconceptguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs/d/i/getConceptGuid)
  **/
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
 // #endregion 🔖Entity IDs
-
 // #region 🔖Attribute
 
-// [👤semio📚js💻semiots🔖attribute](semiorepo://section/semio/js/semio.ts/Attribute)
+// [👤semio📚js💻semio🔖attribute](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute)
 // Attribute entity types, schemas, and helper functions MUST be defined here.
 
+// [👤semio📚js💻semio🔖attribute🪨dateproperty](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/DateProperty)
+// DateProperty holds the data fields for a DateProperty record.
 const DateProperty = () => z.string().optional();
 
 /**
  * Zod schema for Attribute validation.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨attributeschema](semiorepo://definition/semio/js/semio.ts/Attribute/AttributeSchema)
+ *  * [👤semio📚js💻semio🔖attribute🪨attributeschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeSchema)
  **/
 export const AttributeSchema = z.object({
   guid: z.string(),
@@ -1063,7 +1062,7 @@ export const AttributeSchema = z.object({
 /**
  * Type alias for Attribute.
  *
- *  * [👤semio📚js💻semiots🔖attribute🛠️attribute](semiorepo://definition/semio/js/semio.ts/Attribute/Attribute)
+ *  * [👤semio📚js💻semio🔖attribute🛠️attribute](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/Attribute)
  **/
 export type Attribute = z.infer<typeof AttributeSchema>;
 /**
@@ -1071,7 +1070,7 @@ export type Attribute = z.infer<typeof AttributeSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨serializeattribute](semiorepo://definition/semio/js/semio.ts/Attribute/serializeAttribute)
+ *  * [👤semio📚js💻semio🔖attribute🪨serializeattribute](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/serializeAttribute)
  **/
 export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute));
 /**
@@ -1079,20 +1078,20 @@ export const serializeAttribute = (attribute: Attribute): string => JSON.stringi
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨deserializeattribute](semiorepo://definition/semio/js/semio.ts/Attribute/deserializeAttribute)
+ *  * [👤semio📚js💻semio🔖attribute🪨deserializeattribute](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/deserializeAttribute)
  **/
 export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Attribute diff validation.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨attributediffschema](semiorepo://definition/semio/js/semio.ts/Attribute/AttributeDiffSchema)
+ *  * [👤semio📚js💻semio🔖attribute🪨attributediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeDiffSchema)
  **/
 export const AttributeDiffSchema = AttributeSchema.partial();
 /**
  * Diff type for tracking Attribute changes.
  *
- *  * [👤semio📚js💻semiots🔖attribute🛠️attributediff](semiorepo://definition/semio/js/semio.ts/Attribute/AttributeDiff)
+ *  * [👤semio📚js💻semio🔖attribute🛠️attributediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeDiff)
  **/
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
 /**
@@ -1100,7 +1099,7 @@ export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨getattributediff](semiorepo://definition/semio/js/semio.ts/Attribute/getAttributeDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨getattributediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/getAttributeDiff)
  **/
 export const getAttributeDiff = (before: Attribute, after: Attribute): AttributeDiff => {
   const diff: AttributeDiff = {};
@@ -1114,7 +1113,7 @@ export const getAttributeDiff = (before: Attribute, after: Attribute): Attribute
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨inverseattributediff](semiorepo://definition/semio/js/semio.ts/Attribute/inverseAttributeDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨inverseattributediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/inverseAttributeDiff)
  **/
 export const inverseAttributeDiff = (original: Attribute, appliedDiff: AttributeDiff): AttributeDiff => {
   return {
@@ -1128,7 +1127,7 @@ export const inverseAttributeDiff = (original: Attribute, appliedDiff: Attribute
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨mergeattributediff](semiorepo://definition/semio/js/semio.ts/Attribute/mergeAttributeDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨mergeattributediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/mergeAttributeDiff)
  **/
 export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): AttributeDiff => {
   return {
@@ -1142,7 +1141,7 @@ export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨applyattributediff](semiorepo://definition/semio/js/semio.ts/Attribute/applyAttributeDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨applyattributediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/applyAttributeDiff)
  **/
 export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {
   return { ...base, ...diff };
@@ -1151,7 +1150,7 @@ export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attrib
 /**
  * Zod schema for Attributes diff validation.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨attributesdiffschema](semiorepo://definition/semio/js/semio.ts/Attribute/AttributesDiffSchema)
+ *  * [👤semio📚js💻semio🔖attribute🪨attributesdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributesDiffSchema)
  **/
 export const AttributesDiffSchema = z.object({
   removed: z.array(AttributeIdSchema).optional(),
@@ -1161,10 +1160,12 @@ export const AttributesDiffSchema = z.object({
 /**
  * Diff type for tracking Attributes changes.
  *
- *  * [👤semio📚js💻semiots🔖attribute🛠️attributesdiff](semiorepo://definition/semio/js/semio.ts/Attribute/AttributesDiff)
+ *  * [👤semio📚js💻semio🔖attribute🛠️attributesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributesDiff)
  **/
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
+// getAttributesDiff holds the data fields for a getAttributesDiff record.
+// [👤semio📚js💻semio🔖attribute🪨getattributesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/getAttributesDiff)
 const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
   const beforeGuids = new Set(before.map((a) => a.guid));
   const afterGuids = new Set(after.map((a) => a.guid));
@@ -1186,7 +1187,7 @@ const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesD
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨inverseattributesdiff](semiorepo://definition/semio/js/semio.ts/Attribute/inverseAttributesDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨inverseattributesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/inverseAttributesDiff)
  **/
 export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -1211,7 +1212,7 @@ export const inverseAttributesDiff = (original: Attribute[], appliedDiff: Attrib
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨mergeattributesdiff](semiorepo://definition/semio/js/semio.ts/Attribute/mergeAttributesDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨mergeattributesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/mergeAttributesDiff)
  **/
 export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDiff): AttributesDiff => {
   return { ...first, ...second };
@@ -1222,7 +1223,7 @@ export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖attribute🪨applyattributesdiff](semiorepo://definition/semio/js/semio.ts/Attribute/applyAttributesDiff)
+ *  * [👤semio📚js💻semio🔖attribute🪨applyattributesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/applyAttributesDiff)
  **/
 export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
   let result = [...base];
@@ -1241,26 +1242,29 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
   if (diff.added) {
     result.push(...diff.added);
   }
-  return result;
 };
 
 // #endregion 🔖Attribute
 
 // #region 🔖Coord (weak entity)
 
-// [👤semio📚js💻semiots🔖coordweakentity](semiorepo://section/semio/js/semio.ts/Coord%20(weak%20entity))
+// [👤semio📚js💻semio🔖coordweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity))
 // Coord weak entity types and schemas MUST be defined here.
 
 /**
  * Zod schema for Coord validation.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨coordschema](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/CoordSchema)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨coordschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/CoordSchema)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨coordschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/CoordSchema)
  **/
 export const CoordSchema = z.object({ u: z.number(), v: z.number() });
 /**
  * Type alias for Coord.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🛠️coord](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/Coord)
+ *  * [👤semio📚js💻semio🔖coordweakentity🛠️coord](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/Coord)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🛠️coord](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/Coord)
  **/
 export type Coord = z.infer<typeof CoordSchema>;
 /**
@@ -1268,7 +1272,9 @@ export type Coord = z.infer<typeof CoordSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨serializecoord](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/serializeCoord)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨serializecoord](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/serializeCoord)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨serializecoord](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/serializeCoord)
  **/
 export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
 /**
@@ -1276,20 +1282,26 @@ export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSche
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨deserializecoord](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/deserializeCoord)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨deserializecoord](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/deserializeCoord)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨deserializecoord](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/deserializeCoord)
  **/
 export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Coord diff validation.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨coorddiffschema](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/CoordDiffSchema)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨coorddiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/CoordDiffSchema)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨coorddiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/CoordDiffSchema)
  **/
 export const CoordDiffSchema = CoordSchema.partial();
 /**
  * Diff type for tracking Coord changes.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🛠️coorddiff](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/CoordDiff)
+ *  * [👤semio📚js💻semio🔖coordweakentity🛠️coorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/CoordDiff)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🛠️coorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/CoordDiff)
  **/
 export type CoordDiff = z.infer<typeof CoordDiffSchema>;
 /**
@@ -1297,7 +1309,9 @@ export type CoordDiff = z.infer<typeof CoordDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨getcoorddiff](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/getCoordDiff)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨getcoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/getCoordDiff)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨getcoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/getCoordDiff)
  **/
 export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
   return {
@@ -1310,7 +1324,9 @@ export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨inversecoorddiff](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/inverseCoordDiff)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨inversecoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/inverseCoordDiff)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨inversecoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/inverseCoordDiff)
  **/
 export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
   const u = appliedDiff.u ?? 0;
@@ -1325,10 +1341,11 @@ export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): Coord
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨mergecoorddiff](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/mergeCoordDiff)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨mergecoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/mergeCoordDiff)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨mergecoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/mergeCoordDiff)
  **/
 export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
-  return {
     u: (diff1.u ?? 0) + (diff2.u ?? 0),
     v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
@@ -1338,7 +1355,9 @@ export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖coordweakentity🪨applycoorddiff](semiorepo://definition/semio/js/semio.ts/Coord%20(weak%20entity)/applyCoordDiff)
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨applycoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/applyCoordDiff)
+ *
+ * [👤semio📚js💻semio🔖coordweakentity🪨applycoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/applyCoordDiff)
  **/
 export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
   const u = diff.u ?? 0;
@@ -1353,19 +1372,23 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 
 // #region 🔖Vec (weak entity)
 
-// [👤semio📚js💻semiots🔖vecweakentity](semiorepo://section/semio/js/semio.ts/Vec%20(weak%20entity))
+// [👤semio📚js💻semio🔖vecweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity))
 // Vec weak entity types and schemas MUST be defined here.
 
 /**
  * Zod schema for Vec validation.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨vecschema](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/VecSchema)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨vecschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/VecSchema)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨vecschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/VecSchema)
  **/
 export const VecSchema = z.object({ u: z.number(), v: z.number() });
 /**
  * Type alias for Vec.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🛠️vec](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/Vec)
+ *  * [👤semio📚js💻semio🔖vecweakentity🛠️vec](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/Vec)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🛠️vec](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/Vec)
  **/
 export type Vec = z.infer<typeof VecSchema>;
 /**
@@ -1373,7 +1396,9 @@ export type Vec = z.infer<typeof VecSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨serializevec](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/serializeVec)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨serializevec](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/serializeVec)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨serializevec](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/serializeVec)
  **/
 export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
 /**
@@ -1381,20 +1406,26 @@ export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨deserializevec](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/deserializeVec)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨deserializevec](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/deserializeVec)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨deserializevec](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/deserializeVec)
  **/
 export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Vec diff validation.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨vecdiffschema](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/VecDiffSchema)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨vecdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/VecDiffSchema)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨vecdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/VecDiffSchema)
  **/
 export const VecDiffSchema = VecSchema.partial();
 /**
  * Diff type for tracking Vec changes.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🛠️vecdiff](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/VecDiff)
+ *  * [👤semio📚js💻semio🔖vecweakentity🛠️vecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/VecDiff)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🛠️vecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/VecDiff)
  **/
 export type VecDiff = z.infer<typeof VecDiffSchema>;
 /**
@@ -1402,7 +1433,9 @@ export type VecDiff = z.infer<typeof VecDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨getvecdiff](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/getVecDiff)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨getvecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/getVecDiff)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨getvecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/getVecDiff)
  **/
 export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
   return {
@@ -1415,7 +1448,8 @@ export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨inversevecdiff](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/inverseVecDiff)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨inversevecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/inverseVecDiff)
+ *
  **/
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
   const u = appliedDiff.u ?? 0;
@@ -1430,7 +1464,9 @@ export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨mergevecdiff](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/mergeVecDiff)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨mergevecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/mergeVecDiff)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨mergevecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/mergeVecDiff)
  **/
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
   return {
@@ -1443,7 +1479,9 @@ export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vecweakentity🪨applyvecdiff](semiorepo://definition/semio/js/semio.ts/Vec%20(weak%20entity)/applyVecDiff)
+ *  * [👤semio📚js💻semio🔖vecweakentity🪨applyvecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/applyVecDiff)
+ *
+ * [👤semio📚js💻semio🔖vecweakentity🪨applyvecdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity)/d/i/applyVecDiff)
  **/
 export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
   const u = diff.u ?? 0;
@@ -1458,13 +1496,15 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
 
 // #region 🔖Point (weak entity)
 
-// [👤semio📚js💻semiots🔖pointweakentity](semiorepo://section/semio/js/semio.ts/Point%20(weak%20entity))
+// [👤semio📚js💻semio🔖pointweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity))
 // Point weak entity types and schemas MUST be defined here.
 
 /**
  * Zod schema for Point validation.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨pointschema](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/PointSchema)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨pointschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/PointSchema)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨pointschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/PointSchema)
  **/
 export const PointSchema = z.object({
   x: z.number(),
@@ -1474,7 +1514,9 @@ export const PointSchema = z.object({
 /**
  * Type alias for Point.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🛠️point](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/Point)
+ *  * [👤semio📚js💻semio🔖pointweakentity🛠️point](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/Point)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🛠️point](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/Point)
  **/
 export type Point = z.infer<typeof PointSchema>;
 /**
@@ -1482,7 +1524,9 @@ export type Point = z.infer<typeof PointSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨serializepoint](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/serializePoint)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨serializepoint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/serializePoint)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨serializepoint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/serializePoint)
  **/
 export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
 /**
@@ -1490,20 +1534,26 @@ export const serializePoint = (point: Point): string => JSON.stringify(PointSche
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨deserializepoint](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/deserializePoint)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨deserializepoint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/deserializePoint)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨deserializepoint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/deserializePoint)
  **/
 export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Point diff validation.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨pointdiffschema](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/PointDiffSchema)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨pointdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/PointDiffSchema)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨pointdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/PointDiffSchema)
  **/
 export const PointDiffSchema = PointSchema.partial();
 /**
  * Diff type for tracking Point changes.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🛠️pointdiff](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/PointDiff)
+ *  * [👤semio📚js💻semio🔖pointweakentity🛠️pointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/PointDiff)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🛠️pointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/PointDiff)
  **/
 export type PointDiff = z.infer<typeof PointDiffSchema>;
 /**
@@ -1511,8 +1561,9 @@ export type PointDiff = z.infer<typeof PointDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨getpointdiff](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/getPointDiff)
- **/
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨getpointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/getPointDiff)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨getpointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/getPointDiff)
 export const getPointDiff = (before: Point, after: Point): PointDiff => {
   return {
     x: after.x - before.x,
@@ -1525,7 +1576,9 @@ export const getPointDiff = (before: Point, after: Point): PointDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨inversepointdiff](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/inversePointDiff)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨inversepointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/inversePointDiff)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨inversepointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/inversePointDiff)
  **/
 export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
   const x = appliedDiff.x ?? 0;
@@ -1542,7 +1595,9 @@ export const inversePointDiff = (original: Point, appliedDiff: PointDiff): Point
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨mergepointdiff](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/mergePointDiff)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨mergepointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/mergePointDiff)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨mergepointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/mergePointDiff)
  **/
 export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
   return {
@@ -1556,7 +1611,9 @@ export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖pointweakentity🪨applypointdiff](semiorepo://definition/semio/js/semio.ts/Point%20(weak%20entity)/applyPointDiff)
+ *  * [👤semio📚js💻semio🔖pointweakentity🪨applypointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/applyPointDiff)
+ *
+ * [👤semio📚js💻semio🔖pointweakentity🪨applypointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/applyPointDiff)
  **/
 export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
   const x = diff.x ?? 0;
@@ -1573,13 +1630,15 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
 
 // #region 🔖Vector (weak entity)
 
-// [👤semio📚js💻semiots🔖vectorweakentity](semiorepo://section/semio/js/semio.ts/Vector%20(weak%20entity))
+// [👤semio📚js💻semio🔖vectorweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity))
 // Vector weak entity types and schemas MUST be defined here.
 
 /**
  * Zod schema for Vector validation.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨vectorschema](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/VectorSchema)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨vectorschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/VectorSchema)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨vectorschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/VectorSchema)
  **/
 export const VectorSchema = z.object({
   x: z.number(),
@@ -1589,7 +1648,9 @@ export const VectorSchema = z.object({
 /**
  * Type alias for Vector.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🛠️vector](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/Vector)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🛠️vector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/Vector)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🛠️vector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/Vector)
  **/
 export type Vector = z.infer<typeof VectorSchema>;
 /**
@@ -1597,7 +1658,9 @@ export type Vector = z.infer<typeof VectorSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨serializevector](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/serializeVector)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨serializevector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/serializeVector)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨serializevector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/serializeVector)
  **/
 export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
 /**
@@ -1605,20 +1668,25 @@ export const serializeVector = (vector: Vector): string => JSON.stringify(Vector
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨deserializevector](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/deserializeVector)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨deserializevector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/deserializeVector)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨deserializevector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/deserializeVector)
  **/
 export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Vector diff validation.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨vectordiffschema](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/VectorDiffSchema)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨vectordiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/VectorDiffSchema)
+ * [👤semio📚js💻semio🔖vectorweakentity🪨vectordiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/VectorDiffSchema)
  **/
 export const VectorDiffSchema = VectorSchema.partial();
 /**
  * Diff type for tracking Vector changes.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🛠️vectordiff](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/VectorDiff)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🛠️vectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/VectorDiff)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🛠️vectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/VectorDiff)
  **/
 export type VectorDiff = z.infer<typeof VectorDiffSchema>;
 /**
@@ -1626,7 +1694,9 @@ export type VectorDiff = z.infer<typeof VectorDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨getvectordiff](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/getVectorDiff)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨getvectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/getVectorDiff)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨getvectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/getVectorDiff)
  **/
 export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
   return {
@@ -1640,7 +1710,9 @@ export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨inversevectordiff](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/inverseVectorDiff)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨inversevectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/inverseVectorDiff)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨inversevectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/inverseVectorDiff)
  **/
 export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
   const x = appliedDiff.x ?? 0;
@@ -1657,7 +1729,9 @@ export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): Ve
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨mergevectordiff](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/mergeVectorDiff)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨mergevectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/mergeVectorDiff)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨mergevectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/mergeVectorDiff)
  **/
 export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
   return {
@@ -1671,7 +1745,9 @@ export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖vectorweakentity🪨applyvectordiff](semiorepo://definition/semio/js/semio.ts/Vector%20(weak%20entity)/applyVectorDiff)
+ *  * [👤semio📚js💻semio🔖vectorweakentity🪨applyvectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/applyVectorDiff)
+ *
+ * [👤semio📚js💻semio🔖vectorweakentity🪨applyvectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity)/d/i/applyVectorDiff)
  **/
 export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
   const x = diff.x ?? 0;
@@ -1688,13 +1764,15 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
 
 // #region 🔖Plane (weak entity)
 
-// [👤semio📚js💻semiots🔖planeweakentity](semiorepo://section/semio/js/semio.ts/Plane%20(weak%20entity))
+// [👤semio📚js💻semio🔖planeweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity))
 // Plane weak entity types and schemas MUST be defined here.
 
 /**
  * Zod schema for Plane validation.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨planeschema](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/PlaneSchema)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨planeschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/PlaneSchema)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨planeschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/PlaneSchema)
  **/
 export const PlaneSchema = z.object({
   origin: PointSchema,
@@ -1704,7 +1782,9 @@ export const PlaneSchema = z.object({
 /**
  * Type alias for Plane.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🛠️plane](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/Plane)
+ *  * [👤semio📚js💻semio🔖planeweakentity🛠️plane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/Plane)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🛠️plane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/Plane)
  **/
 export type Plane = z.infer<typeof PlaneSchema>;
 /**
@@ -1712,7 +1792,9 @@ export type Plane = z.infer<typeof PlaneSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨serializeplane](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/serializePlane)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨serializeplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/serializePlane)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨serializeplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/serializePlane)
  **/
 export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
 /**
@@ -1720,7 +1802,9 @@ export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSche
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨deserializeplane](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/deserializePlane)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨deserializeplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/deserializePlane)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨deserializeplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/deserializePlane)
  **/
 export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
 /**
@@ -1728,7 +1812,9 @@ export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨planetomatrix](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/planeToMatrix)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨planetomatrix](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/planeToMatrix)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨planetomatrix](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/planeToMatrix)
  **/
 export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
   const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
@@ -1744,7 +1830,9 @@ export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨matrixtoplane](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/matrixToPlane)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨matrixtoplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/matrixToPlane)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨matrixtoplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/matrixToPlane)
  **/
 export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
   const origin = new THREE.Vector3();
@@ -1765,7 +1853,9 @@ export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨averageplane](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/averagePlane)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨averageplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/averagePlane)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨averageplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/averagePlane)
  **/
 export const averagePlane = (planes: Plane[]): Plane | null => {
   if (planes.length === 0) return null;
@@ -1788,7 +1878,8 @@ export const averagePlane = (planes: Plane[]): Plane | null => {
     xAxis: baseXAxis,
     yAxis: baseYAxis,
   };
-};
+// roundPlane holds the data fields for a roundPlane record.
+// [👤semio📚js💻semio🔖planeweakentity🪨roundplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/roundPlane)
 const roundPlane = (plane: Plane): Plane => ({
   origin: {
     x: round(plane.origin.x),
@@ -1810,7 +1901,9 @@ const roundPlane = (plane: Plane): Plane => ({
 /**
  * Zod schema for Plane diff validation.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨planediffschema](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/PlaneDiffSchema)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨planediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/PlaneDiffSchema)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨planediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/PlaneDiffSchema)
  **/
 export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
   .extend({
@@ -1822,7 +1915,9 @@ export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAx
 /**
  * Diff type for tracking Plane changes.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🛠️planediff](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/PlaneDiff)
+ *  * [👤semio📚js💻semio🔖planeweakentity🛠️planediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/PlaneDiff)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🛠️planediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/PlaneDiff)
  **/
 export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
 /**
@@ -1830,7 +1925,9 @@ export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨getplanediff](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/getPlaneDiff)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨getplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/getPlaneDiff)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨getplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/getPlaneDiff)
  **/
 export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
   return {
@@ -1844,7 +1941,9 @@ export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨inverseplanediff](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/inversePlaneDiff)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨inverseplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/inversePlaneDiff)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨inverseplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/inversePlaneDiff)
  **/
 export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
   const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
@@ -1861,7 +1960,9 @@ export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): Plane
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨mergeplanediff](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/mergePlaneDiff)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨mergeplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/mergePlaneDiff)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨mergeplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/mergePlaneDiff)
  **/
 export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
   return {
@@ -1875,7 +1976,9 @@ export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖planeweakentity🪨applyplanediff](semiorepo://definition/semio/js/semio.ts/Plane%20(weak%20entity)/applyPlaneDiff)
+ *  * [👤semio📚js💻semio🔖planeweakentity🪨applyplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/applyPlaneDiff)
+ *
+ * [👤semio📚js💻semio🔖planeweakentity🪨applyplanediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/applyPlaneDiff)
  **/
 export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
   return {
@@ -1889,13 +1992,14 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
 
 // #region 🔖Camera (weak entity)
 
-// [👤semio📚js💻semiots🔖cameraweakentity](semiorepo://section/semio/js/semio.ts/Camera%20(weak%20entity))
 // Camera weak entity types and schemas MUST be defined here.
 
 /**
  * Zod schema for Camera validation.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨cameraschema](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/CameraSchema)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨cameraschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/CameraSchema)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨cameraschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/CameraSchema)
  **/
 export const CameraSchema = z.object({
   position: PointSchema,
@@ -1905,7 +2009,9 @@ export const CameraSchema = z.object({
 /**
  * Type alias for Camera.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🛠️camera](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/Camera)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🛠️camera](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/Camera)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🛠️camera](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/Camera)
  **/
 export type Camera = z.infer<typeof CameraSchema>;
 /**
@@ -1913,7 +2019,9 @@ export type Camera = z.infer<typeof CameraSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨serializecamera](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/serializeCamera)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨serializecamera](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/serializeCamera)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨serializecamera](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/serializeCamera)
  **/
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
 /**
@@ -1921,14 +2029,18 @@ export const serializeCamera = (camera: Camera): string => JSON.stringify(Camera
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨deserializecamera](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/deserializeCamera)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨deserializecamera](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/deserializeCamera)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨deserializecamera](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/deserializeCamera)
  **/
 export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Camera diff validation.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨cameradiffschema](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/CameraDiffSchema)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨cameradiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/CameraDiffSchema)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨cameradiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/CameraDiffSchema)
  **/
 export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true })
   .extend({
@@ -1940,7 +2052,9 @@ export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: tru
 /**
  * Diff type for tracking Camera changes.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🛠️cameradiff](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/CameraDiff)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🛠️cameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/CameraDiff)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🛠️cameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/CameraDiff)
  **/
 export type CameraDiff = z.infer<typeof CameraDiffSchema>;
 /**
@@ -1948,7 +2062,9 @@ export type CameraDiff = z.infer<typeof CameraDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨getcameradiff](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/getCameraDiff)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨getcameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/getCameraDiff)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨getcameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/getCameraDiff)
  **/
 export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
   return {
@@ -1962,7 +2078,9 @@ export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨inversecameradiff](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/inverseCameraDiff)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨inversecameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/inverseCameraDiff)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨inversecameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/inverseCameraDiff)
  **/
 export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => {
   return {
@@ -1976,7 +2094,9 @@ export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): Ca
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨mergecameradiff](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/mergeCameraDiff)
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨mergecameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/mergeCameraDiff)
+ *
+ * [👤semio📚js💻semio🔖cameraweakentity🪨mergecameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/mergeCameraDiff)
  **/
 export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => {
   return {
@@ -1989,8 +2109,9 @@ export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDif
  * Diff type for tracking applyCamera changes.
  *
  * MUST perform the operation correctly.
+ *  * [👤semio📚js💻semio🔖cameraweakentity🪨applycameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/applyCameraDiff)
  *
- *  * [👤semio📚js💻semiots🔖cameraweakentity🪨applycameradiff](semiorepo://definition/semio/js/semio.ts/Camera%20(weak%20entity)/applyCameraDiff)
+ * [👤semio📚js💻semio🔖cameraweakentity🪨applycameradiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/applyCameraDiff)
  **/
 export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
   return {
@@ -2004,13 +2125,13 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
 
 // #region 🔖Location
 
-// [👤semio📚js💻semiots🔖location](semiorepo://section/semio/js/semio.ts/Location)
+// [👤semio📚js💻semio🔖location](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location)
 // Location entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Location validation.
  *
- *  * [👤semio📚js💻semiots🔖location🪨locationschema](semiorepo://definition/semio/js/semio.ts/Location/LocationSchema)
+ *  * [👤semio📚js💻semio🔖location🪨locationschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/LocationSchema)
  **/
 export const LocationSchema = z.object({
   guid: z.string(),
@@ -2022,7 +2143,7 @@ export const LocationSchema = z.object({
 /**
  * Type alias for Location.
  *
- *  * [👤semio📚js💻semiots🔖location🛠️location](semiorepo://definition/semio/js/semio.ts/Location/Location)
+ *  * [👤semio📚js💻semio🔖location🛠️location](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/Location)
  **/
 export type Location = z.infer<typeof LocationSchema>;
 /**
@@ -2030,7 +2151,7 @@ export type Location = z.infer<typeof LocationSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖location🪨serializelocation](semiorepo://definition/semio/js/semio.ts/Location/serializeLocation)
+ *  * [👤semio📚js💻semio🔖location🪨serializelocation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/serializeLocation)
  **/
 export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location));
 /**
@@ -2038,14 +2159,14 @@ export const serializeLocation = (location: Location): string => JSON.stringify(
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖location🪨deserializelocation](semiorepo://definition/semio/js/semio.ts/Location/deserializeLocation)
+ *  * [👤semio📚js💻semio🔖location🪨deserializelocation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/deserializeLocation)
  **/
 export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Location diff validation.
  *
- *  * [👤semio📚js💻semiots🔖location🪨locationdiffschema](semiorepo://definition/semio/js/semio.ts/Location/LocationDiffSchema)
+ *  * [👤semio📚js💻semio🔖location🪨locationdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/LocationDiffSchema)
  **/
 export const LocationDiffSchema = LocationSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -2053,7 +2174,7 @@ export const LocationDiffSchema = LocationSchema.partial().omit({ attributes: tr
 /**
  * Diff type for tracking Location changes.
  *
- *  * [👤semio📚js💻semiots🔖location🛠️locationdiff](semiorepo://definition/semio/js/semio.ts/Location/LocationDiff)
+ *  * [👤semio📚js💻semio🔖location🛠️locationdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/LocationDiff)
  **/
 export type LocationDiff = z.infer<typeof LocationDiffSchema>;
 /**
@@ -2061,7 +2182,7 @@ export type LocationDiff = z.infer<typeof LocationDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖location🪨getlocationdiff](semiorepo://definition/semio/js/semio.ts/Location/getLocationDiff)
+ *  * [👤semio📚js💻semio🔖location🪨getlocationdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/getLocationDiff)
  **/
 export const getLocationDiff = (before: Location, after: Location): LocationDiff => {
   const diff: LocationDiff = {};
@@ -2076,7 +2197,7 @@ export const getLocationDiff = (before: Location, after: Location): LocationDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖location🪨inverselocationdiff](semiorepo://definition/semio/js/semio.ts/Location/inverseLocationDiff)
+ *  * [👤semio📚js💻semio🔖location🪨inverselocationdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/inverseLocationDiff)
  **/
 export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => {
   const inverse: LocationDiff = {};
@@ -2091,7 +2212,7 @@ export const inverseLocationDiff = (original: Location, appliedDiff: LocationDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖location🪨mergelocationdiff](semiorepo://definition/semio/js/semio.ts/Location/mergeLocationDiff)
+ *  * [👤semio📚js💻semio🔖location🪨mergelocationdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/mergeLocationDiff)
  **/
 export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -2101,7 +2222,7 @@ export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): Loc
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖location🪨applylocationdiff](semiorepo://definition/semio/js/semio.ts/Location/applyLocationDiff)
+ *  * [👤semio📚js💻semio🔖location🪨applylocationdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/applyLocationDiff)
  **/
 export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -2113,8 +2234,6 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
     altitude: diff.altitude ?? base.altitude,
   };
 
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
   return result;
 };
 
@@ -2122,19 +2241,19 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 
 // #region 🔖Author
 
-// [👤semio📚js💻semiots🔖author](semiorepo://section/semio/js/semio.ts/Author)
+// [👤semio📚js💻semio🔖author](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author)
 // Author entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Author validation.
  *
- *  * [👤semio📚js💻semiots🔖author🪨authorschema](semiorepo://definition/semio/js/semio.ts/Author/AuthorSchema)
+ *  * [👤semio📚js💻semio🔖author🪨authorschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorSchema)
  **/
 export const AuthorSchema = z.object({ guid: z.string(), name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
 /**
  * Type alias for Author.
  *
- *  * [👤semio📚js💻semiots🔖author🛠️author](semiorepo://definition/semio/js/semio.ts/Author/Author)
+ *  * [👤semio📚js💻semio🔖author🛠️author](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/Author)
  **/
 export type Author = z.infer<typeof AuthorSchema>;
 /**
@@ -2142,7 +2261,7 @@ export type Author = z.infer<typeof AuthorSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖author🪨serializeauthor](semiorepo://definition/semio/js/semio.ts/Author/serializeAuthor)
+ *  * [👤semio📚js💻semio🔖author🪨serializeauthor](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/serializeAuthor)
  **/
 export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
 /**
@@ -2150,14 +2269,14 @@ export const serializeAuthor = (author: Author): string => JSON.stringify(Author
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖author🪨deserializeauthor](semiorepo://definition/semio/js/semio.ts/Author/deserializeAuthor)
+ *  * [👤semio📚js💻semio🔖author🪨deserializeauthor](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/deserializeAuthor)
  **/
 export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Author diff validation.
  *
- *  * [👤semio📚js💻semiots🔖author🪨authordiffschema](semiorepo://definition/semio/js/semio.ts/Author/AuthorDiffSchema)
+ *  * [👤semio📚js💻semio🔖author🪨authordiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorDiffSchema)
  **/
 export const AuthorDiffSchema = AuthorSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -2165,7 +2284,7 @@ export const AuthorDiffSchema = AuthorSchema.partial().omit({ attributes: true }
 /**
  * Diff type for tracking Author changes.
  *
- *  * [👤semio📚js💻semiots🔖author🛠️authordiff](semiorepo://definition/semio/js/semio.ts/Author/AuthorDiff)
+ *  * [👤semio📚js💻semio🔖author🛠️authordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorDiff)
  **/
 export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
 /**
@@ -2173,7 +2292,7 @@ export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖author🪨getauthordiff](semiorepo://definition/semio/js/semio.ts/Author/getAuthorDiff)
+ *  * [👤semio📚js💻semio🔖author🪨getauthordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/getAuthorDiff)
  **/
 export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => {
   const diff: AuthorDiff = {};
@@ -2187,7 +2306,7 @@ export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖author🪨inverseauthordiff](semiorepo://definition/semio/js/semio.ts/Author/inverseAuthorDiff)
+ *  * [👤semio📚js💻semio🔖author🪨inverseauthordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/inverseAuthorDiff)
  **/
 export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): AuthorDiff => {
   const inverse: AuthorDiff = {};
@@ -2201,7 +2320,7 @@ export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): Au
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖author🪨mergeauthordiff](semiorepo://definition/semio/js/semio.ts/Author/mergeAuthorDiff)
+ *  * [👤semio📚js💻semio🔖author🪨mergeauthordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/mergeAuthorDiff)
  **/
 export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -2211,7 +2330,7 @@ export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖author🪨applyauthordiff](semiorepo://definition/semio/js/semio.ts/Author/applyAuthorDiff)
+ *  * [👤semio📚js💻semio🔖author🪨applyauthordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/applyAuthorDiff)
  **/
 export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -2230,7 +2349,7 @@ export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
 /**
  * Zod schema for Authors diff validation.
  *
- *  * [👤semio📚js💻semiots🔖author🪨authorsdiffschema](semiorepo://definition/semio/js/semio.ts/Author/AuthorsDiffSchema)
+ *  * [👤semio📚js💻semio🔖author🪨authorsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorsDiffSchema)
  **/
 export const AuthorsDiffSchema = z.object({
   removed: z.array(AuthorIdSchema).optional(),
@@ -2240,7 +2359,7 @@ export const AuthorsDiffSchema = z.object({
 /**
  * Diff type for tracking Authors changes.
  *
- *  * [👤semio📚js💻semiots🔖author🛠️authorsdiff](semiorepo://definition/semio/js/semio.ts/Author/AuthorsDiff)
+ *  * [👤semio📚js💻semio🔖author🛠️authorsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorsDiff)
  **/
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
@@ -2248,13 +2367,13 @@ export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #region 🔖File
 
-// [👤semio📚js💻semiots🔖file](semiorepo://section/semio/js/semio.ts/File)
+// [👤semio📚js💻semio🔖file](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File)
 // File entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for File validation.
  *
- *  * [👤semio📚js💻semiots🔖file🪨fileschema](semiorepo://definition/semio/js/semio.ts/File/FileSchema)
+ *  * [👤semio📚js💻semio🔖file🪨fileschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileSchema)
  **/
 export const FileSchema = z.object({
   guid: z.string(),
@@ -2268,11 +2387,10 @@ export const FileSchema = z.object({
   createdBy: z.string().optional(),
   updatedAt: DateProperty(),
   updatedBy: z.string().optional(),
-});
 /**
  * Type alias for File.
  *
- *  * [👤semio📚js💻semiots🔖file🛠️file](semiorepo://definition/semio/js/semio.ts/File/File)
+ *  * [👤semio📚js💻semio🔖file🛠️file](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/File)
  **/
 export type File = z.infer<typeof FileSchema>;
 /**
@@ -2280,7 +2398,7 @@ export type File = z.infer<typeof FileSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖file🪨serializefile](semiorepo://definition/semio/js/semio.ts/File/serializeFile)
+ *  * [👤semio📚js💻semio🔖file🪨serializefile](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/serializeFile)
  **/
 export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file));
 /**
@@ -2288,20 +2406,20 @@ export const serializeFile = (file: File): string => JSON.stringify(FileSchema.p
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖file🪨deserializefile](semiorepo://definition/semio/js/semio.ts/File/deserializeFile)
+ *  * [👤semio📚js💻semio🔖file🪨deserializefile](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/deserializeFile)
  **/
 export const deserializeFile = (json: string): File => FileSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for File diff validation.
  *
- *  * [👤semio📚js💻semiots🔖file🪨filediffschema](semiorepo://definition/semio/js/semio.ts/File/FileDiffSchema)
+ *  * [👤semio📚js💻semio🔖file🪨filediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileDiffSchema)
  **/
 export const FileDiffSchema = FileSchema.partial();
 /**
  * Diff type for tracking File changes.
  *
- *  * [👤semio📚js💻semiots🔖file🛠️filediff](semiorepo://definition/semio/js/semio.ts/File/FileDiff)
+ *  * [👤semio📚js💻semio🔖file🛠️filediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileDiff)
  **/
 export type FileDiff = z.infer<typeof FileDiffSchema>;
 /**
@@ -2309,7 +2427,7 @@ export type FileDiff = z.infer<typeof FileDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖file🪨getfilediff](semiorepo://definition/semio/js/semio.ts/File/getFileDiff)
+ *  * [👤semio📚js💻semio🔖file🪨getfilediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/getFileDiff)
  **/
 export const getFileDiff = (before: File, after: File): FileDiff => {
   const diff: FileDiff = {};
@@ -2330,7 +2448,7 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖file🪨inversefilediff](semiorepo://definition/semio/js/semio.ts/File/inverseFileDiff)
+ *  * [👤semio📚js💻semio🔖file🪨inversefilediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/inverseFileDiff)
  **/
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
   const inverse: FileDiff = {};
@@ -2351,7 +2469,7 @@ export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖file🪨mergefilediff](semiorepo://definition/semio/js/semio.ts/File/mergeFileDiff)
+ *  * [👤semio📚js💻semio🔖file🪨mergefilediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/mergeFileDiff)
  **/
 export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
   return { ...diff1, ...diff2 };
@@ -2361,7 +2479,7 @@ export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖file🪨applyfilediff](semiorepo://definition/semio/js/semio.ts/File/applyFileDiff)
+ *  * [👤semio📚js💻semio🔖file🪨applyfilediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/applyFileDiff)
  **/
 export const applyFileDiff = (base: File, diff: FileDiff): File => {
   const result: File = {
@@ -2385,7 +2503,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
 /**
  * Zod schema for Files diff validation.
  *
- *  * [👤semio📚js💻semiots🔖file🪨filesdiffschema](semiorepo://definition/semio/js/semio.ts/File/FilesDiffSchema)
+ *  * [👤semio📚js💻semio🔖file🪨filesdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FilesDiffSchema)
  **/
 export const FilesDiffSchema = z.object({
   removed: z.array(FileIdSchema).optional(),
@@ -2395,7 +2513,7 @@ export const FilesDiffSchema = z.object({
 /**
  * Diff type for tracking Files changes.
  *
- *  * [👤semio📚js💻semiots🔖file🛠️filesdiff](semiorepo://definition/semio/js/semio.ts/File/FilesDiff)
+ *  * [👤semio📚js💻semio🔖file🛠️filesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FilesDiff)
  **/
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
@@ -2403,13 +2521,13 @@ export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
 // #region 🔖Folder
 
-// [👤semio📚js💻semiots🔖folder](semiorepo://section/semio/js/semio.ts/Folder)
+// [👤semio📚js💻semio🔖folder](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder)
 // Folder entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Folder validation.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨folderschema](semiorepo://definition/semio/js/semio.ts/Folder/FolderSchema)
+ *  * [👤semio📚js💻semio🔖folder🪨folderschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderSchema)
  **/
 export const FolderSchema = z.object({
   guid: z.string(),
@@ -2419,13 +2537,12 @@ export const FolderSchema = z.object({
   attributes: z.array(AttributeSchema).optional(),
   createdAt: DateProperty(),
   createdBy: z.string().optional(),
-  updatedAt: DateProperty(),
   updatedBy: z.string().optional(),
 });
 /**
  * Type alias for Folder.
  *
- *  * [👤semio📚js💻semiots🔖folder🛠️folder](semiorepo://definition/semio/js/semio.ts/Folder/Folder)
+ *  * [👤semio📚js💻semio🔖folder🛠️folder](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/Folder)
  **/
 export type Folder = z.infer<typeof FolderSchema>;
 /**
@@ -2433,7 +2550,7 @@ export type Folder = z.infer<typeof FolderSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨serializefolder](semiorepo://definition/semio/js/semio.ts/Folder/serializeFolder)
+ *  * [👤semio📚js💻semio🔖folder🪨serializefolder](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/serializeFolder)
  **/
 export const serializeFolder = (folder: Folder): string => JSON.stringify(FolderSchema.parse(folder));
 /**
@@ -2441,14 +2558,14 @@ export const serializeFolder = (folder: Folder): string => JSON.stringify(Folder
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨deserializefolder](semiorepo://definition/semio/js/semio.ts/Folder/deserializeFolder)
+ *  * [👤semio📚js💻semio🔖folder🪨deserializefolder](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/deserializeFolder)
  **/
 export const deserializeFolder = (json: string): Folder => FolderSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Folder diff validation.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨folderdiffschema](semiorepo://definition/semio/js/semio.ts/Folder/FolderDiffSchema)
+ *  * [👤semio📚js💻semio🔖folder🪨folderdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderDiffSchema)
  **/
 export const FolderDiffSchema = FolderSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -2456,7 +2573,7 @@ export const FolderDiffSchema = FolderSchema.partial().omit({ attributes: true }
 /**
  * Diff type for tracking Folder changes.
  *
- *  * [👤semio📚js💻semiots🔖folder🛠️folderdiff](semiorepo://definition/semio/js/semio.ts/Folder/FolderDiff)
+ *  * [👤semio📚js💻semio🔖folder🛠️folderdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderDiff)
  **/
 export type FolderDiff = z.infer<typeof FolderDiffSchema>;
 /**
@@ -2464,7 +2581,7 @@ export type FolderDiff = z.infer<typeof FolderDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨getfolderdiff](semiorepo://definition/semio/js/semio.ts/Folder/getFolderDiff)
+ *  * [👤semio📚js💻semio🔖folder🪨getfolderdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/getFolderDiff)
  **/
 export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
   const diff: FolderDiff = {};
@@ -2483,7 +2600,7 @@ export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨inversefolderdiff](semiorepo://definition/semio/js/semio.ts/Folder/inverseFolderDiff)
+ *  * [👤semio📚js💻semio🔖folder🪨inversefolderdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/inverseFolderDiff)
  **/
 export const inverseFolderDiff = (original: Folder, appliedDiff: FolderDiff): FolderDiff => {
   const inverse: FolderDiff = {};
@@ -2502,7 +2619,7 @@ export const inverseFolderDiff = (original: Folder, appliedDiff: FolderDiff): Fo
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨mergefolderdiff](semiorepo://definition/semio/js/semio.ts/Folder/mergeFolderDiff)
+ *  * [👤semio📚js💻semio🔖folder🪨mergefolderdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/mergeFolderDiff)
  **/
 export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -2512,7 +2629,7 @@ export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨applyfolderdiff](semiorepo://definition/semio/js/semio.ts/Folder/applyFolderDiff)
+ *  * [👤semio📚js💻semio🔖folder🪨applyfolderdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/applyFolderDiff)
  **/
 export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -2536,7 +2653,7 @@ export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
 /**
  * Zod schema for Folders diff validation.
  *
- *  * [👤semio📚js💻semiots🔖folder🪨foldersdiffschema](semiorepo://definition/semio/js/semio.ts/Folder/FoldersDiffSchema)
+ *  * [👤semio📚js💻semio🔖folder🪨foldersdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FoldersDiffSchema)
  **/
 export const FoldersDiffSchema = z.object({
   removed: z.array(FolderIdSchema).optional(),
@@ -2546,7 +2663,7 @@ export const FoldersDiffSchema = z.object({
 /**
  * Diff type for tracking Folders changes.
  *
- *  * [👤semio📚js💻semiots🔖folder🛠️foldersdiff](semiorepo://definition/semio/js/semio.ts/Folder/FoldersDiff)
+ *  * [👤semio📚js💻semio🔖folder🛠️foldersdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FoldersDiff)
  **/
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
@@ -2554,13 +2671,13 @@ export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #region 🔖Benchmark
 
-// [👤semio📚js💻semiots🔖benchmark](semiorepo://section/semio/js/semio.ts/Benchmark)
+// [👤semio📚js💻semio🔖benchmark](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark)
 // Benchmark entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Benchmark validation.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨benchmarkschema](semiorepo://definition/semio/js/semio.ts/Benchmark/BenchmarkSchema)
+ *  * [👤semio📚js💻semio🔖benchmark🪨benchmarkschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/BenchmarkSchema)
  **/
 export const BenchmarkSchema = z.object({
   guid: z.string(),
@@ -2575,7 +2692,7 @@ export const BenchmarkSchema = z.object({
 /**
  * Type alias for Benchmark.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🛠️benchmark](semiorepo://definition/semio/js/semio.ts/Benchmark/Benchmark)
+ *  * [👤semio📚js💻semio🔖benchmark🛠️benchmark](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/Benchmark)
  **/
 export type Benchmark = z.infer<typeof BenchmarkSchema>;
 /**
@@ -2583,7 +2700,7 @@ export type Benchmark = z.infer<typeof BenchmarkSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨serializebenchmark](semiorepo://definition/semio/js/semio.ts/Benchmark/serializeBenchmark)
+ *  * [👤semio📚js💻semio🔖benchmark🪨serializebenchmark](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/serializeBenchmark)
  **/
 export const serializeBenchmark = (benchmark: Benchmark): string => JSON.stringify(BenchmarkSchema.parse(benchmark));
 /**
@@ -2591,14 +2708,14 @@ export const serializeBenchmark = (benchmark: Benchmark): string => JSON.stringi
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨deserializebenchmark](semiorepo://definition/semio/js/semio.ts/Benchmark/deserializeBenchmark)
+ *  * [👤semio📚js💻semio🔖benchmark🪨deserializebenchmark](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/deserializeBenchmark)
  **/
 export const deserializeBenchmark = (json: string): Benchmark => BenchmarkSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Benchmark diff validation.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨benchmarkdiffschema](semiorepo://definition/semio/js/semio.ts/Benchmark/BenchmarkDiffSchema)
+ *  * [👤semio📚js💻semio🔖benchmark🪨benchmarkdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/BenchmarkDiffSchema)
  **/
 export const BenchmarkDiffSchema = BenchmarkSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -2606,7 +2723,7 @@ export const BenchmarkDiffSchema = BenchmarkSchema.partial().omit({ attributes: 
 /**
  * Diff type for tracking Benchmark changes.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🛠️benchmarkdiff](semiorepo://definition/semio/js/semio.ts/Benchmark/BenchmarkDiff)
+ *  * [👤semio📚js💻semio🔖benchmark🛠️benchmarkdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/BenchmarkDiff)
  **/
 export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
 /**
@@ -2614,7 +2731,7 @@ export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨applybenchmarkdiff](semiorepo://definition/semio/js/semio.ts/Benchmark/applyBenchmarkDiff)
+ *  * [👤semio📚js💻semio🔖benchmark🪨applybenchmarkdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/applyBenchmarkDiff)
  **/
 export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchmark => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -2627,7 +2744,6 @@ export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchm
   if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
   if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
   if (diff.minExcluded !== undefined || base.minExcluded !== undefined) result.minExcluded = diff.minExcluded ?? base.minExcluded;
-  if (diff.max !== undefined || base.max !== undefined) result.max = diff.max ?? base.max;
   if (diff.maxExcluded !== undefined || base.maxExcluded !== undefined) result.maxExcluded = diff.maxExcluded ?? base.maxExcluded;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -2638,7 +2754,7 @@ export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchm
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨getbenchmarkdiff](semiorepo://definition/semio/js/semio.ts/Benchmark/getBenchmarkDiff)
+ *  * [👤semio📚js💻semio🔖benchmark🪨getbenchmarkdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/getBenchmarkDiff)
  **/
 export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): BenchmarkDiff => {
   const diff: BenchmarkDiff = {};
@@ -2656,7 +2772,7 @@ export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): Benchmark
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨inversebenchmarkdiff](semiorepo://definition/semio/js/semio.ts/Benchmark/inverseBenchmarkDiff)
+ *  * [👤semio📚js💻semio🔖benchmark🪨inversebenchmarkdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/inverseBenchmarkDiff)
  **/
 export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: BenchmarkDiff): BenchmarkDiff => {
   const inverse: BenchmarkDiff = {};
@@ -2674,7 +2790,7 @@ export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: Benchmark
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨mergebenchmarkdiff](semiorepo://definition/semio/js/semio.ts/Benchmark/mergeBenchmarkDiff)
+ *  * [👤semio📚js💻semio🔖benchmark🪨mergebenchmarkdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/mergeBenchmarkDiff)
  **/
 export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): BenchmarkDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -2683,7 +2799,7 @@ export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): 
 /**
  * Zod schema for Benchmarks diff validation.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🪨benchmarksdiffschema](semiorepo://definition/semio/js/semio.ts/Benchmark/BenchmarksDiffSchema)
+ *  * [👤semio📚js💻semio🔖benchmark🪨benchmarksdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/BenchmarksDiffSchema)
  **/
 export const BenchmarksDiffSchema = z.object({
   removed: z.array(BenchmarkIdSchema).optional(),
@@ -2693,10 +2809,12 @@ export const BenchmarksDiffSchema = z.object({
 /**
  * Diff type for tracking Benchmarks changes.
  *
- *  * [👤semio📚js💻semiots🔖benchmark🛠️benchmarksdiff](semiorepo://definition/semio/js/semio.ts/Benchmark/BenchmarksDiff)
+ *  * [👤semio📚js💻semio🔖benchmark🛠️benchmarksdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/BenchmarksDiff)
  **/
 export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
 
+// [👤semio📚js💻semio🔖benchmark🪨getbenchmarksdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/getBenchmarksDiff)
+// getBenchmarksDiff holds the data fields for a getBenchmarksDiff record.
 const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
   const beforeGuids = new Set(before.map((b) => b.guid));
   const afterGuids = new Set(after.map((b) => b.guid));
@@ -2717,6 +2835,8 @@ const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksD
   return diff;
 };
 
+// inverseBenchmarksDiff holds the data fields for a inverseBenchmarksDiff record.
+// [👤semio📚js💻semio🔖benchmark🪨inversebenchmarksdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/inverseBenchmarksDiff)
 const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
   const addedGuids = appliedDiff.added?.map((b) => b.guid) ?? [];
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -2732,10 +2852,14 @@ const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDif
   };
 };
 
+// [👤semio📚js💻semio🔖benchmark🪨mergebenchmarksdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/mergeBenchmarksDiff)
+// mergeBenchmarksDiff holds the data fields for a mergeBenchmarksDiff record.
 const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): BenchmarksDiff => {
   return { ...first, ...second };
 };
 
+// applyBenchmarksDiff holds the data fields for a applyBenchmarksDiff record.
+// [👤semio📚js💻semio🔖benchmark🪨applybenchmarksdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/applyBenchmarksDiff)
 const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
   let result = [...base];
   if (diff.removed) {
@@ -2762,13 +2886,13 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 
 // #region 🔖Quality
 
-// [👤semio📚js💻semiots🔖quality](semiorepo://section/semio/js/semio.ts/Quality)
+// [👤semio📚js💻semio🔖quality](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality)
 // Quality entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Quality validation.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨qualityschema](semiorepo://definition/semio/js/semio.ts/Quality/QualitySchema)
+ *  * [👤semio📚js💻semio🔖quality🪨qualityschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualitySchema)
  **/
 export const QualitySchema = z.object({
   guid: z.string(),
@@ -2796,7 +2920,7 @@ export const QualitySchema = z.object({
 /**
  * Type alias for Quality.
  *
- *  * [👤semio📚js💻semiots🔖quality🛠️quality](semiorepo://definition/semio/js/semio.ts/Quality/Quality)
+ *  * [👤semio📚js💻semio🔖quality🛠️quality](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/Quality)
  **/
 export type Quality = z.infer<typeof QualitySchema>;
 /**
@@ -2804,7 +2928,7 @@ export type Quality = z.infer<typeof QualitySchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨serializequality](semiorepo://definition/semio/js/semio.ts/Quality/serializeQuality)
+ *  * [👤semio📚js💻semio🔖quality🪨serializequality](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/serializeQuality)
  **/
 export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
 /**
@@ -2812,14 +2936,13 @@ export const serializeQuality = (quality: Quality): string => JSON.stringify(Qua
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨deserializequality](semiorepo://definition/semio/js/semio.ts/Quality/deserializeQuality)
+ *  * [👤semio📚js💻semio🔖quality🪨deserializequality](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/deserializeQuality)
  **/
 export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
 
 /**
- * Zod schema for Quality diff validation.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨qualitydiffschema](semiorepo://definition/semio/js/semio.ts/Quality/QualityDiffSchema)
+ *  * [👤semio📚js💻semio🔖quality🪨qualitydiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityDiffSchema)
  **/
 export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true, attributes: true }).extend({
   benchmarks: BenchmarksDiffSchema.optional(),
@@ -2828,7 +2951,7 @@ export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true
 /**
  * Diff type for tracking Quality changes.
  *
- *  * [👤semio📚js💻semiots🔖quality🛠️qualitydiff](semiorepo://definition/semio/js/semio.ts/Quality/QualityDiff)
+ *  * [👤semio📚js💻semio🔖quality🛠️qualitydiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityDiff)
  **/
 export type QualityDiff = z.infer<typeof QualityDiffSchema>;
 /**
@@ -2836,7 +2959,7 @@ export type QualityDiff = z.infer<typeof QualityDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨getqualitydiff](semiorepo://definition/semio/js/semio.ts/Quality/getQualityDiff)
+ *  * [👤semio📚js💻semio🔖quality🪨getqualitydiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/getQualityDiff)
  **/
 export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => {
   const diff: QualityDiff = {};
@@ -2866,7 +2989,7 @@ export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨inversequalitydiff](semiorepo://definition/semio/js/semio.ts/Quality/inverseQualityDiff)
+ *  * [👤semio📚js💻semio🔖quality🪨inversequalitydiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/inverseQualityDiff)
  **/
 export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
   const inverse: QualityDiff = {};
@@ -2896,7 +3019,7 @@ export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff):
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨mergequalitydiff](semiorepo://definition/semio/js/semio.ts/Quality/mergeQualityDiff)
+ *  * [👤semio📚js💻semio🔖quality🪨mergequalitydiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/mergeQualityDiff)
  **/
 export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => {
   return {
@@ -2911,7 +3034,7 @@ export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): Qualit
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨applyqualitydiff](semiorepo://definition/semio/js/semio.ts/Quality/applyQualityDiff)
+ *  * [👤semio📚js💻semio🔖quality🪨applyqualitydiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/applyQualityDiff)
  **/
 export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
   const benchmarks = diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : undefined;
@@ -2948,7 +3071,7 @@ export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
 /**
  * Zod schema for Qualities diff validation.
  *
- *  * [👤semio📚js💻semiots🔖quality🪨qualitiesdiffschema](semiorepo://definition/semio/js/semio.ts/Quality/QualitiesDiffSchema)
+ *  * [👤semio📚js💻semio🔖quality🪨qualitiesdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualitiesDiffSchema)
  **/
 export const QualitiesDiffSchema = z.object({
   removed: z.array(QualityIdSchema).optional(),
@@ -2960,13 +3083,13 @@ export const QualitiesDiffSchema = z.object({
 
 // #region 🔖Port
 
-// [👤semio📚js💻semiots🔖port](semiorepo://section/semio/js/semio.ts/Port)
+// [👤semio📚js💻semio🔖port](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port)
 // Port entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Port validation.
  *
- *  * [👤semio📚js💻semiots🔖port🪨portschema](semiorepo://definition/semio/js/semio.ts/Port/PortSchema)
+ *  * [👤semio📚js💻semio🔖port🪨portschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortSchema)
  **/
 export const PortSchema = z.object({
   guid: z.string(),
@@ -2979,7 +3102,7 @@ export const PortSchema = z.object({
 /**
  * Type alias for Port.
  *
- *  * [👤semio📚js💻semiots🔖port🛠️port](semiorepo://definition/semio/js/semio.ts/Port/Port)
+ *  * [👤semio📚js💻semio🔖port🛠️port](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/Port)
  **/
 export type Port = z.infer<typeof PortSchema>;
 /**
@@ -2987,7 +3110,7 @@ export type Port = z.infer<typeof PortSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖port🪨serializeport](semiorepo://definition/semio/js/semio.ts/Port/serializePort)
+ *  * [👤semio📚js💻semio🔖port🪨serializeport](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/serializePort)
  **/
 export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.parse(iface));
 /**
@@ -2995,14 +3118,14 @@ export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨deserializeport](semiorepo://definition/semio/js/semio.ts/Port/deserializePort)
+ *  * [👤semio📚js💻semio🔖port🪨deserializeport](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/deserializePort)
  **/
 export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Port diff validation.
  *
- *  * [👤semio📚js💻semiots🔖port🪨portdiffschema](semiorepo://definition/semio/js/semio.ts/Port/PortDiffSchema)
+ *  * [👤semio📚js💻semio🔖port🪨portdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortDiffSchema)
  **/
 export const PortDiffSchema = PortSchema.partial()
   .omit({ compatiblePorts: true, attributes: true })
@@ -3015,7 +3138,7 @@ export const PortDiffSchema = PortSchema.partial()
 /**
  * Diff type for tracking Port changes.
  *
- *  * [👤semio📚js💻semiots🔖port🛠️portdiff](semiorepo://definition/semio/js/semio.ts/Port/PortDiff)
+ *  * [👤semio📚js💻semio🔖port🛠️portdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortDiff)
  **/
 export type PortDiff = z.infer<typeof PortDiffSchema>;
 /**
@@ -3023,7 +3146,7 @@ export type PortDiff = z.infer<typeof PortDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖port🪨getportdiff](semiorepo://definition/semio/js/semio.ts/Port/getPortDiff)
+ *  * [👤semio📚js💻semio🔖port🪨getportdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/getPortDiff)
  **/
 export const getPortDiff = (before: Port, after: Port): PortDiff => {
   const diff: PortDiff = {};
@@ -3039,7 +3162,7 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨inverseportdiff](semiorepo://definition/semio/js/semio.ts/Port/inversePortDiff)
+ *  * [👤semio📚js💻semio🔖port🪨inverseportdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/inversePortDiff)
  **/
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
   const inverse: PortDiff = {};
@@ -3055,7 +3178,7 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨mergeportdiff](semiorepo://definition/semio/js/semio.ts/Port/mergePortDiff)
+ *  * [👤semio📚js💻semio🔖port🪨mergeportdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/mergePortDiff)
  **/
 export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
   return {
@@ -3069,7 +3192,7 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨applyportdiff](semiorepo://definition/semio/js/semio.ts/Port/applyPortDiff)
+ *  * [👤semio📚js💻semio🔖port🪨applyportdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/applyPortDiff)
  **/
 export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -3077,7 +3200,6 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   const result: Port = {
     guid: base.guid,
     name: diff.name ?? base.name,
-  };
 
   if ("description" in diff) {
     if (diff.description !== null) result.description = diff.description;
@@ -3098,7 +3220,7 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
 /**
  * Zod schema for Ports diff validation.
  *
- *  * [👤semio📚js💻semiots🔖port🪨portsdiffschema](semiorepo://definition/semio/js/semio.ts/Port/PortsDiffSchema)
+ *  * [👤semio📚js💻semio🔖port🪨portsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortsDiffSchema)
  **/
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
@@ -3108,7 +3230,7 @@ export const PortsDiffSchema = z.object({
 /**
  * Diff type for tracking Ports changes.
  *
- *  * [👤semio📚js💻semiots🔖port🛠️portsdiff](semiorepo://definition/semio/js/semio.ts/Port/PortsDiff)
+ *  * [👤semio📚js💻semio🔖port🛠️portsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortsDiff)
  **/
 export type PortsDiff = z.infer<typeof PortsDiffSchema>;
 /**
@@ -3116,7 +3238,7 @@ export type PortsDiff = z.infer<typeof PortsDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖port🪨getportsdiff](semiorepo://definition/semio/js/semio.ts/Port/getPortsDiff)
+ *  * [👤semio📚js💻semio🔖port🪨getportsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/getPortsDiff)
  **/
 export const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
   const diff: PortsDiff = {};
@@ -3142,7 +3264,7 @@ export const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨inverseportsdiff](semiorepo://definition/semio/js/semio.ts/Port/inversePortsDiff)
+ *  * [👤semio📚js💻semio🔖port🪨inverseportsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/inversePortsDiff)
  **/
 export const inversePortsDiff = (original: Port[], appliedDiff: PortsDiff): PortsDiff => {
   const inverse: PortsDiff = {};
@@ -3162,7 +3284,7 @@ export const inversePortsDiff = (original: Port[], appliedDiff: PortsDiff): Port
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨mergeportsdiff](semiorepo://definition/semio/js/semio.ts/Port/mergePortsDiff)
+ *  * [👤semio📚js💻semio🔖port🪨mergeportsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/mergePortsDiff)
  **/
 export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff => {
   return {
@@ -3176,7 +3298,7 @@ export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖port🪨applyportsdiff](semiorepo://definition/semio/js/semio.ts/Port/applyPortsDiff)
+ *  * [👤semio📚js💻semio🔖port🪨applyportsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/applyPortsDiff)
  **/
 export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
   let result = [...base];
@@ -3203,7 +3325,7 @@ export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
  *
  * MUST return a boolean result.
  *
- *  * [👤semio📚js💻semiots🔖port🪨areportscompatible](semiorepo://definition/semio/js/semio.ts/Port/arePortsCompatible)
+ *  * [👤semio📚js💻semio🔖port🪨areportscompatible](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/arePortsCompatible)
  **/
 export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | undefined, allPorts: Port[]): boolean => {
   if (!iface1 || !iface2) return true;
@@ -3220,13 +3342,13 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 
 // #region 🔖Prop
 
-// [👤semio📚js💻semiots🔖prop](semiorepo://section/semio/js/semio.ts/Prop)
+// [👤semio📚js💻semio🔖prop](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop)
 // Prop entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Prop validation.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨propschema](semiorepo://definition/semio/js/semio.ts/Prop/PropSchema)
+ *  * [👤semio📚js💻semio🔖prop🪨propschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropSchema)
  **/
 export const PropSchema = z.object({
   guid: z.string(),
@@ -3238,7 +3360,7 @@ export const PropSchema = z.object({
 /**
  * Type alias for Prop.
  *
- *  * [👤semio📚js💻semiots🔖prop🛠️prop](semiorepo://definition/semio/js/semio.ts/Prop/Prop)
+ *  * [👤semio📚js💻semio🔖prop🛠️prop](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/Prop)
  **/
 export type Prop = z.infer<typeof PropSchema>;
 /**
@@ -3246,7 +3368,7 @@ export type Prop = z.infer<typeof PropSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨serializeprop](semiorepo://definition/semio/js/semio.ts/Prop/serializeProp)
+ *  * [👤semio📚js💻semio🔖prop🪨serializeprop](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/serializeProp)
  **/
 export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.parse(prop));
 /**
@@ -3254,14 +3376,14 @@ export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.p
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨deserializeprop](semiorepo://definition/semio/js/semio.ts/Prop/deserializeProp)
+ *  * [👤semio📚js💻semio🔖prop🪨deserializeprop](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/deserializeProp)
  **/
 export const deserializeProp = (json: string): Prop => PropSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Prop diff validation.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨propdiffschema](semiorepo://definition/semio/js/semio.ts/Prop/PropDiffSchema)
+ *  * [👤semio📚js💻semio🔖prop🪨propdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropDiffSchema)
  **/
 export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -3269,15 +3391,14 @@ export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).ex
 /**
  * Diff type for tracking Prop changes.
  *
- *  * [👤semio📚js💻semiots🔖prop🛠️propdiff](semiorepo://definition/semio/js/semio.ts/Prop/PropDiff)
+ *  * [👤semio📚js💻semio🔖prop🛠️propdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropDiff)
  **/
-export type PropDiff = z.infer<typeof PropDiffSchema>;
 /**
  * Retrieves the PropDiff value.
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨getpropdiff](semiorepo://definition/semio/js/semio.ts/Prop/getPropDiff)
+ *  * [👤semio📚js💻semio🔖prop🪨getpropdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/getPropDiff)
  **/
 export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
   const diff: PropDiff = {};
@@ -3292,7 +3413,7 @@ export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨inversepropdiff](semiorepo://definition/semio/js/semio.ts/Prop/inversePropDiff)
+ *  * [👤semio📚js💻semio🔖prop🪨inversepropdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/inversePropDiff)
  **/
 export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => {
   const inverse: PropDiff = {};
@@ -3307,7 +3428,7 @@ export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨mergepropdiff](semiorepo://definition/semio/js/semio.ts/Prop/mergePropDiff)
+ *  * [👤semio📚js💻semio🔖prop🪨mergepropdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/mergePropDiff)
  **/
 export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -3317,7 +3438,7 @@ export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨applypropdiff](semiorepo://definition/semio/js/semio.ts/Prop/applyPropDiff)
+ *  * [👤semio📚js💻semio🔖prop🪨applypropdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/applyPropDiff)
  **/
 export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -3337,7 +3458,7 @@ export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
 /**
  * Zod schema for Props diff validation.
  *
- *  * [👤semio📚js💻semiots🔖prop🪨propsdiffschema](semiorepo://definition/semio/js/semio.ts/Prop/PropsDiffSchema)
+ *  * [👤semio📚js💻semio🔖prop🪨propsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropsDiffSchema)
  **/
 export const PropsDiffSchema = z.object({
   removed: z.array(PropIdSchema).optional(),
@@ -3347,10 +3468,12 @@ export const PropsDiffSchema = z.object({
 /**
  * Diff type for tracking Props changes.
  *
- *  * [👤semio📚js💻semiots🔖prop🛠️propsdiff](semiorepo://definition/semio/js/semio.ts/Prop/PropsDiff)
+ *  * [👤semio📚js💻semio🔖prop🛠️propsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropsDiff)
  **/
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
 
+// [👤semio📚js💻semio🔖prop🪨getpropsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/getPropsDiff)
+// getPropsDiff holds the data fields for a getPropsDiff record.
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
@@ -3371,6 +3494,8 @@ const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
   return diff;
 };
 
+// [👤semio📚js💻semio🔖prop🪨inversepropsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/inversePropsDiff)
+// inversePropsDiff holds the data fields for a inversePropsDiff record.
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
   const addedGuids = appliedDiff.added?.map((p) => p.guid) ?? [];
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -3386,10 +3511,14 @@ const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff =
   };
 };
 
+// [👤semio📚js💻semio🔖prop🪨mergepropsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/mergePropsDiff)
+// mergePropsDiff holds the data fields for a mergePropsDiff record.
 const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
   return { ...first, ...second };
 };
 
+// [👤semio📚js💻semio🔖prop🪨applypropsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/applyPropsDiff)
+// applyPropsDiff holds the data fields for a applyPropsDiff record.
 const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   let result = [...base];
   if (diff.removed) {
@@ -3414,13 +3543,13 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 
 // #region 🔖Tag
 
-// [👤semio📚js💻semiots🔖tag](semiorepo://section/semio/js/semio.ts/Tag)
+// [👤semio📚js💻semio🔖tag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag)
 // Tag entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Tag validation.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨tagschema](semiorepo://definition/semio/js/semio.ts/Tag/TagSchema)
+ *  * [👤semio📚js💻semio🔖tag🪨tagschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagSchema)
  **/
 export const TagSchema = z.object({
   guid: z.string(),
@@ -3432,7 +3561,7 @@ export const TagSchema = z.object({
 /**
  * Type alias for Tag.
  *
- *  * [👤semio📚js💻semiots🔖tag🛠️tag](semiorepo://definition/semio/js/semio.ts/Tag/Tag)
+ *  * [👤semio📚js💻semio🔖tag🛠️tag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/Tag)
  **/
 export type Tag = z.infer<typeof TagSchema>;
 /**
@@ -3440,7 +3569,7 @@ export type Tag = z.infer<typeof TagSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨serializetag](semiorepo://definition/semio/js/semio.ts/Tag/serializeTag)
+ *  * [👤semio📚js💻semio🔖tag🪨serializetag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/serializeTag)
  **/
 export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse(tag));
 /**
@@ -3448,14 +3577,14 @@ export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨deserializetag](semiorepo://definition/semio/js/semio.ts/Tag/deserializeTag)
+ *  * [👤semio📚js💻semio🔖tag🪨deserializetag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/deserializeTag)
  **/
 export const deserializeTag = (json: string): Tag => TagSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Tag diff validation.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨tagdiffschema](semiorepo://definition/semio/js/semio.ts/Tag/TagDiffSchema)
+ *  * [👤semio📚js💻semio🔖tag🪨tagdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagDiffSchema)
  **/
 export const TagDiffSchema = TagSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -3465,7 +3594,7 @@ export const TagDiffSchema = TagSchema.partial().omit({ attributes: true }).exte
 /**
  * Diff type for tracking Tag changes.
  *
- *  * [👤semio📚js💻semiots🔖tag🛠️tagdiff](semiorepo://definition/semio/js/semio.ts/Tag/TagDiff)
+ *  * [👤semio📚js💻semio🔖tag🛠️tagdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagDiff)
  **/
 export type TagDiff = z.infer<typeof TagDiffSchema>;
 /**
@@ -3473,7 +3602,7 @@ export type TagDiff = z.infer<typeof TagDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨gettagdiff](semiorepo://definition/semio/js/semio.ts/Tag/getTagDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨gettagdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/getTagDiff)
  **/
 export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
   const diff: TagDiff = {};
@@ -3488,7 +3617,7 @@ export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨inversetagdiff](semiorepo://definition/semio/js/semio.ts/Tag/inverseTagDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨inversetagdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/inverseTagDiff)
  **/
 export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => {
   const inverse: TagDiff = {};
@@ -3503,7 +3632,7 @@ export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨mergetagdiff](semiorepo://definition/semio/js/semio.ts/Tag/mergeTagDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨mergetagdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/mergeTagDiff)
  **/
 export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -3513,12 +3642,11 @@ export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨applytagdiff](semiorepo://definition/semio/js/semio.ts/Tag/applyTagDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨applytagdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/applyTagDiff)
  **/
 export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
-  const result: Tag = {
     guid: base.guid,
     name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
   };
@@ -3543,7 +3671,7 @@ export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
 /**
  * Zod schema for Tags diff validation.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨tagsdiffschema](semiorepo://definition/semio/js/semio.ts/Tag/TagsDiffSchema)
+ *  * [👤semio📚js💻semio🔖tag🪨tagsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagsDiffSchema)
  **/
 export const TagsDiffSchema = z.object({
   removed: z.array(TagIdSchema).optional(),
@@ -3553,7 +3681,7 @@ export const TagsDiffSchema = z.object({
 /**
  * Diff type for tracking Tags changes.
  *
- *  * [👤semio📚js💻semiots🔖tag🛠️tagsdiff](semiorepo://definition/semio/js/semio.ts/Tag/TagsDiff)
+ *  * [👤semio📚js💻semio🔖tag🛠️tagsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagsDiff)
  **/
 export type TagsDiff = z.infer<typeof TagsDiffSchema>;
 /**
@@ -3561,7 +3689,7 @@ export type TagsDiff = z.infer<typeof TagsDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨gettagsdiff](semiorepo://definition/semio/js/semio.ts/Tag/getTagsDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨gettagsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/getTagsDiff)
  **/
 export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
   const diff: TagsDiff = {};
@@ -3587,7 +3715,7 @@ export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨inversetagsdiff](semiorepo://definition/semio/js/semio.ts/Tag/inverseTagsDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨inversetagsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/inverseTagsDiff)
  **/
 export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDiff => {
   const inverse: TagsDiff = {};
@@ -3607,7 +3735,7 @@ export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨mergetagsdiff](semiorepo://definition/semio/js/semio.ts/Tag/mergeTagsDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨mergetagsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/mergeTagsDiff)
  **/
 export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
@@ -3630,7 +3758,7 @@ export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨applytagsdiff](semiorepo://definition/semio/js/semio.ts/Tag/applyTagsDiff)
+ *  * [👤semio📚js💻semio🔖tag🪨applytagsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/applyTagsDiff)
  **/
 export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
   let result = [...base];
@@ -3657,7 +3785,7 @@ export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖tag🪨findtag](semiorepo://definition/semio/js/semio.ts/Tag/findTag)
+ *  * [👤semio📚js💻semio🔖tag🪨findtag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/findTag)
  **/
 export const findTag = (tags: Tag[], guid: string): Tag => {
   const tag = tags.find((t) => t.guid === guid);
@@ -3669,13 +3797,13 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
 
 // #region 🔖Concept
 
-// [👤semio📚js💻semiots🔖concept](semiorepo://section/semio/js/semio.ts/Concept)
+// [👤semio📚js💻semio🔖concept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept)
 // Concept entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Concept validation.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨conceptschema](semiorepo://definition/semio/js/semio.ts/Concept/ConceptSchema)
+ *  * [👤semio📚js💻semio🔖concept🪨conceptschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptSchema)
  **/
 export const ConceptSchema = z.object({
   guid: z.string(),
@@ -3687,7 +3815,7 @@ export const ConceptSchema = z.object({
 /**
  * Type alias for Concept.
  *
- *  * [👤semio📚js💻semiots🔖concept🛠️concept](semiorepo://definition/semio/js/semio.ts/Concept/Concept)
+ *  * [👤semio📚js💻semio🔖concept🛠️concept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/Concept)
  **/
 export type Concept = z.infer<typeof ConceptSchema>;
 /**
@@ -3695,7 +3823,7 @@ export type Concept = z.infer<typeof ConceptSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨serializeconcept](semiorepo://definition/semio/js/semio.ts/Concept/serializeConcept)
+ *  * [👤semio📚js💻semio🔖concept🪨serializeconcept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/serializeConcept)
  **/
 export const serializeConcept = (concept: Concept): string => JSON.stringify(ConceptSchema.parse(concept));
 /**
@@ -3703,14 +3831,14 @@ export const serializeConcept = (concept: Concept): string => JSON.stringify(Con
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨deserializeconcept](semiorepo://definition/semio/js/semio.ts/Concept/deserializeConcept)
+ *  * [👤semio📚js💻semio🔖concept🪨deserializeconcept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/deserializeConcept)
  **/
 export const deserializeConcept = (json: string): Concept => ConceptSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Concept diff validation.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨conceptdiffschema](semiorepo://definition/semio/js/semio.ts/Concept/ConceptDiffSchema)
+ *  * [👤semio📚js💻semio🔖concept🪨conceptdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptDiffSchema)
  **/
 export const ConceptDiffSchema = ConceptSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -3720,7 +3848,7 @@ export const ConceptDiffSchema = ConceptSchema.partial().omit({ attributes: true
 /**
  * Diff type for tracking Concept changes.
  *
- *  * [👤semio📚js💻semiots🔖concept🛠️conceptdiff](semiorepo://definition/semio/js/semio.ts/Concept/ConceptDiff)
+ *  * [👤semio📚js💻semio🔖concept🛠️conceptdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptDiff)
  **/
 export type ConceptDiff = z.infer<typeof ConceptDiffSchema>;
 /**
@@ -3728,7 +3856,7 @@ export type ConceptDiff = z.infer<typeof ConceptDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨getconceptdiff](semiorepo://definition/semio/js/semio.ts/Concept/getConceptDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨getconceptdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/getConceptDiff)
  **/
 export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => {
   const diff: ConceptDiff = {};
@@ -3743,7 +3871,7 @@ export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨inverseconceptdiff](semiorepo://definition/semio/js/semio.ts/Concept/inverseConceptDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨inverseconceptdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/inverseConceptDiff)
  **/
 export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff): ConceptDiff => {
   const inverse: ConceptDiff = {};
@@ -3758,7 +3886,7 @@ export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff):
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨mergeconceptdiff](semiorepo://definition/semio/js/semio.ts/Concept/mergeConceptDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨mergeconceptdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/mergeConceptDiff)
  **/
 export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): ConceptDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -3768,12 +3896,11 @@ export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): Concep
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨applyconceptdiff](semiorepo://definition/semio/js/semio.ts/Concept/applyConceptDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨applyconceptdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/applyConceptDiff)
  **/
 export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
-  const result: Concept = {
     guid: base.guid,
     name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
   };
@@ -3798,7 +3925,7 @@ export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
 /**
  * Zod schema for Concepts diff validation.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨conceptsdiffschema](semiorepo://definition/semio/js/semio.ts/Concept/ConceptsDiffSchema)
+ *  * [👤semio📚js💻semio🔖concept🪨conceptsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptsDiffSchema)
  **/
 export const ConceptsDiffSchema = z.object({
   removed: z.array(ConceptIdSchema).optional(),
@@ -3808,7 +3935,7 @@ export const ConceptsDiffSchema = z.object({
 /**
  * Diff type for tracking Concepts changes.
  *
- *  * [👤semio📚js💻semiots🔖concept🛠️conceptsdiff](semiorepo://definition/semio/js/semio.ts/Concept/ConceptsDiff)
+ *  * [👤semio📚js💻semio🔖concept🛠️conceptsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptsDiff)
  **/
 export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
 /**
@@ -3816,7 +3943,7 @@ export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨getconceptsdiff](semiorepo://definition/semio/js/semio.ts/Concept/getConceptsDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨getconceptsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/getConceptsDiff)
  **/
 export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDiff => {
   const diff: ConceptsDiff = {};
@@ -3842,7 +3969,7 @@ export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDi
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨inverseconceptsdiff](semiorepo://definition/semio/js/semio.ts/Concept/inverseConceptsDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨inverseconceptsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/inverseConceptsDiff)
  **/
 export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDiff): ConceptsDiff => {
   const inverse: ConceptsDiff = {};
@@ -3862,7 +3989,7 @@ export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDi
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨mergeconceptsdiff](semiorepo://definition/semio/js/semio.ts/Concept/mergeConceptsDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨mergeconceptsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/mergeConceptsDiff)
  **/
 export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): ConceptsDiff => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
@@ -3885,7 +4012,7 @@ export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): Con
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨applyconceptsdiff](semiorepo://definition/semio/js/semio.ts/Concept/applyConceptsDiff)
+ *  * [👤semio📚js💻semio🔖concept🪨applyconceptsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/applyConceptsDiff)
  **/
 export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[] => {
   let result = [...base];
@@ -3912,7 +4039,7 @@ export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖concept🪨findconcept](semiorepo://definition/semio/js/semio.ts/Concept/findConcept)
+ *  * [👤semio📚js💻semio🔖concept🪨findconcept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/findConcept)
  **/
 export const findConcept = (concepts: Concept[], guid: string): Concept => {
   const concept = concepts.find((c) => c.guid === guid);
@@ -3924,13 +4051,13 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 
 // #region 🔖Model
 
-// [👤semio📚js💻semiots🔖model](semiorepo://section/semio/js/semio.ts/Model)
+// [👤semio📚js💻semio🔖model](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model)
 // Model entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Model validation.
  *
- *  * [👤semio📚js💻semiots🔖model🪨modelschema](semiorepo://definition/semio/js/semio.ts/Model/ModelSchema)
+ *  * [👤semio📚js💻semio🔖model🪨modelschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelSchema)
  **/
 export const ModelSchema = z.object({
   guid: z.string(),
@@ -3943,7 +4070,7 @@ export const ModelSchema = z.object({
 /**
  * Type alias for Model.
  *
- *  * [👤semio📚js💻semiots🔖model🛠️model](semiorepo://definition/semio/js/semio.ts/Model/Model)
+ *  * [👤semio📚js💻semio🔖model🛠️model](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/Model)
  **/
 export type Model = z.infer<typeof ModelSchema>;
 /**
@@ -3951,7 +4078,7 @@ export type Model = z.infer<typeof ModelSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖model🪨serializemodel](semiorepo://definition/semio/js/semio.ts/Model/serializeModel)
+ *  * [👤semio📚js💻semio🔖model🪨serializemodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/serializeModel)
  **/
 export const serializeModel = (model: Model): string => JSON.stringify(ModelSchema.parse(model));
 /**
@@ -3959,14 +4086,14 @@ export const serializeModel = (model: Model): string => JSON.stringify(ModelSche
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨deserializemodel](semiorepo://definition/semio/js/semio.ts/Model/deserializeModel)
+ *  * [👤semio📚js💻semio🔖model🪨deserializemodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/deserializeModel)
  **/
 export const deserializeModel = (json: string): Model => ModelSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Model diff validation.
  *
- *  * [👤semio📚js💻semiots🔖model🪨modeldiffschema](semiorepo://definition/semio/js/semio.ts/Model/ModelDiffSchema)
+ *  * [👤semio📚js💻semio🔖model🪨modeldiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelDiffSchema)
  **/
 export const ModelDiffSchema = ModelSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -3974,7 +4101,7 @@ export const ModelDiffSchema = ModelSchema.partial().omit({ attributes: true }).
 /**
  * Diff type for tracking Model changes.
  *
- *  * [👤semio📚js💻semiots🔖model🛠️modeldiff](semiorepo://definition/semio/js/semio.ts/Model/ModelDiff)
+ *  * [👤semio📚js💻semio🔖model🛠️modeldiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelDiff)
  **/
 export type ModelDiff = z.infer<typeof ModelDiffSchema>;
 /**
@@ -3982,7 +4109,7 @@ export type ModelDiff = z.infer<typeof ModelDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖model🪨getmodeldiff](semiorepo://definition/semio/js/semio.ts/Model/getModelDiff)
+ *  * [👤semio📚js💻semio🔖model🪨getmodeldiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/getModelDiff)
  **/
 export const getModelDiff = (before: Model, after: Model): ModelDiff => {
   const diff: ModelDiff = {};
@@ -3998,7 +4125,7 @@ export const getModelDiff = (before: Model, after: Model): ModelDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨inversemodeldiff](semiorepo://definition/semio/js/semio.ts/Model/inverseModelDiff)
+ *  * [👤semio📚js💻semio🔖model🪨inversemodeldiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/inverseModelDiff)
  **/
 export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
   const inverse: ModelDiff = {};
@@ -4014,7 +4141,7 @@ export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): Model
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨mergemodeldiff](semiorepo://definition/semio/js/semio.ts/Model/mergeModelDiff)
+ *  * [👤semio📚js💻semio🔖model🪨mergemodeldiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/mergeModelDiff)
  **/
 export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -4024,7 +4151,7 @@ export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨applymodeldiff](semiorepo://definition/semio/js/semio.ts/Model/applyModelDiff)
+ *  * [👤semio📚js💻semio🔖model🪨applymodeldiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/applyModelDiff)
  **/
 export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -4045,7 +4172,7 @@ export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
 /**
  * Zod schema for Models diff validation.
  *
- *  * [👤semio📚js💻semiots🔖model🪨modelsdiffschema](semiorepo://definition/semio/js/semio.ts/Model/ModelsDiffSchema)
+ *  * [👤semio📚js💻semio🔖model🪨modelsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelsDiffSchema)
  **/
 export const ModelsDiffSchema = z.object({
   removed: z.array(ModelIdSchema).optional(),
@@ -4058,7 +4185,7 @@ export const ModelsDiffSchema = z.object({
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖model🪨aresamemodel](semiorepo://definition/semio/js/semio.ts/Model/areSameModel)
+ *  * [👤semio📚js💻semio🔖model🪨aresamemodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/areSameModel)
  **/
 export const areSameModel = (model: Model, other: Model): boolean => {
   const modelTagGuids = model.tags?.map((t) => t.guid) ?? [];
@@ -4071,7 +4198,7 @@ export const areSameModel = (model: Model, other: Model): boolean => {
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖model🪨findmodel](semiorepo://definition/semio/js/semio.ts/Model/findModel)
+ *  * [👤semio📚js💻semio🔖model🪨findmodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/findModel)
  **/
 export const findModel = (models: Model[], tagGuids: string[]): Model => {
   const indices = models.map((r) =>
@@ -4090,7 +4217,7 @@ export const findModel = (models: Model[], tagGuids: string[]): Model => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖model🪨getalltagguidsfrommodels](semiorepo://definition/semio/js/semio.ts/Model/getAllTagGuidsFromModels)
+ *  * [👤semio📚js💻semio🔖model🪨getalltagguidsfrommodels](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/getAllTagGuidsFromModels)
  **/
 export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
   const tagsSet = new Set<string>();
@@ -4105,7 +4232,7 @@ export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨filtermodelsbytagguids](semiorepo://definition/semio/js/semio.ts/Model/filterModelsByTagGuids)
+ *  * [👤semio📚js💻semio🔖model🪨filtermodelsbytagguids](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/filterModelsByTagGuids)
  **/
 export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string[]): Model[] => {
   if (!selectedTagGuids || selectedTagGuids.length === 0) return models;
@@ -4113,7 +4240,6 @@ export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string
     if (!r.tags || r.tags.length === 0) return false;
     const modelTagGuids = r.tags.map((t) => t.guid);
     return selectedTagGuids.every((guid) => modelTagGuids.includes(guid));
-  });
 };
 
 /**
@@ -4121,7 +4247,7 @@ export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖model🪨getavailabletagguidsformodels](semiorepo://definition/semio/js/semio.ts/Model/getAvailableTagGuidsForModels)
+ *  * [👤semio📚js💻semio🔖model🪨getavailabletagguidsformodels](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/getAvailableTagGuidsForModels)
  **/
 export const getAvailableTagGuidsForModels = (models: Model[], selectedTagGuids: string[]): string[] => {
   const filteredReps = filterModelsByTagGuids(models, selectedTagGuids);
@@ -4134,7 +4260,7 @@ export const getAvailableTagGuidsForModels = (models: Model[], selectedTagGuids:
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨selectbestmodel](semiorepo://definition/semio/js/semio.ts/Model/selectBestModel)
+ *  * [👤semio📚js💻semio🔖model🪨selectbestmodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/selectBestModel)
  **/
 export const selectBestModel = (models: Model[], selectedTagGuids: string[]): Model | undefined => {
   if (models.length === 0) return undefined;
@@ -4150,7 +4276,7 @@ export const selectBestModel = (models: Model[], selectedTagGuids: string[]): Mo
 /**
  * Constant value for SUPPORTED_3D_EXTENSIONS.
  *
- *  * [👤semio📚js💻semiots🔖model🪨supported3dextensions](semiorepo://definition/semio/js/semio.ts/Model/SUPPORTED_3D_EXTENSIONS)
+ *  * [👤semio📚js💻semio🔖model🪨supported3dextensions](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/SUPPORTED_3D_EXTENSIONS)
  **/
 export const SUPPORTED_3D_EXTENSIONS = [
   "gltf",
@@ -4211,7 +4337,7 @@ export const SUPPORTED_3D_EXTENSIONS = [
 /**
  * Type alias for Supported3DExtension.
  *
- *  * [👤semio📚js💻semiots🔖model🛠️supported3dextension](semiorepo://definition/semio/js/semio.ts/Model/Supported3DExtension)
+ *  * [👤semio📚js💻semio🔖model🛠️supported3dextension](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/Supported3DExtension)
  **/
 export type Supported3DExtension = (typeof SUPPORTED_3D_EXTENSIONS)[number];
 
@@ -4220,7 +4346,7 @@ export type Supported3DExtension = (typeof SUPPORTED_3D_EXTENSIONS)[number];
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖model🪨issupportedmodelextension](semiorepo://definition/semio/js/semio.ts/Model/isSupportedModelExtension)
+ *  * [👤semio📚js💻semio🔖model🪨issupportedmodelextension](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/isSupportedModelExtension)
  **/
 export const isSupportedModelExtension = (filename: string): boolean => {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
@@ -4230,7 +4356,7 @@ export const isSupportedModelExtension = (filename: string): boolean => {
 /**
  * Interface defining ModelFileValidation structure.
  *
- *  * [👤semio📚js💻semiots🔖model🛠️modelfilevalidation](semiorepo://definition/semio/js/semio.ts/Model/ModelFileValidation)
+ *  * [👤semio📚js💻semio🔖model🛠️modelfilevalidation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelFileValidation)
  **/
 export interface ModelFileValidation {
   isValid: boolean;
@@ -4243,7 +4369,7 @@ export interface ModelFileValidation {
  *
  * MUST check all constraints and return problems.
  *
- *  * [👤semio📚js💻semiots🔖model🪨validatemodelfile](semiorepo://definition/semio/js/semio.ts/Model/validateModelFile)
+ *  * [👤semio📚js💻semio🔖model🪨validatemodelfile](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/validateModelFile)
  **/
 export const validateModelFile = (filename: string): ModelFileValidation => {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
@@ -4264,13 +4390,13 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 
 // #region 🔖Connector
 
-// [👤semio📚js💻semiots🔖connector](semiorepo://section/semio/js/semio.ts/Connector)
+// [👤semio📚js💻semio🔖connector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector)
 // Connector entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Connector validation.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨connectorschema](semiorepo://definition/semio/js/semio.ts/Connector/ConnectorSchema)
+ *  * [👤semio📚js💻semio🔖connector🪨connectorschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorSchema)
  **/
 export const ConnectorSchema = z.object({
   guid: z.string(),
@@ -4287,7 +4413,7 @@ export const ConnectorSchema = z.object({
 /**
  * Type alias for Connector.
  *
- *  * [👤semio📚js💻semiots🔖connector🛠️connector](semiorepo://definition/semio/js/semio.ts/Connector/Connector)
+ *  * [👤semio📚js💻semio🔖connector🛠️connector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/Connector)
  **/
 export type Connector = z.infer<typeof ConnectorSchema>;
 /**
@@ -4295,7 +4421,7 @@ export type Connector = z.infer<typeof ConnectorSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨serializeconnector](semiorepo://definition/semio/js/semio.ts/Connector/serializeConnector)
+ *  * [👤semio📚js💻semio🔖connector🪨serializeconnector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/serializeConnector)
  **/
 export const serializeConnector = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
 /**
@@ -4303,14 +4429,14 @@ export const serializeConnector = (connector: Connector): string => JSON.stringi
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨deserializeconnector](semiorepo://definition/semio/js/semio.ts/Connector/deserializeConnector)
+ *  * [👤semio📚js💻semio🔖connector🪨deserializeconnector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/deserializeConnector)
  **/
 export const deserializeConnector = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Connector diff validation.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨connectordiffschema](semiorepo://definition/semio/js/semio.ts/Connector/ConnectorDiffSchema)
+ *  * [👤semio📚js💻semio🔖connector🪨connectordiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorDiffSchema)
  **/
 export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
   point: PointDiffSchema.optional(),
@@ -4321,7 +4447,7 @@ export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true,
 /**
  * Diff type for tracking Connector changes.
  *
- *  * [👤semio📚js💻semiots🔖connector🛠️connectordiff](semiorepo://definition/semio/js/semio.ts/Connector/ConnectorDiff)
+ *  * [👤semio📚js💻semio🔖connector🛠️connectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorDiff)
  **/
 export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
 /**
@@ -4329,12 +4455,11 @@ export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨getconnectordiff](semiorepo://definition/semio/js/semio.ts/Connector/getConnectorDiff)
+ *  * [👤semio📚js💻semio🔖connector🪨getconnectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/getConnectorDiff)
  **/
 export const getConnectorDiff = (before: Connector, after: Connector): ConnectorDiff => {
   const diff: ConnectorDiff = {};
   if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description;
   if (before.port?.guid !== after.port?.guid) diff.port = after.port;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
   if (before.t !== after.t) diff.t = after.t;
@@ -4349,7 +4474,7 @@ export const getConnectorDiff = (before: Connector, after: Connector): Connector
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨mergeconnectordiff](semiorepo://definition/semio/js/semio.ts/Connector/mergeConnectorDiff)
+ *  * [👤semio📚js💻semio🔖connector🪨mergeconnectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/mergeConnectorDiff)
  **/
 export const mergeConnectorDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): ConnectorDiff => {
   return {
@@ -4366,7 +4491,7 @@ export const mergeConnectorDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨inverseconnectordiff](semiorepo://definition/semio/js/semio.ts/Connector/inverseConnectorDiff)
+ *  * [👤semio📚js💻semio🔖connector🪨inverseconnectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/inverseConnectorDiff)
  **/
 export const inverseConnectorDiff = (original: Connector, appliedDiff: ConnectorDiff): ConnectorDiff => {
   const inverse: ConnectorDiff = {};
@@ -4386,7 +4511,7 @@ export const inverseConnectorDiff = (original: Connector, appliedDiff: Connector
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨applyconnectordiff](semiorepo://definition/semio/js/semio.ts/Connector/applyConnectorDiff)
+ *  * [👤semio📚js💻semio🔖connector🪨applyconnectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/applyConnectorDiff)
  **/
 export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connector => {
   const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
@@ -4412,7 +4537,7 @@ export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connec
 /**
  * Zod schema for Connectors diff validation.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨connectorsdiffschema](semiorepo://definition/semio/js/semio.ts/Connector/ConnectorsDiffSchema)
+ *  * [👤semio📚js💻semio🔖connector🪨connectorsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorsDiffSchema)
  **/
 export const ConnectorsDiffSchema = z.object({
   removed: z.array(ConnectorIdSchema).optional(),
@@ -4422,10 +4547,12 @@ export const ConnectorsDiffSchema = z.object({
 /**
  * Diff type for tracking Connectors changes.
  *
- *  * [👤semio📚js💻semiots🔖connector🛠️connectorsdiff](semiorepo://definition/semio/js/semio.ts/Connector/ConnectorsDiff)
+ *  * [👤semio📚js💻semio🔖connector🛠️connectorsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorsDiff)
  **/
 export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
 
+// [👤semio📚js💻semio🔖connector🪨getconnectorsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/getConnectorsDiff)
+// getConnectorsDiff holds the data fields for a getConnectorsDiff record.
 const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
@@ -4451,7 +4578,7 @@ const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsD
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨unifyconnectorportsandcompatibleportsfortypes](semiorepo://definition/semio/js/semio.ts/Connector/unifyConnectorPortsAndCompatiblePortsForTypes)
+ *  * [👤semio📚js💻semio🔖connector🪨unifyconnectorportsandcompatibleportsfortypes](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/unifyConnectorPortsAndCompatiblePortsForTypes)
  **/
 export const unifyConnectorPortsAndCompatiblePortsForTypes = (types: Type[]): TypesDiff => {
   return { updated: [] };
@@ -4462,7 +4589,7 @@ export const unifyConnectorPortsAndCompatiblePortsForTypes = (types: Type[]): Ty
  *
  * MUST return a boolean result.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨areconnectorscompatible](semiorepo://definition/semio/js/semio.ts/Connector/areConnectorsCompatible)
+ *  * [👤semio📚js💻semio🔖connector🪨areconnectorscompatible](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/areConnectorsCompatible)
  **/
 export const areConnectorsCompatible = (connector: Connector, otherPort: Connector): boolean => {
   return true;
@@ -4473,7 +4600,7 @@ export const areConnectorsCompatible = (connector: Connector, otherPort: Connect
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖connector🪨findconnector](semiorepo://definition/semio/js/semio.ts/Connector/findConnector)
+ *  * [👤semio📚js💻semio🔖connector🪨findconnector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/findConnector)
  **/
 export const findConnector = (connectors: Connector[], connectorGuid: string): Connector => {
   const connector = connectors.find((p) => p.guid === connectorGuid);
@@ -4485,13 +4612,13 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 
 // #region 🔖Type
 
-// [👤semio📚js💻semiots🔖type](semiorepo://section/semio/js/semio.ts/Type)
+// [👤semio📚js💻semio🔖type](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type)
 // Type entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Type validation.
  *
- *  * [👤semio📚js💻semiots🔖type🪨typeschema](semiorepo://definition/semio/js/semio.ts/Type/TypeSchema)
+ *  * [👤semio📚js💻semio🔖type🪨typeschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeSchema)
  **/
 export const TypeSchema = z.object({
   guid: z.string(),
@@ -4518,7 +4645,7 @@ export const TypeSchema = z.object({
 /**
  * Type alias for Type.
  *
- *  * [👤semio📚js💻semiots🔖type🛠️type](semiorepo://definition/semio/js/semio.ts/Type/Type)
+ *  * [👤semio📚js💻semio🔖type🛠️type](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/Type)
  **/
 export type Type = z.infer<typeof TypeSchema>;
 /**
@@ -4526,7 +4653,7 @@ export type Type = z.infer<typeof TypeSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖type🪨serializetype](semiorepo://definition/semio/js/semio.ts/Type/serializeType)
+ *  * [👤semio📚js💻semio🔖type🪨serializetype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/serializeType)
  **/
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 /**
@@ -4534,14 +4661,14 @@ export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.p
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖type🪨deserializetype](semiorepo://definition/semio/js/semio.ts/Type/deserializeType)
+ *  * [👤semio📚js💻semio🔖type🪨deserializetype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/deserializeType)
  **/
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
 /**
  * Definition of TypeShallowSchema.
  *
- *  * [👤semio📚js💻semiots🔖type🪨typeshallowschema](semiorepo://definition/semio/js/semio.ts/Type/TypeShallowSchema)
+ *  * [👤semio📚js💻semio🔖type🪨typeshallowschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeShallowSchema)
  **/
 export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: true }).extend({
   models: z.array(z.string()).optional(),
@@ -4550,7 +4677,7 @@ export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: tru
 /**
  * Type alias for TypeShallow.
  *
- *  * [👤semio📚js💻semiots🔖type🛠️typeshallow](semiorepo://definition/semio/js/semio.ts/Type/TypeShallow)
+ *  * [👤semio📚js💻semio🔖type🛠️typeshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeShallow)
  **/
 export type TypeShallow = z.infer<typeof TypeShallowSchema>;
 /**
@@ -4558,7 +4685,7 @@ export type TypeShallow = z.infer<typeof TypeShallowSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖type🪨serializetypeshallow](semiorepo://definition/semio/js/semio.ts/Type/serializeTypeShallow)
+ *  * [👤semio📚js💻semio🔖type🪨serializetypeshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/serializeTypeShallow)
  **/
 export const serializeTypeShallow = (type: TypeShallow): string => JSON.stringify(TypeShallowSchema.parse(type));
 /**
@@ -4566,13 +4693,13 @@ export const serializeTypeShallow = (type: TypeShallow): string => JSON.stringif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖type🪨deserializetypeshallow](semiorepo://definition/semio/js/semio.ts/Type/deserializeTypeShallow)
+ *  * [👤semio📚js💻semio🔖type🪨deserializetypeshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/deserializeTypeShallow)
  **/
 export const deserializeTypeShallow = (json: string): TypeShallow => TypeShallowSchema.parse(JSON.parse(json));
 /**
  * Zod schema for Type diff validation.
  *
- *  * [👤semio📚js💻semiots🔖type🪨typediffschema](semiorepo://definition/semio/js/semio.ts/Type/TypeDiffSchema)
+ *  * [👤semio📚js💻semio🔖type🪨typediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeDiffSchema)
  **/
 export const TypeDiffSchema = TypeSchema.partial()
   .omit({ models: true, connectors: true, props: true, attributes: true })
@@ -4591,9 +4718,8 @@ export const TypeDiffSchema = TypeSchema.partial()
     parent: TypeIdSchema.nullable().optional(),
   });
 /**
- * Diff type for tracking Type changes.
  *
- *  * [👤semio📚js💻semiots🔖type🛠️typediff](semiorepo://definition/semio/js/semio.ts/Type/TypeDiff)
+ *  * [👤semio📚js💻semio🔖type🛠️typediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeDiff)
  **/
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
 /**
@@ -4601,7 +4727,7 @@ export type TypeDiff = z.infer<typeof TypeDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖type🪨gettypediff](semiorepo://definition/semio/js/semio.ts/Type/getTypeDiff)
+ *  * [👤semio📚js💻semio🔖type🪨gettypediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/getTypeDiff)
  **/
 export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
   const diff: TypeDiff = {};
@@ -4634,7 +4760,7 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖type🪨applytypediff](semiorepo://definition/semio/js/semio.ts/Type/applyTypeDiff)
+ *  * [👤semio📚js💻semio🔖type🪨applytypediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/applyTypeDiff)
  **/
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
   const models = diff.models || base.models ? applyCollectionDiff("model", base.models ?? [], diff.models, applyModelDiff) : undefined;
@@ -4675,7 +4801,7 @@ export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖type🪨mergetypediff](semiorepo://definition/semio/js/semio.ts/Type/mergeTypeDiff)
+ *  * [👤semio📚js💻semio🔖type🪨mergetypediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/mergeTypeDiff)
  **/
 export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
   return {
@@ -4690,7 +4816,7 @@ export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖type🪨inversetypediff](semiorepo://definition/semio/js/semio.ts/Type/inverseTypeDiff)
+ *  * [👤semio📚js💻semio🔖type🪨inversetypediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/inverseTypeDiff)
  **/
 export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff => {
   const inverse: TypeDiff = {};
@@ -4717,7 +4843,7 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
 /**
  * Zod schema for Types diff validation.
  *
- *  * [👤semio📚js💻semiots🔖type🪨typesdiffschema](semiorepo://definition/semio/js/semio.ts/Type/TypesDiffSchema)
+ *  * [👤semio📚js💻semio🔖type🪨typesdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypesDiffSchema)
  **/
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
@@ -4727,7 +4853,7 @@ export const TypesDiffSchema = z.object({
 /**
  * Diff type for tracking Types changes.
  *
- *  * [👤semio📚js💻semiots🔖type🛠️typesdiff](semiorepo://definition/semio/js/semio.ts/Type/TypesDiff)
+ *  * [👤semio📚js💻semio🔖type🛠️typesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypesDiff)
  **/
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 
@@ -4735,8 +4861,7 @@ export type TypesDiff = z.infer<typeof TypesDiffSchema>;
  * Searches for matching ConnectorInType entry.
  *
  * MUST return the matching element or undefined.
- *
- *  * [👤semio📚js💻semiots🔖type🪨findconnectorintype](semiorepo://definition/semio/js/semio.ts/Type/findConnectorInType)
+ *  * [👤semio📚js💻semio🔖type🪨findconnectorintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/findConnectorInType)
  **/
 export const findConnectorInType = (type: Type, connectorGuid: string): Connector => findConnector(type.connectors ?? [], connectorGuid);
 
@@ -4744,13 +4869,13 @@ export const findConnectorInType = (type: Type, connectorGuid: string): Connecto
 
 // #region 🔖Layer
 
-// [👤semio📚js💻semiots🔖layer](semiorepo://section/semio/js/semio.ts/Layer)
+// [👤semio📚js💻semio🔖layer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer)
 // Layer entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Layer validation.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨layerschema](semiorepo://definition/semio/js/semio.ts/Layer/LayerSchema)
+ *  * [👤semio📚js💻semio🔖layer🪨layerschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerSchema)
  **/
 export const LayerSchema = z.object({
   guid: z.string(),
@@ -4764,7 +4889,7 @@ export const LayerSchema = z.object({
 /**
  * Type alias for Layer.
  *
- *  * [👤semio📚js💻semiots🔖layer🛠️layer](semiorepo://definition/semio/js/semio.ts/Layer/Layer)
+ *  * [👤semio📚js💻semio🔖layer🛠️layer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/Layer)
  **/
 export type Layer = z.infer<typeof LayerSchema>;
 /**
@@ -4772,7 +4897,7 @@ export type Layer = z.infer<typeof LayerSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨serializelayer](semiorepo://definition/semio/js/semio.ts/Layer/serializeLayer)
+ *  * [👤semio📚js💻semio🔖layer🪨serializelayer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/serializeLayer)
  **/
 export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
 /**
@@ -4780,14 +4905,14 @@ export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSche
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨deserializelayer](semiorepo://definition/semio/js/semio.ts/Layer/deserializeLayer)
+ *  * [👤semio📚js💻semio🔖layer🪨deserializelayer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/deserializeLayer)
  **/
 export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Layer diff validation.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨layerdiffschema](semiorepo://definition/semio/js/semio.ts/Layer/LayerDiffSchema)
+ *  * [👤semio📚js💻semio🔖layer🪨layerdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerDiffSchema)
  **/
 export const LayerDiffSchema = LayerSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -4795,7 +4920,7 @@ export const LayerDiffSchema = LayerSchema.partial().omit({ attributes: true }).
 /**
  * Diff type for tracking Layer changes.
  *
- *  * [👤semio📚js💻semiots🔖layer🛠️layerdiff](semiorepo://definition/semio/js/semio.ts/Layer/LayerDiff)
+ *  * [👤semio📚js💻semio🔖layer🛠️layerdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerDiff)
  **/
 export type LayerDiff = z.infer<typeof LayerDiffSchema>;
 
@@ -4804,7 +4929,7 @@ export type LayerDiff = z.infer<typeof LayerDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨getlayerdiff](semiorepo://definition/semio/js/semio.ts/Layer/getLayerDiff)
+ *  * [👤semio📚js💻semio🔖layer🪨getlayerdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/getLayerDiff)
  **/
 export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
   const diff: LayerDiff = {};
@@ -4821,7 +4946,7 @@ export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨inverselayerdiff](semiorepo://definition/semio/js/semio.ts/Layer/inverseLayerDiff)
+ *  * [👤semio📚js💻semio🔖layer🪨inverselayerdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/inverseLayerDiff)
  **/
 export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => {
   const inverse: LayerDiff = {};
@@ -4838,7 +4963,7 @@ export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): Layer
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨mergelayerdiff](semiorepo://definition/semio/js/semio.ts/Layer/mergeLayerDiff)
+ *  * [👤semio📚js💻semio🔖layer🪨mergelayerdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/mergeLayerDiff)
  **/
 export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
@@ -4848,7 +4973,7 @@ export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨applylayerdiff](semiorepo://definition/semio/js/semio.ts/Layer/applyLayerDiff)
+ *  * [👤semio📚js💻semio🔖layer🪨applylayerdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/applyLayerDiff)
  **/
 export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -4870,7 +4995,7 @@ export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
 /**
  * Zod schema for Layers diff validation.
  *
- *  * [👤semio📚js💻semiots🔖layer🪨layersdiffschema](semiorepo://definition/semio/js/semio.ts/Layer/LayersDiffSchema)
+ *  * [👤semio📚js💻semio🔖layer🪨layersdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayersDiffSchema)
  **/
 export const LayersDiffSchema = z.object({
   removed: z.array(LayerIdSchema).optional(),
@@ -4880,7 +5005,7 @@ export const LayersDiffSchema = z.object({
 /**
  * Diff type for tracking Layers changes.
  *
- *  * [👤semio📚js💻semiots🔖layer🛠️layersdiff](semiorepo://definition/semio/js/semio.ts/Layer/LayersDiff)
+ *  * [👤semio📚js💻semio🔖layer🛠️layersdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayersDiff)
  **/
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
@@ -4888,13 +5013,13 @@ export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #region 🔖Piece
 
-// [👤semio📚js💻semiots🔖piece](semiorepo://section/semio/js/semio.ts/Piece)
+// [👤semio📚js💻semio🔖piece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece)
 // Piece entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Piece validation.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨pieceschema](semiorepo://definition/semio/js/semio.ts/Piece/PieceSchema)
+ *  * [👤semio📚js💻semio🔖piece🪨pieceschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceSchema)
  **/
 export const PieceSchema = z.object({
   guid: z.string(),
@@ -4915,7 +5040,7 @@ export const PieceSchema = z.object({
 /**
  * Type alias for Piece.
  *
- *  * [👤semio📚js💻semiots🔖piece🛠️piece](semiorepo://definition/semio/js/semio.ts/Piece/Piece)
+ *  * [👤semio📚js💻semio🔖piece🛠️piece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/Piece)
  **/
 export type Piece = z.infer<typeof PieceSchema>;
 /**
@@ -4923,7 +5048,7 @@ export type Piece = z.infer<typeof PieceSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨serializepiece](semiorepo://definition/semio/js/semio.ts/Piece/serializePiece)
+ *  * [👤semio📚js💻semio🔖piece🪨serializepiece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/serializePiece)
  **/
 export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
 /**
@@ -4931,14 +5056,14 @@ export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSche
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨deserializepiece](semiorepo://definition/semio/js/semio.ts/Piece/deserializePiece)
+ *  * [👤semio📚js💻semio🔖piece🪨deserializepiece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/deserializePiece)
  **/
 export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Piece diff validation.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨piecediffschema](semiorepo://definition/semio/js/semio.ts/Piece/PieceDiffSchema)
+ *  * [👤semio📚js💻semio🔖piece🪨piecediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceDiffSchema)
  **/
 export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: true, attributes: true }).extend({
   plane: PlaneDiffSchema.optional(),
@@ -4948,7 +5073,7 @@ export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: 
 /**
  * Diff type for tracking Piece changes.
  *
- *  * [👤semio📚js💻semiots🔖piece🛠️piecediff](semiorepo://definition/semio/js/semio.ts/Piece/PieceDiff)
+ *  * [👤semio📚js💻semio🔖piece🛠️piecediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceDiff)
  **/
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
 /**
@@ -4956,7 +5081,7 @@ export type PieceDiff = z.infer<typeof PieceDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨getpiecediff](semiorepo://definition/semio/js/semio.ts/Piece/getPieceDiff)
+ *  * [👤semio📚js💻semio🔖piece🪨getpiecediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/getPieceDiff)
  **/
 export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
   const diff: PieceDiff = {};
@@ -4980,7 +5105,7 @@ export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨inversepiecediff](semiorepo://definition/semio/js/semio.ts/Piece/inversePieceDiff)
+ *  * [👤semio📚js💻semio🔖piece🪨inversepiecediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/inversePieceDiff)
  **/
 export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
   const inverse: PieceDiff = {};
@@ -5004,7 +5129,7 @@ export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): Piece
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨mergepiecediff](semiorepo://definition/semio/js/semio.ts/Piece/mergePieceDiff)
+ *  * [👤semio📚js💻semio🔖piece🪨mergepiecediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/mergePieceDiff)
  **/
 export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => {
   return {
@@ -5019,11 +5144,10 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨applypiecediff](semiorepo://definition/semio/js/semio.ts/Piece/applyPieceDiff)
+ *  * [👤semio📚js💻semio🔖piece🪨applypiecediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/applyPieceDiff)
  **/
 export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
   let newPlane = base.plane;
-  if (diff.plane) {
     const diffPlane = diff.plane as any;
     if (diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis) {
       newPlane = diffPlane as Plane;
@@ -5058,7 +5182,7 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
 /**
  * Zod schema for Pieces diff validation.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨piecesdiffschema](semiorepo://definition/semio/js/semio.ts/Piece/PiecesDiffSchema)
+ *  * [👤semio📚js💻semio🔖piece🪨piecesdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PiecesDiffSchema)
  **/
 export const PiecesDiffSchema = z.object({
   removed: z.array(PieceIdSchema).optional(),
@@ -5068,7 +5192,7 @@ export const PiecesDiffSchema = z.object({
 /**
  * Diff type for tracking Pieces changes.
  *
- *  * [👤semio📚js💻semiots🔖piece🛠️piecesdiff](semiorepo://definition/semio/js/semio.ts/Piece/PiecesDiff)
+ *  * [👤semio📚js💻semio🔖piece🛠️piecesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PiecesDiff)
  **/
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 
@@ -5077,7 +5201,7 @@ export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨getpiecemodelfileguids](semiorepo://definition/semio/js/semio.ts/Piece/getPieceModelFileGuids)
+ *  * [👤semio📚js💻semio🔖piece🪨getpiecemodelfileguids](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/getPieceModelFileGuids)
  **/
 export const getPieceModelFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
   const modelFileGuids = new Map<string, string>();
@@ -5097,7 +5221,7 @@ export const getPieceModelFileGuids = (design: Design, types: Type[], tags: stri
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨getpiecemodelurls](semiorepo://definition/semio/js/semio.ts/Piece/getPieceModelUrls)
+ *  * [👤semio📚js💻semio🔖piece🪨getpiecemodelurls](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/getPieceModelUrls)
  **/
 export const getPieceModelUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
   const modelUrls = new Map<string, string>();
@@ -5118,7 +5242,7 @@ export const getPieceModelUrls = (design: Design, types: Type[], files: File[], 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨fixpieceindesign](semiorepo://definition/semio/js/semio.ts/Piece/fixPieceInDesign)
+ *  * [👤semio📚js💻semio🔖piece🪨fixpieceindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/fixPieceInDesign)
  **/
 export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): DesignDiff => {
   const parentConnection = findParentConnectionForPieceInDesign(kit, designId, pieceId);
@@ -5134,7 +5258,7 @@ export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): D
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨fixpiecesindesign](semiorepo://definition/semio/js/semio.ts/Piece/fixPiecesInDesign)
+ *  * [👤semio📚js💻semio🔖piece🪨fixpiecesindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/fixPiecesInDesign)
  **/
 export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]): DesignDiff => {
   const parentConnections = pieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, designId, pieceId));
@@ -5150,7 +5274,7 @@ export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨isfixedpiece](semiorepo://definition/semio/js/semio.ts/Piece/isFixedPiece)
+ *  * [👤semio📚js💻semio🔖piece🪨isfixedpiece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/isFixedPiece)
  **/
 export const isFixedPiece = (piece: Piece): boolean => {
   const isPlaneSet = piece.plane !== undefined;
@@ -5159,12 +5283,11 @@ export const isFixedPiece = (piece: Piece): boolean => {
   return isPlaneSet;
 };
 
-/**
  * Searches for matching Piece entry.
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖piece🪨findpiece](semiorepo://definition/semio/js/semio.ts/Piece/findPiece)
+ *  * [👤semio📚js💻semio🔖piece🪨findpiece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/findPiece)
  **/
 export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
   const piece = pieces.find((p) => p.guid === pieceGuid);
@@ -5176,13 +5299,13 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 
 // #region 🔖Group
 
-// [👤semio📚js💻semiots🔖group](semiorepo://section/semio/js/semio.ts/Group)
+// [👤semio📚js💻semio🔖group](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group)
 // Group entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Group validation.
  *
- *  * [👤semio📚js💻semiots🔖group🪨groupschema](semiorepo://definition/semio/js/semio.ts/Group/GroupSchema)
+ *  * [👤semio📚js💻semio🔖group🪨groupschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupSchema)
  **/
 export const GroupSchema = z.object({
   guid: z.string(),
@@ -5195,13 +5318,13 @@ export const GroupSchema = z.object({
 /**
  * Type alias for Group.
  *
- *  * [👤semio📚js💻semiots🔖group🛠️group](semiorepo://definition/semio/js/semio.ts/Group/Group)
+ *  * [👤semio📚js💻semio🔖group🛠️group](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/Group)
  **/
 export type Group = z.infer<typeof GroupSchema>;
 /**
  * Zod schema for Group diff validation.
  *
- *  * [👤semio📚js💻semiots🔖group🪨groupdiffschema](semiorepo://definition/semio/js/semio.ts/Group/GroupDiffSchema)
+ *  * [👤semio📚js💻semio🔖group🪨groupdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupDiffSchema)
  **/
 export const GroupDiffSchema = GroupSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
@@ -5209,7 +5332,7 @@ export const GroupDiffSchema = GroupSchema.partial().omit({ attributes: true }).
 /**
  * Diff type for tracking Group changes.
  *
- *  * [👤semio📚js💻semiots🔖group🛠️groupdiff](semiorepo://definition/semio/js/semio.ts/Group/GroupDiff)
+ *  * [👤semio📚js💻semio🔖group🛠️groupdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupDiff)
  **/
 export type GroupDiff = z.infer<typeof GroupDiffSchema>;
 /**
@@ -5217,7 +5340,7 @@ export type GroupDiff = z.infer<typeof GroupDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖group🪨getgroupdiff](semiorepo://definition/semio/js/semio.ts/Group/getGroupDiff)
+ *  * [👤semio📚js💻semio🔖group🪨getgroupdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/getGroupDiff)
  **/
 export const getGroupDiff = (before: Group, after: Group): GroupDiff => {
   const diff: GroupDiff = {};
@@ -5234,7 +5357,7 @@ export const getGroupDiff = (before: Group, after: Group): GroupDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖group🪨inversegroupdiff](semiorepo://definition/semio/js/semio.ts/Group/inverseGroupDiff)
+ *  * [👤semio📚js💻semio🔖group🪨inversegroupdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/inverseGroupDiff)
  **/
 export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): GroupDiff => {
   const inverse: GroupDiff = {};
@@ -5250,7 +5373,7 @@ export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): Group
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖group🪨applygroupdiff](semiorepo://definition/semio/js/semio.ts/Group/applyGroupDiff)
+ *  * [👤semio📚js💻semio🔖group🪨applygroupdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/applyGroupDiff)
  **/
 export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -5272,7 +5395,7 @@ export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖group🪨mergegroupdiff](semiorepo://definition/semio/js/semio.ts/Group/mergeGroupDiff)
+ *  * [👤semio📚js💻semio🔖group🪨mergegroupdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/mergeGroupDiff)
  **/
 export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff => {
   return {
@@ -5284,7 +5407,7 @@ export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff =>
 /**
  * Zod schema for Groups diff validation.
  *
- *  * [👤semio📚js💻semiots🔖group🪨groupsdiffschema](semiorepo://definition/semio/js/semio.ts/Group/GroupsDiffSchema)
+ *  * [👤semio📚js💻semio🔖group🪨groupsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupsDiffSchema)
  **/
 export const GroupsDiffSchema = z.object({
   removed: z.array(GroupIdSchema).optional(),
@@ -5296,15 +5419,14 @@ export const GroupsDiffSchema = z.object({
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖group🪨serializegroup](semiorepo://definition/semio/js/semio.ts/Group/serializeGroup)
+ *  * [👤semio📚js💻semio🔖group🪨serializegroup](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/serializeGroup)
  **/
 export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
 /**
  * Performs the deserializeGroup operation.
  *
- * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖group🪨deserializegroup](semiorepo://definition/semio/js/semio.ts/Group/deserializeGroup)
+ *  * [👤semio📚js💻semio🔖group🪨deserializegroup](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/deserializeGroup)
  **/
 export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
 
@@ -5312,13 +5434,13 @@ export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.
 
 // #region 🔖Side
 
-// [👤semio📚js💻semiots🔖side](semiorepo://section/semio/js/semio.ts/Side)
+// [👤semio📚js💻semio🔖side](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side)
 // Side entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Side validation.
  *
- *  * [👤semio📚js💻semiots🔖side🪨sideschema](semiorepo://definition/semio/js/semio.ts/Side/SideSchema)
+ *  * [👤semio📚js💻semio🔖side🪨sideschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SideSchema)
  **/
 export const SideSchema = z.object({
   piece: PieceIdSchema,
@@ -5328,37 +5450,37 @@ export const SideSchema = z.object({
 /**
  * Type alias for Side.
  *
- *  * [👤semio📚js💻semiots🔖side🛠️side](semiorepo://definition/semio/js/semio.ts/Side/Side)
+ *  * [👤semio📚js💻semio🔖side🛠️side](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/Side)
  **/
 export type Side = z.infer<typeof SideSchema>;
 /**
  * Zod schema for Side diff validation.
  *
- *  * [👤semio📚js💻semiots🔖side🪨sidediffschema](semiorepo://definition/semio/js/semio.ts/Side/SideDiffSchema)
+ *  * [👤semio📚js💻semio🔖side🪨sidediffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SideDiffSchema)
  **/
 export const SideDiffSchema = SideSchema.partial();
 /**
  * Diff type for tracking Side changes.
  *
- *  * [👤semio📚js💻semiots🔖side🛠️sidediff](semiorepo://definition/semio/js/semio.ts/Side/SideDiff)
+ *  * [👤semio📚js💻semio🔖side🛠️sidediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SideDiff)
  **/
 export type SideDiff = z.infer<typeof SideDiffSchema>;
 /**
  * Zod schema for validating Side identifiers.
  *
- *  * [👤semio📚js💻semiots🔖side🪨sideidschema](semiorepo://definition/semio/js/semio.ts/Side/SideIdSchema)
+ *  * [👤semio📚js💻semio🔖side🪨sideidschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SideIdSchema)
  **/
 export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), connector: ConnectorIdSchema.optional() });
 /**
  * Identifier type for Side entities.
  *
- *  * [👤semio📚js💻semiots🔖side🛠️sideid](semiorepo://definition/semio/js/semio.ts/Side/SideId)
+ *  * [👤semio📚js💻semio🔖side🛠️sideid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SideId)
  **/
 export type SideId = z.infer<typeof SideIdSchema>;
 /**
  * Zod schema for Sides diff validation.
  *
- *  * [👤semio📚js💻semiots🔖side🪨sidesdiffschema](semiorepo://definition/semio/js/semio.ts/Side/SidesDiffSchema)
+ *  * [👤semio📚js💻semio🔖side🪨sidesdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SidesDiffSchema)
  **/
 export const SidesDiffSchema = z.object({
   removed: z.array(SideIdSchema).optional(),
@@ -5368,7 +5490,7 @@ export const SidesDiffSchema = z.object({
 /**
  * Diff type for tracking Sides changes.
  *
- *  * [👤semio📚js💻semiots🔖side🛠️sidesdiff](semiorepo://definition/semio/js/semio.ts/Side/SidesDiff)
+ *  * [👤semio📚js💻semio🔖side🛠️sidesdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/SidesDiff)
  **/
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
 /**
@@ -5376,7 +5498,7 @@ export type SidesDiff = z.infer<typeof SidesDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖side🪨getsidediff](semiorepo://definition/semio/js/semio.ts/Side/getSideDiff)
+ *  * [👤semio📚js💻semio🔖side🪨getsidediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/getSideDiff)
  **/
 export const getSideDiff = (before: Side, after: Side): SideDiff => {
   const diff: SideDiff = {};
@@ -5390,7 +5512,7 @@ export const getSideDiff = (before: Side, after: Side): SideDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖side🪨inversesidediff](semiorepo://definition/semio/js/semio.ts/Side/inverseSideDiff)
+ *  * [👤semio📚js💻semio🔖side🪨inversesidediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/inverseSideDiff)
  **/
 export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff => {
   const inverse: SideDiff = {};
@@ -5404,7 +5526,7 @@ export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖side🪨mergesidediff](semiorepo://definition/semio/js/semio.ts/Side/mergeSideDiff)
+ *  * [👤semio📚js💻semio🔖side🪨mergesidediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/mergeSideDiff)
  **/
 export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
   return { ...diff1, ...diff2 };
@@ -5414,7 +5536,7 @@ export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖side🪨applysidediff](semiorepo://definition/semio/js/semio.ts/Side/applySideDiff)
+ *  * [👤semio📚js💻semio🔖side🪨applysidediff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/applySideDiff)
  **/
 export const applySideDiff = (base: Side, diff: SideDiff): Side => {
   const result: Side = {
@@ -5431,7 +5553,7 @@ export const applySideDiff = (base: Side, diff: SideDiff): Side => {
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖side🪨serializeside](semiorepo://definition/semio/js/semio.ts/Side/serializeSide)
+ *  * [👤semio📚js💻semio🔖side🪨serializeside](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/serializeSide)
  **/
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 /**
@@ -5439,7 +5561,7 @@ export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.p
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖side🪨deserializeside](semiorepo://definition/semio/js/semio.ts/Side/deserializeSide)
+ *  * [👤semio📚js💻semio🔖side🪨deserializeside](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/deserializeSide)
  **/
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
 /**
@@ -5447,7 +5569,7 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖side🪨aresameside](semiorepo://definition/semio/js/semio.ts/Side/areSameSide)
+ *  * [👤semio📚js💻semio🔖side🪨aresameside](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side/d/i/areSameSide)
  **/
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
@@ -5455,13 +5577,13 @@ export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.pie
 
 // #region 🔖Connection
 
-// [👤semio📚js💻semiots🔖connection](semiorepo://section/semio/js/semio.ts/Connection)
+// [👤semio📚js💻semio🔖connection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection)
 // Connection entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Connection validation.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨connectionschema](semiorepo://definition/semio/js/semio.ts/Connection/ConnectionSchema)
+ *  * [👤semio📚js💻semio🔖connection🪨connectionschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionSchema)
  **/
 export const ConnectionSchema = z.object({
   guid: z.string(),
@@ -5481,13 +5603,13 @@ export const ConnectionSchema = z.object({
 /**
  * Type alias for Connection.
  *
- *  * [👤semio📚js💻semiots🔖connection🛠️connection](semiorepo://definition/semio/js/semio.ts/Connection/Connection)
+ *  * [👤semio📚js💻semio🔖connection🛠️connection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/Connection)
  **/
 export type Connection = z.infer<typeof ConnectionSchema>;
 /**
  * Zod schema for Connection diff validation.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨connectiondiffschema](semiorepo://definition/semio/js/semio.ts/Connection/ConnectionDiffSchema)
+ *  * [👤semio📚js💻semio🔖connection🪨connectiondiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionDiffSchema)
  **/
 export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ guid: true, connected: true, connecting: true, attributes: true }).extend({
   connected: SideDiffSchema.optional(),
@@ -5497,7 +5619,7 @@ export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ guid: true
 /**
  * Diff type for tracking Connection changes.
  *
- *  * [👤semio📚js💻semiots🔖connection🛠️connectiondiff](semiorepo://definition/semio/js/semio.ts/Connection/ConnectionDiff)
+ *  * [👤semio📚js💻semio🔖connection🛠️connectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionDiff)
  **/
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
 /**
@@ -5505,7 +5627,7 @@ export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨getconnectiondiff](semiorepo://definition/semio/js/semio.ts/Connection/getConnectionDiff)
+ *  * [👤semio📚js💻semio🔖connection🪨getconnectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/getConnectionDiff)
  **/
 export const getConnectionDiff = (before: Connection, after: Connection): ConnectionDiff => {
   const diff: ConnectionDiff = {};
@@ -5529,7 +5651,7 @@ export const getConnectionDiff = (before: Connection, after: Connection): Connec
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨applyconnectiondiff](semiorepo://definition/semio/js/semio.ts/Connection/applyConnectionDiff)
+ *  * [👤semio📚js💻semio🔖connection🪨applyconnectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/applyConnectionDiff)
  **/
 export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -5538,7 +5660,6 @@ export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Con
     guid: base.guid,
     connected: diff.connected ? applySideDiff(base.connected, diff.connected) : base.connected,
     connecting: diff.connecting ? applySideDiff(base.connecting, diff.connecting) : base.connecting,
-  };
 
   if (diff.gap !== undefined || base.gap !== undefined) result.gap = diff.gap ?? base.gap;
   if (diff.shift !== undefined || base.shift !== undefined) result.shift = diff.shift ?? base.shift;
@@ -5559,7 +5680,7 @@ export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Con
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨mergeconnectiondiff](semiorepo://definition/semio/js/semio.ts/Connection/mergeConnectionDiff)
+ *  * [👤semio📚js💻semio🔖connection🪨mergeconnectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/mergeConnectionDiff)
  **/
 export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => {
   return {
@@ -5576,7 +5697,7 @@ export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨inverseconnectiondiff](semiorepo://definition/semio/js/semio.ts/Connection/inverseConnectionDiff)
+ *  * [👤semio📚js💻semio🔖connection🪨inverseconnectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/inverseConnectionDiff)
  **/
 export const inverseConnectionDiff = (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
   const inverse: ConnectionDiff = {};
@@ -5598,7 +5719,7 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
 /**
  * Zod schema for Connections diff validation.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨connectionsdiffschema](semiorepo://definition/semio/js/semio.ts/Connection/ConnectionsDiffSchema)
+ *  * [👤semio📚js💻semio🔖connection🪨connectionsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionsDiffSchema)
  **/
 export const ConnectionsDiffSchema = z.object({
   removed: z.array(ConnectionIdSchema).optional(),
@@ -5608,7 +5729,7 @@ export const ConnectionsDiffSchema = z.object({
 /**
  * Diff type for tracking Connections changes.
  *
- *  * [👤semio📚js💻semiots🔖connection🛠️connectionsdiff](semiorepo://definition/semio/js/semio.ts/Connection/ConnectionsDiff)
+ *  * [👤semio📚js💻semio🔖connection🛠️connectionsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionsDiff)
  **/
 export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
 /**
@@ -5616,7 +5737,7 @@ export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨serializeconnection](semiorepo://definition/semio/js/semio.ts/Connection/serializeConnection)
+ *  * [👤semio📚js💻semio🔖connection🪨serializeconnection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/serializeConnection)
  **/
 export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection));
 /**
@@ -5624,7 +5745,7 @@ export const serializeConnection = (connection: Connection): string => JSON.stri
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨deserializeconnection](semiorepo://definition/semio/js/semio.ts/Connection/deserializeConnection)
+ *  * [👤semio📚js💻semio🔖connection🪨deserializeconnection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/deserializeConnection)
  **/
 export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
@@ -5633,7 +5754,7 @@ export const deserializeConnection = (json: string): Connection => ConnectionSch
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨aresameconnection](semiorepo://definition/semio/js/semio.ts/Connection/areSameConnection)
+ *  * [👤semio📚js💻semio🔖connection🪨aresameconnection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/areSameConnection)
  **/
 export const areSameConnection = (connection: Connection | ConnectionDiff, other: Connection | ConnectionDiff, strict: boolean = false): boolean => {
   const getConnectedPieceId = (conn: typeof connection) => ("connected" in conn && conn.connected && "piece" in conn.connected ? (typeof conn.connected.piece === "string" ? conn.connected.piece : (conn.connected.piece?.guid ?? "")) : "");
@@ -5655,7 +5776,7 @@ export const areSameConnection = (connection: Connection | ConnectionDiff, other
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨findconnection](semiorepo://definition/semio/js/semio.ts/Connection/findConnection)
+ *  * [👤semio📚js💻semio🔖connection🪨findconnection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/findConnection)
  **/
 export const findConnection = (connections: Connection[], connectionGuid: string): Connection => {
   const connection = connections.find((c) => c.guid === connectionGuid);
@@ -5668,8 +5789,7 @@ export const findConnection = (connections: Connection[], connectionGuid: string
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨findpiececonnections](semiorepo://definition/semio/js/semio.ts/Connection/findPieceConnections)
- **/
+ *  * [👤semio📚js💻semio🔖connection🪨findpiececonnections](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/findPieceConnections)
 export const findPieceConnections = (connections: Connection[], pieceGuid: string): Connection[] => {
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
@@ -5679,7 +5799,7 @@ export const findPieceConnections = (connections: Connection[], pieceGuid: strin
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖connection🪨findconnectorforpieceinconnection](semiorepo://definition/semio/js/semio.ts/Connection/findConnectorForPieceInConnection)
+ *  * [👤semio📚js💻semio🔖connection🪨findconnectorforpieceinconnection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/findConnectorForPieceInConnection)
  **/
 export const findConnectorForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Connector | undefined => {
   const connectorGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.connector?.guid : connection.connecting.connector?.guid;
@@ -5691,13 +5811,13 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
 
 // #region 🔖Stat
 
-// [👤semio📚js💻semiots🔖stat](semiorepo://section/semio/js/semio.ts/Stat)
+// [👤semio📚js💻semio🔖stat](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat)
 // Stat entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Stat validation.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨statschema](semiorepo://definition/semio/js/semio.ts/Stat/StatSchema)
+ *  * [👤semio📚js💻semio🔖stat🪨statschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatSchema)
  **/
 export const StatSchema = z.object({
   guid: z.string(),
@@ -5711,19 +5831,19 @@ export const StatSchema = z.object({
 /**
  * Type alias for Stat.
  *
- *  * [👤semio📚js💻semiots🔖stat🛠️stat](semiorepo://definition/semio/js/semio.ts/Stat/Stat)
+ *  * [👤semio📚js💻semio🔖stat🛠️stat](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/Stat)
  **/
 export type Stat = z.infer<typeof StatSchema>;
 /**
  * Zod schema for Stat diff validation.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨statdiffschema](semiorepo://definition/semio/js/semio.ts/Stat/StatDiffSchema)
+ *  * [👤semio📚js💻semio🔖stat🪨statdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatDiffSchema)
  **/
 export const StatDiffSchema = StatSchema.partial();
 /**
  * Diff type for tracking Stat changes.
  *
- *  * [👤semio📚js💻semiots🔖stat🛠️statdiff](semiorepo://definition/semio/js/semio.ts/Stat/StatDiff)
+ *  * [👤semio📚js💻semio🔖stat🛠️statdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatDiff)
  **/
 export type StatDiff = z.infer<typeof StatDiffSchema>;
 /**
@@ -5731,7 +5851,7 @@ export type StatDiff = z.infer<typeof StatDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨getstatdiff](semiorepo://definition/semio/js/semio.ts/Stat/getStatDiff)
+ *  * [👤semio📚js💻semio🔖stat🪨getstatdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/getStatDiff)
  **/
 export const getStatDiff = (before: Stat, after: Stat): StatDiff => {
   const diff: StatDiff = {};
@@ -5748,7 +5868,7 @@ export const getStatDiff = (before: Stat, after: Stat): StatDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨inversestatdiff](semiorepo://definition/semio/js/semio.ts/Stat/inverseStatDiff)
+ *  * [👤semio📚js💻semio🔖stat🪨inversestatdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/inverseStatDiff)
  **/
 export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff => {
   const inverse: StatDiff = {};
@@ -5765,7 +5885,7 @@ export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨applystatdiff](semiorepo://definition/semio/js/semio.ts/Stat/applyStatDiff)
+ *  * [👤semio📚js💻semio🔖stat🪨applystatdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/applyStatDiff)
  **/
 export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
   const result: Stat = {
@@ -5786,7 +5906,7 @@ export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨mergestatdiff](semiorepo://definition/semio/js/semio.ts/Stat/mergeStatDiff)
+ *  * [👤semio📚js💻semio🔖stat🪨mergestatdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/mergeStatDiff)
  **/
 export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
   return { ...diff1, ...diff2 };
@@ -5794,7 +5914,7 @@ export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
 /**
  * Zod schema for Stats diff validation.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨statsdiffschema](semiorepo://definition/semio/js/semio.ts/Stat/StatsDiffSchema)
+ *  * [👤semio📚js💻semio🔖stat🪨statsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatsDiffSchema)
  **/
 export const StatsDiffSchema = z.object({
   removed: z.array(StatIdSchema).optional(),
@@ -5806,7 +5926,7 @@ export const StatsDiffSchema = z.object({
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨serializestat](semiorepo://definition/semio/js/semio.ts/Stat/serializeStat)
+ *  * [👤semio📚js💻semio🔖stat🪨serializestat](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/serializeStat)
  **/
 export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
 /**
@@ -5814,7 +5934,7 @@ export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.p
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖stat🪨deserializestat](semiorepo://definition/semio/js/semio.ts/Stat/deserializeStat)
+ *  * [👤semio📚js💻semio🔖stat🪨deserializestat](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/deserializeStat)
  **/
 export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.parse(json));
 
@@ -5822,13 +5942,13 @@ export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.par
 
 // #region 🔖Design
 
-// [👤semio📚js💻semiots🔖design](semiorepo://section/semio/js/semio.ts/Design)
+// [👤semio📚js💻semio🔖design](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design)
 // Design entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Design validation.
  *
- *  * [👤semio📚js💻semiots🔖design🪨designschema](semiorepo://definition/semio/js/semio.ts/Design/DesignSchema)
+ *  * [👤semio📚js💻semio🔖design🪨designschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignSchema)
  **/
 export const DesignSchema = z.object({
   guid: z.string(),
@@ -5859,7 +5979,7 @@ export const DesignSchema = z.object({
 /**
  * Type alias for Design.
  *
- *  * [👤semio📚js💻semiots🔖design🛠️design](semiorepo://definition/semio/js/semio.ts/Design/Design)
+ *  * [👤semio📚js💻semio🔖design🛠️design](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/Design)
  **/
 export type Design = z.infer<typeof DesignSchema>;
 /**
@@ -5867,7 +5987,7 @@ export type Design = z.infer<typeof DesignSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖design🪨serializedesign](semiorepo://definition/semio/js/semio.ts/Design/serializeDesign)
+ *  * [👤semio📚js💻semio🔖design🪨serializedesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/serializeDesign)
  **/
 export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
 /**
@@ -5875,14 +5995,14 @@ export const serializeDesign = (design: Design): string => JSON.stringify(Design
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨deserializedesign](semiorepo://definition/semio/js/semio.ts/Design/deserializeDesign)
+ *  * [👤semio📚js💻semio🔖design🪨deserializedesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/deserializeDesign)
  **/
 export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
 /**
  * Definition of DesignShallowSchema.
  *
- *  * [👤semio📚js💻semiots🔖design🪨designshallowschema](semiorepo://definition/semio/js/semio.ts/Design/DesignShallowSchema)
+ *  * [👤semio📚js💻semio🔖design🪨designshallowschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignShallowSchema)
  **/
 export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true }).extend({
   pieces: z.array(z.string()).optional(),
@@ -5893,7 +6013,7 @@ export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections
 /**
  * Type alias for DesignShallow.
  *
- *  * [👤semio📚js💻semiots🔖design🛠️designshallow](semiorepo://definition/semio/js/semio.ts/Design/DesignShallow)
+ *  * [👤semio📚js💻semio🔖design🛠️designshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignShallow)
  **/
 export type DesignShallow = z.infer<typeof DesignShallowSchema>;
 /**
@@ -5901,7 +6021,7 @@ export type DesignShallow = z.infer<typeof DesignShallowSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖design🪨serializedesignshallow](semiorepo://definition/semio/js/semio.ts/Design/serializeDesignShallow)
+ *  * [👤semio📚js💻semio🔖design🪨serializedesignshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/serializeDesignShallow)
  **/
 export const serializeDesignShallow = (design: DesignShallow): string => JSON.stringify(DesignShallowSchema.parse(design));
 /**
@@ -5909,13 +6029,13 @@ export const serializeDesignShallow = (design: DesignShallow): string => JSON.st
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨deserializedesignshallow](semiorepo://definition/semio/js/semio.ts/Design/deserializeDesignShallow)
+ *  * [👤semio📚js💻semio🔖design🪨deserializedesignshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/deserializeDesignShallow)
  **/
 export const deserializeDesignShallow = (json: string): DesignShallow => DesignShallowSchema.parse(JSON.parse(json));
 /**
  * Zod schema for Design diff validation.
  *
- *  * [👤semio📚js💻semiots🔖design🪨designdiffschema](semiorepo://definition/semio/js/semio.ts/Design/DesignDiffSchema)
+ *  * [👤semio📚js💻semio🔖design🪨designdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignDiffSchema)
  **/
 export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({
   pieces: PiecesDiffSchema.optional(),
@@ -5931,7 +6051,7 @@ export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: t
 /**
  * Diff type for tracking Design changes.
  *
- *  * [👤semio📚js💻semiots🔖design🛠️designdiff](semiorepo://definition/semio/js/semio.ts/Design/DesignDiff)
+ *  * [👤semio📚js💻semio🔖design🛠️designdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignDiff)
  **/
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 /**
@@ -5939,7 +6059,7 @@ export type DesignDiff = z.infer<typeof DesignDiffSchema>;
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖design🪨getdesigndiff](semiorepo://definition/semio/js/semio.ts/Design/getDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨getdesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/getDesignDiff)
  **/
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
   const diff: DesignDiff = {};
@@ -5978,7 +6098,7 @@ export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨mergedesigndiff](semiorepo://definition/semio/js/semio.ts/Design/mergeDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨mergedesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/mergeDesignDiff)
  **/
 export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => {
   return {
@@ -5999,7 +6119,7 @@ export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDif
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨inversedesigndiff](semiorepo://definition/semio/js/semio.ts/Design/inverseDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨inversedesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/inverseDesignDiff)
  **/
 export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): DesignDiff => {
   const inverse: DesignDiff = {};
@@ -6032,7 +6152,7 @@ export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): De
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨addpiecetodesigndiff](semiorepo://definition/semio/js/semio.ts/Design/addPieceToDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨addpiecetodesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/addPieceToDesignDiff)
  **/
 export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
   return {
@@ -6048,7 +6168,7 @@ export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖design🪨setpieceindesigndiff](semiorepo://definition/semio/js/semio.ts/Design/setPieceInDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨setpieceindesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/setPieceInDesignDiff)
  **/
 export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: string; diff: PieceDiff }): any => {
   const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: string; diff: PieceDiff }) => p.id_ === pieceDiff.id_);
@@ -6066,7 +6186,7 @@ export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: string; 
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨removepiecefromdesigndiff](semiorepo://definition/semio/js/semio.ts/Design/removePieceFromDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨removepiecefromdesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removePieceFromDesignDiff)
  **/
 export const removePieceFromDesignDiff = (designDiff: any, pieceId: string): any => {
   return {
@@ -6083,7 +6203,7 @@ export const removePieceFromDesignDiff = (designDiff: any, pieceId: string): any
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨addpiecestodesigndiff](semiorepo://definition/semio/js/semio.ts/Design/addPiecesToDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨addpiecestodesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/addPiecesToDesignDiff)
  **/
 export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
   return {
@@ -6099,7 +6219,7 @@ export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => 
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖design🪨setpiecesindesigndiff](semiorepo://definition/semio/js/semio.ts/Design/setPiecesInDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨setpiecesindesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/setPiecesInDesignDiff)
  **/
 export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: string; diff: PieceDiff }[]): any => {
   const updated = [...(designDiff.pieces?.updated || [])];
@@ -6119,7 +6239,7 @@ export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: string
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨removepiecesfromdesigndiff](semiorepo://definition/semio/js/semio.ts/Design/removePiecesFromDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨removepiecesfromdesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removePiecesFromDesignDiff)
  **/
 export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: string[]): any => {
   return {
@@ -6136,7 +6256,7 @@ export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: string[]):
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨addconnectiontodesigndiff](semiorepo://definition/semio/js/semio.ts/Design/addConnectionToDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨addconnectiontodesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/addConnectionToDesignDiff)
  **/
 export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
   return {
@@ -6152,7 +6272,7 @@ export const addConnectionToDesignDiff = (designDiff: any, connection: Connectio
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖design🪨setconnectionindesigndiff](semiorepo://definition/semio/js/semio.ts/Design/setConnectionInDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨setconnectionindesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/setConnectionInDesignDiff)
  **/
 export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
   const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) => areSameConnection(c, connectionDiff));
@@ -6169,7 +6289,7 @@ export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: Conne
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨removeconnectionfromdesigndiff](semiorepo://definition/semio/js/semio.ts/Design/removeConnectionFromDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨removeconnectionfromdesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removeConnectionFromDesignDiff)
  **/
 export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: { connected: { piece: string }; connecting: { piece: string } }): any => {
   return {
@@ -6186,7 +6306,7 @@ export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: { 
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨addconnectionstodesigndiff](semiorepo://definition/semio/js/semio.ts/Design/addConnectionsToDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨addconnectionstodesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/addConnectionsToDesignDiff)
  **/
 export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
   return {
@@ -6202,7 +6322,7 @@ export const addConnectionsToDesignDiff = (designDiff: any, connections: Connect
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖design🪨setconnectionsindesigndiff](semiorepo://definition/semio/js/semio.ts/Design/setConnectionsInDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨setconnectionsindesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/setConnectionsInDesignDiff)
  **/
 export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
   const updated = [...(designDiff.connections?.updated || [])];
@@ -6221,7 +6341,7 @@ export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: Con
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨removeconnectionsfromdesigndiff](semiorepo://definition/semio/js/semio.ts/Design/removeConnectionsFromDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨removeconnectionsfromdesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removeConnectionsFromDesignDiff)
  **/
 export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: string[]): any => {
   return {
@@ -6238,7 +6358,7 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨applydesigndiff](semiorepo://definition/semio/js/semio.ts/Design/applyDesignDiff)
+ *  * [👤semio📚js💻semio🔖design🪨applydesigndiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/applyDesignDiff)
  **/
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
   const pieces = diff.pieces || base.pieces ? applyCollectionDiff("piece", base.pieces ?? [], diff.pieces, applyPieceDiff) : undefined;
@@ -6284,7 +6404,7 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
 /**
  * Zod schema for Designs diff validation.
  *
- *  * [👤semio📚js💻semiots🔖design🪨designsdiffschema](semiorepo://definition/semio/js/semio.ts/Design/DesignsDiffSchema)
+ *  * [👤semio📚js💻semio🔖design🪨designsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignsDiffSchema)
  **/
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),
@@ -6294,7 +6414,7 @@ export const DesignsDiffSchema = z.object({
 /**
  * Diff type for tracking Designs changes.
  *
- *  * [👤semio📚js💻semiots🔖design🛠️designsdiff](semiorepo://definition/semio/js/semio.ts/Design/DesignsDiff)
+ *  * [👤semio📚js💻semio🔖design🛠️designsdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignsDiff)
  **/
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 
@@ -6303,7 +6423,7 @@ export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨mergedesigns](semiorepo://definition/semio/js/semio.ts/Design/mergeDesigns)
+ *  * [👤semio📚js💻semio🔖design🪨mergedesigns](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/mergeDesigns)
  **/
 export const mergeDesigns = (designs: Design[]): DesignDiff => {
   const pieces = designs.flatMap((d) => d.pieces ?? []);
@@ -6320,7 +6440,7 @@ export const mergeDesigns = (designs: Design[]): DesignDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨orientdesign](semiorepo://definition/semio/js/semio.ts/Design/orientDesign)
+ *  * [👤semio📚js💻semio🔖design🪨orientdesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/orientDesign)
  **/
 export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
   if (plane === undefined && center === undefined) {
@@ -6335,7 +6455,7 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖design🪨removepiecesandconnectionsfromdesign](semiorepo://definition/semio/js/semio.ts/Design/removePiecesAndConnectionsFromDesign)
+ *  * [👤semio📚js💻semio🔖design🪨removepiecesandconnectionsfromdesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removePiecesAndConnectionsFromDesign)
  **/
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignDiff => {
   return {
@@ -6348,6 +6468,8 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   };
 };
 
+// [👤semio📚js💻semio🔖design🪨computechildplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/computeChildPlane)
+// computeChildPlane holds the data fields for a computeChildPlane record.
 const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
   const parentMatrix = planeToMatrix(parentPlane);
   const parentPoint = vectorToThree(parentConnector.point);
@@ -6420,7 +6542,7 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
  *
  * MUST return a flat array.
  *
- *  * [👤semio📚js💻semiots🔖design🪨flattendesign](semiorepo://definition/semio/js/semio.ts/Design/flattenDesign)
+ *  * [👤semio📚js💻semio🔖design🪨flattendesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/flattenDesign)
  **/
 export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   const design = findDesignInKit(kit, designId);
@@ -6719,7 +6841,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖design🪨createclustereddesign](semiorepo://definition/semio/js/semio.ts/Design/createClusteredDesign)
+ *  * [👤semio📚js💻semio🔖design🪨createclustereddesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/createClusteredDesign)
  **/
 export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
   if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
@@ -6762,7 +6884,7 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨replaceclusterwithdesign](semiorepo://definition/semio/js/semio.ts/Design/replaceClusterWithDesign)
+ *  * [👤semio📚js💻semio🔖design🪨replaceclusterwithdesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/replaceClusterWithDesign)
  **/
 export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignDiff => {
   const piecesToRemove = clusterPieceIds.map((guid) => ({ guid }));
@@ -6816,7 +6938,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖design🪨getclusterablegroups](semiorepo://definition/semio/js/semio.ts/Design/getClusterableGroups)
+ *  * [👤semio📚js💻semio🔖design🪨getclusterablegroups](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/getClusterableGroups)
  **/
 export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
   if (selectedPieceIds.length < 2) return [];
@@ -6874,7 +6996,7 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨expanddesignpieces](semiorepo://definition/semio/js/semio.ts/Design/expandDesignPieces)
+ *  * [👤semio📚js💻semio🔖design🪨expanddesignpieces](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/expandDesignPieces)
  **/
 export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   const hasDesignConnections = design.connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
@@ -6944,7 +7066,6 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
 /**
  * Type alias for IncludedDesignInfo.
  *
- *  * [👤semio📚js💻semiots🔖design🛠️includeddesigninfo](semiorepo://definition/semio/js/semio.ts/Design/IncludedDesignInfo)
  **/
 export type IncludedDesignInfo = {
   guid: string;
@@ -6960,7 +7081,7 @@ export type IncludedDesignInfo = {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖design🪨getincludeddesigns](semiorepo://definition/semio/js/semio.ts/Design/getIncludedDesigns)
+ *  * [👤semio📚js💻semio🔖design🪨getincludeddesigns](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/getIncludedDesigns)
  **/
 export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   const includedDesigns: IncludedDesignInfo[] = [];
@@ -6995,7 +7116,7 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨isportinuse](semiorepo://definition/semio/js/semio.ts/Design/isPortInUse)
+ *  * [👤semio📚js💻semio🔖design🪨isportinuse](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/isPortInUse)
  **/
 export const isPortInUse = (design: Design, pieceGuid: string, connectorGuid: string): boolean => {
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
@@ -7012,7 +7133,7 @@ export const isPortInUse = (design: Design, pieceGuid: string, connectorGuid: st
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖design🪨isconnectionindesign](semiorepo://definition/semio/js/semio.ts/Design/isConnectionInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨isconnectionindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/isConnectionInDesign)
  **/
 export const isConnectionInDesign = (design: Design, connection: Connection): boolean => {
   return design.connections?.some((c) => areSameConnection(c, connection)) ?? false;
@@ -7023,7 +7144,7 @@ export const isConnectionInDesign = (design: Design, connection: Connection): bo
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖design🪨findpieceindesign](semiorepo://definition/semio/js/semio.ts/Design/findPieceInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨findpieceindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/findPieceInDesign)
  **/
 export const findPieceInDesign = (design: Design, pieceGuid: string): Piece => findPiece(design.pieces ?? [], pieceGuid);
 
@@ -7032,7 +7153,7 @@ export const findPieceInDesign = (design: Design, pieceGuid: string): Piece => f
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖design🪨findconnectionindesign](semiorepo://definition/semio/js/semio.ts/Design/findConnectionInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨findconnectionindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/findConnectionInDesign)
  **/
 export const findConnectionInDesign = (design: Design, connectionGuid: string): Connection => {
   return findConnection(design.connections ?? [], connectionGuid);
@@ -7043,7 +7164,7 @@ export const findConnectionInDesign = (design: Design, connectionGuid: string): 
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖design🪨findconnectionsindesign](semiorepo://definition/semio/js/semio.ts/Design/findConnectionsInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨findconnectionsindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/findConnectionsInDesign)
  **/
 export const findConnectionsInDesign = (design: Design, connectionGuids: string[]): Connection[] => {
   return connectionGuids.map((connectionGuid) => findConnectionInDesign(design, connectionGuid));
@@ -7054,7 +7175,7 @@ export const findConnectionsInDesign = (design: Design, connectionGuids: string[
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖design🪨findpiececonnectionsindesign](semiorepo://definition/semio/js/semio.ts/Design/findPieceConnectionsInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨findpiececonnectionsindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/findPieceConnectionsInDesign)
  **/
 export const findPieceConnectionsInDesign = (design: Design, pieceGuid: string): Connection[] => {
   return findPieceConnections(design.connections ?? [], pieceGuid);
@@ -7065,7 +7186,7 @@ export const findPieceConnectionsInDesign = (design: Design, pieceGuid: string):
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖design🪨findconnectionpiecesindesign](semiorepo://definition/semio/js/semio.ts/Design/findConnectionPiecesInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨findconnectionpiecesindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/findConnectionPiecesInDesign)
  **/
 export const findConnectionPiecesInDesign = (design: Design, connection: Connection): { connecting: Piece; connected: Piece } => {
   return {
@@ -7079,7 +7200,7 @@ export const findConnectionPiecesInDesign = (design: Design, connection: Connect
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖design🪨findstaleconnectionsindesign](semiorepo://definition/semio/js/semio.ts/Design/findStaleConnectionsInDesign)
+ *  * [👤semio📚js💻semio🔖design🪨findstaleconnectionsindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/findStaleConnectionsInDesign)
  **/
 export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   return (
@@ -7099,13 +7220,13 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
 
 // #region 🔖Kit
 
-// [👤semio📚js💻semiots🔖kit](semiorepo://section/semio/js/semio.ts/Kit)
+// [👤semio📚js💻semio🔖kit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit)
 // Kit entity types, schemas, and helpers MUST be defined here.
 
 /**
  * Zod schema for Kit validation.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨kitschema](semiorepo://definition/semio/js/semio.ts/Kit/KitSchema)
+ *  * [👤semio📚js💻semio🔖kit🪨kitschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitSchema)
  **/
 export const KitSchema = z.object({
   guid: z.string(),
@@ -7134,7 +7255,7 @@ export const KitSchema = z.object({
 /**
  * Type alias for Kit.
  *
- *  * [👤semio📚js💻semiots🔖kit🛠️kit](semiorepo://definition/semio/js/semio.ts/Kit/Kit)
+ *  * [👤semio📚js💻semio🔖kit🛠️kit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/Kit)
  **/
 export type Kit = z.infer<typeof KitSchema>;
 /**
@@ -7142,7 +7263,7 @@ export type Kit = z.infer<typeof KitSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨serializekit](semiorepo://definition/semio/js/semio.ts/Kit/serializeKit)
+ *  * [👤semio📚js💻semio🔖kit🪨serializekit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/serializeKit)
  **/
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
 /**
@@ -7150,14 +7271,14 @@ export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨deserializekit](semiorepo://definition/semio/js/semio.ts/Kit/deserializeKit)
+ *  * [👤semio📚js💻semio🔖kit🪨deserializekit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/deserializeKit)
  **/
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
 /**
  * Definition of KitShallowSchema.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨kitshallowschema](semiorepo://definition/semio/js/semio.ts/Kit/KitShallowSchema)
+ *  * [👤semio📚js💻semio🔖kit🪨kitshallowschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitShallowSchema)
  **/
 export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, folders: true, authors: true }).extend({
   types: z.array(z.string()).optional(),
@@ -7172,7 +7293,7 @@ export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tag
 /**
  * Type alias for KitShallow.
  *
- *  * [👤semio📚js💻semiots🔖kit🛠️kitshallow](semiorepo://definition/semio/js/semio.ts/Kit/KitShallow)
+ *  * [👤semio📚js💻semio🔖kit🛠️kitshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitShallow)
  **/
 export type KitShallow = z.infer<typeof KitShallowSchema>;
 /**
@@ -7180,7 +7301,7 @@ export type KitShallow = z.infer<typeof KitShallowSchema>;
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨serializekitshallow](semiorepo://definition/semio/js/semio.ts/Kit/serializeKitShallow)
+ *  * [👤semio📚js💻semio🔖kit🪨serializekitshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/serializeKitShallow)
  **/
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
 /**
@@ -7188,13 +7309,13 @@ export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(K
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨deserializekitshallow](semiorepo://definition/semio/js/semio.ts/Kit/deserializeKitShallow)
+ *  * [👤semio📚js💻semio🔖kit🪨deserializekitshallow](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/deserializeKitShallow)
  **/
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
 /**
  * Zod schema for Kit diff validation.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨kitdiffschema](semiorepo://definition/semio/js/semio.ts/Kit/KitDiffSchema)
+ *  * [👤semio📚js💻semio🔖kit🪨kitdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitDiffSchema)
  **/
 export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, authors: true, files: true, folders: true, attributes: true }).extend({
   types: TypesDiffSchema.optional(),
@@ -7218,16 +7339,22 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
 /**
  * Diff type for tracking Kit changes.
  *
- *  * [👤semio📚js💻semiots🔖kit🛠️kitdiff](semiorepo://definition/semio/js/semio.ts/Kit/KitDiff)
+ *  * [👤semio📚js💻semio🔖kit🛠️kitdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitDiff)
  **/
 export type KitDiff = z.infer<typeof KitDiffSchema>;
+// EntityIdType holds the data fields for a EntityIdType record.
+// [👤semio📚js💻semio🔖kit✂️entityidtype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/EntityIdType)
 type EntityIdType = { guid: string };
+// [👤semio📚js💻semio🔖kit✂️collectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/CollectionDiff)
+// CollectionDiff holds the data fields for a CollectionDiff record.
 type CollectionDiff<K extends string, T extends { guid: string }, D> = {
   removed?: EntityIdType[];
   updated?: Array<{ [key in K]: EntityIdType } & { diff: D }>;
   added?: T[];
 };
 
+// [👤semio📚js💻semio🔖kit🪨getcollectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/getCollectionDiff)
+// getCollectionDiff holds the data fields for a getCollectionDiff record.
 const getCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, before: T[], after: T[], getItemDiff: (before: T, after: T) => D): CollectionDiff<K, T, D> => {
   const diff: CollectionDiff<K, T, D> = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
@@ -7248,6 +7375,8 @@ const getCollectionDiff = <K extends string, T extends { guid: string }, D>(enti
   return diff;
 };
 
+// [👤semio📚js💻semio🔖kit🪨inversecollectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/inverseCollectionDiff)
+// inverseCollectionDiff holds the data fields for a inverseCollectionDiff record.
 const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, original: T[], appliedDiff: CollectionDiff<K, T, D>, inverseItemDiff: (original: T, appliedDiff: D) => D): CollectionDiff<K, T, D> => {
   const inverse: CollectionDiff<K, T, D> = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -7263,6 +7392,8 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   return inverse;
 };
 
+// [👤semio📚js💻semio🔖kit🪨applycollectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/applyCollectionDiff)
+// applyCollectionDiff holds the data fields for a applyCollectionDiff record.
 const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, base: T[], diff: CollectionDiff<K, T, D> | undefined, applyItemDiff: (base: T, diff: D) => T): T[] => {
   if (!diff) return base;
   let result = [...base];
@@ -7285,6 +7416,8 @@ const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(en
   return result;
 };
 
+// mergeCollectionDiff holds the data fields for a mergeCollectionDiff record.
+// [👤semio📚js💻semio🔖kit🪨mergecollectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/mergeCollectionDiff)
 const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, diff1: CollectionDiff<K, T, D>, diff2: CollectionDiff<K, T, D>, mergeItemDiff: (diff1: D, diff2: D) => D): CollectionDiff<K, T, D> => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
@@ -7308,7 +7441,7 @@ const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(en
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨getkitdiff](semiorepo://definition/semio/js/semio.ts/Kit/getKitDiff)
+ *  * [👤semio📚js💻semio🔖kit🪨getkitdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/getKitDiff)
  **/
 export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   const diff: KitDiff = {};
@@ -7348,7 +7481,7 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨inversekitdiff](semiorepo://definition/semio/js/semio.ts/Kit/inverseKitDiff)
+ *  * [👤semio📚js💻semio🔖kit🪨inversekitdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/inverseKitDiff)
  **/
 export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => {
   const inverse: KitDiff = {};
@@ -7378,7 +7511,7 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨mergekitdiff](semiorepo://definition/semio/js/semio.ts/Kit/mergeKitDiff)
+ *  * [👤semio📚js💻semio🔖kit🪨mergekitdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/mergeKitDiff)
  **/
 export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
   const mergeSimpleDiff = <D>(d1: D, d2: D): D => ({ ...d1, ...d2 });
@@ -7402,7 +7535,7 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨applykitdiff](semiorepo://definition/semio/js/semio.ts/Kit/applyKitDiff)
+ *  * [👤semio📚js💻semio🔖kit🪨applykitdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/applyKitDiff)
  **/
 export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   const result: any = {
@@ -7470,7 +7603,7 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 /**
  * Zod schema for Kits diff validation.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨kitsdiffschema](semiorepo://definition/semio/js/semio.ts/Kit/KitsDiffSchema)
+ *  * [👤semio📚js💻semio🔖kit🪨kitsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitsDiffSchema)
  **/
 export const KitsDiffSchema = z.object({
   removed: z.array(KitIdSchema).optional(),
@@ -7483,7 +7616,7 @@ export const KitsDiffSchema = z.object({
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨addtypetokit](semiorepo://definition/semio/js/semio.ts/Kit/addTypeToKit)
+ *  * [👤semio📚js💻semio🔖kit🪨addtypetokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addTypeToKit)
  **/
 export const addTypeToKit = (type: Type): KitDiff => ({
   types: {
@@ -7495,7 +7628,7 @@ export const addTypeToKit = (type: Type): KitDiff => ({
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨settypeinkit](semiorepo://definition/semio/js/semio.ts/Kit/setTypeInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨settypeinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setTypeInKit)
  **/
 export const setTypeInKit = (type: Type): KitDiff => ({
   types: {
@@ -7507,7 +7640,7 @@ export const setTypeInKit = (type: Type): KitDiff => ({
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨removetypefromkit](semiorepo://definition/semio/js/semio.ts/Kit/removeTypeFromKit)
+ *  * [👤semio📚js💻semio🔖kit🪨removetypefromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeTypeFromKit)
  **/
 export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
   types: { removed: [{ guid: typeGuid }] },
@@ -7518,7 +7651,7 @@ export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨adddesigntokit](semiorepo://definition/semio/js/semio.ts/Kit/addDesignToKit)
+ *  * [👤semio📚js💻semio🔖kit🪨adddesigntokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addDesignToKit)
  **/
 export const addDesignToKit = (design: Design): KitDiff => ({
   designs: {
@@ -7530,7 +7663,7 @@ export const addDesignToKit = (design: Design): KitDiff => ({
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨setdesigninkit](semiorepo://definition/semio/js/semio.ts/Kit/setDesignInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨setdesigninkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setDesignInKit)
  **/
 export const setDesignInKit = (design: Design): KitDiff => ({
   designs: {
@@ -7542,7 +7675,7 @@ export const setDesignInKit = (design: Design): KitDiff => ({
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨removedesignfromkit](semiorepo://definition/semio/js/semio.ts/Kit/removeDesignFromKit)
+ *  * [👤semio📚js💻semio🔖kit🪨removedesignfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeDesignFromKit)
  **/
 export const removeDesignFromKit = (designGuid: string): KitDiff => {
   return {
@@ -7557,7 +7690,7 @@ export const removeDesignFromKit = (designGuid: string): KitDiff => {
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨updatedesigninkit](semiorepo://definition/semio/js/semio.ts/Kit/updateDesignInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨updatedesigninkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/updateDesignInKit)
  **/
 export const updateDesignInKit = (design: Design): KitDiff => ({
   designs: {
@@ -7570,7 +7703,7 @@ export const updateDesignInKit = (design: Design): KitDiff => ({
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨addporttokit](semiorepo://definition/semio/js/semio.ts/Kit/addPortToKit)
+ *  * [👤semio📚js💻semio🔖kit🪨addporttokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addPortToKit)
  **/
 export const addPortToKit = (iface: Port): KitDiff => ({
   ports: {
@@ -7582,7 +7715,7 @@ export const addPortToKit = (iface: Port): KitDiff => ({
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨setportinkit](semiorepo://definition/semio/js/semio.ts/Kit/setPortInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨setportinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setPortInKit)
  **/
 export const setPortInKit = (iface: Port): KitDiff => ({
   ports: {
@@ -7594,7 +7727,7 @@ export const setPortInKit = (iface: Port): KitDiff => ({
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨removeportfromkit](semiorepo://definition/semio/js/semio.ts/Kit/removePortFromKit)
+ *  * [👤semio📚js💻semio🔖kit🪨removeportfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removePortFromKit)
  **/
 export const removePortFromKit = (portGuid: string): KitDiff => ({
   ports: { removed: [{ guid: portGuid }] },
@@ -7604,7 +7737,7 @@ export const removePortFromKit = (portGuid: string): KitDiff => ({
  *
  * MUST perform the operation correctly.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨updateportinkit](semiorepo://definition/semio/js/semio.ts/Kit/updatePortInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨updateportinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/updatePortInKit)
  **/
 export const updatePortInKit = (iface: Port): KitDiff => ({
   ports: {
@@ -7617,7 +7750,7 @@ export const updatePortInKit = (iface: Port): KitDiff => ({
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findfileinkit](semiorepo://definition/semio/js/semio.ts/Kit/findFileInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨findfileinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findFileInKit)
  **/
 export const findFileInKit = (kit: Kit, fileGuid: string): File => {
   const file = (kit.files || []).find((f) => f.guid === fileGuid);
@@ -7630,7 +7763,7 @@ export const findFileInKit = (kit: Kit, fileGuid: string): File => {
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨addfiletokit](semiorepo://definition/semio/js/semio.ts/Kit/addFileToKit)
+ *  * [👤semio📚js💻semio🔖kit🪨addfiletokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addFileToKit)
  **/
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
 /**
@@ -7638,15 +7771,14 @@ export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] }
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨setfileinkit](semiorepo://definition/semio/js/semio.ts/Kit/setFileInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨setfileinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setFileInKit)
  **/
 export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
 /**
  * Removes a FileFromKit element.
- *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨removefilefromkit](semiorepo://definition/semio/js/semio.ts/Kit/removeFileFromKit)
+ *  * [👤semio📚js💻semio🔖kit🪨removefilefromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeFileFromKit)
  **/
 export const removeFileFromKit = (fileGuid: string): KitDiff => ({
   files: { removed: [{ guid: fileGuid }] },
@@ -7657,7 +7789,7 @@ export const removeFileFromKit = (fileGuid: string): KitDiff => ({
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨setattributeinkit](semiorepo://definition/semio/js/semio.ts/Kit/setAttributeInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨setattributeinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setAttributeInKit)
  **/
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
   attributes: { added: [attribute] },
@@ -7668,7 +7800,7 @@ export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findtaginkit](semiorepo://definition/semio/js/semio.ts/Kit/findTagInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨findtaginkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findTagInKit)
  **/
 export const findTagInKit = (kit: Kit, tagGuid: string): Tag => {
   const tag = (kit.tags || []).find((t) => t.guid === tagGuid);
@@ -7681,7 +7813,7 @@ export const findTagInKit = (kit: Kit, tagGuid: string): Tag => {
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨addtagtokit](semiorepo://definition/semio/js/semio.ts/Kit/addTagToKit)
+ *  * [👤semio📚js💻semio🔖kit🪨addtagtokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addTagToKit)
  **/
 export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
 /**
@@ -7689,7 +7821,7 @@ export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨settaginkit](semiorepo://definition/semio/js/semio.ts/Kit/setTagInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨settaginkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setTagInKit)
  **/
 export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
 /**
@@ -7697,7 +7829,7 @@ export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨removetagfromkit](semiorepo://definition/semio/js/semio.ts/Kit/removeTagFromKit)
+ *  * [👤semio📚js💻semio🔖kit🪨removetagfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeTagFromKit)
  **/
 export const removeTagFromKit = (tagGuid: string): KitDiff => ({
   tags: { removed: [{ guid: tagGuid }] },
@@ -7708,7 +7840,7 @@ export const removeTagFromKit = (tagGuid: string): KitDiff => ({
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findconceptinkit](semiorepo://definition/semio/js/semio.ts/Kit/findConceptInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨findconceptinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findConceptInKit)
  **/
 export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
   const concept = (kit.concepts || []).find((c) => c.guid === conceptGuid);
@@ -7721,7 +7853,7 @@ export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
  *
  * MUST append the element to the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨addconcepttokit](semiorepo://definition/semio/js/semio.ts/Kit/addConceptToKit)
+ *  * [👤semio📚js💻semio🔖kit🪨addconcepttokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addConceptToKit)
  **/
 export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
 /**
@@ -7729,7 +7861,7 @@ export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { add
  *
  * MUST replace the existing element.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨setconceptinkit](semiorepo://definition/semio/js/semio.ts/Kit/setConceptInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨setconceptinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setConceptInKit)
  **/
 export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
 /**
@@ -7737,7 +7869,7 @@ export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { add
  *
  * MUST remove the element from the collection.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨removeconceptfromkit](semiorepo://definition/semio/js/semio.ts/Kit/removeConceptFromKit)
+ *  * [👤semio📚js💻semio🔖kit🪨removeconceptfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeConceptFromKit)
  **/
 export const removeConceptFromKit = (conceptGuid: string): KitDiff => ({
   concepts: { removed: [{ guid: conceptGuid }] },
@@ -7748,7 +7880,6 @@ export const removeConceptFromKit = (conceptGuid: string): KitDiff => ({
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findreplacabledesignsfordesignpiece](semiorepo://definition/semio/js/semio.ts/Kit/findReplacableDesignsForDesignPiece)
  **/
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
   if (!designPiece.design) return [];
@@ -7768,7 +7899,7 @@ export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid:
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨aresamekit](semiorepo://definition/semio/js/semio.ts/Kit/areSameKit)
+ *  * [👤semio📚js💻semio🔖kit🪨aresamekit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/areSameKit)
  **/
 export const areSameKit = (kitGuid: string, otherGuid: string): boolean => {
   return kitGuid === otherGuid;
@@ -7778,7 +7909,7 @@ export const areSameKit = (kitGuid: string, otherGuid: string): boolean => {
  *
  * MUST return true if the condition is met.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨hassamekit](semiorepo://definition/semio/js/semio.ts/Kit/hasSameKit)
+ *  * [👤semio📚js💻semio🔖kit🪨hassamekit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/hasSameKit)
  **/
 export const hasSameKit = (kitGuid: string, otherGuids: string[]): boolean => otherGuids.some((other) => areSameKit(kitGuid, other));
 
@@ -7787,7 +7918,7 @@ export const hasSameKit = (kitGuid: string, otherGuids: string[]): boolean => ot
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findtypeinkit](semiorepo://definition/semio/js/semio.ts/Kit/findTypeInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨findtypeinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findTypeInKit)
  **/
 export const findTypeInKit = (kit: Kit, typeGuid: string): Type => {
   const type = kit.types?.find((t) => t.guid === typeGuid);
@@ -7800,7 +7931,7 @@ export const findTypeInKit = (kit: Kit, typeGuid: string): Type => {
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨finddesigninkit](semiorepo://definition/semio/js/semio.ts/Kit/findDesignInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨finddesigninkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findDesignInKit)
  **/
 export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
   const design = kit.designs?.find((d) => d.guid === designGuid);
@@ -7810,7 +7941,7 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
 
 // #region 🔖Design Family Helpers
 
-// [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers](semiorepo://section/semio/js/semio.ts/Kit/Design%20Family%20Helpers)
+// [👤semio📚js💻semio🔖kit🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers)
 // Design family traversal helpers MUST be defined here.
 
 /**
@@ -7818,7 +7949,7 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨getprimitivedesign](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/getPrimitiveDesign)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨getprimitivedesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/getPrimitiveDesign)
  **/
 export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => {
   let current = findDesignInKit(kit, designGuid);
@@ -7833,7 +7964,7 @@ export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨getdesignfamily](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/getDesignFamily)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨getdesignfamily](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/getDesignFamily)
  **/
 export const getDesignFamily = (kit: Kit, designGuid: string): Design[] => {
   const primitive = getPrimitiveDesign(kit, designGuid);
@@ -7853,7 +7984,7 @@ export const getDesignFamily = (kit: Kit, designGuid: string): Design[] => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨getdesignsiblings](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/getDesignSiblings)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨getdesignsiblings](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/getDesignSiblings)
  **/
 export const getDesignSiblings = (kit: Kit, designGuid: string): Design[] => {
   const design = findDesignInKit(kit, designGuid);
@@ -7866,7 +7997,7 @@ export const getDesignSiblings = (kit: Kit, designGuid: string): Design[] => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨getdesignchildren](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/getDesignChildren)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨getdesignchildren](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/getDesignChildren)
  **/
 export const getDesignChildren = (kit: Kit, designGuid: string): Design[] => {
   return (kit.designs || []).filter((d) => d.parent?.guid === designGuid);
@@ -7877,7 +8008,7 @@ export const getDesignChildren = (kit: Kit, designGuid: string): Design[] => {
  *
  * MUST return a boolean result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨aredesignsinsamefamily](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/areDesignsInSameFamily)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨aredesignsinsamefamily](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/areDesignsInSameFamily)
  **/
 export const areDesignsInSameFamily = (kit: Kit, designGuidA: string, designGuidB: string): boolean => {
   const primitiveA = getPrimitiveDesign(kit, designGuidA);
@@ -7890,7 +8021,7 @@ export const areDesignsInSameFamily = (kit: Kit, designGuidA: string, designGuid
  *
  * MUST return a boolean result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨canusedesignaspiece](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/canUseDesignAsPiece)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨canusedesignaspiece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/canUseDesignAsPiece)
  **/
 export const canUseDesignAsPiece = (kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean => {
   return !areDesignsInSameFamily(kit, containerDesignGuid, pieceDesignGuid);
@@ -7901,7 +8032,7 @@ export const canUseDesignAsPiece = (kit: Kit, containerDesignGuid: string, piece
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖designfamilyhelpers🪨findsamefamilydesignpieces](semiorepo://definition/semio/js/semio.ts/Kit/Design%20Family%20Helpers/findSameFamilyDesignPieces)
+ *  * [👤semio📚js💻semio🔖kit🔖designfamilyhelpers🪨findsamefamilydesignpieces](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Design%20Family%20Helpers/d/i/findSameFamilyDesignPieces)
  **/
 export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[] => {
   const design = findDesignInKit(kit, designGuid);
@@ -7915,7 +8046,7 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 
 // #region 🔖Type Family Helpers
 
-// [👤semio📚js💻semiots🔖kit🔖typefamilyhelpers](semiorepo://section/semio/js/semio.ts/Kit/Type%20Family%20Helpers)
+// [👤semio📚js💻semio🔖kit🔖typefamilyhelpers](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers)
 // Type family traversal helpers MUST be defined here.
 
 /**
@@ -7923,7 +8054,7 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖typefamilyhelpers🪨getprimitivetype](semiorepo://definition/semio/js/semio.ts/Kit/Type%20Family%20Helpers/getPrimitiveType)
+ *  * [👤semio📚js💻semio🔖kit🔖typefamilyhelpers🪨getprimitivetype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers/d/i/getPrimitiveType)
  **/
 export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => {
   let current = findTypeInKit(kit, typeGuid);
@@ -7938,7 +8069,7 @@ export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖typefamilyhelpers🪨gettypefamily](semiorepo://definition/semio/js/semio.ts/Kit/Type%20Family%20Helpers/getTypeFamily)
+ *  * [👤semio📚js💻semio🔖kit🔖typefamilyhelpers🪨gettypefamily](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers/d/i/getTypeFamily)
  **/
 export const getTypeFamily = (kit: Kit, typeGuid: string): Type[] => {
   const primitive = getPrimitiveType(kit, typeGuid);
@@ -7958,7 +8089,7 @@ export const getTypeFamily = (kit: Kit, typeGuid: string): Type[] => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖typefamilyhelpers🪨gettypesiblings](semiorepo://definition/semio/js/semio.ts/Kit/Type%20Family%20Helpers/getTypeSiblings)
+ *  * [👤semio📚js💻semio🔖kit🔖typefamilyhelpers🪨gettypesiblings](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers/d/i/getTypeSiblings)
  **/
 export const getTypeSiblings = (kit: Kit, typeGuid: string): Type[] => {
   const type = findTypeInKit(kit, typeGuid);
@@ -7971,7 +8102,7 @@ export const getTypeSiblings = (kit: Kit, typeGuid: string): Type[] => {
  *
  * MUST return the requested value.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖typefamilyhelpers🪨gettypechildren](semiorepo://definition/semio/js/semio.ts/Kit/Type%20Family%20Helpers/getTypeChildren)
+ *  * [👤semio📚js💻semio🔖kit🔖typefamilyhelpers🪨gettypechildren](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers/d/i/getTypeChildren)
  **/
 export const getTypeChildren = (kit: Kit, typeGuid: string): Type[] => {
   return (kit.types || []).filter((t) => t.parent?.guid === typeGuid);
@@ -7982,7 +8113,7 @@ export const getTypeChildren = (kit: Kit, typeGuid: string): Type[] => {
  *
  * MUST return a boolean result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖typefamilyhelpers🪨aretypesinsamefamily](semiorepo://definition/semio/js/semio.ts/Kit/Type%20Family%20Helpers/areTypesInSameFamily)
+ *  * [👤semio📚js💻semio🔖kit🔖typefamilyhelpers🪨aretypesinsamefamily](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers/d/i/areTypesInSameFamily)
  **/
 export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: string): boolean => {
   const primitiveA = getPrimitiveType(kit, typeGuidA);
@@ -7997,7 +8128,7 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findportinkit](semiorepo://definition/semio/js/semio.ts/Kit/findPortInKit)
+ *  * [👤semio📚js💻semio🔖kit🪨findportinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findPortInKit)
  **/
 export const findPortInKit = (kit: Kit, portGuid: string): Port => {
   const iface = kit.ports?.find((i) => i.guid === portGuid);
@@ -8010,7 +8141,7 @@ export const findPortInKit = (kit: Kit, portGuid: string): Port => {
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findpiecetypeindesign](semiorepo://definition/semio/js/semio.ts/Kit/findPieceTypeInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findpiecetypeindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findPieceTypeInDesign)
  **/
 export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type => {
   const piece = findPieceInDesign(findDesignInKit(kit, designGuid), pieceGuid);
@@ -8023,7 +8154,7 @@ export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: s
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findparentpieceindesign](semiorepo://definition/semio/js/semio.ts/Kit/findParentPieceInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findparentpieceindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findParentPieceInDesign)
  **/
 export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => {
   const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
@@ -8036,7 +8167,7 @@ export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid:
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findparentconnectionforpieceindesign](semiorepo://definition/semio/js/semio.ts/Kit/findParentConnectionForPieceInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findparentconnectionforpieceindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findParentConnectionForPieceInDesign)
  **/
 export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => {
   const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
@@ -8049,7 +8180,7 @@ export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: strin
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findchildrenpiecesindesign](semiorepo://definition/semio/js/semio.ts/Kit/findChildrenPiecesInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findchildrenpiecesindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findChildrenPiecesInDesign)
  **/
 export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece[] => {
   const design = findDesignInKit(kit, designGuid);
@@ -8068,7 +8199,7 @@ export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGu
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findusedconnectorsbypieceindesign](semiorepo://definition/semio/js/semio.ts/Kit/findUsedConnectorsByPieceInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findusedconnectorsbypieceindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findUsedConnectorsByPieceInDesign)
  **/
 export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connector[] => {
   const design = findDesignInKit(kit, designGuid);
@@ -8084,7 +8215,7 @@ export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, 
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findreplacabletypesforpieceindesign](semiorepo://definition/semio/js/semio.ts/Kit/findReplacableTypesForPieceInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findreplacabletypesforpieceindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findReplacableTypesForPieceInDesign)
  **/
 export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designGuid);
@@ -8120,7 +8251,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findreplacabletypesforpiecesindesign](semiorepo://definition/semio/js/semio.ts/Kit/findReplacableTypesForPiecesInDesign)
+ *  * [👤semio📚js💻semio🔖kit🪨findreplacabletypesforpiecesindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findReplacableTypesForPiecesInDesign)
  **/
 export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: string, pieceGuids: string[], variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designGuid);
@@ -8162,12 +8293,11 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
 /**
  * Definition of piecesMetadata.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨piecesmetadata](semiorepo://definition/semio/js/semio.ts/Kit/piecesMetadata)
+ *  * [👤semio📚js💻semio🔖kit🪨piecesmetadata](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/piecesMetadata)
  **/
 export const piecesMetadata = (
   kit: Kit,
   designGuid: string,
-): Map<
   string,
   {
     plane: Plane;
@@ -8205,7 +8335,7 @@ export const piecesMetadata = (
  *
  * MUST return the matching element or undefined.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨findattributevalue](semiorepo://definition/semio/js/semio.ts/Kit/findAttributeValue)
+ *  * [👤semio📚js💻semio🔖kit🪨findattributevalue](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findAttributeValue)
  **/
 export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
@@ -8214,6 +8344,8 @@ export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connect
   return attribute?.value ?? defaultValue ?? "";
 };
 
+// getColorForText holds the data fields for a getColorForText record.
+// [👤semio📚js💻semio🔖kit🪨getcolorfortext](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/getColorForText)
 const getColorForText = (text?: string): string => {
   if (!text || text === "") return "var(--foreground)";
 
@@ -8292,7 +8424,7 @@ const getColorForText = (text?: string): string => {
  *
  * MUST assign colors deterministically.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨colorportsfortypes](semiorepo://definition/semio/js/semio.ts/Kit/colorPortsForTypes)
+ *  * [👤semio📚js💻semio🔖kit🪨colorportsfortypes](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/colorPortsForTypes)
  **/
 export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   const updated: { type: TypeId; diff: TypeDiff }[] = [];
@@ -8306,7 +8438,6 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
           guid: guid(),
           key: "semio.color",
           value: getColorForText(connector.port?.guid),
-        },
       ],
     }));
 
@@ -8326,7 +8457,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
  *
  * MUST produce a valid in-memory representation.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨parsedesignidfromvariant](semiorepo://definition/semio/js/semio.ts/Kit/parseDesignIdFromVariant)
+ *  * [👤semio📚js💻semio🔖kit🪨parsedesignidfromvariant](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/parseDesignIdFromVariant)
  **/
 export const parseDesignIdFromVariant = (variant: string): string => {
   return variant.split("-")[0];
@@ -8334,13 +8465,13 @@ export const parseDesignIdFromVariant = (variant: string): string => {
 
 // #region 🔖File Tree Utilities
 
-// [👤semio📚js💻semiots🔖kit🔖filetreeutilities](semiorepo://section/semio/js/semio.ts/Kit/File%20Tree%20Utilities)
+// [👤semio📚js💻semio🔖kit🔖filetreeutilities](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/File%20Tree%20Utilities)
 // File tree construction and traversal utilities MUST be defined here.
 
 /**
  * Interface defining FileTreeNode structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖filetreeutilities🛠️filetreenode](semiorepo://definition/semio/js/semio.ts/Kit/File%20Tree%20Utilities/FileTreeNode)
+ *  * [👤semio📚js💻semio🔖kit🔖filetreeutilities🛠️filetreenode](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/File%20Tree%20Utilities/d/i/FileTreeNode)
  **/
 export interface FileTreeNode {
   name: string;
@@ -8357,7 +8488,7 @@ export interface FileTreeNode {
  *
  * MUST construct and return a complete structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖filetreeutilities🪨buildfiletree](semiorepo://definition/semio/js/semio.ts/Kit/File%20Tree%20Utilities/buildFileTree)
+ *  * [👤semio📚js💻semio🔖kit🔖filetreeutilities🪨buildfiletree](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/File%20Tree%20Utilities/d/i/buildFileTree)
  **/
 export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] => {
   const folderChildren = new Map<string | undefined, Folder[]>();
@@ -8418,7 +8549,7 @@ export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] 
  *
  * MUST return a flat array.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖filetreeutilities🪨flattenfiletree](semiorepo://definition/semio/js/semio.ts/Kit/File%20Tree%20Utilities/flattenFileTree)
+ *  * [👤semio📚js💻semio🔖kit🔖filetreeutilities🪨flattenfiletree](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/File%20Tree%20Utilities/d/i/flattenFileTree)
  **/
 export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expandedPaths: Set<string> = new Set()): Array<FileTreeNode & { level: number; isExpanded: boolean }> => {
   const result: Array<FileTreeNode & { level: number; isExpanded: boolean }> = [];
@@ -8442,7 +8573,7 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
  *
  * MUST return a new valid instance.
  *
- *  * [👤semio📚js💻semiots🔖kit🪨createfilefromdatauri](semiorepo://definition/semio/js/semio.ts/Kit/createFileFromDataUri)
+ *  * [👤semio📚js💻semio🔖kit🪨createfilefromdatauri](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/createFileFromDataUri)
  **/
 export const createFileFromDataUri = (name: string, dataUri: string): File => {
   const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
@@ -8475,20 +8606,24 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
 
 // #region 🔖Kit Import/Export
 
-// [👤semio📚js💻semiots🔖kit🔖kitimport🔖export](semiorepo://section/semio/js/semio.ts/Kit/Kit%20Import/Export)
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export)
 // Kit serialization and deserialization functions MUST be defined here.
 
 /**
  * Interface defining KitImportResult structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖kitimport🔖export🛠️kitimportresult](semiorepo://definition/semio/js/semio.ts/Kit/Kit%20Import/Export/KitImportResult)
+ *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🛠️kitimportresult](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/KitImportResult)
  **/
 export interface KitImportResult {
   kit: Kit;
   files: Map<string, Blob>;
 }
 
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨cachedsqljs](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/cachedSqlJs)
+// cachedSqlJs holds the data fields for a cachedSqlJs record.
 let cachedSqlJs: any = null;
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨getsqljs](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/getSqlJs)
+// getSqlJs holds the data fields for a getSqlJs record.
 const getSqlJs = async () => {
   if (!cachedSqlJs) {
     const initSqlJs = (await import("sql.js")).default;
@@ -8519,7 +8654,7 @@ const getSqlJs = async () => {
  *
  * MUST load and return the imported data.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖kitimport🔖export🪨importkit](semiorepo://definition/semio/js/semio.ts/Kit/Kit%20Import/Export/importKit)
+ *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨importkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/importKit)
  **/
 export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
   const JSZip = (await import("jszip")).default;
@@ -8578,7 +8713,7 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
  *
  * MUST produce the exported format.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖kitimport🔖export🪨exportkit](semiorepo://definition/semio/js/semio.ts/Kit/Kit%20Import/Export/exportKit)
+ *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨exportkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/exportKit)
  **/
 export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blob> => {
   const JSZip = (await import("jszip")).default;
@@ -8607,7 +8742,7 @@ export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blo
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖kitimport🔖export🪨arekitsequal](semiorepo://definition/semio/js/semio.ts/Kit/Kit%20Import/Export/areKitsEqual)
+ *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨arekitsequal](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/areKitsEqual)
  **/
 export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
@@ -8949,7 +9084,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖kitimport🔖export🪨arekitdiffsequal](semiorepo://definition/semio/js/semio.ts/Kit/Kit%20Import/Export/areKitDiffsEqual)
+ *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨arekitdiffsequal](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/areKitDiffsEqual)
  **/
 export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
@@ -9515,6 +9650,8 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   return true;
 };
 
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨sqlitetokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/sqliteToKit)
+// sqliteToKit holds the data fields for a sqliteToKit record.
 const sqliteToKit = async (db: any): Promise<Kit> => {
   const existingTables = new Set<string>();
   const tableStmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table'");
@@ -9929,6 +10066,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   return kit;
 };
 
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨toarray](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/toArray)
+// toArray holds the data fields for a toArray record.
 const toArray = <T>(value: T | T[] | undefined): T[] => {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
@@ -9937,7 +10076,7 @@ const toArray = <T>(value: T | T[] | undefined): T[] => {
 /**
  * Constant value for KIT_SQLITE_SCHEMA.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖kitimport🔖export🪨kitsqliteschema](semiorepo://definition/semio/js/semio.ts/Kit/Kit%20Import/Export/KIT_SQLITE_SCHEMA)
+ *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨kitsqliteschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/KIT_SQLITE_SCHEMA)
  **/
 export const KIT_SQLITE_SCHEMA = `
 CREATE TABLE semio (
@@ -10373,6 +10512,8 @@ CREATE TABLE attribute (
 );
 `;
 
+// kitToSqlite holds the data fields for a kitToSqlite record.
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨kittosqlite](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/kitToSqlite)
 const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   db.exec(KIT_SQLITE_SCHEMA);
 
@@ -10556,12 +10697,10 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         toArray(prop.attributes).forEach((attr) => {
           db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, prop.guid]);
         });
-      });
 
       toArray(connector.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, connector_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, connector.guid]);
       });
-    });
 
     toArray(type.attributes).forEach((attr) => {
       db.run("INSERT INTO attribute (guid, key, value, definition, type_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, type.guid]);
@@ -10627,7 +10766,6 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           piece.plane?.origin.z !== undefined ? piece.plane.origin.z : null,
           piece.plane?.xAxis.x !== undefined ? piece.plane.xAxis.x : null,
           piece.plane?.xAxis.y !== undefined ? piece.plane.xAxis.y : null,
-          piece.plane?.xAxis.z !== undefined ? piece.plane.xAxis.z : null,
           piece.plane?.yAxis.x !== undefined ? piece.plane.yAxis.x : null,
           piece.plane?.yAxis.y !== undefined ? piece.plane.yAxis.y : null,
           piece.plane?.yAxis.z !== undefined ? piece.plane.yAxis.z : null,
@@ -10711,7 +10849,6 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       });
     });
 
-    toArray(design.stats).forEach((stat) => {
       db.run("INSERT INTO stat (guid, quality_guid, min_value, min_excluded, max_value, max_excluded, unit, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
         stat.guid,
         stat.quality.guid,
@@ -10732,7 +10869,6 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 };
 
 // #endregion 🔖Kit Import/Export
-
 // #region 🔖Validation
 
 // [🔖semio/js/semio.ts#Validation](semiorepo://section/semio/js/semio.ts/VALIDATION)
@@ -10740,20 +10876,20 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #region 🔖Validation core types
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes](semiorepo://section/semio/js/semio.ts/Kit/Validation/Validation%20core%20types)
+// [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types)
 // Core validation types and interfaces MUST be defined here.
 
 /**
  * Enumeration of EntityKind values.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes🛠️entitykind](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20core%20types/EntityKind)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes🛠️entitykind](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types/d/i/EntityKind)
  **/
 export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
 /**
  * Interface defining DomainLocation structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes🛠️domainlocation](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20core%20types/DomainLocation)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes🛠️domainlocation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types/d/i/DomainLocation)
  **/
 export interface DomainLocation {
   entityKind: EntityKind;
@@ -10764,17 +10900,16 @@ export interface DomainLocation {
 /**
  * Interface defining Fix structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes🛠️fix](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20core%20types/Fix)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes🛠️fix](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types/d/i/Fix)
  **/
 export interface Fix {
   title: string;
-  diff: KitDiff;
 }
 
 /**
  * Interface defining Problem structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes🛠️problem](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20core%20types/Problem)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes🛠️problem](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types/d/i/Problem)
  **/
 export interface Problem {
   constraintId: string;
@@ -10787,7 +10922,7 @@ export interface Problem {
 /**
  * Interface defining ValidationResult structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes🛠️validationresult](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20core%20types/ValidationResult)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes🛠️validationresult](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types/d/i/ValidationResult)
  **/
 export interface ValidationResult {
   problems: Problem[];
@@ -10798,7 +10933,7 @@ export interface ValidationResult {
  *
  * MUST return true if the condition is met.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcoretypes🪨haserrors](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20core%20types/hasErrors)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcoretypes🪨haserrors](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20core%20types/d/i/hasErrors)
  **/
 export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
@@ -10806,13 +10941,13 @@ export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
 // #region 🔖Validation context & engine
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine](semiorepo://section/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine)
+// [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine)
 // Validation context construction and engine MUST be defined here.
 
 /**
  * Interface defining ValidationContext structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine🛠️validationcontext](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine/ValidationContext)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine🛠️validationcontext](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine/d/i/ValidationContext)
  **/
 export interface ValidationContext {
   kit: Kit;
@@ -10820,7 +10955,6 @@ export interface ValidationContext {
   designsByGuid: Map<Guid, Design>;
   piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
   connectorsByTypeGuid: Map<Guid, Connector[]>;
-  modelsByTypeGuid: Map<Guid, Model[]>;
 }
 
 /**
@@ -10828,7 +10962,7 @@ export interface ValidationContext {
  *
  * MUST construct and return a complete structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine🪨buildvalidationcontext](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine/buildValidationContext)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine🪨buildvalidationcontext](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine/d/i/buildValidationContext)
  **/
 export const buildValidationContext = (kit: Kit): ValidationContext => {
   const typesByGuid = new Map<Guid, Type>();
@@ -10853,14 +10987,14 @@ export const buildValidationContext = (kit: Kit): ValidationContext => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine🛠️constraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine/Constraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine🛠️constraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine/d/i/Constraint)
  **/
 export type Constraint = (ctx: ValidationContext) => Problem[];
 
 /**
  * Interface defining ValidationConfig structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine🛠️validationconfig](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine/ValidationConfig)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine🛠️validationconfig](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine/d/i/ValidationConfig)
  **/
 export interface ValidationConfig {
   constraints?: Constraint[];
@@ -10869,16 +11003,15 @@ export interface ValidationConfig {
 /**
  * Definition of defaultConstraints.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine🛠️defaultconstraints](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine/defaultConstraints)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine🛠️defaultconstraints](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine/d/i/defaultConstraints)
  **/
 export let defaultConstraints: Constraint[] = [];
 
-/**
  * Validates Kit against constraints.
  *
  * MUST check all constraints and return problems.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationcontextengine🪨validatekit](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20context%20&%20engine/validateKit)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationcontextengine🪨validatekit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20context%20&%20engine/d/i/validateKit)
  **/
 export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationResult => {
   const ctx = buildValidationContext(kit);
@@ -10890,7 +11023,7 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
 
 // #region 🔖Fix helper
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖fixhelper](semiorepo://section/semio/js/semio.ts/Kit/Validation/Fix%20helper)
+// [👤semio📚js💻semio🔖kit🔖validation🔖fixhelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Fix%20helper)
 // Validation fix helper functions MUST be defined here.
 
 /**
@@ -10898,7 +11031,7 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
  *
  * MUST produce a Fix that regenerates the GUID.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖fixhelper🪨semiomakefix](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Fix%20helper/semioMakeFix)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖fixhelper🪨semiomakefix](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Fix%20helper/d/i/semioMakeFix)
  **/
 export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clone: Kit) => void): Fix => {
   const clone = JSON.parse(serializeKit(ctx.kit)) as Kit;
@@ -10911,9 +11044,11 @@ export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clo
 
 // #region 🔖GUID update helper
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖guidupdatehelper](semiorepo://section/semio/js/semio.ts/Kit/Validation/GUID%20update%20helper)
+// [👤semio📚js💻semio🔖kit🔖validation🔖guidupdatehelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/GUID%20update%20helper)
 // GUID regeneration helper functions MUST be defined here.
 
+// updateGuidEverywhere holds the data fields for a updateGuidEverywhere record.
+// [👤semio📚js💻semio🔖kit🔖validation🔖guidupdatehelper🪨updateguideverywhere](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/GUID%20update%20helper/d/i/updateGuidEverywhere)
 const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
   const update = (obj: any) => {
     if (!obj || typeof obj !== "object") return;
@@ -10924,7 +11059,6 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
     if (obj.port?.guid === oldGuid) obj.port = createPortId(newGuid);
     if (obj.quality?.guid === oldGuid) obj.quality = createQualityId(newGuid);
     if (obj.piece?.guid === oldGuid) obj.piece = createPieceId(newGuid);
-    if (obj.designPiece?.guid === oldGuid) obj.designPiece = createPieceId(newGuid);
     if (obj.connector?.guid === oldGuid) obj.connector = createConnectorId(newGuid);
     if (Array.isArray(obj.compatiblePorts)) {
       obj.compatiblePorts = obj.compatiblePorts.map((iid: PortId) => (iid.guid === oldGuid ? createPortId(newGuid) : iid));
@@ -10947,7 +11081,7 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
 
 // #region 🔖Constraint: GUID uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintguiduniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20GUID%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintguiduniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20GUID%20uniqueness)
 // GUID uniqueness constraint MUST be enforced here.
 
 /**
@@ -10955,7 +11089,7 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintguiduniqueness🪨semioguiduniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20GUID%20uniqueness/semioGuidUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintguiduniqueness🪨semioguiduniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20GUID%20uniqueness/d/i/semioGuidUniquenessConstraint)
  **/
 export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -10975,7 +11109,6 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
         semioMakeFix(ctx, "Regenerate GUID", (clone) => {
           const newGuid = guid();
           updateGuidEverywhere(clone, entityGuid, newGuid);
-        }),
       ],
     };
     problems.push(problem);
@@ -10999,7 +11132,7 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Type name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constrainttypenameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Type%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constrainttypenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Type%20name%20uniqueness)
 // Type name uniqueness constraint MUST be enforced here.
 
 /**
@@ -11007,7 +11140,7 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constrainttypenameuniqueness🪨semiotypenameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Type%20name%20uniqueness/semioTypeNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constrainttypenameuniqueness🪨semiotypenameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Type%20name%20uniqueness/d/i/semioTypeNameUniquenessConstraint)
  **/
 export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11020,7 +11153,6 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   for (const [parentGuid, siblings] of byParent) {
     const names = new Map<string, Type[]>();
     siblings.forEach((t) => {
-      const name = t.name ?? "";
       if (!names.has(name)) names.set(name, []);
       names.get(name)!.push(t);
     });
@@ -11052,7 +11184,7 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Design name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintdesignnameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Design%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintdesignnameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Design%20name%20uniqueness)
 // Design name uniqueness constraint MUST be enforced here.
 
 /**
@@ -11060,12 +11192,11 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintdesignnameuniqueness🪨semiodesignnameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Design%20name%20uniqueness/semioDesignNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintdesignnameuniqueness🪨semiodesignnameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Design%20name%20uniqueness/d/i/semioDesignNameUniquenessConstraint)
  **/
 export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const byParent = new Map<Guid | undefined, Design[]>();
-  toArray(ctx.kit.designs).forEach((d) => {
     const pid = d.parent?.guid as Guid | undefined;
     if (!byParent.has(pid)) byParent.set(pid, []);
     byParent.get(pid)!.push(d);
@@ -11105,15 +11236,14 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Piece name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintpiecenameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Piece%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintpiecenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Piece%20name%20uniqueness)
 // Piece name uniqueness constraint MUST be enforced here.
 
 /**
  * Constraint validating PieceNameUniqueness rules.
- *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintpiecenameuniqueness🪨semiopiecenameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Piece%20name%20uniqueness/semioPieceNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintpiecenameuniqueness🪨semiopiecenameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Piece%20name%20uniqueness/d/i/semioPieceNameUniquenessConstraint)
  **/
 export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11156,15 +11286,14 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Quality name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintqualitynameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Quality%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintqualitynameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Quality%20name%20uniqueness)
 // Quality name uniqueness constraint MUST be enforced here.
 
 /**
  * Constraint validating QualityNameUniqueness rules.
  *
  * MUST detect and report constraint breachs.
- *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintqualitynameuniqueness🪨semioqualitynameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Quality%20name%20uniqueness/semioQualityNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintqualitynameuniqueness🪨semioqualitynameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Quality%20name%20uniqueness/d/i/semioQualityNameUniquenessConstraint)
  **/
 export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11201,7 +11330,7 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Port name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintportnameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Port%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintportnameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Port%20name%20uniqueness)
 // Port name uniqueness constraint MUST be enforced here.
 
 /**
@@ -11209,12 +11338,11 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintportnameuniqueness🪨semioportnameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Port%20name%20uniqueness/semioPortNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintportnameuniqueness🪨semioportnameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Port%20name%20uniqueness/d/i/semioPortNameUniquenessConstraint)
  **/
 export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const ports = toArray(ctx.kit.ports);
-  const nameMap = new Map<string, Port[]>();
   ports.forEach((i) => {
     const name = i.name ?? "";
     if (!nameMap.has(name)) nameMap.set(name, []);
@@ -11246,7 +11374,7 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: File name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintfilenameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20File%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintfilenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20File%20name%20uniqueness)
 // File name uniqueness constraint MUST be enforced here.
 
 /**
@@ -11254,7 +11382,7 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintfilenameuniqueness🪨semiofilenameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20File%20name%20uniqueness/semioFileNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintfilenameuniqueness🪨semiofilenameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20File%20name%20uniqueness/d/i/semioFileNameUniquenessConstraint)
  **/
 export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11265,7 +11393,6 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
     if (!nameMap.has(name)) nameMap.set(name, []);
     nameMap.get(name)!.push(f);
   });
-  for (const [name, list] of nameMap) {
     if (list.length <= 1) continue;
     const [first, ...rest] = list;
     const allNames = files.map((f) => f.name ?? "");
@@ -11291,7 +11418,7 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Folder name uniqueness
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintfoldernameuniqueness](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Folder%20name%20uniqueness)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintfoldernameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Folder%20name%20uniqueness)
 // Folder name uniqueness constraint MUST be enforced here.
 
 /**
@@ -11299,7 +11426,7 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintfoldernameuniqueness🪨semiofoldernameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Folder%20name%20uniqueness/semioFolderNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintfoldernameuniqueness🪨semiofoldernameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Folder%20name%20uniqueness/d/i/semioFolderNameUniquenessConstraint)
  **/
 export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11315,7 +11442,6 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
     siblings.forEach((f) => {
       const name = f.name ?? "";
       if (!nameMap.has(name)) nameMap.set(name, []);
-      nameMap.get(name)!.push(f);
     });
     for (const [name, list] of nameMap) {
       if (list.length <= 1) continue;
@@ -11344,7 +11470,7 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Connector name uniqueness within type
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintconnectornameuniquenesswithintype](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Connector%20name%20uniqueness%20within%20type)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintconnectornameuniquenesswithintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Connector%20name%20uniqueness%20within%20type)
 // Connector name uniqueness within type constraint MUST be enforced here.
 
 /**
@@ -11352,7 +11478,7 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintconnectornameuniquenesswithintype🪨semioconnectornameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Connector%20name%20uniqueness%20within%20type/semioConnectorNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintconnectornameuniquenesswithintype🪨semioconnectornameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Connector%20name%20uniqueness%20within%20type/d/i/semioConnectorNameUniquenessConstraint)
  **/
 export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11378,7 +11504,6 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
           if (!cp) return;
           cp.name = generateUniqueName(name, allNames);
         });
-        problems.push({
           constraintId: "connector-name-unique",
           message: `Duplicate connector name "${name}" inside type "${type?.name}".`,
           location: { entityKind: "Connector", entityGuid: connector.guid, field: "name" },
@@ -11395,15 +11520,14 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Model name uniqueness within type
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintmodelnameuniquenesswithintype](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Model%20name%20uniqueness%20within%20type)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintmodelnameuniquenesswithintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Model%20name%20uniqueness%20within%20type)
 // Model name uniqueness within type constraint MUST be enforced here.
 
 /**
  * Constraint validating ModelNameUniqueness rules.
- *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintmodelnameuniquenesswithintype🪨semiomodelnameuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Model%20name%20uniqueness%20within%20type/semioModelNameUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintmodelnameuniquenesswithintype🪨semiomodelnameuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Model%20name%20uniqueness%20within%20type/d/i/semioModelNameUniquenessConstraint)
  **/
 export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11446,7 +11570,7 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Layer path uniqueness within design
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintlayerpathuniquenesswithindesign](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Layer%20path%20uniqueness%20within%20design)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintlayerpathuniquenesswithindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Layer%20path%20uniqueness%20within%20design)
 // Layer path uniqueness within design constraint MUST be enforced here.
 
 /**
@@ -11454,7 +11578,7 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintlayerpathuniquenesswithindesign🪨semiolayerpathuniquenessconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Layer%20path%20uniqueness%20within%20design/semioLayerPathUniquenessConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintlayerpathuniquenesswithindesign🪨semiolayerpathuniquenessconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Layer%20path%20uniqueness%20within%20design/d/i/semioLayerPathUniquenessConstraint)
  **/
 export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11496,7 +11620,7 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
 
 // #region 🔖Constraint: Design piece same family constraint
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintdesignpiecesamefamilyconstraint](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint:%20Design%20piece%20same%20family%20constraint)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintdesignpiecesamefamilyconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Design%20piece%20same%20family%20constraint)
 // Design piece same family constraint MUST be enforced here.
 
 /**
@@ -11504,7 +11628,7 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
  *
  * MUST detect and report constraint breachs.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖constraintdesignpiecesamefamilyconstraint🪨semiodesignpiecesamefamilyconstraint](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Constraint:%20Design%20piece%20same%20family%20constraint/semioDesignPieceSameFamilyConstraint)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖constraintdesignpiecesamefamilyconstraint🪨semiodesignpiecesamefamilyconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Design%20piece%20same%20family%20constraint/d/i/semioDesignPieceSameFamilyConstraint)
  **/
 export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -11542,6 +11666,8 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
   return problems;
 };
 
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintdesignpiecesamefamilyconstraint🪨getprimitivedesignfromcontext](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint:%20Design%20piece%20same%20family%20constraint/d/i/getPrimitiveDesignFromContext)
+// getPrimitiveDesignFromContext holds the data fields for a getPrimitiveDesignFromContext record.
 const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: string): string => {
   let currentGuid = designGuid;
   let interactions = 0;
@@ -11559,7 +11685,7 @@ const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: strin
 
 // #region 🔖Constraint registration
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖constraintregistration](semiorepo://section/semio/js/semio.ts/Kit/Validation/Constraint%20registration)
+// [👤semio📚js💻semio🔖kit🔖validation🔖constraintregistration](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Constraint%20registration)
 // Constraint registration and default configurations MUST be defined here.
 
 defaultConstraints = [
@@ -11581,13 +11707,13 @@ defaultConstraints = [
 
 // #region 🔖Validation serialization
 
-// [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization](semiorepo://section/semio/js/semio.ts/Kit/Validation/Validation%20serialization)
+// [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization)
 // Validation result serialization and deserialization MUST be defined here.
 
 /**
  * Interface defining SerializableValidationFix structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🛠️serializablevalidationfix](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/SerializableValidationFix)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🛠️serializablevalidationfix](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/SerializableValidationFix)
  **/
 export interface SerializableValidationFix {
   title: string;
@@ -11597,7 +11723,7 @@ export interface SerializableValidationFix {
 /**
  * Interface defining SerializableProblem structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🛠️serializableproblem](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/SerializableProblem)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🛠️serializableproblem](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/SerializableProblem)
  **/
 export interface SerializableProblem {
   constraintId: string;
@@ -11610,7 +11736,7 @@ export interface SerializableProblem {
 /**
  * Interface defining SerializableValidationResult structure.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🛠️serializablevalidationresult](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/SerializableValidationResult)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🛠️serializablevalidationresult](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/SerializableValidationResult)
  **/
 export interface SerializableValidationResult {
   problems: SerializableProblem[];
@@ -11621,7 +11747,7 @@ export interface SerializableValidationResult {
  *
  * MUST convert to the target representation.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🪨tovalidationresult](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/toValidationResult)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🪨tovalidationresult](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/toValidationResult)
  **/
 export const toValidationResult = (result: ValidationResult): SerializableValidationResult => ({
   problems: result.problems.map((problem) => ({
@@ -11638,7 +11764,7 @@ export const toValidationResult = (result: ValidationResult): SerializableValida
  *
  * MUST produce a serializable output.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🪨serializevalidationresult](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/serializeValidationResult)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🪨serializevalidationresult](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/serializeValidationResult)
  **/
 export const serializeValidationResult = (result: ValidationResult): string => {
   const serializable = toValidationResult(result);
@@ -11655,10 +11781,12 @@ export const serializeValidationResult = (result: ValidationResult): string => {
  *
  * MUST produce a valid in-memory representation.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🪨parsevalidationresult](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/parseValidationResult)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🪨parsevalidationresult](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/parseValidationResult)
  **/
 export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
 
+// [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🪨isguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/isGuid)
+// isGuid holds the data fields for a isGuid record.
 const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 /**
@@ -11666,7 +11794,7 @@ const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🪨arekitdiffsequalignoringnewguids](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/areKitDiffsEqualIgnoringNewGuids)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🪨arekitdiffsequalignoringnewguids](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/areKitDiffsEqualIgnoringNewGuids)
  **/
 export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolean => {
   const normalize = (obj: unknown): unknown => {
@@ -11688,7 +11816,7 @@ export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolea
  *
  * MUST return a boolean equality result.
  *
- *  * [👤semio📚js💻semiots🔖kit🔖validation🔖validationserialization🪨arevalidationresultsequal](semiorepo://definition/semio/js/semio.ts/Kit/Validation/Validation%20serialization/areValidationResultsEqual)
+ *  * [👤semio📚js💻semio🔖kit🔖validation🔖validationserialization🪨arevalidationresultsequal](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Validation%20serialization/d/i/areValidationResultsEqual)
  **/
 export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean => {
   const serializableA = toValidationResult(a);

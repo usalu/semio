@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🏪assets💻iconsts](semiorepo://file/semio/assets/icons.ts)
+// [👤semio🏪assets💻icons](semiorepo://p/u/semio/b/a/assets/f/icons.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Exports
-
-// [👤semio🏪assets💻iconsts🔖exports](semiorepo://section/semio/assets/icons.ts/Exports)
+// [👤semio🏪assets💻icons🔖exports](semiorepo://p/u/semio/b/a/assets/f/icons.ts/s/Exports)
 // Re-exports of Lucide React icons with semantic aliases for the UI.
 // Exports MUST map each Lucide icon to a domain-specific alias name.
 
@@ -83,7 +81,9 @@ export {
   ArrowRight as NavigateForwardIcon,
   ArrowUp as NavigateUpIcon,
   Pause as PauseIcon,
-  Play as PlayIcon, Plug as PortIcon, Circle as RecordIcon,
+  Play as PlayIcon,
+  Plug as PortIcon,
+  Circle as RecordIcon,
   Cloud as RemoteKitIcon,
   Minus as RemoveIcon,
   PanelRight as RightSidePanelIcon,
@@ -98,14 +98,17 @@ export {
   ArrowDown as SortDescendingIcon,
   BarChart3 as StatsIcon,
   Square as StopIcon,
-  Sun as SunIcon, Table2 as TableViewIcon, Tablet as TabletIcon, Clock as TemporaryKitIcon,
+  Sun as SunIcon,
+  Table2 as TableViewIcon,
+  Tablet as TabletIcon,
+  Clock as TemporaryKitIcon,
   Hammer as ToolbarIcon,
   Wrench as ToolsIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
   Box as TypeIcon,
   User as UserIcon,
-  Box as WorkbenchIcon
+  Box as WorkbenchIcon,
 } from "lucide-react";
 
 export type { LucideIcon } from "lucide-react";

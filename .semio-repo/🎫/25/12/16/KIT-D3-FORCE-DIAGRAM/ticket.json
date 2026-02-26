@@ -1,18 +1,6 @@
 {
   "title": "Implement d3-force layout for kit diagram with configurable simulation parameters",
   "status": "closed",
-  "prompt": "\"PLAN: The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the parameters for the simulation to the settings of the kit app.\"",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.969Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "c44e5e38193be007ca56cc649aa2f58238c1ec40",
-      "prompt": "\"PLAN: The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the parameters for the simulation to the settings of the kit app.\"",
-      "llm": "opus-4-5"
-    }
-  ]
+  "description": "\"PLAN: The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the parameters for the simulation to the settings of the kit app.\"",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

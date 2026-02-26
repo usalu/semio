@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [🧰semiorepo🖱️vscode⚙️eslintconfigts](semiorepo://file/semio-repo/vscode/eslint.config.ts)
+// [🧰semiorepo🖱️vscode⚙️eslintconfigts](semiorepo://p/i/semio-repo/b/u/vscode/f/eslint.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,14 +19,12 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [🧰semiorepo🖱️vscode⚙️eslintconfigts🔖configuration](semiorepo://section/semio-repo/vscode/eslint.config.ts/Configuration)
+// [🧰semiorepo🖱️vscode⚙️eslintconfigts🔖configuration](semiorepo://p/i/semio-repo/b/u/vscode/f/eslint.config.ts/s/Configuration)
 // ESLint flat configuration for the VS Code extension package.
 // Configuration MUST export a valid ESLint flat config array.
 
 // Default ESLint flat configuration export with no custom rules.
 // Export MUST be an array of ESLint config objects.
-export default [
-];
+export default [];
 
 // #endregion 🔖Configuration

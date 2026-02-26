@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js🥼semiobenchmarkts](semiorepo://file/semio/js/semio.benchmark.ts)
+// [👤semio📚js🥼semiobenchmarkts](semiorepo://p/u/semio/b/l/js/f/semio.benchmark.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -25,15 +24,7 @@ import DiffForward from "../assets/semio/diff_kit_metabolism.json";
 import DiffInverse from "../assets/semio/diff_kit_metabolism_inverted.json";
 import InvalidKit from "../assets/semio/kit_invalid.json";
 import MetabolismKit from "../assets/semio/kit_metabolism.json";
-import {
-  applyKitDiff,
-  exportKit,
-  flattenDesign,
-  importKit,
-  Kit,
-  KitDiff,
-  validateKit
-} from "./semio.js";
+import { applyKitDiff, exportKit, flattenDesign, importKit, Kit, KitDiff, validateKit } from "./semio.js";
 
 // Number of iterations per benchmark run.
 // MUST be at least 1 for meaningful timing.
@@ -90,7 +81,6 @@ bench("Roundtrip/Metabolism", async () => {
   const { kit, files } = await importKit(zipBuffer);
 
   const blob = await exportKit(kit, files);
-
 });
 
 bench("Diff/Metabolism", () => {

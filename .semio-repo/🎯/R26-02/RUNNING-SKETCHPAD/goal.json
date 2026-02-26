@@ -8,9 +8,8 @@
   },
   "client": "copilot-chat",
   "llm": "gemini-3-pro",
-  "parent": "R26-02",
+  "parent": "🎯r2602",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/398"
-  },
-  "interactions": null
+  }
 }

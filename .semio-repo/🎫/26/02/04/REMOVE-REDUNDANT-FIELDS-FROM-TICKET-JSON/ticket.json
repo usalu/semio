@@ -1,20 +1,11 @@
 {
   "title": "Remove Redundant Fields from Ticket JSON",
   "status": "open",
-  "prompt": "Remove status, started, finished, and prompt fields from ticket.json. Status should be derived from whether the last interaction was finished or not.",
+  "description": "Remove status, started, finished, and prompt fields from ticket.json. Status should be derived from whether the last interaction was finished or not.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/346"
   },
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-04 19:15:13",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": "linux",
-      "client": "claude-code",
-      "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
-      "prompt": "Remove status, started, finished, and prompt fields from ticket.json. Status should be derived from whether the last interaction was finished or not.",
-      "llm": "opus-4-5"
-    }
+  "sessions": [
+    "⚪9b57ce56af904029a6e9f3ff7d7669b9"
   ]
 }

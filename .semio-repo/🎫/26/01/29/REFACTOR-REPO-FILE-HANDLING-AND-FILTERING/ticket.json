@@ -1,22 +1,10 @@
 {
   "title": "Refactor Repo File Handling and Filtering",
   "status": "closed",
-  "prompt": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
+  "description": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
   "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/262"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-01-29T09:49:05.588584487Z",
-      "author": "usalu",
-      "system": "",
-      "client": "",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
-      "prompt": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
-      "llm": "gemini-3-pro"
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism"
 }

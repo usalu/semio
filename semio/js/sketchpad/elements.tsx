@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js🗃️sketchpad💻elementstsx](semiorepo://file/semio/js/sketchpad/elements.tsx)
+// [👤semio📚js🗃️sketchpad💻elements](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖imports](semiorepo://section/semio/js/sketchpad/elements.tsx/Imports)
+// [👤semio📚js🗃️sketchpad💻elements🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Imports)
 // External library and internal module imports used across all sections.
 // Consumers MUST NOT add non-tree-shakeable imports.
 
@@ -120,15 +118,14 @@ import { Camera, cn, Plane, Point, Vector } from "../semio";
 // #endregion 🔖Imports
 
 // #region 🔖Section Specificity
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](semiorepo://section/semio/js/sketchpad/elements.tsx/Section%20Specificity)
+// [👤semio📚js🗃️sketchpad💻elements🔖sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity)
 // Enum defining priority levels for section content ownership.
 // Consumers MUST use these constants for section precedence.
 
 /**
  * Priority enum for section content ownership across apps.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity🛠️sectionspecificity](semiorepo://definition/semio/js/sketchpad/elements.tsx/Section%20Specificity/SectionSpecificity)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖sectionspecificity🛠️sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity/d/i/SectionSpecificity)
  **/
 export enum SectionSpecificity {
   SKETCHPAD = 0,
@@ -143,22 +140,33 @@ export enum SectionSpecificity {
 // #endregion 🔖Section Specificity
 
 // #region 🔖Interaction Context
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext](semiorepo://section/semio/js/sketchpad/elements.tsx/Interaction%20Context)
+// [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context)
 // React context for tracking active UI interactions.
 // Consumers MUST wrap interactive elements with InteractionProvider.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext✂️interactioncommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/InteractionCommands)
+ * InteractionCommands holds the data fields for a InteractionCommands record.
+ **/
 interface InteractionCommands {
   setActiveInteraction: (elementId?: string, interactionId?: string) => void;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext🪨interactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/InteractionContext)
+ * InteractionContext holds the data fields for a InteractionContext record.
+ **/
 const InteractionContext = React.createContext<InteractionCommands | undefined>(undefined);
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext🪨activeinteractioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/ActiveInteractionContext)
+ * ActiveInteractionContext holds the data fields for a ActiveInteractionContext record.
+ **/
 const ActiveInteractionContext = React.createContext<string | undefined>(undefined);
 
 /**
  * Context provider for UI interaction commands and active state.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext🪨interactionprovider](semiorepo://definition/semio/js/sketchpad/elements.tsx/Interaction%20Context/InteractionProvider)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext🪨useinteractioncommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/useInteractionCommands)
  **/
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
@@ -172,57 +180,64 @@ export const InteractionProvider: React.FC<{
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext🪨useinteractioncommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/useInteractionCommands)
+ * useInteractionCommands holds the data fields for a useInteractionCommands record.
+ **/
 const useInteractionCommands = () => React.useContext(InteractionContext);
+/** useActiveInteraction holds the data fields for a useActiveInteraction record.
+// [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext🪨useactiveinteraction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/useActiveInteraction)
+ * [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext🪨useactiveinteraction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context/d/i/useActiveInteraction)
+ **/
 const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 
 // #endregion 🔖Interaction Context
 
 // #region 🔖Level Context
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext](semiorepo://section/semio/js/sketchpad/elements.tsx/Level%20Context)
+// [👤semio📚js🗃️sketchpad💻elements🔖levelcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context)
 // React context for UI depth level tracking.
 // Consumers MUST wrap components with LevelProvider.
 
 /**
  * Union type for UI depth levels.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext🛠️level](semiorepo://definition/semio/js/sketchpad/elements.tsx/Level%20Context/Level)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖levelcontext🛠️level](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context/d/i/Level)
  **/
 export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖levelcontext🪨levelcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context/d/i/LevelContext)
+ * LevelContext holds the data fields for a LevelContext record.
+ **/
 const LevelContext = React.createContext<Level>("base");
 
 /**
  * Context provider that sets the current UI level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext🪨levelprovider](semiorepo://definition/semio/js/sketchpad/elements.tsx/Level%20Context/LevelProvider)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖levelcontext🪨levelprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context/d/i/LevelProvider)
  **/
 export const LevelProvider: React.FC<{
   level: Level;
   children: React.ReactNode;
-}> = ({ level, children }) => {
   return <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
-};
 
 /**
  * Hook returning the current UI depth level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext🪨uselevel](semiorepo://definition/semio/js/sketchpad/elements.tsx/Level%20Context/useLevel)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖levelcontext🪨uselevel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context/d/i/useLevel)
  **/
 export const useLevel = () => React.useContext(LevelContext);
 
 // #endregion 🔖Level Context
 
 // #region 🔖Element
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖element](semiorepo://section/semio/js/sketchpad/elements.tsx/Element)
+// [👤semio📚js🗃️sketchpad💻elements🔖element](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element)
 // Core element types, transaction context, and level-based CSS class helpers.
 // Consumers MUST use level functions for consistent styling.
 
 /**
  * Interface for start/finalize/abort lifecycle of a UI transaction.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🛠️transaction](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/Transaction)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🛠️transaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/Transaction)
  **/
 export interface Transaction {
   start?: () => void;
@@ -230,12 +245,16 @@ export interface Transaction {
   abort?: () => void;
 }
 
+/**
+ * TransactionContext holds the data fields for a TransactionContext record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖element🪨transactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/TransactionContext)
+ **/
 const TransactionContext = React.createContext<Transaction | undefined>(undefined);
 
 /**
  * Context provider that supplies a Transaction to descendants.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨transactionprovider](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/TransactionProvider)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨transactionprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/TransactionProvider)
  **/
 export const TransactionProvider: React.FC<{
   transaction?: Transaction;
@@ -247,14 +266,14 @@ export const TransactionProvider: React.FC<{
 /**
  * Hook returning the current Transaction context.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨usetransaction](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/useTransaction)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨usetransaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/useTransaction)
  **/
 export const useTransaction = (): Transaction | undefined => React.useContext(TransactionContext);
 
 /**
  * Base props interface requiring an id string.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🛠️elementbaseprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/ElementBaseProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🛠️elementbaseprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/ElementBaseProps)
  **/
 export interface ElementBaseProps {
   id: string;
@@ -263,14 +282,14 @@ export interface ElementBaseProps {
 /**
  * Extended element props inheriting ElementBaseProps.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🛠️elementprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/ElementProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🛠️elementprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/ElementProps)
  **/
 export interface ElementProps extends ElementBaseProps { }
 
 /**
  * Returns the Tailwind background class for a given level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelbgclass](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/getLevelBgClass)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨getlevelbgclass](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/getLevelBgClass)
  **/
 export const getLevelBgClass = (level: Level): string => {
   switch (level) {
@@ -290,7 +309,7 @@ export const getLevelBgClass = (level: Level): string => {
 /**
  * Returns the Tailwind hover background class for a given level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelhoverclass](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/getLevelHoverClass)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨getlevelhoverclass](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/getLevelHoverClass)
  **/
 export const getLevelHoverClass = (level: Level): string => {
   switch (level) {
@@ -310,7 +329,7 @@ export const getLevelHoverClass = (level: Level): string => {
 /**
  * Returns the Tailwind active-state hover class for a given level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelactivehoverclass](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/getLevelActiveHoverClass)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨getlevelactivehoverclass](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/getLevelActiveHoverClass)
  **/
 export const getLevelActiveHoverClass = (level: Level): string => {
   switch (level) {
@@ -330,7 +349,7 @@ export const getLevelActiveHoverClass = (level: Level): string => {
 /**
  * Returns the Tailwind z-index class for a given level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelzclass](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/getLevelZClass)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨getlevelzclass](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/getLevelZClass)
  **/
 export const getLevelZClass = (level: Level): string => {
   switch (level) {
@@ -350,7 +369,7 @@ export const getLevelZClass = (level: Level): string => {
 /**
  * Returns the Tailwind border class for a given level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getlevelborderelementclass](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/getLevelBorderElementClass)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨getlevelborderelementclass](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/getLevelBorderElementClass)
  **/
 export const getLevelBorderElementClass = (level: Level): string => {
   switch (level) {
@@ -370,13 +389,11 @@ export const getLevelBorderElementClass = (level: Level): string => {
 /**
  * Returns the Tailwind divide class for a given level.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖element🪨getleveldivideelementclass](semiorepo://definition/semio/js/sketchpad/elements.tsx/Element/getLevelDivideElementClass)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖element🪨getleveldivideelementclass](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element/d/i/getLevelDivideElementClass)
  **/
 export const getLevelDivideElementClass = (level: Level): string => {
   switch (level) {
-    case "window":
       return "divide-hover-window";
-    case "panel":
       return "divide-hover-panel";
     case "overlay":
       return "divide-hover-overlay";
@@ -390,15 +407,22 @@ export const getLevelDivideElementClass = (level: Level): string => {
 // #endregion 🔖Element
 
 // #region 🔖Command
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖command](semiorepo://section/semio/js/sketchpad/elements.tsx/Command)
+// [👤semio📚js🗃️sketchpad💻elements🔖command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command)
 // Command palette UI built on cmdk primitives.
 // Consumers MUST use CommandInput for search functionality.
 
+/**
+ * Command holds the data fields for a Command record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/Command)
+ **/
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return <CommandPrimitive data-slot="command" className={cn("bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
 }
 
+/**
+ * CommandDialog holds the data fields for a CommandDialog record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commanddialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandDialog)
+ **/
 function CommandDialog({
   title = "Command Palette",
   description = "Search for a command to run...",
@@ -427,6 +451,10 @@ function CommandDialog({
   );
 }
 
+/**
+ * CommandInput holds the data fields for a CommandInput record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandinput](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandInput)
+ **/
 function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b border-element px-tiny">
@@ -436,14 +464,26 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandlist](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandList)
+ * CommandList holds the data fields for a CommandList record.
+ **/
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
   return <CommandPrimitive.List data-slot="command-list" className={cn("max-h-[300px] scroll-py-single overflow-x-hidden overflow-y-auto", className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandempty](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandEmpty)
+ * CommandEmpty holds the data fields for a CommandEmpty record.
+ **/
 function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return <CommandPrimitive.Empty data-slot="command-empty" className="py-medium text-center text-sm" {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandGroup)
+ * CommandGroup holds the data fields for a CommandGroup record.
+ **/
 function CommandGroup({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Group>) {
   return (
     <CommandPrimitive.Group
@@ -456,11 +496,13 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
     />
   );
 }
-
-function CommandSeparator({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
   return <CommandPrimitive.Separator data-slot="command-separator" className={cn("bg-border -mx-single h-px", className)} {...props} />;
 }
 
+/**
+ * CommandItem holds the data fields for a CommandItem record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commanditem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandItem)
+ **/
 function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
   return (
     <CommandPrimitive.Item
@@ -474,6 +516,10 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandshortcut](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandShortcut)
+ * CommandShortcut holds the data fields for a CommandShortcut record.
+ **/
 function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return <span data-slot="command-shortcut" className={cn("text-muted-foreground ml-auto text-xs tracking-widest", className)} {...props} />;
 }
@@ -482,15 +528,14 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 // #endregion 🔖Command
 
 // #region 🔖Footer
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](semiorepo://section/semio/js/sketchpad/elements.tsx/Footer)
+// [👤semio📚js🗃️sketchpad💻elements🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer)
 // Status bar component at the bottom of the layout.
 // Consumers MUST provide FooterItem entries for each action.
 
 /**
  * Configuration interface for a single footer action item.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖footer🛠️footeritem](semiorepo://definition/semio/js/sketchpad/elements.tsx/Footer/FooterItem)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖footer🛠️footeritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/FooterItem)
  **/
 export interface FooterItem {
   id: string;
@@ -506,7 +551,7 @@ export interface FooterItem {
 /**
  * Props interface for the Footer component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖footer🛠️footerprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Footer/FooterProps)
+ * [👤semio📚js🗃️sketchpad💻elements🔖footer🛠️footerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/FooterProps)
  **/
 export interface FooterProps {
   items?: FooterItem[];
@@ -514,6 +559,10 @@ export interface FooterProps {
   isVisible?: boolean;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖footer🪨footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/Footer)
+ * [👤semio📚js🗃️sketchpad💻elements🔖footer🪨footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/Footer)
+ * Footer holds the data fields for a Footer record.
+ **/
 const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true }) => {
   const level = useLevel();
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -538,15 +587,14 @@ export { Footer };
 // #endregion 🔖Footer
 
 // #region 🔖Layout
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](semiorepo://section/semio/js/sketchpad/elements.tsx/Layout)
+// [👤semio📚js🗃️sketchpad💻elements🔖layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout)
 // Top-level layout orchestrating navbar, panels, canvas, and footer.
 // Consumers MUST provide a canvas element.
 
 /**
  * Props interface for the top-level Layout component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖layout🛠️layoutprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Layout/LayoutProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖layout🛠️layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout/d/i/Layout)
  **/
 export interface LayoutProps {
   navbar?: React.ReactNode;
@@ -558,11 +606,13 @@ export interface LayoutProps {
   leftSidePanel?: SidePanelProps;
   rightSidePanel?: SidePanelProps;
   hudPanel?: HudPanelProps;
-  canvas: React.ReactNode;
   toolbar?: React.ReactNode;
-  className?: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖layout🪨layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout/d/i/Layout)
+ * [👤semio📚js🗃️sketchpad💻elements🔖layout🪨layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout/d/i/Layout)
+ * Layout holds the data fields for a Layout record.
+ **/
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel, rightPanel, bottomPanel, leftSidePanel, rightSidePanel, hudPanel, canvas, toolbar, className = "" }) => (
   <div className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}>
     {navbar && <div className="flex-shrink-0">{navbar}</div>}
@@ -594,19 +644,30 @@ export { Layout };
 // #endregion 🔖Layout
 
 // #region 🔖Popover
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](semiorepo://section/semio/js/sketchpad/elements.tsx/Popover)
+// [👤semio📚js🗃️sketchpad💻elements🔖popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover)
 // Floating popover component built on Radix primitives.
-// Consumers MUST wrap content in PopoverContent.
 
+/**
+ * Popover holds the data fields for a Popover record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/Popover)
+// [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/Popover)
+// Popover holds the data fields for a Popover record.
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popovertrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/PopoverTrigger)
+ * PopoverTrigger holds the data fields for a PopoverTrigger record.
+ **/
 function PopoverTrigger({ className, ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" className={cn(className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popovercontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/PopoverContent)
+ * PopoverContent holds the data fields for a PopoverContent record.
+ **/
 function PopoverContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
     <PopoverPrimitive.Portal>
@@ -624,6 +685,10 @@ function PopoverContent({ className, align = "center", sideOffset = 4, ...props 
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popoveranchor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/PopoverAnchor)
+ * PopoverAnchor holds the data fields for a PopoverAnchor record.
+ **/
 function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
@@ -631,17 +696,16 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
 export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 
 // #endregion 🔖Popover
-
 // #region 🔖Tooltip
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip](semiorepo://section/semio/js/sketchpad/elements.tsx/Tooltip)
+// [👤semio📚js🗃️sketchpad💻elements🔖tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)
 // Tooltip components with expertise-level adaptive content.
 // Consumers MUST configure the expertise mode provider.
 
 /**
  * Configuration for enhanced tooltip with label, paths, and hotkey.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️tooltipconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Tooltip/TooltipConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltipconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipConfig)
  **/
 export interface TooltipConfig {
   labelKey: string;
@@ -653,7 +717,7 @@ export interface TooltipConfig {
 /**
  * Data interface for description-based tooltip content.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️descriptiontooltipdata](semiorepo://definition/semio/js/sketchpad/elements.tsx/Tooltip/DescriptionTooltipData)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️descriptiontooltipdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipData)
  **/
 export interface DescriptionTooltipData {
   label?: string;
@@ -664,12 +728,16 @@ export interface DescriptionTooltipData {
   hotkey?: string;
 }
 
+/**
+ * getExpertiseFunction holds the data fields for a getExpertiseFunction record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨getexpertisefunction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/getExpertiseFunction)
+ **/
 let getExpertiseFunction: (() => Expertise) | undefined;
 
 /**
  * Registers the expertise provider function for tooltips.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️settooltipmodeprovider](semiorepo://definition/semio/js/sketchpad/elements.tsx/Tooltip/setTooltipModeProvider)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️settooltipmodeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/setTooltipModeProvider)
  **/
 export function setTooltipModeProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
@@ -679,17 +747,25 @@ export function setTooltipModeProvider(fn: () => Expertise) {
 /**
  * Hook returning the current expertise level for tooltips.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip🛠️usetooltipmode](semiorepo://definition/semio/js/sketchpad/elements.tsx/Tooltip/useTooltipMode)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️usetooltipmode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/useTooltipMode)
  **/
 export function useTooltipMode(): Expertise {
   if (!getExpertiseFunction) return Expertise.BEGINNER;
   return getExpertiseFunction();
 }
 
+/**
+ * TooltipProvider holds the data fields for a TooltipProvider record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltipprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipProvider)
+ **/
 function TooltipProvider({ delayDuration = 400, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return <TooltipPrimitive.Provider data-slot="tooltip-provider" delayDuration={delayDuration} {...props} />;
 }
 
+/**
+ * Tooltip holds the data fields for a Tooltip record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/Tooltip)
+ **/
 function Tooltip({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
   return (
     <TooltipProvider>
@@ -698,10 +774,18 @@ function Tooltip({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root
   );
 }
 
+/**
+ * TooltipTrigger holds the data fields for a TooltipTrigger record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltiptrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipTrigger)
+ **/
 function TooltipTrigger({ className, asChild, ...props }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" asChild={asChild} className={cn(className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipContent)
+ * TooltipContent holds the data fields for a TooltipContent record.
+ **/
 function TooltipContent({ className, sideOffset = 8, children, ...props }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   return (
     <TooltipPrimitive.Portal>
@@ -720,10 +804,18 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip✂️enhancedtooltipcontentprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/EnhancedTooltipContentProps)
+ * EnhancedTooltipContentProps holds the data fields for a EnhancedTooltipContentProps record.
+ **/
 interface EnhancedTooltipContentProps {
   config: TooltipConfig;
 }
 
+/** EnhancedTooltipContent holds the data fields for a EnhancedTooltipContent record.
+// [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️enhancedtooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/EnhancedTooltipContent)
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨enhancedtooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/EnhancedTooltipContent)
+ **/
 function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
   const { t } = useTranslation();
   const mode = useTooltipMode();
@@ -781,22 +873,28 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip✂️descriptiontooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipContent)
+ * DescriptionTooltipContentProps holds the data fields for a DescriptionTooltipContentProps record.
+ **/
 interface DescriptionTooltipContentProps {
   id: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️descriptiontooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipContent)
+ * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨descriptiontooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipContent)
+ * DescriptionTooltipContent holds the data fields for a DescriptionTooltipContent record.
+ **/
 function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const { t } = useTranslation();
   const mode = useTooltipMode();
 
   if (mode === Expertise.EXPERT) return null;
 
-  const label = useLabel(id);
   const manualLabel = useLabel("tooltip.manual");
   const tutorialLabel = useLabel("tooltip.tutorial");
   const value = t(id as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
-  const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
 
   let hotkey: string | undefined;
   if (typeof value === "object" && value?.hotkey) {
@@ -806,8 +904,6 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
     const hotkeyValue = t(hotkeyKey as any) as any;
     if (typeof hotkeyValue === "string" && hotkeyValue !== hotkeyKey) {
       hotkey = hotkeyValue;
-    } else if (hotkeyValue && typeof hotkeyValue === "object" && hotkeyValue.hotkey) {
-      hotkey = typeof hotkeyValue.hotkey === "string" ? hotkeyValue.hotkey : undefined;
     }
   }
 
@@ -829,8 +925,6 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
 
   return (
     <div className="flex flex-col gap-single">
-      <span>{displayText}</span>
-      {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
         <div className="flex w-full items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath && (
             <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
@@ -856,27 +950,28 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
 }
 
 // #endregion 🔖Tooltip
-
 // #region 🔖Base Components
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖basecomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Base%20Components)
+// [👤semio📚js🗃️sketchpad💻elements🔖basecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components)
 // Foundational internal components like Label.
 // Consumers MUST use these as building blocks for inputs.
 
+/**
+ * LabelProps holds the data fields for a LabelProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖basecomponents✂️labelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/LabelProps)
+ **/
 interface LabelProps {
   id: string;
   children: React.ReactNode;
   className?: string;
   labelElementId?: string;
-}
-
-function Label({ id, children, className, labelElementId }: LabelProps) {
+// Label holds the data fields for a Label record.
+// [👤semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
   const label = useLabel(id);
   return (
     <div className={cn("group flex items-stretch min-w-0 w-full", className)}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span id={labelElementId} className="inline-flex items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:bg-hover-panel">
             {label}
           </span>
         </TooltipTrigger>
@@ -890,18 +985,25 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
 }
 
 // #endregion 🔖Base Components
-
 // #region 🔖Display Components
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components)
 // Read-only display wrappers for tooltips and callouts.
 // Consumers MUST pass valid config objects.
 
+/**
+ * SemioTooltipProps holds the data fields for a SemioTooltipProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents✂️semiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/SemioTooltip)
+ **/
 interface SemioTooltipProps {
   children: React.ReactElement;
   config: TooltipConfig;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🛠️semiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/SemioTooltip)
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🪨semiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/SemioTooltip)
+ * SemioTooltip holds the data fields for a SemioTooltip record.
+ **/
 function SemioTooltip({ children, config }: SemioTooltipProps) {
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
@@ -915,12 +1017,17 @@ function SemioTooltip({ children, config }: SemioTooltipProps) {
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents✂️idsemiotooltipprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/IdSemioTooltipProps)
+ * IdSemioTooltipProps holds the data fields for a IdSemioTooltipProps record.
+ **/
 interface IdSemioTooltipProps {
   children: React.ReactElement;
-  id: string;
 }
-
-function IdSemioTooltip({ children, id }: IdSemioTooltipProps) {
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🛠️idsemiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/IdSemioTooltip)
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🪨idsemiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/IdSemioTooltip)
+ * IdSemioTooltip holds the data fields for a IdSemioTooltip record.
+ **/
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
   return (
@@ -934,17 +1041,16 @@ function IdSemioTooltip({ children, id }: IdSemioTooltipProps) {
 }
 
 export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
-
 // #region 🔖Aside
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖aside](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Aside)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖aside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Aside)
 // Callout boxes for notes, tips, cautions, and dangers.
 // Consumers MUST specify a valid kind prop.
 
 /**
  * Props interface for the Aside callout component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖aside🛠️asideprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Aside/AsideProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖aside🛠️asideprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Aside/d/i/AsideProps)
  **/
 export interface AsideProps {
   kind?: "note" | "tip" | "caution" | "danger";
@@ -952,6 +1058,10 @@ export interface AsideProps {
   children: React.ReactNode;
 }
 
+/**
+ * iconMap holds the data fields for a iconMap record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖aside🪨iconmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Aside/d/i/iconMap)
+ **/
 const iconMap = {
   note: InfoIcon,
   tip: LightbulbIcon,
@@ -959,6 +1069,10 @@ const iconMap = {
   danger: AlertCircleIcon,
 };
 
+/**
+ * colorMap holds the data fields for a colorMap record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖aside🪨colormap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Aside/d/i/colorMap)
+ **/
 const colorMap = {
   note: "border-info-border bg-info-bg text-info-foreground",
   tip: "border-success-border bg-success-bg text-success-foreground",
@@ -969,7 +1083,7 @@ const colorMap = {
 /**
  * Callout component rendering note, tip, caution, or danger boxes.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖aside🪨aside](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Aside/Aside)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖aside🪨aside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Aside/d/i/Aside)
  **/
 export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) => {
   const Icon = iconMap[kind];
@@ -989,13 +1103,16 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 };
 
 // #endregion 🔖Aside
-
 // #region 🔖Avatar
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Avatar)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar)
 // User avatar components with image, fallback, drag, and table variants.
 // Consumers MUST provide content for the fallback.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🪨avatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/Avatar)
+ * Avatar holds the data fields for a Avatar record.
+ **/
 const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, style, ...props }, ref) => {
   const isSizeClass = className && (className.includes("size-") || className.includes("w-") || className.includes("h-"));
   const isFullSize = className && className.includes("size-full");
@@ -1012,11 +1129,19 @@ const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, R
 });
 Avatar.displayName = "Avatar";
 
+/**
+ * AvatarImage holds the data fields for a AvatarImage record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🪨avatarimage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/AvatarImage)
+ **/
 const AvatarImage = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(({ className, ...props }, ref) => (
   <AvatarPrimitive.Image ref={ref} data-slot="avatar-image" className={cn("aspect-square size-full", className)} {...props} />
 ));
 AvatarImage.displayName = "AvatarImage";
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🪨avatarfallback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/AvatarFallback)
+ * AvatarFallback holds the data fields for a AvatarFallback record.
+ **/
 const AvatarFallback = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Fallback>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>>(({ className, ...props }, ref) => (
   <AvatarPrimitive.Fallback ref={ref} data-slot="avatar-fallback" className={cn("bg-muted flex size-full items-center justify-center rounded-full", className)} {...props} />
 ));
@@ -1025,15 +1150,13 @@ AvatarFallback.displayName = "AvatarFallback";
 /**
  * Props interface for the DraggableAvatar component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🛠️draggableavatarprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Avatar/DraggableAvatarProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🛠️draggableavatarprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/DraggableAvatarProps)
  **/
 export interface DraggableAvatarProps {
   content: string;
   isSelected?: boolean;
-  isHovered?: boolean;
   shouldFade?: boolean;
   title?: string;
-  dragRef?: React.Ref<HTMLDivElement>;
   dragListeners?: any;
   dragAttributes?: any;
   onClick?: () => void;
@@ -1046,7 +1169,7 @@ export interface DraggableAvatarProps {
 /**
  * Avatar component with drag-and-drop support and selection styling.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🪨draggableavatar](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Avatar/DraggableAvatar)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🪨draggableavatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/DraggableAvatar)
  **/
 export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
   ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onDoubleClick, onPointerEnter, onPointerLeave, className }, ref) => {
@@ -1069,7 +1192,7 @@ DraggableAvatar.displayName = "DraggableAvatar";
 /**
  * Props interface for the TableAvatar component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🛠️tableavatarprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Avatar/TableAvatarProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🛠️tableavatarprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/TableAvatarProps)
  **/
 export interface TableAvatarProps {
   id?: string;
@@ -1085,14 +1208,12 @@ export interface TableAvatarProps {
 /**
  * Avatar component optimized for table row display.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖avatar🪨tableavatar](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Avatar/TableAvatar)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🪨tableavatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/TableAvatar)
  **/
 export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
-  const nameStr = typeof name === "string" ? name : String(name ?? "");
   const normalizedName = nameStr.trim();
   const initials = normalizedName
     ? normalizedName
-      .split(" ")
       .slice(0, 2)
       .map((word) => word.charAt(0))
       .join("")
@@ -1115,17 +1236,16 @@ TableAvatar.displayName = "TableAvatar";
 export { Avatar, AvatarFallback, AvatarImage };
 
 // #endregion 🔖Avatar
-
 // #region 🔖Card
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Card)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card)
 // Card container and grid layout for content blocks.
 // Consumers MUST provide a title string.
-
 /**
  * Props interface for the Card component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🛠️cardprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Card/CardProps)
+ *
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🛠️cardprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardProps)
  **/
 export interface CardProps {
   title: string;
@@ -1137,7 +1257,7 @@ export interface CardProps {
 /**
  * Content card with title, icon, and children.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🪨card](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Card/Card)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🪨card](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/Card)
  **/
 export const Card: React.FC<CardProps> = ({ title, icon, children, className = "" }) => {
   const IconComponent = typeof icon === "string" ? null : icon;
@@ -1156,35 +1276,36 @@ export const Card: React.FC<CardProps> = ({ title, icon, children, className = "
 /**
  * Props interface for the CardGrid component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🛠️cardgridprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Card/CardGridProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🛠️cardgridprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardGridProps)
  **/
 export interface CardGridProps {
   stagger?: boolean;
   children: React.ReactNode;
   className?: string;
 }
-
 /**
  * Responsive grid layout for Card components.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖card🪨cardgrid](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Card/CardGrid)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🪨cardgrid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardGrid)
+/**
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🪨cardgrid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardGrid)
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🪨cardgrid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardGrid)
  **/
 export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, className = "" }) => {
   return <div className={`grid grid-cols-1 md:grid-cols-2 gap-medium my-medium ${className}`}>{children}</div>;
 };
-
 // #endregion 🔖Card
 
 // #region 🔖Spinner
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖spinner](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Spinner)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner)
 // Animated loading spinner in small, medium, or large sizes.
 // Consumers MUST choose an appropriate size for the context.
 
 /**
  * Props interface for the Spinner component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖spinner🛠️spinnerprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Spinner/SpinnerProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner🛠️spinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner/d/i/SpinnerProps)
  **/
 export interface SpinnerProps {
   size?: "small" | "medium" | "large";
@@ -1194,30 +1315,29 @@ export interface SpinnerProps {
 /**
  * Animated SVG loading spinner.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖spinner🪨spinner](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Spinner/Spinner)
- **/
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner🪨spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner/d/i/Spinner)
+// Spinner holds the data fields for a Spinner record.
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner🪨spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner/d/i/Spinner)
 export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "" }) => {
   const sizeClass = size === "small" ? "size-small" : size === "large" ? "size-large" : "size-medium";
   return (
     <svg className={`animate-spin ${sizeClass} ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
-  );
 };
 
 // #endregion 🔖Spinner
 
 // #region 🔖NotFound
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖notfound](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/NotFound)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖notfound](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/NotFound)
 // 404-style placeholder with icon, title, and back navigation.
 // Consumers MUST provide a title for the error.
 
 /**
  * Props interface for the NotFound component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖notfound🛠️notfoundprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/NotFound/NotFoundProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖notfound🛠️notfoundprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/NotFound/d/i/NotFoundProps)
  **/
 export interface NotFoundProps {
   title: string;
@@ -1230,7 +1350,7 @@ export interface NotFoundProps {
 /**
  * Not-found placeholder page with navigation link.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖notfound🪨notfound](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/NotFound/NotFound)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖notfound🪨notfound](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/NotFound/d/i/NotFound)
  **/
 export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
   const navigate = useNavigate();
@@ -1246,39 +1366,37 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
         </button>
       )}
     </div>
-  );
 };
 
 // #endregion 🔖NotFound
 
 // #region 🔖LoadingRow
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖loadingrow](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/LoadingRow)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖loadingrow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/LoadingRow)
 // Skeleton loading row with pulsing icon and name.
 // Consumers MUST provide a name for the placeholder.
 
 /**
  * Props interface for the LoadingRow component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖loadingrow🛠️loadingrowprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/LoadingRow/LoadingRowProps)
- **/
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖loadingrow🛠️loadingrowprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/LoadingRow/d/i/LoadingRowProps)
+// LoadingRowProps holds the data fields for a LoadingRowProps record.
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖loadingrow🛠️loadingrowprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/LoadingRow/d/i/LoadingRowProps)
 export interface LoadingRowProps {
   name: string;
   icon?: React.ReactNode;
   className?: string;
 }
 
-/**
- * Skeleton row showing pulsing icon and name placeholder.
+/** LoadingRow holds the data fields for a LoadingRow record.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖loadingrow🪨loadingrow](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/LoadingRow/LoadingRow)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖loadingrow🪨loadingrow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/LoadingRow/d/i/LoadingRow)
  **/
 export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = "" }) => {
   return (
     <div className={`flex items-center gap-single p-single opacity-50 pointer-events-none ${className}`}>
       {icon && <span className="shrink-0">{icon}</span>}
       <span className="flex-1 truncate">{name}</span>
-      <Spinner size="small" />
     </div>
   );
 };
@@ -1287,14 +1405,14 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
 
 // #region 🔖DiagramNode
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/DiagramNode)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/DiagramNode)
 // Individual diagram node element with selection and hover states.
 // Consumers MUST provide content for the node.
 
 /**
  * Props interface for the DiagramNode component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode🛠️diagramnodeprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/DiagramNode/DiagramNodeProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖diagramnode🛠️diagramnodeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/DiagramNode/d/i/DiagramNodeProps)
  **/
 export interface DiagramNodeProps {
   content: React.ReactNode;
@@ -1302,9 +1420,7 @@ export interface DiagramNodeProps {
   hovered?: boolean;
   isPlaceholder?: boolean;
   showTopHandle?: boolean;
-  showBottomHandle?: boolean;
   className?: string;
-  onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
 }
@@ -1312,7 +1428,7 @@ export interface DiagramNodeProps {
 /**
  * Individual node element within a diagram graph.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode🪨diagramnode](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/DiagramNode/DiagramNode)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖diagramnode🪨diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/DiagramNode/d/i/DiagramNode)
  **/
 export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick }) => {
   return (
@@ -1340,12 +1456,9 @@ export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = fa
     </div>
   );
 };
-
-/**
- * Empty placeholder node for adding new diagram entries.
+/** PlaceholderDiagramNode holds the data fields for a PlaceholderDiagramNode record.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖diagramnode🪨placeholderdiagramnode](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/DiagramNode/PlaceholderDiagramNode)
- **/
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖diagramnode🪨placeholderdiagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/DiagramNode/d/i/PlaceholderDiagramNode)
 export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => void }> = ({ id = "diagram.placeholder", onClick }) => {
   return <DiagramNode content={useLabel(id)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
 };
@@ -1354,22 +1467,32 @@ export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => voi
 
 // #region 🔖HoverCard
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖hovercard](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/HoverCard)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard)
 // Hover-triggered card built on Radix primitives.
 // Consumers MUST use HoverCardTrigger to activate.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard🛠️hovercard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard/d/i/HoverCard)
+ * HoverCard holds the data fields for a HoverCard record.
+ **/
 function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
 }
 
+/**
+ * HoverCardTrigger holds the data fields for a HoverCardTrigger record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard🛠️hovercardtrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard/d/i/HoverCardTrigger)
+ **/
 function HoverCardTrigger({ className, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
   return <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" className={cn(className)} {...props} />;
 }
 
+/**
+ * HoverCardContent holds the data fields for a HoverCardContent record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard🛠️hovercardcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard/d/i/HoverCardContent)
+ **/
 function HoverCardContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
-  return (
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
-      <HoverCardPrimitive.Content
         data-slot="hover-card-content"
         align={align}
         sideOffset={sideOffset}
@@ -1380,25 +1503,25 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
         {...props}
       />
     </HoverCardPrimitive.Portal>
-  );
 }
 
 export { HoverCard, HoverCardContent, HoverCardTrigger };
 
-// #endregion 🔖HoverCard
-
-// #region 🔖Icons
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖icons](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Icons)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖icons](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Icons)
 // Cursor icon component for collaborative pointer display.
 // Consumers MUST provide position data for rendering.
 
-interface CursorProps {
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖icons🛠️cursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Icons/d/i/Cursor)
+ * CursorProps holds the data fields for a CursorProps record.
+ **/
   color: string;
   x?: number;
-  y?: number;
 }
-
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖icons🪨cursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Icons/d/i/Cursor)
+// Cursor holds the data fields for a Cursor record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖icons🪨cursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Icons/d/i/Cursor)
+ **/
 const Cursor: React.FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
   return (
     <svg
@@ -1416,7 +1539,6 @@ const Cursor: React.FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
     >
       <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill={color} />
     </svg>
-  );
 };
 
 export { Cursor };
@@ -1425,14 +1547,14 @@ export { Cursor };
 
 // #region 🔖Section
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖section](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Section)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section)
 // Collapsible section container with heading and specificity.
 // Consumers MUST provide a heading string.
 
 /**
  * Props interface for the Section component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖section🛠️sectionprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Section/SectionProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section🛠️sectionprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section/d/i/SectionProps)
  **/
 export interface SectionProps {
   id?: string;
@@ -1441,6 +1563,10 @@ export interface SectionProps {
   className?: string;
 }
 
+/** Section holds the data fields for a Section record.
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section🪨section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section/d/i/Section)
+ * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section🪨section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section/d/i/Section)
+ **/
 const Section: React.FC<SectionProps> = ({ id, title, children, className = "" }) => {
   return (
     <section id={id} className={`mb-8 ${className}`}>
@@ -1451,7 +1577,6 @@ const Section: React.FC<SectionProps> = ({ id, title, children, className = "" }
       )}
       <div>{children}</div>
     </section>
-  );
 };
 
 export { Section };
@@ -1460,14 +1585,14 @@ export { Section };
 
 // #region 🔖Steps
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖steps](semiorepo://section/semio/js/sketchpad/elements.tsx/Display%20Components/Steps)
+// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Steps)
 // Ordered step list container for tutorial or wizard flows.
 // Consumers MUST provide step children in order.
 
 /**
  * Props interface for the Steps component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖steps🛠️stepsprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Steps/StepsProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖steps🛠️stepsprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Steps/d/i/StepsProps)
  **/
 export interface StepsProps {
   children: React.ReactNode;
@@ -1477,14 +1602,12 @@ export interface StepsProps {
 /**
  * Ordered step list container rendering numbered children.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖steps🪨steps](semiorepo://definition/semio/js/sketchpad/elements.tsx/Display%20Components/Steps/Steps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖steps🪨steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Steps/d/i/Steps)
  **/
 export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
-  return <div className={`steps-container space-y-medium my-medium ${className}`}>{children}</div>;
 };
 
 // #endregion 🔖Steps
-
 // #endregion 🔖Display Components
 
 // #region 🔖Input Components
@@ -1493,10 +1616,14 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 
 // #region 🔖ActionGroup
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖actiongroup](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/ActionGroup)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup)
 // Compact action button group with dropdown support.
 // Consumers MUST provide action items for the group.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🪨actiongroupitemvariants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/actionGroupItemVariants)
+ * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
+ **/
 const actionGroupItemVariants = cva(
   "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
   {
@@ -1515,14 +1642,26 @@ const actionGroupItemVariants = cva(
   },
 );
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🪨actiongroupcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionGroupContext)
+ * ActionGroupContext holds the data fields for a ActionGroupContext record.
+ **/
 const ActionGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
+/**
+ * ActionGroupProps holds the data fields for a ActionGroupProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup✂️actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionGroup)
+ **/
 interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children"> {
   children: React.ReactNode;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🛠️actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionGroup)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🪨actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionGroup)
+ * ActionGroup holds the data fields for a ActionGroup record.
+ **/
 function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
@@ -1534,6 +1673,10 @@ function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🛠️actiongroupitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionGroupItem)
+ * ActionGroupItem holds the data fields for a ActionGroupItem record.
+ **/
 function ActionGroupItem({
   className,
   children,
@@ -1590,12 +1733,20 @@ function ActionGroupItem({
   return actionGroupItemElement;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup✂️actiondropdownoption](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionDropdownOption)
+ * ActionDropdownOption holds the data fields for a ActionDropdownOption record.
+ **/
 interface ActionDropdownOption {
   value: string;
   icon: React.ReactNode;
   label?: string;
 }
 
+/**
+ * ActionDropdownProps holds the data fields for a ActionDropdownProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup✂️actiondropdown](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionDropdown)
+ **/
 interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "children" | "id"> {
   id: string;
   options: ActionDropdownOption[];
@@ -1605,6 +1756,10 @@ interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "chil
   finalizeTransaction?: () => void;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🛠️actiondropdown](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionDropdown)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🪨actiondropdown](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/ActionDropdown)
+ * ActionDropdown holds the data fields for a ActionDropdown record.
+ **/
 function ActionDropdown({ className, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
   const transaction = useTransaction();
   const [open, setOpen] = React.useState(false);
@@ -1655,6 +1810,10 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
   return buttonElement;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup✂️action](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/Action)
+ * ActionProps holds the data fields for a ActionProps record.
+ **/
 interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   as?: "button" | "div";
   loading?: boolean;
@@ -1663,6 +1822,10 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   id?: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🛠️action](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/Action)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🪨action](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/Action)
+ * Action holds the data fields for a Action record.
+ **/
 function Action({ className, id, icon, text, as = "button", ...props }: ActionProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
@@ -1714,6 +1877,10 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
 
 // #endregion 🔖ActionGroup
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttongroupitemvariants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/buttonGroupItemVariants)
+ * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
+ **/
 const buttonGroupItemVariants = cva(
   "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square p-single overflow-hidden",
   {
@@ -1738,28 +1905,38 @@ const buttonGroupItemVariants = cva(
   },
 );
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttongroupcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroupContext)
+ * ButtonGroupContext holds the data fields for a ButtonGroupContext record.
+ **/
 const ButtonGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroup)
+ * ButtonGroupProps holds the data fields for a ButtonGroupProps record.
+ **/
 interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
   id?: string;
   showLabel?: boolean;
   children: React.ReactNode;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️buttongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroup)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroup)
+ * ButtonGroup holds the data fields for a ButtonGroup record.
+ **/
 function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
   const buttonGroupElement = (
     <div data-slot="button-group" id={id} data-level={level} className={cn("group/button-group flex w-fit shrink-0 items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
-      <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
 
   if (showLabel && id) {
-    return (
       <Label id={id} labelElementId={`${id}-label`}>
         {buttonGroupElement}
       </Label>
@@ -1769,6 +1946,10 @@ function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGro
   return buttonGroupElement;
 }
 
+/**
+ * ButtonGroupItem holds the data fields for a ButtonGroupItem record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️buttongroupitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroupItem)
+ **/
 function ButtonGroupItem({
   className,
   children,
@@ -1823,6 +2004,10 @@ function ButtonGroupItem({
   return buttonGroupItemElement;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttonprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonProps)
+ * ButtonProps holds the data fields for a ButtonProps record.
+ **/
 type ButtonProps = React.ComponentProps<"button"> &
   Omit<VariantProps<typeof buttonGroupItemVariants>, "level"> & {
     asChild?: boolean;
@@ -1832,6 +2017,10 @@ type ButtonProps = React.ComponentProps<"button"> &
     children?: React.ReactNode;
   };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttoncycleitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycleItem)
+ * ButtonCycleItem holds the data fields for a ButtonCycleItem record.
+ **/
 interface ButtonCycleItem<T extends string> {
   value: T;
   label: React.ReactNode;
@@ -1839,6 +2028,10 @@ interface ButtonCycleItem<T extends string> {
   id?: string;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️button](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/Button)
+ * ButtonCycleProps holds the data fields for a ButtonCycleProps record.
+ **/
 interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"button">, "children" | "id">, ElementProps {
   value?: T;
   onValueChange?: (value: T) => void;
@@ -1846,6 +2039,9 @@ interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"
   showLabel?: boolean;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️button](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/Button)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨button](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/Button)
+ **/
 function Button({ className, asChild = false, id, icon, text, children, ...props }: ButtonProps) {
   const level = useLevel();
   return (
@@ -1857,6 +2053,10 @@ function Button({ className, asChild = false, id, icon, text, children, ...props
   );
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️buttoncycle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycle)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttoncycle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycle)
+ * ButtonCycle holds the data fields for a ButtonCycle record.
+ **/
 function ButtonCycle<T extends string = string>({ className, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
   const level = useLevel();
   const currentIndex = items.findIndex((item) => item.value === value);
@@ -1870,7 +2070,6 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
   return (
     <ButtonGroup showLabel={showLabel} className={className}>
       <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem.label} text={currentItem.text} {...props} />
-    </ButtonGroup>
   );
 }
 
@@ -1879,15 +2078,23 @@ export type { ButtonCycleProps, ButtonProps };
 
 // #region 🔖Combobox
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖combobox](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Combobox)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox)
 // Searchable dropdown with popover options list.
 // Consumers MUST provide options and onValueChange handler.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox✂️comboboxoption](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox/d/i/ComboboxOption)
+ * ComboboxOption holds the data fields for a ComboboxOption record.
+ **/
 interface ComboboxOption {
   value: string;
   label: string;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox✂️comboboxprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox/d/i/ComboboxProps)
+ * ComboboxProps holds the data fields for a ComboboxProps record.
+ **/
 interface ComboboxProps extends ElementProps {
   options: ComboboxOption[];
   value?: string;
@@ -1903,7 +2110,7 @@ interface ComboboxProps extends ElementProps {
 /**
  * Searchable combobox dropdown with autocomplete filtering.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖combobox🪨combobox](semiorepo://definition/semio/js/sketchpad/elements.tsx/Input%20Components/Combobox/Combobox)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox🪨combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox/d/i/Combobox)
  **/
 export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
   const transaction = useTransaction();
@@ -1955,11 +2162,9 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
               {options.map((option) => (
                 <CommandItem key={option.value} value={option.value} onSelect={() => handleSelect(option.value)}>
                   <CheckIcon className={cn("mr-2 size-small", value === option.value ? "opacity-100" : "opacity-0")} />
-                  {option.label}
                 </CommandItem>
               ))}
             </CommandGroup>
-          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
@@ -1971,7 +2176,6 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
         {comboboxElement}
       </Label>
     );
-  }
 
   return comboboxElement;
 };
@@ -1980,10 +2184,14 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
 
 // #region 🔖Input
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖input](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Input)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input)
 // Text input field with label, validation, and clear support.
 // Consumers MUST provide an id for accessibility.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input✂️input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input/d/i/Input)
+ * InputProps holds the data fields for a InputProps record.
+ **/
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
   value?: string | number | readonly string[];
@@ -1994,6 +2202,10 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
   showLabel?: boolean;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input🛠️input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input/d/i/Input)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input🪨input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input/d/i/Input)
+ * Input holds the data fields for a Input record.
+ **/
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, ...props }: InputProps) {
   const transaction = useTransaction();
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
@@ -2091,7 +2303,6 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     );
   }
 
-  return inputElement;
 }
 
 export { Input };
@@ -2100,10 +2311,14 @@ export { Input };
 
 // #region 🔖Select
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖select](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Select)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select)
 // Dropdown select built on Radix primitives.
 // Consumers MUST use SelectItem children for options.
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/Select)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🪨select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/Select)
+ * Select holds the data fields for a Select record.
+ **/
 function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const transaction = useTransaction();
   const fallbackValue = React.useMemo(() => {
@@ -2129,7 +2344,6 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ..
     return findValue(React.Children.toArray(children));
   }, [children]);
 
-  const handleOpenChange = (open: boolean) => {
     if (open) {
       transaction?.start?.();
     } else {
@@ -2142,7 +2356,6 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ..
     <SelectPrimitive.Root
       data-slot="select"
       {...(value !== null && value !== undefined ? { value } : defaultValue !== null && defaultValue !== undefined ? { defaultValue } : fallbackValue !== undefined ? { defaultValue: fallbackValue } : {})}
-      onOpenChange={handleOpenChange}
       {...props}
     >
       {children}
@@ -2160,14 +2373,26 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ..
   return selectElement;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectGroup)
+ * SelectGroup holds the data fields for a SelectGroup record.
+ **/
 function SelectGroup({ ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {
   return <SelectPrimitive.Group data-slot="select-group" {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectValue)
+ * SelectValue holds the data fields for a SelectValue record.
+ **/
 function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />;
 }
 
+/**
+ * SelectTrigger holds the data fields for a SelectTrigger record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selecttrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectTrigger)
+ **/
 function SelectTrigger({
   className,
   size = "default",
@@ -2201,6 +2426,10 @@ function SelectTrigger({
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectContent)
+ * SelectContent holds the data fields for a SelectContent record.
+ **/
 function SelectContent({ className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
     <SelectPrimitive.Portal>
@@ -2222,10 +2451,18 @@ function SelectContent({ className, children, position = "popper", ...props }: R
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectlabel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectLabel)
+ * SelectLabel holds the data fields for a SelectLabel record.
+ **/
 function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return <SelectPrimitive.Label data-slot="select-label" className={cn("text-muted-foreground p-single text-xs", className)} {...props} />;
 }
 
+/**
+ * SelectItem holds the data fields for a SelectItem record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectItem)
+ **/
 function SelectItem({ className, children, id, ...props }: React.ComponentProps<typeof SelectPrimitive.Item> & { id?: string }) {
   return (
     <SelectPrimitive.Item
@@ -2248,10 +2485,18 @@ function SelectItem({ className, children, id, ...props }: React.ComponentProps<
   );
 }
 
+/**
+ * SelectSeparator holds the data fields for a SelectSeparator record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectseparator](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectSeparator)
+ **/
 function SelectSeparator({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
   return <SelectPrimitive.Separator data-slot="select-separator" className={cn("bg-border pointer-events-none -mx-single my-single h-px", className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectscrollupbutton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectScrollUpButton)
+ * SelectScrollUpButton holds the data fields for a SelectScrollUpButton record.
+ **/
 function SelectScrollUpButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
   return (
     <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-single", className)} {...props}>
@@ -2260,6 +2505,10 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🛠️selectscrolldownbutton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/SelectScrollDownButton)
+ * SelectScrollDownButton holds the data fields for a SelectScrollDownButton record.
+ **/
 function SelectScrollDownButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
   return (
     <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-single", className)} {...props}>
@@ -2268,6 +2517,9 @@ function SelectScrollDownButton({ className, ...props }: React.ComponentProps<ty
   );
 }
 
+/**
+ * ChevronUpIcon holds the data fields for a ChevronUpIcon record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🪨chevronupicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/ChevronUpIcon)
 const ChevronUpIcon = ChevronDownIconAlt;
 
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };
@@ -2276,10 +2528,14 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 
 // #region 🔖Slider
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖slider](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Slider)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖slider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Slider)
 // Range slider built on Radix primitives.
 // Consumers MUST provide min and max values.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖slider🛠️slider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Slider/d/i/Slider)
+ * Slider holds the data fields for a Slider record.
+ **/
 function Slider({
   className,
   defaultValue,
@@ -2321,7 +2577,6 @@ function Slider({
   const findNearestSnapValue = React.useCallback(
     (val: number): number => {
       if (!snapValues || snapValues.length === 0) return val;
-      let nearest = snapValues[0];
       let minDistance = Math.abs(val - nearest);
       for (const snapValue of snapValues) {
         const distance = Math.abs(val - snapValue);
@@ -2329,7 +2584,6 @@ function Slider({
           minDistance = distance;
           nearest = snapValue;
         }
-      }
       return nearest;
     },
     [snapValues],
@@ -2489,7 +2743,6 @@ function Slider({
     );
   }
 
-  return sliderContent;
 }
 
 export { Slider };
@@ -2498,10 +2751,14 @@ export { Slider };
 
 // #region 🔖Stepper
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖stepper](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Stepper)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Stepper)
 // Numeric stepper with increment/decrement and drag adjustment.
 // Consumers MUST provide min and max bounds.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖stepper✂️stepperprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Stepper/d/i/StepperProps)
+ * StepperProps holds the data fields for a StepperProps record.
+ **/
 interface StepperProps extends ElementProps {
   value?: number;
   defaultValue?: number;
@@ -2518,7 +2775,7 @@ interface StepperProps extends ElementProps {
 /**
  * Numeric stepper with increment, decrement, and drag-to-adjust.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖stepper🪨stepper](semiorepo://definition/semio/js/sketchpad/elements.tsx/Input%20Components/Stepper/Stepper)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖stepper🪨stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Stepper/d/i/Stepper)
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id }) => {
   const transaction = useTransaction();
@@ -2557,7 +2814,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     [clampValue, onChange],
   );
 
-  const startContinuousChange = React.useCallback(
     (increment: number) => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -2566,7 +2822,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         intervalRef.current = setInterval(() => {
           setInternalValue((prev) => {
             const newValue = clampValue(prev + increment);
-            onChange?.(newValue);
             return newValue;
           });
         }, 100);
@@ -2660,12 +2915,10 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
         className={cn("flex h-full w-large cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
-      >
         <RemoveIcon className="size-tiny" />
       </button>
       <Input
         type="number"
-        value={internalValue.toString()}
         onChange={handleInputChange}
         onFocus={() => {
           if (!isEditing) {
@@ -2728,7 +2981,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         <AddIcon className="size-tiny" />
       </button>
     </div>
-  );
 
   return <Label id={id}>{stepperElement}</Label>;
 };
@@ -2737,19 +2989,25 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 
 // #region 🔖Textarea
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖textarea](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Textarea)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea)
 // Multi-line text input with label and validation.
 // Consumers MUST provide an id for the field.
 
+/**
+ * TextareaProps holds the data fields for a TextareaProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea✂️textareaprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea/d/i/TextareaProps)
+ **/
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
-  value?: string | number | readonly string[];
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onLazyChange?: (value: string) => void;
   showLabel?: boolean;
   placeholderId?: string;
-}
 
+/** Textarea holds the data fields for a Textarea record.
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea🛠️textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea/d/i/Textarea)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea🪨textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea/d/i/Textarea)
+ **/
 function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, ...props }: TextareaProps) {
   const transaction = useTransaction();
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
@@ -2827,7 +3085,6 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     );
   }
 
-  return textareaElement;
 }
 
 export { Textarea };
@@ -2836,10 +3093,14 @@ export { Textarea };
 
 // #region 🔖Toggle
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖toggle](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/Toggle)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle)
 // Toggle button with pressed/unpressed states.
 // Consumers MUST handle onPressedChange events.
 
+/**
+ * toggleVariants holds the data fields for a toggleVariants record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle🪨togglevariants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/toggleVariants)
+ **/
 const toggleVariants = cva(
   "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden",
   {
@@ -2861,7 +3122,7 @@ const toggleVariants = cva(
 /**
  * Configuration interface for a single toggle option with value and label.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖toggle🛠️toggleitem](semiorepo://definition/semio/js/sketchpad/elements.tsx/Input%20Components/Toggle/ToggleItem)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle🛠️toggleitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleItem)
  **/
 export interface ToggleItem<T extends string> {
   value: T;
@@ -2871,6 +3132,10 @@ export interface ToggleItem<T extends string> {
   id?: string;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️togglestandardprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleStandardProps)
+ * ToggleStandardProps holds the data fields for a ToggleStandardProps record.
+ **/
 interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
   kind?: "default";
   i18nPressed?: string;
@@ -2879,6 +3144,10 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
   text?: string;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️togglewithactionprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleWithActionProps)
+ * ToggleWithActionProps holds the data fields for a ToggleWithActionProps record.
+ **/
 interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
   kind: "withAction";
   actionIcon: React.ReactNode;
@@ -2889,6 +3158,10 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
   text?: string;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️toggledropdownprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleDropdownProps)
+ * ToggleDropdownProps holds the data fields for a ToggleDropdownProps record.
+ **/
 interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
   kind: "dropdown";
   value?: T;
@@ -2908,6 +3181,9 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   onOpenChange?: (open: boolean) => void;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️toggleprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleProps)
+ * ToggleProps holds the data fields for a ToggleProps record.
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithActionProps | ToggleDropdownProps<T>;
 
 export type { ToggleProps };
@@ -2916,14 +3192,22 @@ export type { ToggleProps };
 
 // #region 🔖ToggleGroup
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖togglegroup](semiorepo://section/semio/js/sketchpad/elements.tsx/Input%20Components/ToggleGroup)
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup)
 // Group of mutually exclusive or multi-select toggles.
 // Consumers MUST provide items with distinct values.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🪨togglegroupcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroupContext)
+ * ToggleGroupContext holds the data fields for a ToggleGroupContext record.
+ **/
 const ToggleGroupContext = React.createContext<{ level: Level }>({
   level: "base",
 });
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup✂️togglegroupitemprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroupItemProps)
+ * ToggleGroupItemProps holds the data fields for a ToggleGroupItemProps record.
+ **/
 type ToggleGroupItemProps = Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
   id?: string;
   icon: React.ReactNode;
@@ -2932,6 +3216,10 @@ type ToggleGroupItemProps = Omit<React.ComponentProps<typeof ToggleGroupPrimitiv
   value: string;
 };
 
+/**
+ * ToggleGroupProps holds the data fields for a ToggleGroupProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup✂️togglegroupitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroupItem)
+ **/
 interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children" | "type" | "id"> {
   id?: string;
   showLabel?: boolean;
@@ -2939,6 +3227,10 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
   items: ToggleGroupItemProps[];
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🛠️togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroup)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🪨togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroup)
+ * ToggleGroup holds the data fields for a ToggleGroup record.
+ **/
 function ToggleGroup({ className, id, showLabel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
@@ -2965,6 +3257,10 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
   return toggleGroupElement;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🛠️togglegroupitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroupItem)
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🪨togglegroupitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/ToggleGroupItem)
+ * ToggleGroupItem holds the data fields for a ToggleGroupItem record.
+ **/
 function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
   const context = React.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
@@ -3015,17 +3311,17 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       </Tooltip>
     );
   }
-
   return toggleGroupItemElement;
 }
 
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🪨addiconsize](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/addIconSize)
+ * addIconSize holds the data fields for a addIconSize record.
+ **/
 const addIconSize = (element: React.ReactNode): React.ReactNode => {
   if (React.isValidElement(element)) {
-    const existingClassName = (element.props as any).className || "";
 
     if (!existingClassName.includes("size-")) {
       return React.cloneElement(element, {
-        ...(element.props as object),
         className: cn(existingClassName, "size-small"),
       } as any);
     }
@@ -3033,6 +3329,10 @@ const addIconSize = (element: React.ReactNode): React.ReactNode => {
   return element;
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🛠️toggle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/Toggle)
+ * Toggle holds the data fields for a Toggle record.
+ **/
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {
     const { actionIcon, onActionClick, icon, text, pressed, defaultPressed, onPressedChange, id, showLabel, className, actionId } = props as ToggleWithActionProps;
@@ -3064,10 +3364,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       items,
       value: controlledValue,
       defaultValue,
-      onValueChange,
       pressed,
       defaultPressed,
-      onPressedChange,
       id,
       showLabel,
       className,
@@ -3089,11 +3387,9 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const selectedItem = items.find((item) => item.value === value) || items[0];
     const isOpenControlled = controlledOpen !== undefined;
     const open = isOpenControlled ? controlledOpen : internalOpen;
-    const setOpen = (nextOpen: boolean) => {
       if (!isOpenControlled) {
         setInternalOpen(nextOpen);
       }
-      onOpenChange?.(nextOpen);
     };
 
     const handleSelect = (itemValue: string) => {
@@ -3175,7 +3471,6 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
           id: selectedItem.id,
         },
-      ],
     };
 
     if (isPressedControlled) {
@@ -3197,7 +3492,6 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       value={value}
       defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
       onValueChange={(val: string) => onPressedChange?.(val === "on")}
-      className={className}
       items={[
         {
           value: "on",
@@ -3209,11 +3503,9 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     />
   );
 }
-
 export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
 // #endregion 🔖ToggleGroup
-
 // #endregion 🔖Input Components
 
 // #region 🔖Aggregation Components
@@ -3222,25 +3514,36 @@ export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
 // #region 🔖Accordion
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components)
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components)
 // Collapsible accordion built on Radix primitives.
 // Consumers MUST use AccordionItem children.
 
+/**
+ * Accordion holds the data fields for a Accordion record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖accordion🛠️accordion](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Accordion/d/i/Accordion)
+ **/
 function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
 }
 
+/**
+ * AccordionItem holds the data fields for a AccordionItem record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖accordion🛠️accordionitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Accordion/d/i/AccordionItem)
+ **/
 function AccordionItem({ className, ...props }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
   return <AccordionPrimitive.Item data-slot="accordion-item" className={cn("border-b border-element last:border-b-0", className)} {...props} />;
 }
 
+/**
+ * AccordionTrigger holds the data fields for a AccordionTrigger record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖accordion🛠️accordiontrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Accordion/d/i/AccordionTrigger)
+ **/
 function AccordionTrigger({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-medium py-small text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
           className,
         )}
         {...props}
@@ -3252,62 +3555,95 @@ function AccordionTrigger({ className, children, ...props }: React.ComponentProp
   );
 }
 
+/**
+ * AccordionContent holds the data fields for a AccordionContent record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖accordion🛠️accordioncontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Accordion/d/i/AccordionContent)
+ **/
 function AccordionContent({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content data-slot="accordion-content" className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm" {...props}>
-      <div className={cn("pt-0 pb-4", className)}>{children}</div>
-    </AccordionPrimitive.Content>
-  );
-}
 
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 
 // #endregion 🔖Accordion
 
-// #region 🔖Collapsible
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖collapsible](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Collapsible)
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖collapsible](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Collapsible)
 // Collapsible section built on Radix primitives.
 // Consumers MUST use CollapsibleTrigger.
 
+/**
+ * Collapsible holds the data fields for a Collapsible record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🛠️collapsible](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/d/i/Collapsible)
+ **/
 function Collapsible({ ...props }: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🛠️collapsibletrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/d/i/CollapsibleTrigger)
+ * CollapsibleTrigger holds the data fields for a CollapsibleTrigger record.
+ **/
 function CollapsibleTrigger({ className, ...props }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
   return <CollapsiblePrimitive.CollapsibleTrigger data-slot="collapsible-trigger" className={cn(className)} {...props} />;
 }
 
+/**
+ * CollapsibleContent holds the data fields for a CollapsibleContent record.
+ **/
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🛠️collapsiblecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/d/i/CollapsibleContent)
+ * CollapsibleContent holds the data fields for a CollapsibleContent record.
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖collapsible🛠️collapsiblecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Collapsible/d/i/CollapsibleContent)
 function CollapsibleContent({ ...props }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleContent>) {
   return <CollapsiblePrimitive.CollapsibleContent data-slot="collapsible-content" {...props} />;
 }
 
 export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 
-// #endregion 🔖Collapsible
+// #endregion 🔖Aggregation Components
 
 // #region 🔖Dialog
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖dialog](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Dialog)
+// [👤semio📚js🗃️sketchpad💻elements🔖dialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog)
 // Modal dialog built on Radix primitives.
 // Consumers MUST use DialogTrigger to open.
 
+/**
+ * Dialog holds the data fields for a Dialog record.
+ *
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/Dialog)
+ **/
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogtrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogTrigger)
+ * DialogTrigger holds the data fields for a DialogTrigger record.
+ **/
 function DialogTrigger({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" className={cn(className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogportal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogPortal)
+ * DialogPortal holds the data fields for a DialogPortal record.
+ **/
 function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogclose](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogClose)
+ * DialogClose holds the data fields for a DialogClose record.
+ **/
 function DialogClose({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" className={cn(className)} {...props} />;
 }
 
+/**
+ * DialogOverlay holds the data fields for a DialogOverlay record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogOverlay)
+ **/
 function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
@@ -3318,9 +3654,12 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
   );
 }
 
+/**
+ * DialogContent holds the data fields for a DialogContent record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogContent)
+ **/
 function DialogContent({
   className,
-  children,
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
@@ -3328,7 +3667,6 @@ function DialogContent({
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
@@ -3352,40 +3690,61 @@ function DialogContent({
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogheader](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogHeader)
+ * DialogHeader holds the data fields for a DialogHeader record.
+ **/
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-header" className={cn("flex flex-col gap-single text-center sm:text-left", className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogfooter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogFooter)
+ * DialogFooter holds the data fields for a DialogFooter record.
+ **/
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-footer" className={cn("flex flex-col-reverse gap-single sm:flex-row sm:justify-end", className)} {...props} />;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogtitle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogTitle)
+ * DialogTitle holds the data fields for a DialogTitle record.
+ **/
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title data-slot="dialog-title" className={cn("text-lg leading-none font-semibold", className)} {...props} />;
-}
-
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogdescription](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogDescription)
+ * DialogDescription holds the data fields for a DialogDescription record.
+ **/
 function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return <DialogPrimitive.Description data-slot="dialog-description" className={cn("text-muted-foreground text-sm", className)} {...props} />;
 }
 
-export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger };
-
 // #endregion 🔖Dialog
 
-// #region 🔖Resizable
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖resizable](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Resizable)
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖resizable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Resizable)
 // Resizable panel layout built on react-resizable-panels.
 // Consumers MUST use ResizableHandle between panels.
 
+/**
+ * ResizablePanelGroup holds the data fields for a ResizablePanelGroup record.
+ * [👤semio📚js🗃️sketchpad💻elements🛠️resizablepanelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/d/i/ResizablePanelGroup)
+ **/
 function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
   return <ResizablePrimitive.PanelGroup data-slot="resizable-panel-group" className={cn("flex h-full w-full data-[panel-group-direction=vertical]:flex-col", className)} {...props} />;
 }
 
+/**
+ * ResizablePanel holds the data fields for a ResizablePanel record.
+ * [👤semio📚js🗃️sketchpad💻elements🛠️resizablepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/d/i/ResizablePanel)
+ **/
 function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
   return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;
 }
 
+/** ResizableHandle holds the data fields for a ResizableHandle record.
+// [👤semio📚js🗃️sketchpad💻elements🛠️resizablehandle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/d/i/ResizableHandle)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖resizable🪨resizablehandle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Resizable/d/i/ResizableHandle)
+ **/
 function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseEnter: externalOnMouseEnter, onMouseLeave: externalOnMouseLeave, ...props }: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle>) {
   const [isHovered, setIsHovered] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -3409,8 +3768,6 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
 
   const handleMouseLeave: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (!isDragging) {
-      setIsHovered(false);
-    }
     externalOnMouseLeave?.(e as any);
   };
 
@@ -3431,13 +3788,10 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
         "data-[panel-group-direction=vertical]:before:inset-x-0 data-[panel-group-direction=vertical]:before:-top-2 data-[panel-group-direction=vertical]:before:h-4 data-[panel-group-direction=vertical]:before:w-full data-[panel-group-direction=vertical]:before:cursor-ns-resize",
         className,
       )}
-      onMouseDown={handleMouseDown as any}
       onMouseEnter={handleMouseEnter as any}
       onMouseLeave={handleMouseLeave as any}
       {...props}
     />
-  );
-}
 
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
@@ -3445,11 +3799,12 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
 // #region 🔖Scrollable
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖scrollable](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Scrollable)
+// [👤semio📚js🗃️sketchpad💻elements🔖scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable)
 // Custom scrollable area built on Radix ScrollArea.
 // Consumers MUST wrap content in Scrollable.
 
-const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(({ className, children, orientation = "vertical", ...props }, ref) => {
+// Scrollable holds the data fields for a Scrollable record.
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖scrollable🪨scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Scrollable/d/i/Scrollable)
   return (
     <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
       <ScrollAreaPrimitive.Viewport
@@ -3459,7 +3814,6 @@ const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof 
           "focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0",
           orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
         )}
-      >
         {children}
       </ScrollAreaPrimitive.Viewport>
       {(orientation === "vertical" || orientation === "both") && <ScrollBar />}
@@ -3470,12 +3824,15 @@ const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof 
 });
 Scrollable.displayName = "Scrollable";
 
+/**
+ * ScrollBar holds the data fields for a ScrollBar record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖scrollable🛠️scrollbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable/d/i/ScrollBar)
+ **/
 function ScrollBar({ className, orientation = "vertical", ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
   return (
     <ScrollAreaPrimitive.ScrollAreaScrollbar
       data-slot="scroll-area-scrollbar"
       orientation={orientation}
-      className={cn("flex touch-none p-single transition-colors select-none", orientation === "vertical" && "h-full w-2.5 border-l border-l-transparent", orientation === "horizontal" && "h-2.5 flex-col border-t border-t-transparent", className)}
       {...props}
     >
       <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="bg-border relative flex-1" />
@@ -3489,14 +3846,14 @@ export { Scrollable, ScrollBar };
 
 // #region 🔖Band
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖band](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Band)
+// [👤semio📚js🗃️sketchpad💻elements🔖band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band)
 // Horizontal band of navigation items with labels and icons.
 // Consumers MUST provide BandItem entries.
 
 /**
  * Configuration interface for a single band item.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖band🛠️banditem](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Band/BandItem)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖band🛠️banditem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band/d/i/BandItem)
  **/
 export interface BandItem {
   content: React.ReactNode;
@@ -3507,7 +3864,7 @@ export interface BandItem {
 /**
  * Props interface for the Band component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖band🛠️bandprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Band/BandProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖band🛠️bandprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band/d/i/BandProps)
  **/
 export interface BandProps {
   id?: string;
@@ -3516,6 +3873,10 @@ export interface BandProps {
   className?: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖band🛠️band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Band/d/i/Band)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖band🪨band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Band/d/i/Band)
+ * Band holds the data fields for a Band record.
+ **/
 function Band({ items, scrollable = true, className, id }: BandProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
@@ -3531,7 +3892,6 @@ function Band({ items, scrollable = true, className, id }: BandProps) {
   );
 
   if (scrollable)
-    return (
       <Scrollable orientation="horizontal" className={cn("border-b h-large", borderClass, bgClass, className)}>
         {itemsElement}
       </Scrollable>
@@ -3545,14 +3905,14 @@ export { Band as Band };
 
 // #region 🔖Strip
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖strip](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Strip)
+// [👤semio📚js🗃️sketchpad💻elements🔖strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip)
 // Vertical strip of icon items for compact navigation.
 // Consumers MUST provide StripItem entries.
 
 /**
  * Configuration interface for a single strip item.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖strip🛠️stripitem](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Strip/StripItem)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖strip🛠️stripitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip/d/i/StripItem)
  **/
 export interface StripItem {
   content: React.ReactNode;
@@ -3563,7 +3923,7 @@ export interface StripItem {
 /**
  * Props interface for the Strip component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖strip🛠️stripprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Strip/StripProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖strip🛠️stripprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip/d/i/StripProps)
  **/
 export interface StripProps {
   id?: string;
@@ -3572,6 +3932,10 @@ export interface StripProps {
   className?: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖strip🛠️strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Strip/d/i/Strip)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖strip🪨strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Strip/d/i/Strip)
+ * Strip holds the data fields for a Strip record.
+ **/
 function Strip({ items, scrollable = true, className, id }: StripProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
@@ -3587,7 +3951,6 @@ function Strip({ items, scrollable = true, className, id }: StripProps) {
   );
 
   if (scrollable)
-    return (
       <Scrollable orientation="horizontal" className={cn("border-b h-medium", borderClass, bgClass, className)}>
         {itemsElement}
       </Scrollable>
@@ -3601,14 +3964,14 @@ export { Strip };
 
 // #region 🔖Navbar
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖navbar](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Navbar)
+// [👤semio📚js🗃️sketchpad💻elements🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar)
 // Top navigation bar with icon items.
 // Consumers MUST provide NavbarItem entries.
 
 /**
  * Configuration interface for a single navbar item.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖navbar🛠️navbaritem](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Navbar/NavbarItem)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖navbar🛠️navbaritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar/d/i/NavbarItem)
  **/
 export interface NavbarItem {
   content: React.ReactNode;
@@ -3619,13 +3982,17 @@ export interface NavbarItem {
 /**
  * Props interface for the Navbar component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖navbar🛠️navbarprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Navbar/NavbarProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖navbar🛠️navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar/d/i/Navbar)
  **/
 export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖navbar🛠️navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Navbar/d/i/Navbar)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖navbar🪨navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Navbar/d/i/Navbar)
+ * Navbar holds the data fields for a Navbar record.
+ **/
 function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
@@ -3634,7 +4001,6 @@ function Navbar({ items, className }: NavbarProps) {
       <div className="p-single flex gap-single items-center min-w-0">
         {items.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
-            {item.content}
           </div>
         ))}
       </div>
@@ -3648,20 +4014,32 @@ export { Navbar };
 
 // #region 🔖Tabs
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tabs](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tabs)
+// [👤semio📚js🗃️sketchpad💻elements🔖tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs)
 // Tab container built on Radix primitives.
 // Consumers MUST use TabsTrigger and TabsContent.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tabs🛠️tabslist](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs/d/i/TabsList)
+ * Tabs holds the data fields for a Tabs record.
+ **/
 function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
   return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-single", className)} {...props} />;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tabs🛠️tabslist](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tabs/d/i/TabsList)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tabs🪨tabslist](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tabs/d/i/TabsList)
+ * TabsList holds the data fields for a TabsList record.
+ **/
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single", bgClass, className)} {...props} />;
 }
 
+/** TabsTrigger holds the data fields for a TabsTrigger record.
+// [👤semio📚js🗃️sketchpad💻elements🔖tabs🛠️tabstrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs/d/i/TabsTrigger)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tabs🪨tabstrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tabs/d/i/TabsTrigger)
+ **/
 function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   const level = useLevel();
   const activeHoverClass = getLevelActiveHoverClass(level);
@@ -3680,6 +4058,9 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   );
 }
 
+ * [👤semio📚js🗃️sketchpad💻elements🔖tabs🛠️tabscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs/d/i/TabsContent)
+ * TabsContent holds the data fields for a TabsContent record.
+ **/
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   return <TabsPrimitive.Content data-slot="tabs-content" className={cn("flex-1 outline-none", className)} {...props} />;
 }
@@ -3690,22 +4071,30 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #region 🔖Tree
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree](semiorepo://section/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree)
+// [👤semio📚js🗃️sketchpad💻elements🔖tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)
 // Hierarchical tree view with sections, items, and file trees.
 // Consumers MUST wrap components in TreeStateProvider.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treestatecontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeStateContextValue)
+ * TreeStateContextValue holds the data fields for a TreeStateContextValue record.
+ **/
 interface TreeStateContextValue {
   openStates: Record<string, boolean>;
   setOpenState: (id: string, open: boolean) => void;
   getOpenState: (id: string, defaultOpen: boolean) => boolean;
 }
 
+/**
+ * TreeStateContext holds the data fields for a TreeStateContext record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treestatecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeStateContext)
+ **/
 const TreeStateContext = React.createContext<TreeStateContextValue | null>(null);
 
 /**
  * Context provider managing tree expansion state.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treestateprovider](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/TreeStateProvider)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treestateprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeStateProvider)
  **/
 export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [openStates, setOpenStates] = React.useState<Record<string, boolean>>({});
@@ -3724,7 +4113,7 @@ export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 /**
  * Hook returning tree expansion state and toggle functions.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨usetreestate](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/useTreeState)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨usetreestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/useTreeState)
  **/
 export const useTreeState = () => {
   const context = React.useContext(TreeStateContext);
@@ -3732,6 +4121,10 @@ export const useTreeState = () => {
   return context;
 };
 
+/** hasNonEmptyChildren holds the data fields for a hasNonEmptyChildren record.
+// [👤semio📚js🗃️sketchpad💻elements🔖tree🪨hasnonemptychildren](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/hasNonEmptyChildren)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tree🪨hasnonemptychildren](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tree/d/i/hasNonEmptyChildren)
+ **/
 const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
   if (!children) return false;
   const childArray = React.Children.toArray(children);
@@ -3746,8 +4139,16 @@ const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
   );
 };
 
+/**
+ * TreeContext holds the data fields for a TreeContext record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeContext)
+ **/
 const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
 
+/** IndentationLines holds the data fields for a IndentationLines record.
+// [👤semio📚js🗃️sketchpad💻elements🔖tree🪨indentationlines](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/IndentationLines)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tree🪨indentationlines](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tree/d/i/IndentationLines)
+ **/
 const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }> = ({ level, isLastAtLevel, showLines }) => {
   if (!showLines || level === 0) return null;
 
@@ -3765,7 +4166,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
 /**
  * Wrapper rendering tree children with connecting lines.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treecontent](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/TreeContent)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeContent)
  **/
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
@@ -3780,7 +4181,7 @@ export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children 
 /**
  * Configuration interface for an action button on a tree section.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🛠️treesectionaction](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/TreeSectionAction)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🛠️treesectionaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeSectionAction)
  **/
 export interface TreeSectionAction {
   icon: React.ReactNode;
@@ -3789,6 +4190,10 @@ export interface TreeSectionAction {
   id?: string;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treesectionprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeSectionProps)
+ * TreeSectionProps holds the data fields for a TreeSectionProps record.
+ **/
 interface TreeSectionProps {
   label?: string;
   id?: string;
@@ -3802,6 +4207,10 @@ interface TreeSectionProps {
   onDoubleClick?: (event: React.MouseEvent) => void;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️sortabletreeitemprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItemProps)
+ * SortableTreeItemProps holds the data fields for a SortableTreeItemProps record.
+ **/
 interface SortableTreeItemProps {
   id: string;
   label?: React.ReactNode;
@@ -3818,6 +4227,10 @@ interface SortableTreeItemProps {
   onDoubleClick?: (event: React.MouseEvent) => void;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treeitemprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeItemProps)
+ * TreeItemProps holds the data fields for a TreeItemProps record.
+ **/
 interface TreeItemProps {
   label?: React.ReactNode;
   id?: string;
@@ -3836,6 +4249,10 @@ interface TreeItemProps {
   onDoubleClick?: (event: React.MouseEvent) => void;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️sortabletreeitemsprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItemsProps)
+ * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
+ **/
 interface SortableTreeItemsProps {
   items: { id: string;[key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
@@ -3845,7 +4262,7 @@ interface SortableTreeItemsProps {
 /**
  * Collapsible tree section header with optional action buttons.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treesection](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/TreeSection)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treesection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeSection)
  **/
 export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
@@ -3988,6 +4405,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
   );
 };
 
+/**
+ * SortableTreeItem holds the data fields for a SortableTreeItem record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨sortabletreeitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItem)
+ **/
 const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   id,
   label,
@@ -4138,7 +4559,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 /**
  * Drag-and-drop sortable container for tree items.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨sortabletreeitems](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/SortableTreeItems)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨sortabletreeitems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItems)
  **/
 export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onReorder, children }) => {
   const handleDragEnd = (event: DragEndEvent) => {
@@ -4164,7 +4585,7 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
 /**
  * Single tree item row with icon, label, and interaction handlers.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treeitem](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/TreeItem)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treeitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeItem)
  **/
 export const TreeItem: React.FC<TreeItemProps> = ({
   label,
@@ -4183,16 +4604,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   actions = [],
   onDoubleClick,
 }) => {
-  const { t } = useTranslation();
   const resolvedLabel = id ? useLabel(id) : label;
   if (sortable && sortableId) {
     return (
-      <SortableTreeItem
-        id={sortableId}
         label={resolvedLabel}
         icon={icon}
         children={children}
-        onClick={onClick}
         className={className}
         isSelected={isSelected}
         isHighlighted={isHighlighted}
@@ -4310,7 +4727,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 /**
  * Iterator rendering a list of tree item children.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treeitems](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/TreeItems)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treeitems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeItems)
  **/
 export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (child: React.ReactNode, index: number, isLast: boolean) => React.ReactNode }> = ({ children, renderItem }) => {
   return <>{children.map((child, index) => renderItem(child, index, index === children.length - 1))}</>;
@@ -4319,7 +4736,7 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
 /**
  * Data interface for a node in a file tree.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🛠️filetreenode](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/FileTreeNode)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🛠️filetreenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/FileTreeNode)
  **/
 export interface FileTreeNode {
   title: string;
@@ -4332,7 +4749,7 @@ export interface FileTreeNode {
 /**
  * Hierarchical tree view component with optional file tree rendering.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨tree](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/Tree)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/Tree)
  **/
 export const Tree: React.FC<{ children: React.ReactNode; className?: string; showLines?: boolean }> & {
   Files: React.FC<TreeFilesProps>;
@@ -4347,6 +4764,10 @@ export const Tree: React.FC<{ children: React.ReactNode; className?: string; sho
   );
 };
 
+/**
+ * FileTreeItemProps holds the data fields for a FileTreeItemProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️filetreeitemprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/FileTreeItemProps)
+ **/
 interface FileTreeItemProps {
   node: FileTreeNode;
   currentPath?: string;
@@ -4354,6 +4775,10 @@ interface FileTreeItemProps {
   as?: "a" | "div";
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tree🪨filetreeitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tree/d/i/FileTreeItem)
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖tree🪨filetreeitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Tree/d/i/FileTreeItem)
+ * FileTreeItem holds the data fields for a FileTreeItem record.
+ **/
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
   const { level } = React.useContext(TreeContext);
   const [isHovered, setIsHovered] = React.useState(false);
@@ -4366,10 +4791,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? FolderIcon : DocumentIcon;
 
-  const baseClasses = "relative flex items-center gap-single py-single px-tiny rounded-md hover:bg-accent transition-colors cursor-selectable select-none";
   const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
   const itemClasses = `${baseClasses} ${stateClasses}`;
-
   const handleClick = (e: React.MouseEvent) => {
     if (hasChildren) {
       e.preventDefault();
@@ -4422,6 +4845,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   return itemElement;
 };
 
+/**
+ * TreeFilesProps holds the data fields for a TreeFilesProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treefilesprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeFilesProps)
+ **/
 interface TreeFilesProps {
   title?: string;
   nodes: FileTreeNode[];
@@ -4431,13 +4858,8 @@ interface TreeFilesProps {
   className?: string;
 }
 
-Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = "a", className = "" }: TreeFilesProps) => {
-  if (nodes.length === 0) return null;
-
   return (
-    <TreeStateProvider>
       <div className={`not-prose my-medium p-medium rounded-lg border border-element bg-card ${className}`}>
-        {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
           <div className="flex flex-col gap-single">
             {nodes.map((node, idx) => (
@@ -4451,11 +4873,9 @@ Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = 
 };
 
 Tree.Section = Tree.Files;
-
 /**
  * Alias for Tree.Files rendering a file tree from FileTreeNode data.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨filetree](semiorepo://definition/semio/js/sketchpad/elements.tsx/Aggregation%20Components/Tree/FileTree)
  **/
 export const FileTree = Tree.Files;
 
@@ -4469,14 +4889,14 @@ export const FileTree = Tree.Files;
 
 // #region 🔖Breadcrumb
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents](semiorepo://section/semio/js/sketchpad/elements.tsx/Navigation%20Components)
+// [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components)
 // Breadcrumb trail for hierarchical page navigation.
 // Consumers MUST provide BreadcrumbItemData entries.
 
 /**
  * Data interface for a single breadcrumb entry.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖breadcrumb🛠️breadcrumbitemdata](semiorepo://definition/semio/js/sketchpad/elements.tsx/Navigation%20Components/Breadcrumb/BreadcrumbItemData)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🛠️breadcrumbitemdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbItemData)
  **/
 export interface BreadcrumbItemData {
   id?: string;
@@ -4485,10 +4905,18 @@ export interface BreadcrumbItemData {
   onNavigate?: (href: string) => void;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb✂️breadcrumbprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbProps)
+ * BreadcrumbProps holds the data fields for a BreadcrumbProps record.
+ **/
 interface BreadcrumbProps extends Omit<React.ComponentProps<"nav">, "children"> {
   items: BreadcrumbItemData[];
 }
 
+/** Breadcrumb holds the data fields for a Breadcrumb record.
+// [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🛠️breadcrumb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/Breadcrumb)
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🪨breadcrumb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/Breadcrumb)
+ **/
 function Breadcrumb({ className, items, ...props }: BreadcrumbProps) {
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
   const level = useLevel();
@@ -4513,6 +4941,10 @@ function Breadcrumb({ className, items, ...props }: BreadcrumbProps) {
   );
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb✂️breadcrumbitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbItem)
+ * BreadcrumbItemProps holds the data fields for a BreadcrumbItemProps record.
+ **/
 interface BreadcrumbItemProps extends Omit<React.ComponentProps<"li">, "content"> {
   id?: string;
   content?: React.ReactNode;
@@ -4520,6 +4952,10 @@ interface BreadcrumbItemProps extends Omit<React.ComponentProps<"li">, "content"
   options?: { label: React.ReactNode; href: string; id?: string }[];
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🛠️breadcrumbitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbItem)
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🪨breadcrumbitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbItem)
+ * BreadcrumbItem holds the data fields for a BreadcrumbItem record.
+ **/
 function BreadcrumbItem({ className, id, content, children, onNavigate, options, ...props }: BreadcrumbItemProps) {
   const itemContent = content ?? children;
   const interactiveContent = React.useMemo(() => {
@@ -4565,6 +5001,10 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
   return itemElement;
 }
 
+/**
+ * BreadcrumbSeparatorItemProps holds the data fields for a BreadcrumbSeparatorItemProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb✂️breadcrumbseparatoritemprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbSeparatorItemProps)
+ **/
 interface BreadcrumbSeparatorItemProps {
   hasOptions: boolean;
   isOpen: boolean;
@@ -4574,6 +5014,10 @@ interface BreadcrumbSeparatorItemProps {
   onNavigate?: (href: string) => void;
 }
 
+/** BreadcrumbSeparatorItem holds the data fields for a BreadcrumbSeparatorItem record.
+// [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🛠️breadcrumbseparatoritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbSeparatorItem)
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖breadcrumb🪨breadcrumbseparatoritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/Breadcrumb/d/i/BreadcrumbSeparatorItem)
+ **/
 function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options, onNavigate }: BreadcrumbSeparatorItemProps) {
   const icon = isOpen ? <ChevronDownIcon className="cursor-foldable" /> : <ChevronRightIcon className="cursor-foldable" />;
 
@@ -4589,14 +5033,12 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
       </li>
     );
   }
-
   return (
     <li data-slot="breadcrumb-separator" role="presentation" className="flex items-center p-single">
       <DropdownMenuPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
         <DropdownMenuPrimitive.Trigger asChild>
           <div>
             <Action id={id && !isOpen ? id : undefined} icon={icon} className="cursor-foldable" />
-          </div>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content align="center" sideOffset={8} className="bg-transparent backdrop-blur-sm w-auto overflow-hidden border p-single z-temporary">
@@ -4619,11 +5061,9 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
                     <DescriptionTooltipContent id={item.id} />
                   </TooltipContent>
                 </Tooltip>
-              ) : (
                 menuItem
               );
 
-              if (index < options.length - 1) {
                 return (
                   <React.Fragment key={index}>
                     {wrappedItem}
@@ -4631,7 +5071,6 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
                   </React.Fragment>
                 );
               }
-
               return wrappedItem;
             })}
           </DropdownMenuPrimitive.Content>
@@ -4641,37 +5080,35 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
   );
 }
 
-export { Breadcrumb, BreadcrumbItem };
-
 // #endregion 🔖Breadcrumb
 
 // #region 🔖PageNavigation
-
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖pagenavigation](semiorepo://section/semio/js/sketchpad/elements.tsx/Navigation%20Components/PageNavigation)
-// Previous/next page navigation links.
-// Consumers MUST provide PageNavigationLink data.
+// PageNavigation MUST provide the pagenavigation functionality.
+// [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation)
 
 /**
  * Configuration interface for a previous/next page link.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖pagenavigation🛠️pagenavigationlink](semiorepo://definition/semio/js/sketchpad/elements.tsx/Navigation%20Components/PageNavigation/PageNavigationLink)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation🛠️pagenavigationlink](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation/d/i/PageNavigationLink)
  **/
 export interface PageNavigationLink {
   path: string;
   title: string;
   section?: string;
 }
-
-/**
  * Props interface for the PageNavigation component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖pagenavigation🛠️pagenavigationprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Navigation%20Components/PageNavigation/PageNavigationProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation🛠️pagenavigationprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation/d/i/PageNavigationProps)
  **/
 export interface PageNavigationProps {
   prev?: PageNavigationLink;
   next?: PageNavigationLink;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation🪨pagenavigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation/d/i/PageNavigation)
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation🪨pagenavigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation/d/i/PageNavigation)
+ * PageNavigation holds the data fields for a PageNavigation record.
+ **/
 const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -4680,9 +5117,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
 
   return (
     <div className="flex items-center justify-between border-t border-element pt-4 mt-8">
-      {prev ? (
         <Button id="semio.sketchpad.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
-          <ChevronLeftIcon className="size-tiny" />
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
             <div className="font-medium">{prev.title}</div>
@@ -4696,15 +5131,11 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
-          </div>
           <ChevronRightIcon className="size-tiny" />
         </Button>
-      ) : (
         <div />
-      )}
     </div>
   );
-};
 
 export { PageNavigation };
 
@@ -4718,21 +5149,21 @@ export { PageNavigation };
 
 // #region 🔖Panel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/Panel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel)
 // Resizable dockable panel with sections and collapse support.
 // Consumers MUST set resizeSide for the handle.
 
 /**
  * Union type for panel resize handle positions.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel🛠️resizeside](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/Panel/ResizeSide)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🛠️resizeside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/ResizeSide)
  **/
 export type ResizeSide = "left" | "right" | "top" | "bottom";
 
 /**
  * Configuration interface for a collapsible section within a panel.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel🛠️panelsection](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/Panel/PanelSection)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🛠️panelsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelSection)
  **/
 export interface PanelSection {
   id: string;
@@ -4753,7 +5184,7 @@ export interface PanelSection {
 /**
  * Props interface for the Panel component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panel🛠️panelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/Panel/PanelProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🛠️panelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelProps)
  **/
 export interface PanelProps {
   visible?: boolean;
@@ -4773,6 +5204,10 @@ export interface PanelProps {
   panelKey?: string;
 }
 
+/**
+ * Panel holds the data fields for a Panel record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🪨panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/Panel)
+ **/
 const Panel: React.FC<PanelProps> = ({
   visible = true,
   onSizeChange,
@@ -4824,10 +5259,8 @@ const Panel: React.FC<PanelProps> = ({
   const borderClass =
     resizeSide === "left"
       ? isResizing || isResizeHovered
-        ? "border-l-accent"
         : "border-l"
       : resizeSide === "right"
-        ? isResizing || isResizeHovered
           ? "border-r-accent"
           : "border-r"
         : resizeSide === "top"
@@ -4876,6 +5309,9 @@ const Panel: React.FC<PanelProps> = ({
   );
 };
 
+/** PanelSectionWrapper holds the data fields for a PanelSectionWrapper record.
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🪨panelsectionwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelSectionWrapper)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🪨panelsectionwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelSectionWrapper)
 const PanelSectionWrapper: React.FC<{ section: PanelSection; defaultOpen: boolean; children: React.ReactNode }> = ({ section, defaultOpen, children }) => {
   const sectionLabel = useLabel(section.id) ?? section.id;
   return (
@@ -4891,14 +5327,14 @@ export { Panel };
 
 // #region 🔖PanelGroup
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panelgroup](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/PanelGroup)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/PanelGroup)
 // Flex container grouping multiple panels together.
 // Consumers MUST provide panel children.
 
 /**
  * Props interface for the PanelGroup component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖panelgroup🛠️panelgroupprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/PanelGroup/PanelGroupProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panelgroup🛠️panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/PanelGroup/d/i/PanelGroup)
  **/
 export interface PanelGroupProps {
   children: React.ReactNode;
@@ -4906,6 +5342,9 @@ export interface PanelGroupProps {
   position?: "left" | "right" | "middle" | "bottom";
 }
 
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panelgroup🪨panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/PanelGroup/d/i/PanelGroup)
+ * PanelGroup holds the data fields for a PanelGroup record.
+ **/
 const PanelGroup: React.FC<PanelGroupProps> = ({ children, className = "", position = "middle" }) => {
   const baseClass = "flex";
   const positionClass = position === "left" || position === "right" || position === "middle" ? "flex-col" : "flex-row";
@@ -4918,17 +5357,20 @@ export { PanelGroup };
 
 // #region 🔖LeftPanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖leftpanel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/LeftPanel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/LeftPanel)
 // Left-docked panel variant with right resize handle.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for LeftPanel omitting resizeSide.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖leftpanel🛠️leftpanelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/LeftPanel/LeftPanelProps)
  **/
 export type LeftPanelProps = Omit<PanelProps, "resizeSide">;
 
+/** LeftPanel holds the data fields for a LeftPanel record.
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖leftpanel🪨leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/LeftPanel/d/i/LeftPanel)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖leftpanel🪨leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/LeftPanel/d/i/LeftPanel)
+ **/
 const LeftPanel: React.FC<LeftPanelProps> = (props) => <Panel {...props} resizeSide="right" />;
 
 export { LeftPanel };
@@ -4937,17 +5379,16 @@ export { LeftPanel };
 
 // #region 🔖RightPanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖rightpanel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/RightPanel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel)
 // Right-docked panel variant with left resize handle.
 // Consumers MUST provide visible and children props.
-
-/**
- * Props type for RightPanel omitting resizeSide.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖rightpanel🛠️rightpanelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/RightPanel/RightPanelProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel🛠️rightpanelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel/d/i/RightPanelProps)
  **/
-export type RightPanelProps = Omit<PanelProps, "resizeSide">;
-
+/** RightPanel holds the data fields for a RightPanel record.
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel🪨rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel/d/i/RightPanel)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel🪨rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel/d/i/RightPanel)
+ **/
 const RightPanel: React.FC<RightPanelProps> = (props) => <Panel {...props} resizeSide="left" />;
 
 export { RightPanel };
@@ -4956,19 +5397,22 @@ export { RightPanel };
 
 // #region 🔖MiddlePanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖middlepanel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/MiddlePanel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel)
 // Center panel variant without resize handles.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for MiddlePanel omitting resizeSide.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖middlepanel🛠️middlepanelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/MiddlePanel/MiddlePanelProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel🛠️middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel/d/i/MiddlePanel)
  **/
-export type MiddlePanelProps = Omit<PanelProps, "resizeSide"> & {
   resizeSide?: "left" | "right";
 };
 
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel🪨middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel/d/i/MiddlePanel)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel🪨middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel/d/i/MiddlePanel)
+ * MiddlePanel holds the data fields for a MiddlePanel record.
+ **/
 const MiddlePanel: React.FC<MiddlePanelProps> = ({ resizeSide = "right", ...props }) => <Panel {...props} resizeSide={resizeSide} />;
 
 export { MiddlePanel };
@@ -4977,17 +5421,20 @@ export { MiddlePanel };
 
 // #region 🔖BottomPanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖bottompanel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/BottomPanel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/BottomPanel)
 // Bottom-docked panel variant with top resize handle.
 // Consumers MUST provide visible and children props.
 
 /**
  * Props type for BottomPanel omitting resizeSide.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖bottompanel🛠️bottompanelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/BottomPanel/BottomPanelProps)
  **/
 export type BottomPanelProps = Omit<PanelProps, "resizeSide">;
 
+/** BottomPanel holds the data fields for a BottomPanel record.
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖bottompanel🪨bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/BottomPanel/d/i/BottomPanel)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖bottompanel🪨bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/BottomPanel/d/i/BottomPanel)
+ **/
 const BottomPanel: React.FC<BottomPanelProps> = (props) => <Panel {...props} resizeSide="top" />;
 
 export { BottomPanel };
@@ -4996,14 +5443,14 @@ export { BottomPanel };
 
 // #region 🔖SidePanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖sidepanel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/SidePanel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/SidePanel)
 // Collapsible side panel with tabbed content.
 // Consumers MUST provide SidePanelTabConfig entries.
 
 /**
  * Configuration interface for a side panel tab.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖sidepanel🛠️sidepaneltabconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/SidePanel/SidePanelTabConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖sidepanel🛠️sidepaneltabconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/SidePanel/d/i/SidePanelTabConfig)
  **/
 export interface SidePanelTabConfig {
   id: string;
@@ -5015,7 +5462,7 @@ export interface SidePanelTabConfig {
 /**
  * Props interface for the SidePanel component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖sidepanel🛠️sidepanelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/SidePanel/SidePanelProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖sidepanel🛠️sidepanelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/SidePanel/d/i/SidePanelProps)
  **/
 export interface SidePanelProps {
   position: "left" | "right";
@@ -5031,6 +5478,10 @@ export interface SidePanelProps {
   className?: string;
 }
 
+/** SidePanel holds the data fields for a SidePanel record.
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖sidepanel🪨sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/SidePanel/d/i/SidePanel)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖sidepanel🪨sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/SidePanel/d/i/SidePanel)
+ **/
 const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
@@ -5047,9 +5498,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
       setInternalActiveTab(tabId);
     }
   };
-
-  if (!visible || tabs.length === 0) return null;
-
   const resizeSide = position === "left" ? "right" : "left";
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -5105,7 +5553,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
                   <DescriptionTooltipContent id={tab.id} />
                 </TooltipContent>
               </Tooltip>
-            );
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
@@ -5114,23 +5561,21 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
         {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>
     </LevelProvider>
-  );
 };
-
 export { SidePanel };
 
 // #endregion 🔖SidePanel
 
 // #region 🔖HudPanel
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel](semiorepo://section/semio/js/sketchpad/elements.tsx/Panel%20Components/HudPanel)
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/HudPanel)
 // Floating heads-up display panel with tabs.
 // Consumers MUST provide HudPanelTabConfig entries.
 
 /**
  * Configuration interface for a HUD panel tab.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel🛠️hudpaneltabconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/HudPanel/HudPanelTabConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖hudpanel🛠️hudpaneltabconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/HudPanel/d/i/HudPanelTabConfig)
  **/
 export interface HudPanelTabConfig {
   id: string;
@@ -5142,7 +5587,7 @@ export interface HudPanelTabConfig {
 /**
  * Props interface for the HudPanel component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖hudpanel🛠️hudpanelprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Panel%20Components/HudPanel/HudPanelProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖hudpanel🛠️hudpanelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/HudPanel/d/i/HudPanelProps)
  **/
 export interface HudPanelProps {
   visible?: boolean;
@@ -5157,6 +5602,10 @@ export interface HudPanelProps {
   className?: string;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖hudpanel🪨hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/HudPanel/d/i/HudPanel)
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖hudpanel🪨hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/HudPanel/d/i/HudPanel)
+ * HudPanel holds the data fields for a HudPanel record.
+ **/
 const HudPanel: React.FC<HudPanelProps> = ({ visible = true, size = 400, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 800, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
@@ -5231,11 +5680,9 @@ const HudPanel: React.FC<HudPanelProps> = ({ visible = true, size = 400, onSizeC
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
-          <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
         </Scrollable>
         {onSizeChange && <div className="absolute top-0 bottom-0 right-0 w-single cursor-ew-resize" onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>
-    </LevelProvider>
   );
 };
 
@@ -5251,14 +5698,14 @@ export { HudPanel };
 
 // #region 🔖Window
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖window](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components/Window)
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window)
 // Draggable, resizable floating window with dashed border.
 // Consumers MUST provide a WindowConfig object.
 
 /**
  * Configuration interface for a floating window instance.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖window🛠️windowconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Window/WindowConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window🛠️windowconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window/d/i/WindowConfig)
  **/
 export interface WindowConfig {
   id: string;
@@ -5277,10 +5724,18 @@ export interface WindowConfig {
   controls?: React.ReactNode;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window✂️window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window/d/i/Window)
+ * WindowProps holds the data fields for a WindowProps record.
+ **/
 interface WindowProps extends WindowConfig {
   isVisible?: boolean;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window🪨defaulterrordisplay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window/d/i/DefaultErrorDisplay)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window🪨defaulterrordisplay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window/d/i/DefaultErrorDisplay)
+ * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
+ **/
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   const bgClass = "bg-window";
   return (
@@ -5294,6 +5749,10 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window🪨window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window/d/i/Window)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖window🪨window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Window/d/i/Window)
+ * Window holds the data fields for a Window record.
+ **/
 const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
   const [headerElement, setHeaderElement] = React.useState<HTMLElement | null>(null);
@@ -5345,7 +5804,6 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   return (
     <LevelProvider level="window">
-      <div ref={windowRef} id={id} className={cn("relative h-full w-full", bgClass, className)} onDoubleClick={onDoubleClick}>
         {headerElement
           ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
@@ -5361,14 +5819,14 @@ export { Window };
 
 // #region 🔖Page
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components/Page)
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Page)
 // Full-page content wrapper with frontmatter and footer.
 // Consumers MUST provide frontmatter and children.
 
 /**
  * Frontmatter metadata interface for a documentation page.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page🛠️pagefrontmatter](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Page/PageFrontmatter)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖page🛠️pagefrontmatter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Page/d/i/PageFrontmatter)
  **/
 export interface PageFrontmatter {
   title?: string;
@@ -5382,7 +5840,7 @@ export interface PageFrontmatter {
 /**
  * Props interface for the Page component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page🛠️pageprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Page/PageProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖page🛠️pageprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Page/d/i/PageProps)
  **/
 export interface PageProps {
   frontmatter?: PageFrontmatter;
@@ -5395,7 +5853,7 @@ export interface PageProps {
 /**
  * Full-page wrapper with frontmatter header and footer.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖page🪨page](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Page/Page)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖page🪨page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Page/d/i/Page)
  **/
 export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusComplete, footer, children }) => {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
@@ -5411,7 +5869,6 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
       }
     }
   }, [focusedItemId, onFocusComplete]);
-
   return (
     <Scrollable ref={scrollAreaRef} className="h-full w-full">
       <div className="prose prose-sm max-w-none dark:prose-invert p-medium">
@@ -5427,7 +5884,7 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
 // #region 🔖Diagram
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram)
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram)
 // Interactive node-edge diagram built on ReactFlow and D3 force.
 // Consumers MUST provide nodes and edges arrays.
 
@@ -5457,21 +5914,21 @@ export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTyp
 /**
  * Base pixel unit for diagram node sizing.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🪨diagramunit](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/DIAGRAM_UNIT)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🪨diagramunit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DIAGRAM_UNIT)
  **/
 export const DIAGRAM_UNIT = 48;
 
 /**
  * Union type for diagram layout directions (TB/BT/LR/RL).
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramlayoutdirection](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/DiagramLayoutDirection)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramlayoutdirection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramLayoutDirection)
  **/
 export type DiagramLayoutDirection = "TB" | "BT" | "LR" | "RL";
 
 /**
  * Configuration interface for dagre-based diagram layout.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramlayoutoptions](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/DiagramLayoutOptions)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramlayoutoptions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramLayoutOptions)
  **/
 export interface DiagramLayoutOptions {
   direction?: DiagramLayoutDirection;
@@ -5484,7 +5941,7 @@ export interface DiagramLayoutOptions {
 /**
  * Computes dagre layout positions for diagram nodes and edges.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️calculatediagramlayout](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/calculateDiagramLayout)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️calculatediagramlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/calculateDiagramLayout)
  **/
 export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {
   const { direction = "TB", nodeWidth = DIAGRAM_UNIT, nodeHeight = DIAGRAM_UNIT, rankSep = DIAGRAM_UNIT * 1.67, nodeSep = DIAGRAM_UNIT * 1.04 } = options;
@@ -5520,7 +5977,7 @@ export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: Di
 /**
  * Configuration interface for D3 force simulation parameters.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramforceconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/DiagramForceConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramforceconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramForceConfig)
  **/
 export interface DiagramForceConfig {
   enabled: boolean;
@@ -5534,7 +5991,7 @@ export interface DiagramForceConfig {
 /**
  * Default D3 force configuration values.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🪨defaultdiagramforceconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/defaultDiagramForceConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🪨defaultdiagramforceconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/defaultDiagramForceConfig)
  **/
 export const defaultDiagramForceConfig: DiagramForceConfig = {
   enabled: false,
@@ -5545,11 +6002,19 @@ export const defaultDiagramForceConfig: DiagramForceConfig = {
   updateIntervalMs: 50,
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram✂️forcenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/ForceNode)
+ * ForceNode holds the data fields for a ForceNode record.
+ **/
 interface ForceNode extends SimulationNodeDatum {
   id: string;
   data: any;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram✂️forcelink](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/ForceLink)
+ * ForceLink holds the data fields for a ForceLink record.
+ **/
 interface ForceLink extends SimulationLinkDatum<ForceNode> {
   id: string;
 }
@@ -5557,7 +6022,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 /**
  * Props interface for the Diagram component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️diagramprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/DiagramProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramProps)
  **/
 export interface DiagramProps {
   nodeTypes: NodeTypes;
@@ -5623,6 +6088,10 @@ export interface DiagramProps {
   defaultViewport?: { x: number; y: number; zoom: number };
 }
 
+/**
+ * DiagramInner holds the data fields for a DiagramInner record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🪨diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/Diagram)
+ **/
 const DiagramInner: React.FC<DiagramProps> = ({
   nodeTypes,
   edgeTypes,
@@ -5744,10 +6213,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
           const pos = currentPositions.get(simNode.id);
           if (pos) {
             simNode.x = pos.x;
-            simNode.y = pos.y;
           }
         }
-        const simNode = simulationRef.current.nodes().find((n) => n.id === node.id);
         if (simNode) {
           simNode.fx = node.position.x;
           simNode.fy = node.position.y;
@@ -5992,6 +6459,10 @@ const DiagramInner: React.FC<DiagramProps> = ({
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🪨diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/Diagram)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🪨diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/Diagram)
+ * Diagram holds the data fields for a Diagram record.
+ **/
 const Diagram: React.FC<DiagramProps> = (props) => {
   return (
     <ReactFlowProvider>
@@ -6006,7 +6477,7 @@ export type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, On
 /**
  * Hook computing and memoizing diagram layout from nodes and edges.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🛠️usediagramlayout](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/useDiagramLayout)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️usediagramlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/useDiagramLayout)
  **/
 export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], layoutOptions?: DiagramLayoutOptions): { nodes: Node[]; edges: Edge[] } {
   return React.useMemo(() => {
@@ -6017,6 +6488,10 @@ export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], lay
   }, [initialNodes, initialEdges, layoutOptions]);
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram✂️diagramskeletonprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramSkeletonProps)
+ * DiagramSkeletonProps holds the data fields for a DiagramSkeletonProps record.
+ **/
 interface DiagramSkeletonProps {
   nodeCount?: number;
   edgeCount?: number;
@@ -6026,7 +6501,7 @@ interface DiagramSkeletonProps {
 /**
  * Skeleton loading placeholder for a diagram.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖diagram🪨diagramskeleton](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Diagram/DiagramSkeleton)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨getcomputedcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getComputedColor)
  **/
 export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, className = "" }) => {
   const skeletonNodes: Node[] = React.useMemo(
@@ -6058,7 +6533,6 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
         nodeTypes={{}}
         edgeTypes={{}}
         nodesDraggable={false}
-        nodesConnectable={false}
         elementsSelectable={false}
         panOnDrag={false}
         zoomOnScroll={false}
@@ -6074,18 +6548,26 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
 
 // #region 🔖Scene
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components/Scene)
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene)
 // 3D scene viewer built on React Three Fiber.
 // Consumers MUST provide SceneGeometry data.
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨getcomputedcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getComputedColor)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨getcomputedcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getComputedColor)
+ * getComputedColor holds the data fields for a getComputedColor record.
+ **/
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨selectablecursorusagecount](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/selectableCursorUsageCount)
+ * selectableCursorUsageCount holds the data fields for a selectableCursorUsageCount record.
+ **/
 let selectableCursorUsageCount = 0;
 
 /**
  * Interface for a geometry entry in a 3D scene.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️scenegeometry](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/SceneGeometry)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🛠️scenegeometry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneGeometry)
  **/
 export interface SceneGeometry {
   guid: string;
@@ -6101,7 +6583,7 @@ export interface SceneGeometry {
 /**
  * Extended SceneGeometry with transform delta support.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️transformablegeometry](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/TransformableGeometry)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🛠️transformablegeometry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/TransformableGeometry)
  **/
 export interface TransformableGeometry extends SceneGeometry {
   isTransformable?: boolean;
@@ -6110,7 +6592,7 @@ export interface TransformableGeometry extends SceneGeometry {
 /**
  * Interface for an incremental plane transformation delta.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️planetransformdelta](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/PlaneTransformDelta)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🛠️planetransformdelta](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/PlaneTransformDelta)
  **/
 export interface PlaneTransformDelta {
   translation?: { x: number; y: number; z: number };
@@ -6121,21 +6603,21 @@ export interface PlaneTransformDelta {
 /**
  * Callback type for a single plane update.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️onplaneupdate](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/OnPlaneUpdate)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🛠️onplaneupdate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/OnPlaneUpdate)
  **/
 export type OnPlaneUpdate = (geometryGuid: string, newPlane: Plane) => void;
 
 /**
  * Callback type for batch plane updates.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🛠️onmultiplaneupdate](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/OnMultiPlaneUpdate)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🛠️onmultiplaneupdate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/OnMultiPlaneUpdate)
  **/
 export type OnMultiPlaneUpdate = (updates: Array<{ geometryGuid: string; newPlane: Plane }>) => void;
 
 /**
  * Constructs a Plane from a point and direction vector.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨planefrompointanddirection](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/planeFromPointAndDirection)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨planefrompointanddirection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/planeFromPointAndDirection)
  **/
 export const planeFromPointAndDirection = (point: Point, direction: Vector): Plane => {
   const dir = new THREE.Vector3(direction.x, direction.y, direction.z).normalize();
@@ -6155,7 +6637,7 @@ export const planeFromPointAndDirection = (point: Point, direction: Vector): Pla
 /**
  * Extracts the THREE.Vector3 position from a Plane.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨getplaneposition](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/getPlanePosition)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨getplaneposition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getPlanePosition)
  **/
 export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
   return new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
@@ -6164,7 +6646,7 @@ export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
 /**
  * Checks whether a geometry has a non-null plane.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨hasvalidplane](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/hasValidPlane)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨hasvalidplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/hasValidPlane)
  **/
 export const hasValidPlane = (geometry: SceneGeometry): boolean => {
   return geometry.plane !== undefined && geometry.plane !== null;
@@ -6173,12 +6655,16 @@ export const hasValidPlane = (geometry: SceneGeometry): boolean => {
 /**
  * Checks whether a geometry has a valid plane for camera focus.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨isgeometryfocusable](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/isGeometryFocusable)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨isgeometryfocusable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/isGeometryFocusable)
  **/
 export const isGeometryFocusable = (geometry: SceneGeometry): boolean => {
   return hasValidPlane(geometry) && (geometry.isFocusable === undefined || geometry.isFocusable === true);
 };
 
+/**
+ * GeometryProps holds the data fields for a GeometryProps record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene✂️geometryprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/GeometryProps)
+ **/
 interface GeometryProps {
   children?: React.ReactNode;
   selected?: boolean;
@@ -6198,7 +6684,7 @@ interface GeometryProps {
 /**
  * 3D geometry mesh component with selection, hover, and edge rendering.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨geometry](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/Geometry)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨geometry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Geometry)
  **/
 export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = React.useMemo(() => getComputedColor("--foreground"), []);
@@ -6273,14 +6759,26 @@ export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, 
   );
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene✂️getcomputedcolorforgltf](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getComputedColorForGltf)
+ * GltfProps holds the data fields for a GltfProps record.
+ **/
 interface GltfProps {
   src: string;
   roughness?: number;
   metalness?: number;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨getcomputedcolorforgltf](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getComputedColorForGltf)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨getcomputedcolorforgltf](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/getComputedColorForGltf)
+ * getComputedColorForGltf holds the data fields for a getComputedColorForGltf record.
+ **/
 const getComputedColorForGltf = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gltf](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gltf)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gltf](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gltf)
+ * Gltf holds the data fields for a Gltf record.
+ **/
 const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
   const { scene } = useGLTF(src);
   const plasterColor = React.useMemo(() => new THREE.Color(getComputedColorForGltf("--plaster")), []);
@@ -6314,14 +6812,20 @@ const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
   return <primitive object={clonedScene} />;
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene✂️geometryfileprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/GeometryFileProps)
+ * GeometryFileProps holds the data fields for a GeometryFileProps record.
+ **/
 interface GeometryFileProps {
   src: string;
   environment?: string;
   roughness?: number;
   metalness?: number;
-}
+/** GeometryFile holds the data fields for a GeometryFile record.
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨geometryfile](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/GeometryFile)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨geometryfile](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/GeometryFile)
+ **/
 const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness, metalness }) => {
-  return (
     <div className="w-full h-full">
       <Geometry>
         <React.Suspense fallback={null}>
@@ -6332,10 +6836,18 @@ const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness
   );
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene✂️gizmo](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gizmo)
+ * GizmoProps holds the data fields for a GizmoProps record.
+ **/
 interface GizmoProps {
   show?: boolean;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gizmo](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gizmo)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gizmo](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gizmo)
+ * Gizmo holds the data fields for a Gizmo record.
+ **/
 const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
   const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
@@ -6360,6 +6872,10 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
   );
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene✂️sceneinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
+ * SceneInnerProps holds the data fields for a SceneInnerProps record.
+ **/
 interface SceneInnerProps {
   children?: React.ReactNode;
   showGrid?: boolean;
@@ -6370,6 +6886,10 @@ interface SceneInnerProps {
   onFocusComplete?: () => void;
 }
 
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
+ * SceneInner holds the data fields for a SceneInner record.
+ **/
 const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete }) => {
   const [gridColors, setGridColors] = React.useState({
     sectionColor: getComputedColor("--foreground"),
@@ -6578,6 +7098,10 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
   );
 };
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene✂️sceneprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneProps)
+ * SceneProps holds the data fields for a SceneProps record.
+ **/
 interface SceneProps {
   children?: React.ReactNode;
   showGrid?: boolean;
@@ -6598,7 +7122,7 @@ interface SceneProps {
 /**
  * 3D scene viewer with orbit controls, grid, and geometry rendering.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨scene](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/Scene)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Scene)
  **/
 export const Scene: React.FC<SceneProps> = ({
   children,
@@ -6648,7 +7172,6 @@ export const Scene: React.FC<SceneProps> = ({
 /**
  * Skeleton loading placeholder for a 3D scene.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene🪨sceneskeleton](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Scene/SceneSkeleton)
  **/
 export const SceneSkeleton: React.FC = () => (
   <div className="h-full w-full bg-background flex items-center justify-center">
@@ -6664,21 +7187,21 @@ export const SceneSkeleton: React.FC = () => (
 
 // #region 🔖Table
 
-// [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table](semiorepo://section/semio/js/sketchpad/elements.tsx/Window%20Components/Table)
+// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table)
 // Sortable, hierarchical data table with drag-drop support.
 // Consumers MUST provide columns and data arrays.
 
 /**
  * Union type for ascending or descending sort order.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️sortdirection](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/SortDirection)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🛠️sortdirection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/SortDirection)
  **/
 export type SortDirection = "asc" | "desc";
 
 /**
  * Configuration interface for a table column definition.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️tablecolumn](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/TableColumn)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🛠️tablecolumn](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/TableColumn)
  **/
 export interface TableColumn<T = unknown> {
   id: string;
@@ -6694,7 +7217,7 @@ export interface TableColumn<T = unknown> {
 /**
  * Interface for hierarchical row data with parent/child relations.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️hierarchicalrowdata](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/HierarchicalRowData)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🛠️hierarchicalrowdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/HierarchicalRowData)
  **/
 export interface HierarchicalRowData {
   id: string;
@@ -6707,7 +7230,7 @@ export interface HierarchicalRowData {
 /**
  * Configuration interface for table drag-and-drop behavior.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️dragdropconfig](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/DragDropConfig)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🛠️dragdropconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/DragDropConfig)
  **/
 export interface DragDropConfig {
   enabled?: boolean;
@@ -6721,7 +7244,7 @@ export interface DragDropConfig {
 /**
  * Props interface for the Table component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️tableprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/TableProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🛠️tableprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/TableProps)
  **/
 export interface TableProps<T = unknown> {
   columns: TableColumn<T>[];
@@ -6753,6 +7276,10 @@ export interface TableProps<T = unknown> {
   wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🪨table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/Table)
+ * Table holds the data fields for a Table record.
+ **/
 const Table = <T,>({
   columns,
   data,
@@ -7008,7 +7535,7 @@ export { Table };
 /**
  * Props interface for the TableSkeleton component.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🛠️tableskeletonprops](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/TableSkeletonProps)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🛠️tableskeletonprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/TableSkeletonProps)
  **/
 export interface TableSkeletonProps {
   columns: TableColumn[];
@@ -7019,7 +7546,7 @@ export interface TableSkeletonProps {
 /**
  * Skeleton loading placeholder for a table.
  *
- *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖table🪨tableskeleton](semiorepo://definition/semio/js/sketchpad/elements.tsx/Window%20Components/Table/TableSkeleton)
+ *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🪨tableskeleton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/TableSkeleton)
  **/
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>

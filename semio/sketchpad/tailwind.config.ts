@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🖱️sketchpad⚙️tailwindconfigts](semiorepo://file/semio/sketchpad/tailwind.config.ts)
+// [👤semio🖱️sketchpad⚙️tailwindconfigts](semiorepo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -20,16 +19,19 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [👤semio🖱️sketchpad⚙️tailwindconfigts🔖configuration](semiorepo://section/semio/sketchpad/tailwind.config.ts/Configuration)
+// [👤semio🖱️sketchpad⚙️tailwindconfigts🔖configuration](semiorepo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts/s/Configuration)
 // Tailwind CSS configuration extending the shared semio preset for the sketchpad application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/js.
 
 import { tailwindConfig } from "@semio/js";
 import type { Config } from "tailwindcss";
 
-// Tailwind CSS configuration with content paths and shared preset.
-// Config MUST include content glob patterns and the tailwindConfig preset.
+/**
+ * Tailwind CSS configuration with content paths and shared preset.
+// [👤semio🖱️sketchpad⚙️tailwindconfigts🔖configuration🪨config](semiorepo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts/s/Configuration/d/i/config)
+ *
+ * Config MUST include content glob patterns and the tailwindConfig preset.
+ **/
 const config: Pick<Config, "content" | "presets"> = {
   content: ["./**/*.{ts,tsx,mdx}"],
   presets: [tailwindConfig],

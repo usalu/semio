@@ -1,92 +1,10 @@
 {
   "title": "Project Generate Requirements Docs Todos",
   "status": "closed",
-  "prompt": "Extend the CLI with project generate command for requirements, docs, and todos generation. Add project generate requirements|docs|todos subcommands. Generate SPECS.md, DOCS.md, TODOS.md files per project by scanning code entities (projects, bundles, folders, files, sections, definitions) and extracting their requirements, docs, and todos from README.md files and code comment blocks.",
+  "description": "Extend the CLI with project generate command for requirements, docs, and todos generation. Add project generate requirements|docs|todos subcommands. Generate SPECS.md, DOCS.md, TODOS.md files per project by scanning code entities (projects, bundles, folders, files, sections, definitions) and extracting their requirements, docs, and todos from README.md files and code comment blocks.",
   "summary": "Implemented project generate requirements/docs/todos CLI commands with content-based extraction, 17 tests, zero license leaks",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/636"
   },
-  "goal": "CLI-INFRA/REPO-TOOLING",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-20 08:30:36",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-      "prompt": "Extend the CLI with project generate command for requirements, docs, and todos generation. Add project generate requirements|docs|todos subcommands. Generate SPECS.md, DOCS.md, TODOS.md files per project by scanning code entities (projects, bundles, folders, files, sections, definitions) and extracting their requirements, docs, and todos from README.md files and code comment blocks.",
-      "llm": "opus-4-6"
-    },
-    {
-      "kind": "ticket.close",
-      "date": "2026-02-20 09:11:22",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-      "files": [
-        {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
-        },
-        {
-          "path": "🧰semiorepo⌨️cli💻maingo"
-        }
-      ]
-    }
-  ],
-  "sessions": [
-    {
-      "id": "d242daaa-579d-4762-8ea5-ba09e417d659",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "claude-code",
-      "interactions": [
-        {
-          "kind": "agent.started",
-          "timestamp": "2026-02-20T08:45:37Z",
-          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-          "reads": {},
-          "diff": {
-            "projects": {},
-            "bundles": {},
-            "folders": {},
-            "files": {}
-          }
-        }
-      ]
-    },
-    {
-      "id": "d577f2f0-5846-40b9-b8d7-d145ae2abd62",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "claude-code",
-      "interactions": [
-        {
-          "kind": "agent.started",
-          "timestamp": "2026-02-20T08:45:37Z",
-          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-          "reads": {},
-          "diff": {
-            "projects": {},
-            "bundles": {},
-            "folders": {},
-            "files": {}
-          }
-        },
-        {
-          "kind": "agent.ended",
-          "timestamp": "2026-02-20T08:45:42Z",
-          "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-          "reads": {},
-          "diff": {
-            "projects": {},
-            "bundles": {},
-            "folders": {},
-            "files": {}
-          }
-        }
-      ]
-    }
-  ]
+  "goal": "🎯cliinfra🎯repotooling"
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜logints](semiorepo://file/semio/gh/Semio.Grasshopper/yak/login.ts)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜login](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,14 +20,17 @@
 // #endregion 🔖Header
 
 // #region 🔖Login
-
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🔖login](semiorepo://section/semio/gh/Semio.Grasshopper/yak/login.ts/Login)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻login🔖login](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/s/Login)
 // Yak login script. MUST authenticate with the Yak package manager.
 
 import { execSync } from "child_process";
 
-// Yak CLI executable path for Rhino 8.
-// MUST point to the installed Yak binary.
+/**
+ * Yak CLI executable path for Rhino 8.
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻login🔖login🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/s/Login/d/i/yak)
+ *
+ * MUST point to the installed Yak binary.
+ **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" login`, { stdio: "inherit" });
 

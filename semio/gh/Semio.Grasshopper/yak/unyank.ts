@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜unyankts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/unyank.ts)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜unyank](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,17 +20,24 @@
 // #endregion 🔖Header
 
 // #region 🔖Unyank
-
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🔖unyank](semiorepo://section/semio/gh/Semio.Grasshopper/yak/unyank.ts/Unyank)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyank🔖unyank](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/s/Unyank)
 // Yak unyank script. MUST restore a previously yanked package version.
 
 import { execSync } from "child_process";
 
-// Yak CLI executable path for Rhino 7.
-// MUST point to the installed Yak binary.
+/**
+ * Yak CLI executable path for Rhino 7.
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyank🔖unyank🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/s/Unyank/d/i/yak)
+ *
+ * MUST point to the installed Yak binary.
+ **/
 const yak = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";
-// Semio package version from CLI argument or default.
-// MUST be a valid semver version string.
+/**
+ * Semio package version from CLI argument or default.
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyank🔖unyank🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/s/Unyank/d/i/version)
+ *
+ * MUST be a valid semver version string.
+ **/
 const version = process.argv[2] || "5.1.0-beta";
 
 execSync(`"${yak}" unyank semio ${version}`, { stdio: "inherit" });

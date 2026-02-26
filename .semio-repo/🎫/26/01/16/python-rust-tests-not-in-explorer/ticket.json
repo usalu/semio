@@ -1,17 +1,6 @@
 {
   "title": "Python Rust Tests Not In Explorer",
   "status": "closed",
-  "prompt": "Migrated from legacy files",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-01-29T19:44:04.192458Z",
-      "author": "Migration Script",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "Migrated from legacy files"
-    }
-  ]
+  "description": "Migrated from legacy files",
+  "goal": "🎯aioptimizedrepo"
 }

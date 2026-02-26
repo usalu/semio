@@ -1,18 +1,6 @@
 {
   "title": "Add optional comparator parameter to useSyncField and useSyncFields for custom equality checks",
   "status": "closed",
-  "prompt": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-20T13:30:21.713Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
-      "prompt": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
-      "llm": "opus-4-5"
-    }
-  ]
+  "description": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
+  "goal": "🎯aioptimizedrepo"
 }

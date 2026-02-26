@@ -50,7 +50,7 @@ Shows policy breachs as diagnostics for all supported file types (TypeScript, Ja
 
 - Loads cached breachs on file open for immediate feedback
 - Re-runs `repo analyze` on file save and updates diagnostics
-- Quick Fix actions to apply automated fixes via `repo fix`
+- Quick Fix actions to apply automated fixes via `repo autofix`
 - Promotes preview editors opened from the Problems list into regular tabs for save-ready edits
 
 ## Kit Validation

@@ -1,0 +1,13 @@
+{
+  "title": "Track Plan Steps in Session Json",
+  "status": "closed",
+  "description": "The session.json should keep track of the plan with steps based on events. When agent.tool.plan.updating.ended fires, session.json must be updated with the merged plan steps. Smart merging: preserve timestamps from existing steps, add new steps, mark removed steps as abandoned. Add Abandoned field to TicketAgentPlanStep, Plan field to SessionMeta, mergeTicketAgentPlanSteps function, updateSessionMetaPlan function called from logHook. Also update trackHookInOpenTicket to use smart merging. Add tests.",
+  "summary": "Added Abandoned field to TicketAgentPlanStep. Added Plan field to SessionMeta. Added mergeTicketAgentPlanSteps for smart merging (preserves timestamps, marks removed steps as abandoned). Added updateSessionMetaPlan to read/merge/write session.json. Updated logHook to call updateSessionMetaPlan on HookAgentToolPlanUpdatingEnded. Updated trackHookInOpenTicket to use mergeTicketAgentPlanSteps instead of replacing plan. Added TestSessionJsonTracksPlan and TestMergeTicketAgentPlanSteps tests covering all merge scenarios.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/742"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪17724188902318457452101837317911064639"
+  ]
+}

@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🌐play⚙️postcssconfigts](semiorepo://file/semio/play/postcss.config.ts)
+// [👤semio🌐play⚙️postcssconfigts](semiorepo://p/u/semio/b/w/play/f/postcss.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,15 +19,18 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [👤semio🌐play⚙️postcssconfigts🔖configuration](semiorepo://section/semio/play/postcss.config.ts/Configuration)
+// [👤semio🌐play⚙️postcssconfigts🔖configuration](semiorepo://p/u/semio/b/w/play/f/postcss.config.ts/s/Configuration)
 // PostCSS plugin configuration for the play application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 
 import { Config } from "postcss-load-config";
 
-// PostCSS configuration with the Tailwind CSS PostCSS plugin.
-// Config MUST include the @tailwindcss/postcss plugin.
+/**
+ * PostCSS configuration with the Tailwind CSS PostCSS plugin.
+// [👤semio🌐play⚙️postcssconfigts🔖configuration🪨config](semiorepo://p/u/semio/b/w/play/f/postcss.config.ts/s/Configuration/d/i/config)
+ *
+ * Config MUST include the @tailwindcss/postcss plugin.
+ **/
 const config: Config = {
   plugins: {
     "@tailwindcss/postcss": {},

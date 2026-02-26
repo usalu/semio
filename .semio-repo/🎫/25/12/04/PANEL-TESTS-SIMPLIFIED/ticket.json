@@ -1,18 +1,6 @@
 {
   "title": "Simplified panel tests to verify toggle existence",
   "status": "closed",
-  "prompt": "Simplified panel tests to verify toggle existence",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.868Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Simplified panel tests to verify toggle existence",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Simplified panel tests to verify toggle existence",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

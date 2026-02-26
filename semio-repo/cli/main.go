@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [🧰semiorepo⌨️cli💻maingo](semiorepo://file/semio-repo/cli/main.go)
+// [🧰semiorepo⌨️cli💻maingo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go)
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Preamble
-
-// [🧰semiorepo⌨️cli💻maingo🔖preamble](semiorepo://section/semio-repo/cli/main.go/Preamble)
+// [🧰semiorepo⌨️cli💻maingo🔖preamble](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Preamble)
 // Package declaration and dependency imports for the semio-repo CLI.
 
 package main
@@ -33,6 +31,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
+	"embed"
 	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
@@ -66,6 +65,7 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/spf13/cobra"
 	repopkg "github.com/usalu/semio/semio-repo/go"
 	"gopkg.in/yaml.v3"
@@ -74,13 +74,118 @@ import (
 
 // #endregion 🔖Preamble
 
+// #region 🔖Templates
+// [🧰semiorepo⌨️cli💻maingo🔖templates](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates)
+// Embedded template files and initialization for text and markdown rendering.
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🪨texttemplatecontent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/textTemplateContent)
+//
+//go:embed templates/renderers/text.tpl
+var textTemplateContent string
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🪨markdowntemplatecontent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/markdownTemplateContent)
+//
+//go:embed templates/renderers/markdown.tpl
+var markdownTemplateContent string
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🪨prompttemplatesfs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/promptTemplatesFS)
+//
+//go:embed templates/prompts/*.tpl
+var promptTemplatesFS embed.FS
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🪨agenttemplatesfs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/agentTemplatesFS)
+//
+//go:embed templates/agents/*.tpl
+var agentTemplatesFS embed.FS
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🪨summarytemplatesfs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/summaryTemplatesFS)
+//
+//go:embed templates/summaries/*.tpl
+var summaryTemplatesFS embed.FS
+
+var (
+	textTpl *template.Template
+	mdTpl   *template.Template
+)
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🛠️templatefuncmap](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/templateFuncMap)
+// templateFuncMap holds the data fields for a templateFuncMap record.
+// templateFuncMap MUST perform the templateFuncMap operation.
+func templateFuncMap() template.FuncMap {
+	fm := sprig.TxtFuncMap()
+	fm["colorize"] = func(s, color string, isTTY bool) string {
+		return colorize(s, colorNameToANSI(color), isTTY)
+	}
+	fm["propColor"] = func(i int) string {
+		switch i {
+		case 0:
+			return "yellow"
+		case 1:
+			return "blue"
+		case 2:
+			return "green"
+		default:
+			return "dim"
+		}
+	}
+	fm["sanitizeProp"] = sanitizeProp
+	fm["pathToUriPath"] = PathToUriPath
+	return fm
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🛠️colornametoansi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/colorNameToANSI)
+// colorNameToANSI holds the data fields for a colorNameToANSI record.
+// colorNameToANSI MUST perform the colorNameToANSI operation.
+func colorNameToANSI(name string) string {
+	switch name {
+	case "red":
+		return ColorRed
+	case "green":
+		return ColorGreen
+	case "yellow":
+		return ColorYellow
+	case "blue":
+		return ColorBlue
+	case "dim":
+		return ColorDim
+	case "bold":
+		return ColorBold
+	default:
+		return ""
+	}
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🛠️inittemplates](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/initTemplates)
+// initTemplates MUST perform the initTemplates operation.
+// initTemplates performs the initTemplates operation.
+func initTemplates() {
+	textTpl = template.Must(template.New("text").Funcs(templateFuncMap()).Parse(textTemplateContent))
+	mdTpl = template.Must(template.New("md").Funcs(templateFuncMap()).Parse(markdownTemplateContent))
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖templates🛠️rendertemplate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Templates/d/i/renderTemplate)
+// renderTemplate MUST perform the renderTemplate operation.
+func renderTemplate(tpl *template.Template, name string, data interface{}) string {
+	var sb strings.Builder
+	if err := tpl.ExecuteTemplate(&sb, name, data); err != nil {
+		return fmt.Sprintf("[template error: %s: %v]", name, err)
+	}
+	return sb.String()
+}
+
+func init() {
+	initTemplates()
+}
+
+// #endregion 🔖Templates
+
 // #region 🔖Engine Events
 
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents](semiorepo://section/semio-repo/cli/main.go/Engine%20Events)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events)
 // Event types and payload structures for the engine event stream.
 
 // Kind represents a kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️kind](semiorepo://definition/semio-repo/cli/main.go/Engine%20Events/Kind)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Kind)
 type Kind string
 
 const (
@@ -94,7 +199,7 @@ const (
 )
 
 // Event holds the data fields for a event record.
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️event](semiorepo://definition/semio-repo/cli/main.go/Engine%20Events/Event)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️event](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Event)
 type Event struct {
 	Kind     Kind            `json:"kind"`
 	Command  string          `json:"command,omitempty"`
@@ -284,7 +389,7 @@ func inferEntityKindFromStatute(statute Statute) string {
 }
 
 // Progress holds the data fields for a progress record.
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️progress](semiorepo://definition/semio-repo/cli/main.go/Engine%20Events/Progress)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️progress](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Progress)
 type Progress struct {
 	Current int    `json:"current,omitempty"`
 	Total   int    `json:"total,omitempty"`
@@ -293,7 +398,7 @@ type Progress struct {
 }
 
 // Artifact holds the data fields for a artifact record.
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️artifact](semiorepo://definition/semio-repo/cli/main.go/Engine%20Events/Artifact)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️artifact](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Artifact)
 type Artifact struct {
 	Type string `json:"type"`
 	URI  string `json:"uri"`
@@ -301,7 +406,7 @@ type Artifact struct {
 }
 
 // ErrPayload holds the data fields for a err payload record.
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️errpayload](semiorepo://definition/semio-repo/cli/main.go/Engine%20Events/ErrPayload)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️errpayload](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/ErrPayload)
 type ErrPayload struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -310,7 +415,7 @@ type ErrPayload struct {
 }
 
 // DonePayload holds the data fields for a done payload record.
-// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️donepayload](semiorepo://definition/semio-repo/cli/main.go/Engine%20Events/DonePayload)
+// [🧰semiorepo⌨️cli💻maingo🔖engineevents✂️donepayload](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/DonePayload)
 type DonePayload struct {
 	ExitCode int    `json:"exit_code"`
 	Status   string `json:"status"`
@@ -320,11 +425,11 @@ type DonePayload struct {
 
 // #region 🔖Engine Errors
 
-// [🧰semiorepo⌨️cli💻maingo🔖engineerrors](semiorepo://section/semio-repo/cli/main.go/Engine%20Errors)
+// [🧰semiorepo⌨️cli💻maingo🔖engineerrors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Errors)
 // Error code constants for engine failure classification.
 
 // ErrorCode represents a error code value.
-// [🧰semiorepo⌨️cli💻maingo🔖engineerrors✂️errorcode](semiorepo://definition/semio-repo/cli/main.go/Engine%20Errors/ErrorCode)
+// [🧰semiorepo⌨️cli💻maingo🔖engineerrors✂️errorcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Errors/d/i/ErrorCode)
 type ErrorCode string
 
 const (
@@ -339,17 +444,17 @@ const (
 
 // #region 🔖Engine Requests
 
-// [🧰semiorepo⌨️cli💻maingo🔖enginerequests](semiorepo://section/semio-repo/cli/main.go/Engine%20Requests)
+// [🧰semiorepo⌨️cli💻maingo🔖enginerequests](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Requests)
 // Request command types and argument structures for engine invocation.
 
 // Command represents a command value.
-// [🧰semiorepo⌨️cli💻maingo🔖enginerequests✂️command](semiorepo://definition/semio-repo/cli/main.go/Engine%20Requests/Command)
+// [🧰semiorepo⌨️cli💻maingo🔖enginerequests✂️command](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/Command)
 type Command string
 
 const (
 	CmdGraphQL Command = "graphql"
 	CmdAnalyze Command = "analyze"
-	CmdFix     Command = "fix"
+	CmdAutofix Command = "autofix"
 	CmdPolicy  Command = "policy"
 	CmdTicket  Command = "ticket"
 	CmdBundle  Command = "bundle"
@@ -360,7 +465,7 @@ const (
 )
 
 // Request holds the data fields for a request record.
-// [🧰semiorepo⌨️cli💻maingo🔖enginerequests✂️request](semiorepo://definition/semio-repo/cli/main.go/Engine%20Requests/Request)
+// [🧰semiorepo⌨️cli💻maingo🔖enginerequests✂️request](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/Request)
 type Request struct {
 	Command  Command
 	Args     json.RawMessage
@@ -369,7 +474,7 @@ type Request struct {
 }
 
 // GraphQLArgs holds the data fields for a graph q l args record.
-// [🧰semiorepo⌨️cli💻maingo🔖enginerequests✂️graphqlargs](semiorepo://definition/semio-repo/cli/main.go/Engine%20Requests/GraphQLArgs)
+// [🧰semiorepo⌨️cli💻maingo🔖enginerequests✂️graphqlargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/GraphQLArgs)
 type GraphQLArgs struct {
 	Query     string         `json:"query"`
 	Variables map[string]any `json:"variables,omitempty"`
@@ -379,31 +484,31 @@ type GraphQLArgs struct {
 
 // #region 🔖Engine
 
-// [🧰semiorepo⌨️cli💻maingo🔖engine](semiorepo://section/semio-repo/cli/main.go/Engine)
+// [🧰semiorepo⌨️cli💻maingo🔖engine](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine)
 // Core engine that dispatches requests and emits events over a channel.
 
 // GraphQLExecutor defines the interface contract for graph q l executor operations.
-// [🧰semiorepo⌨️cli💻maingo🔖engine✂️graphqlexecutor](semiorepo://definition/semio-repo/cli/main.go/Engine/GraphQLExecutor)
+// [🧰semiorepo⌨️cli💻maingo🔖engine✂️graphqlexecutor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine/d/i/GraphQLExecutor)
 type GraphQLExecutor interface {
 	Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error)
 }
 
 // Engine holds the data fields for a engine record.
-// [🧰semiorepo⌨️cli💻maingo🔖engine✂️engine](semiorepo://definition/semio-repo/cli/main.go/Engine/Engine)
+// [🧰semiorepo⌨️cli💻maingo🔖engine✂️engine](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine/d/i/Engine)
 type Engine struct {
 	GraphQL GraphQLExecutor
 }
 
 // NewEngine MUST initialize all required fields and return a valid Engine.
 // NewEngine creates and returns a new Engine instance.
-// [🧰semiorepo⌨️cli💻maingo🔖engine🛠️newengine](semiorepo://definition/semio-repo/cli/main.go/Engine/NewEngine)
+// [🧰semiorepo⌨️cli💻maingo🔖engine🛠️newengine](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine/d/i/NewEngine)
 func NewEngine(graphql GraphQLExecutor) *Engine {
 	return &Engine{GraphQL: graphql}
 }
 
 // Run MUST emit start, result or error, and done events in order.
 // Run dispatches the request and returns an event channel.
-// [🧰semiorepo⌨️cli💻maingo🔖engine🛠️run](semiorepo://definition/semio-repo/cli/main.go/Engine/Run)
+// [🧰semiorepo⌨️cli💻maingo🔖engine🛠️run](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine/d/i/Run)
 func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 	out := make(chan Event)
 	go func() {
@@ -424,7 +529,7 @@ func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 		}
 
 		switch req.Command {
-		case CmdGraphQL, CmdAnalyze, CmdFix, CmdPolicy, CmdTicket, CmdBundle, CmdFolder, CmdFile, CmdSection, CmdDef:
+		case CmdGraphQL, CmdAnalyze, CmdAutofix, CmdPolicy, CmdTicket, CmdBundle, CmdFolder, CmdFile, CmdSection, CmdDef:
 			e.runGraphQL(ctx, req, out)
 		default:
 			e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "unsupported command", Fatal: true})
@@ -485,11 +590,11 @@ const (
 
 // #region 🔖Cli Adapter
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter)
 // CLI adapter that wires cobra commands to the engine and renders output.
 
 // Config holds the data fields for a config record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️config](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Config)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️config](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/Config)
 type Config struct {
 	Format  string
 	Verbose bool
@@ -499,45 +604,45 @@ type Config struct {
 
 // IsJSON MUST return true only when the condition is met.
 // IsJSON reports whether the Config is j s o n.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️isjson](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/IsJSON)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️isjson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/IsJSON)
 func (c *Config) IsJSON() bool {
 	return c.Format == "json"
 }
 
 // IsMarkdown MUST return true only when the condition is met.
 // IsMarkdown reports whether the Config is markdown.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️ismarkdown](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/IsMarkdown)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️ismarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/IsMarkdown)
 func (c *Config) IsMarkdown() bool {
 	return c.Format == "md"
 }
 
 // IsText MUST return true only when the condition is met.
 // IsText reports whether the Config is text.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️istext](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/IsText)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️istext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/IsText)
 func (c *Config) IsText() bool {
 	return c.Format == "text"
 }
 
 // EngineFactory is a function type for engine factory callbacks.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️enginefactory](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/EngineFactory)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️enginefactory](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/EngineFactory)
 type EngineFactory func(Config) (*Engine, error)
 
 // ExitError holds the data fields for a exit error record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️exiterror](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/ExitError)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️exiterror](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExitError)
 type ExitError struct {
 	Code int
 }
 
 // Error MUST return a formatted string representation.
 // Error returns the string representation of the error.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️error](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Error)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️error](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/Error)
 func (e ExitError) Error() string {
 	return fmt.Sprintf("exit status %d", e.Code)
 }
 
 // NewRoot MUST initialize all required fields and return a valid Root.
 // NewRoot creates and returns a new Root instance.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️newroot](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/NewRoot)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️newroot](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/NewRoot)
 func NewRoot(factory EngineFactory) *cobra.Command {
 	root, _ := NewRootWithConfig(factory)
 	return root
@@ -545,7 +650,7 @@ func NewRoot(factory EngineFactory) *cobra.Command {
 
 // NewRootWithConfig MUST initialize all required fields and return a valid RootWithConfig.
 // NewRootWithConfig creates and returns a new RootWithConfig instance.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️newrootwithconfig](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/NewRootWithConfig)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️newrootwithconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/NewRootWithConfig)
 func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	config := Config{}
 	root := &cobra.Command{
@@ -574,7 +679,8 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(mcpCommand(factory, &config))
 	root.AddCommand(graphqlCommand(factory, &config))
 	root.AddCommand(analyzeCommand(factory, &config))
-	root.AddCommand(fixCommand(factory, &config))
+	root.AddCommand(autofixCommand(factory, &config))
+	root.AddCommand(testCommand(factory, &config))
 	root.AddCommand(policyCommand(factory, &config))
 	root.AddCommand(ticketCommand(factory, &config))
 	root.AddCommand(todoCommand(factory, &config))
@@ -596,6 +702,8 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(mermaidCommand(factory, &config))
 	root.AddCommand(projectCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
+	root.AddCommand(summarizeCommand(factory, &config))
+	root.AddCommand(entityEmojisCommand(&config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(preflightCmd)
 	root.AddCommand(updateCmd)
@@ -604,7 +712,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 
 // Execute MUST delegate to the root command and propagate errors.
 // Execute runs the root command and returns any error.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️execute](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Execute)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️execute](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/Execute)
 func Execute(factory EngineFactory) error {
 	return NewRoot(factory).Execute()
 }
@@ -768,10 +876,10 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
+func autofixCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var scope string
 	cmd := &cobra.Command{
-		Use:   "fix",
+		Use:   "autofix",
 		Short: "Apply autofixes for breachs",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -795,6 +903,183 @@ func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().StringVar(&scope, "scope", "", "Scope to fix")
 	return cmd
 }
+
+// #region 🔖Summarize Command
+
+// summarizeCommand MUST return a summary for the given entity ID.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️summarizecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/summarizeCommand)
+func summarizeCommand(factory EngineFactory, config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "summarize <id>",
+		Short: "Summarize an entity by its ID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			id := args[0]
+			buildOpts := TreeBuildOptions{
+				IncludeSections: true,
+			}
+			tree := BuildMonorepoTreeCached(ctx, buildOpts)
+			var found *TreeNode
+			var findByID func(node *TreeNode)
+			findByID = func(node *TreeNode) {
+				if found != nil {
+					return
+				}
+				if node.ID == id {
+					found = node
+					return
+				}
+				for _, c := range node.Children {
+					findByID(c)
+				}
+			}
+			findByID(tree)
+			if found == nil {
+				return fmt.Errorf("entity not found: %s", id)
+			}
+			type summaryOutput struct {
+				ID      string `json:"id"`
+				Kind    string `json:"kind"`
+				Label   string `json:"label"`
+				Summary string `json:"summary"`
+				URI     string `json:"uri"`
+			}
+			out := summaryOutput{
+				ID:      found.ID,
+				Kind:    string(found.Kind),
+				Label:   found.Label,
+				Summary: found.Summary,
+				URI:     found.URI,
+			}
+			switch {
+			case config.IsJSON():
+				encoded, err := json.Marshal(out)
+				if err != nil {
+					return err
+				}
+				fmt.Fprintln(cmd.OutOrStdout(), string(encoded))
+			default:
+				fmt.Fprintf(cmd.OutOrStdout(), "[%s] %s\n", out.Kind, out.Label)
+				if out.Summary != "" {
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s\n", out.Summary)
+				}
+				if out.URI != "" {
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s\n", out.URI)
+				}
+			}
+			return nil
+		},
+	}
+	return cmd
+}
+
+// #endregion 🔖Summarize Command
+
+// #region 🔖Entity Emojis Command
+
+// AllEntityEmojis MUST return the complete set of entity-identifying emojis.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️allentityemojis](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/AllEntityEmojis)
+func AllEntityEmojis() []string {
+	seen := map[string]bool{}
+	var result []string
+	add := func(e string) {
+		normalized := emojiText(e)
+		if normalized == "" || seen[normalized] {
+			return
+		}
+		seen[normalized] = true
+		result = append(result, normalized)
+	}
+	// Singular entity emojis (appear in IDs as kind prefixes)
+	add(EmojiProjectUser)
+	add(EmojiProjectInfra)
+	add(EmojiProjectResearch)
+	add(EmojiProjectMono)
+	add(EmojiBundleLibrary)
+	add(EmojiBundleSchema)
+	add(EmojiBundleBinary)
+	add(EmojiBundleUI)
+	add(EmojiBundleExample)
+	add(EmojiBundleSite)
+	add(EmojiBundleAssets)
+	add(EmojiBundleRepo)
+	add(EmojiFolderOrg)
+	add(EmojiFolderRequired)
+	add(EmojiFileCode)
+	add(EmojiFileLab)
+	add(EmojiFileScript)
+	add(EmojiFileDocs)
+	add(EmojiFileConfig)
+	add(EmojiFileResource)
+	add(EmojiFileLicense)
+	add(EmojiLine)
+	add(EmojiSection)
+	add(EmojiDefinitionImpl)
+	add(EmojiDefinitionInterface)
+	add(EmojiDefinitionConstant)
+	add(EmojiDefinitionTest)
+	add(EmojiYear)
+	add(EmojiMonth)
+	add(EmojiDay)
+	add(EmojiHour)
+	add(EmojiMinute)
+	add(EmojiSecond)
+	add(EmojiGoal)
+	add(EmojiTicket)
+	add(EmojiDraft)
+	add(EmojiTodo)
+	add(EmojiPolicy)
+	add(EmojiBreach)
+	add(EmojiBreachScope)
+	add(EmojiContributor)
+	add(EmojiCheckpoint)
+	add(EmojiInteractionStarted)
+	add(EmojiInteractionEdited)
+	add(EmojiInteractionFinished)
+	add(EmojiInteractionRestarted)
+	add(EmojiInteractionDeleted)
+	add(EmojiSession)
+	add(EmojiSessionRunning)
+	add(EmojiSessionCompleted)
+	add(EmojiSessionInterrupted)
+	// Plural/collection entity emojis
+	add(EmojiCodebase)
+	add(EmojiProjects)
+	add(EmojiBundles)
+	add(EmojiFolders)
+	add(EmojiFiles)
+	add(EmojiDefinitions)
+	return result
+}
+
+// entityEmojisCommand MUST output all entity-identifying emojis.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️entityemojiscommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/entityEmojisCommand)
+func entityEmojisCommand(config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "entity-emojis",
+		Short: "List all entity-identifying emojis",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			emojis := AllEntityEmojis()
+			switch {
+			case config.IsJSON():
+				encoded, err := json.Marshal(emojis)
+				if err != nil {
+					return err
+				}
+				fmt.Fprintln(cmd.OutOrStdout(), string(encoded))
+			default:
+				for _, e := range emojis {
+					fmt.Fprintln(cmd.OutOrStdout(), e)
+				}
+			}
+			return nil
+		},
+	}
+	return cmd
+}
+
+// #endregion 🔖Entity Emojis Command
 
 func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -965,8 +1250,8 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-policy", false, "Exclude policies")
 	cmd.Flags().Bool("only-contributor", false, "Only show contributors")
 	cmd.Flags().Bool("no-contributor", false, "Exclude contributors")
-	cmd.Flags().Bool("only-commit", false, "Only show commits")
-	cmd.Flags().Bool("no-commit", false, "Exclude commits")
+	cmd.Flags().Bool("only-checkpoint", false, "Only show checkpoints")
+	cmd.Flags().Bool("no-checkpoint", false, "Exclude checkpoints")
 	cmd.Flags().Bool("only-statute", false, "Only show statutes")
 	cmd.Flags().Bool("no-statute", false, "Exclude statutes")
 	cmd.Flags().Bool("only-todo", false, "Only show todos")
@@ -998,12 +1283,14 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-script", false, "Exclude script files")
 	cmd.Flags().Bool("only-config", false, "Only show config files")
 	cmd.Flags().Bool("no-config", false, "Exclude config files")
-	cmd.Flags().Bool("only-test", false, "Only show test files")
-	cmd.Flags().Bool("no-test", false, "Exclude test files")
+	cmd.Flags().Bool("only-lab", false, "Only show lab files")
+	cmd.Flags().Bool("no-lab", false, "Exclude lab files")
 	cmd.Flags().Bool("only-docs", false, "Only show docs files")
 	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
 	cmd.Flags().Bool("only-resource", false, "Only show resource files")
 	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
+	cmd.Flags().Bool("only-template", false, "Only show template files")
+	cmd.Flags().Bool("no-template", false, "Exclude template files")
 	cmd.Flags().Bool("only-license", false, "Only show license files")
 	cmd.Flags().Bool("no-license", false, "Exclude license files")
 
@@ -1082,7 +1369,7 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 		{"only-draft", "no-draft", TreeNodeDraft},
 		{"only-policy", "no-policy", TreeNodePolicy},
 		{"only-contributor", "no-contributor", TreeNodeContributor},
-		{"only-commit", "no-commit", TreeNodeCommit},
+		{"only-checkpoint", "no-checkpoint", TreeNodeCheckpoint},
 		{"only-statute", "no-statute", TreeNodeStatute},
 		{"only-todo", "no-todo", TreeNodeTodo},
 		{"only-breach", "no-breach", TreeNodeBreach},
@@ -1115,9 +1402,10 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 		{"only-code", "no-code", TreeNodeFile, FileKindCode},
 		{"only-script", "no-script", TreeNodeFile, FileKindScript},
 		{"only-config", "no-config", TreeNodeFile, FileKindConfig},
-		{"only-test", "no-test", TreeNodeFile, FileKindTest},
+		{"only-lab", "no-lab", TreeNodeFile, FileKindLab},
 		{"only-docs", "no-docs", TreeNodeFile, FileKindDocs},
 		{"only-resource", "no-resource", TreeNodeFile, FileKindResource},
+		{"only-template", "no-template", TreeNodeFile, FileKindTemplate},
 		{"only-license", "no-license", TreeNodeFile, FileKindLicense},
 		{"only-implementation", "no-implementation", TreeNodeDefinition, string(DefinitionKindImplementation)},
 		{"only-interface", "no-interface", TreeNodeDefinition, string(DefinitionKindInterface)},
@@ -1164,7 +1452,7 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export [output]",
 		Short: "Export repo data to SQLite database",
-		Long:  `Export all repo data (bundles, folders, files, sections, contributors, tickets, policies, breachs) to a SQLite database file.`,
+		Long:  `Export repo data (projects, bundles, folders, files, sections, definitions) to a SQLite database file.`,
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			outputPath := ""
@@ -1189,6 +1477,613 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 }
+
+// #region 🔖Test Command
+
+// testScopeKind classifies the granularity of a testable entity scope.
+type testScopeKind string
+
+const (
+	testScopeAll        testScopeKind = "all"
+	testScopeProject    testScopeKind = "project"
+	testScopeBundle     testScopeKind = "bundle"
+	testScopeFile       testScopeKind = "file"
+	testScopeSection    testScopeKind = "section"
+	testScopeDefinition testScopeKind = "definition"
+)
+
+// testScope carries resolved information for running tests within a specific entity boundary.
+type testScope struct {
+	Kind       testScopeKind
+	BundleRoot string
+	FilePath   string
+	Section    string
+	TestName   string
+	Language   string
+}
+
+// detectBundleLanguage returns the primary language of a bundle by inspecting manifest files.
+func detectBundleLanguage(bundleRoot string) string {
+	absRoot := bundleRoot
+	if !filepath.IsAbs(absRoot) {
+		absRoot = filepath.Join(rootDir, absRoot)
+	}
+	if FileExists(filepath.Join(absRoot, "go.mod")) {
+		return "go"
+	}
+	if FileExists(filepath.Join(absRoot, "Cargo.toml")) {
+		return "rust"
+	}
+	if _, err := filepath.Glob(filepath.Join(absRoot, "*.csproj")); err == nil {
+		matches, _ := filepath.Glob(filepath.Join(absRoot, "*.csproj"))
+		if len(matches) > 0 {
+			return "csharp"
+		}
+	}
+	if _, err := filepath.Glob(filepath.Join(absRoot, "*.sln")); err == nil {
+		matches, _ := filepath.Glob(filepath.Join(absRoot, "*.sln"))
+		if len(matches) > 0 {
+			return "csharp"
+		}
+	}
+	if FileExists(filepath.Join(absRoot, "package.json")) {
+		return "typescript"
+	}
+	if FileExists(filepath.Join(absRoot, "pyproject.toml")) || FileExists(filepath.Join(absRoot, "requirements.txt")) {
+		return "python"
+	}
+	return ""
+}
+
+// resolveTestScopes converts entity IDs or URIs to testScope entries.
+func resolveTestScopes(ids []string) []testScope {
+	if len(ids) == 0 {
+		return []testScope{{Kind: testScopeAll}}
+	}
+	var scopes []testScope
+	for _, raw := range ids {
+		scope := resolveTestScope(raw)
+		scopes = append(scopes, scope)
+	}
+	return scopes
+}
+
+// resolveTestScope resolves a single entity ID or URI to a testScope.
+func resolveTestScope(raw string) testScope {
+	normalized := strings.ReplaceAll(raw, "\uFE0E", "")
+	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
+	normalized = strings.TrimSpace(normalized)
+
+	// Resolve via URI for structured IDs
+	uri := normalized
+	if !strings.HasPrefix(uri, "semiorepo://") {
+		uri = IdToUri(normalized)
+	}
+
+	if uri == "" {
+		return testScope{Kind: testScopeAll}
+	}
+
+	p := strings.TrimPrefix(uri, "semiorepo://")
+
+	// Project: semiorepo://p/i/semio-repo
+	if strings.HasPrefix(p, "p/") {
+		rest := strings.TrimPrefix(p, "p/")
+		parts := strings.SplitN(rest, "/", 3)
+		if len(parts) == 2 {
+			// project-only — find all bundles in project
+			pkc := parts[0]
+			pName := PathFromUriPath(parts[1])
+			_ = pkc
+			return testScope{Kind: testScopeProject, BundleRoot: pName}
+		}
+		if len(parts) >= 3 && strings.HasPrefix(parts[2], "b/") {
+			bRest := strings.TrimPrefix(parts[2], "b/")
+			bParts := strings.SplitN(bRest, "/", 3)
+			if len(bParts) >= 2 {
+				pkc := parts[0]
+				pName := PathFromUriPath(parts[1])
+				bkc := bParts[0]
+				bName := PathFromUriPath(bParts[1])
+				_ = pkc
+				_ = bkc
+				bundleName := strings.TrimPrefix(pName, "@") + "/" + bName
+				bundle := findBundleByName(bundleName)
+				bundleRoot := bundleName
+				if bundle != nil {
+					bundleRoot = bundle.Root
+				}
+				if len(bParts) == 2 {
+					return testScope{Kind: testScopeBundle, BundleRoot: bundleRoot, Language: detectBundleLanguage(bundleRoot)}
+				}
+				// file/section/definition inside bundle
+				return resolveTestScopeFromBundleSubPath(bundleRoot, bParts[2])
+			}
+		}
+	}
+
+	// File: semiorepo://f/path
+	if strings.HasPrefix(p, "f/") {
+		fRest := strings.TrimPrefix(p, "f/")
+		fParts := strings.SplitN(fRest, "/", 2)
+		filePath := PathFromUriPath(fParts[0])
+		lang := ""
+		if l := GetLanguage(filePath); l != nil {
+			lang = l.Name()
+		}
+		if len(fParts) == 1 {
+			return testScope{Kind: testScopeFile, FilePath: filePath, Language: lang}
+		}
+		return resolveTestScopeFromFileSubPath(filePath, lang, fParts[1])
+	}
+
+	return testScope{Kind: testScopeAll}
+}
+
+func findBundleByName(name string) *Bundle {
+	bundles := LoadBundles()
+	for i := range bundles {
+		if bundles[i].Name == name || Flat(bundles[i].Name) == Flat(name) {
+			return &bundles[i]
+		}
+	}
+	return nil
+}
+
+func resolveTestScopeFromBundleSubPath(bundleRoot string, subPath string) testScope {
+	lang := detectBundleLanguage(bundleRoot)
+	// subPath: fd/.../f/filename or f/filename or f/filename/s/Section or f/filename/d/t/TestName
+	// Simplistic: extract file, section, definition
+	parts := strings.Split(subPath, "/")
+	filePath := ""
+	section := ""
+	testName := ""
+	scopeKind := testScopeBundle
+	for i := 0; i < len(parts); i++ {
+		if parts[i] == "f" && i+1 < len(parts) {
+			filePath = filepath.Join(bundleRoot, PathFromUriPath(parts[i+1]))
+			scopeKind = testScopeFile
+			i++
+		} else if parts[i] == "s" && i+1 < len(parts) {
+			section = PathFromUriPath(parts[i+1])
+			scopeKind = testScopeSection
+			i++
+		} else if parts[i] == "d" && i+2 < len(parts) {
+			testName = PathFromUriPath(parts[i+2])
+			scopeKind = testScopeDefinition
+			i += 2
+		} else if parts[i] == "fd" && i+2 < len(parts) {
+			i += 2 // skip folder kind code and name
+		}
+	}
+	if l := GetLanguage(filePath); l != nil {
+		lang = l.Name()
+	}
+	return testScope{Kind: scopeKind, BundleRoot: bundleRoot, FilePath: filePath, Section: section, TestName: testName, Language: lang}
+}
+
+func resolveTestScopeFromFileSubPath(filePath string, lang string, subPath string) testScope {
+	section := ""
+	testName := ""
+	scopeKind := testScopeFile
+	parts := strings.Split(subPath, "/")
+	for i := 0; i < len(parts); i++ {
+		if parts[i] == "s" && i+1 < len(parts) {
+			section = PathFromUriPath(parts[i+1])
+			scopeKind = testScopeSection
+			i++
+		} else if parts[i] == "d" && i+2 < len(parts) {
+			testName = PathFromUriPath(parts[i+2])
+			scopeKind = testScopeDefinition
+			i += 2
+		}
+	}
+	return testScope{Kind: scopeKind, FilePath: filePath, Section: section, TestName: testName, Language: lang}
+}
+
+// runTestScope executes tests for a resolved testScope and streams results.
+func runTestScope(scope testScope, cmd *cobra.Command) error {
+	switch scope.Kind {
+	case testScopeAll:
+		return runAllTests(cmd)
+	case testScopeProject:
+		return runProjectTests(scope.BundleRoot, cmd)
+	case testScopeBundle:
+		return runBundleTests(scope.BundleRoot, scope.Language, "", "", cmd)
+	case testScopeFile:
+		return runFileTests(scope.FilePath, scope.Language, "", cmd)
+	case testScopeSection:
+		return runSectionTests(scope.FilePath, scope.Language, scope.Section, cmd)
+	case testScopeDefinition:
+		return runDefinitionTest(scope.FilePath, scope.Language, scope.BundleRoot, scope.TestName, cmd)
+	}
+	return nil
+}
+
+func runAllTests(cmd *cobra.Command) error {
+	bundles := LoadBundles()
+	var firstErr error
+	for _, b := range bundles {
+		lang := detectBundleLanguage(b.Root)
+		if lang == "" {
+			continue
+		}
+		if err := runBundleTests(b.Root, lang, "", "", cmd); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
+func runProjectTests(projectName string, cmd *cobra.Command) error {
+	bundles := LoadBundles()
+	flatProject := Flat(projectName)
+	var firstErr error
+	for _, b := range bundles {
+		parts := strings.SplitN(b.Name, "/", 2)
+		if Flat(parts[0]) != flatProject {
+			continue
+		}
+		lang := detectBundleLanguage(b.Root)
+		if lang == "" {
+			continue
+		}
+		if err := runBundleTests(b.Root, lang, "", "", cmd); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
+func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilter string, cmd *cobra.Command) error {
+	absRoot := bundleRoot
+	if !filepath.IsAbs(absRoot) {
+		absRoot = filepath.Join(rootDir, absRoot)
+	}
+	if lang == "" {
+		lang = detectBundleLanguage(bundleRoot)
+	}
+	switch lang {
+	case "go":
+		args := []string{"test"}
+		if testFilter != "" {
+			args = append(args, "-run", testFilter)
+		}
+		if fileFilter != "" {
+			args = append(args, "./"+fileFilter+"/...")
+		} else {
+			args = append(args, "./...")
+		}
+		return runExternalCommand(absRoot, "go", args, cmd)
+	case "rust":
+		args := []string{"test"}
+		if testFilter != "" {
+			args = append(args, testFilter)
+		}
+		return runExternalCommand(absRoot, "cargo", args, cmd)
+	case "csharp":
+		args := []string{"test"}
+		if testFilter != "" {
+			args = append(args, "--filter", testFilter)
+		}
+		return runExternalCommand(absRoot, "dotnet", args, cmd)
+	case "typescript", "javascript":
+		runner, runArgs := detectJSTestRunner(absRoot, testFilter)
+		return runExternalCommand(absRoot, runner, runArgs, cmd)
+	case "python":
+		args := []string{"run", "pytest"}
+		if fileFilter != "" {
+			args = append(args, fileFilter)
+		}
+		if testFilter != "" {
+			args = append(args, "-k", testFilter)
+		}
+		if uvExists() {
+			return runExternalCommand(absRoot, "uv", args, cmd)
+		}
+		return runExternalCommand(absRoot, "pytest", args[2:], cmd)
+	}
+	return fmt.Errorf("unknown language %q for bundle %s", lang, bundleRoot)
+}
+
+func uvExists() bool {
+	_, err := exec.LookPath("uv")
+	return err == nil
+}
+
+func detectJSTestRunner(absRoot string, testFilter string) (string, []string) {
+	// Check package.json scripts for test runner
+	pkgPath := filepath.Join(absRoot, "package.json")
+	if FileExists(pkgPath) {
+		content, err := ReadTextFile(pkgPath)
+		if err == nil {
+			if strings.Contains(content, "vitest") {
+				args := []string{"vitest", "run"}
+				if testFilter != "" {
+					args = append(args, "-t", testFilter)
+				}
+				return "npx", args
+			}
+			if strings.Contains(content, "jest") {
+				args := []string{"jest"}
+				if testFilter != "" {
+					args = append(args, "-t", testFilter)
+				}
+				return "npx", args
+			}
+			// Check if there's a "test" script
+			if strings.Contains(content, `"test"`) {
+				args := []string{"test"}
+				return "npm", args
+			}
+		}
+	}
+	// Default fallback
+	args := []string{"vitest", "run"}
+	if testFilter != "" {
+		args = append(args, "-t", testFilter)
+	}
+	return "npx", args
+}
+
+func runFileTests(filePath string, lang string, testFilter string, cmd *cobra.Command) error {
+	if lang == "" {
+		l := GetLanguage(filePath)
+		if l != nil {
+			lang = l.Name()
+		}
+	}
+	absFilePath := filePath
+	if !filepath.IsAbs(absFilePath) {
+		absFilePath = filepath.Join(rootDir, filePath)
+	}
+	bundle := GetBundleByPath(filePath)
+	if bundle == nil {
+		return fmt.Errorf("no bundle found for file %s", filePath)
+	}
+	absRoot := filepath.Join(rootDir, bundle.Root)
+	relFile, _ := filepath.Rel(absRoot, absFilePath)
+	switch lang {
+	case "go":
+		args := []string{"test", "-v", "-run"}
+		if testFilter != "" {
+			args = append(args, testFilter)
+		} else {
+			args = append(args, ".")
+		}
+		// Go test by file uses the package directory
+		fileDir := filepath.Dir(absFilePath)
+		relDir, _ := filepath.Rel(absRoot, fileDir)
+		if relDir == "." || relDir == "" {
+			args = append(args, "./...")
+		} else {
+			args = append(args, "./"+relDir+"/...")
+		}
+		return runExternalCommand(absRoot, "go", args, cmd)
+	case "python":
+		args := []string{"run", "pytest", relFile}
+		if testFilter != "" {
+			args = append(args, "-k", testFilter)
+		}
+		if uvExists() {
+			return runExternalCommand(absRoot, "uv", args, cmd)
+		}
+		return runExternalCommand(absRoot, "pytest", args[2:], cmd)
+	case "typescript", "javascript":
+		runner, runArgs := detectJSTestRunner(absRoot, testFilter)
+		runArgs = append(runArgs, relFile)
+		return runExternalCommand(absRoot, runner, runArgs, cmd)
+	case "csharp":
+		args := []string{"test"}
+		if testFilter != "" {
+			args = append(args, "--filter", testFilter)
+		}
+		return runExternalCommand(absRoot, "dotnet", args, cmd)
+	case "rust":
+		args := []string{"test"}
+		if testFilter != "" {
+			args = append(args, testFilter)
+		}
+		return runExternalCommand(absRoot, "cargo", args, cmd)
+	}
+	return fmt.Errorf("unsupported language %q for file test", lang)
+}
+
+func runSectionTests(filePath string, lang string, section string, cmd *cobra.Command) error {
+	// For Go: find all test functions in section, build pattern
+	if lang == "" {
+		l := GetLanguage(filePath)
+		if l != nil {
+			lang = l.Name()
+		}
+	}
+	absFilePath := filePath
+	if !filepath.IsAbs(absFilePath) {
+		absFilePath = filepath.Join(rootDir, filePath)
+	}
+	bundle := GetBundleByPath(filePath)
+	if bundle == nil {
+		return fmt.Errorf("no bundle found for file %s", filePath)
+	}
+	absRoot := filepath.Join(rootDir, bundle.Root)
+	switch lang {
+	case "go":
+		// Collect test names from the section
+		testPattern := collectGoTestsInSection(absFilePath, section)
+		if testPattern == "" {
+			return fmt.Errorf("no tests found in section %q of %s", section, filePath)
+		}
+		args := []string{"test", "-v", "-run", testPattern, "./..."}
+		return runExternalCommand(absRoot, "go", args, cmd)
+	default:
+		// Fallback: run all tests in the file
+		return runFileTests(filePath, lang, "", cmd)
+	}
+}
+
+func collectGoTestsInSection(filePath string, sectionName string) string {
+	content, err := ReadTextFile(filePath)
+	if err != nil {
+		return ""
+	}
+	lines := strings.Split(content, "\n")
+	flatSection := Flat(sectionName)
+	inSection := false
+	var testNames []string
+	testFuncRe := regexp.MustCompile(`^func (Test\w+)\(`)
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		// Detect section start/end
+		if strings.HasPrefix(trimmed, "// #region") {
+			regionName := strings.TrimPrefix(trimmed, "// #region")
+			regionName = strings.TrimSpace(regionName)
+			// Strip emoji prefix from region name
+			for _, r := range regionName {
+				if r > 0x7F {
+					regionName = strings.TrimSpace(regionName[len(string(r)):])
+					break
+				}
+			}
+			if Flat(regionName) == flatSection {
+				inSection = true
+				continue
+			} else if inSection {
+				inSection = false
+			}
+		}
+		if strings.HasPrefix(trimmed, "// #endregion") && inSection {
+			break
+		}
+		if inSection {
+			if m := testFuncRe.FindStringSubmatch(line); m != nil {
+				testNames = append(testNames, m[1])
+			}
+		}
+	}
+	if len(testNames) == 0 {
+		return ""
+	}
+	return "^(" + strings.Join(testNames, "|") + ")$"
+}
+
+func runDefinitionTest(filePath string, lang string, bundleRoot string, testName string, cmd *cobra.Command) error {
+	if lang == "" {
+		l := GetLanguage(filePath)
+		if l != nil {
+			lang = l.Name()
+		}
+	}
+	if bundleRoot == "" {
+		b := GetBundleByPath(filePath)
+		if b != nil {
+			bundleRoot = b.Root
+		}
+	}
+	absRoot := bundleRoot
+	if !filepath.IsAbs(absRoot) {
+		absRoot = filepath.Join(rootDir, bundleRoot)
+	}
+	// Reconstruct original name from flattened: try to find in file
+	originalName := resolveTestFunctionName(filepath.Join(rootDir, filePath), testName)
+	if originalName == "" {
+		// Try PascalCase reconstruction for Go tests
+		originalName = unflattenTestName(testName)
+	}
+	switch lang {
+	case "go":
+		args := []string{"test", "-v", "-run", "^" + originalName + "$", "./..."}
+		return runExternalCommand(absRoot, "go", args, cmd)
+	case "python":
+		args := []string{"run", "pytest", "-k", testName}
+		if uvExists() {
+			return runExternalCommand(absRoot, "uv", args, cmd)
+		}
+		return runExternalCommand(absRoot, "pytest", args[2:], cmd)
+	case "csharp":
+		args := []string{"test", "--filter", "FullyQualifiedName~" + originalName}
+		return runExternalCommand(absRoot, "dotnet", args, cmd)
+	case "rust":
+		args := []string{"test", testName}
+		return runExternalCommand(absRoot, "cargo", args, cmd)
+	default:
+		return runBundleTests(bundleRoot, lang, "", testName, cmd)
+	}
+}
+
+// resolveTestFunctionName finds the actual function name in a file matching the flat name.
+func resolveTestFunctionName(absFilePath string, flatName string) string {
+	content, err := ReadTextFile(absFilePath)
+	if err != nil {
+		return ""
+	}
+	testFuncRe := regexp.MustCompile(`func ((?:Test|Benchmark|Fuzz)\w+)\(`)
+	for _, m := range testFuncRe.FindAllStringSubmatch(content, -1) {
+		if Flat(m[1]) == flatName {
+			return m[1]
+		}
+	}
+	return ""
+}
+
+// unflattenTestName reconstructs a probable PascalCase function name from a flat name.
+func unflattenTestName(flat string) string {
+	for _, prefix := range []string{"testbenchmark", "testfuzz", "benchmark", "fuzz", "test"} {
+		if strings.HasPrefix(flat, prefix) {
+			rest := flat[len(prefix):]
+			if len(rest) > 0 {
+				return strings.ToUpper(prefix[:1]) + prefix[1:] + strings.ToUpper(rest[:1]) + rest[1:]
+			}
+		}
+	}
+	if len(flat) > 0 {
+		return strings.ToUpper(flat[:1]) + flat[1:]
+	}
+	return flat
+}
+
+func runExternalCommand(dir string, name string, args []string, cmd *cobra.Command) error {
+	c := exec.Command(name, args...)
+	c.Dir = dir
+	c.Stdout = cmd.OutOrStdout()
+	c.Stderr = cmd.ErrOrStderr()
+	c.Stdin = os.Stdin
+	cmdStr := name
+	if len(args) > 0 {
+		cmdStr += " " + strings.Join(args, " ")
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "Running: %s (in %s)\n", cmdStr, dir)
+	return c.Run()
+}
+
+func testCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "test [testable-id-or-uri]...",
+		Short: "Run tests for given entities",
+		Long: `Run tests for one or more testable entities identified by their entity IDs or URIs.
+
+With no arguments, runs all tests in the repository.
+
+Supported entity scopes (narrowing order):
+  🧰project                       - all tests in the project
+  🧰project⌨️bundle               - all tests in the bundle
+  🧰project⌨️bundle🥼file         - all tests in the test file
+  🧰project⌨️bundle🥼file🔖sec    - all tests in the section
+  🧰project⌨️bundle🥼file🔖sec🧪fn - a single test function`,
+		Args: cobra.ArbitraryArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			scopes := resolveTestScopes(args)
+			var firstErr error
+			for _, scope := range scopes {
+				if err := runTestScope(scope, cmd); err != nil && firstErr == nil {
+					firstErr = err
+				}
+			}
+			return firstErr
+		},
+	}
+}
+
+// #endregion 🔖Test Command
 
 func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "policy", Short: "Policy management commands"}
@@ -2209,10 +3104,6 @@ func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
 				var roots []*treeItem
 				for _, g := range goals {
 					item := &treeItem{id: g.ID, label: g.GetID() + " - " + g.Title + " - " + g.Status, parent: g.Parent}
-					for _, ix := range g.Interactions {
-						ixLabel := fmt.Sprintf("🔄 %s [%s] %s @%s", ix.Kind, ix.Date, ix.Client, ix.Author)
-						item.children = append(item.children, &treeItem{id: g.ID + "/" + ix.Kind + "/" + ix.Date, label: ixLabel})
-					}
 					itemMap[g.ID] = item
 				}
 				for _, t := range tickets {
@@ -2368,11 +3259,11 @@ func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-func commitCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "commit", Short: "Commit management commands"}
+func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "checkpoint", Short: "Checkpoint management commands"}
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List commits",
+		Short: "List checkpoints",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			limit := 100
@@ -2382,24 +3273,24 @@ func commitCommand(factory EngineFactory, config *Config) *cobra.Command {
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
-				stream <- Event{Kind: KindStart, Command: "commit list"}
-				commitChan := make(chan Commit)
+				stream <- Event{Kind: KindStart, Command: "checkpoint list"}
+				checkpointChan := make(chan Checkpoint)
 				go func() {
-					StreamCommits(context.Background(), &limit, commitChan, opts)
+					StreamCheckpoints(context.Background(), &limit, checkpointChan, opts)
 				}()
-				for c := range commitChan {
-					data, err := json.Marshal(map[string]interface{}{"commit": c})
+				for c := range checkpointChan {
+					data, err := json.Marshal(map[string]interface{}{"checkpoint": c})
 					if err != nil {
 						continue
 					}
-					stream <- Event{Kind: KindResult, Command: "commit list", Data: data}
+					stream <- Event{Kind: KindResult, Command: "checkpoint list", Data: data}
 				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 			return renderStream(cmd, config, stream)
 		},
 	}
-	listCmd.Flags().Int("limit", 100, "Maximum number of commits to show")
+	listCmd.Flags().Int("limit", 100, "Maximum number of checkpoints to show")
 	bindStreamFlags(listCmd)
 	root.AddCommand(listCmd)
 	return root
@@ -2515,6 +3406,11 @@ func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
+var headingEmojiRe = regexp.MustCompile(`^[\x{1F000}-\x{1FFFF}\x{2600}-\x{27FF}\x{FE00}-\x{FE0F}]+\s*`)
+
+// ExtractMarkdownSection MUST perform the ExtractMarkdownSection operation.
+// ExtractMarkdownSection holds the data fields for a ExtractMarkdownSection record.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️extractmarkdownsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractMarkdownSection)
 func ExtractMarkdownSection(content string, sectionName string) string {
 	lines := strings.Split(content, "\n")
 	headerRe := regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
@@ -2524,7 +3420,7 @@ func ExtractMarkdownSection(content string, sectionName string) string {
 	for _, line := range lines {
 		if match := headerRe.FindStringSubmatch(line); match != nil {
 			level := len(match[1])
-			name := strings.TrimSpace(match[2])
+			name := strings.TrimSpace(headingEmojiRe.ReplaceAllString(match[2], ""))
 			if !inSection && name == sectionName && level == 1 {
 				inSection = true
 				sectionLevel = level
@@ -2570,6 +3466,9 @@ func isHeaderMetaLine(text string) bool {
 	return false
 }
 
+// ExtractFileHeaderSummary MUST perform the ExtractFileHeaderSummary operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️extractfileheadersummary](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractFileHeaderSummary)
+// ExtractFileHeaderSummary performs the ExtractFileHeaderSummary operation.
 func ExtractFileHeaderSummary(filePath string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -2642,6 +3541,9 @@ func ExtractFileHeaderSummary(filePath string) string {
 	return ""
 }
 
+// ExtractFileHeaderRequirements holds the data fields for a ExtractFileHeaderRequirements record.
+// ExtractFileHeaderRequirements MUST perform the ExtractFileHeaderRequirements operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️extractfileheaderrequirements](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractFileHeaderRequirements)
 func ExtractFileHeaderRequirements(filePath string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -2707,6 +3609,9 @@ func ExtractFileHeaderRequirements(filePath string) string {
 	return strings.TrimSpace(strings.Join(requirementsLines, "\n"))
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️extractsectionleadcomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractSectionLeadComments)
+// ExtractSectionLeadComments MUST perform the ExtractSectionLeadComments operation.
+// ExtractSectionLeadComments performs the ExtractSectionLeadComments operation.
 func ExtractSectionLeadComments(content string, section Section, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
 	lowerName := strings.ToLower(section.Name)
@@ -2742,6 +3647,9 @@ func ExtractSectionLeadComments(content string, section Section, prefix string) 
 	return strings.TrimSpace(strings.Join(specLines, "\n")), strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
 
+// ExtractDefinitionDocstring MUST perform the ExtractDefinitionDocstring operation.
+// ExtractDefinitionDocstring holds the data fields for a ExtractDefinitionDocstring record.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️extractdefinitiondocstring](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractDefinitionDocstring)
 func ExtractDefinitionDocstring(content string, def Definition, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
 	for i := def.StartLine - 2; i >= 0; i-- {
@@ -2813,12 +3721,17 @@ func walkProjectFiles(project *Project) []File {
 	return files
 }
 
+// EntityEntry holds the data fields for a EntityEntry record.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter✂️entityentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/EntityEntry)
 type EntityEntry struct {
 	ID   string
 	URI  string
 	Text string
 }
 
+// GenerateProjectRequirements MUST perform the GenerateProjectRequirements operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generateprojectrequirements](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateProjectRequirements)
+// GenerateProjectRequirements performs the GenerateProjectRequirements operation.
 func GenerateProjectRequirements(projectName string) error {
 	project := findProjectByName(projectName)
 	if project == nil {
@@ -2917,6 +3830,9 @@ func GenerateProjectRequirements(projectName string) error {
 	return WriteTextFile(outputPath, sb.String())
 }
 
+// GenerateProjectDocs holds the data fields for a GenerateProjectDocs record.
+// GenerateProjectDocs MUST perform the GenerateProjectDocs operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generateprojectdocs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateProjectDocs)
 func GenerateProjectDocs(projectName string) error {
 	project := findProjectByName(projectName)
 	if project == nil {
@@ -3015,6 +3931,9 @@ func GenerateProjectDocs(projectName string) error {
 	return WriteTextFile(outputPath, sb.String())
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generateprojecttodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateProjectTodos)
+// GenerateProjectTodos holds the data fields for a GenerateProjectTodos record.
+// GenerateProjectTodos MUST perform the GenerateProjectTodos operation.
 func GenerateProjectTodos(projectName string) error {
 	project := findProjectByName(projectName)
 	if project == nil {
@@ -3278,17 +4197,19 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-code", false, "Exclude code files")
 	cmd.Flags().Bool("no-script", false, "Exclude script files")
 	cmd.Flags().Bool("no-config", false, "Exclude config files")
-	cmd.Flags().Bool("no-test", false, "Exclude test files")
+	cmd.Flags().Bool("no-lab", false, "Exclude lab files")
 	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
 	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
+	cmd.Flags().Bool("no-template", false, "Exclude template files")
 	cmd.Flags().Bool("no-license", false, "Exclude license files")
 
 	cmd.Flags().Bool("only-code", false, "Only show code files")
 	cmd.Flags().Bool("only-script", false, "Only show script files")
 	cmd.Flags().Bool("only-config", false, "Only show config files")
-	cmd.Flags().Bool("only-test", false, "Only show test files")
+	cmd.Flags().Bool("only-lab", false, "Only show lab files")
 	cmd.Flags().Bool("only-docs", false, "Only show docs files")
 	cmd.Flags().Bool("only-resource", false, "Only show resource files")
+	cmd.Flags().Bool("only-template", false, "Only show template files")
 	cmd.Flags().Bool("only-license", false, "Only show license files")
 
 	cmd.Flags().Bool("no-library", false, "Exclude library bundles")
@@ -3401,14 +4322,17 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	if v, _ := cmd.Flags().GetBool("no-config"); v {
 		excludeKinds = append(excludeKinds, FileKindConfig)
 	}
-	if v, _ := cmd.Flags().GetBool("no-test"); v {
-		excludeKinds = append(excludeKinds, FileKindTest)
+	if v, _ := cmd.Flags().GetBool("no-lab"); v {
+		excludeKinds = append(excludeKinds, FileKindLab)
 	}
 	if v, _ := cmd.Flags().GetBool("no-docs"); v {
 		excludeKinds = append(excludeKinds, FileKindDocs)
 	}
 	if v, _ := cmd.Flags().GetBool("no-resource"); v {
 		excludeKinds = append(excludeKinds, FileKindResource)
+	}
+	if v, _ := cmd.Flags().GetBool("no-template"); v {
+		excludeKinds = append(excludeKinds, FileKindTemplate)
 	}
 	if v, _ := cmd.Flags().GetBool("no-license"); v {
 		excludeKinds = append(excludeKinds, FileKindLicense)
@@ -3424,14 +4348,17 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	if v, _ := cmd.Flags().GetBool("only-config"); v {
 		includeKinds = append(includeKinds, FileKindConfig)
 	}
-	if v, _ := cmd.Flags().GetBool("only-test"); v {
-		includeKinds = append(includeKinds, FileKindTest)
+	if v, _ := cmd.Flags().GetBool("only-lab"); v {
+		includeKinds = append(includeKinds, FileKindLab)
 	}
 	if v, _ := cmd.Flags().GetBool("only-docs"); v {
 		includeKinds = append(includeKinds, FileKindDocs)
 	}
 	if v, _ := cmd.Flags().GetBool("only-resource"); v {
 		includeKinds = append(includeKinds, FileKindResource)
+	}
+	if v, _ := cmd.Flags().GetBool("only-template"); v {
+		includeKinds = append(includeKinds, FileKindTemplate)
 	}
 	if v, _ := cmd.Flags().GetBool("only-license"); v {
 		includeKinds = append(includeKinds, FileKindLicense)
@@ -4043,7 +4970,7 @@ func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 // #region 🔖Utilities
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖utilities](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Utilities)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖utilities](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Utilities)
 // General-purpose utility functions for time parsing and formatting.
 
 func parseFlexibleTime(t string) (time.Time, error) {
@@ -4067,11 +4994,11 @@ func parseFlexibleTime(t string) (time.Time, error) {
 
 // #region 🔖Models
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Models)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models)
 // Data model types for tickets, goals, and tree representation.
 
 // TicketNode holds the data fields for a ticket node record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models✂️ticketnode](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/TicketNode)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models✂️ticketnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/d/i/TicketNode)
 type TicketNode struct {
 	ID, Slug, Status string
 	Title, URI       string
@@ -4084,7 +5011,7 @@ type TicketNode struct {
 }
 
 // GoalNode holds the data fields for a goal node record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models✂️goalnode](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/GoalNode)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models✂️goalnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/d/i/GoalNode)
 type GoalNode struct {
 	ID, Title, Status  string
 	DueDate, CreatedAt string
@@ -4095,42 +5022,42 @@ type GoalNode struct {
 
 // #region 🔖Monorepo Tree Types
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types)
 // Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨entitykinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/EntityKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨entitykinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/EntityKinds)
 // EntityKinds holds the data fields for a EntityKinds record.
 var EntityKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
 	"project", "bundle", "folder", "file", "line", "range",
 	"section", "definition", "goal", "ticket", "draft", "todo",
-	"policy", "breach", "contributor", "commit", "interaction",
+	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨resourcekinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/ResourceKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨resourcekinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/ResourceKinds)
 // ResourceKinds holds the data fields for a ResourceKinds record.
 var ResourceKinds = []string{
 	"repo", "project", "bundle", "folder", "file", "section", "definition",
 }
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨diffablekinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/DiffableKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨diffablekinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/DiffableKinds)
 // DiffableKinds holds the data fields for a DiffableKinds record.
 var DiffableKinds = []string{
 	"root", "year", "month", "day", "hour",
 	"project", "bundle", "folder", "file", "section", "definition",
-	"goal", "ticket", "contributor", "commit", "interaction",
+	"goal", "ticket", "contributor", "checkpoint", "interaction", "session",
 }
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨relatedtofilekinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/RelatedToFileKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨relatedtofilekinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/RelatedToFileKinds)
 // RelatedToFileKinds holds the data fields for a RelatedToFileKinds record.
 var RelatedToFileKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
 	"project", "bundle", "folder", "goal", "ticket", "draft", "todo",
-	"policy", "breach", "contributor", "commit", "interaction",
+	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
 
 // TreeNodeKind represents a tree node kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes✂️treenodekind](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/TreeNodeKind)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes✂️treenodekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/TreeNodeKind)
 type TreeNodeKind string
 
 const (
@@ -4147,13 +5074,14 @@ const (
 	TreeNodePolicy      TreeNodeKind = "policy"
 	TreeNodeBreach      TreeNodeKind = "breach"
 	TreeNodeContributor TreeNodeKind = "contributor"
-	TreeNodeCommit      TreeNodeKind = "commit"
+	TreeNodeCheckpoint  TreeNodeKind = "checkpoint"
+	TreeNodeSession     TreeNodeKind = "session"
 	TreeNodeStatute     TreeNodeKind = "statute"
 	TreeNodeCategory    TreeNodeKind = "category"
 )
 
 // TreeNode holds the data fields for a tree node record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes✂️treenode](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/TreeNode)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes✂️treenode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/TreeNode)
 type TreeNode struct {
 	Kind        TreeNodeKind
 	ID          string
@@ -4161,6 +5089,7 @@ type TreeNode struct {
 	URI         string
 	SubKind     string
 	Description string
+	Summary     string
 	Year        int
 	Month       int
 	Day         int
@@ -4172,7 +5101,7 @@ type TreeNode struct {
 }
 
 // TreeFilter holds the data fields for a tree filter record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes✂️treefilter](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/TreeFilter)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes✂️treefilter](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/TreeFilter)
 type TreeFilter struct {
 	Query               string
 	OnlyKinds           map[TreeNodeKind]bool
@@ -4194,14 +5123,14 @@ type TreeFilter struct {
 
 // HasOnlyKinds MUST return true only when the property is present.
 // HasOnlyKinds reports whether the TreeFilter has only kinds.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️hasonlykinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/HasOnlyKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️hasonlykinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/HasOnlyKinds)
 func (f *TreeFilter) HasOnlyKinds() bool {
 	return len(f.OnlyKinds) > 0
 }
 
 // IsKindVisible MUST return true only when the condition is met.
 // IsKindVisible reports whether the TreeFilter is kind visible.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️iskindvisible](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/IsKindVisible)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️iskindvisible](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/IsKindVisible)
 func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 	if kind == TreeNodeCategory {
 		return true
@@ -4214,7 +5143,7 @@ func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 
 // MatchesSubKind MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesSubKind performs the matches sub kind operation on the TreeFilter.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchessubkind](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/MatchesSubKind)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchessubkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesSubKind)
 func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 	if subKind == "" {
 		return true
@@ -4239,7 +5168,7 @@ func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 
 // MatchesDate MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesDate performs the matches date operation on the TreeFilter.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchesdate](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/MatchesDate)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchesdate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesDate)
 func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 	if len(f.OnlyYears) > 0 {
 		found := false
@@ -4297,7 +5226,7 @@ func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 
 // MatchesStatus MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesStatus performs the matches status operation on the TreeFilter.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchesstatus](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/MatchesStatus)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchesstatus](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesStatus)
 func (f *TreeFilter) MatchesStatus(status string) bool {
 	if f.OnlyStatus == "" {
 		return true
@@ -4307,7 +5236,7 @@ func (f *TreeFilter) MatchesStatus(status string) bool {
 
 // MatchesContributor MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesContributor performs the matches contributor operation on the TreeFilter.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchescontributor](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/MatchesContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🛠️matchescontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesContributor)
 func (f *TreeFilter) MatchesContributor(contributor string) bool {
 	if len(f.OnlyContributors) > 0 {
 		for _, c := range f.OnlyContributors {
@@ -4331,7 +5260,7 @@ func (f *TreeFilter) MatchesContributor(contributor string) bool {
 
 // #region 🔖Tree Logic
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic)
 // Tree construction, filtering, searching, and rendering for goals, sections, and monorepo nodes.
 
 func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode {
@@ -4689,18 +5618,18 @@ func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 
 // #region 🔖Monorepo Tree
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree)
 // Monorepo tree builder that assembles all entity nodes into a unified tree.
 
 // TreeBuildOptions holds the data fields for a tree build options record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree✂️treebuildoptions](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/TreeBuildOptions)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree✂️treebuildoptions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/TreeBuildOptions)
 type TreeBuildOptions struct {
 	IncludeSections bool
 }
 
 // BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
 // BuildMonorepoTree constructs and returns the monorepo tree structure.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️buildmonorepotree](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/BuildMonorepoTree)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️buildmonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/BuildMonorepoTree)
 func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	var options TreeBuildOptions
 	if len(opts) > 0 {
@@ -4713,12 +5642,13 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	var drafts []*Draft
 	var policies []PolicyDef
 	var contributors []Contributor
-	var commits []Commit
+	var checkpoints []Checkpoint
 	var allFolders []Folder
 	var allFiles []File
+	var sessions []Session
 
 	var wg sync.WaitGroup
-	wg.Add(8)
+	wg.Add(9)
 
 	go func() {
 		defer wg.Done()
@@ -4755,7 +5685,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	go func() {
 		defer wg.Done()
 		limit := 100
-		commits = LoadCommits(&limit)
+		checkpoints = LoadCheckpoints(&limit)
 	}()
 	go func() {
 		defer wg.Done()
@@ -4773,9 +5703,17 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			allFiles = append(allFiles, f)
 		}
 	}()
+	go func() {
+		defer wg.Done()
+		sessionCh := make(chan Session)
+		go func() { StreamSessions(ctx, sessionCh) }()
+		for s := range sessionCh {
+			sessions = append(sessions, s)
+		}
+	}()
 	wg.Wait()
 
-	projectsNode := &TreeNode{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://p"}
+	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: "�️Codebase", URI: "semiorepo://cb"}
 	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
 
 	type folderEntry struct {
@@ -4824,14 +5762,11 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		globalFileNodes[f.Path] = fileNode
 	}
 
-	foldersNode := &TreeNode{Kind: TreeNodeCategory, ID: "folders", Label: "📁Folders", URI: "semiorepo://fds"}
 	folderRoots := buildFolderRoots(allFolders)
 	for _, folderRoot := range folderRoots {
-		foldersNode.Children = append(foldersNode.Children, folderRoot)
+		codebaseNode.Children = append(codebaseNode.Children, folderRoot)
 	}
-	attachFilesToFolders(foldersNode, allFiles, globalFileNodes)
-	sortTreeChildren(foldersNode)
-	root.Children = append(root.Children, foldersNode)
+	attachFilesToFolders(codebaseNode, allFiles, globalFileNodes)
 
 	for pi := range projects {
 		p := &projects[pi]
@@ -4896,18 +5831,16 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			sortTreeChildren(bNode)
 			pNode.Children = append(pNode.Children, bNode)
 		}
-		projectsNode.Children = append(projectsNode.Children, pNode)
+		codebaseNode.Children = append(codebaseNode.Children, pNode)
 	}
-	root.Children = append(root.Children, projectsNode)
+	sortTreeChildren(codebaseNode)
+	root.Children = append(root.Children, codebaseNode)
 
 	goalsNode := &TreeNode{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://gs"}
 	goalMap := make(map[string]*TreeNode)
 	sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
 	for _, g := range goals {
 		goalCreatedAt := ""
-		if len(g.Interactions) > 0 {
-			goalCreatedAt = g.Interactions[0].Date
-		}
 		gNode := &TreeNode{
 			Kind:        TreeNodeGoal,
 			ID:          g.GetID(),
@@ -5024,7 +5957,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, policiesNode)
 
-	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "👤Contributors", URI: "semiorepo://cs"}
+	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "🧑‍💻Contributors", URI: "semiorepo://cs"}
 	sort.Slice(contributors, func(i, j int) bool { return contributors[i].Github < contributors[j].Github })
 	for _, c := range contributors {
 		label := c.Github
@@ -5043,11 +5976,11 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, contributorsNode)
 
-	commitsNode := &TreeNode{Kind: TreeNodeCategory, ID: "commits", Label: "🔀Commits", URI: "semiorepo://cms"}
-	for ci := range commits {
-		c := &commits[ci]
+	checkpointsNode := &TreeNode{Kind: TreeNodeCategory, ID: "checkpoints", Label: "🔀Checkpoints", URI: "semiorepo://cms"}
+	for ci := range checkpoints {
+		c := &checkpoints[ci]
 		cNode := &TreeNode{
-			Kind:  TreeNodeCommit,
+			Kind:  TreeNodeCheckpoint,
 			ID:    c.GetID(),
 			Label: c.SHA[:8] + " " + c.Title,
 			URI:   c.GetURI(),
@@ -5061,9 +5994,42 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				return ""
 			}()},
 		}
-		commitsNode.Children = append(commitsNode.Children, cNode)
+		checkpointsNode.Children = append(checkpointsNode.Children, cNode)
 	}
-	root.Children = append(root.Children, commitsNode)
+	root.Children = append(root.Children, checkpointsNode)
+
+	sessionsNode := &TreeNode{Kind: TreeNodeCategory, ID: "sessions", Label: "⚪Sessions", URI: "semiorepo://s"}
+	sort.Slice(sessions, func(i, j int) bool { return sessions[i].StartedAt > sessions[j].StartedAt })
+	for si := range sessions {
+		s := &sessions[si]
+		kindEmoji := SessionKindEmoji(s.Kind)
+		label := kindEmoji + " " + s.UUID
+		if s.Client != "" {
+			label += " (" + s.Client + ")"
+		}
+		sNode := &TreeNode{
+			Kind:    TreeNodeSession,
+			ID:      s.GetID(),
+			Label:   label,
+			URI:     s.GetURI(),
+			SubKind: string(s.Kind),
+			Year:    s.Year,
+			Month:   s.Month,
+			Day:     s.Day,
+			Status:  string(s.Kind),
+			Data: map[string]interface{}{
+				"uuid":      s.UUID,
+				"kind":      string(s.Kind),
+				"client":    s.Client,
+				"startedAt": s.StartedAt,
+				"year":      float64(s.Year),
+				"month":     float64(s.Month),
+				"day":       float64(s.Day),
+			},
+		}
+		sessionsNode.Children = append(sessionsNode.Children, sNode)
+	}
+	root.Children = append(root.Children, sessionsNode)
 
 	PropagateParentIDs(root, "")
 	return root
@@ -5071,7 +6037,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 
 // PropagateParentIDs holds the data fields for a PropagateParentIDs record.
 // PropagateParentIDs MUST perform the PropagateParentIDs operation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️propagateparentids](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/PropagateParentIDs)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️propagateparentids](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/PropagateParentIDs)
 func PropagateParentIDs(node *TreeNode, parentArtifactID string) {
 	if node.Data == nil {
 		node.Data = map[string]interface{}{}
@@ -5269,7 +6235,7 @@ func sortTreeChildren(node *TreeNode) {
 
 // FilterMonorepoTree MUST preserve the tree structure while removing non-matching nodes.
 // FilterMonorepoTree filters the monorepo tree based on the given criteria.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️filtermonorepotree](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/FilterMonorepoTree)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️filtermonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/FilterMonorepoTree)
 func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
 	if filter == nil {
 		return root
@@ -5358,7 +6324,7 @@ func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query stri
 
 // SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
 // SearchMonorepoTree performs a text search across the monorepo tree.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️searchmonorepotree](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/SearchMonorepoTree)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️searchmonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/SearchMonorepoTree)
 func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	if query == "" {
 		return root
@@ -5511,7 +6477,7 @@ func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMat
 
 // RenderMonorepoTree MUST produce a complete monorepo tree output.
 // RenderMonorepoTree renders the monorepo tree into its output representation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️rendermonorepotree](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/RenderMonorepoTree)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️rendermonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/RenderMonorepoTree)
 func RenderMonorepoTree(root *TreeNode) string {
 	var sb strings.Builder
 	for i, c := range root.Children {
@@ -5522,7 +6488,7 @@ func RenderMonorepoTree(root *TreeNode) string {
 
 // RenderMonorepoTreeMarkdown MUST produce a complete monorepo tree markdown output.
 // RenderMonorepoTreeMarkdown renders the monorepo tree markdown into its output representation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️rendermonorepotreemarkdown](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Monorepo%20Tree/RenderMonorepoTreeMarkdown)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖monorepotree🛠️rendermonorepotreemarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/RenderMonorepoTreeMarkdown)
 func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 	var sb strings.Builder
 	for _, c := range root.Children {
@@ -5559,8 +6525,10 @@ func treeNodeKindToEntityKind(k TreeNodeKind) string {
 		return "breach"
 	case TreeNodeContributor:
 		return "contributor"
-	case TreeNodeCommit:
-		return "commit"
+	case TreeNodeCheckpoint:
+		return "checkpoint"
+	case TreeNodeSession:
+		return "session"
 	case TreeNodeCategory:
 		return ""
 	}
@@ -5617,23 +6585,26 @@ func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLa
 
 func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) {
 	if node.Kind == TreeNodeCategory {
-		label := node.Label
-		if node.URI != "" {
-			label = "[" + node.Label + "](" + node.URI + ")"
-		}
-		sb.WriteString(indent + "- " + label + "\n")
+		sb.WriteString(renderTemplate(mdTpl, "md/tree_node_category", map[string]interface{}{
+			"Indent": indent,
+			"Label":  node.Label,
+			"URI":    node.URI,
+		}) + "\n")
 	} else if node.Data != nil {
 		entityKind := treeNodeKindToEntityKind(node.Kind)
 		if entityKind == "" {
 			entityKind = string(node.Kind)
 		}
-		sb.WriteString(indent + renderEntityMarkdown(entityKind, node.Data) + "\n")
+		sb.WriteString(renderTemplate(mdTpl, "md/tree_node_entity", map[string]interface{}{
+			"Indent":  indent,
+			"Content": renderEntityMarkdown(entityKind, node.Data),
+		}) + "\n")
 	} else {
-		label := node.Label
-		if node.URI != "" {
-			label = "[" + node.Label + "](" + node.URI + ")"
-		}
-		sb.WriteString(indent + "- " + label + "\n")
+		sb.WriteString(renderTemplate(mdTpl, "md/tree_node_category", map[string]interface{}{
+			"Indent": indent,
+			"Label":  node.Label,
+			"URI":    node.URI,
+		}) + "\n")
 	}
 	for _, c := range node.Children {
 		renderTreeNodeMarkdown(sb, c, indent+"  ")
@@ -5644,7 +6615,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 
 // #region 🔖Query Cache
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖querycache](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Query%20Cache)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖querycache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache)
 // Local Bleve index under .semio-repo/cache for keyword search. Uses composite git fingerprint (superproject HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
 
 const cacheSchemaVersion = 2
@@ -6033,7 +7004,7 @@ func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error)
 
 // #region 🔖Tree Cache
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖treecache](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Tree%20Logic/Tree%20Cache)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖treecache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache)
 // Gzip-compressed JSON cache of the full TreeNode tree under .semio-repo/cache. Uses same git fingerprint as Query Cache for invalidation. Saves ~95% of tree build time on cache hit.
 
 func getTreeCachePath() string {
@@ -6107,6 +7078,9 @@ func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 	return &tree, &meta, nil
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖treecache🛠️buildmonorepotreecached](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/BuildMonorepoTreeCached)
+// BuildMonorepoTreeCached holds the data fields for a BuildMonorepoTreeCached record.
+// BuildMonorepoTreeCached MUST perform the BuildMonorepoTreeCached operation.
 func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	repoRoot := GetRootDir()
 	fp, newMeta := computeCompositeFingerprint(repoRoot)
@@ -6125,22 +7099,22 @@ func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *Tre
 
 // #region 🔖CLI Renderers
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers)
 // Stream renderers that format engine events for NDJSON, human-readable, and markdown output.
 
 // StreamRenderer defines the interface contract for stream renderer operations.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️streamrenderer](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/StreamRenderer)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️streamrenderer](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/StreamRenderer)
 type StreamRenderer interface {
 	Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error)
 }
 
 // NDJSONRenderer holds the data fields for a n d j s o n renderer record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️ndjsonrenderer](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/NDJSONRenderer)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️ndjsonrenderer](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/NDJSONRenderer)
 type NDJSONRenderer struct{}
 
 // Render MUST produce a complete  output.
 // Render renders the  into its output representation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🛠️render](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/Render)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/Render)
 func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	encoder := json.NewEncoder(out)
 	encoder.SetEscapeHTML(false)
@@ -6170,7 +7144,7 @@ func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, strea
 
 // #region 🔖ANSI
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖ansi](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/ANSI)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖ansi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/ANSI)
 // ANSI escape code constants for terminal colorization.
 
 const (
@@ -6193,14 +7167,14 @@ func colorize(s string, color string, enabled bool) string {
 // #endregion 🔖ANSI
 
 // HumanRenderer holds the data fields for a human renderer record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️humanrenderer](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/HumanRenderer)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️humanrenderer](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/HumanRenderer)
 type HumanRenderer struct {
 	Verbose bool
 }
 
 // Render MUST produce a complete  output.
 // Render renders the  into its output representation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🛠️render](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/Render)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/Render)
 func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	isTTY := false
@@ -6222,33 +7196,40 @@ func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream
 			exitCode = event.Done.ExitCode
 			duration := time.Since(startTime).Round(time.Millisecond)
 
-			statusIcon := "✓"
-			color := ColorGreen
+			var summary string
 			if exitCode != 0 {
-				statusIcon = "✗"
-				color = ColorRed
-			}
-
-			summary := fmt.Sprintf("%s done  %s  %s", statusIcon, event.Command, duration)
-			if exitCode != 0 {
-				summary = fmt.Sprintf("%s failed %s  %s (exit: %d)", statusIcon, event.Command, duration, exitCode)
+				summary = renderTemplate(textTpl, "text/done_failure", map[string]interface{}{
+					"IsTTY":    isTTY,
+					"Command":  event.Command,
+					"Duration": duration,
+					"ExitCode": exitCode,
+				})
+			} else {
+				summary = renderTemplate(textTpl, "text/done_success", map[string]interface{}{
+					"IsTTY":    isTTY,
+					"Command":  event.Command,
+					"Duration": duration,
+				})
 			}
 
 			if isTTY {
 				fmt.Fprint(out, "\r\033[K")
-				fmt.Fprintln(out, colorize(summary, color, true))
-			} else {
-				fmt.Fprintln(out, summary)
 			}
+			fmt.Fprintln(out, summary)
 			continue
 		}
 		if event.Kind == KindError && event.Error != nil {
 			if isTTY {
 				fmt.Fprint(out, "\r\033[K")
 			}
-			fmt.Fprintf(errOut, "%s error: %s\n", colorize("✗", ColorRed, isTTY), event.Error.Message)
+			fmt.Fprintln(errOut, renderTemplate(textTpl, "text/error", map[string]interface{}{
+				"IsTTY":   isTTY,
+				"Message": event.Error.Message,
+			}))
 			if r.Verbose && event.Error.Detail != "" {
-				fmt.Fprintf(errOut, "%s\n", event.Error.Detail)
+				fmt.Fprintln(errOut, renderTemplate(textTpl, "text/error_detail", map[string]interface{}{
+					"Detail": event.Error.Detail,
+				}))
 			}
 			continue
 		}
@@ -6256,8 +7237,10 @@ func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream
 			if isTTY {
 				fmt.Fprint(out, "\r\033[K")
 			}
-			prefix := colorize("•", ColorDim, isTTY)
-			fmt.Fprintf(errOut, "%s %s\n", prefix, event.Message)
+			fmt.Fprintln(errOut, renderTemplate(textTpl, "text/log", map[string]interface{}{
+				"IsTTY":   isTTY,
+				"Message": event.Message,
+			}))
 			continue
 		}
 		if event.Kind == KindResult && len(event.Data) > 0 {
@@ -6268,11 +7251,18 @@ func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream
 		}
 		if event.Kind == KindProgress && event.Progress != nil {
 			if isTTY {
-				fmt.Fprintf(out, "\r%s %d%% (%d/%d) %s", colorize("↻", ColorBlue, true), event.Progress.Percent, event.Progress.Current, event.Progress.Total, event.Progress.Step)
+				fmt.Fprint(out, renderTemplate(textTpl, "text/progress_tty", map[string]interface{}{
+					"Percent": event.Progress.Percent,
+					"Current": event.Progress.Current,
+					"Total":   event.Progress.Total,
+					"Step":    event.Progress.Step,
+				}))
 			} else {
-
 				if event.Progress.Percent%10 == 0 && event.Progress.Percent > 0 {
-					fmt.Fprintf(out, "progress: %d%% %s\n", event.Progress.Percent, event.Progress.Step)
+					fmt.Fprintln(out, renderTemplate(textTpl, "text/progress", map[string]interface{}{
+						"Percent": event.Progress.Percent,
+						"Step":    event.Progress.Step,
+					}))
 				}
 			}
 		}
@@ -6283,7 +7273,10 @@ func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream
 func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return fmt.Sprintf("→ %s\n", string(data))
+		return renderTemplate(textTpl, "text/result_fallback", map[string]interface{}{
+			"IsTTY": isTTY,
+			"Data":  string(data),
+		}) + "\n"
 	}
 	payload := raw
 	if inner, ok := raw["data"].(map[string]interface{}); ok {
@@ -6291,7 +7284,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	}
 
 	var sb strings.Builder
-	prefix := colorize("→", ColorBlue, isTTY)
 
 	if output, ok := payload["markdown"].(string); ok {
 		return output
@@ -6301,11 +7293,11 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
 			total := metrics["total"]
 			autofixable := metrics["autofixable"]
-			summaryText := fmt.Sprintf("found %v breachs", total)
-			if autofixable != nil {
-				summaryText += fmt.Sprintf(" (%v autofixable)", autofixable)
-			}
-			sb.WriteString(fmt.Sprintf("%s %s\n", prefix, summaryText))
+			sb.WriteString(renderTemplate(textTpl, "text/analyze_summary", map[string]interface{}{
+				"IsTTY":       isTTY,
+				"Total":       total,
+				"Autofixable": autofixable,
+			}) + "\n")
 		}
 		if breachs, ok := analyze["breachs"].([]interface{}); ok {
 			for _, v := range breachs {
@@ -6319,13 +7311,13 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-					loc := fmt.Sprintf("%s:%s", scope, line)
-					lineStr := fmt.Sprintf("  %s %s %s %s\n",
-						colorize("breach", ColorRed, isTTY),
-						kind,
-						colorize(loc, ColorDim, isTTY),
-						summary)
-					sb.WriteString(lineStr)
+					sb.WriteString(renderTemplate(textTpl, "text/breach", map[string]interface{}{
+						"IsTTY":   isTTY,
+						"Kind":    kind,
+						"Scope":   scope,
+						"Line":    line,
+						"Summary": summary,
+					}) + "\n")
 				}
 			}
 		}
@@ -6337,8 +7329,11 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	if fix, ok := payload["fix"].(map[string]interface{}); ok {
 		fixed := fix["fixed"]
 		remaining := fix["remaining"]
-		sb.WriteString(fmt.Sprintf("%s fixed %v breachs (%v remaining)\n", prefix, fixed, remaining))
-		return sb.String()
+		return renderTemplate(textTpl, "text/fix", map[string]interface{}{
+			"IsTTY":     isTTY,
+			"Fixed":     fixed,
+			"Remaining": remaining,
+		}) + "\n"
 	}
 
 	if repo, ok := payload["repo"].(map[string]interface{}); ok {
@@ -6484,21 +7479,28 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 
 	if id, ok := payload["id"].(string); ok {
 		if path, ok := payload["path"].(string); ok {
-			return fmt.Sprintf("%s %s %s\n", prefix, id, path)
+			return renderTemplate(textTpl, "text/id_path", map[string]interface{}{
+				"IsTTY": isTTY,
+				"ID":    id,
+				"Path":  path,
+			}) + "\n"
 		}
-		return fmt.Sprintf("%s item %s\n", prefix, id)
+		return renderTemplate(textTpl, "text/id_only", map[string]interface{}{
+			"IsTTY": isTTY,
+			"ID":    id,
+		}) + "\n"
 	}
 
 	return renderEntityHuman("root", payload, isTTY) + "\n"
 }
 
 // MarkdownRenderer holds the data fields for a markdown renderer record.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️markdownrenderer](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/MarkdownRenderer)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers✂️markdownrenderer](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/MarkdownRenderer)
 type MarkdownRenderer struct{}
 
 // Render MUST produce a complete  output.
 // Render renders the  into its output representation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🛠️render](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/CLI%20Renderers/Render)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/Render)
 func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	for event := range stream {
@@ -6510,9 +7512,13 @@ func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, str
 			fmt.Fprint(out, formatMarkdownResult(event.Command, event.Data))
 		}
 		if event.Kind == KindError && event.Error != nil {
-			fmt.Fprintf(errOut, "**Error: %s**\n", event.Error.Message)
+			fmt.Fprintln(errOut, renderTemplate(mdTpl, "md/error", map[string]interface{}{
+				"Message": event.Error.Message,
+			}))
 			if event.Error.Detail != "" {
-				fmt.Fprintf(errOut, "> %s\n", event.Error.Detail)
+				fmt.Fprintln(errOut, renderTemplate(mdTpl, "md/error_detail", map[string]interface{}{
+					"Detail": event.Error.Detail,
+				}))
 			}
 		}
 	}
@@ -6539,9 +7545,13 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
 			total := metrics["total"]
 			autofixable := metrics["autofixable"]
-			sb.WriteString(fmt.Sprintf("- **Total Breachs**: %v\n", total))
+			sb.WriteString(renderTemplate(mdTpl, "md/analyze_total", map[string]interface{}{
+				"Total": total,
+			}) + "\n")
 			if autofixable != nil {
-				sb.WriteString(fmt.Sprintf("- **Autofixable**: %v\n", autofixable))
+				sb.WriteString(renderTemplate(mdTpl, "md/analyze_autofixable", map[string]interface{}{
+					"Autofixable": autofixable,
+				}) + "\n")
 			}
 		}
 		if breachs, ok := analyze["breachs"].([]interface{}); ok {
@@ -6556,7 +7566,12 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-					sb.WriteString(fmt.Sprintf("- [%s](semiorepo://statute/%s) - %s:%s - %s\n", kind, PathToUriPath(kind), scope, line, summary))
+					sb.WriteString(renderTemplate(mdTpl, "md/breach", map[string]interface{}{
+						"Kind":    kind,
+						"Scope":   scope,
+						"Line":    line,
+						"Summary": summary,
+					}) + "\n")
 				}
 			}
 		}
@@ -6616,7 +7631,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 
 	singleKeys := []string{
 		"ticket", "goal", "bundle", "folder", "file", "definition",
-		"contributor", "policy", "project", "draft", "todo", "commit",
+		"contributor", "policy", "project", "draft", "todo", "checkpoint",
 	}
 	for _, key := range singleKeys {
 		if entity, ok := payload[key].(map[string]interface{}); ok {
@@ -6728,7 +7743,9 @@ func renderEventsToMarkdown(events []Event) string {
 			sb.WriteString(formatMarkdownResult(event.Command, event.Data))
 		}
 		if event.Kind == KindError && event.Error != nil {
-			sb.WriteString(fmt.Sprintf("**Error: %s**\n", event.Error.Message))
+			sb.WriteString(renderTemplate(mdTpl, "md/error", map[string]interface{}{
+				"Message": event.Error.Message,
+			}) + "\n")
 		}
 	}
 	return sb.String()
@@ -6819,7 +7836,7 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 
 // #region 🔖Mermaid
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid](semiorepo://section/semio-repo/cli/main.go/Cli%20Adapter/Mermaid)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid)
 // Mermaid diagram generation for LOC visualizations as treemap-beta strings.
 
 // mermaidEscapeLabel MUST escape double quotes in mermaid labels.
@@ -6864,8 +7881,8 @@ func mermaidBundleEmoji(kind BundleKind) string {
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidfileemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidFileEmoji)
 func mermaidFileEmoji(kind string) string {
 	switch kind {
-	case FileKindTest:
-		return EmojiFileTest
+	case FileKindLab:
+		return EmojiFileLab
 	case FileKindScript:
 		return EmojiFileScript
 	case FileKindDocs:
@@ -6874,6 +7891,8 @@ func mermaidFileEmoji(kind string) string {
 		return EmojiFileConfig
 	case FileKindResource:
 		return EmojiFileResource
+	case FileKindTemplate:
+		return EmojiFileTemplate
 	case FileKindLicense:
 		return EmojiFileLicense
 	default:
@@ -6881,7 +7900,8 @@ func mermaidFileEmoji(kind string) string {
 	}
 }
 
-// MermaidLocByProjectsBundlesFoldersFiles MUST generate a treemap-beta mermaid diagram of LOC grouped by project, bundle, folder, and file.
+// MermaidLocByProjectsBundlesFoldersFiles performs the MermaidLocByProjectsBundlesFoldersFiles operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbyprojectsbundlesfoldersfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByProjectsBundlesFoldersFiles)
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbyprojectsbundlesfoldersfiles](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByProjectsBundlesFoldersFiles)
 func MermaidLocByProjectsBundlesFoldersFiles() string {
 	projects := LoadProjects()
@@ -7034,7 +8054,8 @@ func MermaidLocByProjectsBundlesFoldersFiles() string {
 	return sb.String()
 }
 
-// MermaidLocByContributors MUST generate a treemap-beta mermaid diagram of LOC grouped by contributor.
+// MermaidLocByContributors performs the MermaidLocByContributors operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbycontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByContributors)
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbycontributors](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByContributors)
 func MermaidLocByContributors() string {
 	bundles := GetProjects()
@@ -7071,7 +8092,8 @@ func MermaidLocByContributors() string {
 	return sb.String()
 }
 
-// MermaidLocByLanguage MUST generate a treemap-beta mermaid diagram of LOC grouped by programming language.
+// MermaidLocByLanguage performs the MermaidLocByLanguage operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbylanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByLanguage)
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbylanguage](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByLanguage)
 func MermaidLocByLanguage() string {
 	ctx := context.Background()
@@ -7156,32 +8178,33 @@ func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 // #region 🔖GraphQL Types
 
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes](semiorepo://section/semio-repo/cli/main.go/GraphQL%20Types)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types)
 // GraphQL-facing domain types, enums, constants, and entity node implementations.
 
 // Node defines the interface contract for node operations.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️node](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Node)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️node](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Node)
 type Node interface {
 	IsNode()
 	GetID() string
 }
 
 // DefinitionKind represents a definition kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️definitionkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DefinitionKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️definitionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DefinitionKind)
 type DefinitionKind string
 
 const (
 	DefinitionKindImplementation DefinitionKind = "implementation"
 	DefinitionKindInterface      DefinitionKind = "interface"
 	DefinitionKindConstant       DefinitionKind = "constant"
+	DefinitionKindTest           DefinitionKind = "test"
 )
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the DefinitionKind is valid.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
 func (e DefinitionKind) IsValid() bool {
 	switch e {
-	case DefinitionKindImplementation, DefinitionKindInterface, DefinitionKindConstant:
+	case DefinitionKindImplementation, DefinitionKindInterface, DefinitionKindConstant, DefinitionKindTest:
 		return true
 	}
 	return false
@@ -7189,14 +8212,14 @@ func (e DefinitionKind) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the DefinitionKind.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/String)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
 func (e DefinitionKind) String() string {
 	return string(e)
 }
 
 // DeriveDefinitionKind MUST return a valid value for any recognized input.
 // DeriveDefinitionKind infers and returns the definition kind from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivedefinitionkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DeriveDefinitionKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivedefinitionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveDefinitionKind)
 func DeriveDefinitionKind(rawKind string) DefinitionKind {
 	switch strings.ToLower(rawKind) {
 	case "interface", "type", "trait", "abstract",
@@ -7206,13 +8229,15 @@ func DeriveDefinitionKind(rawKind string) DefinitionKind {
 		return DefinitionKindInterface
 	case "const", "constant", "enum", "var", "let", "static":
 		return DefinitionKindConstant
+	case "test":
+		return DefinitionKindTest
 	default:
 		return DefinitionKindImplementation
 	}
 }
 
 // TicketStatus represents a ticket status value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketstatus](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketStatus)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketstatus](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketStatus)
 type TicketStatus string
 
 const (
@@ -7222,7 +8247,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the TicketStatus is valid.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
 func (e TicketStatus) IsValid() bool {
 	switch e {
 	case TicketStatusOpen, TicketStatusClosed:
@@ -7233,13 +8258,13 @@ func (e TicketStatus) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the TicketStatus.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/String)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
 func (e TicketStatus) String() string {
 	return string(e)
 }
 
 // BreachPriority represents a breach priority value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️breachpriority](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/BreachPriority)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️breachpriority](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/BreachPriority)
 type BreachPriority string
 
 const (
@@ -7250,7 +8275,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the BreachPriority is valid.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
 func (e BreachPriority) IsValid() bool {
 	switch e {
 	case BreachPriorityHigh, BreachPriorityMedium, BreachPriorityLow:
@@ -7261,13 +8286,13 @@ func (e BreachPriority) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the BreachPriority.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/String)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
 func (e BreachPriority) String() string {
 	return string(e)
 }
 
 // AllowedLLMs holds the allowed l l ms values.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🪨allowedllms](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/AllowedLLMs)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🪨allowedllms](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AllowedLLMs)
 var AllowedLLMs = []string{
 	"opus-4-6",
 	"opus-4-5",
@@ -7288,7 +8313,7 @@ var AllowedLLMs = []string{
 }
 
 // AllowedClients holds the allowed clients values.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🪨allowedclients](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/AllowedClients)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🪨allowedclients](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AllowedClients)
 var AllowedClients = []string{
 	"vscode",
 	"copilot-chat",
@@ -7305,21 +8330,21 @@ var AllowedClients = []string{
 
 // NormalizeLLMSlug MUST be idempotent for already-normalized values.
 // NormalizeLLMSlug normalizes the l l m slug to its canonical form.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️normalizellmslug](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/NormalizeLLMSlug)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️normalizellmslug](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/NormalizeLLMSlug)
 func NormalizeLLMSlug(llm string) string {
 	return strings.ToLower(Slugify(llm))
 }
 
 // NormalizeClientSlug MUST be idempotent for already-normalized values.
 // NormalizeClientSlug normalizes the client slug to its canonical form.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️normalizeclientslug](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/NormalizeClientSlug)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️normalizeclientslug](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/NormalizeClientSlug)
 func NormalizeClientSlug(client string) string {
 	return strings.ToLower(Slugify(client))
 }
 
 // ResolveAllowedLLM MUST return an error for unrecognized values.
 // ResolveAllowedLLM resolves and validates the allowed l l m against known values.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️resolveallowedllm](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ResolveAllowedLLM)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️resolveallowedllm](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ResolveAllowedLLM)
 func ResolveAllowedLLM(llm string) (string, error) {
 	llmSlug := NormalizeLLMSlug(llm)
 	bestMatch := ""
@@ -7338,7 +8363,7 @@ func ResolveAllowedLLM(llm string) (string, error) {
 
 // ResolveAllowedClient MUST return an error for unrecognized values.
 // ResolveAllowedClient resolves and validates the allowed client against known values.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️resolveallowedclient](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ResolveAllowedClient)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️resolveallowedclient](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ResolveAllowedClient)
 func ResolveAllowedClient(client string) (string, error) {
 	uiSlug := NormalizeClientSlug(client)
 	bestMatch := ""
@@ -7356,28 +8381,28 @@ func ResolveAllowedClient(client string) (string, error) {
 }
 
 // Range holds the data fields for a range record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️range](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Range)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️range](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Range)
 type Range struct {
 	Start int `json:"start"`
 	End   int `json:"end"`
 }
 
 // LineMetrics holds the data fields for a line metrics record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️linemetrics](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/LineMetrics)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️linemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/LineMetrics)
 type LineMetrics struct {
 	Added   int `yaml:"added" json:"added"`
 	Removed int `yaml:"removed" json:"removed"`
 }
 
 // DiffLines holds the data fields for a diff lines record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️difflines](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DiffLines)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️difflines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DiffLines)
 type DiffLines struct {
 	Added   []int
 	Removed []int
 }
 
 // CountMetrics holds the data fields for a count metrics record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️countmetrics](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/CountMetrics)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️countmetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/CountMetrics)
 type CountMetrics struct {
 	Added   int `json:"added"`
 	Updated int `json:"updated"`
@@ -7385,7 +8410,7 @@ type CountMetrics struct {
 }
 
 // ContributorIcons holds the data fields for a contributor icons record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributoricons](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorIcons)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributoricons](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorIcons)
 type ContributorIcons struct {
 	Avatar      *string `json:"avatar,omitempty"`
 	AvatarRound *string `json:"avatarRound,omitempty"`
@@ -7393,21 +8418,21 @@ type ContributorIcons struct {
 }
 
 // ContributorLink holds the data fields for a contributor link record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorlink](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorLink)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorlink](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorLink)
 type ContributorLink struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
 // TicketDate holds the data fields for a ticket date record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketdate](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketDate)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketdate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketDate)
 type TicketDate struct {
 	Created  time.Time  `json:"created"`
 	Finished *time.Time `json:"finished,omitempty"`
 }
 
 // TicketSectionMetrics holds the data fields for a ticket section metrics record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketsectionmetrics](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketSectionMetrics)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketsectionmetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketSectionMetrics)
 type TicketSectionMetrics struct {
 	Range       *Range       `json:"range,omitempty"`
 	Definitions []string     `json:"definitions,omitempty"`
@@ -7415,7 +8440,7 @@ type TicketSectionMetrics struct {
 }
 
 // TicketFileMetricsEntry holds the data fields for a ticket file metrics entry record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketfilemetricsentry](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketFileMetricsEntry)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketfilemetricsentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketFileMetricsEntry)
 type TicketFileMetricsEntry struct {
 	Path     string                          `json:"path"`
 	Lines    *LineMetrics                    `json:"lines,omitempty"`
@@ -7423,7 +8448,7 @@ type TicketFileMetricsEntry struct {
 }
 
 // AnalyzeMetrics holds the data fields for a analyze metrics record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️analyzemetrics](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/AnalyzeMetrics)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️analyzemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AnalyzeMetrics)
 type AnalyzeMetrics struct {
 	Total       int            `json:"total"`
 	ByPriority  *PriorityCount `json:"byPriority"`
@@ -7431,7 +8456,7 @@ type AnalyzeMetrics struct {
 }
 
 // PriorityCount holds the data fields for a priority count record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️prioritycount](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/PriorityCount)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️prioritycount](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/PriorityCount)
 type PriorityCount struct {
 	High   int `json:"high"`
 	Medium int `json:"medium"`
@@ -7439,7 +8464,7 @@ type PriorityCount struct {
 }
 
 // Repo holds the data fields for a repo record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️repo](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Repo)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Repo)
 type Repo struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
@@ -7450,21 +8475,21 @@ type Repo struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Repo is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (r *Repo) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Repo.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (r *Repo) GetID() string { return emojiText(EmojiRepo) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Repo.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (r *Repo) GetURI() string { return "semiorepo://" }
 
 // ProjectKind represents a project kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️projectkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ProjectKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️projectkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ProjectKind)
 type ProjectKind string
 
 const (
@@ -7476,13 +8501,13 @@ const (
 
 // String MUST return the canonical string value.
 // String returns the string representation of the ProjectKind.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/String)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
 func (e ProjectKind) String() string {
 	return string(e)
 }
 
 // BundleKind represents a bundle kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️bundlekind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/BundleKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️bundlekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/BundleKind)
 type BundleKind string
 
 const (
@@ -7497,7 +8522,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the BundleKind is valid.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
 func (e BundleKind) IsValid() bool {
 	switch e {
 	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets, BundleKindRepo:
@@ -7508,14 +8533,14 @@ func (e BundleKind) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the BundleKind.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/String)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
 func (e BundleKind) String() string {
 	return string(e)
 }
 
 // DeriveProjectKind MUST return a valid value for any recognized input.
 // DeriveProjectKind infers and returns the project kind from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️deriveprojectkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DeriveProjectKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️deriveprojectkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveProjectKind)
 func DeriveProjectKind(name string) ProjectKind {
 	switch name {
 	case "semio":
@@ -7533,7 +8558,7 @@ func DeriveProjectKind(name string) ProjectKind {
 
 // DeriveBundleKind MUST return a valid value for any recognized input.
 // DeriveBundleKind infers and returns the bundle kind from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivebundlekind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DeriveBundleKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivebundlekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveBundleKind)
 func DeriveBundleKind(name string, root string) BundleKind {
 	absRoot := root
 	if !filepath.IsAbs(absRoot) {
@@ -7560,7 +8585,7 @@ func DeriveBundleKind(name string, root string) BundleKind {
 }
 
 // Project holds the data fields for a project record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️project](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Project)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️project](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Project)
 type Project struct {
 	Name    string      `json:"name"`
 	Root    string      `json:"root"`
@@ -7570,12 +8595,12 @@ type Project struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Project is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (p *Project) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Project.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (p *Project) GetID() string {
 	emoji := EmojiProjectUser
 	switch string(p.Kind) {
@@ -7597,14 +8622,14 @@ func (p *Project) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Project.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (p *Project) GetURI() string {
 	pkc := ProjectKindToCode(p.Kind)
 	return fmt.Sprintf("semiorepo://p/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(p.Name, "@")))
 }
 
 // Bundle holds the data fields for a bundle record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️bundle](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Bundle)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️bundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Bundle)
 type Bundle struct {
 	Name        string     `json:"name"`
 	Root        string     `json:"root"`
@@ -7616,7 +8641,7 @@ type Bundle struct {
 }
 
 // Package holds the data fields for a package record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️package](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Package)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️package](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Package)
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -7626,12 +8651,12 @@ type Package struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Bundle is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (b *Bundle) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Bundle.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (b *Bundle) GetID() string {
 	emoji := EmojiBundleLibrary
 	switch string(b.Kind) {
@@ -7664,7 +8689,7 @@ func (b *Bundle) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Bundle.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (b *Bundle) GetURI() string {
 	parts := strings.SplitN(b.Name, "/", 2)
 	projectCode := parts[0]
@@ -7711,7 +8736,7 @@ func bundlePathPrefix(name string) string {
 }
 
 // FolderKind represents a folder kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️folderkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/FolderKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️folderkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/FolderKind)
 type FolderKind string
 
 const (
@@ -7722,7 +8747,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the FolderKind is valid.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsValid)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
 func (e FolderKind) IsValid() bool {
 	switch e {
 	case FolderKindOrganization, FolderKindRequired, FolderKindRoot:
@@ -7733,7 +8758,7 @@ func (e FolderKind) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the FolderKind.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/String)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
 func (e FolderKind) String() string {
 	return string(e)
 }
@@ -7743,6 +8768,9 @@ func (e FolderKind) String() string {
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivefolderkind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DeriveFolderKind)
 var folderKindCache sync.Map
 
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivefolderkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveFolderKind)
+// DeriveFolderKind holds the data fields for a DeriveFolderKind record.
+// DeriveFolderKind MUST perform the DeriveFolderKind operation.
 func DeriveFolderKind(path string) FolderKind {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") {
@@ -7783,7 +8811,7 @@ func DeriveFolderKind(path string) FolderKind {
 
 // IsGeneratedFolder MUST return true only when the condition is met.
 // IsGeneratedFolder reports whether the value is generated folder.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isgeneratedfolder](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsGeneratedFolder)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isgeneratedfolder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsGeneratedFolder)
 func IsGeneratedFolder(path string) bool {
 	parts := strings.Split(filepath.ToSlash(path), "/")
 	for _, part := range parts {
@@ -7805,7 +8833,7 @@ func IsGeneratedFolder(path string) bool {
 }
 
 // Folder holds the data fields for a folder record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️folder](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Folder)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️folder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Folder)
 type Folder struct {
 	ID        string     `json:"id"`
 	Path      string     `json:"path"`
@@ -7820,25 +8848,25 @@ type Folder struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Folder is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (f *Folder) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Folder.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (f *Folder) GetID() string {
 	return buildFolderID(f.Path, f.BundleID)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Folder.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (f *Folder) GetURI() string {
 	return buildFileUriFromPath(f.Path)
 }
 
 // File holds the data fields for a file record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️file](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/File)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️file](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/File)
 type File struct {
 	ID        string  `json:"id"`
 	Path      string  `json:"path"`
@@ -7856,9 +8884,10 @@ const (
 	FileKindCode     = "code"
 	FileKindScript   = "script"
 	FileKindConfig   = "config"
-	FileKindTest     = "test"
+	FileKindLab      = "lab"
 	FileKindDocs     = "docs"
 	FileKindResource = "resource"
+	FileKindTemplate = "template"
 	FileKindLicense  = "license"
 )
 
@@ -7879,17 +8908,19 @@ const (
 	EmojiFolderRequired       = "🛅"
 	EmojiFolderRoot           = "🌱"
 	EmojiFileCode             = "💻"
-	EmojiFileTest             = "🧪"
+	EmojiFileLab              = "🥼"
 	EmojiFileScript           = "📜"
 	EmojiFileDocs             = "📃"
 	EmojiFileConfig           = "⚙️"
 	EmojiFileResource         = "💾"
+	EmojiFileTemplate         = "📋"
 	EmojiFileLicense          = "⚖️"
 	EmojiLine                 = "📌"
 	EmojiSection              = "🔖"
 	EmojiDefinitionImpl       = "🛠️"
 	EmojiDefinitionInterface  = "✂️"
 	EmojiDefinitionConstant   = "🪨"
+	EmojiDefinitionTest       = "🧪"
 	EmojiYear                 = "🎆"
 	EmojiMonth                = "🌙"
 	EmojiDay                  = "☀️"
@@ -7904,16 +8935,21 @@ const (
 	EmojiBreach               = "🚫"
 	EmojiBreachScope          = "🔍"
 	EmojiContributor          = "🧑‍💻"
-	EmojiCommit               = "🔀"
+	EmojiCheckpoint           = "🔀"
 	EmojiInteractionStarted   = "🌱"
 	EmojiInteractionEdited    = "✏️"
 	EmojiInteractionFinished  = "✅"
 	EmojiInteractionRestarted = "🔁"
 	EmojiInteractionDeleted   = "🗑️"
+	EmojiSession              = "⚪"
+	EmojiSessionRunning       = "🟡"
+	EmojiSessionCompleted     = "🟢"
+	EmojiSessionInterrupted   = "🔴"
 )
 
 var (
 	EmojiRepo         = ""
+	EmojiCodebase     = "�️"
 	EmojiProjects     = "🏗️"
 	EmojiBundles      = "📦"
 	EmojiFolders      = "📁"
@@ -7933,7 +8969,8 @@ var (
 	EmojiPolicies     = "👮"
 	EmojiBreaches     = "🚫"
 	EmojiContributors = "🧑‍💻"
-	EmojiCommits      = "🔀"
+	EmojiCheckpoints  = "🔀"
+	EmojiSessions     = "⚪"
 	EmojiInteractions = ""
 	EmojiTerritorys   = ""
 	EmojiTerritory    = ""
@@ -7943,7 +8980,7 @@ var (
 
 // DeriveFileKind MUST return a valid value for any recognized input.
 // DeriveFileKind infers and returns the file kind from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivefilekind](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/DeriveFileKind)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivefilekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveFileKind)
 func DeriveFileKind(name string) string {
 	ext := strings.ToLower(filepath.Ext(name))
 	nameLower := strings.ToLower(name)
@@ -7960,7 +8997,7 @@ func DeriveFileKind(name string) string {
 		strings.HasSuffix(nameNoExt, ".benchmark") ||
 		strings.HasSuffix(nameNoExt, ".stories") || strings.HasSuffix(nameNoExt, ".story") ||
 		strings.HasPrefix(nameLower, "test_") || strings.HasPrefix(nameLower, "test.") || nameLower == "conftest.py" {
-		return FileKindTest
+		return FileKindLab
 	}
 
 	if strings.HasSuffix(nameNoExt, ".config") || strings.HasSuffix(nameNoExt, ".conf") ||
@@ -7980,6 +9017,10 @@ func DeriveFileKind(name string) string {
 		return FileKindConfig
 	case ".md", ".txt", ".rst", ".adoc", ".asciidoc", ".org", ".rdoc":
 		return FileKindDocs
+	case ".tpl", ".tmpl", ".gotmpl", ".mustache", ".hbs", ".handlebars",
+		".ejs", ".njk", ".nunjucks", ".jinja", ".jinja2", ".j2",
+		".liquid", ".pug", ".jade", ".slim", ".haml":
+		return FileKindTemplate
 	case ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".bmp", ".tiff", ".tif",
 		".ttf", ".woff", ".woff2", ".eot", ".otf",
 		".mp3", ".mp4", ".wav", ".ogg", ".webm", ".avi", ".mov",
@@ -8036,12 +9077,12 @@ func DeriveFileKind(name string) string {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the File is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (f *File) IsNode() {}
 
 // IsGenerated MUST return true only when the condition is met.
 // IsGenerated reports whether the value is generated.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isgenerated](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsGenerated)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isgenerated](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsGenerated)
 func IsGenerated(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
 	if base == "package-lock.json" || base == "yarn.lock" || base == "pnpm-lock.yaml" || base == "go.sum" || base == "uv.lock" {
@@ -8061,7 +9102,7 @@ func IsGenerated(path string) bool {
 
 // IsSemanticallyIgnored MUST return true only when the condition is met.
 // IsSemanticallyIgnored reports whether the value is semantically ignored.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️issemanticallyignored](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsSemanticallyIgnored)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️issemanticallyignored](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsSemanticallyIgnored)
 func IsSemanticallyIgnored(path string) bool {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
@@ -8077,20 +9118,20 @@ func IsSemanticallyIgnored(path string) bool {
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the File.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (f *File) GetID() string {
 	return buildFileID(f.Path, f.BundleID)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the File.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (f *File) GetURI() string {
 	return buildFileUriFromPath(f.Path)
 }
 
 // Section holds the data fields for a section record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️section](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Section)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️section](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Section)
 type Section struct {
 	ID          string       `json:"id,omitempty"`
 	Name        string       `json:"name"`
@@ -8106,12 +9147,12 @@ type Section struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Section is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (s *Section) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Section.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (s *Section) GetID() string {
 	if s.FilePath != "" {
 		fileID := buildFileID(s.FilePath, nil)
@@ -8125,7 +9166,7 @@ func (s *Section) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Section.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (s *Section) GetURI() string {
 	if s.FilePath != "" && s.Path != "" {
 		return buildSectionUriFromPath(s.FilePath + "#" + s.Path)
@@ -8137,7 +9178,7 @@ func (s *Section) GetURI() string {
 }
 
 // Definition holds the data fields for a definition record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️definition](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Definition)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️definition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Definition)
 type Definition struct {
 	ID          string         `json:"id,omitempty"`
 	Name        string         `json:"name"`
@@ -8152,12 +9193,12 @@ type Definition struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Definition is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (d *Definition) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Definition.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (d *Definition) GetID() string {
 	if d.FilePath != "" {
 		fileID := buildFileID(d.FilePath, nil)
@@ -8173,7 +9214,7 @@ func (d *Definition) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Definition.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (d *Definition) GetURI() string {
 	dkc := definitionKindCode(map[string]interface{}{"kind": string(d.Kind)})
 	if d.FilePath != "" {
@@ -8186,7 +9227,7 @@ func (d *Definition) GetURI() string {
 }
 
 // Contributor holds the data fields for a contributor record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributor](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Contributor)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Contributor)
 type Contributor struct {
 	Github        string                          `yaml:"github" json:"github"`
 	Name          string                          `yaml:"name" json:"name"`
@@ -8200,15 +9241,15 @@ type Contributor struct {
 }
 
 // ContributorContributionsTree holds the data fields for a contributor contributions tree record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorcontributionstree](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorContributionsTree)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorcontributionstree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorContributionsTree)
 type ContributorContributionsTree struct {
-	Commits []*Commit
-	Tickets []*Ticket
-	Bundles []*ContributorBundle
+	Checkpoints []*Checkpoint
+	Tickets     []*Ticket
+	Bundles     []*ContributorBundle
 }
 
 // ContributorBundle holds the data fields for a contributor bundle record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorbundle](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorBundle)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorbundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorBundle)
 type ContributorBundle struct {
 	Name    string
 	Lines   LineMetrics
@@ -8216,7 +9257,7 @@ type ContributorBundle struct {
 }
 
 // ContributorFolder holds the data fields for a contributor folder record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorfolder](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorFolder)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorfolder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorFolder)
 type ContributorFolder struct {
 	Name  string
 	Lines LineMetrics
@@ -8224,7 +9265,7 @@ type ContributorFolder struct {
 }
 
 // ContributorFile holds the data fields for a contributor file record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorfile](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorFile)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorFile)
 type ContributorFile struct {
 	Name     string
 	Lines    LineMetrics
@@ -8232,7 +9273,7 @@ type ContributorFile struct {
 }
 
 // ContributorSection holds the data fields for a contributor section record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorsection](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorSection)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorSection)
 type ContributorSection struct {
 	Name        string
 	Lines       LineMetrics
@@ -8240,7 +9281,7 @@ type ContributorSection struct {
 }
 
 // ContributorDefinition holds the data fields for a contributor definition record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributordefinition](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorDefinition)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributordefinition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorDefinition)
 type ContributorDefinition struct {
 	Name  string
 	Lines LineMetrics
@@ -8248,26 +9289,26 @@ type ContributorDefinition struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Contributor is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (c *Contributor) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Contributor.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (c *Contributor) GetID() string {
 	return emojiText(EmojiContributor) + Flat(c.Github)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Contributor.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (c *Contributor) GetURI() string {
 	return "semiorepo://cs/" + PathToUriPath(c.Github)
 }
 
-// Commit holds the data fields for a commit record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️commit](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Commit)
-type Commit struct {
+// Checkpoint holds the data fields for a checkpoint record.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️checkpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Checkpoint)
+type Checkpoint struct {
 	ID       string    `json:"id"`
 	SHA      string    `json:"sha"`
 	Title    string    `json:"title"`
@@ -8276,45 +9317,45 @@ type Commit struct {
 }
 
 // IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Commit is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
-func (c *Commit) IsNode() {}
+// IsNode reports whether the Checkpoint is node.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+func (c *Checkpoint) IsNode() {}
 
 // #region 🔖Drafts
 
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts](semiorepo://section/semio-repo/cli/main.go/GraphQL%20Types/Drafts)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts)
 // Draft management for creating, listing, and deleting draft file sets.
 
 // Draft holds the data fields for a draft record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts✂️draft](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/Draft)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts✂️draft](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/Draft)
 type Draft struct {
 	ID string `json:"id"`
 }
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Draft.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetID)
 func (d *Draft) GetID() string {
 	return emojiText(EmojiDraft) + Flat(d.ID)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Draft.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetURI)
 func (d *Draft) GetURI() string {
 	return "semiorepo://drs/" + PathToUriPath(d.ID)
 }
 
 // GetDraftsPath MUST return the stored value without modification.
 // GetDraftsPath returns the drafts path of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️getdraftspath](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/GetDraftsPath)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️getdraftspath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetDraftsPath)
 func GetDraftsPath() string {
 	return filepath.Join(GetRootDir(), ".semio-repo", "✍️")
 }
 
 // ListDrafts MUST return a consistent snapshot of available entries.
 // ListDrafts returns all available drafts entries.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️listdrafts](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/ListDrafts)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️listdrafts](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/ListDrafts)
 func ListDrafts() ([]*Draft, error) {
 	draftsDir := GetDraftsPath()
 	if !IsDir(draftsDir) {
@@ -8335,7 +9376,7 @@ func ListDrafts() ([]*Draft, error) {
 
 // CreateDraft MUST persist the new entity and return a reference to it.
 // CreateDraft creates a new draft and persists it.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️createdraft](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/CreateDraft)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️createdraft](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/CreateDraft)
 func CreateDraft(title string, files []string) (*Draft, error) {
 	id := Slugify(title)
 	if id == "" {
@@ -8363,7 +9404,7 @@ func CreateDraft(title string, files []string) (*Draft, error) {
 
 // DeleteDraft MUST remove all associated data for the entity.
 // DeleteDraft removes the specified draft.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️deletedraft](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Drafts/DeleteDraft)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️deletedraft](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/DeleteDraft)
 func DeleteDraft(id string) error {
 	draftPath := filepath.Join(GetDraftsPath(), id)
 	if !IsDir(draftPath) {
@@ -8375,33 +9416,34 @@ func DeleteDraft(id string) error {
 // #endregion 🔖Drafts
 
 // GetID MUST return the stored value without modification.
-// GetID returns the i d of the Commit.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
-func (c *Commit) GetID() string { return emojiText(EmojiCommit) + c.SHA }
+// GetID returns the i d of the Checkpoint.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+func (c *Checkpoint) GetID() string { return emojiText(EmojiCheckpoint) + c.SHA }
 
 // GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Commit.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
-func (c *Commit) GetURI() string {
+// GetURI returns the u r i of the Checkpoint.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+func (c *Checkpoint) GetURI() string {
 	return "semiorepo://cms/" + c.SHA
 }
 
 // Ticket holds the data fields for a ticket record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticket](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Ticket)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Ticket)
 type Ticket struct {
 	Year          int                   `json:"-" yaml:"-"`
 	Month         int                   `json:"-" yaml:"-"`
 	Day           int                   `json:"-" yaml:"-"`
 	Slug          string                `json:"-" yaml:"-"`
 	Title         string                `json:"title" yaml:"title"`
-	Status        TicketStatus          `json:"-" yaml:"-"`
+	Status        TicketStatus          `json:"status,omitempty" yaml:"status,omitempty"`
 	Description   string                `json:"description,omitempty" yaml:"description,omitempty"`
-	Summary       string                `json:"-" yaml:"-"`
+	Summary       string                `json:"summary,omitempty" yaml:"summary,omitempty"`
 	Management    *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
 	Goal          string                `json:"goal,omitempty" yaml:"goal,omitempty"`
 	Parent        string                `json:"-" yaml:"-"`
-	Interactions  []Interaction         `json:"interactions,omitempty" yaml:"interactions,omitempty"`
-	Agents        []TicketAgent         `json:"agents,omitempty" yaml:"agents,omitempty"`
+	Sessions      []string              `json:"sessions,omitempty" yaml:"sessions,omitempty"`
+	Interactions  []Interaction         `json:"-" yaml:"-"`
+	Agents        []TicketAgent         `json:"-" yaml:"-"`
 	FolderPath    string                `json:"-" yaml:"-"`
 	JsonPath      string                `json:"-" yaml:"-"`
 	ImportantPath string                `json:"-" yaml:"-"`
@@ -8409,36 +9451,62 @@ type Ticket struct {
 
 // UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
 // UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️unmarshaljsonticket](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/UnmarshalJSONTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️unmarshaljson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)
 func (t *Ticket) UnmarshalJSON(data []byte) error {
-	type TicketAlias Ticket
+	type TicketAlias struct {
+		Title       string                `json:"title"`
+		Description string                `json:"description,omitempty"`
+		Status      TicketStatus          `json:"status,omitempty"`
+		Summary     string                `json:"summary,omitempty"`
+		Management  *TicketManagementData `json:"github,omitempty"`
+		Goal        string                `json:"goal,omitempty"`
+		Parent      string                `json:"parent,omitempty"`
+	}
 	aux := &struct {
 		TicketAlias
-		PromptLegacy       string        `json:"prompt"`
-		InteractionsLegacy []Interaction `json:"interactions"`
-		ParentLegacy       string        `json:"parent"`
-		StatusLegacy       TicketStatus  `json:"status"`
-		SummaryLegacy      string        `json:"summary"`
-		SessionsLegacy     []TicketAgent `json:"sessions"`
+		PromptLegacy       string          `json:"prompt"`
+		InteractionsLegacy []Interaction   `json:"interactions"`
+		AgentsLegacy       []TicketAgent   `json:"agents"`
+		SessionsRaw        json.RawMessage `json:"sessions"`
 	}{}
 	if err := json.Unmarshal(data, aux); err != nil {
 		return err
 	}
-	*t = Ticket(aux.TicketAlias)
+	*t = Ticket{
+		Title:       aux.Title,
+		Description: aux.Description,
+		Status:      aux.Status,
+		Summary:     aux.Summary,
+		Management:  aux.Management,
+		Goal:        aux.Goal,
+		Parent:      aux.Parent,
+	}
 	if t.Description == "" && aux.PromptLegacy != "" {
 		t.Description = aux.PromptLegacy
 	}
 	if len(aux.InteractionsLegacy) > 0 {
 		t.Interactions = aux.InteractionsLegacy
 	}
-	if t.Parent == "" && aux.ParentLegacy != "" {
-		t.Parent = aux.ParentLegacy
+	if len(aux.AgentsLegacy) > 0 {
+		t.Agents = aux.AgentsLegacy
 	}
-	if t.Status == "" && aux.StatusLegacy != "" {
-		t.Status = aux.StatusLegacy
-	}
-	if t.Summary == "" && aux.SummaryLegacy != "" {
-		t.Summary = aux.SummaryLegacy
+	if len(aux.SessionsRaw) > 0 {
+		var sessionIDs []string
+		if err := json.Unmarshal(aux.SessionsRaw, &sessionIDs); err == nil {
+			for _, sessionID := range sessionIDs {
+				appendTicketSessionID(t, sessionID)
+			}
+		} else {
+			var legacyAgents []TicketAgent
+			if err := json.Unmarshal(aux.SessionsRaw, &legacyAgents); err == nil {
+				for _, legacyAgent := range legacyAgents {
+					appendTicketSessionID(t, legacyAgent.Session)
+				}
+				if len(t.Agents) == 0 {
+					t.Agents = legacyAgents
+				}
+			}
+		}
 	}
 	if t.Summary == "" {
 		for i := len(t.Interactions) - 1; i >= 0; i-- {
@@ -8448,9 +9516,6 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 			}
 		}
 	}
-	if len(t.Agents) == 0 && len(aux.SessionsLegacy) > 0 {
-		t.Agents = aux.SessionsLegacy
-	}
 	if t.Status == "" && len(t.Interactions) > 0 {
 		lastKind := t.Interactions[len(t.Interactions)-1].Kind
 		if lastKind == string(repopkg.EventTicketClose) {
@@ -8459,27 +9524,63 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 			t.Status = TicketStatusOpen
 		}
 	}
+	for _, agent := range t.Agents {
+		appendTicketSessionID(t, agent.Session)
+	}
 	if t.Status == "" {
 		t.Status = TicketStatusOpen
+	}
+
+	if t.Goal != "" && strings.Contains(t.Goal, emojiText(EmojiGoal)) {
+		t.Goal = semioIDToGoalPath(t.Goal)
+	}
+
+	contributorPrefix := emojiText(EmojiContributor)
+	for i := range t.Interactions {
+		if strings.HasPrefix(t.Interactions[i].Author, contributorPrefix) {
+			t.Interactions[i].Author = semioIDToContributorGithub(t.Interactions[i].Author)
+		}
+	}
+
+	for i := range t.Agents {
+		if strings.HasPrefix(t.Agents[i].Contributor, contributorPrefix) {
+			t.Agents[i].Contributor = semioIDToContributorGithub(t.Agents[i].Contributor)
+		}
 	}
 	return nil
 }
 
+// MarshalJSON converts internal filesystem paths to semio repo emoji IDs for serialization.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️marshaljson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/MarshalJSON)
+// MarshalJSON MUST perform the MarshalJSON operation.
+func (t Ticket) MarshalJSON() ([]byte, error) {
+	type TicketAlias Ticket
+	alias := TicketAlias(t)
+
+	if alias.Goal != "" && !strings.Contains(alias.Goal, emojiText(EmojiGoal)) {
+		alias.Goal = goalPathToSemioID(alias.Goal)
+	}
+	for i := range alias.Sessions {
+		alias.Sessions[i] = normalizeTicketSessionID(alias.Sessions[i])
+	}
+	return json.Marshal(alias)
+}
+
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Ticket is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (t *Ticket) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (t *Ticket) GetID() string {
 	return emojiText(EmojiTicket) + Flat(t.Slug)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (t *Ticket) GetURI() string {
 	if t.Goal != "" {
 		goalParts := strings.Split(t.Goal, "/")
@@ -8498,14 +9599,14 @@ func (t *Ticket) GetURI() string {
 
 // GetTitle MUST return the stored value without modification.
 // GetTitle returns the title of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️gettitle](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetTitle)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️gettitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetTitle)
 func (t *Ticket) GetTitle() string {
 	return t.Title
 }
 
 // GetPrompt MUST return the description or the first interaction prompt.
 // GetPrompt returns the prompt of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getprompt](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetPrompt)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getprompt](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetPrompt)
 func (t *Ticket) GetPrompt() string {
 	if t.Description != "" {
 		return t.Description
@@ -8513,36 +9614,22 @@ func (t *Ticket) GetPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Prompt
 	}
-	for _, a := range t.Agents {
-		for _, e := range a.Events {
-			if e.Kind == string(HookAgentPromptSubmitting) && e.Prompt != "" {
-				return e.Prompt
-			}
-		}
-	}
 	return ""
 }
 
 // GetLatestPrompt MUST return the latest prompt from sessions or interactions.
 // GetLatestPrompt returns the latest prompt of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getlatestprompt](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetLatestPrompt)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getlatestprompt](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetLatestPrompt)
 func (t *Ticket) GetLatestPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Prompt
-	}
-	for i := len(t.Agents) - 1; i >= 0; i-- {
-		for j := len(t.Agents[i].Events) - 1; j >= 0; j-- {
-			if t.Agents[i].Events[j].Kind == string(HookAgentPromptSubmitting) && t.Agents[i].Events[j].Prompt != "" {
-				return t.Agents[i].Events[j].Prompt
-			}
-		}
 	}
 	return t.Description
 }
 
 // GetLLM MUST return the LLM from the latest session or interaction.
 // GetLLM returns the l l m of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getllm](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetLLM)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getllm](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetLLM)
 func (t *Ticket) GetLLM() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].LLM
@@ -8555,7 +9642,7 @@ func (t *Ticket) GetLLM() string {
 
 // GetClient MUST return the client from the latest session or interaction.
 // GetClient returns the client of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getclient](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetClient)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getclient](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetClient)
 func (t *Ticket) GetClient() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Client
@@ -8568,14 +9655,14 @@ func (t *Ticket) GetClient() string {
 
 // GetStatus MUST return the stored value without modification.
 // GetStatus returns the status of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getstatus](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetStatus)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getstatus](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetStatus)
 func (t *Ticket) GetStatus() TicketStatus {
 	return t.Status
 }
 
 // GetAuthor MUST return the author from the first session or interaction.
 // GetAuthor returns the author of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getauthor](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetAuthor)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getauthor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetAuthor)
 func (t *Ticket) GetAuthor() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Author
@@ -8586,19 +9673,19 @@ func (t *Ticket) GetAuthor() string {
 	return ""
 }
 
-// GetCommit MUST return the commit from the first interaction.
-// GetCommit returns the commit of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getcommit](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetCommit)
-func (t *Ticket) GetCommit() string {
+// GetCheckpoint MUST return the checkpoint from the first interaction.
+// GetCheckpoint returns the checkpoint of the Ticket.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetCheckpoint)
+func (t *Ticket) GetCheckpoint() string {
 	if len(t.Interactions) > 0 {
-		return t.Interactions[0].Commit
+		return t.Interactions[0].Checkpoint
 	}
 	return ""
 }
 
 // GetSummary MUST return the stored value without modification.
 // GetSummary returns the summary of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getsummary](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetSummary)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getsummary](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetSummary)
 func (t *Ticket) GetSummary() string {
 	if t.Summary != "" {
 		return t.Summary
@@ -8613,7 +9700,7 @@ func (t *Ticket) GetSummary() string {
 
 // GetDateStarted MUST return the earliest date from interactions or sessions.
 // GetDateStarted returns the date started of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatestarted](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetDateStarted)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatestarted](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateStarted)
 func (t *Ticket) GetDateStarted() time.Time {
 	for _, interaction := range t.Interactions {
 		if interaction.Kind == string(repopkg.EventTicketOpen) && interaction.Date != "" {
@@ -8633,24 +9720,12 @@ func (t *Ticket) GetDateStarted() time.Time {
 			return parsed
 		}
 	}
-	if len(t.Agents) > 0 {
-		for _, e := range t.Agents[0].Events {
-			if e.Kind == string(HookAgentPromptSubmitting) && e.Timestamp != "" {
-				if parsed, err := time.Parse(time.RFC3339, e.Timestamp); err == nil {
-					return parsed
-				}
-				if parsed, err := time.Parse("2006-01-02 15:04:05", e.Timestamp); err == nil {
-					return parsed
-				}
-			}
-		}
-	}
 	return time.Date(t.Year, time.Month(t.Month), t.Day, 0, 0, 0, 0, time.UTC)
 }
 
 // GetDateFinished MUST return the stored value without modification.
 // GetDateFinished returns the date finished of the Ticket.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatefinished](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetDateFinished)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatefinished](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateFinished)
 func (t *Ticket) GetDateFinished() *time.Time {
 	for i := len(t.Interactions) - 1; i >= 0; i-- {
 		if t.Interactions[i].Kind == string(repopkg.EventTicketClose) && t.Interactions[i].Date != "" {
@@ -8667,7 +9742,7 @@ func (t *Ticket) GetDateFinished() *time.Time {
 
 // GetInteractionFiles MUST return the stored value without modification.
 // GetInteractionFiles returns all unique InteractionFile entries across all interactions.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getinteractionfiles](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetInteractionFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getinteractionfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetInteractionFiles)
 func (t *Ticket) GetInteractionFiles() []InteractionFile {
 	seen := make(map[string]struct{})
 	var result []InteractionFile
@@ -8684,21 +9759,21 @@ func (t *Ticket) GetInteractionFiles() []InteractionFile {
 }
 
 // TicketBundleContrib holds the data fields for a ticket bundle contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketbundlecontrib](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketBundleContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketbundlecontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketBundleContrib)
 type TicketBundleContrib struct {
 	BundleID string              `json:"bundleId"`
 	Files    []TicketFileContrib `json:"files"`
 }
 
 // TicketFileContrib holds the data fields for a ticket file contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketfilecontrib](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketFileContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketfilecontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketFileContrib)
 type TicketFileContrib struct {
 	FileID   string                 `json:"fileId"`
 	Sections []TicketSectionContrib `json:"sections"`
 }
 
 // TicketSectionContrib holds the data fields for a ticket section contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketsectioncontrib](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/TicketSectionContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️ticketsectioncontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketSectionContrib)
 type TicketSectionContrib struct {
 	SectionID   string       `json:"sectionId"`
 	Definitions []string     `json:"definitions"`
@@ -8706,7 +9781,7 @@ type TicketSectionContrib struct {
 }
 
 // Policy holds the data fields for a policy record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️policy](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/Policy)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️policy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Policy)
 type Policy struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
@@ -8718,12 +9793,12 @@ type Policy struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Policy is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (p *Policy) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Policy.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (p *Policy) GetID() string {
 	slug := strings.TrimPrefix(p.ID, "/")
 	return emojiText(EmojiPolicy) + Flat(slug)
@@ -8731,13 +9806,13 @@ func (p *Policy) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Policy.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (p *Policy) GetURI() string {
 	return "semiorepo://pls/pl/" + PathToUriPath(strings.TrimPrefix(p.ID, "/"))
 }
 
 // StatuteMeta holds the data fields for a statute meta record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️statutemeta](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/StatuteMeta)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️statutemeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/StatuteMeta)
 type StatuteMeta struct {
 	Kind        Statute        `json:"kind"`
 	PolicyID    string         `json:"policyId"`
@@ -8749,32 +9824,32 @@ type StatuteMeta struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the StatuteMeta is node.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
 func (v *StatuteMeta) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the StatuteMeta.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (v *StatuteMeta) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiStatute), StatutePathToIdValue(string(v.Kind)))
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the StatuteMeta.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (v *StatuteMeta) GetURI() string {
 	return "semiorepo://pls/pl/" + PathToUriPath(v.PolicyID) + "/sts/" + PathToUriPath(string(v.Kind))
 }
 
 // AnalyzeResult holds the data fields for a analyze result record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️analyzeresult](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/AnalyzeResult)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️analyzeresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AnalyzeResult)
 type AnalyzeResult struct {
 	Breachs []*Breach       `json:"breachs"`
 	Metrics *AnalyzeMetrics `json:"metrics"`
 }
 
 // FixResult holds the data fields for a fix result record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️fixresult](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/FixResult)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️fixresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/FixResult)
 type FixResult struct {
 	Fixed     int       `json:"fixed"`
 	Remaining int       `json:"remaining"`
@@ -8782,7 +9857,7 @@ type FixResult struct {
 }
 
 // ContributorContributions holds the data fields for a contributor contributions record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorcontributions](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributorContributions)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributorcontributions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorContributions)
 type ContributorContributions struct {
 	Bundles     []ContributionBundle     `json:"bundles"`
 	Folders     []ContributionFolder     `json:"folders"`
@@ -8792,42 +9867,42 @@ type ContributorContributions struct {
 }
 
 // ContributionBundle holds the data fields for a contribution bundle record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionbundle](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributionBundle)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionbundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionBundle)
 type ContributionBundle struct {
 	BundleID string        `json:"bundleId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
 // ContributionFolder holds the data fields for a contribution folder record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionfolder](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributionFolder)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionfolder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionFolder)
 type ContributionFolder struct {
 	FolderID string        `json:"folderId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
 // ContributionFile holds the data fields for a contribution file record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionfile](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributionFile)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionFile)
 type ContributionFile struct {
 	FileID  string       `json:"fileId"`
 	Metrics *LineMetrics `json:"metrics"`
 }
 
 // ContributionSection holds the data fields for a contribution section record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionsection](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributionSection)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributionsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionSection)
 type ContributionSection struct {
 	SectionID string       `json:"sectionId"`
 	Metrics   *LineMetrics `json:"metrics"`
 }
 
 // ContributionDefinition holds the data fields for a contribution definition record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributiondefinition](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/ContributionDefinition)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributiondefinition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionDefinition)
 type ContributionDefinition struct {
 	DefinitionID string       `json:"definitionId"`
 	Metrics      *LineMetrics `json:"metrics"`
 }
 
 // SemanticChangeType represents a semantic change type value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️semanticchangetype](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/SemanticChangeType)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️semanticchangetype](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/SemanticChangeType)
 type SemanticChangeType string
 
 const (
@@ -8838,7 +9913,7 @@ const (
 )
 
 // SemanticChange holds the data fields for a semantic change record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️semanticchange](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/SemanticChange)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️semanticchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/SemanticChange)
 type SemanticChange struct {
 	Kind     string
 	Status   SemanticChangeType
@@ -8889,7 +9964,7 @@ func mergeLineMetrics(target *LineMetrics, add LineMetrics) {
 	target.Removed += add.Removed
 }
 
-func computeLineMetricsForDiff(diff *DiffLines, baseCommit, filePath string) LineMetrics {
+func computeLineMetricsForDiff(diff *DiffLines, baseCheckpoint, filePath string) LineMetrics {
 	if diff == nil {
 		return LineMetrics{}
 	}
@@ -8897,7 +9972,7 @@ func computeLineMetricsForDiff(diff *DiffLines, baseCommit, filePath string) Lin
 		return LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), filePath)), Removed: 0}
 	}
 	if len(diff.Removed) > 0 && len(diff.Added) == 0 {
-		return LineMetrics{Added: 0, Removed: CountLinesAtCommit(baseCommit, filePath)}
+		return LineMetrics{Added: 0, Removed: CountLinesAtCheckpoint(baseCheckpoint, filePath)}
 	}
 	return LineMetrics{Added: len(diff.Added), Removed: len(diff.Removed)}
 }
@@ -8925,7 +10000,7 @@ func buildCodebasePathSet(codebase *Codebase) map[string]struct{} {
 	return result
 }
 
-func buildFolderLineTotals(files []string, baseCommit string, bundles []Bundle) (map[string]int, map[string]int) {
+func buildFolderLineTotals(files []string, baseCheckpoint string, bundles []Bundle) (map[string]int, map[string]int) {
 	currentTotals := make(map[string]int)
 	baseTotals := make(map[string]int)
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -8936,12 +10011,12 @@ func buildFolderLineTotals(files []string, baseCommit string, bundles []Bundle) 
 		}
 		id := ctx.GetFolderID(folderPath)
 		currentTotals[id] += CountLinesInFile(filepath.Join(GetRootDir(), file))
-		baseTotals[id] += CountLinesAtCommit(baseCommit, file)
+		baseTotals[id] += CountLinesAtCheckpoint(baseCheckpoint, file)
 	}
 	return currentTotals, baseTotals
 }
 
-func buildBundleLineTotals(files []string, baseCommit string, bundles []Bundle) (map[string]int, map[string]int) {
+func buildBundleLineTotals(files []string, baseCheckpoint string, bundles []Bundle) (map[string]int, map[string]int) {
 	currentTotals := make(map[string]int)
 	baseTotals := make(map[string]int)
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -8951,7 +10026,7 @@ func buildBundleLineTotals(files []string, baseCommit string, bundles []Bundle) 
 		}
 		bundleName := ctx.GetBundleForFile(file)
 		currentTotals[bundleName] += CountLinesInFile(filepath.Join(GetRootDir(), file))
-		baseTotals[bundleName] += CountLinesAtCommit(baseCommit, file)
+		baseTotals[bundleName] += CountLinesAtCheckpoint(baseCheckpoint, file)
 	}
 	return currentTotals, baseTotals
 }
@@ -9027,7 +10102,7 @@ func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) str
 	diffSet.Renamed = append(diffSet.Renamed, renamed...)
 }
 
-func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
+func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
 	result := newTicketDiffSet()
 	ctx := &CodebaseContext{Bundles: bundles}
 	currentSectionMap := make(map[string]CodebaseSection)
@@ -9068,7 +10143,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit strin
 		if err != nil {
 			continue
 		}
-		baseContent, err := ReadTextFileAtCommit(baseCommit, filePath)
+		baseContent, err := ReadTextFileAtCheckpoint(baseCheckpoint, filePath)
 		if err != nil {
 			continue
 		}
@@ -9104,7 +10179,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit strin
 	return result
 }
 
-func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
+func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
 	result := newTicketDiffSet()
 	ctx := &CodebaseContext{Bundles: bundles}
 	currentDefMap := make(map[string]CodebaseDefinition)
@@ -9145,7 +10220,7 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 		if err != nil {
 			continue
 		}
-		baseContent, err := ReadTextFileAtCommit(baseCommit, filePath)
+		baseContent, err := ReadTextFileAtCheckpoint(baseCheckpoint, filePath)
 		if err != nil {
 			continue
 		}
@@ -9194,8 +10269,8 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 
 // BuildSemanticDiffs MUST assemble the semantic diffs from the available context data.
 // BuildSemanticDiffs constructs and returns the semantic diffs structure.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️buildsemanticdiffs](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/BuildSemanticDiffs)
-func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️buildsemanticdiffs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/BuildSemanticDiffs)
+func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
 	result := newTicketDiffs()
 	ctx := &CodebaseContext{Bundles: bundles}
 
@@ -9222,10 +10297,10 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 		baseFiles = append(baseFiles, f)
 	}
 
-	currentFolderLines, _ := buildFolderLineTotals(currentFiles, baseCommit, bundles)
-	_, baseFolderLines := buildFolderLineTotals(baseFiles, baseCommit, bundles)
-	currentBundleLines, _ := buildBundleLineTotals(currentFiles, baseCommit, bundles)
-	_, baseBundleLines := buildBundleLineTotals(baseFiles, baseCommit, bundles)
+	currentFolderLines, _ := buildFolderLineTotals(currentFiles, baseCheckpoint, bundles)
+	_, baseFolderLines := buildFolderLineTotals(baseFiles, baseCheckpoint, bundles)
+	currentBundleLines, _ := buildBundleLineTotals(currentFiles, baseCheckpoint, bundles)
+	_, baseBundleLines := buildBundleLineTotals(baseFiles, baseCheckpoint, bundles)
 
 	currentBundleMap := make(map[string]CodebaseBundle)
 	baseBundleMap := make(map[string]CodebaseBundle)
@@ -9299,13 +10374,13 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 			}
 			fromFileID := ctx.GetFileID(status.From)
 			toFileID := ctx.GetFileID(status.To)
-			addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: SemanticChangeRenamed, FromPath: fromFileID, ToPath: toFileID, Lines: LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), status.To)), Removed: CountLinesAtCommit(baseCommit, status.From)}})
+			addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: SemanticChangeRenamed, FromPath: fromFileID, ToPath: toFileID, Lines: LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), status.To)), Removed: CountLinesAtCheckpoint(baseCheckpoint, status.From)}})
 		}
 	}
 
 	for filePath, diff := range diffLines {
 		fileID := ctx.GetFileID(filePath)
-		metrics := computeLineMetricsForDiff(diff, baseCommit, filePath)
+		metrics := computeLineMetricsForDiff(diff, baseCheckpoint, filePath)
 		status := SemanticChangeModified
 		if len(diff.Added) > 0 && len(diff.Removed) == 0 {
 			status = SemanticChangeAdded
@@ -9319,19 +10394,19 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 		return path
 	})
 
-	result.Sections = buildSectionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines, bundles)
-	result.Definitions = buildDefinitionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines, bundles)
+	result.Sections = buildSectionDiffs(baseCodebase, currentCodebase, baseCheckpoint, diffLines, bundles)
+	result.Definitions = buildDefinitionDiffs(baseCodebase, currentCodebase, baseCheckpoint, diffLines, bundles)
 
 	return result
 }
 
 // #region 🔖GraphQL Input Types
 
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes](semiorepo://section/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types)
 // GraphQL mutation input types for tickets, goals, todos, and contributors.
 
 // FileListInput holds the data fields for a file list input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️filelistinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/FileListInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️filelistinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/FileListInput)
 type FileListInput struct {
 	Updated []string `json:"updated,omitempty"`
 	Created []string `json:"created,omitempty"`
@@ -9339,7 +10414,7 @@ type FileListInput struct {
 }
 
 // TicketOpenInput holds the data fields for a ticket open input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketopeninput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketOpenInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketopeninput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketOpenInput)
 type TicketOpenInput struct {
 	Title        string `json:"title"`
 	Prompt       string `json:"prompt"`
@@ -9354,14 +10429,14 @@ type TicketOpenInput struct {
 }
 
 // DraftCreateInput holds the data fields for a draft create input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️draftcreateinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/DraftCreateInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️draftcreateinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/DraftCreateInput)
 type DraftCreateInput struct {
 	Title string   `json:"title"`
 	Files []string `json:"files,omitempty"`
 }
 
 // GoalCreateInput holds the data fields for a goal create input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalcreateinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalCreateInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalcreateinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalCreateInput)
 type GoalCreateInput struct {
 	Title        string `json:"title"`
 	Description  string `json:"description"`
@@ -9375,7 +10450,7 @@ type GoalCreateInput struct {
 }
 
 // GoalChangeInput holds the data fields for a goal change input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalchangeinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalChangeInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalchangeinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalChangeInput)
 type GoalChangeInput struct {
 	ID           string  `json:"id"`
 	Title        *string `json:"title,omitempty"`
@@ -9386,7 +10461,7 @@ type GoalChangeInput struct {
 }
 
 // GoalCloseInput holds the data fields for a goal close input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalcloseinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalCloseInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalcloseinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalCloseInput)
 type GoalCloseInput struct {
 	ID           string `json:"id"`
 	Summary      string `json:"summary"`
@@ -9394,7 +10469,7 @@ type GoalCloseInput struct {
 }
 
 // GoalReopenInput holds the data fields for a goal reopen input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalreopeninput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalReopenInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goalreopeninput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalReopenInput)
 type GoalReopenInput struct {
 	ID           string  `json:"id"`
 	Prompt       string  `json:"prompt"`
@@ -9408,14 +10483,14 @@ type GoalReopenInput struct {
 }
 
 // GoalDeleteInput holds the data fields for a goal delete input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goaldeleteinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/GoalDeleteInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️goaldeleteinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalDeleteInput)
 type GoalDeleteInput struct {
 	ID           string `json:"id"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
 // TicketDeleteInput holds the data fields for a ticket delete input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketdeleteinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketDeleteInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketdeleteinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketDeleteInput)
 type TicketDeleteInput struct {
 	Year         int    `json:"year"`
 	Month        int    `json:"month"`
@@ -9425,7 +10500,7 @@ type TicketDeleteInput struct {
 }
 
 // TicketCloseInput holds the data fields for a ticket close input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketCloseInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketCloseInput)
 type TicketCloseInput struct {
 	Year         int      `json:"year"`
 	Month        int      `json:"month"`
@@ -9439,7 +10514,7 @@ type TicketCloseInput struct {
 }
 
 // TicketReopenInput holds the data fields for a ticket reopen input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketreopeninput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketReopenInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketreopeninput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketReopenInput)
 type TicketReopenInput struct {
 	Year         int     `json:"year"`
 	Month        int     `json:"month"`
@@ -9456,7 +10531,7 @@ type TicketReopenInput struct {
 }
 
 // TicketChangeInput holds the data fields for a ticket change input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketchangeinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketChangeInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketchangeinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketChangeInput)
 type TicketChangeInput struct {
 	Year         int     `json:"year"`
 	Month        int     `json:"month"`
@@ -9472,7 +10547,7 @@ type TicketChangeInput struct {
 }
 
 // ContributorAddInput holds the data fields for a contributor add input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️contributoraddinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/ContributorAddInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️contributoraddinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/ContributorAddInput)
 type ContributorAddInput struct {
 	Github       string   `json:"github"`
 	Name         *string  `json:"name,omitempty"`
@@ -9484,7 +10559,7 @@ type ContributorAddInput struct {
 }
 
 // FilterInput holds the data fields for a filter input record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️filterinput](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/FilterInput)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️filterinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/FilterInput)
 type FilterInput struct {
 	Filter         *string  `json:"filter,omitempty"`
 	Regex          *bool    `json:"regex,omitempty"`
@@ -9498,7 +10573,7 @@ type FilterInput struct {
 
 // ToStreamOptions MUST map all filter input fields to stream options.
 // ToStreamOptions converts the filter input into stream options.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes🛠️tostreamoptions](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/ToStreamOptions)
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes🛠️tostreamoptions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/ToStreamOptions)
 func (f *FilterInput) ToStreamOptions() StreamOptions {
 	if f == nil {
 		return StreamOptions{}
@@ -9538,19 +10613,33 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 
 // #region 🔖Provider Interfaces
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces](semiorepo://section/semio-repo/cli/main.go/Providers/Provider%20Interfaces)
+// [🧰semiorepo⌨️cli💻maingo🔖providers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers)
 // Provider interfaces define contracts for composable integrations.
 
-// SourceControlProvider defines the interface for source control operations (GitHub, GitLab, BitBucket, ...).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️sourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/SourceControlProvider)
-type SourceControlProvider interface {
+// VersionControlProvider defines the interface for version control operations (Git, ...).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️versioncontrolprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/VersionControlProvider)
+type VersionControlProvider interface {
 	Kind() string
 	RepoURL() (string, error)
 	Configure(repoRoot string) error
+
+	Checkpoint(repoRoot string, description string) (id string, err error)
+
+	CurrentCheckpoint(repoRoot string) (string, error)
+
+	Checkin(repoRoot string, contributor string) error
+
+	Checkout(repoRoot string, contributor string, description string) (id string, err error)
+
+	CurrentBranch(repoRoot string) (string, error)
+
+	StagedFiles(repoRoot string) ([]string, error)
+
+	StageAll(repoRoot string) error
 }
 
 // ManagementIssue holds the data fields for a management issue record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementissue](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementIssue)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementIssue)
 type ManagementIssue struct {
 	URL       string `json:"url"`
 	State     string `json:"state"`
@@ -9566,7 +10655,7 @@ type ManagementIssue struct {
 }
 
 // ManagementMilestone holds the data fields for a management milestone record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementmilestone](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementMilestone)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementMilestone)
 type ManagementMilestone struct {
 	Number      int    `json:"number"`
 	Title       string `json:"title"`
@@ -9577,13 +10666,13 @@ type ManagementMilestone struct {
 }
 
 // ManagementLabel holds the data fields for a management label record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementlabel](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementLabel)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementlabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementLabel)
 type ManagementLabel struct {
 	Name string `json:"name"`
 }
 
 // ManagementProvider defines the interface for issue/milestone management operations (GitHub, Jira, Trello, Linear, ...).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/ManagementProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️managementprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementProvider)
 type ManagementProvider interface {
 	Kind() string
 	Configure(repoRoot string) error
@@ -9622,21 +10711,21 @@ type ManagementProvider interface {
 }
 
 // SandboxProvider defines the interface for sandbox/container operations (Devcontainer, Podman, ...).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️sandboxprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/SandboxProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️sandboxprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/SandboxProvider)
 type SandboxProvider interface {
 	Kind() string
 	Configure(repoRoot string) error
 }
 
 // EditorHookMapping holds the data fields for an editor hook mapping record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️editorhookmapping](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/EditorHookMapping)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️editorhookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorHookMapping)
 type EditorHookMapping struct {
 	Client     string
 	ConfigPath string
 }
 
 // EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️editorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/EditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️editorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorProvider)
 type EditorProvider interface {
 	Kind() string
 	Configure(repoRoot string) error
@@ -9651,41 +10740,68 @@ type EditorProvider interface {
 
 // #region 🔖GitHub Management Provider
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider](semiorepo://section/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider)
 // GitHub implementation of ManagementProvider using the gh CLI.
 
 // GitHubManagementProvider holds the data fields for a github management provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️githubmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider/GitHubManagementProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️githubmanagementprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GitHubManagementProvider)
 type GitHubManagementProvider struct{}
 
+// Kind MUST perform the Kind operation.
+// Kind holds the data fields for a Kind record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
 func (p *GitHubManagementProvider) Kind() string { return "github" }
 
+// Configure MUST perform the Configure operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Configure)
+// Configure performs the Configure operation.
 func (p *GitHubManagementProvider) Configure(repoRoot string) error { return nil }
 
+// CreateIssue MUST perform the CreateIssue operation.
+// CreateIssue holds the data fields for a CreateIssue record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️createissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateIssue)
 func (p *GitHubManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
 	return ghCreateIssue(title, body, milestone)
 }
 
+// CloseIssue holds the data fields for a CloseIssue record.
+// CloseIssue MUST perform the CloseIssue operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️closeissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CloseIssue)
 func (p *GitHubManagementProvider) CloseIssue(issueURL string) error {
 	return ghCloseIssue(issueURL)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️reopenissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ReopenIssue)
+// ReopenIssue holds the data fields for a ReopenIssue record.
+// ReopenIssue MUST perform the ReopenIssue operation.
 func (p *GitHubManagementProvider) ReopenIssue(issueURL string) error {
 	return ghReopenIssue(issueURL)
 }
 
+// DeleteIssue holds the data fields for a DeleteIssue record.
+// DeleteIssue MUST perform the DeleteIssue operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️deleteissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteIssue)
 func (p *GitHubManagementProvider) DeleteIssue(issueURLOrNumber string) error {
 	return ghDeleteIssue(issueURLOrNumber)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updateissuetitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueTitle)
+// UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
+// UpdateIssueTitle MUST perform the UpdateIssueTitle operation.
 func (p *GitHubManagementProvider) UpdateIssueTitle(issueURL, title string) error {
 	return ghUpdateIssueTitle(issueURL, title)
 }
 
+// UpdateIssueBody MUST perform the UpdateIssueBody operation.
+// UpdateIssueBody holds the data fields for a UpdateIssueBody record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updateissuebody](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueBody)
 func (p *GitHubManagementProvider) UpdateIssueBody(issueURL, body string) error {
 	return ghUpdateIssueBody(issueURL, body)
 }
 
+// GetIssueDetails MUST perform the GetIssueDetails operation.
+// GetIssueDetails holds the data fields for a GetIssueDetails record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getissuedetails](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueDetails)
 func (p *GitHubManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
 	issue, err := ghGetIssueDetails(issueURL)
 	if err != nil {
@@ -9706,58 +10822,100 @@ func (p *GitHubManagementProvider) GetIssueDetails(issueURL string) (*Management
 	return mi, nil
 }
 
+// GetIssueNodeID MUST perform the GetIssueNodeID operation.
+// GetIssueNodeID holds the data fields for a GetIssueNodeID record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getissuenodeid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueNodeID)
 func (p *GitHubManagementProvider) GetIssueNodeID(issueURL string) (string, error) {
 	return ghGetIssueNodeID(issueURL)
 }
 
+// GetIssueParentURL holds the data fields for a GetIssueParentURL record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getissueparenturl](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueParentURL)
+// GetIssueParentURL MUST perform the GetIssueParentURL operation.
 func (p *GitHubManagementProvider) GetIssueParentURL(issueURL string) (string, error) {
 	return ghGetIssueParentURL(issueURL)
 }
 
+// AddComment MUST perform the AddComment operation.
+// AddComment holds the data fields for a AddComment record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addcomment](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddComment)
 func (p *GitHubManagementProvider) AddComment(issueURL, comment string) error {
 	return ghAddComment(issueURL, comment)
 }
 
+// AddLabels holds the data fields for a AddLabels record.
+// AddLabels MUST perform the AddLabels operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addlabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddLabels)
 func (p *GitHubManagementProvider) AddLabels(issueURL string, labels []string) error {
 	return ghAddLabels(issueURL, labels)
 }
 
+// RemoveLabels MUST perform the RemoveLabels operation.
+// RemoveLabels holds the data fields for a RemoveLabels record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️removelabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/RemoveLabels)
 func (p *GitHubManagementProvider) RemoveLabels(issueURL string, labels []string) error {
 	return ghRemoveLabels(issueURL, labels)
 }
 
+// AddIssueToProject holds the data fields for a AddIssueToProject record.
+// AddIssueToProject MUST perform the AddIssueToProject operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addissuetoproject](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddIssueToProject)
 func (p *GitHubManagementProvider) AddIssueToProject(issueURL string) {
 	ghAddIssueToProject(issueURL)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️assignissuetocurrentuser](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AssignIssueToCurrentUser)
+// AssignIssueToCurrentUser MUST perform the AssignIssueToCurrentUser operation.
+// AssignIssueToCurrentUser performs the AssignIssueToCurrentUser operation.
 func (p *GitHubManagementProvider) AssignIssueToCurrentUser(issueURL string) {
 	ghAssignIssueToCurrentUser(issueURL)
 }
 
+// AddSubIssue MUST perform the AddSubIssue operation.
+// AddSubIssue holds the data fields for a AddSubIssue record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addsubissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddSubIssue)
 func (p *GitHubManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
 	return ghAddSubIssue(parentIssueURL, childIssueURL)
 }
 
+// UpdateIssueMilestone holds the data fields for a UpdateIssueMilestone record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updateissuemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueMilestone)
+// UpdateIssueMilestone MUST perform the UpdateIssueMilestone operation.
 func (p *GitHubManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	return ghUpdateIssueMilestone(issueURL, milestoneTitle)
 }
 
+// ClearIssueMilestone MUST perform the ClearIssueMilestone operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️clearissuemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ClearIssueMilestone)
+// ClearIssueMilestone performs the ClearIssueMilestone operation.
 func (p *GitHubManagementProvider) ClearIssueMilestone(issueURL string) error {
 	return ghClearIssueMilestone(issueURL)
 }
 
+// CreateMilestone holds the data fields for a CreateMilestone record.
+// CreateMilestone MUST perform the CreateMilestone operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️createmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateMilestone)
 func (p *GitHubManagementProvider) CreateMilestone(title, description string) (int, error) {
 	return ghCreateMilestone(title, description)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updatemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateMilestone)
+// UpdateMilestone holds the data fields for a UpdateMilestone record.
+// UpdateMilestone MUST perform the UpdateMilestone operation.
 func (p *GitHubManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
 	return ghUpdateMilestone(number, title, description, state, dueOn)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️deletemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteMilestone)
+// DeleteMilestone holds the data fields for a DeleteMilestone record.
+// DeleteMilestone MUST perform the DeleteMilestone operation.
 func (p *GitHubManagementProvider) DeleteMilestone(number int) error {
 	return ghDeleteMilestone(number)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestone)
+// GetMilestone holds the data fields for a GetMilestone record.
+// GetMilestone MUST perform the GetMilestone operation.
 func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
 	m, err := ghGetMilestone(number)
 	if err != nil {
@@ -9766,10 +10924,16 @@ func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMileston
 	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getmilestonetitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestoneTitle)
+// GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
+// GetMilestoneTitle MUST perform the GetMilestoneTitle operation.
 func (p *GitHubManagementProvider) GetMilestoneTitle(number int) (string, error) {
 	return ghGetMilestoneTitle(number)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️findmilestonebytitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/FindMilestoneByTitle)
+// FindMilestoneByTitle MUST perform the FindMilestoneByTitle operation.
+// FindMilestoneByTitle performs the FindMilestoneByTitle operation.
 func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	m, err := ghFindMilestoneByTitle(title)
 	if err != nil {
@@ -9781,6 +10945,9 @@ func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*Manageme
 	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️listissuesforlabelsync](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListIssuesForLabelSync)
+// ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
+// ListIssuesForLabelSync MUST perform the ListIssuesForLabelSync operation.
 func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
 	issues, err := ghListIssuesForLabelSync()
 	if err != nil {
@@ -9798,10 +10965,16 @@ func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, 
 	return result, nil
 }
 
+// ListOpenIssuesWithLabel MUST perform the ListOpenIssuesWithLabel operation.
+// ListOpenIssuesWithLabel holds the data fields for a ListOpenIssuesWithLabel record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️listopenissueswithlabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListOpenIssuesWithLabel)
 func (p *GitHubManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
 	return ghListOpenIssuesWithLabel(label)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️listrepolabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListRepoLabels)
+// ListRepoLabels holds the data fields for a ListRepoLabels record.
+// ListRepoLabels MUST perform the ListRepoLabels operation.
 func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
 	labels, err := ghListRepoLabels()
 	if err != nil {
@@ -9814,109 +10987,268 @@ func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
 	return result, nil
 }
 
+// CreateRepoLabel holds the data fields for a CreateRepoLabel record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️createrepolabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateRepoLabel)
+// CreateRepoLabel MUST perform the CreateRepoLabel operation.
 func (p *GitHubManagementProvider) CreateRepoLabel(name string) error {
 	return ghCreateRepoLabel(name)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️deleterepolabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteRepoLabel)
+// DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
+// DeleteRepoLabel MUST perform the DeleteRepoLabel operation.
 func (p *GitHubManagementProvider) DeleteRepoLabel(name string) error {
 	return ghDeleteRepoLabel(name)
 }
 
+// SyncRepoLabelCatalog MUST perform the SyncRepoLabelCatalog operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️syncrepolabelcatalog](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/SyncRepoLabelCatalog)
+// SyncRepoLabelCatalog performs the SyncRepoLabelCatalog operation.
 func (p *GitHubManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return ghSyncRepoLabelCatalog(validLabels)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️creategoalissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateGoalIssue)
+// CreateGoalIssue holds the data fields for a CreateGoalIssue record.
+// CreateGoalIssue MUST perform the CreateGoalIssue operation.
 func (p *GitHubManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
 	return ghCreateGoalIssue(title, description, milestone)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updategoalissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateGoalIssue)
+// UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
+// UpdateGoalIssue MUST perform the UpdateGoalIssue operation.
 func (p *GitHubManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
 	return ghUpdateGoalIssue(issueURL, title, description)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getcurrentuser](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetCurrentUser)
+// GetCurrentUser holds the data fields for a GetCurrentUser record.
+// GetCurrentUser MUST perform the GetCurrentUser operation.
 func (p *GitHubManagementProvider) GetCurrentUser() string {
 	return ghGetCurrentUser()
 }
 
 // NullManagementProvider is a no-op implementation of ManagementProvider.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️nullmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Management%20Provider/NullManagementProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider✂️nullmanagementprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/NullManagementProvider)
 type NullManagementProvider struct{}
 
-func (p *NullManagementProvider) Kind() string                    { return "none" }
+// Kind MUST perform the Kind operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
+// Kind performs the Kind operation.
+func (p *NullManagementProvider) Kind() string { return "none" }
+
+// Configure holds the data fields for a Configure record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Configure)
+// Configure MUST perform the Configure operation.
 func (p *NullManagementProvider) Configure(repoRoot string) error { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️createissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateIssue)
+// CreateIssue holds the data fields for a CreateIssue record.
+// CreateIssue MUST perform the CreateIssue operation.
 func (p *NullManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
 	return "", nil
 }
-func (p *NullManagementProvider) CloseIssue(issueURL string) error              { return nil }
-func (p *NullManagementProvider) ReopenIssue(issueURL string) error             { return nil }
-func (p *NullManagementProvider) DeleteIssue(issueURLOrNumber string) error     { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️closeissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CloseIssue)
+// CloseIssue holds the data fields for a CloseIssue record.
+// CloseIssue MUST perform the CloseIssue operation.
+func (p *NullManagementProvider) CloseIssue(issueURL string) error { return nil }
+
+// ReopenIssue MUST perform the ReopenIssue operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️reopenissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ReopenIssue)
+// ReopenIssue performs the ReopenIssue operation.
+func (p *NullManagementProvider) ReopenIssue(issueURL string) error { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️deleteissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteIssue)
+// DeleteIssue holds the data fields for a DeleteIssue record.
+// DeleteIssue MUST perform the DeleteIssue operation.
+func (p *NullManagementProvider) DeleteIssue(issueURLOrNumber string) error { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updateissuetitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueTitle)
+// UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
+// UpdateIssueTitle MUST perform the UpdateIssueTitle operation.
 func (p *NullManagementProvider) UpdateIssueTitle(issueURL, title string) error { return nil }
-func (p *NullManagementProvider) UpdateIssueBody(issueURL, body string) error   { return nil }
+
+// UpdateIssueBody MUST perform the UpdateIssueBody operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updateissuebody](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueBody)
+// UpdateIssueBody performs the UpdateIssueBody operation.
+func (p *NullManagementProvider) UpdateIssueBody(issueURL, body string) error { return nil }
+
+// GetIssueDetails MUST perform the GetIssueDetails operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getissuedetails](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueDetails)
+// GetIssueDetails performs the GetIssueDetails operation.
 func (p *NullManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
 	return nil, nil
 }
-func (p *NullManagementProvider) GetIssueNodeID(issueURL string) (string, error)      { return "", nil }
-func (p *NullManagementProvider) GetIssueParentURL(issueURL string) (string, error)   { return "", nil }
-func (p *NullManagementProvider) AddComment(issueURL, comment string) error           { return nil }
-func (p *NullManagementProvider) AddLabels(issueURL string, labels []string) error    { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getissuenodeid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueNodeID)
+// GetIssueNodeID holds the data fields for a GetIssueNodeID record.
+// GetIssueNodeID MUST perform the GetIssueNodeID operation.
+func (p *NullManagementProvider) GetIssueNodeID(issueURL string) (string, error) { return "", nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getissueparenturl](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueParentURL)
+// GetIssueParentURL holds the data fields for a GetIssueParentURL record.
+// GetIssueParentURL MUST perform the GetIssueParentURL operation.
+func (p *NullManagementProvider) GetIssueParentURL(issueURL string) (string, error) { return "", nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addcomment](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddComment)
+// AddComment holds the data fields for a AddComment record.
+// AddComment MUST perform the AddComment operation.
+func (p *NullManagementProvider) AddComment(issueURL, comment string) error { return nil }
+
+// AddLabels MUST perform the AddLabels operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addlabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddLabels)
+// AddLabels performs the AddLabels operation.
+func (p *NullManagementProvider) AddLabels(issueURL string, labels []string) error { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️removelabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/RemoveLabels)
+// RemoveLabels holds the data fields for a RemoveLabels record.
+// RemoveLabels MUST perform the RemoveLabels operation.
 func (p *NullManagementProvider) RemoveLabels(issueURL string, labels []string) error { return nil }
-func (p *NullManagementProvider) AddIssueToProject(issueURL string)                   {}
-func (p *NullManagementProvider) AssignIssueToCurrentUser(issueURL string)            {}
+
+// AddIssueToProject MUST perform the AddIssueToProject operation.
+// AddIssueToProject holds the data fields for a AddIssueToProject record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addissuetoproject](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddIssueToProject)
+func (p *NullManagementProvider) AddIssueToProject(issueURL string) {}
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️assignissuetocurrentuser](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AssignIssueToCurrentUser)
+// AssignIssueToCurrentUser MUST perform the AssignIssueToCurrentUser operation.
+// AssignIssueToCurrentUser performs the AssignIssueToCurrentUser operation.
+func (p *NullManagementProvider) AssignIssueToCurrentUser(issueURL string) {}
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️addsubissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddSubIssue)
+// AddSubIssue holds the data fields for a AddSubIssue record.
+// AddSubIssue MUST perform the AddSubIssue operation.
 func (p *NullManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
 	return nil
 }
+
+// UpdateIssueMilestone MUST perform the UpdateIssueMilestone operation.
+// UpdateIssueMilestone holds the data fields for a UpdateIssueMilestone record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updateissuemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueMilestone)
 func (p *NullManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	return nil
 }
+
+// ClearIssueMilestone MUST perform the ClearIssueMilestone operation.
+// ClearIssueMilestone holds the data fields for a ClearIssueMilestone record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️clearissuemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ClearIssueMilestone)
 func (p *NullManagementProvider) ClearIssueMilestone(issueURL string) error { return nil }
+
+// CreateMilestone holds the data fields for a CreateMilestone record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️createmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateMilestone)
+// CreateMilestone MUST perform the CreateMilestone operation.
 func (p *NullManagementProvider) CreateMilestone(title, description string) (int, error) {
 	return 0, nil
 }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updatemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateMilestone)
+// UpdateMilestone holds the data fields for a UpdateMilestone record.
+// UpdateMilestone MUST perform the UpdateMilestone operation.
 func (p *NullManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
 	return nil
 }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️deletemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteMilestone)
+// DeleteMilestone holds the data fields for a DeleteMilestone record.
+// DeleteMilestone MUST perform the DeleteMilestone operation.
 func (p *NullManagementProvider) DeleteMilestone(number int) error { return nil }
+
+// GetMilestone MUST perform the GetMilestone operation.
+// GetMilestone holds the data fields for a GetMilestone record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestone)
 func (p *NullManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
 	return nil, nil
 }
+
+// GetMilestoneTitle MUST perform the GetMilestoneTitle operation.
+// GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getmilestonetitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestoneTitle)
 func (p *NullManagementProvider) GetMilestoneTitle(number int) (string, error) { return "", nil }
+
+// FindMilestoneByTitle MUST perform the FindMilestoneByTitle operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️findmilestonebytitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/FindMilestoneByTitle)
+// FindMilestoneByTitle performs the FindMilestoneByTitle operation.
 func (p *NullManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	return nil, nil
 }
+
+// ListIssuesForLabelSync MUST perform the ListIssuesForLabelSync operation.
+// ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️listissuesforlabelsync](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListIssuesForLabelSync)
 func (p *NullManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
 	return nil, nil
 }
+
+// ListOpenIssuesWithLabel MUST perform the ListOpenIssuesWithLabel operation.
+// ListOpenIssuesWithLabel holds the data fields for a ListOpenIssuesWithLabel record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️listopenissueswithlabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListOpenIssuesWithLabel)
 func (p *NullManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
 	return nil, nil
 }
+
+// ListRepoLabels MUST perform the ListRepoLabels operation.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️listrepolabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListRepoLabels)
+// ListRepoLabels performs the ListRepoLabels operation.
 func (p *NullManagementProvider) ListRepoLabels() ([]ManagementLabel, error) { return nil, nil }
-func (p *NullManagementProvider) CreateRepoLabel(name string) error          { return nil }
-func (p *NullManagementProvider) DeleteRepoLabel(name string) error          { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️createrepolabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateRepoLabel)
+// CreateRepoLabel holds the data fields for a CreateRepoLabel record.
+// CreateRepoLabel MUST perform the CreateRepoLabel operation.
+func (p *NullManagementProvider) CreateRepoLabel(name string) error { return nil }
+
+// DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️deleterepolabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteRepoLabel)
+// DeleteRepoLabel MUST perform the DeleteRepoLabel operation.
+func (p *NullManagementProvider) DeleteRepoLabel(name string) error { return nil }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️syncrepolabelcatalog](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/SyncRepoLabelCatalog)
+// SyncRepoLabelCatalog holds the data fields for a SyncRepoLabelCatalog record.
+// SyncRepoLabelCatalog MUST perform the SyncRepoLabelCatalog operation.
 func (p *NullManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return nil
 }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️creategoalissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateGoalIssue)
+// CreateGoalIssue MUST perform the CreateGoalIssue operation.
+// CreateGoalIssue performs the CreateGoalIssue operation.
 func (p *NullManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
 	return "", nil
 }
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️updategoalissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateGoalIssue)
+// UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
+// UpdateGoalIssue MUST perform the UpdateGoalIssue operation.
 func (p *NullManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
 	return nil
 }
+
+// GetCurrentUser MUST perform the GetCurrentUser operation.
+// GetCurrentUser holds the data fields for a GetCurrentUser record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubmanagementprovider🛠️getcurrentuser](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetCurrentUser)
 func (p *NullManagementProvider) GetCurrentUser() string { return "" }
 
 // #endregion 🔖GitHub Management Provider
 
-// #region 🔖GitHub Source Control Provider
+// #region 🔖Git Version Control Provider
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubsourcecontrolprovider](semiorepo://section/semio-repo/cli/main.go/Providers/GitHub%20Source%20Control%20Provider)
-// GitHub implementation of SourceControlProvider using the gh CLI.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider)
+// Git implementation of VersionControlProvider using git CLI commands.
 
-// GitHubSourceControlProvider holds the data fields for a github source control provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubsourcecontrolprovider✂️githubsourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Source%20Control%20Provider/GitHubSourceControlProvider)
-type GitHubSourceControlProvider struct{}
+// GitVersionControlProvider holds the data fields for a git version control provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider✂️gitversioncontrolprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/GitVersionControlProvider)
+type GitVersionControlProvider struct{}
 
-func (p *GitHubSourceControlProvider) Kind() string { return "github" }
+// Kind holds the data fields for a Kind record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Kind)
+// Kind MUST perform the Kind operation.
+func (p *GitVersionControlProvider) Kind() string { return "git" }
 
-func (p *GitHubSourceControlProvider) RepoURL() (string, error) {
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️repourl](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/RepoURL)
+// RepoURL holds the data fields for a RepoURL record.
+// RepoURL MUST perform the RepoURL operation.
+func (p *GitVersionControlProvider) RepoURL() (string, error) {
 	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
 		return "", err
@@ -9924,36 +11256,200 @@ func (p *GitHubSourceControlProvider) RepoURL() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func (p *GitHubSourceControlProvider) Configure(repoRoot string) error { return nil }
+// Configure holds the data fields for a Configure record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Configure)
+// Configure MUST perform the Configure operation.
+func (p *GitVersionControlProvider) Configure(repoRoot string) error { return nil }
 
-// #endregion 🔖GitHub Source Control Provider
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️checkpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkpoint)
+// Checkpoint holds the data fields for a Checkpoint record.
+// Checkpoint MUST perform the Checkpoint operation.
+func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description string) (string, error) {
+	if _, _, exitCode := ExecCommand("git", []string{"diff", "--cached", "--quiet"}, repoRoot); exitCode == 0 {
+		if err := p.StageAll(repoRoot); err != nil {
+			return "", fmt.Errorf("stage all failed: %w", err)
+		}
+	}
+	args := []string{"commit", "-m", description}
+	stdout, stderr, exitCode := ExecCommand("git", args, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git commit failed (exit %d): %s", exitCode, strings.TrimSpace(stderr))
+	}
+	_ = stdout
+	sha, err := p.CurrentCheckpoint(repoRoot)
+	if err != nil {
+		return "", fmt.Errorf("failed to get checkpoint sha after checkpoint: %w", err)
+	}
+	return sha, nil
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️currentcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/CurrentCheckpoint)
+// CurrentCheckpoint MUST perform the CurrentCheckpoint operation.
+// CurrentCheckpoint performs the CurrentCheckpoint operation.
+func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git rev-parse HEAD failed: %s", strings.TrimSpace(stderr))
+	}
+	return strings.TrimSpace(stdout), nil
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️checkin](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkin)
+// Checkin holds the data fields for a Checkin record.
+// Checkin MUST perform the Checkin operation.
+func (p *GitVersionControlProvider) Checkin(repoRoot string, contributor string) error {
+	contributorBranch := contributor + "/latest"
+
+	_, stderr, exitCode := ExecCommand("git", []string{"fetch", "origin", "main"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git fetch origin main failed: %s", strings.TrimSpace(stderr))
+	}
+
+	currentBranch, err := p.CurrentBranch(repoRoot)
+	if err != nil {
+		return err
+	}
+
+	if currentBranch != contributorBranch {
+		_, stderr, exitCode = ExecCommand("git", []string{"switch", contributorBranch}, repoRoot)
+		if exitCode != 0 {
+
+			_, stderr, exitCode = ExecCommand("git", []string{"switch", "-c", contributorBranch}, repoRoot)
+			if exitCode != 0 {
+				return fmt.Errorf("git switch to %s failed: %s", contributorBranch, strings.TrimSpace(stderr))
+			}
+		}
+	}
+
+	_, stderr, exitCode = ExecCommand("git", []string{"merge", "--ff-only", "origin/main"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git fast-forward merge to main failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+// Checkout MUST perform the Checkout operation.
+// Checkout holds the data fields for a Checkout record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️checkout](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkout)
+func (p *GitVersionControlProvider) Checkout(repoRoot string, contributor string, description string) (string, error) {
+	contributorBranch := contributor + "/latest"
+	now := time.Now().UTC()
+	archiveBranch := fmt.Sprintf("%s/%04d/%02d/%02d", contributor, now.Year(), now.Month(), now.Day())
+
+	_, stderr, exitCode := ExecCommand("git", []string{"branch", archiveBranch, contributorBranch}, repoRoot)
+	if exitCode != 0 {
+
+		for i := 2; i <= 99; i++ {
+			candidate := fmt.Sprintf("%s-%d", archiveBranch, i)
+			_, _, ec := ExecCommand("git", []string{"branch", candidate, contributorBranch}, repoRoot)
+			if ec == 0 {
+				archiveBranch = candidate
+				break
+			}
+		}
+	}
+
+	_, stderr, exitCode = ExecCommand("git", []string{"switch", "main"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git switch to main failed: %s", strings.TrimSpace(stderr))
+	}
+
+	_, stderr, exitCode = ExecCommand("git", []string{"merge", "--squash", contributorBranch}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git squash merge failed: %s", strings.TrimSpace(stderr))
+	}
+
+	_, stderr, exitCode = ExecCommand("git", []string{"commit", "-m", description}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git commit squash merge failed: %s", strings.TrimSpace(stderr))
+	}
+
+	sha, err := p.CurrentCheckpoint(repoRoot)
+	if err != nil {
+		return "", err
+	}
+	return sha, nil
+}
+
+// CurrentBranch MUST perform the CurrentBranch operation.
+// CurrentBranch holds the data fields for a CurrentBranch record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️currentbranch](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/CurrentBranch)
+func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "--abbrev-ref", "HEAD"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git rev-parse --abbrev-ref HEAD failed: %s", strings.TrimSpace(stderr))
+	}
+	return strings.TrimSpace(stdout), nil
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️stagedfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/StagedFiles)
+// StagedFiles holds the data fields for a StagedFiles record.
+// StagedFiles MUST perform the StagedFiles operation.
+func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"diff", "--cached", "--name-only"}, repoRoot)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff --cached --name-only failed: %s", strings.TrimSpace(stderr))
+	}
+	var files []string
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line != "" {
+			files = append(files, line)
+		}
+	}
+	return files, nil
+}
+
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider🛠️stageall](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/StageAll)
+// StageAll holds the data fields for a StageAll record.
+// StageAll MUST perform the StageAll operation.
+func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
+	_, stderr, exitCode := ExecCommand("git", []string{"add", "-A"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git add -A failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+// #endregion 🔖Git Version Control Provider
 
 // #region 🔖Devcontainer Sandbox Provider
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider](semiorepo://section/semio-repo/cli/main.go/Providers/Devcontainer%20Sandbox%20Provider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider)
 // Devcontainer implementation of SandboxProvider.
 
 // DevcontainerSandboxProvider holds the data fields for a devcontainer sandbox provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider✂️devcontainersandboxprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Devcontainer%20Sandbox%20Provider/DevcontainerSandboxProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider✂️devcontainersandboxprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/DevcontainerSandboxProvider)
 type DevcontainerSandboxProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *DevcontainerSandboxProvider) Kind() string { return "devcontainer" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖devcontainersandboxprovider🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return nil }
 
 // #endregion 🔖Devcontainer Sandbox Provider
 
 // #region 🔖Editor Providers
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders](semiorepo://section/semio-repo/cli/main.go/Providers/Editor%20Providers)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers)
 // Editor provider implementations for Copilot, Cursor, Windsurf, Claude Code, Droid, Codex, Antigravity.
 
 // CopilotEditorProvider holds the data fields for a copilot editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️copiloteditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/CopilotEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️copiloteditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CopilotEditorProvider)
 type CopilotEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *CopilotEditorProvider) Kind() string { return "copilot-chat" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *CopilotEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -9967,32 +11463,53 @@ func (p *CopilotEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
 func (p *CopilotEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCopilotEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *CopilotEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	return formatVSCodeHookOutput(hookEventName, result)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *CopilotEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return vsCodeEventFromHookEvent(event, parentInfo)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *CopilotEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateCopilotConfig(repoRoot)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "copilot-chat", ConfigPath: ".github/hooks/semio-repo.json"}
 }
 
 // CursorEditorProvider holds the data fields for a cursor editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️cursoreditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/CursorEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️cursoreditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CursorEditorProvider)
 type CursorEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *CursorEditorProvider) Kind() string { return "cursor-chat" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *CursorEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -10006,33 +11523,54 @@ func (p *CursorEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
 func (p *CursorEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCursorEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *CursorEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *CursorEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *CursorEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateCursorConfig(repoRoot)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json"}
 }
 
 // WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️windsurfeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/WindsurfEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️windsurfeditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/WindsurfEditorProvider)
 type WindsurfEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *WindsurfEditorProvider) Kind() string { return "windsurf-chat" }
 
+// Configure MUST perform the Configure operation.
+// Configure holds the data fields for a Configure record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -10046,33 +11584,54 @@ func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
 func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveWindsurfEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *WindsurfEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *WindsurfEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *WindsurfEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateWindsurfConfig(repoRoot)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json"}
 }
 
 // ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️claudecodeeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/ClaudeCodeEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️claudecodeeditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ClaudeCodeEditorProvider)
 type ClaudeCodeEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *ClaudeCodeEditorProvider) Kind() string { return "claude-code" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -10086,33 +11645,54 @@ func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
 func (p *ClaudeCodeEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *ClaudeCodeEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *ClaudeCodeEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *ClaudeCodeEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateClaudeCodeConfig(repoRoot)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "claude-code", ConfigPath: ".claude/settings.json"}
 }
 
 // DroidEditorProvider holds the data fields for a droid editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️droideditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/DroidEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️droideditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/DroidEditorProvider)
 type DroidEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *DroidEditorProvider) Kind() string { return "droid" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *DroidEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -10126,79 +11706,136 @@ func (p *DroidEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 func (p *DroidEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *DroidEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *DroidEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *DroidEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateDroidConfig(repoRoot)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "droid", ConfigPath: ".factory/hooks.json"}
 }
 
 // CodexEditorProvider holds the data fields for a codex editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️codexeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/CodexEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️codexeditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CodexEditorProvider)
 type CodexEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *CodexEditorProvider) Kind() string { return "codex" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *CodexEditorProvider) Configure(repoRoot string) error { return nil }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
 func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *CodexEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *CodexEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error) { return "", nil }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "codex", ConfigPath: ""}
 }
 
 // AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️antigravityeditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Editor%20Providers/AntigravityEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders✂️antigravityeditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/AntigravityEditorProvider)
 type AntigravityEditorProvider struct{}
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️kind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
 func (p *AntigravityEditorProvider) Kind() string { return "antigravity-chat" }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
 func (p *AntigravityEditorProvider) Configure(repoRoot string) error { return nil }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️resolvenativeevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
 func (p *AntigravityEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
 func (p *AntigravityEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️nativeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
 func (p *AntigravityEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️generatehookconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
 func (p *AntigravityEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return "", nil
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖editorproviders🛠️hookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
 func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
 }
@@ -10207,11 +11844,12 @@ func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
 
 // #region 🔖Provider Registry
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry](semiorepo://section/semio-repo/cli/main.go/Providers/Provider%20Registry)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry)
 // Registry functions for accessing all available providers.
 
 // AllEditorProviders returns all registered editor providers.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️alleditorproviders](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/AllEditorProviders)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️alleditorproviders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/AllEditorProviders)
+// AllEditorProviders MUST perform the AllEditorProviders operation.
 func AllEditorProviders() []EditorProvider {
 	return []EditorProvider{
 		&CopilotEditorProvider{},
@@ -10225,7 +11863,8 @@ func AllEditorProviders() []EditorProvider {
 }
 
 // GetEditorProvider returns the editor provider for the given client slug.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️geteditorprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/GetEditorProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️geteditorprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/GetEditorProvider)
+// GetEditorProvider MUST perform the GetEditorProvider operation.
 func GetEditorProvider(client string) EditorProvider {
 	for _, p := range AllEditorProviders() {
 		if p.Kind() == client {
@@ -10236,25 +11875,31 @@ func GetEditorProvider(client string) EditorProvider {
 }
 
 // DefaultManagementProvider returns the default management provider (GitHub).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultmanagementprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultManagementProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultmanagementprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/DefaultManagementProvider)
+// DefaultManagementProvider MUST perform the DefaultManagementProvider operation.
 func DefaultManagementProvider() ManagementProvider {
 	return &GitHubManagementProvider{}
 }
 
-// DefaultSourceControlProvider returns the default source control provider (GitHub).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultsourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultSourceControlProvider)
-func DefaultSourceControlProvider() SourceControlProvider {
-	return &GitHubSourceControlProvider{}
+// DefaultVersionControlProvider returns the default version control provider (Git).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultversioncontrolprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/DefaultVersionControlProvider)
+// DefaultVersionControlProvider MUST perform the DefaultVersionControlProvider operation.
+func DefaultVersionControlProvider() VersionControlProvider {
+	return &GitVersionControlProvider{}
 }
 
 // DefaultSandboxProvider returns the default sandbox provider (Devcontainer).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultsandboxprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultSandboxProvider)
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultsandboxprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/DefaultSandboxProvider)
+// DefaultSandboxProvider MUST perform the DefaultSandboxProvider operation.
 func DefaultSandboxProvider() SandboxProvider {
 	return &DevcontainerSandboxProvider{}
 }
 
 var mgmtProvider ManagementProvider = DefaultManagementProvider()
 
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️getmanagementprovider](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/GetManagementProvider)
+// GetManagementProvider holds the data fields for a GetManagementProvider record.
+// GetManagementProvider MUST perform the GetManagementProvider operation.
 func GetManagementProvider() ManagementProvider { return mgmtProvider }
 
 // #endregion 🔖Provider Registry
@@ -10263,11 +11908,11 @@ func GetManagementProvider() ManagementProvider { return mgmtProvider }
 
 // #region 🔖Types
 
-// [🧰semiorepo⌨️cli💻maingo🔖types](semiorepo://section/semio-repo/cli/main.go/Types)
+// [🧰semiorepo⌨️cli💻maingo🔖types](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types)
 // Scope, todo, breach, and ticket metric types for the repository model.
 
 // ScopeKind represents a scope kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️scopekind](semiorepo://definition/semio-repo/cli/main.go/Types/ScopeKind)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️scopekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/ScopeKind)
 type ScopeKind string
 
 const (
@@ -10280,7 +11925,7 @@ const (
 )
 
 // Scope holds the data fields for a scope record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️scope](semiorepo://definition/semio-repo/cli/main.go/Types/Scope)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️scope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/Scope)
 type Scope struct {
 	Raw            string    `json:"raw"`
 	Kind           ScopeKind `json:"kind"`
@@ -10291,7 +11936,7 @@ type Scope struct {
 }
 
 // TodoCreateInput holds the data fields for a todo create input record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️todocreateinput](semiorepo://definition/semio-repo/cli/main.go/Types/TodoCreateInput)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️todocreateinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/TodoCreateInput)
 type TodoCreateInput struct {
 	ParentID    string `json:"parentId"`
 	Name        string `json:"name"`
@@ -10299,7 +11944,7 @@ type TodoCreateInput struct {
 }
 
 // TodoChangeInput holds the data fields for a todo change input record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️todochangeinput](semiorepo://definition/semio-repo/cli/main.go/Types/TodoChangeInput)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️todochangeinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/TodoChangeInput)
 type TodoChangeInput struct {
 	ID          string  `json:"id"`
 	Name        *string `json:"name"`
@@ -10307,7 +11952,7 @@ type TodoChangeInput struct {
 }
 
 // Todo holds the data fields for a todo record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️todo](semiorepo://definition/semio-repo/cli/main.go/Types/Todo)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️todo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/Todo)
 type Todo struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -10318,23 +11963,23 @@ type Todo struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Todo is node.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/IsNode)
 func (t *Todo) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Todo.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️getid](semiorepo://definition/semio-repo/cli/main.go/Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/GetID)
 func (t *Todo) GetID() string { return emojiText(EmojiTodo) + Flat(t.ID) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Todo.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/GetURI)
 func (t *Todo) GetURI() string {
 	return "semiorepo://tos/" + PathToUriPath(t.ID)
 }
 
 // Location holds the data fields for a location record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️location](semiorepo://definition/semio-repo/cli/main.go/Types/Location)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️location](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/Location)
 type Location struct {
 	FilePath string `json:"filePath"`
 	Line     int    `json:"line"`
@@ -10342,7 +11987,7 @@ type Location struct {
 }
 
 // Breach holds the data fields for a breach record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️breach](semiorepo://definition/semio-repo/cli/main.go/Types/Breach)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️breach](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/Breach)
 type Breach struct {
 	ID      string  `json:"id"`
 	Summary string  `json:"summary"`
@@ -10355,58 +12000,58 @@ type Breach struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Breach is node.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/Types/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/IsNode)
 func (v *Breach) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Breach.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️getid](semiorepo://definition/semio-repo/cli/main.go/Types/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/GetID)
 func (v *Breach) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiBreach), v.ID) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Breach.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/Types/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/GetURI)
 func (v *Breach) GetURI() string {
 	return "semiorepo://brs/" + PathToUriPath(v.ID)
 }
 
 // Priority MUST derive the value from the statute metadata.
 // Priority returns the priority of the breach from its kind metadata.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️priority](semiorepo://definition/semio-repo/cli/main.go/Types/Priority)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️priority](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/Priority)
 func (v *Breach) Priority() BreachPriority {
 	return v.Kind.Info().Priority
 }
 
 // Autofixable MUST return true only for statutes that support auto-fix.
 // Autofixable reports whether the statute supports automatic fixing.
-// [🧰semiorepo⌨️cli💻maingo🔖types🛠️autofixable](semiorepo://definition/semio-repo/cli/main.go/Types/Autofixable)
+// [🧰semiorepo⌨️cli💻maingo🔖types🛠️autofixable](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/Autofixable)
 func (v *Breach) Autofixable() bool {
 	return v.Kind.Info().Autofixable
 }
 
 // TicketFileMetrics holds the data fields for a ticket file metrics record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️ticketfilemetrics](semiorepo://definition/semio-repo/cli/main.go/Types/TicketFileMetrics)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️ticketfilemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/TicketFileMetrics)
 type TicketFileMetrics struct {
 	Sections map[string]TicketSectionMetrics `yaml:"sections" json:"sections"`
 }
 
 // TicketBundleMetrics holds the data fields for a ticket bundle metrics record.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️ticketbundlemetrics](semiorepo://definition/semio-repo/cli/main.go/Types/TicketBundleMetrics)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️ticketbundlemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/TicketBundleMetrics)
 type TicketBundleMetrics struct {
 	Files map[string]TicketFileMetrics `yaml:"files" json:"files"`
 }
 
 // TicketBundles represents a ticket bundles value.
-// [🧰semiorepo⌨️cli💻maingo🔖types✂️ticketbundles](semiorepo://definition/semio-repo/cli/main.go/Types/TicketBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types✂️ticketbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/d/i/TicketBundles)
 type TicketBundles map[string]TicketBundleMetrics
 
 // #region 🔖Languages
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages](semiorepo://section/semio-repo/cli/main.go/Types/Languages)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages)
 // Language plugin registry with parsers for sections, definitions, comments, imports, and headers.
 
 // LanguagePlugin defines the interface contract for language plugin operations.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️languageplugin](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/LanguagePlugin)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️languageplugin](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/LanguagePlugin)
 type LanguagePlugin interface {
 	Name() string
 	Extensions() []string
@@ -10436,7 +12081,7 @@ type LanguagePlugin interface {
 }
 
 // DefinitionRange holds the data fields for a definition range record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️definitionrange](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/DefinitionRange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️definitionrange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/DefinitionRange)
 type DefinitionRange struct {
 	Name    string
 	Kind    string
@@ -10446,7 +12091,7 @@ type DefinitionRange struct {
 }
 
 // BaseLanguage holds the data fields for a base language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️baselanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/BaseLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️baselanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/BaseLanguage)
 type BaseLanguage struct {
 	name               string
 	extensions         []string
@@ -10473,57 +12118,57 @@ type BaseLanguage struct {
 
 // Name MUST operate on the BaseLanguage receiver and return consistent results.
 // Name performs the name operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️name](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Name)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️name](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Name)
 func (l *BaseLanguage) Name() string { return l.name }
 
 // Extensions MUST operate on the BaseLanguage receiver and return consistent results.
 // Extensions performs the extensions operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extensions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Extensions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extensions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Extensions)
 func (l *BaseLanguage) Extensions() []string { return l.extensions }
 
 // CommentPrefix MUST operate on the BaseLanguage receiver and return consistent results.
 // CommentPrefix performs the comment prefix operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️commentprefix](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/CommentPrefix)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️commentprefix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CommentPrefix)
 func (l *BaseLanguage) CommentPrefix() string { return l.commentPrefix }
 
 // BlockCommentStart MUST operate on the BaseLanguage receiver and return consistent results.
 // BlockCommentStart performs the block comment start operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️blockcommentstart](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/BlockCommentStart)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️blockcommentstart](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/BlockCommentStart)
 func (l *BaseLanguage) BlockCommentStart() string { return l.blockCommentStart }
 
 // BlockCommentEnd MUST operate on the BaseLanguage receiver and return consistent results.
 // BlockCommentEnd performs the block comment end operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️blockcommentend](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/BlockCommentEnd)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️blockcommentend](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/BlockCommentEnd)
 func (l *BaseLanguage) BlockCommentEnd() string { return l.blockCommentEnd }
 
 // UsesIndentScoping MUST operate on the BaseLanguage receiver and return consistent results.
 // UsesIndentScoping performs the uses indent scoping operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️usesindentscoping](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/UsesIndentScoping)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️usesindentscoping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/UsesIndentScoping)
 func (l *BaseLanguage) UsesIndentScoping() bool { return l.usesIndentScoping }
 
 // SupportsSections MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportssections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/SupportsSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportssections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsSections)
 func (l *BaseLanguage) SupportsSections() bool { return l.sectionStart != nil }
 
 // SupportsDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportsdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/SupportsDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportsdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsDefinitions)
 func (l *BaseLanguage) SupportsDefinitions() bool { return l.definitionRegexp != nil }
 
 // SupportsComments MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportscomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/SupportsComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportscomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsComments)
 func (l *BaseLanguage) SupportsComments() bool { return l.commentPrefix != "" }
 
 // SupportsHeaders MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportsheaders](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/SupportsHeaders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️supportsheaders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsHeaders)
 func (l *BaseLanguage) SupportsHeaders() bool { return l.supportsHeaders }
 
 // MatchesExtension MUST operate on the BaseLanguage receiver and return consistent results.
 // MatchesExtension performs the matches extension operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️matchesextension](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/MatchesExtension)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️matchesextension](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/MatchesExtension)
 func (l *BaseLanguage) MatchesExtension(ext string) bool {
 	ext = strings.ToLower(ext)
 	for _, langExt := range l.extensions {
@@ -10536,7 +12181,7 @@ func (l *BaseLanguage) MatchesExtension(ext string) bool {
 
 // FormatSectionStart MUST produce a well-formed section start string.
 // FormatSectionStart formats the section start into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatsectionstart](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FormatSectionStart)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatsectionstart](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatSectionStart)
 func (l *BaseLanguage) FormatSectionStart(name string) string {
 	if l.sectionStartFmt == "" {
 		return ""
@@ -10546,7 +12191,7 @@ func (l *BaseLanguage) FormatSectionStart(name string) string {
 
 // FormatSectionEnd MUST produce a well-formed section end string.
 // FormatSectionEnd formats the section end into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatsectionend](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FormatSectionEnd)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatsectionend](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatSectionEnd)
 func (l *BaseLanguage) FormatSectionEnd(name string) string {
 	if l.sectionEndFmt == "" {
 		return ""
@@ -10556,7 +12201,7 @@ func (l *BaseLanguage) FormatSectionEnd(name string) string {
 
 // FormatSectionBoth MUST produce a well-formed section both string.
 // FormatSectionBoth formats the section both into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatsectionboth](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FormatSectionBoth)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatsectionboth](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatSectionBoth)
 func (l *BaseLanguage) FormatSectionBoth(name string) string {
 	if l.sectionBothFmt == "" {
 		return ""
@@ -10569,7 +12214,7 @@ func (l *BaseLanguage) FormatSectionBoth(name string) string {
 
 // FormatHeader MUST produce a well-formed header string.
 // FormatHeader formats the header into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatheader](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FormatHeader)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatheader](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatHeader)
 func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, requirements string) string {
 	if !l.supportsHeaders {
 		return ""
@@ -10577,8 +12222,8 @@ func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, lice
 	cp := l.commentPrefix
 	var b strings.Builder
 	b.WriteString(l.FormatSectionStart("Header"))
-	b.WriteString("\n\n")
-	b.WriteString(cp + " [" + fileId + "](" + fileUri + ")\n\n")
+	b.WriteString("\n")
+	b.WriteString(cp + " [" + fileId + "](" + fileUri + ")\n")
 	for _, line := range strings.Split(contributors, "\n") {
 		if strings.TrimSpace(line) != "" {
 			b.WriteString(cp + " " + line + "\n")
@@ -10620,7 +12265,7 @@ func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, lice
 
 // PolicySectionStartMatch MUST operate on the BaseLanguage receiver and return consistent results.
 // PolicySectionStartMatch performs the policy section start match operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️policysectionstartmatch](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/PolicySectionStartMatch)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️policysectionstartmatch](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/PolicySectionStartMatch)
 func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 	if l.policySectionStart == nil {
 		return false, ""
@@ -10638,7 +12283,7 @@ func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 
 // PolicySectionEndMatch MUST operate on the BaseLanguage receiver and return consistent results.
 // PolicySectionEndMatch performs the policy section end match operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️policysectionendmatch](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/PolicySectionEndMatch)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️policysectionendmatch](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/PolicySectionEndMatch)
 func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	if l.policySectionEnd == nil {
 		return false, ""
@@ -10656,7 +12301,7 @@ func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️parsesections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ParseSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️parsesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ParseSections)
 func (l *BaseLanguage) ParseSections(content string) []Section {
 	if l.sectionStart == nil {
 		return nil
@@ -10724,7 +12369,7 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 
 // ParseDefinitions MUST return an error when the input is malformed.
 // ParseDefinitions parses the input and returns the definitions result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️parsedefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ParseDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️parsedefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ParseDefinitions)
 func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -10880,14 +12525,14 @@ func extractDefinitionKeyword(fullMatch, name string) string {
 
 // ExtraOrphanDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extraorphandefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ExtraOrphanDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extraorphandefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ExtraOrphanDefinitions)
 func (l *BaseLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return nil
 }
 
 // SkipDirectives MUST operate on the BaseLanguage receiver and return consistent results.
 // SkipDirectives performs the skip directives operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️skipdirectives](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/SkipDirectives)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️skipdirectives](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SkipDirectives)
 func (l *BaseLanguage) SkipDirectives() []string {
 	builtIn := []string{"TODO", "semio-ignore-"}
 	return append(builtIn, l.skipDirectives...)
@@ -10895,7 +12540,7 @@ func (l *BaseLanguage) SkipDirectives() []string {
 
 // ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
 // ScanComments performs the scan comments operation on the BaseLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️scancomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ScanComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️scancomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ScanComments)
 func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if l.commentPrefix == "" {
 		return nil
@@ -11215,39 +12860,39 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extractimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ExtractImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extractimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ExtractImports)
 func (l *BaseLanguage) ExtractImports(content string) ([]string, string) {
 	return []string{}, content
 }
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FormatImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️formatimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatImports)
 func (l *BaseLanguage) FormatImports(imports []string) string {
 	return ""
 }
 
 // ExtractPackage MUST return the extracted value without side effects.
 // ExtractPackage extracts the package from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extractpackage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ExtractPackage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️extractpackage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ExtractPackage)
 func (l *BaseLanguage) ExtractPackage(content string) (string, string) {
 	return "", content
 }
 
 // #region 🔖TypeScript
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript)
 // TypeScript language plugin with section, definition, comment, and import support.
 
 // TypeScriptLanguage holds the data fields for a type script language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript✂️typescriptlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TypeScriptLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript✂️typescriptlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/TypeScriptLanguage)
 type TypeScriptLanguage struct {
 	BaseLanguage
 }
 
 // NewTypeScriptLanguage MUST initialize all required fields and return a valid TypeScriptLanguage.
 // NewTypeScriptLanguage creates and returns a new TypeScriptLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️newtypescriptlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/NewTypeScriptLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️newtypescriptlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/NewTypeScriptLanguage)
 func NewTypeScriptLanguage() *TypeScriptLanguage {
 	return &TypeScriptLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11272,7 +12917,7 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 
 // ScanComments MUST operate on the TypeScriptLanguage receiver and return consistent results.
 // ScanComments performs the scan comments operation on the TypeScriptLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️scancomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/ScanComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️scancomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/ScanComments)
 func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if DeriveFileKind(file) == FileKindConfig {
 		return nil
@@ -11499,7 +13144,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️extractimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/ExtractImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️extractimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/ExtractImports)
 func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -11528,7 +13173,7 @@ func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️formatimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/FormatImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️formatimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/FormatImports)
 func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -11546,18 +13191,18 @@ func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 
 // #region 🔖Go
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/Go)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go)
 // Go language plugin with section, definition, import, and package support.
 
 // GoLanguage holds the data fields for a go language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go✂️golanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/GoLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go✂️golanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/GoLanguage)
 type GoLanguage struct {
 	BaseLanguage
 }
 
 // NewGoLanguage MUST initialize all required fields and return a valid GoLanguage.
 // NewGoLanguage creates and returns a new GoLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️newgolanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/NewGoLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️newgolanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/NewGoLanguage)
 func NewGoLanguage() *GoLanguage {
 	return &GoLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11584,7 +13229,7 @@ func NewGoLanguage() *GoLanguage {
 
 // ExtraOrphanDefinitions MUST operate on the GoLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the GoLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extraorphandefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/ExtraOrphanDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extraorphandefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtraOrphanDefinitions)
 func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	for i := 0; i < len(lines); i++ {
@@ -11618,7 +13263,7 @@ func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extractimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/ExtractImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extractimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtractImports)
 func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -11655,7 +13300,7 @@ func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️formatimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/FormatImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️formatimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/FormatImports)
 func (l *GoLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -11679,7 +13324,7 @@ func (l *GoLanguage) FormatImports(imports []string) string {
 
 // ExtractPackage MUST return the extracted value without side effects.
 // ExtractPackage extracts the package from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extractpackage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/ExtractPackage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extractpackage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtractPackage)
 func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 	lines := strings.Split(content, "\n")
 	pkg := ""
@@ -11697,14 +13342,14 @@ func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 }
 
 // PythonLanguage holds the data fields for a python language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go✂️pythonlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/PythonLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go✂️pythonlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/PythonLanguage)
 type PythonLanguage struct {
 	BaseLanguage
 }
 
 // NewPythonLanguage MUST initialize all required fields and return a valid PythonLanguage.
 // NewPythonLanguage creates and returns a new PythonLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️newpythonlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/NewPythonLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️newpythonlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/NewPythonLanguage)
 func NewPythonLanguage() *PythonLanguage {
 	return &PythonLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11729,7 +13374,7 @@ func NewPythonLanguage() *PythonLanguage {
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extractimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/ExtractImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️extractimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtractImports)
 func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -11747,7 +13392,7 @@ func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️formatimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Go/FormatImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖go🛠️formatimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/FormatImports)
 func (l *PythonLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -11768,18 +13413,18 @@ func (l *PythonLanguage) FormatImports(imports []string) string {
 
 // #region 🔖C#
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/C/)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s/)
 // C# language plugin with section, definition, and import support.
 
 // CSharpLanguage holds the data fields for a c sharp language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c✂️csharplanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/C//CSharpLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c✂️csharplanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/CSharpLanguage)
 type CSharpLanguage struct {
 	BaseLanguage
 }
 
 // NewCSharpLanguage MUST initialize all required fields and return a valid CSharpLanguage.
 // NewCSharpLanguage creates and returns a new CSharpLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c🛠️newcsharplanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/C//NewCSharpLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c🛠️newcsharplanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/NewCSharpLanguage)
 func NewCSharpLanguage() *CSharpLanguage {
 	return &CSharpLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11806,7 +13451,7 @@ func NewCSharpLanguage() *CSharpLanguage {
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c🛠️extractimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/C//ExtractImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c🛠️extractimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/ExtractImports)
 func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -11824,7 +13469,7 @@ func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c🛠️formatimports](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/C//FormatImports)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖c🛠️formatimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/FormatImports)
 func (l *CSharpLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -11845,18 +13490,18 @@ func (l *CSharpLanguage) FormatImports(imports []string) string {
 
 // #region 🔖JSON
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON)
 // JSON language plugin with section parsing via embedded comment keys.
 
 // JSONLanguage holds the data fields for a j s o n language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json✂️jsonlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/JSONLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json✂️jsonlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/JSONLanguage)
 type JSONLanguage struct {
 	BaseLanguage
 }
 
 // NewJSONLanguage MUST initialize all required fields and return a valid JSONLanguage.
 // NewJSONLanguage creates and returns a new JSONLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️newjsonlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/NewJSONLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️newjsonlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/NewJSONLanguage)
 func NewJSONLanguage() *JSONLanguage {
 	return &JSONLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11870,27 +13515,27 @@ func NewJSONLanguage() *JSONLanguage {
 
 // SupportsSections MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the JSONLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportssections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/SupportsSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportssections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsSections)
 func (l *JSONLanguage) SupportsSections() bool { return true }
 
 // SupportsDefinitions MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the JSONLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportsdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/SupportsDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportsdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsDefinitions)
 func (l *JSONLanguage) SupportsDefinitions() bool { return false }
 
 // SupportsComments MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the JSONLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportscomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/SupportsComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportscomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsComments)
 func (l *JSONLanguage) SupportsComments() bool { return false }
 
 // SupportsHeaders MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the JSONLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportsheaders](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/SupportsHeaders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️supportsheaders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsHeaders)
 func (l *JSONLanguage) SupportsHeaders() bool { return false }
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️parsesections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/JSON/ParseSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖json🛠️parsesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/ParseSections)
 func (l *JSONLanguage) ParseSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
@@ -11900,18 +13545,18 @@ func (l *JSONLanguage) ParseSections(content string) []Section {
 
 // #region 🔖Markdown
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown)
 // Markdown language plugin with heading-based section parsing.
 
 // MarkdownLanguage holds the data fields for a markdown language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown✂️markdownlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown/MarkdownLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown✂️markdownlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/MarkdownLanguage)
 type MarkdownLanguage struct {
 	BaseLanguage
 }
 
 // NewMarkdownLanguage MUST initialize all required fields and return a valid MarkdownLanguage.
 // NewMarkdownLanguage creates and returns a new MarkdownLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️newmarkdownlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown/NewMarkdownLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️newmarkdownlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/NewMarkdownLanguage)
 func NewMarkdownLanguage() *MarkdownLanguage {
 	return &MarkdownLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11929,22 +13574,22 @@ func NewMarkdownLanguage() *MarkdownLanguage {
 
 // SupportsSections MUST operate on the MarkdownLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the MarkdownLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️supportssections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown/SupportsSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️supportssections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/SupportsSections)
 func (l *MarkdownLanguage) SupportsSections() bool { return true }
 
 // SupportsDefinitions MUST operate on the MarkdownLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the MarkdownLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️supportsdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown/SupportsDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️supportsdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/SupportsDefinitions)
 func (l *MarkdownLanguage) SupportsDefinitions() bool { return false }
 
 // SupportsComments MUST operate on the MarkdownLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the MarkdownLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️supportscomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown/SupportsComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️supportscomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/SupportsComments)
 func (l *MarkdownLanguage) SupportsComments() bool { return false }
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️parsesections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Markdown/ParseSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖markdown🛠️parsesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/ParseSections)
 func (l *MarkdownLanguage) ParseSections(content string) []Section {
 	return ParseMarkdownSectionsInternal(content)
 }
@@ -11953,18 +13598,18 @@ func (l *MarkdownLanguage) ParseSections(content string) []Section {
 
 // #region 🔖Rust
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/Rust)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust)
 // Rust language plugin with section, definition, and import support.
 
 // RustLanguage holds the data fields for a rust language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust✂️rustlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Rust/RustLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust✂️rustlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/RustLanguage)
 type RustLanguage struct {
 	BaseLanguage
 }
 
 // NewRustLanguage MUST initialize all required fields and return a valid RustLanguage.
 // NewRustLanguage creates and returns a new RustLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust🛠️newrustlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Rust/NewRustLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust🛠️newrustlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/NewRustLanguage)
 func NewRustLanguage() *RustLanguage {
 	return &RustLanguage{
 		BaseLanguage: BaseLanguage{
@@ -11989,7 +13634,7 @@ func NewRustLanguage() *RustLanguage {
 
 // ExtraOrphanDefinitions MUST operate on the RustLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the RustLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust🛠️extraorphandefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Rust/ExtraOrphanDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖rust🛠️extraorphandefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/ExtraOrphanDefinitions)
 func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	modRegexp := regexp.MustCompile(`^\s*(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;`)
@@ -12006,18 +13651,18 @@ func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 
 // #region 🔖Ruby
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/Ruby)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby)
 // Ruby language plugin with section, definition, and import support.
 
 // RubyLanguage holds the data fields for a ruby language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby✂️rubylanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Ruby/RubyLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby✂️rubylanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/RubyLanguage)
 type RubyLanguage struct {
 	BaseLanguage
 }
 
 // NewRubyLanguage MUST initialize all required fields and return a valid RubyLanguage.
 // NewRubyLanguage creates and returns a new RubyLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby🛠️newrubylanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Ruby/NewRubyLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby🛠️newrubylanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/NewRubyLanguage)
 func NewRubyLanguage() *RubyLanguage {
 	return &RubyLanguage{
 		BaseLanguage: BaseLanguage{
@@ -12042,7 +13687,7 @@ func NewRubyLanguage() *RubyLanguage {
 
 // ParseDefinitions MUST return an error when the input is malformed.
 // ParseDefinitions parses the input and returns the definitions result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby🛠️parsedefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Ruby/ParseDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby🛠️parsedefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/ParseDefinitions)
 func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -12102,7 +13747,7 @@ func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []Defini
 
 // ExtraOrphanDefinitions MUST operate on the RubyLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the RubyLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby🛠️extraorphandefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Ruby/ExtraOrphanDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖ruby🛠️extraorphandefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/ExtraOrphanDefinitions)
 func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	moduleRegexp := regexp.MustCompile(`^\s*module\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`)
@@ -12119,18 +13764,18 @@ func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 
 // #region 🔖Shell
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖shell](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/Shell)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖shell](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Shell)
 // Shell language plugin with section and comment support.
 
 // ShellLanguage holds the data fields for a shell language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖shell✂️shelllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Shell/ShellLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖shell✂️shelllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Shell/d/i/ShellLanguage)
 type ShellLanguage struct {
 	BaseLanguage
 }
 
 // NewShellLanguage MUST initialize all required fields and return a valid ShellLanguage.
 // NewShellLanguage creates and returns a new ShellLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖shell🛠️newshelllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/Shell/NewShellLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖shell🛠️newshelllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Shell/d/i/NewShellLanguage)
 func NewShellLanguage() *ShellLanguage {
 	return &ShellLanguage{
 		BaseLanguage: BaseLanguage{
@@ -12155,18 +13800,18 @@ func NewShellLanguage() *ShellLanguage {
 
 // #region 🔖TOML
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML)
 // TOML language plugin with section heading and comment support.
 
 // TomlLanguage holds the data fields for a toml language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml✂️tomllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML/TomlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml✂️tomllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/TomlLanguage)
 type TomlLanguage struct {
 	BaseLanguage
 }
 
 // NewTomlLanguage MUST initialize all required fields and return a valid TomlLanguage.
 // NewTomlLanguage creates and returns a new TomlLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️newtomllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML/NewTomlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️newtomllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/NewTomlLanguage)
 func NewTomlLanguage() *TomlLanguage {
 	return &TomlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -12187,40 +13832,40 @@ func NewTomlLanguage() *TomlLanguage {
 
 // SupportsSections MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the TomlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportssections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML/SupportsSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportssections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsSections)
 func (l *TomlLanguage) SupportsSections() bool { return true }
 
 // SupportsDefinitions MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the TomlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportsdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML/SupportsDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportsdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsDefinitions)
 func (l *TomlLanguage) SupportsDefinitions() bool { return false }
 
 // SupportsComments MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the TomlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportscomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML/SupportsComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportscomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsComments)
 func (l *TomlLanguage) SupportsComments() bool { return true }
 
 // SupportsHeaders MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the TomlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportsheaders](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/TOML/SupportsHeaders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖toml🛠️supportsheaders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsHeaders)
 func (l *TomlLanguage) SupportsHeaders() bool { return false }
 
 // #endregion 🔖TOML
 
 // #region 🔖YAML
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML)
 // YAML language plugin with section heading and comment support.
 
 // YamlLanguage holds the data fields for a yaml language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml✂️yamllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML/YamlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml✂️yamllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/YamlLanguage)
 type YamlLanguage struct {
 	BaseLanguage
 }
 
 // NewYamlLanguage MUST initialize all required fields and return a valid YamlLanguage.
 // NewYamlLanguage creates and returns a new YamlLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️newyamllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML/NewYamlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️newyamllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/NewYamlLanguage)
 func NewYamlLanguage() *YamlLanguage {
 	return &YamlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -12241,40 +13886,40 @@ func NewYamlLanguage() *YamlLanguage {
 
 // SupportsSections MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the YamlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportssections](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML/SupportsSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportssections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsSections)
 func (l *YamlLanguage) SupportsSections() bool { return true }
 
 // SupportsDefinitions MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the YamlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportsdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML/SupportsDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportsdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsDefinitions)
 func (l *YamlLanguage) SupportsDefinitions() bool { return false }
 
 // SupportsComments MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the YamlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportscomments](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML/SupportsComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportscomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsComments)
 func (l *YamlLanguage) SupportsComments() bool { return true }
 
 // SupportsHeaders MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the YamlLanguage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportsheaders](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/YAML/SupportsHeaders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖yaml🛠️supportsheaders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsHeaders)
 func (l *YamlLanguage) SupportsHeaders() bool { return false }
 
 // #endregion 🔖YAML
 
 // #region 🔖SQL
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖sql](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/SQL)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖sql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/SQL)
 // SQL language plugin with section and comment support.
 
 // SqlLanguage holds the data fields for a sql language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖sql✂️sqllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/SQL/SqlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖sql✂️sqllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/SQL/d/i/SqlLanguage)
 type SqlLanguage struct {
 	BaseLanguage
 }
 
 // NewSqlLanguage MUST initialize all required fields and return a valid SqlLanguage.
 // NewSqlLanguage creates and returns a new SqlLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖sql🛠️newsqllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/SQL/NewSqlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖sql🛠️newsqllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/SQL/d/i/NewSqlLanguage)
 func NewSqlLanguage() *SqlLanguage {
 	return &SqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -12299,18 +13944,18 @@ func NewSqlLanguage() *SqlLanguage {
 
 // #region 🔖GraphQL
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖graphql](semiorepo://section/semio-repo/cli/main.go/Types/Languages/TypeScript/GraphQL)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖graphql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/GraphQL)
 // GraphQL language plugin with section and comment support.
 
 // GraphqlLanguage holds the data fields for a graphql language record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖graphql✂️graphqllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/GraphQL/GraphqlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖graphql✂️graphqllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/GraphQL/d/i/GraphqlLanguage)
 type GraphqlLanguage struct {
 	BaseLanguage
 }
 
 // NewGraphqlLanguage MUST initialize all required fields and return a valid GraphqlLanguage.
 // NewGraphqlLanguage creates and returns a new GraphqlLanguage instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖graphql🛠️newgraphqllanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/GraphQL/NewGraphqlLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🔖graphql🛠️newgraphqllanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/GraphQL/d/i/NewGraphqlLanguage)
 func NewGraphqlLanguage() *GraphqlLanguage {
 	return &GraphqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -12350,7 +13995,7 @@ var languageRegistry = []LanguagePlugin{
 
 // GetLanguage MUST return the stored value without modification.
 // GetLanguage returns the language of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️getlanguage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/GetLanguage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️getlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/GetLanguage)
 func GetLanguage(filePath string) LanguagePlugin {
 	ext := strings.ToLower(filepath.Ext(filePath))
 	for _, lang := range languageRegistry {
@@ -12363,7 +14008,7 @@ func GetLanguage(filePath string) LanguagePlugin {
 
 // GetLanguageByName MUST return the stored value without modification.
 // GetLanguageByName returns the language by name of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️getlanguagebyname](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TypeScript/GetLanguageByName)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖typescript🛠️getlanguagebyname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/GetLanguageByName)
 func GetLanguageByName(name string) LanguagePlugin {
 	for _, lang := range languageRegistry {
 		if lang.Name() == name {
@@ -12376,7 +14021,7 @@ func GetLanguageByName(name string) LanguagePlugin {
 // #endregion 🔖TypeScript
 
 // GitAuthor holds the data fields for a git author record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️gitauthor](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GitAuthor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️gitauthor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GitAuthor)
 type GitAuthor struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Email  string `json:"email,omitempty" yaml:"email,omitempty"`
@@ -12385,7 +14030,7 @@ type GitAuthor struct {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the GitAuthor.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️string](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/String)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/String)
 func (a GitAuthor) String() string {
 	if a.Email != "" {
 		return fmt.Sprintf("%s <%s>", a.Name, a.Email)
@@ -12407,7 +14052,7 @@ func parseGitAuthor(s string) GitAuthor {
 
 // FindAndUpdateContributor MUST return nil when no match is found.
 // FindAndUpdateContributor searches for and returns the matching and update contributor.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️findandupdatecontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FindAndUpdateContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️findandupdatecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FindAndUpdateContributor)
 func FindAndUpdateContributor(authorStr string) string {
 	parsed := parseGitAuthor(authorStr)
 	if parsed.Name == "" && parsed.Email == "" {
@@ -12495,7 +14140,7 @@ func FindAndUpdateContributor(authorStr string) string {
 
 // GetSystem MUST return the stored value without modification.
 // GetSystem returns the system of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getsystem](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GetSystem)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getsystem](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetSystem)
 func GetSystem() string {
 	switch runtime.GOOS {
 	case "darwin":
@@ -12508,7 +14153,7 @@ func GetSystem() string {
 }
 
 // InteractionFile holds a file reference with path, id and uri.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interactionfile](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/InteractionFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interactionfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/InteractionFile)
 type InteractionFile struct {
 	Path string `json:"path" yaml:"path"`
 	ID   string `json:"id,omitempty" yaml:"id,omitempty"`
@@ -12516,106 +14161,77 @@ type InteractionFile struct {
 }
 
 // Interaction holds the data fields for a interaction record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interaction](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Interaction)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interaction](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Interaction)
 type Interaction struct {
-	Kind    string            `json:"kind" yaml:"kind"`
-	Date    string            `json:"date" yaml:"date"`
-	Author  string            `json:"author" yaml:"author"`
-	System  string            `json:"system" yaml:"system"`
-	Client  string            `json:"client" yaml:"client"`
-	Commit  string            `json:"commit" yaml:"commit"`
-	Prompt  string            `json:"prompt,omitempty" yaml:"prompt,omitempty"`
-	Summary string            `json:"summary,omitempty" yaml:"summary,omitempty"`
-	LLM     string            `json:"llm,omitempty" yaml:"llm,omitempty"`
-	Files   []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
+	Kind       string            `json:"kind" yaml:"kind"`
+	Date       string            `json:"date" yaml:"date"`
+	Author     string            `json:"author" yaml:"author"`
+	System     string            `json:"system" yaml:"system"`
+	Client     string            `json:"client" yaml:"client"`
+	Checkpoint string            `json:"checkpoint" yaml:"checkpoint"`
+	Prompt     string            `json:"prompt,omitempty" yaml:"prompt,omitempty"`
+	Summary    string            `json:"summary,omitempty" yaml:"summary,omitempty"`
+	LLM        string            `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Files      []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
-// TicketAgentRename holds a from/to pair for renamed entities.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentrename](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentRename)
-type TicketAgentRename struct {
+// CheckpointDiffRename holds a from/to pair for renamed entities.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiffrename](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiffRename)
+type CheckpointDiffRename struct {
 	From string `json:"from" yaml:"from"`
 	To   string `json:"to" yaml:"to"`
 }
 
-// TicketAgentDiffStats holds deleted/renamed/modified/created lists for a diff category.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentdiffstats](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentDiffStats)
-type TicketAgentDiffStats struct {
-	Deleted  []string            `json:"deleted,omitempty" yaml:"deleted,omitempty"`
-	Renamed  []TicketAgentRename `json:"renamed,omitempty" yaml:"renamed,omitempty"`
-	Modified []string            `json:"modified,omitempty" yaml:"modified,omitempty"`
-	Created  []string            `json:"created,omitempty" yaml:"created,omitempty"`
+// CheckpointDiffStats holds deleted/renamed/modified/created lists for a diff category.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiffstats](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiffStats)
+type CheckpointDiffStats struct {
+	Deleted  []string               `json:"deleted,omitempty" yaml:"deleted,omitempty"`
+	Renamed  []CheckpointDiffRename `json:"renamed,omitempty" yaml:"renamed,omitempty"`
+	Modified []string               `json:"modified,omitempty" yaml:"modified,omitempty"`
+	Created  []string               `json:"created,omitempty" yaml:"created,omitempty"`
 }
 
-// TicketAgentDiff holds diff stats for projects, bundles, folders, files, sections, and definitions.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentDiff)
-type TicketAgentDiff struct {
-	Projects    TicketAgentDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
-	Bundles     TicketAgentDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
-	Folders     TicketAgentDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
-	Files       TicketAgentDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
-	Sections    TicketAgentDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
-	Definitions TicketAgentDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
+// CheckpointDiff holds diff stats for projects, bundles, folders, files, sections, and definitions.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiff](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiff)
+type CheckpointDiff struct {
+	Projects    CheckpointDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
+	Bundles     CheckpointDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+	Folders     CheckpointDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
+	Files       CheckpointDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
+	Sections    CheckpointDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
+	Definitions CheckpointDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
 }
 
 // TicketAgentPlanStep holds a single step in an agent plan with optional timestamps.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentplanstep](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentPlanStep)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentplanstep](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgentPlanStep)
 type TicketAgentPlanStep struct {
 	Name      string `json:"name" yaml:"name"`
 	Completed string `json:"completed,omitempty" yaml:"completed,omitempty"`
 	Started   string `json:"started,omitempty" yaml:"started,omitempty"`
+	Abandoned string `json:"abandoned,omitempty" yaml:"abandoned,omitempty"`
 }
 
 // TicketAgentPlan holds the plan steps for an agent.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentplan](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentPlan)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentplan](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgentPlan)
 type TicketAgentPlan struct {
 	Steps []TicketAgentPlanStep `json:"steps,omitempty" yaml:"steps,omitempty"`
 }
 
-// TicketAgentEventSectionRef holds a section ID and its definitions in a code block.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagenteventsectionref](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentEventSectionRef)
-type TicketAgentEventSectionRef struct {
-	Section     string   `json:"section" yaml:"section"`
-	Definitions []string `json:"definitions,omitempty" yaml:"definitions,omitempty"`
-}
-
-// TicketAgentEventCodeBlock holds section refs and lines of code for old/new in a code edit.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagenteventcodeblock](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentEventCodeBlock)
-type TicketAgentEventCodeBlock struct {
-	Sections []TicketAgentEventSectionRef `json:"sections,omitempty" yaml:"sections,omitempty"`
-	LOC      int                          `json:"loc,omitempty" yaml:"loc,omitempty"`
-}
-
-// TicketAgentEvent holds an agent hook event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentevent](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentEvent)
-type TicketAgentEvent struct {
-	Kind      string                     `json:"kind" yaml:"kind"`
-	Timestamp string                     `json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
-	Prompt    string                     `json:"prompt,omitempty" yaml:"prompt,omitempty"`
-	Query     string                     `json:"query,omitempty" yaml:"query,omitempty"`
-	File      string                     `json:"file,omitempty" yaml:"file,omitempty"`
-	Denied    string                     `json:"denied,omitempty" yaml:"denied,omitempty"`
-	Line      int                        `json:"line,omitempty" yaml:"line,omitempty"`
-	Old       *TicketAgentEventCodeBlock `json:"old,omitempty" yaml:"old,omitempty"`
-	New       *TicketAgentEventCodeBlock `json:"new,omitempty" yaml:"new,omitempty"`
-}
-
-// TicketAgent holds an agent record with contributor, plan, events, and diff.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagent](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgent)
+// TicketAgent holds an agent record with contributor and plan.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgent)
 type TicketAgent struct {
-	Session     string             `json:"session" yaml:"session"`
-	Contributor string             `json:"contributor,omitempty" yaml:"contributor,omitempty"`
-	System      string             `json:"system,omitempty" yaml:"system,omitempty"`
-	Client      string             `json:"client,omitempty" yaml:"client,omitempty"`
-	LLM         string             `json:"llm,omitempty" yaml:"llm,omitempty"`
-	Transcript  string             `json:"transcript,omitempty" yaml:"transcript,omitempty"`
-	Plan        *TicketAgentPlan   `json:"plan,omitempty" yaml:"plan,omitempty"`
-	Events      []TicketAgentEvent `json:"events,omitempty" yaml:"events,omitempty"`
-	Diff        *TicketAgentDiff   `json:"diff,omitempty" yaml:"diff,omitempty"`
+	Session     string           `json:"session" yaml:"session"`
+	Contributor string           `json:"contributor,omitempty" yaml:"contributor,omitempty"`
+	System      string           `json:"system,omitempty" yaml:"system,omitempty"`
+	Client      string           `json:"client,omitempty" yaml:"client,omitempty"`
+	LLM         string           `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Transcript  string           `json:"transcript,omitempty" yaml:"transcript,omitempty"`
+	Plan        *TicketAgentPlan `json:"plan,omitempty" yaml:"plan,omitempty"`
 }
 
 // UnmarshalJSON MUST handle both legacy and current JSON layouts.
 // UnmarshalJSON performs the unmarshal j s o n operation on the Interaction.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️unmarshaljson](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/UnmarshalJSON)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️unmarshaljson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/UnmarshalJSON)
 func (i *Interaction) UnmarshalJSON(data []byte) error {
 	type Alias Interaction
 	raw := struct {
@@ -12711,7 +14327,7 @@ func resolveAuthorToGithub(name, email string) string {
 }
 
 // InteractionResource holds a flat interaction enriched with its source context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interactionresource](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/InteractionResource)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️interactionresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/InteractionResource)
 type InteractionResource struct {
 	Interaction
 	SourceKind string `json:"sourceKind"`
@@ -12721,7 +14337,7 @@ type InteractionResource struct {
 }
 
 // ListInteractions aggregates interactions from all tickets and goals.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️listinteractions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ListInteractions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️listinteractions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ListInteractions)
 // ListInteractions MUST perform the ListInteractions operation.
 func ListInteractions() ([]InteractionResource, error) {
 	var result []InteractionResource
@@ -12740,25 +14356,11 @@ func ListInteractions() ([]InteractionResource, error) {
 			}
 		}
 	}
-	goals, err := ListGoals()
-	if err == nil {
-		for _, g := range goals {
-			gid := g.GetID()
-			for _, ix := range g.Interactions {
-				result = append(result, InteractionResource{
-					Interaction: ix,
-					SourceKind:  "goal",
-					SourceID:    gid,
-					GoalID:      gid,
-				})
-			}
-		}
-	}
 	return result, nil
 }
 
 // StreamInteractions streams interactions from all tickets and goals.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️streaminteractions](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/StreamInteractions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️streaminteractions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/StreamInteractions)
 // StreamInteractions MUST perform the StreamInteractions operation.
 func StreamInteractions(ctx context.Context, out chan<- InteractionResource) {
 	defer close(out)
@@ -12779,26 +14381,10 @@ func StreamInteractions(ctx context.Context, out chan<- InteractionResource) {
 			}
 		}
 	}
-	goals, _ := ListGoals()
-	for _, g := range goals {
-		gid := g.GetID()
-		for _, ix := range g.Interactions {
-			select {
-			case <-ctx.Done():
-				return
-			case out <- InteractionResource{
-				Interaction: ix,
-				SourceKind:  "goal",
-				SourceID:    gid,
-				GoalID:      gid,
-			}:
-			}
-		}
-	}
 }
 
 // TicketSection holds the data fields for a ticket section record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsection](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketSection)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketSection)
 type TicketSection struct {
 	Name        string       `json:"name"`
 	Range       *Range       `json:"range,omitempty"`
@@ -12807,20 +14393,20 @@ type TicketSection struct {
 }
 
 // TicketFile holds the data fields for a ticket file record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketfile](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketFile)
 type TicketFile struct {
 	Path  string       `json:"path"`
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
 // TicketManagementData holds the data fields for a ticket github data record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketgithubdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketManagementData)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketmanagementdata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketManagementData)
 type TicketManagementData struct {
 	Issue string `json:"issue,omitempty"`
 }
 
 // TicketFileRenamed holds the data fields for a ticket file renamed record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketfilerenamed](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketFileRenamed)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketfilerenamed](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketFileRenamed)
 type TicketFileRenamed struct {
 	From  string       `json:"from"`
 	To    string       `json:"to"`
@@ -12828,7 +14414,7 @@ type TicketFileRenamed struct {
 }
 
 // TicketDiffSet holds the data fields for a ticket diff set record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdiffset](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketDiffSet)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdiffset](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketDiffSet)
 type TicketDiffSet struct {
 	Deleted  []TicketFile        `json:"deleted"`
 	Renamed  []TicketFileRenamed `json:"renamed"`
@@ -12837,7 +14423,7 @@ type TicketDiffSet struct {
 }
 
 // TicketDiffs holds the data fields for a ticket diffs record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdiffs](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketDiffs)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdiffs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketDiffs)
 type TicketDiffs struct {
 	Bundles     TicketDiffSet `json:"bundles"`
 	Folders     TicketDiffSet `json:"folders"`
@@ -12847,50 +14433,61 @@ type TicketDiffs struct {
 }
 
 // TicketData holds the data fields for a ticket data record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketData)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketdata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketData)
 type TicketData struct {
-	Title        string                `json:"title"`
-	Interactions []Interaction         `json:"interactions"`
-	Status       TicketStatus          `json:"status"`
-	Summary      string                `json:"summary,omitempty"`
-	Management   *TicketManagementData `json:"github,omitempty"`
-	Goal         string                `json:"goal,omitempty"`
-	Parent       string                `json:"parent,omitempty"`
+	Title      string                `json:"title"`
+	Status     TicketStatus          `json:"status"`
+	Summary    string                `json:"summary,omitempty"`
+	Management *TicketManagementData `json:"github,omitempty"`
+	Goal       string                `json:"goal,omitempty"`
+	Parent     string                `json:"parent,omitempty"`
 }
 
 // Goal holds the data fields for a goal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Goal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Goal)
 type Goal struct {
-	Title        string              `json:"title"`
-	Description  string              `json:"description"`
-	Prompt       string              `json:"prompt"`
-	Status       string              `json:"status"`
-	Summary      string              `json:"summary,omitempty"`
-	DueDate      string              `json:"dueDate,omitempty"`
-	Dates        GoalDates           `json:"dates"`
-	Client       string              `json:"client"`
-	LLM          string              `json:"llm"`
-	Parent       string              `json:"parent,omitempty"`
-	Management   *GoalManagementData `json:"github,omitempty"`
-	Interactions []Interaction       `json:"interactions"`
+	Title       string              `json:"title"`
+	Description string              `json:"description"`
+	Prompt      string              `json:"prompt"`
+	Status      string              `json:"status"`
+	Summary     string              `json:"summary,omitempty"`
+	DueDate     string              `json:"dueDate,omitempty"`
+	Dates       GoalDates           `json:"dates"`
+	Client      string              `json:"client"`
+	LLM         string              `json:"llm"`
+	Parent      string              `json:"parent,omitempty"`
+	Management  *GoalManagementData `json:"github,omitempty"`
 
 	ID   string `json:"-"`
 	Path string `json:"-"`
 }
 
+// MarshalJSON converts internal filesystem paths to semio repo emoji IDs for Goal serialization.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️marshaljson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/MarshalJSON)
+// MarshalJSON MUST perform the MarshalJSON operation.
+func (g Goal) MarshalJSON() ([]byte, error) {
+	type GoalAlias Goal
+	alias := GoalAlias(g)
+
+	if alias.Parent != "" && !strings.Contains(alias.Parent, emojiText(EmojiGoal)) {
+		alias.Parent = goalPathToSemioID(alias.Parent)
+	}
+	return json.Marshal(alias)
+}
+
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Goal is node.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/IsNode)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/IsNode)
 func (g *Goal) IsNode() {}
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Goal.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getid](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GetID)
-func (g *Goal) GetID() string { return emojiText(EmojiGoal) + Flat(g.ID) }
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetID)
+func (g *Goal) GetID() string { return goalArtifactID(g.ID) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Goal.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetURI)
 func (g *Goal) GetURI() string {
 	parts := strings.Split(g.ID, "/")
 	result := "semiorepo://"
@@ -12905,86 +14502,87 @@ func (g *Goal) GetURI() string {
 }
 
 // GoalDates holds the data fields for a goal dates record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goaldates](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GoalDates)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goaldates](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GoalDates)
 type GoalDates struct {
 	Due string `json:"due,omitempty"`
 }
 
 // GoalManagementData holds the data fields for a goal github data record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goalgithubdata](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GoalManagementData)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️goalmanagementdata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GoalManagementData)
 type GoalManagementData struct {
 	Milestone string `json:"milestone,omitempty"`
 	Issue     string `json:"issue,omitempty"`
 }
 
 // Statute represents a statute value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️statute](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Statute)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️statute](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Statute)
 type Statute string
 
 const (
-	BreachCodeFileMissingHeaderRegion               Statute = "code/file/missing-header-region"
-	BreachCodeFileWrongHeaderRegionFormat           Statute = "code/file/wrong-header-region-format"
-	BreachCodeFileMissingIdentification             Statute = "code/file/missing-identification"
-	BreachCodeFileWrongIdentificationId             Statute = "code/file/wrong-identification/id"
-	BreachCodeFileWrongIdentificationUri            Statute = "code/file/wrong-identification/uri"
-	BreachCodeFileMissingContributors               Statute = "code/file/missing-contributors"
-	BreachCodeFileMissingSummary                    Statute = "code/file/missing-summary"
-	BreachCodeFileMissingLicense                    Statute = "code/file/missing-license"
-	BreachCodeFileWrongLicense                      Statute = "code/file/wrong-license"
-	BreachCodeFileMissingRequirements                      Statute = "code/file/missing-requirements"
-	BreachCodeFileMissingDocs                       Statute = "code/file/missing-docs"
-	BreachCodeSectionEmpty                          Statute = "code/section/empty"
-	BreachCodeSectionOrphanDefinition               Statute = "code/section/orphan-definition"
-	BreachCodeSectionMissingStartName               Statute = "code/section/missing-start-name"
-	BreachCodeSectionMissingEndName                 Statute = "code/section/missing-end-name"
-	BreachCodeSectionNameMismatch                   Statute = "code/section/name-mismatch"
-	BreachCodeSectionMissingIdentification          Statute = "code/section/missing-identification"
-	BreachCodeSectionWrongIdentificationId          Statute = "code/section/wrong-identification/id"
-	BreachCodeSectionWrongIdentificationUri         Statute = "code/section/wrong-identification/uri"
-	BreachCodeSectionWrongFormat                    Statute = "code/section/wrong-format"
-	BreachCodeSectionWrongFormatSummaryTooLong      Statute = "code/section/wrong-format/summary/too-long-summary"
-	BreachCodeSectionWrongFormatRequirementsSplitBlock     Statute = "code/section/wrong-format/requirements/split-block"
-	BreachCodeSectionWrongFormatDocs                Statute = "code/section/wrong-format/docs"
-	BreachCodeSectionMissingSummary                 Statute = "code/section/missing-summary"
-	BreachCodeSectionMissingRequirements                   Statute = "code/section/missing-requirements"
-	BreachCodeSectionMissingDocs                    Statute = "code/section/missing-docs"
-	BreachCodeDefMissingIdentification              Statute = "code/definition/missing-identification"
-	BreachCodeDefWrongIdentificationId              Statute = "code/definition/wrong-identification/id"
-	BreachCodeDefWrongIdentificationUri             Statute = "code/definition/wrong-identification/uri"
-	BreachCodeDefWrongFormat                        Statute = "code/definition/wrong-format"
-	BreachCodeDefNotNativeDocstring                 Statute = "code/definition/wrong-format/not-native-docstring"
-	BreachCodeDefMissingSummary                     Statute = "code/definition/missing-summary"
-	BreachCodeDefMissingRequirements                       Statute = "code/definition/missing-requirements"
-	BreachCodeDefMissingDocs                        Statute = "code/definition/missing-docs"
-	BreachCodeCommentInline                         Statute = "code/comment/inline"
-	BreachCodeCommentBlock                          Statute = "code/comment/block"
-	BreachCodeCommentJSDoc                          Statute = "code/comment/jsdoc"
-	BreachCodeRequirementsSyntax                           Statute = "code/requirements/implementation-syntax"
-	BreachCodeDocsMissingReadme                     Statute = "code/docs/missing-readme"
-	BreachDevDocsMissingFile                        Statute = "dev-docs/missing-file"
-	BreachDevDocsMissingFolder                      Statute = "dev-docs/missing-folder"
-	BreachDevDocsWrongFilePath                      Statute = "dev-docs/wrong-file-path"
-	BreachDevDocsWrongFolderPath                    Statute = "dev-docs/wrong-folder-path"
-	BreachDevDocsWrongFileName                      Statute = "dev-docs/wrong-file-name"
-	BreachDevDocsWrongFolderName                    Statute = "dev-docs/wrong-folder-name"
-	BreachDevDocsWrongFileOrder                     Statute = "dev-docs/wrong-file-order"
-	BreachDevDocsWrongFolderOrder                   Statute = "dev-docs/wrong-folder-order"
-	BreachDevDocsMissingComponent                   Statute = "dev-docs/missing-component"
-	BreachDevDocsWrongComponentName                 Statute = "dev-docs/wrong-component-name"
-	BreachDevDocsWrongComponentOrder                Statute = "dev-docs/wrong-component-order"
-	BreachSketchpadImportThirdParty                 Statute = "sketchpad/import/third-party-outside-elements"
-	BreachSketchpadStateMultipleMachines            Statute = "sketchpad/state/multiple-machines"
-	BreachSketchpadStateCreateActor                 Statute = "sketchpad/state/create-actor-usage"
-	BreachSketchpadStateYjsAppState                 Statute = "sketchpad/state/yjs-app-state"
-	BreachSketchpadStateForbiddenStore              Statute = "sketchpad/state/forbidden-store"
-	BreachSketchpadHooksNonTriadic                  Statute = "sketchpad/hooks/non-triadic"
-	BreachCodeUnicodeEmojiVariation                 Statute = "code/unicode/emoji-variation"
-	BreachRepoMissingCommand                        Statute = "repo/missing-command"
-	BreachRepoMissingTicketTracking                 Statute = "repo/missing-ticket-tracking"
-	BreachSystemDevcontainerVscodeSettingsOutside   Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
-	BreachSystemDevcontainerVscodeExtensionsOutside Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
-	BreachFolderIllegalEmpty                        Statute = "folder/illegal/empty"
-	BreachFileIllegalUseGodfile                     Statute = "file/illegal/use-godfile"
+	BreachCodeFileMissingHeaderRegion                  Statute = "code/file/missing-header-region"
+	BreachCodeFileWrongHeaderRegionFormat              Statute = "code/file/wrong-header-region-format"
+	BreachCodeFileMissingIdentification                Statute = "code/file/missing-identification"
+	BreachCodeFileWrongIdentificationId                Statute = "code/file/wrong-identification/id"
+	BreachCodeFileWrongIdentificationUri               Statute = "code/file/wrong-identification/uri"
+	BreachCodeFileMissingContributors                  Statute = "code/file/missing-contributors"
+	BreachCodeFileMissingSummary                       Statute = "code/file/missing-summary"
+	BreachCodeFileMissingLicense                       Statute = "code/file/missing-license"
+	BreachCodeFileWrongLicense                         Statute = "code/file/wrong-license"
+	BreachCodeFileMissingRequirements                  Statute = "code/file/missing-requirements"
+	BreachCodeFileMissingDocs                          Statute = "code/file/missing-docs"
+	BreachCodeSectionEmpty                             Statute = "code/section/empty"
+	BreachCodeSectionOrphanDefinition                  Statute = "code/section/orphan-definition"
+	BreachCodeSectionMissingStartName                  Statute = "code/section/missing-start-name"
+	BreachCodeSectionMissingEndName                    Statute = "code/section/missing-end-name"
+	BreachCodeSectionNameMismatch                      Statute = "code/section/name-mismatch"
+	BreachCodeSectionMissingIdentification             Statute = "code/section/missing-identification"
+	BreachCodeSectionWrongIdentificationId             Statute = "code/section/wrong-identification/id"
+	BreachCodeSectionWrongIdentificationUri            Statute = "code/section/wrong-identification/uri"
+	BreachCodeSectionWrongFormat                       Statute = "code/section/wrong-format"
+	BreachCodeSectionWrongFormatSummaryTooLong         Statute = "code/section/wrong-format/summary/too-long-summary"
+	BreachCodeSectionWrongFormatNewlineAfterRegion     Statute = "code/section/wrong-format/newline-after-region"
+	BreachCodeSectionWrongFormatRequirementsSplitBlock Statute = "code/section/wrong-format/requirements/split-block"
+	BreachCodeSectionWrongFormatDocs                   Statute = "code/section/wrong-format/docs"
+	BreachCodeSectionMissingSummary                    Statute = "code/section/missing-summary"
+	BreachCodeSectionMissingRequirements               Statute = "code/section/missing-requirements"
+	BreachCodeSectionMissingDocs                       Statute = "code/section/missing-docs"
+	BreachCodeDefMissingIdentification                 Statute = "code/definition/missing-identification"
+	BreachCodeDefWrongIdentificationId                 Statute = "code/definition/wrong-identification/id"
+	BreachCodeDefWrongIdentificationUri                Statute = "code/definition/wrong-identification/uri"
+	BreachCodeDefWrongFormat                           Statute = "code/definition/wrong-format"
+	BreachCodeDefNotNativeDocstring                    Statute = "code/definition/wrong-format/not-native-docstring"
+	BreachCodeDefMissingSummary                        Statute = "code/definition/missing-summary"
+	BreachCodeDefMissingRequirements                   Statute = "code/definition/missing-requirements"
+	BreachCodeDefMissingDocs                           Statute = "code/definition/missing-docs"
+	BreachCodeCommentInline                            Statute = "code/comment/inline"
+	BreachCodeCommentBlock                             Statute = "code/comment/block"
+	BreachCodeCommentJSDoc                             Statute = "code/comment/jsdoc"
+	BreachCodeRequirementsSyntax                       Statute = "code/requirements/implementation-syntax"
+	BreachCodeDocsMissingReadme                        Statute = "code/docs/missing-readme"
+	BreachDevDocsMissingFile                           Statute = "dev-docs/missing-file"
+	BreachDevDocsMissingFolder                         Statute = "dev-docs/missing-folder"
+	BreachDevDocsWrongFilePath                         Statute = "dev-docs/wrong-file-path"
+	BreachDevDocsWrongFolderPath                       Statute = "dev-docs/wrong-folder-path"
+	BreachDevDocsWrongFileName                         Statute = "dev-docs/wrong-file-name"
+	BreachDevDocsWrongFolderName                       Statute = "dev-docs/wrong-folder-name"
+	BreachDevDocsWrongFileOrder                        Statute = "dev-docs/wrong-file-order"
+	BreachDevDocsWrongFolderOrder                      Statute = "dev-docs/wrong-folder-order"
+	BreachDevDocsMissingComponent                      Statute = "dev-docs/missing-component"
+	BreachDevDocsWrongComponentName                    Statute = "dev-docs/wrong-component-name"
+	BreachDevDocsWrongComponentOrder                   Statute = "dev-docs/wrong-component-order"
+	BreachSketchpadImportThirdParty                    Statute = "sketchpad/import/third-party-outside-elements"
+	BreachSketchpadStateMultipleMachines               Statute = "sketchpad/state/multiple-machines"
+	BreachSketchpadStateCreateActor                    Statute = "sketchpad/state/create-actor-usage"
+	BreachSketchpadStateYjsAppState                    Statute = "sketchpad/state/yjs-app-state"
+	BreachSketchpadStateForbiddenStore                 Statute = "sketchpad/state/forbidden-store"
+	BreachSketchpadHooksNonTriadic                     Statute = "sketchpad/hooks/non-triadic"
+	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
+	BreachRepoMissingCommand                           Statute = "repo/missing-command"
+	BreachRepoMissingTicketTracking                    Statute = "repo/missing-ticket-tracking"
+	BreachSystemDevcontainerVscodeSettingsOutside      Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
+	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
+	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
+	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
 )
 
 var statuteInfoTable = map[Statute]StatuteMeta{
@@ -13127,6 +14725,13 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Reason:      "Section summary must not exceed 256 characters",
 		Solution:    "Shorten the section summary to 256 characters or less",
 		Autofixable: false,
+	},
+	BreachCodeSectionWrongFormatNewlineAfterRegion: {
+		Kind:        BreachCodeSectionWrongFormatNewlineAfterRegion,
+		Priority:    BreachPriorityLow,
+		Reason:      "No blank lines allowed between region start marker and region information comments",
+		Solution:    "Remove blank lines between region start marker and the first comment line",
+		Autofixable: true,
 	},
 	BreachCodeSectionWrongFormatRequirementsSplitBlock: {
 		Kind:        BreachCodeSectionWrongFormatRequirementsSplitBlock,
@@ -13433,7 +15038,7 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 
 // Info MUST return the metadata entry for the statute.
 // Info returns the metadata for the statute.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️info](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Info)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️info](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Info)
 func (k Statute) Info() StatuteMeta {
 	if info, ok := statuteInfoTable[k]; ok {
 		return info
@@ -13448,7 +15053,7 @@ func (k Statute) Info() StatuteMeta {
 }
 
 // Territory holds the data fields for a statute group record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️territory](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Territory)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️territory](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Territory)
 type Territory struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
@@ -13459,7 +15064,7 @@ type Territory struct {
 
 // AllKinds MUST include all statutes from the group and its children.
 // AllKinds returns all statutes associated with the group.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️allkinds](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/AllKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️allkinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/AllKinds)
 func (g *Territory) AllKinds() []Statute {
 	var result []Statute
 	result = append(result, g.Kinds...)
@@ -13471,20 +15076,20 @@ func (g *Territory) AllKinds() []Statute {
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Territory.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getid](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GetID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetID)
 func (g *Territory) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiTerritory), g.Name)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Territory.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GetURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetURI)
 func (g *Territory) GetURI() string {
 	return "semiorepo://territory/" + PathToUriPath(g.Name)
 }
 
 // PolicyDef holds the data fields for a policy def record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️policydef](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/PolicyDef)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️policydef](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/PolicyDef)
 type PolicyDef struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
@@ -13497,7 +15102,7 @@ type PolicyDef struct {
 
 // AllKinds MUST include all statutes from the group and its children.
 // AllKinds returns all statutes associated with the group.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️allkinds](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/AllKinds)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️allkinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/AllKinds)
 func (p *PolicyDef) AllKinds() []Statute {
 	var result []Statute
 	for _, g := range p.Groups {
@@ -13507,17 +15112,17 @@ func (p *PolicyDef) AllKinds() []Statute {
 }
 
 // AnalyzeReport holds the data fields for a analyze report record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️analyzereport](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/AnalyzeReport)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️analyzereport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/AnalyzeReport)
 type AnalyzeReport struct {
-	Timestamp string   `json:"timestamp"`
-	Status    string   `json:"status"`
-	Scope     string   `json:"scope"`
-	Summary   Summary  `json:"summary"`
-	Breachs   []Breach `json:"breachs"`
+	Second  string   `json:"second"`
+	Status  string   `json:"status"`
+	Scope   string   `json:"scope"`
+	Summary Summary  `json:"summary"`
+	Breachs []Breach `json:"breachs"`
 }
 
 // Summary holds the data fields for a summary record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️summary](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Summary)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️summary](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Summary)
 type Summary struct {
 	Total      int            `json:"total"`
 	ByPriority map[string]int `json:"byPriority"`
@@ -13525,16 +15130,16 @@ type Summary struct {
 }
 
 // FileCache holds the data fields for a file cache record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️filecache](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/FileCache)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️filecache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FileCache)
 type FileCache struct {
-	FilePath  string   `json:"filePath"`
-	Hash      string   `json:"hash"`
-	Timestamp string   `json:"timestamp"`
-	Breachs   []Breach `json:"breachs"`
+	FilePath string   `json:"filePath"`
+	Hash     string   `json:"hash"`
+	Second   string   `json:"second"`
+	Breachs  []Breach `json:"breachs"`
 }
 
 // OutputType represents a output type value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️outputtype](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/OutputType)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️outputtype](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/OutputType)
 type OutputType string
 
 const (
@@ -13546,21 +15151,21 @@ const (
 )
 
 // OutputLine holds the data fields for a output line record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️outputline](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/OutputLine)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️outputline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/OutputLine)
 type OutputLine struct {
 	Type OutputType `json:"type"`
 	Text string     `json:"text"`
 }
 
 // CommandOutput holds the data fields for a command output record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️commandoutput](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/CommandOutput)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️commandoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CommandOutput)
 type CommandOutput struct {
 	Lines    []OutputLine `json:"lines"`
 	ExitCode int          `json:"exitCode"`
 }
 
 // ToolResult holds the data fields for a tool result record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️toolresult](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ToolResult)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️toolresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ToolResult)
 type ToolResult struct {
 	Output CommandOutput `json:"output"`
 	Data   interface{}   `json:"data,omitempty"`
@@ -13568,7 +15173,7 @@ type ToolResult struct {
 }
 
 // ContributorTicket holds the data fields for a contributor ticket record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️contributorticket](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ContributorTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️contributorticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ContributorTicket)
 type ContributorTicket struct {
 	Year     int          `json:"year"`
 	Month    int          `json:"month"`
@@ -13578,33 +15183,33 @@ type ContributorTicket struct {
 	FilePath string       `json:"filePath,omitempty"`
 }
 
-// ContributorCommit holds the data fields for a contributor commit record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️contributorcommit](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ContributorCommit)
-type ContributorCommit struct {
+// ContributorCheckpoint holds the data fields for a contributor checkpoint record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️contributorcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ContributorCheckpoint)
+type ContributorCheckpoint struct {
 	Title string `json:"title"`
 	Sha   string `json:"sha"`
 }
 
 // ContributorContributionsStorage holds the data fields for a contributor contributions storage record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️contributorcontributionsstorage](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/ContributorContributionsStorage)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️contributorcontributionsstorage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ContributorContributionsStorage)
 type ContributorContributionsStorage struct {
-	Bundles     []string            `json:"bundles,omitempty"`
-	Folders     []string            `json:"folders,omitempty"`
-	Files       []string            `json:"files,omitempty"`
-	Regions     []string            `json:"regions,omitempty"`
-	Definitions []string            `json:"definitions,omitempty"`
-	Tickets     []ContributorTicket `json:"tickets,omitempty"`
-	Commits     []ContributorCommit `json:"commits,omitempty"`
-	Lines       *LineMetrics        `json:"lines,omitempty"`
+	Bundles     []string                `json:"bundles,omitempty"`
+	Folders     []string                `json:"folders,omitempty"`
+	Files       []string                `json:"files,omitempty"`
+	Regions     []string                `json:"regions,omitempty"`
+	Definitions []string                `json:"definitions,omitempty"`
+	Tickets     []ContributorTicket     `json:"tickets,omitempty"`
+	Checkpoints []ContributorCheckpoint `json:"checkpoints,omitempty"`
+	Lines       *LineMetrics            `json:"lines,omitempty"`
 }
 
 // #region 🔖Codebase Types
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes](semiorepo://section/semio-repo/cli/main.go/Types/Languages/Codebase%20Types)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types)
 // Internal metric, contributor, ticket, policy, breach, and tree node types for codebase analysis.
 
 // BundleMetricsInternal holds the data fields for a bundle metrics internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️bundlemetricsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/BundleMetricsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️bundlemetricsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/BundleMetricsInternal)
 type BundleMetricsInternal struct {
 	Folders     int `json:"folders"`
 	Files       int `json:"files"`
@@ -13615,7 +15220,7 @@ type BundleMetricsInternal struct {
 }
 
 // FolderMetricsInternal holds the data fields for a folder metrics internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️foldermetricsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/FolderMetricsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️foldermetricsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FolderMetricsInternal)
 type FolderMetricsInternal struct {
 	Files   int `json:"files"`
 	Lines   int `json:"lines"`
@@ -13623,7 +15228,7 @@ type FolderMetricsInternal struct {
 }
 
 // FileMetricsInternal holds the data fields for a file metrics internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️filemetricsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/FileMetricsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️filemetricsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FileMetricsInternal)
 type FileMetricsInternal struct {
 	Sections    int `json:"sections"`
 	Definitions int `json:"definitions"`
@@ -13631,7 +15236,7 @@ type FileMetricsInternal struct {
 }
 
 // SectionMetricsInternal holds the data fields for a section metrics internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️sectionmetricsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/SectionMetricsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️sectionmetricsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/SectionMetricsInternal)
 type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
@@ -13639,7 +15244,7 @@ type SectionMetricsInternal struct {
 }
 
 // DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️definitionmetricsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/DefinitionMetricsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️definitionmetricsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/DefinitionMetricsInternal)
 type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
@@ -13647,21 +15252,21 @@ type DefinitionMetricsInternal struct {
 }
 
 // RangePosition holds the data fields for a range position record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️rangeposition](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/RangePosition)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️rangeposition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/RangePosition)
 type RangePosition struct {
 	Line   int `json:"line"`
 	Column int `json:"column"`
 }
 
 // FileRange holds the data fields for a file range record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️filerange](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/FileRange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️filerange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FileRange)
 type FileRange struct {
 	Start RangePosition `json:"start"`
 	End   RangePosition `json:"end"`
 }
 
 // BreachFile holds the data fields for a breach file record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️breachfile](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/BreachFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️breachfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/BreachFile)
 type BreachFile struct {
 	ID    string     `json:"id"`
 	Path  string     `json:"path"`
@@ -13670,7 +15275,7 @@ type BreachFile struct {
 }
 
 // BreachFolder holds the data fields for a breach folder record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️breachfolder](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/BreachFolder)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️breachfolder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/BreachFolder)
 type BreachFolder struct {
 	ID   string `json:"id"`
 	Path string `json:"path"`
@@ -13678,7 +15283,7 @@ type BreachFolder struct {
 }
 
 // CodebaseBreach holds the data fields for a codebase breach record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasebreach](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseBreach)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasebreach](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseBreach)
 type CodebaseBreach struct {
 	ID          string         `json:"id"`
 	Folders     []BreachFolder `json:"folders,omitempty"`
@@ -13691,7 +15296,7 @@ type CodebaseBreach struct {
 }
 
 // CodebaseBundle holds the data fields for a codebase bundle record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasebundle](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseBundle)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasebundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseBundle)
 type CodebaseBundle struct {
 	ID           string                 `json:"id"`
 	Folder       string                 `json:"folder"`
@@ -13702,7 +15307,7 @@ type CodebaseBundle struct {
 }
 
 // CodebaseFolder holds the data fields for a codebase folder record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasefolder](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseFolder)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasefolder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseFolder)
 type CodebaseFolder struct {
 	ID       string                 `json:"id"`
 	Path     string                 `json:"path"`
@@ -13713,7 +15318,7 @@ type CodebaseFolder struct {
 }
 
 // FileBreachRef holds the data fields for a file breach ref record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️filebreachref](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/FileBreachRef)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️filebreachref](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FileBreachRef)
 type FileBreachRef struct {
 	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
@@ -13722,7 +15327,7 @@ type FileBreachRef struct {
 }
 
 // CodebaseFile holds the data fields for a codebase file record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasefile](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasefile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseFile)
 type CodebaseFile struct {
 	ID      string               `json:"id"`
 	Path    string               `json:"path"`
@@ -13732,7 +15337,7 @@ type CodebaseFile struct {
 }
 
 // CodebaseSection holds the data fields for a codebase section record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasesection](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseSection)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasesection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseSection)
 type CodebaseSection struct {
 	ID      string                  `json:"id"`
 	Path    string                  `json:"path"`
@@ -13741,7 +15346,7 @@ type CodebaseSection struct {
 }
 
 // CodebaseDefinition holds the data fields for a codebase definition record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasedefinition](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseDefinition)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasedefinition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseDefinition)
 type CodebaseDefinition struct {
 	ID      string                     `json:"id"`
 	Path    string                     `json:"path"`
@@ -13750,42 +15355,42 @@ type CodebaseDefinition struct {
 }
 
 // ContributorBundleContrib holds the data fields for a contributor bundle contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorbundlecontrib](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorBundleContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorbundlecontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorBundleContrib)
 type ContributorBundleContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorFolderContrib holds the data fields for a contributor folder contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorfoldercontrib](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorFolderContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorfoldercontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorFolderContrib)
 type ContributorFolderContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorFileContrib holds the data fields for a contributor file contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorfilecontrib](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorFileContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorfilecontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorFileContrib)
 type ContributorFileContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorSectionContrib holds the data fields for a contributor section contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorsectioncontrib](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorSectionContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorsectioncontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorSectionContrib)
 type ContributorSectionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorDefinitionContrib holds the data fields for a contributor definition contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributordefinitioncontrib](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorDefinitionContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributordefinitioncontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorDefinitionContrib)
 type ContributorDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorContributionsInternal holds the data fields for a contributor contributions internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorcontributionsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorContributionsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributorcontributionsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorContributionsInternal)
 type ContributorContributionsInternal struct {
 	Bundles     []ContributorBundleContrib     `json:"bundles,omitempty"`
 	Folders     []ContributorFolderContrib     `json:"folders,omitempty"`
@@ -13795,9 +15400,9 @@ type ContributorContributionsInternal struct {
 }
 
 // ContributorMetricsInternal holds the data fields for a contributor metrics internal record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributormetricsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/ContributorMetricsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️contributormetricsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorMetricsInternal)
 type ContributorMetricsInternal struct {
-	Commits     int `json:"commits"`
+	Checkpoints int `json:"checkpoints"`
 	Tickets     int `json:"tickets"`
 	Bundles     int `json:"bundles"`
 	Folders     int `json:"folders"`
@@ -13808,7 +15413,7 @@ type ContributorMetricsInternal struct {
 }
 
 // CodebaseContributor holds the data fields for a codebase contributor record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasecontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseContributor)
 type CodebaseContributor struct {
 	ID            string                            `json:"id"`
 	URI           string                            `json:"uri"`
@@ -13822,55 +15427,55 @@ type CodebaseContributor struct {
 }
 
 // TicketDateInfo holds the data fields for a ticket date info record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketdateinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/TicketDateInfo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketdateinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketDateInfo)
 type TicketDateInfo struct {
 	Created  string `json:"created,omitempty"`
 	Finished string `json:"finished,omitempty"`
 }
 
 // TicketBundleContribInfo holds the data fields for a ticket bundle contrib info record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketbundlecontribinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/TicketBundleContribInfo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketbundlecontribinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketBundleContribInfo)
 type TicketBundleContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketFolderContribInfo holds the data fields for a ticket folder contrib info record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketfoldercontribinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/TicketFolderContribInfo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketfoldercontribinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketFolderContribInfo)
 type TicketFolderContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketFileContribInfo holds the data fields for a ticket file contrib info record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketfilecontribinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/TicketFileContribInfo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketfilecontribinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketFileContribInfo)
 type TicketFileContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketSectionContribInfo holds the data fields for a ticket section contrib info record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketsectioncontribinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/TicketSectionContribInfo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketsectioncontribinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketSectionContribInfo)
 type TicketSectionContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketDefinitionContrib holds the data fields for a ticket definition contrib record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketdefinitioncontrib](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/TicketDefinitionContrib)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️ticketdefinitioncontrib](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketDefinitionContrib)
 type TicketDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // CodebaseTicket holds the data fields for a codebase ticket record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebaseticket](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebaseTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebaseticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseTicket)
 type CodebaseTicket struct {
 	ID          string                     `json:"id"`
 	Path        string                     `json:"path"`
 	URI         string                     `json:"uri"`
 	Date        *TicketDateInfo            `json:"date,omitempty"`
-	Commit      string                     `json:"commit,omitempty"`
+	Checkpoint  string                     `json:"checkpoint,omitempty"`
 	Year        string                     `json:"year"`
 	Month       string                     `json:"month"`
 	Day         string                     `json:"day"`
@@ -13887,7 +15492,7 @@ type CodebaseTicket struct {
 }
 
 // PolicyBreachRef holds the data fields for a policy breach ref record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️policybreachref](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/PolicyBreachRef)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️policybreachref](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/PolicyBreachRef)
 type PolicyBreachRef struct {
 	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
@@ -13896,7 +15501,7 @@ type PolicyBreachRef struct {
 }
 
 // CodebasePolicy holds the data fields for a codebase policy record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasepolicy](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CodebasePolicy)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebasepolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebasePolicy)
 type CodebasePolicy struct {
 	ID      string            `json:"id"`
 	Name    string            `json:"name"`
@@ -13905,7 +15510,7 @@ type CodebasePolicy struct {
 }
 
 // CbTreeNodeKind represents a cb tree node kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️cbtreenodekind](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CbTreeNodeKind)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️cbtreenodekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CbTreeNodeKind)
 type CbTreeNodeKind string
 
 const (
@@ -13918,14 +15523,14 @@ const (
 )
 
 // CbTreeNode holds the data fields for a cb tree node record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️cbtreenode](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/CbTreeNode)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️cbtreenode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CbTreeNode)
 type CbTreeNode struct {
 	Kind     CbTreeNodeKind         `json:"kind"`
 	Children map[string]*CbTreeNode `json:"children,omitempty"`
 }
 
 // Codebase holds the data fields for a codebase record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebase](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/Codebase%20Types/Codebase)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🔖codebasetypes✂️codebase](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/Codebase)
 type Codebase struct {
 	Bundles      []CodebaseBundle       `json:"bundles"`
 	Folders      []CodebaseFolder       `json:"folders"`
@@ -13945,12 +15550,14 @@ type Codebase struct {
 
 // #region 🔖Utils
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils](semiorepo://section/semio-repo/cli/main.go/Types/Utils)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils)
 // File system, git, path normalization, and formatting utilities.
 
 var (
-	rootDir  string
-	executor *Executor
+	rootDir               string
+	executor              *Executor
+	formatterBinaryLookup = exec.LookPath
+	formatterCommandRun   = runFormatterCommand
 )
 
 func init() {
@@ -13970,18 +15577,18 @@ func init() {
 
 // GetRootDir MUST return the stored value without modification.
 // GetRootDir returns the root dir of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrootdir](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetRootDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrootdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRootDir)
 func GetRootDir() string {
 	return rootDir
 }
 
 // SetRootDir MUST update the value on the receiver.
 // SetRootDir sets the root dir on the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️setrootdir](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/SetRootDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️setrootdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/SetRootDir)
 func SetRootDir(dir string) {
 	rootDir = dir
 	gitignoreMutex.Lock()
-	cachedGitignorePatterns = nil
+	cachedGitignore = nil
 	gitignoreLoaded = false
 	gitignoreMutex.Unlock()
 	InvalidateProjectCache()
@@ -13989,14 +15596,14 @@ func SetRootDir(dir string) {
 
 // GetRepoMetaDir MUST return the stored value without modification.
 // GetRepoMetaDir returns the repo meta dir of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrepometadir](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetRepoMetaDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrepometadir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRepoMetaDir)
 func GetRepoMetaDir() string {
 	return filepath.Join(rootDir, ".semio-repo")
 }
 
 // GetRepoMetaPath MUST return the stored value without modification.
 // GetRepoMetaPath returns the repo meta path of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrepometapath](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetRepoMetaPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrepometapath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRepoMetaPath)
 func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
@@ -14033,68 +15640,29 @@ func findRepoRoot(startDir string) string {
 }
 
 // GitignorePattern holds the data fields for a gitignore pattern record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils✂️gitignorepattern](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GitignorePattern)
-type GitignorePattern struct {
-	Pattern string
-	Negate  bool
-}
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils✂️gitignorepattern](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GitignorePattern)
 
 var (
-	cachedGitignorePatterns []GitignorePattern
-	gitignoreLoaded         bool
-	gitignoreMutex          sync.Mutex
+	cachedGitignore *ignore.GitIgnore
+	gitignoreLoaded bool
+	gitignoreMutex  sync.Mutex
 )
 
-func getGitignorePatterns() []GitignorePattern {
+func getGitignore() *ignore.GitIgnore {
 	gitignoreMutex.Lock()
 	defer gitignoreMutex.Unlock()
 	if gitignoreLoaded {
-		return cachedGitignorePatterns
+		return cachedGitignore
 	}
 	gitignorePath := filepath.Join(rootDir, ".gitignore")
-	content, err := os.ReadFile(gitignorePath)
+	ign, err := ignore.CompileIgnoreFile(gitignorePath)
 	if err != nil {
 		gitignoreLoaded = true
 		return nil
 	}
-	for _, line := range strings.Split(string(content), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		negate := false
-		if strings.HasPrefix(line, "!") {
-			negate = true
-			line = strings.TrimSpace(strings.TrimPrefix(line, "!"))
-		}
-		if line == "" {
-			continue
-		}
-		rooted := strings.HasPrefix(line, "/")
-		if rooted {
-			line = strings.TrimPrefix(line, "/")
-		}
-		trimmed := strings.TrimSuffix(line, "/")
-		if trimmed == "" {
-			continue
-		}
-		baseHasSlash := strings.Contains(trimmed, "/")
-		patterns := []string{trimmed}
-		if !strings.HasSuffix(trimmed, "/**") {
-			patterns = append(patterns, trimmed+"/**")
-		}
-		for _, pattern := range patterns {
-			if !baseHasSlash && !rooted {
-				pattern = "**/" + pattern
-			}
-			cachedGitignorePatterns = append(cachedGitignorePatterns, GitignorePattern{Pattern: pattern, Negate: negate})
-		}
-	}
+	cachedGitignore = ign
 	gitignoreLoaded = true
-	return cachedGitignorePatterns
+	return cachedGitignore
 }
 
 func isGitIgnored(filePath string) bool {
@@ -14116,20 +15684,11 @@ func isIgnoredByGitignore(filePath string) bool {
 	if relPath == "" {
 		return false
 	}
-	ignored := false
-	for _, pattern := range getGitignorePatterns() {
-		if pattern.Pattern == "" {
-			continue
-		}
-		if matched, _ := doublestar.Match(pattern.Pattern, relPath); matched {
-			if pattern.Negate {
-				ignored = false
-			} else {
-				ignored = true
-			}
-		}
+	ign := getGitignore()
+	if ign == nil {
+		return false
 	}
-	return ignored
+	return ign.MatchesPath(relPath)
 }
 
 func policyAppliesToScope(policyID string, scope Scope) bool {
@@ -14151,21 +15710,21 @@ func isSourceFile(filePath string) bool {
 
 // NormalizePath MUST be idempotent for already-normalized values.
 // NormalizePath normalizes the path to its canonical form.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️normalizepath](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/NormalizePath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️normalizepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/NormalizePath)
 func NormalizePath(p string) string {
 	return strings.ReplaceAll(p, "\\", "/")
 }
 
 // EnsureDir MUST be idempotent and MUST NOT fail if the target already exists.
 // EnsureDir ensures the dir exists, creating it if necessary.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️ensuredir](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/EnsureDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️ensuredir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/EnsureDir)
 func EnsureDir(dirPath string) error {
 	return os.MkdirAll(dirPath, 0755)
 }
 
 // GetRelativePath MUST return the stored value without modification.
 // GetRelativePath returns the relative path of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrelativepath](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetRelativePath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrelativepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRelativePath)
 func GetRelativePath(filePath string) string {
 	rel, err := filepath.Rel(rootDir, filePath)
 	if err != nil {
@@ -14176,7 +15735,7 @@ func GetRelativePath(filePath string) string {
 
 // ReadTextFile MUST return the full content from the given path.
 // ReadTextFile reads and returns the text file content.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️readtextfile](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ReadTextFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️readtextfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ReadTextFile)
 func ReadTextFile(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -14187,7 +15746,7 @@ func ReadTextFile(filePath string) (string, error) {
 
 // WriteTextFile MUST persist the content atomically.
 // WriteTextFile writes the text file content to storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️writetextfile](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/WriteTextFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️writetextfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/WriteTextFile)
 func WriteTextFile(filePath string, content string) error {
 	if err := EnsureDir(filepath.Dir(filePath)); err != nil {
 		return err
@@ -14195,9 +15754,129 @@ func WriteTextFile(filePath string, content string) error {
 	return os.WriteFile(filePath, []byte(content), 0644)
 }
 
+type formatterPlan struct {
+	binary      string
+	args        []string
+	requirement []string
+}
+
+func runFormatterCommand(binary string, args []string, workDir string) error {
+	commandPath := binary
+	if strings.Contains(binary, "/") || strings.Contains(binary, "\\") {
+		commandPath = filepath.Join(workDir, binary)
+	}
+	cmd := exec.Command(commandPath, args...)
+	cmd.Dir = workDir
+	return cmd.Run()
+}
+
+func formatterPlansForLanguage(languageName string, relPath string) []formatterPlan {
+	prettierBinary := filepath.Join("node_modules", ".bin", "prettier")
+	prettierPlan := formatterPlan{
+		binary:      prettierBinary,
+		args:        []string{"--write", "--ignore-unknown", relPath},
+		requirement: []string{prettierBinary, ".prettierrc.json"},
+	}
+	switch languageName {
+	case "typescript", "markdown", "json", "yaml", "graphql", "sql", "toml":
+		return []formatterPlan{prettierPlan}
+	case "go":
+		return []formatterPlan{
+			{binary: "gofmt", args: []string{"-w", relPath}, requirement: []string{"go.work"}},
+		}
+	case "python":
+		return []formatterPlan{
+			{binary: "uv", args: []string{"run", "--group", "dev", "ruff", "format", relPath}, requirement: []string{"pyproject.toml"}},
+			{binary: "uv", args: []string{"run", "--group", "dev", "black", relPath}, requirement: []string{"pyproject.toml"}},
+			prettierPlan,
+		}
+	case "csharp":
+		return []formatterPlan{
+			{binary: "dotnet", args: []string{"format", "Monorepo.sln", "--include", relPath, "--verbosity", "minimal"}, requirement: []string{"Monorepo.sln"}},
+			prettierPlan,
+		}
+	case "rust":
+		return []formatterPlan{
+			{binary: "rustfmt", args: []string{relPath}, requirement: []string{"Cargo.toml"}},
+			prettierPlan,
+		}
+	case "ruby":
+		return []formatterPlan{
+			{binary: "rubocop", args: []string{"-A", relPath}, requirement: []string{"package.json"}},
+			prettierPlan,
+		}
+	case "shell":
+		return []formatterPlan{
+			{binary: "shfmt", args: []string{"-w", relPath}, requirement: []string{"package.json"}},
+			prettierPlan,
+		}
+	default:
+		return []formatterPlan{prettierPlan}
+	}
+}
+
+func isFormatterPlanAvailable(plan formatterPlan, workDir string) bool {
+	if strings.Contains(plan.binary, "/") || strings.Contains(plan.binary, "\\") {
+		if !FileExists(filepath.Join(workDir, plan.binary)) {
+			return false
+		}
+	} else {
+		if _, err := formatterBinaryLookup(plan.binary); err != nil {
+			return false
+		}
+	}
+	for _, rel := range plan.requirement {
+		if !FileExists(filepath.Join(workDir, rel)) {
+			return false
+		}
+	}
+	return true
+}
+
+func fallbackFormatText(content string) string {
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimRight(line, " \t")
+	}
+	formatted := strings.Join(lines, "\n")
+	if formatted == "" {
+		return formatted
+	}
+	if !strings.HasSuffix(formatted, "\n") {
+		formatted += "\n"
+	}
+	return formatted
+}
+
+func runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {
+	absPath := filepath.Join(rootDir, relPath)
+	langName := ""
+	if language != nil {
+		langName = language.Name()
+	}
+	plans := formatterPlansForLanguage(langName, relPath)
+	for _, plan := range plans {
+		if !isFormatterPlanAvailable(plan, rootDir) {
+			continue
+		}
+		if err := formatterCommandRun(plan.binary, plan.args, rootDir); err == nil {
+			return nil
+		}
+	}
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return err
+	}
+	formatted := fallbackFormatText(content)
+	if formatted == content {
+		return nil
+	}
+	return WriteTextFile(absPath, formatted)
+}
+
 // WriteJSONFile MUST persist the content atomically.
 // WriteJSONFile writes the j s o n file content to storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️writejsonfile](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/WriteJSONFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️writejsonfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/WriteJSONFile)
 func WriteJSONFile(filePath string, data interface{}) error {
 	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -14208,7 +15887,7 @@ func WriteJSONFile(filePath string, data interface{}) error {
 
 // ReadJSONFile MUST return the full content from the given path.
 // ReadJSONFile reads and returns the j s o n file content.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️readjsonfile](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ReadJSONFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️readjsonfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ReadJSONFile)
 func ReadJSONFile(filePath string, v interface{}) error {
 	data, err := ReadTextFile(filePath)
 	if err != nil {
@@ -14219,7 +15898,7 @@ func ReadJSONFile(filePath string, v interface{}) error {
 
 // FileExists MUST complete the operation and return consistent results.
 // FileExists performs the file exists operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️fileexists](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/FileExists)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️fileexists](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/FileExists)
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
@@ -14227,7 +15906,7 @@ func FileExists(path string) bool {
 
 // IsDir MUST return true only when the condition is met.
 // IsDir reports whether the value is dir.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️isdir](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/IsDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️isdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/IsDir)
 func IsDir(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -14238,7 +15917,7 @@ func IsDir(path string) bool {
 
 // LoadGitignore MUST read from the configured storage path.
 // LoadGitignore loads the gitignore from storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️loadgitignore](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/LoadGitignore)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️loadgitignore](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/LoadGitignore)
 func LoadGitignore(cwd string) ([]string, error) {
 	gitignorePath := filepath.Join(cwd, ".gitignore")
 	if !FileExists(gitignorePath) {
@@ -14260,7 +15939,7 @@ func LoadGitignore(cwd string) ([]string, error) {
 
 // SimpleGlob MUST complete the operation and return consistent results.
 // SimpleGlob performs the simple glob operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️simpleglob](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/SimpleGlob)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️simpleglob](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/SimpleGlob)
 func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
 	if cwd == "" {
 		cwd = rootDir
@@ -14363,30 +16042,30 @@ func globByExtension(root string, patternBase string, exts []string, ignorePatte
 	return results, nil
 }
 
-// ISOTimestamp MUST complete the operation and return consistent results.
-// ISOTimestamp performs the i s o timestamp operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️isotimestamp](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ISOTimestamp)
-func ISOTimestamp() string {
-	return time.Now().UTC().Format(time.RFC3339)
+// FormatSecond MUST complete the operation and return consistent results.
+// FormatSecond performs the i s o timestamp operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️formatsecond](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/FormatSecond)
+func FormatSecond(t time.Time) string {
+	return fmt.Sprintf("🎆%02d🌙%02d☀️%02d⏰%02d⌚%02d⏱️%02d", t.Year()%100, t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
 // FormatDate MUST produce a well-formed date string.
 // FormatDate formats the date into its string representation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️formatdate](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/FormatDate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️formatdate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/FormatDate)
 func FormatDate(t time.Time) (year, month, day int) {
 	return t.Year() % 100, int(t.Month()), t.Day()
 }
 
 // PadNumber MUST complete the operation and return consistent results.
 // PadNumber performs the pad number operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️padnumber](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/PadNumber)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️padnumber](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/PadNumber)
 func PadNumber(n, width int) string {
 	return fmt.Sprintf("%0*d", width, n)
 }
 
 // PathToUriPath MUST complete the operation and return consistent results.
 // PathToUriPath performs the path to uri path operation (no whitespace, reversible).
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️pathtouripath](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/PathToUriPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️pathtouripath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/PathToUriPath)
 func PathToUriPath(path string) string {
 	segments := strings.Split(path, "/")
 	for i, s := range segments {
@@ -14397,7 +16076,7 @@ func PathToUriPath(path string) string {
 
 // PathFromUriPath MUST complete the operation and return consistent results.
 // PathFromUriPath performs the uri path to path operation (reverse of PathToUriPath).
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️pathfromuripath](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/PathFromUriPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️pathfromuripath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/PathFromUriPath)
 func PathFromUriPath(uriPath string) string {
 	segments := strings.Split(uriPath, "/")
 	for i, s := range segments {
@@ -14408,7 +16087,7 @@ func PathFromUriPath(uriPath string) string {
 
 // Flat performs the Flat operation.
 // Flat MUST preserve only alphanumeric characters and emojis, then lower case.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️flat](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Flat)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️flat](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Flat)
 func Flat(text string) string {
 	var buf strings.Builder
 	for _, r := range text {
@@ -14421,7 +16100,7 @@ func Flat(text string) string {
 
 // Slugify MUST complete the operation and return consistent results.
 // Slugify performs the slugify operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️slugify](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Slugify)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️slugify](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Slugify)
 func Slugify(text string) string {
 	runes := []rune(text)
 	var buf strings.Builder
@@ -14443,7 +16122,7 @@ func Slugify(text string) string {
 
 // TitleizeSlug MUST complete the operation and return consistent results.
 // TitleizeSlug performs the titleize slug operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️titleizeslug](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/TitleizeSlug)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️titleizeslug](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/TitleizeSlug)
 func TitleizeSlug(slug string) string {
 	words := strings.Split(slug, "-")
 	for i, w := range words {
@@ -14456,7 +16135,7 @@ func TitleizeSlug(slug string) string {
 
 // StatutePathToIdValue MUST complete the operation and return consistent results.
 // StatutePathToIdValue performs the statute path to id value operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️statutepathtoidvalue](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/StatutePathToIdValue)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️statutepathtoidvalue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/StatutePathToIdValue)
 func StatutePathToIdValue(path string) string {
 	parts := strings.Split(path, "/")
 	for i, p := range parts {
@@ -14467,7 +16146,7 @@ func StatutePathToIdValue(path string) string {
 
 // StatuteIdValueToPath MUST complete the operation and return consistent results.
 // StatuteIdValueToPath performs the statute id value to path operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️statuteidvaluetopath](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/StatuteIdValueToPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️statuteidvaluetopath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/StatuteIdValueToPath)
 func StatuteIdValueToPath(idValue string) string {
 	parts := strings.Split(idValue, "#")
 	for i, p := range parts {
@@ -14478,7 +16157,7 @@ func StatuteIdValueToPath(idValue string) string {
 
 // ExecCommand MUST complete the operation and return consistent results.
 // ExecCommand performs the exec command operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️execcommand](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ExecCommand)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️execcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ExecCommand)
 func ExecCommand(command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
 	if cwd == "" {
 		cwd = rootDir
@@ -14502,7 +16181,7 @@ func ExecCommand(command string, args []string, cwd string) (stdout, stderr stri
 
 // GetGitAuthor MUST return the stored value without modification.
 // GetGitAuthor returns the git author of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitauthor](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetGitAuthor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitauthor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitAuthor)
 func GetGitAuthor() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -14516,7 +16195,7 @@ func GetGitAuthor() string {
 
 // GetGitAuthorGithub MUST return the stored value without modification.
 // GetGitAuthorGithub returns the git author github of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitauthorgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetGitAuthorGithub)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitauthorgithub](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitAuthorGithub)
 func GetGitAuthorGithub() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
@@ -14531,17 +16210,17 @@ func GetGitAuthorGithub() string {
 	return FindAndUpdateContributor(fallback)
 }
 
-// GetGitCommit MUST return the stored value without modification.
-// GetGitCommit returns the git commit of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitcommit](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetGitCommit)
-func GetGitCommit() string {
-	commit, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, "")
-	return strings.TrimSpace(commit)
+// GetGitCheckpoint MUST return the stored value without modification.
+// GetGitCheckpoint returns the git checkpoint of the value.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitCheckpoint)
+func GetGitCheckpoint() string {
+	sha, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, "")
+	return strings.TrimSpace(sha)
 }
 
 // GetGitIgnoredSet MUST return the stored value without modification.
 // GetGitIgnoredSet returns the git ignored set of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitignoredset](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/GetGitIgnoredSet)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitignoredset](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitIgnoredSet)
 func GetGitIgnoredSet(paths []string) map[string]bool {
 	if len(paths) == 0 {
 		return make(map[string]bool)
@@ -14560,28 +16239,28 @@ func GetGitIgnoredSet(paths []string) map[string]bool {
 
 // NewOutput MUST initialize all required fields and return a valid Output.
 // NewOutput creates and returns a new Output instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️newoutput](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/NewOutput)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️newoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/NewOutput)
 func NewOutput() *CommandOutput {
 	return &CommandOutput{Lines: []OutputLine{}, ExitCode: 0}
 }
 
 // Info MUST return the metadata entry for the statute.
 // Info returns the metadata for the statute.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️info](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Info)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️info](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Info)
 func (o *CommandOutput) Info(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputInfo, Text: text})
 }
 
 // Success MUST operate on the CommandOutput receiver and return consistent results.
 // Success performs the success operation on the CommandOutput.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️success](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Success)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️success](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Success)
 func (o *CommandOutput) Success(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputSuccess, Text: text})
 }
 
 // Error MUST return a formatted string representation.
 // Error returns the string representation of the error.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️error](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Error)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️error](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Error)
 func (o *CommandOutput) Error(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputError, Text: text})
 	o.ExitCode = 1
@@ -14589,21 +16268,21 @@ func (o *CommandOutput) Error(text string) {
 
 // Warn MUST operate on the CommandOutput receiver and return consistent results.
 // Warn performs the warn operation on the CommandOutput.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️warn](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Warn)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️warn](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Warn)
 func (o *CommandOutput) Warn(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputWarn, Text: text})
 }
 
 // Plain MUST operate on the CommandOutput receiver and return consistent results.
 // Plain performs the plain operation on the CommandOutput.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️plain](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Plain)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️plain](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Plain)
 func (o *CommandOutput) Plain(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputPlain, Text: text})
 }
 
 // Print MUST operate on the CommandOutput receiver and return consistent results.
 // Print performs the print operation on the CommandOutput.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️print](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Print)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️print](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Print)
 func (o *CommandOutput) Print() {
 	for _, line := range o.Lines {
 		fmt.Println(line.Text)
@@ -14612,7 +16291,7 @@ func (o *CommandOutput) Print() {
 
 // Json MUST operate on the CommandOutput receiver and return consistent results.
 // Json performs the json operation on the CommandOutput.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️json](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/Json)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️json](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Json)
 func (o *CommandOutput) Json(data interface{}) {
 	bytes, err := json.MarshalIndent(data, "", "  ")
 	if err == nil {
@@ -14622,7 +16301,7 @@ func (o *CommandOutput) Json(data interface{}) {
 
 // ListDirEntries MUST return a consistent snapshot of available entries.
 // ListDirEntries returns all available dir entries entries.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️listdirentries](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ListDirEntries)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️listdirentries](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ListDirEntries)
 func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -14646,7 +16325,7 @@ func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 
 // WalkDir MUST visit every entry and MUST stop when the callback returns an error.
 // WalkDir recursively walks the dir and invokes the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️walkdir](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/WalkDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️walkdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/WalkDir)
 func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -14664,7 +16343,7 @@ func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 
 // ParseScope MUST return an error when the input is malformed.
 // ParseScope parses the input and returns the scope result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️parsescope](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ParseScope)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️parsescope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ParseScope)
 func ParseScope(raw string) Scope {
 	if raw == "" || raw == "semio" {
 		return Scope{Raw: "semio", Kind: ScopeRepo}
@@ -14693,7 +16372,7 @@ func ParseScope(raw string) Scope {
 
 // ReadLines MUST return the full content from the given path.
 // ReadLines reads and returns the lines content.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️readlines](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ReadLines)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️readlines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ReadLines)
 func ReadLines(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -14712,12 +16391,12 @@ func ReadLines(filePath string) ([]string, error) {
 
 // #region 🔖Sections
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections](semiorepo://section/semio-repo/cli/main.go/Types/Sections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections)
 // Section parsing, JSON section manipulation, and section lookup utilities.
 
 // ParseCodeSections MUST return an error when the input is malformed.
 // ParseCodeSections parses the input and returns the code sections result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsecodesections](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/ParseCodeSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsecodesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseCodeSections)
 func ParseCodeSections(content string, languageName string) []Section {
 	lang := GetLanguageByName(languageName)
 	if lang == nil || !lang.SupportsSections() {
@@ -14728,7 +16407,7 @@ func ParseCodeSections(content string, languageName string) []Section {
 
 // ParseMarkdownSectionsInternal MUST return an error when the input is malformed.
 // ParseMarkdownSectionsInternal parses the input and returns the markdown sections internal result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsemarkdownsectionsinternal](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/ParseMarkdownSectionsInternal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsemarkdownsectionsinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseMarkdownSectionsInternal)
 func ParseMarkdownSectionsInternal(content string) []Section {
 	lines := strings.Split(content, "\n")
 	var sections []Section
@@ -14788,7 +16467,7 @@ func ParseMarkdownSectionsInternal(content string) []Section {
 }
 
 // JsonSectionLocation holds the data fields for a json section location record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections✂️jsonsectionlocation](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/JsonSectionLocation)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections✂️jsonsectionlocation](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/JsonSectionLocation)
 type JsonSectionLocation struct {
 	Path       string
 	KeyStart   int
@@ -14808,7 +16487,7 @@ type jsonContext struct {
 
 // ParseJSONSectionsDetailed MUST return an error when the input is malformed.
 // ParseJSONSectionsDetailed parses the input and returns the j s o n sections detailed result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsejsonsectionsdetailed](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/ParseJSONSectionsDetailed)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsejsonsectionsdetailed](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseJSONSectionsDetailed)
 func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSectionLocation, error) {
 	var sections []Section
 	locations := make(map[string]*JsonSectionLocation)
@@ -14980,7 +16659,7 @@ func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSecti
 
 // ParseJSONSections MUST return an error when the input is malformed.
 // ParseJSONSections parses the input and returns the j s o n sections result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsejsonsections](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/ParseJSONSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsejsonsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseJSONSections)
 func ParseJSONSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
@@ -14988,7 +16667,7 @@ func ParseJSONSections(content string) []Section {
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsesections](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/ParseSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseSections)
 func ParseSections(content string, filePath string) []Section {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -14999,7 +16678,7 @@ func ParseSections(content string, filePath string) []Section {
 
 // ParseDefinitions MUST return an error when the input is malformed.
 // ParseDefinitions parses the input and returns the definitions result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsedefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/ParseDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️parsedefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseDefinitions)
 func ParseDefinitions(content string, filePath string) []Definition {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -15026,7 +16705,7 @@ func ParseDefinitions(content string, filePath string) []Definition {
 
 // HydrateSectionsWithDefinitions MUST attach all matching child elements to their parents.
 // HydrateSectionsWithDefinitions populates the sections with definitions with associated child data.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️hydratesectionswithdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/HydrateSectionsWithDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️hydratesectionswithdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/HydrateSectionsWithDefinitions)
 func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition) []Section {
 	if len(sections) == 0 {
 		return sections
@@ -15066,7 +16745,7 @@ func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition
 
 // NormalizeSectionPath MUST be idempotent for already-normalized values.
 // NormalizeSectionPath normalizes the section path to its canonical form.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️normalizesectionpath](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/NormalizeSectionPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️normalizesectionpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/NormalizeSectionPath)
 func NormalizeSectionPath(sectionPath string) []string {
 	cleaned := strings.ReplaceAll(sectionPath, "#", "/")
 	raw := strings.FieldsFunc(cleaned, func(r rune) bool { return r == '/' })
@@ -15338,7 +17017,7 @@ func jsonReindentEntry(entry string, indent string) string {
 
 // FindSection MUST return nil when no match is found.
 // FindSection searches for and returns the matching section.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️findsection](semiorepo://definition/semio-repo/cli/main.go/Types/Sections/FindSection)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖sections🛠️findsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/FindSection)
 func FindSection(sections []Section, name string) *Section {
 	for i := range sections {
 		if sections[i].Name == name {
@@ -15355,11 +17034,11 @@ func FindSection(sections []Section, name string) *Section {
 
 // #region 🔖Policies
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies](semiorepo://section/semio-repo/cli/main.go/Types/Policies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies)
 // Policy definitions, context, checkers, and individual policy implementations.
 
 // PolicyFunc is a function type for policy func callbacks.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️policyfunc](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/PolicyFunc)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️policyfunc](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/PolicyFunc)
 type PolicyFunc func(ctx *PolicyContext) []Breach
 
 var policies = []PolicyDef{
@@ -15430,6 +17109,7 @@ var policies = []PolicyDef{
 						},
 						Kinds: []Statute{
 							BreachCodeSectionWrongFormat,
+							BreachCodeSectionWrongFormatNewlineAfterRegion,
 							BreachCodeSectionWrongFormatDocs,
 						},
 					},
@@ -15688,7 +17368,7 @@ var policies = []PolicyDef{
 
 // FindPolicy MUST return nil when no match is found.
 // FindPolicy searches for and returns the matching policy.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️findpolicy](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/FindPolicy)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️findpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/FindPolicy)
 func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
@@ -15700,14 +17380,14 @@ func FindPolicy(id string) (PolicyDef, bool) {
 
 // GetPolicies MUST return the stored value without modification.
 // GetPolicies returns the policies of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️getpolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/GetPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️getpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/GetPolicies)
 func GetPolicies() []PolicyDef {
 	return policies
 }
 
 // StreamPolicies MUST emit all matching entries and close the channel when done.
 // StreamPolicies streams the policies over a channel with optional filtering.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️streampolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/StreamPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️streampolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/StreamPolicies)
 func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -15757,7 +17437,7 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 }
 
 // PolicyContext holds the data fields for a policy context record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️policycontext](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/PolicyContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️policycontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/PolicyContext)
 type PolicyContext struct {
 	Scope              Scope
 	RootDir            string
@@ -15773,7 +17453,7 @@ type PolicyContext struct {
 
 // NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
 // NewPolicyContext creates and returns a new PolicyContext instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️newpolicycontext](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/NewPolicyContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️newpolicycontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/NewPolicyContext)
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
@@ -15787,7 +17467,7 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 
 // NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
 // NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️newpolicycontextwithfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/NewPolicyContextWithFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️newpolicycontextwithfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/NewPolicyContextWithFiles)
 func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
 	ctx := NewPolicyContext(scope, bundles)
 	ctx.filesOverride = files
@@ -15796,17 +17476,22 @@ func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *P
 
 // Files MUST operate on the PolicyContext receiver and return consistent results.
 // Files performs the files operation on the PolicyContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️files](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/Files)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️files](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Files)
 func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
 	}
-	return ScopeToFiles(ctx.Scope, ctx.Bundles)
+	files, err := ScopeToFiles(ctx.Scope, ctx.Bundles)
+	if err != nil {
+		return nil, err
+	}
+	ctx.filesOverride = files
+	return files, nil
 }
 
 // ReadText MUST return the full content from the given path.
 // ReadText reads and returns the text content.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️readtext](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/ReadText)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️readtext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/ReadText)
 func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.fileCache == nil {
 		ctx.fileCache = make(map[string]string)
@@ -15826,7 +17511,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 
 // Sections MUST operate on the PolicyContext receiver and return consistent results.
 // Sections performs the sections operation on the PolicyContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️sections](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/Sections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️sections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Sections)
 func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if ctx.sectionCache == nil {
 		ctx.sectionCache = make(map[string][]Section)
@@ -15842,7 +17527,7 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 
 // ParseIgnoreDirectives MUST return an error when the input is malformed.
 // ParseIgnoreDirectives parses the input and returns the ignore directives result.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️parseignoredirectives](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/ParseIgnoreDirectives)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️parseignoredirectives](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/ParseIgnoreDirectives)
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
@@ -15866,7 +17551,7 @@ func ParseIgnoreDirectives(content string) map[int][]string {
 
 // IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
 // IgnoreDirectives performs the ignore directives operation on the PolicyContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️ignoredirectives](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/IgnoreDirectives)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️ignoredirectives](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IgnoreDirectives)
 func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	if ignores, ok := ctx.ignoreCache[filePath]; ok {
 		return ignores
@@ -15879,7 +17564,7 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 
 // IsIgnored MUST return true only when the condition is met.
 // IsIgnored reports whether the PolicyContext is ignored.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isignored](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/IsIgnored)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isignored](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsIgnored)
 func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statute) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
@@ -15900,7 +17585,7 @@ func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statut
 
 // CreateBreach MUST persist the new entity and return a reference to it.
 // CreateBreach creates a new breach and persists it.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️createbreach](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/CreateBreach)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️createbreach](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CreateBreach)
 func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope string, line int, col int, excerpt string) Breach {
 	return Breach{
 		ID:      buildBreachID(scope, line, col),
@@ -15927,7 +17612,7 @@ func extractFileFromScope(scope string) string {
 
 // FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
 // FilterIgnored filters the ignored based on the given criteria.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️filterignored](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/FilterIgnored)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️filterignored](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/FilterIgnored)
 func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	var result []Breach
 	for _, v := range breachs {
@@ -15963,7 +17648,7 @@ func hasImplementationSyntax(text string) (bool, string) {
 
 // SpecLines MUST operate on the PolicyContext receiver and return consistent results.
 // SpecLines performs the spec lines operation on the PolicyContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️speclines](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/SpecLines)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️speclines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/SpecLines)
 func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	if ctx.specLineCache == nil {
 		ctx.specLineCache = make(map[string]map[int]bool)
@@ -16025,14 +17710,14 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 
 // IsSpecLine MUST return true only when the condition is met.
 // IsSpecLine reports whether the PolicyContext is spec line.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isspecline](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/IsSpecLine)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isspecline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsSpecLine)
 func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
 	return ctx.SpecLines(filePath)[lineNum]
 }
 
 // IsSpecBlock MUST return true only when the condition is met.
 // IsSpecBlock reports whether the PolicyContext is spec block.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isspecblock](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/IsSpecBlock)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isspecblock](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsSpecBlock)
 func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
 	for i := startLine; i <= endLine && i <= len(lines); i++ {
 		if isSpecText(lines[i-1]) {
@@ -16044,7 +17729,7 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 
 // SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 // SectionDocLines performs the section doc lines operation on the PolicyContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️sectiondoclines](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/SectionDocLines)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️sectiondoclines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/SectionDocLines)
 func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	if ctx.sectionDocCache == nil {
 		ctx.sectionDocCache = make(map[string]map[int]bool)
@@ -16124,14 +17809,14 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 
 // IsSectionDocLine MUST return true only when the condition is met.
 // IsSectionDocLine reports whether the PolicyContext is section doc line.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️issectiondocline](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/IsSectionDocLine)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️issectiondocline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsSectionDocLine)
 func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
 	return ctx.SectionDocLines(filePath)[lineNum]
 }
 
 // DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 // DefinitionDocLines performs the definition doc lines operation on the PolicyContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️definitiondoclines](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/DefinitionDocLines)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️definitiondoclines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/DefinitionDocLines)
 func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	if ctx.definitionDocCache == nil {
 		ctx.definitionDocCache = make(map[string]map[int]bool)
@@ -16246,7 +17931,7 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 
 // IsDefinitionDocLine MUST return true only when the condition is met.
 // IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isdefinitiondocline](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/IsDefinitionDocLine)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️isdefinitiondocline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsDefinitionDocLine)
 func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
 	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
@@ -16262,7 +17947,7 @@ func randomString(n int) string {
 
 // CheckPolicies MUST run all applicable policies and aggregate breachs.
 // CheckPolicies validates the policies and returns any breachs.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️checkpolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/CheckPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️checkpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CheckPolicies)
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach, error) {
 	ctx := NewPolicyContext(scope, bundles)
 	return CheckPoliciesWithContext(ctx, policyIDs)
@@ -16270,7 +17955,7 @@ func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach,
 
 // CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
 // CheckPoliciesWithContext validates the policies with context and returns any breachs.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️checkpolicieswithcontext](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/CheckPoliciesWithContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️checkpolicieswithcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CheckPoliciesWithContext)
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach, error) {
 	var breachs []Breach
 	var policiesToRun []PolicyDef
@@ -16527,7 +18212,7 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 }
 
 func isTestOrBenchmarkFile(file string) bool {
-	if DeriveFileKind(filepath.Base(file)) == FileKindTest {
+	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
 		return true
 	}
 	lowerPath := strings.ToLower(file)
@@ -16535,21 +18220,7 @@ func isTestOrBenchmarkFile(file string) bool {
 }
 
 func isExportedDefinition(name string, line string, langName string) bool {
-	trimmed := strings.TrimSpace(line)
-	switch langName {
-	case "typescript":
-		return strings.HasPrefix(trimmed, "export ")
-	case "go":
-		return len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z'
-	case "python":
-		return !strings.HasPrefix(name, "_")
-	case "csharp":
-		return strings.Contains(trimmed, "public ") || strings.Contains(trimmed, "internal ")
-	case "rust":
-		return strings.HasPrefix(trimmed, "pub ") || strings.HasPrefix(trimmed, "pub(")
-	default:
-		return true
-	}
+	return true
 }
 
 func requiresDefinitionRequirements(line string, langName string) bool {
@@ -16679,6 +18350,12 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
 					BreachCodeSectionEmpty,
 					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine, 0, ""))
+			}
+			if s.StartLine < len(lines) && strings.TrimSpace(lines[s.StartLine]) == "" {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Blank line after region start marker in section \"%s\" in %s:%d", s.Name, file, s.StartLine+1),
+					BreachCodeSectionWrongFormatNewlineAfterRegion,
+					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine+1, 0, ""))
 			}
 			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
 				hasIdentification := false
@@ -17240,13 +18917,13 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 }
 
 // CommentTemplateState holds the data fields for a comment template state record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️commenttemplatestate](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/CommentTemplateState)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️commenttemplatestate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CommentTemplateState)
 type CommentTemplateState struct {
 	ExprDepth int
 }
 
 // CommentScanState holds the data fields for a comment scan state record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️commentscanstate](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/CommentScanState)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️commentscanstate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CommentScanState)
 type CommentScanState struct {
 	InBlockComment          bool
 	BlockCommentStartLine   int
@@ -17267,7 +18944,7 @@ type CommentScanState struct {
 
 // InTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
 // InTemplateRaw performs the in template raw operation on the CommentScanState.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️intemplateraw](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/InTemplateRaw)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies🛠️intemplateraw](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/InTemplateRaw)
 func (state *CommentScanState) InTemplateRaw() bool {
 	if len(state.Templates) == 0 {
 		return false
@@ -17759,7 +19436,8 @@ func folderPolicy(ctx *PolicyContext) []Breach {
 		".venv/",
 		".nx/",
 	}
-	err := filepath.WalkDir(ctx.RootDir, func(path string, d fs.DirEntry, err error) error {
+
+	err := filepath.WalkDir(ctx.RootDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -17776,13 +19454,20 @@ func folderPolicy(ctx *PolicyContext) []Breach {
 				return filepath.SkipDir
 			}
 		}
-		entries, readErr := os.ReadDir(path)
+
+		if isIgnoredByGitignore(filepath.Join(ctx.RootDir, relPath)) {
+			return filepath.SkipDir
+		}
+
+		f, readErr := os.Open(path)
 		if readErr != nil {
 			return nil
 		}
-		if len(entries) == 0 {
+		defer f.Close()
+		_, readErr = f.Readdirnames(1)
+		if readErr == io.EOF {
 			breachs = append(breachs, ctx.CreateBreach(
-				fmt.Sprintf("Empty folder %q must be removed", relPath),
+				"Empty folder \""+relPath+"\" must be removed",
 				BreachFolderIllegalEmpty,
 				relPath+"/", 0, 0, relPath))
 		}
@@ -17792,7 +19477,7 @@ func folderPolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️godfile](semiorepo://definition/semio-repo/cli/main.go/Types/Policies/Godfile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖policies✂️godfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Godfile)
 // Godfile holds the data fields for a Godfile record.
 type Godfile struct {
 	Exact map[string]bool
@@ -17848,63 +19533,19 @@ func filePolicy(ctx *PolicyContext) []Breach {
 		return nil
 	}
 	var breachs []Breach
-	var relPaths []string
 	godfile, err := loadGodfile()
 	if err != nil {
 		return breachs
 	}
-	excludePrefixes := []string{
-		".git/",
-		".semio-repo/",
-		"node_modules/",
-		".venv/",
-		".nx/",
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
 	}
-	err = filepath.WalkDir(ctx.RootDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		if d.IsDir() {
-			relPath, _ := filepath.Rel(ctx.RootDir, path)
-			relPath = NormalizePath(relPath)
-			if relPath == "." {
-				return nil
-			}
-			for _, prefix := range excludePrefixes {
-				if strings.HasPrefix(relPath+"/", prefix) {
-					return filepath.SkipDir
-				}
-			}
-			return nil
-		}
-		relPath, _ := filepath.Rel(ctx.RootDir, path)
-		relPath = NormalizePath(relPath)
-		relPaths = append(relPaths, relPath)
-		return nil
-	})
-	_ = err
-	ignored := make(map[string]bool)
-	chunkSize := 512
-	for i := 0; i < len(relPaths); i += chunkSize {
-		end := i + chunkSize
-		if end > len(relPaths) {
-			end = len(relPaths)
-		}
-		chunkIgnored := GetGitIgnoredSet(relPaths[i:end])
-		for relPath := range chunkIgnored {
-			ignored[relPath] = true
-		}
-	}
-	for _, relPath := range relPaths {
-		if ignored[relPath] || ignored[relPath+"/"] {
-			continue
-		}
-		if isIgnoredByGitignore(filepath.Join(ctx.RootDir, relPath)) {
-			continue
-		}
+	for _, filePath := range files {
+		relPath := GetRelativePath(filePath)
 		if !godfileMatchesPath(godfile, relPath) {
 			breachs = append(breachs, ctx.CreateBreach(
-				fmt.Sprintf("File %q is not listed in .semio-repo/files.json", relPath),
+				"File \""+relPath+"\" is not listed in .semio-repo/files.json",
 				BreachFileIllegalUseGodfile,
 				relPath, 0, 0, relPath))
 		}
@@ -17916,11 +19557,11 @@ func filePolicy(ctx *PolicyContext) []Breach {
 
 // #region 🔖Codebase
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase](semiorepo://section/semio-repo/cli/main.go/Types/Codebase)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase)
 // Codebase builder that assembles bundles, folders, files, sections, definitions, contributors, tickets, policies, and breachs.
 
 // CodebaseContext holds the data fields for a codebase context record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase✂️codebasecontext](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/CodebaseContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase✂️codebasecontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/CodebaseContext)
 type CodebaseContext struct {
 	RootDir  string
 	RootURI  string
@@ -17933,7 +19574,7 @@ type CodebaseContext struct {
 
 // NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
 // NewCodebaseContext creates and returns a new CodebaseContext instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️newcodebasecontext](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/NewCodebaseContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️newcodebasecontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/NewCodebaseContext)
 func NewCodebaseContext() *CodebaseContext {
 	rootURI := "file://" + NormalizePath(rootDir)
 	return &CodebaseContext{
@@ -17944,14 +19585,14 @@ func NewCodebaseContext() *CodebaseContext {
 
 // LoadBundles MUST read from the configured storage path.
 // LoadBundles loads the bundles from storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadbundles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/LoadBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadBundles)
 func (ctx *CodebaseContext) LoadBundles() {
 	ctx.Bundles = GetProjects()
 }
 
 // LoadFiles MUST read from the configured storage path.
 // LoadFiles loads the files from storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/LoadFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadFiles)
 func (ctx *CodebaseContext) LoadFiles() error {
 	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, ctx.Bundles)
 	if err != nil {
@@ -17963,7 +19604,7 @@ func (ctx *CodebaseContext) LoadFiles() error {
 
 // LoadBreachs MUST read from the configured storage path.
 // LoadBreachs loads the breachs from storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadbreachs](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/LoadBreachs)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadbreachs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadBreachs)
 func (ctx *CodebaseContext) LoadBreachs() error {
 	for _, file := range ctx.Files {
 		breachs, err := AnalyzeFile(file, ctx.Bundles)
@@ -17977,7 +19618,7 @@ func (ctx *CodebaseContext) LoadBreachs() error {
 
 // LoadTickets MUST read from the configured storage path.
 // LoadTickets loads the tickets from storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadtickets](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/LoadTickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadtickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadTickets)
 func (ctx *CodebaseContext) LoadTickets() error {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -17989,14 +19630,14 @@ func (ctx *CodebaseContext) LoadTickets() error {
 
 // LoadPolicies MUST read from the configured storage path.
 // LoadPolicies loads the policies from storage.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadpolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/LoadPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadPolicies)
 func (ctx *CodebaseContext) LoadPolicies() {
 	ctx.Policies = GetPolicies()
 }
 
 // GetBundleForFile MUST return the stored value without modification.
 // GetBundleForFile returns the bundle for file of the CodebaseContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getbundleforfile](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/GetBundleForFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getbundleforfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetBundleForFile)
 func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 	name, _, ok := ctx.GetBundleInfo(filePath)
 	if !ok {
@@ -18007,7 +19648,7 @@ func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 
 // GetBundleInfo MUST return the stored value without modification.
 // GetBundleInfo returns the bundle info of the CodebaseContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getbundleinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/GetBundleInfo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getbundleinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetBundleInfo)
 func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bool) {
 	normalizedPath := NormalizePath(path)
 	var matchedBundle string
@@ -18031,35 +19672,35 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 
 // GetFileID MUST return the stored value without modification.
 // GetFileID returns the file i d of the CodebaseContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getfileid](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/GetFileID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getfileid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetFileID)
 func (ctx *CodebaseContext) GetFileID(file string) string {
 	return buildFileID(file, nil)
 }
 
 // GetFolderID MUST return the stored value without modification.
 // GetFolderID returns the folder i d of the CodebaseContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getfolderid](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/GetFolderID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️getfolderid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetFolderID)
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
 	return buildFolderID(folder, nil)
 }
 
 // FileURI MUST operate on the CodebaseContext receiver and return consistent results.
 // FileURI performs the file u r i operation on the CodebaseContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️fileuri](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/FileURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️fileuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/FileURI)
 func (ctx *CodebaseContext) FileURI(path string) string {
 	return buildFileUriFromPath(NormalizePath(path))
 }
 
 // FolderURI MUST operate on the CodebaseContext receiver and return consistent results.
 // FolderURI performs the folder u r i operation on the CodebaseContext.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️folderuri](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/FolderURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️folderuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/FolderURI)
 func (ctx *CodebaseContext) FolderURI(path string) string {
 	return buildFileUriFromPath(NormalizePath(path))
 }
 
 // BuildCodebaseBundles MUST assemble the codebase bundles from the available context data.
 // BuildCodebaseBundles constructs and returns the codebase bundles structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasebundles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasebundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseBundles)
 func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -18199,7 +19840,7 @@ func countSections(sections []Section) int {
 
 // BuildCodebaseFolders MUST assemble the codebase folders from the available context data.
 // BuildCodebaseFolders constructs and returns the codebase folders structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefolders](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseFolders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFolders)
 func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -18255,7 +19896,7 @@ func extractFilePath(scope string) string {
 
 // BuildCodebaseFiles MUST assemble the codebase files from the available context data.
 // BuildCodebaseFiles constructs and returns the codebase files structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFiles)
 func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	var result []CodebaseFile
 	breachsByFile := make(map[string][]Breach)
@@ -18314,7 +19955,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 
 // BuildCodebaseSections MUST assemble the codebase sections from the available context data.
 // BuildCodebaseSections constructs and returns the codebase sections structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasesections](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseSections)
 func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	var result []CodebaseSection
 
@@ -18368,7 +20009,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 
 // BuildCodebaseDefinitions MUST assemble the codebase definitions from the available context data.
 // BuildCodebaseDefinitions constructs and returns the codebase definitions structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasedefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasedefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseDefinitions)
 func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 	var result []CodebaseDefinition
 
@@ -18413,7 +20054,7 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 
 // BuildCodebaseContributors MUST assemble the codebase contributors from the available context data.
 // BuildCodebaseContributors constructs and returns the codebase contributors structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasecontributors](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseContributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasecontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseContributors)
 func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -18469,15 +20110,15 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 		result = append(result, CodebaseContributor{
 			ID:            c.Github,
-			URI:           ctx.FileURI(".semio-repo/👤/" + c.Github),
-			Path:          ".semio-repo/👤/" + c.Github + "/contributor.json",
+			URI:           ctx.FileURI(".semio-repo/🧑‍💻/" + c.Github),
+			Path:          ".semio-repo/🧑‍💻/" + c.Github + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
 			Emails:        c.Emails,
 			Links:         c.Links,
 			Contributions: contributions,
 			Metrics: &ContributorMetricsInternal{
-				Commits:     len(c.Contributions.Commits),
+				Checkpoints: len(c.Contributions.Checkpoints),
 				Tickets:     len(c.Contributions.Tickets),
 				Bundles:     len(c.Contributions.Bundles),
 				Folders:     len(c.Contributions.Folders),
@@ -18493,7 +20134,7 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 // BuildCodebaseTickets MUST assemble the codebase tickets from the available context data.
 // BuildCodebaseTickets constructs and returns the codebase tickets structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasetickets](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseTickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasetickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseTickets)
 func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	var result []CodebaseTicket
 
@@ -18540,16 +20181,16 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 				Created:  ticket.GetDateStarted().Format(time.RFC3339),
 				Finished: finishedStr,
 			},
-			Commit:  ticket.GetCommit(),
-			Year:    fmt.Sprintf("%04d", ticket.Year),
-			Month:   fmt.Sprintf("%02d", ticket.Month),
-			Day:     fmt.Sprintf("%02d", ticket.Day),
-			Slug:    ticket.Slug,
-			Prompt:  ticket.GetPrompt(),
-			LLM:     llm,
-			Author:  ticket.GetAuthor(),
-			Status:  ticket.GetStatus(),
-			Bundles: bundleContribs,
+			Checkpoint: ticket.GetCheckpoint(),
+			Year:       fmt.Sprintf("%04d", ticket.Year),
+			Month:      fmt.Sprintf("%02d", ticket.Month),
+			Day:        fmt.Sprintf("%02d", ticket.Day),
+			Slug:       ticket.Slug,
+			Prompt:     ticket.GetPrompt(),
+			LLM:        llm,
+			Author:     ticket.GetAuthor(),
+			Status:     ticket.GetStatus(),
+			Bundles:    bundleContribs,
 		})
 	}
 	return result
@@ -18557,7 +20198,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 // BuildCodebasePolicies MUST assemble the codebase policies from the available context data.
 // BuildCodebasePolicies constructs and returns the codebase policies structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasepolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebasePolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasepolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebasePolicies)
 func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	var result []CodebasePolicy
 	breachsByPolicy := make(map[string][]Breach)
@@ -18593,7 +20234,7 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 
 // BuildCodebaseBreachs MUST assemble the codebase breachs from the available context data.
 // BuildCodebaseBreachs constructs and returns the codebase breachs structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasebreachs](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseBreachs)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasebreachs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseBreachs)
 func BuildCodebaseBreachs(ctx *CodebaseContext) []CodebaseBreach {
 	var result []CodebaseBreach
 
@@ -18653,7 +20294,7 @@ func BuildCodebaseBreachs(ctx *CodebaseContext) []CodebaseBreach {
 
 // BuildCodebaseTree MUST assemble the codebase tree from the available context data.
 // BuildCodebaseTree constructs and returns the codebase tree structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasetree](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasetree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseTree)
 func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*CbTreeNode {
 	tree := make(map[string]*CbTreeNode)
 	tree["semio"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
@@ -18701,7 +20342,7 @@ func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []C
 
 // BuildCodebase MUST assemble the codebase from the available context data.
 // BuildCodebase constructs and returns the codebase structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebase](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebase)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebase](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebase)
 func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	bundles := BuildCodebaseBundles(ctx)
 	folders := BuildCodebaseFolders(ctx)
@@ -18730,26 +20371,26 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 
 // BuildCodebaseSnapshot MUST assemble the codebase snapshot from the available context data.
 // BuildCodebaseSnapshot constructs and returns the codebase snapshot structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasesnapshot](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseSnapshot)
-func BuildCodebaseSnapshot(files []string, bundles []Bundle, commit string) (*Codebase, error) {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasesnapshot](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseSnapshot)
+func BuildCodebaseSnapshot(files []string, bundles []Bundle, checkpoint string) (*Codebase, error) {
 	ctx := &CodebaseContext{RootDir: rootDir, RootURI: "file://" + NormalizePath(rootDir)}
 	ctx.Bundles = bundles
 	ctx.Files = files
 	ctx.Policies = GetPolicies()
 	codebase := &Codebase{}
-	codebase.Bundles = BuildCodebaseBundlesForFiles(ctx, commit)
-	codebase.Folders = BuildCodebaseFoldersForFiles(ctx, commit)
-	codebase.Files = BuildCodebaseFilesForFiles(ctx, commit)
-	codebase.Sections = BuildCodebaseSectionsForFiles(ctx, commit)
-	codebase.Definitions = BuildCodebaseDefinitionsForFiles(ctx, commit)
+	codebase.Bundles = BuildCodebaseBundlesForFiles(ctx, checkpoint)
+	codebase.Folders = BuildCodebaseFoldersForFiles(ctx, checkpoint)
+	codebase.Files = BuildCodebaseFilesForFiles(ctx, checkpoint)
+	codebase.Sections = BuildCodebaseSectionsForFiles(ctx, checkpoint)
+	codebase.Definitions = BuildCodebaseDefinitionsForFiles(ctx, checkpoint)
 	codebase.Tree = BuildCodebaseTree(ctx, codebase.Bundles, codebase.Files, codebase.Sections, codebase.Definitions)
 	return codebase, nil
 }
 
 // BuildCodebaseBundlesForFiles MUST assemble the codebase bundles for files from the available context data.
 // BuildCodebaseBundlesForFiles constructs and returns the codebase bundles for files structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasebundlesforfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseBundlesForFiles)
-func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []CodebaseBundle {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasebundlesforfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseBundlesForFiles)
+func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
 	lineCounts := make(map[string]int)
@@ -18776,7 +20417,7 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []Codebas
 		if folder != "." {
 			folderSets[bundleName][folder] = struct{}{}
 		}
-		content, err := ReadTextFileAtCommit(commit, file)
+		content, err := ReadTextFileAtCheckpoint(checkpoint, file)
 		if err != nil {
 			continue
 		}
@@ -18824,8 +20465,8 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []Codebas
 
 // BuildCodebaseFoldersForFiles MUST assemble the codebase folders for files from the available context data.
 // BuildCodebaseFoldersForFiles constructs and returns the codebase folders for files structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefoldersforfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseFoldersForFiles)
-func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []CodebaseFolder {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefoldersforfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFoldersForFiles)
+func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
 	lineCounts := make(map[string]int)
@@ -18837,7 +20478,7 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []Codebas
 		}
 		folderSet[folder] = struct{}{}
 		fileCounts[folder]++
-		content, err := ReadTextFileAtCommit(commit, file)
+		content, err := ReadTextFileAtCheckpoint(checkpoint, file)
 		if err == nil {
 			lineCounts[folder] += CountLines(content)
 		}
@@ -18870,13 +20511,13 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []Codebas
 
 // BuildCodebaseFilesForFiles MUST assemble the codebase files for files from the available context data.
 // BuildCodebaseFilesForFiles constructs and returns the codebase files for files structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefilesforfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseFilesForFiles)
-func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseFile {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasefilesforfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFilesForFiles)
+func BuildCodebaseFilesForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseFile {
 	var result []CodebaseFile
 	for _, file := range ctx.Files {
 		id := ctx.GetFileID(file)
 		var metrics *FileMetricsInternal
-		content, err := ReadTextFileAtCommit(commit, file)
+		content, err := ReadTextFileAtCheckpoint(checkpoint, file)
 		if err == nil {
 			sections := ParseSections(content, file)
 			sectionCount := countSections(sections)
@@ -18906,11 +20547,11 @@ func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseF
 
 // BuildCodebaseSectionsForFiles MUST assemble the codebase sections for files from the available context data.
 // BuildCodebaseSectionsForFiles constructs and returns the codebase sections for files structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasesectionsforfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseSectionsForFiles)
-func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, commit string) []CodebaseSection {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasesectionsforfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseSectionsForFiles)
+func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseSection {
 	var result []CodebaseSection
 	for _, file := range ctx.Files {
-		content, err := ReadTextFileAtCommit(commit, file)
+		content, err := ReadTextFileAtCheckpoint(checkpoint, file)
 		if err != nil {
 			continue
 		}
@@ -18955,11 +20596,11 @@ func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file
 
 // BuildCodebaseDefinitionsForFiles MUST assemble the codebase definitions for files from the available context data.
 // BuildCodebaseDefinitionsForFiles constructs and returns the codebase definitions for files structure.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasedefinitionsforfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/BuildCodebaseDefinitionsForFiles)
-func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []CodebaseDefinition {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️buildcodebasedefinitionsforfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseDefinitionsForFiles)
+func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseDefinition {
 	var result []CodebaseDefinition
 	for _, file := range ctx.Files {
-		content, err := ReadTextFileAtCommit(commit, file)
+		content, err := ReadTextFileAtCheckpoint(checkpoint, file)
 		if err != nil {
 			continue
 		}
@@ -18995,7 +20636,7 @@ func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []Cod
 
 // ToolCodebase MUST complete the operation and return consistent results.
 // ToolCodebase performs the tool codebase operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️toolcodebase](semiorepo://definition/semio-repo/cli/main.go/Types/Codebase/ToolCodebase)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️toolcodebase](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/ToolCodebase)
 func ToolCodebase() ToolResult {
 	output := NewOutput()
 	ctx := NewCodebaseContext()
@@ -19024,33 +20665,33 @@ func ToolCodebase() ToolResult {
 
 // #region 🔖Tickets
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets](semiorepo://section/semio-repo/cli/main.go/Types/Tickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets)
 // Ticket and goal lifecycle management including creation, closing, reopening, deletion, and diff computation.
 
 // GetTicketsDir MUST return the stored value without modification.
 // GetTicketsDir returns the tickets dir of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getticketsdir](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/GetTicketsDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getticketsdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTicketsDir)
 func GetTicketsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "🎫")
 }
 
 // GetTicketPath MUST return the stored value without modification.
 // GetTicketPath returns the ticket path of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getticketpath](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/GetTicketPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getticketpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTicketPath)
 func GetTicketPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketsDir(), PadNumber(year, 2), PadNumber(month, 2), PadNumber(day, 2), slug)
 }
 
 // GetImportantFilePath MUST return the stored value without modification.
 // GetImportantFilePath returns the important file path of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getimportantfilepath](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/GetImportantFilePath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getimportantfilepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetImportantFilePath)
 func GetImportantFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "important.md")
 }
 
 // GetTicketJsonPath MUST return the stored value without modification.
 // GetTicketJsonPath returns the ticket json path of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getticketjsonpath](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/GetTicketJsonPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getticketjsonpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTicketJsonPath)
 func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
@@ -19065,7 +20706,7 @@ func hasTicketKeyword(text, keyword string) bool {
 
 // FindTicketBySlug MUST return nil when no match is found.
 // FindTicketBySlug searches for and returns the matching ticket by slug.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️findticketbyslug](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FindTicketBySlug)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️findticketbyslug](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FindTicketBySlug)
 func FindTicketBySlug(slug string) (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -19082,7 +20723,7 @@ func FindTicketBySlug(slug string) (*Ticket, error) {
 
 // LatestTicket MUST complete the operation and return consistent results.
 // LatestTicket performs the latest ticket operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️latestticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/LatestTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️latestticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LatestTicket)
 func LatestTicket() (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -19116,7 +20757,7 @@ func shouldSkipTicket(prompt string) bool {
 
 // OpenTicket MUST complete the operation and return consistent results.
 // OpenTicket performs the open ticket operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️openticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/OpenTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️openticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/OpenTicket)
 func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
@@ -19139,7 +20780,7 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 
 // OpenGoal MUST complete the operation and return consistent results.
 // OpenGoal performs the open goal operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️opengoal](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/OpenGoal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️opengoal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/OpenGoal)
 func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagement bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
@@ -19156,7 +20797,7 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagem
 
 // UpdateTicketTitle MUST complete the operation and return consistent results.
 // UpdateTicketTitle performs the update ticket title operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️updatetickettitle](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/UpdateTicketTitle)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️updatetickettitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/UpdateTicketTitle)
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
@@ -19200,7 +20841,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 // CreateTicket MUST persist the new entity and return a reference to it.
 // CreateTicket creates a new ticket and persists it.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️createticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/CreateTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️createticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CreateTicket)
 func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	if goal == "" {
@@ -19248,8 +20889,6 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
 
 	importantFilePath := GetImportantFilePath(year, month, day, slug)
-	gitAuthor := GetGitAuthorGithub()
-	gitCommit := GetGitCommit()
 
 	if draft != "" {
 		draftPath := filepath.Join(GetDraftsPath(), draft)
@@ -19290,13 +20929,12 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 			Kind:   string(repopkg.EventTicketOpen),
 			Prompt: prompt,
 			LLM:    llmSlug,
-			Author: gitAuthor,
 			System: GetSystem(),
 			Client: uiSlug,
 			Date:   now.Format("2006-01-02 15:04:05"),
-			Commit: gitCommit,
 		}},
 	}
+	appendTicketSessionID(ticket, currentTicketSessionID())
 
 	skipIssue := noIssue || noManagement || strings.Contains(prompt, "NOISSUE")
 	if !skipIssue {
@@ -19328,7 +20966,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	repopkg.Emit(repopkg.EventTicketOpen, "repo-cli", repopkg.TicketOpenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Client: uiSlug, Author: gitAuthor, Goal: goal, Parent: parent,
+		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorGithub(), Goal: goal, Parent: parent,
 	})
 	return ticket, nil
 }
@@ -19394,7 +21032,7 @@ func ghAssignIssueToCurrentUser(issueURL string) {
 
 // CountLines MUST complete the operation and return consistent results.
 // CountLines performs the count lines operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️countlines](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/CountLines)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️countlines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CountLines)
 func CountLines(content string) int {
 	if content == "" {
 		return 0
@@ -19404,7 +21042,7 @@ func CountLines(content string) int {
 
 // CountLinesInFile MUST complete the operation and return consistent results.
 // CountLinesInFile performs the count lines in file operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️countlinesinfile](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/CountLinesInFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️countlinesinfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CountLinesInFile)
 func CountLinesInFile(path string) int {
 	content, err := ReadTextFile(path)
 	if err != nil {
@@ -19413,43 +21051,43 @@ func CountLinesInFile(path string) int {
 	return CountLines(content)
 }
 
-// CountLinesAtCommit MUST complete the operation and return consistent results.
-// CountLinesAtCommit performs the count lines at commit operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️countlinesatcommit](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/CountLinesAtCommit)
-func CountLinesAtCommit(commit, filePath string) int {
-	stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", commit, filePath)}, "")
+// CountLinesAtCheckpoint MUST complete the operation and return consistent results.
+// CountLinesAtCheckpoint performs the count lines at checkpoint operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️countlinesatcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CountLinesAtCheckpoint)
+func CountLinesAtCheckpoint(checkpoint, filePath string) int {
+	stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", checkpoint, filePath)}, "")
 	if exitCode != 0 {
 		return 0
 	}
 	return CountLines(stdout)
 }
 
-// ReadTextFileAtCommit MUST return the text file at commit content or an error if unavailable.
-// ReadTextFileAtCommit reads and returns text file at commit from the source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️readtextfileatcommit](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ReadTextFileAtCommit)
-func ReadTextFileAtCommit(commit, filePath string) (string, error) {
-	if commit == "" {
+// ReadTextFileAtCheckpoint MUST return the text file at checkpoint content or an error if unavailable.
+// ReadTextFileAtCheckpoint reads and returns text file at checkpoint from the source.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️readtextfileatcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ReadTextFileAtCheckpoint)
+func ReadTextFileAtCheckpoint(checkpoint, filePath string) (string, error) {
+	if checkpoint == "" {
 		return ReadTextFile(filepath.Join(rootDir, filePath))
 	}
-	stdout, stderr, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", commit, filePath)}, "")
+	stdout, stderr, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", checkpoint, filePath)}, "")
 	if exitCode != 0 {
 		return "", fmt.Errorf("git show failed: %s", strings.TrimSpace(stderr))
 	}
 	return stdout, nil
 }
 
-// ListFilesAtCommit MUST return all available files at commit entries.
-// ListFilesAtCommit returns a list of files at commit entries.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️listfilesatcommit](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ListFilesAtCommit)
-func ListFilesAtCommit(commit string) ([]string, error) {
-	if commit == "" {
+// ListFilesAtCheckpoint MUST return all available files at checkpoint entries.
+// ListFilesAtCheckpoint returns a list of files at checkpoint entries.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️listfilesatcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ListFilesAtCheckpoint)
+func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
+	if checkpoint == "" {
 		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetProjects())
 		if err != nil {
 			return nil, err
 		}
 		return files, nil
 	}
-	stdout, stderr, exitCode := ExecCommand("git", []string{"ls-tree", "-r", "--name-only", commit}, "")
+	stdout, stderr, exitCode := ExecCommand("git", []string{"ls-tree", "-r", "--name-only", checkpoint}, "")
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git ls-tree failed: %s", strings.TrimSpace(stderr))
 	}
@@ -19499,7 +21137,7 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 
 // #region 🔖Ticket File Resolution
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖ticketfileresolution](semiorepo://section/semio-repo/cli/main.go/Types/Tickets/Ticket%20File%20Resolution)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖ticketfileresolution](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/Ticket%20File%20Resolution)
 // Ticket file input normalization for close operations.
 // Requirements: Accept repo-relative paths, absolute paths, semiorepo file URIs, and file artifact IDs.
 // Docs: Used by ticket close to map file identifiers to repo paths.
@@ -19564,7 +21202,7 @@ func normalizeTicketFileInputs(files []string) []string {
 
 // FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
 // FilterTicketWorkspaceFiles returns the subset of ticket workspace files matching the criteria.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️filterticketworkspacefiles](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FilterTicketWorkspaceFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️filterticketworkspacefiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FilterTicketWorkspaceFiles)
 func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 	if ticket == nil {
 		return files
@@ -19902,7 +21540,7 @@ func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 
 // SaveTicket MUST persist the ticket atomically to the data store.
 // SaveTicket persists ticket to the data store.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️saveticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SaveTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️saveticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SaveTicket)
 func SaveTicket(ticket *Ticket) error {
 	jsonBytes, err := json.MarshalIndent(ticket, "", "  ")
 	if err != nil {
@@ -19913,7 +21551,7 @@ func SaveTicket(ticket *Ticket) error {
 
 // ReadTicket MUST return the ticket content or an error if unavailable.
 // ReadTicket reads and returns ticket from the source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️readticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ReadTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️readticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ReadTicket)
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
@@ -19942,7 +21580,7 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 
 // ListTickets MUST return all available tickets entries.
 // ListTickets returns a list of tickets entries.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️listtickets](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ListTickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️listtickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ListTickets)
 func ListTickets(year, month, day *int) ([]Ticket, error) {
 	ticketsDir := GetTicketsDir()
 	if !FileExists(ticketsDir) {
@@ -20035,7 +21673,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 
 // StreamTickets MUST invoke the callback for each matching tickets entry.
 // StreamTickets streams tickets entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamtickets](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamTickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamtickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamTickets)
 func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket, opts ...StreamOptions) error {
 	defer close(out)
 
@@ -20219,7 +21857,7 @@ var (
 
 // InvalidateProjectCache MUST clear the cached state to force a reload.
 // InvalidateProjectCache invalidates the cached project cache.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️invalidateprojectcache](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/InvalidateProjectCache)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️invalidateprojectcache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/InvalidateProjectCache)
 func InvalidateProjectCache() {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
@@ -20229,7 +21867,7 @@ func InvalidateProjectCache() {
 
 // LoadProjects MUST return all matching projects from the data source.
 // LoadProjects loads and returns projects from the data source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadprojects](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/LoadProjects)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadProjects)
 func LoadProjects() []Project {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
@@ -20242,6 +21880,11 @@ func LoadProjects() []Project {
 }
 
 func isProjectDir(name string) bool {
+	readmePath := filepath.Join(rootDir, name, "README.md")
+	content, err := ReadTextFile(readmePath)
+	if err != nil || !strings.HasPrefix(content, "---") {
+		return false
+	}
 	if strings.HasPrefix(name, ".") {
 		return false
 	}
@@ -20328,10 +21971,10 @@ func loadProjectsInternal() []Project {
 	return projects
 }
 
-// LoadCommits MUST return all matching commits from the data source.
-// LoadCommits loads and returns commits from the data source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadcommits](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/LoadCommits)
-func LoadCommits(limit *int) []Commit {
+// LoadCheckpoints MUST return all matching checkpoints from the data source.
+// LoadCheckpoints loads and returns checkpoints from the data source.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadcheckpoints](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadCheckpoints)
+func LoadCheckpoints(limit *int) []Checkpoint {
 	args := []string{"log", "--pretty=format:%H|%aN|%ad|%s", "--date=iso-strict"}
 	if limit != nil {
 		args = append(args, fmt.Sprintf("-n%d", *limit))
@@ -20341,10 +21984,10 @@ func LoadCommits(limit *int) []Commit {
 	cmd.Dir = rootDir
 	out, err := cmd.Output()
 	if err != nil {
-		return []Commit{}
+		return []Checkpoint{}
 	}
 	lines := strings.Split(string(out), "\n")
-	var commits []Commit
+	var checkpoints []Checkpoint
 	for _, line := range lines {
 		parts := strings.Split(line, "|")
 		if len(parts) >= 4 {
@@ -20354,7 +21997,7 @@ func LoadCommits(limit *int) []Commit {
 			title := strings.Join(parts[3:], "|")
 			date, _ := time.Parse(time.RFC3339, dateStr)
 
-			commits = append(commits, Commit{
+			checkpoints = append(checkpoints, Checkpoint{
 				ID:    sha,
 				SHA:   sha,
 				Title: title,
@@ -20362,12 +22005,12 @@ func LoadCommits(limit *int) []Commit {
 			})
 		}
 	}
-	return commits
+	return checkpoints
 }
 
 // LoadBundles MUST return all matching bundles from the data source.
 // LoadBundles loads and returns bundles from the data source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadbundles](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/LoadBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadBundles)
 func LoadBundles() []Bundle {
 	var bundles []Bundle
 	projects := LoadProjects()
@@ -20379,14 +22022,14 @@ func LoadBundles() []Bundle {
 
 // GetProjects MUST retrieve the requested value or return an error.
 // GetProjects retrieves and returns the projects.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getprojects](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/GetProjects)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetProjects)
 func GetProjects() []Bundle {
 	return LoadBundles()
 }
 
 // StreamBundles MUST invoke the callback for each matching bundles entry.
 // StreamBundles streams bundles entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streambundles](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streambundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamBundles)
 func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -20561,7 +22204,7 @@ func loadPackages(bundleRoot string) []Package {
 
 // StreamProjects MUST invoke the callback for each matching projects entry.
 // StreamProjects streams projects entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamprojects](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamProjects)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamProjects)
 func StreamProjects(ctx context.Context, out chan<- Project, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -20649,7 +22292,7 @@ func runProjectTree(factory EngineFactory, config Config, cmd *cobra.Command, ar
 }
 
 // StreamOptions holds the data fields for a stream options record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets✂️streamoptions](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamOptions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets✂️streamoptions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamOptions)
 type StreamOptions struct {
 	ShowIgnored    bool
 	ShowGenerated  bool
@@ -20882,7 +22525,7 @@ func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
 
 // StreamFolders MUST invoke the callback for each matching folders entry.
 // StreamFolders streams folders entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamfolders](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamFolders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamfolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamFolders)
 func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -20991,7 +22634,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 
 // StreamFiles MUST invoke the callback for each matching files entry.
 // StreamFiles streams files entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamFiles)
 func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -21181,7 +22824,7 @@ func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
 
 // StreamSections MUST invoke the callback for each matching sections entry.
 // StreamSections streams sections entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamsections](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamSections)
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -21243,7 +22886,7 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 
 // StreamDefinitions MUST invoke the callback for each matching definitions entry.
 // StreamDefinitions streams definitions entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/StreamDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamDefinitions)
 func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -21314,7 +22957,7 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 
 // ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
 // ResolveBundleForPath resolves and returns the bundle for path.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️resolvebundleforpath](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ResolveBundleForPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️resolvebundleforpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ResolveBundleForPath)
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	var bestMatch string
 	var maxLen int
@@ -21506,7 +23149,7 @@ func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 
 // FinishTicket MUST return a non-nil error when the operation fails.
 // FinishTicket performs the finish ticket operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️finishticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FinishTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️finishticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FinishTicket)
 func FinishTicket(ticket *Ticket, summary string, files []string, noManagement bool, bulk bool) error {
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
@@ -21632,14 +23275,14 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 	}
 	ticket.Interactions = append(ticket.Interactions, Interaction{
-		Kind:    string(repopkg.EventTicketClose),
-		Author:  GetGitAuthorGithub(),
-		System:  GetSystem(),
-		Client:  closeClient,
-		Commit:  GetGitCommit(),
-		Date:    nowStr,
-		Summary: summary,
-		Files:   interactionFiles,
+		Kind:       string(repopkg.EventTicketClose),
+		Author:     GetGitAuthorGithub(),
+		System:     GetSystem(),
+		Client:     closeClient,
+		Checkpoint: GetGitCheckpoint(),
+		Date:       nowStr,
+		Summary:    summary,
+		Files:      interactionFiles,
 	})
 	if err := SaveTicket(ticket); err != nil {
 		return err
@@ -21660,7 +23303,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 
 // ReopenTicket MUST return a non-nil error when the operation fails.
 // ReopenTicket performs the reopen ticket operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️reopenticket](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ReopenTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️reopenticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ReopenTicket)
 func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noManagement bool) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
@@ -21671,8 +23314,6 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	if parent != "" {
 		ticket.Parent = parent
 	}
-	gitAuthor := GetGitAuthorGithub()
-	gitCommit := GetGitCommit()
 	var llmSlug string
 	var uiSlug string
 	var err error
@@ -21695,11 +23336,9 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		Kind:   string(repopkg.EventTicketReopen),
 		Prompt: prompt,
 		LLM:    llmSlug,
-		Author: gitAuthor,
 		System: GetSystem(),
 		Client: uiSlug,
 		Date:   time.Now().Format("2006-01-02 15:04:05"),
-		Commit: gitCommit,
 	}
 
 	if draft != "" {
@@ -21733,6 +23372,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	}
 
 	ticket.Interactions = append(ticket.Interactions, interaction)
+	appendTicketSessionID(ticket, currentTicketSessionID())
 	ticket.Status = TicketStatusOpen
 
 	if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
@@ -21753,14 +23393,14 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	repopkg.Emit(repopkg.EventTicketReopen, "repo-cli", repopkg.TicketReopenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Prompt:        prompt, LLM: llmSlug, Client: uiSlug, Author: gitAuthor,
+		Prompt:        prompt, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorGithub(),
 	})
 	return nil
 }
 
 // ToolTicketOpen MUST complete the operation successfully.
 // ToolTicketOpen performs the tool ticket open operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketopen](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketOpen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketOpen)
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
 	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	if err != nil {
@@ -21789,7 +23429,7 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 
 // ToolTicketList MUST complete the operation successfully.
 // ToolTicketList performs the tool ticket list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketList)
 func ToolTicketList(year, month, day *int) ToolResult {
 	if year == nil && month == nil && day == nil {
 		result := toolResultFromTreeList(TreeNodeTicket)
@@ -21827,7 +23467,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 
 // ToolTicketRead MUST complete the operation successfully.
 // ToolTicketRead performs the tool ticket read operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketread](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketRead)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketread](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketRead)
 func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -21857,7 +23497,7 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 
 // ToolTicketClose MUST complete the operation successfully.
 // ToolTicketClose performs the tool ticket close operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketclose](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketClose)
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noManagement bool) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -21898,7 +23538,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 
 // ToolTicketReopen MUST complete the operation successfully.
 // ToolTicketReopen performs the tool ticket reopen operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolTicketReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketReopen)
 func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
@@ -21924,7 +23564,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 
 // ToolDraftCreate MUST complete the operation successfully.
 // ToolDraftCreate performs the tool draft create operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolDraftCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftCreate)
 func ToolDraftCreate(title string, files []string) ToolResult {
 	output := NewOutput()
 	draft, err := CreateDraft(title, files)
@@ -21937,7 +23577,7 @@ func ToolDraftCreate(title string, files []string) ToolResult {
 
 // ToolDraftList MUST complete the operation successfully.
 // ToolDraftList performs the tool draft list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolDraftList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftList)
 func ToolDraftList() ToolResult {
 	drafts, err := ListDrafts()
 	if err != nil {
@@ -21953,7 +23593,7 @@ func ToolDraftList() ToolResult {
 
 // ToolDraftDelete MUST complete the operation successfully.
 // ToolDraftDelete performs the tool draft delete operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolDraftDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftDelete)
 func ToolDraftDelete(slug string) ToolResult {
 	if err := DeleteDraft(slug); err != nil {
 		return toolErrorResult(err)
@@ -21963,7 +23603,7 @@ func ToolDraftDelete(slug string) ToolResult {
 
 // ToolGoalCreate MUST complete the operation successfully.
 // ToolGoalCreate performs the tool goal create operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalCreate)
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noManagement bool, parent, milestone string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
@@ -21997,7 +23637,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noM
 
 // ToolGoalList MUST complete the operation successfully.
 // ToolGoalList performs the tool goal list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoallist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoallist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalList)
 func ToolGoalList() ToolResult {
 	result := toolResultFromTreeList(TreeNodeGoal)
 	goals, err := ListGoals()
@@ -22009,7 +23649,7 @@ func ToolGoalList() ToolResult {
 
 // ToolGoalClose MUST complete the operation successfully.
 // ToolGoalClose performs the tool goal close operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalclose](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalClose)
 func ToolGoalClose(id, summary string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
@@ -22032,7 +23672,7 @@ func ToolGoalClose(id, summary string, noManagement bool) ToolResult {
 
 // ToolGoalReopen MUST complete the operation successfully.
 // ToolGoalReopen performs the tool goal reopen operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolGoalReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolgoalreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalReopen)
 func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	var titlePtr, descriptionPtr, dueDatePtr *string
@@ -22070,7 +23710,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 
 // ToolContributorAdd MUST complete the operation successfully.
 // ToolContributorAdd performs the tool contributor add operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributoradd](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolContributorAdd)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributoradd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorAdd)
 func ToolContributorAdd(github string) ToolResult {
 	contributor, err := CreateContributor(github)
 	if err != nil {
@@ -22090,7 +23730,7 @@ func ToolContributorAdd(github string) ToolResult {
 
 // ToolContributorList MUST complete the operation successfully.
 // ToolContributorList performs the tool contributor list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributorlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolContributorList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributorlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorList)
 func ToolContributorList() ToolResult {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -22106,7 +23746,7 @@ func ToolContributorList() ToolResult {
 
 // ToolContributorRemove MUST complete the operation successfully.
 // ToolContributorRemove performs the tool contributor remove operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributorremove](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolContributorRemove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorRemove)
 func ToolContributorRemove(github string) ToolResult {
 	if err := RemoveContributor(github); err != nil {
 		return toolErrorResult(err)
@@ -22120,7 +23760,7 @@ func ToolContributorRemove(github string) ToolResult {
 
 // ToolProjectList MUST complete the operation successfully.
 // ToolProjectList performs the tool project list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolprojectlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolProjectList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolprojectlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolProjectList)
 func ToolProjectList() ToolResult {
 	projects := LoadProjects()
 	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
@@ -22134,7 +23774,7 @@ func ToolProjectList() ToolResult {
 
 // ToolBundleList MUST complete the operation successfully.
 // ToolBundleList performs the tool bundle list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolbundlelist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolBundleList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolbundlelist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolBundleList)
 func ToolBundleList() ToolResult {
 	bundles := LoadBundles()
 	sort.Slice(bundles, func(i, j int) bool { return bundles[i].Name < bundles[j].Name })
@@ -22148,14 +23788,14 @@ func ToolBundleList() ToolResult {
 
 // ToolProjectTree MUST complete the operation successfully.
 // ToolProjectTree performs the tool project tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolprojecttree](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolProjectTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolprojecttree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolProjectTree)
 func ToolProjectTree() ToolResult {
 	return toolResultFromTreeRender(TreeNodeProject)
 }
 
 // ToolFolderCreate MUST complete the operation successfully.
 // ToolFolderCreate performs the tool folder create operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldercreate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFolderCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldercreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderCreate)
 func ToolFolderCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -22171,7 +23811,7 @@ func ToolFolderCreate(path string) ToolResult {
 
 // ToolFolderMove MUST complete the operation successfully.
 // ToolFolderMove performs the tool folder move operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldermove](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFolderMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldermove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderMove)
 func ToolFolderMove(source, target string) ToolResult {
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
@@ -22195,7 +23835,7 @@ func ToolFolderMove(source, target string) ToolResult {
 
 // ToolFolderDelete MUST complete the operation successfully.
 // ToolFolderDelete performs the tool folder delete operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfolderdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFolderDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfolderdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderDelete)
 func ToolFolderDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -22211,7 +23851,7 @@ func ToolFolderDelete(path string) ToolResult {
 
 // ToolFolderList MUST complete the operation successfully.
 // ToolFolderList performs the tool folder list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfolderlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFolderList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfolderlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderList)
 func ToolFolderList(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -22243,7 +23883,7 @@ func ToolFolderList(path string) ToolResult {
 
 // ToolFolderTree MUST complete the operation successfully.
 // ToolFolderTree performs the tool folder tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldertree](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFolderTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldertree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderTree)
 func ToolFolderTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -22301,7 +23941,7 @@ func printTree(output *CommandOutput, dir, prefix string) {
 
 // ToolFileCreate MUST complete the operation successfully.
 // ToolFileCreate performs the tool file create operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilecreate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFileCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileCreate)
 func ToolFileCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -22319,7 +23959,7 @@ func ToolFileCreate(path string) ToolResult {
 
 // FileHeaderId MUST complete the operation successfully.
 // FileHeaderId performs the file header id operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️fileheaderid](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FileHeaderId)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️fileheaderid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FileHeaderId)
 func FileHeaderId(path string) string {
 	kind := DeriveFileKind(filepath.Base(path))
 	if kind == FileKindCode {
@@ -22348,7 +23988,7 @@ func FileHeaderId(path string) string {
 
 // AGPLLicenseText MUST complete the operation successfully.
 // AGPLLicenseText performs the a g p l license text operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️agpllicensetext](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/AGPLLicenseText)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️agpllicensetext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/AGPLLicenseText)
 func AGPLLicenseText() string {
 	return `This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -22366,7 +24006,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 
 // FileHeaderUri MUST return the semiorepo URI for a file path.
 // FileHeaderUri returns the artifact URI for the given file path.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️fileheaderuri](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/FileHeaderUri)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️fileheaderuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FileHeaderUri)
 func FileHeaderUri(path string) string {
 	data := map[string]interface{}{"path": path}
 	return GetArtifactURI("file", data)
@@ -22374,7 +24014,7 @@ func FileHeaderUri(path string) string {
 
 // SectionHeaderId MUST return the section artifact ID for a file path and section path.
 // SectionHeaderId returns the section identification string.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️sectionheaderid](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SectionHeaderId)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️sectionheaderid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SectionHeaderId)
 func SectionHeaderId(filePath string, sectionPath string) string {
 	normalizedFilePath := NormalizePath(filePath)
 	fileID := buildFileID(normalizedFilePath, nil)
@@ -22385,7 +24025,7 @@ func SectionHeaderId(filePath string, sectionPath string) string {
 
 // SectionHeaderUri MUST return the semiorepo URI for a section.
 // SectionHeaderUri returns the section artifact URI.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️sectionheaderuri](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SectionHeaderUri)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️sectionheaderuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SectionHeaderUri)
 func SectionHeaderUri(filePath string, sectionPath string) string {
 	path := filePath + "#" + sectionPath
 	data := map[string]interface{}{"path": path}
@@ -22394,7 +24034,7 @@ func SectionHeaderUri(filePath string, sectionPath string) string {
 
 // DefinitionHeaderId MUST return the definition artifact ID for a file path, section path, and definition name.
 // DefinitionHeaderId returns the definition identification string.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️definitionheaderid](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/DefinitionHeaderId)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️definitionheaderid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/DefinitionHeaderId)
 func DefinitionHeaderId(filePath string, sectionPath string, name string, kind DefinitionKind) string {
 	normalizedFilePath := NormalizePath(filePath)
 	fileID := buildFileID(normalizedFilePath, nil)
@@ -22408,7 +24048,7 @@ func DefinitionHeaderId(filePath string, sectionPath string, name string, kind D
 
 // DefinitionHeaderUri MUST return the semiorepo URI for a definition.
 // DefinitionHeaderUri returns the definition artifact URI.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️definitionheaderuri](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/DefinitionHeaderUri)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️definitionheaderuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/DefinitionHeaderUri)
 func DefinitionHeaderUri(filePath string, sectionPath string, name string) string {
 	val := filePath
 	if sectionPath != "" {
@@ -22430,7 +24070,7 @@ func generateFileHeader(path string, language LanguagePlugin) string {
 
 // ToolFileMove MUST complete the operation successfully.
 // ToolFileMove performs the tool file move operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilemove](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFileMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileMove)
 func ToolFileMove(source, target string) ToolResult {
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
@@ -22454,7 +24094,7 @@ func ToolFileMove(source, target string) ToolResult {
 
 // ToolFileDelete MUST complete the operation successfully.
 // ToolFileDelete performs the tool file delete operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfiledelete](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFileDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfiledelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileDelete)
 func ToolFileDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -22470,7 +24110,7 @@ func ToolFileDelete(path string) ToolResult {
 
 // ToolFileList MUST complete the operation successfully.
 // ToolFileList performs the tool file list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilelist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFileList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilelist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileList)
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
@@ -22492,7 +24132,7 @@ func ToolFileList(scopeRaw string) ToolResult {
 
 // ToolFileTree MUST complete the operation successfully.
 // ToolFileTree performs the tool file tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfiletree](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolFileTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfiletree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileTree)
 func ToolFileTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -22506,7 +24146,7 @@ func ToolFileTree(path string) ToolResult {
 
 // ToolSectionCreate MUST complete the operation successfully.
 // ToolSectionCreate performs the tool section create operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectioncreate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolSectionCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectioncreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionCreate)
 func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -22566,7 +24206,7 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 
 // ToolSectionMove MUST complete the operation successfully.
 // ToolSectionMove performs the tool section move operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectionmove](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolSectionMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectionmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionMove)
 func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -22646,7 +24286,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 
 // ToolIntegrate MUST complete the operation successfully.
 // ToolIntegrate performs the tool integrate operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolintegrate](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolIntegrate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolintegrate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolIntegrate)
 func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSectionName string) ToolResult {
 	output := NewOutput()
 
@@ -22756,7 +24396,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 
 // ToolExtract MUST complete the operation successfully.
 // ToolExtract performs the tool extract operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolextract](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolExtract)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolextract](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolExtract)
 func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolResult {
 	output := NewOutput()
 
@@ -22847,7 +24487,7 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 
 // UpdateAgentsDocsPath MUST apply the update and return an error if the target is missing.
 // UpdateAgentsDocsPath modifies an existing agents docs path entry.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️updateagentsdocspath](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/UpdateAgentsDocsPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️updateagentsdocspath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/UpdateAgentsDocsPath)
 func UpdateAgentsDocsPath(oldPath, newPath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -22889,7 +24529,7 @@ func UpdateAgentsDocsPath(oldPath, newPath string) {
 
 // RemoveAgentsDocsEntry MUST remove the target and return an error on failure.
 // RemoveAgentsDocsEntry removes the specified agents docs entry.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️removeagentsdocsentry](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/RemoveAgentsDocsEntry)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️removeagentsdocsentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/RemoveAgentsDocsEntry)
 func RemoveAgentsDocsEntry(filePath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -22937,7 +24577,7 @@ func RemoveAgentsDocsEntry(filePath string) {
 
 // SplitHeader MUST complete the operation successfully.
 // SplitHeader splits the header into parts.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️splitheader](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SplitHeader)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️splitheader](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SplitHeader)
 func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	sections := lang.ParseSections(content)
 	for _, s := range sections {
@@ -22952,7 +24592,7 @@ func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 
 // MergeHeaders MUST combine the inputs and return the merged result.
 // MergeHeaders combines the headers entries into one.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️mergeheaders](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/MergeHeaders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️mergeheaders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/MergeHeaders)
 func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string {
 	if targetHeader == "" {
 		return sourceHeader
@@ -23006,7 +24646,7 @@ func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string
 
 // UniqueStrings MUST complete the operation successfully.
 // UniqueStrings performs the unique strings operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️uniquestrings](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/UniqueStrings)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️uniquestrings](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/UniqueStrings)
 func UniqueStrings(input []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
@@ -23021,7 +24661,7 @@ func UniqueStrings(input []string) []string {
 
 // ToolSectionDelete MUST complete the operation successfully.
 // ToolSectionDelete performs the tool section delete operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectiondelete](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolSectionDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectiondelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionDelete)
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -23078,7 +24718,7 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 
 // ToolSectionList MUST complete the operation successfully.
 // ToolSectionList performs the tool section list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectionlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolSectionList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectionlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionList)
 func ToolSectionList(filePath string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(filePath)
@@ -23113,7 +24753,7 @@ func ToolSectionList(filePath string) ToolResult {
 
 // ToolSectionTree MUST complete the operation successfully.
 // ToolSectionTree performs the tool section tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectiontree](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolSectionTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectiontree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionTree)
 func ToolSectionTree(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.Split(filePath, "#")[0])
@@ -23144,7 +24784,7 @@ func ToolSectionTree(filePath string) ToolResult {
 
 // ToolDefinitionList MUST complete the operation successfully.
 // ToolDefinitionList performs the tool definition list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldefinitionlist](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolDefinitionList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldefinitionlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDefinitionList)
 func ToolDefinitionList(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -23158,14 +24798,14 @@ func ToolDefinitionList(filePath string) ToolResult {
 
 // ToolDefinitionTree MUST complete the operation successfully.
 // ToolDefinitionTree performs the tool definition tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldefinitiontree](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolDefinitionTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldefinitiontree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDefinitionTree)
 func ToolDefinitionTree(filePath string) ToolResult {
 	return ToolDefinitionList(filePath)
 }
 
 // ToolUpdateMetabolism MUST complete the operation successfully.
 // ToolUpdateMetabolism performs the tool update metabolism operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolupdatemetabolism](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/ToolUpdateMetabolism)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolupdatemetabolism](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolUpdateMetabolism)
 func ToolUpdateMetabolism() ToolResult {
 	output := NewOutput()
 	output.Info("\n🔄 Running update-metabolism via npx tsx...")
@@ -23179,28 +24819,421 @@ func ToolUpdateMetabolism() ToolResult {
 
 // #region 🔖SQLite Export
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport](semiorepo://section/semio-repo/cli/main.go/Types/Tickets/SQLite%20Export)
-// SQLite export functions for persisting repository data.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export)
+// SQLite export functions for persisting repository data to the normalized schema defined in semio-repo/sqlite/schema.sql.
+
+// exportSchemaSQL is the embedded SQLite schema for repo export, matching semio-repo/sqlite/schema.sql exactly.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🪨exportschemasql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSchemaSQL)
+const exportSchemaSQL = `
+CREATE TABLE IF NOT EXISTS contributor (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    github TEXT NOT NULL UNIQUE CHECK (length (trim(github)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    alias TEXT NOT NULL UNIQUE CHECK (length (trim(alias)) > 0)
+);
+CREATE TABLE IF NOT EXISTS release (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    initial_month INTEGER NOT NULL CHECK (initial_month >= 0),
+    number INTEGER NOT NULL CHECK (number > 0),
+    due INTEGER CHECK (due IS NULL OR due >= 0),
+    published INTEGER CHECK (published IS NULL OR published >= 0),
+    description TEXT NOT NULL CHECK (length (trim(description)) > 0),
+    UNIQUE (initial_month, number)
+);
+CREATE TABLE IF NOT EXISTS release_contributors (
+    release_id INTEGER NOT NULL,
+    contributor_id INTEGER NOT NULL,
+    UNIQUE (release_id, contributor_id),
+    FOREIGN KEY (release_id) REFERENCES release (id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS version (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    release_id INTEGER NOT NULL,
+    contributor_id INTEGER NOT NULL,
+    number INTEGER NOT NULL CHECK (number > 0),
+    second INTEGER NOT NULL CHECK (second >= 0),
+    message TEXT NOT NULL CHECK (length (trim(message)) > 0),
+    UNIQUE (release_id, number),
+    FOREIGN KEY (release_id) REFERENCES release (id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS checkpoint (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_id INTEGER NOT NULL,
+    contributor_id INTEGER NOT NULL,
+    number INTEGER NOT NULL CHECK (number > 0),
+    second INTEGER NOT NULL CHECK (second >= 0),
+    message TEXT NOT NULL CHECK (length (trim(message)) > 0),
+    UNIQUE (version_id, contributor_id, number),
+    FOREIGN KEY (version_id) REFERENCES version (id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS folder_kind (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0)
+);
+CREATE TABLE IF NOT EXISTS folder (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    checkpoint_id INTEGER NOT NULL,
+    parent_folder_id INTEGER,
+    folder_kind_id INTEGER NOT NULL,
+    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
+    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
+    UNIQUE (checkpoint_id, parent_folder_id, name),
+    FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_folder_id) REFERENCES folder (id) ON DELETE CASCADE,
+    FOREIGN KEY (folder_kind_id) REFERENCES folder_kind (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS file_kind (
+    id INTEGER PRIMARY KEY,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
+);
+CREATE TABLE IF NOT EXISTS file (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    checkpoint_id INTEGER NOT NULL,
+    parent_folder_id INTEGER,
+    file_kind_id INTEGER NOT NULL,
+    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
+    extension TEXT NOT NULL CHECK (length (trim(extension)) > 0),
+    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
+    UNIQUE (checkpoint_id, parent_folder_id, file_kind_id, name, extension),
+    FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_folder_id) REFERENCES folder (id) ON DELETE CASCADE,
+    FOREIGN KEY (file_kind_id) REFERENCES file_kind (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS project_kind (
+    id INTEGER PRIMARY KEY,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
+);
+CREATE TABLE IF NOT EXISTS project (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    folder_id INTEGER NOT NULL,
+    project_kind_id INTEGER NOT NULL,
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    summary TEXT,
+    FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
+    FOREIGN KEY (project_kind_id) REFERENCES project_kind (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS concept (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    bundle_id INTEGER,
+    folder_id INTEGER,
+    file_id INTEGER,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
+    specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
+    UNIQUE (name),
+    UNIQUE (emoji),
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS mechanism (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
+    specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
+    UNIQUE (name, emoji)
+);
+CREATE TABLE IF NOT EXISTS system (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
+    specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
+    UNIQUE (name, emoji)
+);
+CREATE TABLE IF NOT EXISTS system_concepts (
+    system_id INTEGER NOT NULL,
+    concept_id INTEGER NOT NULL,
+    UNIQUE (system_id, concept_id),
+    FOREIGN KEY (system_id) REFERENCES system (id) ON DELETE CASCADE,
+    FOREIGN KEY (concept_id) REFERENCES concept (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS bundle_kind (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0)
+);
+CREATE TABLE IF NOT EXISTS bundle (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    folder_id INTEGER NOT NULL,
+    bundle_kind_id INTEGER NOT NULL,
+    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
+    summary TEXT,
+    UNIQUE (project_id, bundle_kind_id, name),
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
+    FOREIGN KEY (bundle_kind_id) REFERENCES bundle_kind (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS section (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_id INTEGER NOT NULL,
+    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
+    summary TEXT,
+    UNIQUE (file_id, name),
+    FOREIGN KEY (file_id) REFERENCES file (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS definition_kind (
+    id INTEGER PRIMARY KEY,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
+);
+CREATE TABLE IF NOT EXISTS definition (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    section_id INTEGER NOT NULL,
+    definition_kind_id INTEGER NOT NULL,
+    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
+    summary TEXT,
+    code TEXT,
+    UNIQUE (section_id, definition_kind_id, name),
+    FOREIGN KEY (section_id) REFERENCES section (id) ON DELETE CASCADE,
+    FOREIGN KEY (definition_kind_id) REFERENCES definition_kind (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS client_kind (
+    id INTEGER PRIMARY KEY,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
+);
+CREATE TABLE IF NOT EXISTS agent (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    prompt TEXT NOT NULL CHECK (length (trim(prompt)) > 0)
+);
+CREATE TABLE IF NOT EXISTS session (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contributor_id INTEGER NOT NULL,
+    client_kind_id INTEGER NOT NULL,
+    initial_second INTEGER NOT NULL CHECK (initial_second >= 0),
+    agent_id INTEGER NOT NULL,
+    session_id TEXT NOT NULL UNIQUE CHECK (length (trim(session_id)) > 0),
+    UNIQUE (contributor_id, initial_second),
+    FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS event_kind (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_kind_id INTEGER,
+    FOREIGN KEY (parent_kind_id) REFERENCES event_kind (id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS event (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind_id INTEGER NOT NULL,
+    contributor_id INTEGER NOT NULL,
+    second INTEGER NOT NULL CHECK (second >= 0),
+    client_id INTEGER NOT NULL,
+    agent_id INTEGER NOT NULL,
+    session_id INTEGER NOT NULL,
+    policy_id INTEGER NOT NULL,
+    ticket_id INTEGER NOT NULL,
+    FOREIGN KEY (kind_id) REFERENCES event_kind (id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
+);
+`
 
 // ExportResult holds the data fields for a export result record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport✂️exportresult](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SQLite%20Export/ExportResult)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport✂️exportresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ExportResult)
 type ExportResult struct {
-	Path         string `json:"path"`
-	Bundles      int    `json:"bundles"`
-	Folders      int    `json:"folders"`
-	Files        int    `json:"files"`
-	Sections     int    `json:"sections"`
-	Definitions  int    `json:"definitions"`
-	Contributors int    `json:"contributors"`
-	Tickets      int    `json:"tickets"`
-	Policies     int    `json:"policies"`
-	Statutes     int    `json:"statutes"`
-	Breachs      int    `json:"breachs"`
+	Path        string `json:"path"`
+	Projects    int    `json:"projects"`
+	Bundles     int    `json:"bundles"`
+	Folders     int    `json:"folders"`
+	Files       int    `json:"files"`
+	Sections    int    `json:"sections"`
+	Definitions int    `json:"definitions"`
 }
 
-// ExportToSQLite MUST write the complete output to the target.
-// ExportToSQLite exports the to s q lite to the target format.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exporttosqlite](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SQLite%20Export/ExportToSQLite)
+// folderKindToInt MUST map FolderKind to the integer enum value for folder_kind table (id 0=organizational, 1=required).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️folderkindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/folderKindToInt)
+func folderKindToInt(k FolderKind) int {
+	switch k {
+	case FolderKindRequired:
+		return 1
+	default:
+		return 0
+	}
+}
+
+// projectKindToInt MUST map ProjectKind to the integer enum value for project_kind table (id 0=user, 1=infrastructure, 2=research).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️projectkindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/projectKindToInt)
+func projectKindToInt(k ProjectKind) int {
+	switch k {
+	case ProjectKindUser:
+		return 0
+	case ProjectKindInfrastructure:
+		return 1
+	case ProjectKindResearch:
+		return 2
+	default:
+		return 0
+	}
+}
+
+// bundleKindToInt MUST map BundleKind to the integer enum value for bundle_kind table (id 0=library, 1=schema, 2=binary, 3=ui, 4=examples, 5=site, 6=assets).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️bundlekindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/bundleKindToInt)
+func bundleKindToInt(k BundleKind) int {
+	switch k {
+	case BundleKindLibrary:
+		return 0
+	case BundleKindSchema:
+		return 1
+	case BundleKindBinary:
+		return 2
+	case BundleKindUI:
+		return 3
+	case "example", "examples":
+		return 4
+	case BundleKindSite:
+		return 5
+	case BundleKindAssets:
+		return 6
+	default:
+		return 0
+	}
+}
+
+// fileKindToInt MUST map file kind string to the integer enum value for file_kind table (id 0=code, 1=lab, 2=script, 3=docs, 4=config, 5=binary, 6=template, 7=license).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️filekindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/fileKindToInt)
+func fileKindToInt(kind string) int {
+	switch kind {
+	case FileKindCode:
+		return 0
+	case FileKindLab:
+		return 1
+	case FileKindScript:
+		return 2
+	case FileKindDocs:
+		return 3
+	case FileKindConfig:
+		return 4
+	case FileKindResource:
+		return 5
+	case FileKindTemplate:
+		return 6
+	case FileKindLicense:
+		return 7
+	default:
+		return 0
+	}
+}
+
+// definitionKindToInt MUST map DefinitionKind to the integer enum value for definition_kind table (id 0=implementation, 1=interface, 2=constant, 3=test).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️definitionkindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/definitionKindToInt)
+func definitionKindToInt(k DefinitionKind) int {
+	switch k {
+	case DefinitionKindImplementation:
+		return 0
+	case DefinitionKindInterface:
+		return 1
+	case DefinitionKindConstant:
+		return 2
+	case DefinitionKindTest:
+		return 3
+	default:
+		return 0
+	}
+}
+
+// seedKindTables MUST insert all enum rows into kind tables before any FK-referencing inserts.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️seedkindtables](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/seedKindTables)
+func seedKindTables(tx *sql.Tx) error {
+	folderKinds := []struct {
+		id    int
+		name  string
+		emoji string
+	}{
+		{0, "organizational", "🗃️"},
+		{1, "required", "🛅"},
+	}
+	for _, fk := range folderKinds {
+		if _, err := tx.Exec(`INSERT INTO folder_kind (id, name, emoji) VALUES (?, ?, ?)`, fk.id, fk.name, fk.emoji); err != nil {
+			return fmt.Errorf("failed to seed folder_kind %d: %w", fk.id, err)
+		}
+	}
+	fileKinds := []struct {
+		id          int
+		emoji       string
+		name        string
+		description string
+	}{
+		{0, "💻", "code", "Source code file"},
+		{1, "🥼", "lab", "Laboratory or notebook file"},
+		{2, "📜", "script", "Script file"},
+		{3, "📝", "docs", "Documentation file"},
+		{4, "⚙️", "config", "Configuration file"},
+		{5, "💾", "binary", "Binary or resource file"},
+		{6, "📋", "template", "Template file"},
+		{7, "⚖️", "license", "License file"},
+	}
+	for _, fk := range fileKinds {
+		if _, err := tx.Exec(`INSERT INTO file_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, fk.id, fk.emoji, fk.name, fk.description); err != nil {
+			return fmt.Errorf("failed to seed file_kind %d: %w", fk.id, err)
+		}
+	}
+	projectKinds := []struct {
+		id          int
+		emoji       string
+		name        string
+		description string
+	}{
+		{0, "👤", "user", "User-facing project"},
+		{1, "🧰", "infrastructure", "Infrastructure project"},
+		{2, "🔬", "research", "Research project"},
+	}
+	for _, pk := range projectKinds {
+		if _, err := tx.Exec(`INSERT INTO project_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, pk.id, pk.emoji, pk.name, pk.description); err != nil {
+			return fmt.Errorf("failed to seed project_kind %d: %w", pk.id, err)
+		}
+	}
+	bundleKinds := []struct {
+		id   int
+		name string
+	}{
+		{0, "library"},
+		{1, "schema"},
+		{2, "binary"},
+		{3, "ui"},
+		{4, "examples"},
+		{5, "site"},
+		{6, "assets"},
+	}
+	for _, bk := range bundleKinds {
+		if _, err := tx.Exec(`INSERT INTO bundle_kind (id, name) VALUES (?, ?)`, bk.id, bk.name); err != nil {
+			return fmt.Errorf("failed to seed bundle_kind %d: %w", bk.id, err)
+		}
+	}
+	definitionKinds := []struct {
+		id          int
+		emoji       string
+		name        string
+		description string
+	}{
+		{0, "🛠️", "implementation", "An implementation definition"},
+		{1, "🔌", "interface", "An interface definition"},
+		{2, "🪨", "constant", "A constant definition"},
+		{3, "🧪", "test", "A test definition"},
+	}
+	for _, dk := range definitionKinds {
+		if _, err := tx.Exec(`INSERT INTO definition_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, dk.id, dk.emoji, dk.name, dk.description); err != nil {
+			return fmt.Errorf("failed to seed definition_kind %d: %w", dk.id, err)
+		}
+	}
+	return nil
+}
+
+// ExportToSQLite MUST write the complete output to the target using exactly the schema defined in semio-repo/sqlite/schema.sql.
+// ExportToSQLite exports repo data to a SQLite database using the normalized schema with FK-based kind references and a synthetic snapshot checkpoint.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exporttosqlite](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ExportToSQLite)
 func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	if outputPath == "" {
 		outputPath = filepath.Join(ctx.GetRootDir(), "repo.db")
@@ -23213,12 +25246,10 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
-	schemaPath := filepath.Join(ctx.GetRootDir(), "sql", "sqlite", "repo", "schema.sql")
-	schemaBytes, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read schema file: %w", err)
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
-	if _, err := db.Exec(string(schemaBytes)); err != nil {
+	if _, err := db.Exec(exportSchemaSQL); err != nil {
 		return nil, fmt.Errorf("failed to execute schema: %w", err)
 	}
 	tx, err := db.Begin()
@@ -23227,177 +25258,325 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	}
 	defer tx.Rollback()
 	result := &ExportResult{Path: outputPath}
-	if err := exportRepo(tx, ctx); err != nil {
-		return nil, fmt.Errorf("failed to export repo: %w", err)
+
+	if err := seedKindTables(tx); err != nil {
+		return nil, fmt.Errorf("failed to seed kind tables: %w", err)
 	}
-	if result.Bundles, err = exportBundles(tx, ctx); err != nil {
-		return nil, fmt.Errorf("failed to export bundles: %w", err)
+
+	now := time.Now().Unix()
+	if _, err := tx.Exec(`INSERT INTO contributor (github, name, alias) VALUES (?, ?, ?)`,
+		"export", "Export System", "export"); err != nil {
+		return nil, fmt.Errorf("failed to insert synthetic contributor: %w", err)
 	}
-	if result.Folders, err = exportFolders(tx, ctx); err != nil {
+	if _, err := tx.Exec(`INSERT INTO release (initial_month, number, description) VALUES (?, ?, ?)`,
+		0, 1, "Export Snapshot"); err != nil {
+		return nil, fmt.Errorf("failed to insert synthetic release: %w", err)
+	}
+	if _, err := tx.Exec(`INSERT INTO version (release_id, contributor_id, number, second, message) VALUES (?, ?, ?, ?, ?)`,
+		1, 1, 1, now, "Export Snapshot"); err != nil {
+		return nil, fmt.Errorf("failed to insert synthetic version: %w", err)
+	}
+	if _, err := tx.Exec(`INSERT INTO checkpoint (version_id, contributor_id, number, second, message) VALUES (?, ?, ?, ?, ?)`,
+		1, 1, 1, now, "Export Snapshot"); err != nil {
+		return nil, fmt.Errorf("failed to insert synthetic checkpoint: %w", err)
+	}
+	const snapshotCheckpointID = int64(1)
+
+	folderIDs := make(map[string]int64)
+	if result.Folders, err = exportFoldersNew(tx, ctx, snapshotCheckpointID, folderIDs); err != nil {
 		return nil, fmt.Errorf("failed to export folders: %w", err)
 	}
-	if result.Files, result.Sections, result.Definitions, err = exportFiles(tx, ctx); err != nil {
+
+	projectIDs := make(map[string]int64)
+	if result.Projects, err = exportProjectsNew(tx, ctx, folderIDs, projectIDs); err != nil {
+		return nil, fmt.Errorf("failed to export projects: %w", err)
+	}
+
+	if result.Bundles, err = exportBundlesNew(tx, ctx, projectIDs, folderIDs); err != nil {
+		return nil, fmt.Errorf("failed to export bundles: %w", err)
+	}
+
+	fileIDs := make(map[string]int64)
+	if result.Files, err = exportFilesNew(tx, ctx, snapshotCheckpointID, folderIDs, fileIDs); err != nil {
 		return nil, fmt.Errorf("failed to export files: %w", err)
 	}
-	if result.Contributors, err = exportContributors(tx, ctx); err != nil {
-		return nil, fmt.Errorf("failed to export contributors: %w", err)
+
+	sectionIDs := make(map[string]int64)
+	if result.Sections, err = exportSectionsNew(tx, ctx, fileIDs, sectionIDs); err != nil {
+		return nil, fmt.Errorf("failed to export sections: %w", err)
 	}
-	if result.Tickets, err = exportTickets(tx, ctx); err != nil {
-		return nil, fmt.Errorf("failed to export tickets: %w", err)
+
+	if result.Definitions, err = exportDefinitionsNew(tx, ctx, fileIDs, sectionIDs); err != nil {
+		return nil, fmt.Errorf("failed to export definitions: %w", err)
 	}
-	if result.Policies, result.Statutes, err = exportPolicies(tx, ctx); err != nil {
-		return nil, fmt.Errorf("failed to export policies: %w", err)
-	}
-	analyzeResult, err := ctx.Analyze(nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to analyze: %w", err)
-	}
-	if result.Breachs, err = exportBreachs(tx, analyzeResult.Breachs); err != nil {
-		return nil, fmt.Errorf("failed to export breachs: %w", err)
-	}
+
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return result, nil
 }
 
-func exportRepo(tx *sql.Tx, ctx RepoContext) error {
-	_, err := tx.Exec(`INSERT INTO repo (id, name, path, exported_at) VALUES (?, ?, ?, ?)`,
-		"semio-repo/repo",
-		"semio",
-		ctx.GetRootDir(),
-		time.Now().UTC().Format(time.RFC3339))
-	return err
-}
-
-func exportBundles(tx *sql.Tx, ctx RepoContext) (int, error) {
-	bundles := ctx.GetBundles()
-	stmt, err := tx.Prepare(`INSERT INTO bundle (id, name, root, source_root, project_type, uri) VALUES (?, ?, ?, ?, ?, ?)`)
+// exportFoldersNew MUST insert all folders with checkpoint_id, folder_kind_id, and a non-empty summary.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportfoldersnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFoldersNew)
+func exportFoldersNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64) (int, error) {
+	folders := ctx.GetFolders()
+	stmt, err := tx.Prepare(`INSERT INTO folder (checkpoint_id, parent_folder_id, folder_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	tagStmt, err := tx.Prepare(`INSERT INTO bundle_tag (bundle_id, tag) VALUES (?, ?)`)
-	if err != nil {
-		return 0, err
+
+	pathToFolder := make(map[string]*Folder)
+	for _, f := range folders {
+		pathToFolder[f.Path] = f
 	}
-	defer tagStmt.Close()
 
-	for _, b := range bundles {
-		id := b.GetID()
-		uri := "file://" + NormalizePath(filepath.Join(ctx.GetRootDir(), b.Root))
-		var sourceRoot, projectType interface{}
-		if b.SourceRoot != "" {
-			sourceRoot = b.SourceRoot
+	var insertFolder func(f *Folder) (int64, error)
+	insertFolder = func(f *Folder) (int64, error) {
+		if id, ok := folderIDs[f.Path]; ok {
+			return id, nil
 		}
-
-		if _, err := stmt.Exec(id, b.Name, b.Root, sourceRoot, projectType, uri); err != nil {
-			return 0, err
-		}
-		for _, tag := range b.Tags {
-			if _, err := tagStmt.Exec(id, tag); err != nil {
-				return 0, err
+		var parentID interface{}
+		parentPath := filepath.Dir(f.Path)
+		if parentPath != "." && parentPath != "" {
+			if parentFolder, ok := pathToFolder[parentPath]; ok {
+				pid, err := insertFolder(parentFolder)
+				if err != nil {
+					return 0, err
+				}
+				parentID = pid
 			}
 		}
+		kindID := folderKindToInt(f.Kind)
+		summary := f.Name
+		readmePath := filepath.Join(ctx.GetRootDir(), f.Path, "README.md")
+		if content, err := ReadTextFile(readmePath); err == nil {
+			if s := extractReadmeSummary(content); s != "" {
+				summary = s
+			}
+		}
+		res, err := stmt.Exec(checkpointID, parentID, kindID, f.Name, summary)
+		if err != nil {
+			return 0, err
+		}
+		id, err := res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		folderIDs[f.Path] = id
+		return id, nil
 	}
-	return len(bundles), nil
-}
 
-func exportFolders(tx *sql.Tx, ctx RepoContext) (int, error) {
-	folders := ctx.GetFolders()
-	stmt, err := tx.Prepare(`INSERT INTO folder (id, path, uri, name, parent_id, bundle_id) VALUES (?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
 	for _, f := range folders {
-		if _, err := stmt.Exec(f.ID, f.Path, f.URI, f.Name, f.ParentID, f.BundleID); err != nil {
+		if _, err := insertFolder(f); err != nil {
 			return 0, err
 		}
 	}
 	return len(folders), nil
 }
 
-func exportFiles(tx *sql.Tx, ctx RepoContext) (int, int, int, error) {
-	files := ctx.GetFiles()
-	fileStmt, err := tx.Prepare(`INSERT INTO file (id, path, uri, name, extension, folder_id, bundle_id, lines) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	defer fileStmt.Close()
-	sectionStmt, err := tx.Prepare(`INSERT INTO section (id, name, path, file_id, parent_id, start_line, end_line, start_column, end_column) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	defer sectionStmt.Close()
-	defStmt, err := tx.Prepare(`INSERT INTO definition (id, name, kind, file_id, section_id, start_line, end_line, start_column, end_column) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	defer defStmt.Close()
-
-	totalSections := 0
-	totalDefs := 0
-	for _, f := range files {
-		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
-		lines := 0
-		if content, err := ReadTextFile(absPath); err == nil {
-			lines = strings.Count(content, "\n") + 1
+// extractReadmeSummary MUST extract the summary from a README.md file.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️extractreadmesummary](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/extractReadmeSummary)
+func extractReadmeSummary(content string) string {
+	lines := strings.Split(content, "\n")
+	inSummary := false
+	var summaryLines []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "### Summary" {
+			inSummary = true
+			continue
 		}
-		if _, err := fileStmt.Exec(f.ID, f.Path, f.URI, f.Name, f.Extension, f.FolderID, f.BundleID, lines); err != nil {
-			return 0, 0, 0, err
-		}
-		if content, err := ReadTextFile(absPath); err == nil {
-			sections := ParseSections(content, f.Path)
-			sectionCount, err := exportSectionsRecursive(sectionStmt, sections, f.ID, f.Path, nil)
-			if err != nil {
-				return 0, 0, 0, err
+		if inSummary {
+			if strings.HasPrefix(trimmed, "#") {
+				break
 			}
-			totalSections += sectionCount
-
-			lang := GetLanguage(f.Path)
-			if lang != nil && lang.SupportsDefinitions() {
-				lines := strings.Split(content, "\n")
-				defs := lang.ParseDefinitions(content, lines)
-				for _, d := range defs {
-					sectionPath := findSectionForDefinition(sections, d.Start, d.End, "")
-					var sectionID interface{}
-					id := f.ID + "§" + d.Name
-					if sectionPath != "" {
-						sid := f.ID + "#" + sectionPath
-						sectionID = sid
-						id = sid + "§" + d.Name
-					}
-					// TODO: Get actual kind from LanguagePlugin
-					kind := "variable"
-					if _, err := defStmt.Exec(id, d.Name, kind, f.ID, sectionID, d.Start, d.End, 0, 0); err != nil {
-						return 0, 0, 0, err
-					}
-					totalDefs++
-				}
+			if trimmed != "" {
+				summaryLines = append(summaryLines, trimmed)
 			}
 		}
 	}
-	return len(files), totalSections, totalDefs, nil
+	return strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
 
-func exportSectionsRecursive(sectionStmt *sql.Stmt, sections []Section, fileID, filePath string, parentID *string) (int, error) {
-	count := 0
-	for _, s := range sections {
-		sectionPath := s.Name
-		if parentID != nil {
-
-			parentPath := strings.SplitN(*parentID, "#", 2)[1]
-			sectionPath = parentPath + "#" + s.Name
+// exportProjectsNew MUST insert all projects using project_kind_id FK reference.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportprojectsnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportProjectsNew)
+func exportProjectsNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, projectIDs map[string]int64) (int, error) {
+	projects := ctx.GetProjects()
+	stmt, err := tx.Prepare(`INSERT INTO project (folder_id, project_kind_id, name, summary) VALUES (?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	for _, p := range projects {
+		folderID, ok := folderIDs[p.Root]
+		if !ok {
+			continue
 		}
-		sectionID := fileID + "#" + sectionPath
+		kindID := projectKindToInt(p.Kind)
+		var summary interface{}
+		readmePath := filepath.Join(ctx.GetRootDir(), p.Root, "README.md")
+		if content, err := ReadTextFile(readmePath); err == nil {
+			if s := extractReadmeSummary(content); s != "" {
+				summary = s
+			}
+		}
+		res, err := stmt.Exec(folderID, kindID, p.Name, summary)
+		if err != nil {
+			return 0, err
+		}
+		id, err := res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		projectIDs[p.Name] = id
+	}
+	return len(projects), nil
+}
 
-		if _, err := sectionStmt.Exec(sectionID, s.Name, sectionPath, fileID, parentID, s.StartLine, s.EndLine, 0, 0); err != nil {
+// exportBundlesNew MUST insert all bundles using bundle_kind_id FK reference.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportbundlesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportBundlesNew)
+func exportBundlesNew(tx *sql.Tx, ctx RepoContext, projectIDs map[string]int64, folderIDs map[string]int64) (int, error) {
+	bundles := ctx.GetBundles()
+	stmt, err := tx.Prepare(`INSERT INTO bundle (project_id, folder_id, bundle_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	count := 0
+	for _, b := range bundles {
+		projectID, ok := projectIDs[b.ProjectName]
+		if !ok {
+			continue
+		}
+		folderID, ok := folderIDs[b.Root]
+		if !ok {
+			continue
+		}
+		kindID := bundleKindToInt(b.Kind)
+		bundleName := b.Name
+		parts := strings.SplitN(b.Name, "/", 2)
+		if len(parts) > 1 {
+			bundleName = parts[1]
+		}
+		var summary interface{}
+		readmePath := filepath.Join(ctx.GetRootDir(), b.Root, "README.md")
+		if content, err := ReadTextFile(readmePath); err == nil {
+			if s := extractReadmeSummary(content); s != "" {
+				summary = s
+			}
+		}
+		if _, err := stmt.Exec(projectID, folderID, kindID, bundleName, summary); err != nil {
 			return 0, err
 		}
 		count++
+	}
+	return count, nil
+}
+
+// exportFilesNew MUST insert all files with checkpoint_id, file_kind_id, extension, and a non-empty summary.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportfilesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFilesNew)
+func exportFilesNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64, fileIDs map[string]int64) (int, error) {
+	files := ctx.GetFiles()
+	stmt, err := tx.Prepare(`INSERT INTO file (checkpoint_id, parent_folder_id, file_kind_id, name, extension, summary) VALUES (?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	for _, f := range files {
+		var parentFolderID interface{}
+		folder := filepath.Dir(f.Path)
+		if folder != "." && folder != "" {
+			if fid, ok := folderIDs[folder]; ok {
+				parentFolderID = fid
+			}
+		}
+		kindID := fileKindToInt(DeriveFileKind(f.Name))
+		ext := f.Extension
+		if ext == "" {
+			ext = strings.TrimPrefix(filepath.Ext(f.Name), ".")
+		}
+		if ext == "" {
+			ext = "bin"
+		}
+		summary := filepath.Base(f.Path)
+		fileSummary := ExtractFileHeaderSummary(filepath.Join(ctx.GetRootDir(), f.Path))
+		if fileSummary != "" {
+			summary = fileSummary
+		}
+		res, err := stmt.Exec(checkpointID, parentFolderID, kindID, filepath.Base(f.Path), ext, summary)
+		if err != nil {
+			return 0, err
+		}
+		id, err := res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		fileIDs[f.Path] = id
+	}
+	return len(files), nil
+}
+
+// exportSectionsNew MUST insert all sections with integer IDs.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportsectionsnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsNew)
+func exportSectionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
+	files := ctx.GetFiles()
+	stmt, err := tx.Prepare(`INSERT INTO section (file_id, name, summary) VALUES (?, ?, ?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	totalSections := 0
+	for _, f := range files {
+		fileID, ok := fileIDs[f.Path]
+		if !ok {
+			continue
+		}
+		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
+		}
+		sections := ParseSections(content, f.Path)
+		lang := GetLanguage(f.Path)
+		var prefix string
+		if lang != nil {
+			prefix = lang.CommentPrefix()
+		}
+		count, err := exportSectionsRecursiveNew(stmt, sections, fileID, f.Path, content, prefix, sectionIDs)
+		if err != nil {
+			return 0, err
+		}
+		totalSections += count
+	}
+	return totalSections, nil
+}
+
+// exportSectionsRecursiveNew MUST insert sections recursively with flat names.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportsectionsrecursivenew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsRecursiveNew)
+func exportSectionsRecursiveNew(stmt *sql.Stmt, sections []Section, fileID int64, filePath string, content string, commentPrefix string, sectionIDs map[string]int64) (int, error) {
+	count := 0
+	for _, s := range sections {
+		var summary interface{}
+		if commentPrefix != "" {
+			_, summaryText := ExtractSectionLeadComments(content, s, commentPrefix)
+			if summaryText != "" {
+				summary = summaryText
+			}
+		}
+		sectionKey := filePath + "#" + s.Name
+		res, err := stmt.Exec(fileID, s.Name, summary)
+		if err != nil {
+			return 0, err
+		}
+		id, err := res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		sectionIDs[sectionKey] = id
+		count++
 		if len(s.Children) > 0 {
-			childCount, err := exportSectionsRecursive(sectionStmt, s.Children, fileID, filePath, &sectionID)
+			childCount, err := exportSectionsRecursiveNew(stmt, s.Children, fileID, filePath, content, commentPrefix, sectionIDs)
 			if err != nil {
 				return 0, err
 			}
@@ -23407,219 +25586,81 @@ func exportSectionsRecursive(sectionStmt *sql.Stmt, sections []Section, fileID, 
 	return count, nil
 }
 
-func exportContributors(tx *sql.Tx, ctx RepoContext) (int, error) {
-	contributors, err := ctx.GetContributors()
-	if err != nil {
-		return 0, err
-	}
-	stmt, err := tx.Prepare(`INSERT INTO contributor (id, github, name, avatar_url, avatar_round_url, github_icon_url) VALUES (?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-	emailStmt, err := tx.Prepare(`INSERT INTO contributor_email (contributor_id, email) VALUES (?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer emailStmt.Close()
-	linkStmt, err := tx.Prepare(`INSERT INTO contributor_link (contributor_id, name, url) VALUES (?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer linkStmt.Close()
-	for _, c := range contributors {
-		id := c.GetID()
-		var name interface{}
-		if c.Name != "" {
-			name = c.Name
-		}
-		if _, err := stmt.Exec(id, c.Github, name, nil, nil, nil); err != nil {
-			return 0, err
-		}
-		for _, email := range c.Emails {
-			if _, err := emailStmt.Exec(id, email); err != nil {
-				return 0, err
-			}
-		}
-		for linkName, url := range c.Links {
-			if _, err := linkStmt.Exec(id, linkName, url); err != nil {
-				return 0, err
-			}
-		}
-	}
-	return len(contributors), nil
-}
-
-func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
-	tickets, err := ctx.GetTickets(nil, nil, nil, nil)
-	if err != nil {
-		return 0, err
-	}
-	ticketStmt, err := tx.Prepare(`INSERT INTO ticket (id, year, month, day, slug, title, path, uri, prompt, summary, status, author_id, llm, client, commit_sha, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer ticketStmt.Close()
-	ticketFileStmt, err := tx.Prepare(`INSERT INTO ticket_file (ticket_id, file_path) VALUES (?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer ticketFileStmt.Close()
-	checkpointStmt, err := tx.Prepare(`INSERT INTO ticket_checkpoint (id, ticket_id, sequence, kind, prompt, model, author_id, commit_sha, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer checkpointStmt.Close()
-	for _, t := range tickets {
-		ticketID := t.GetID()
-		uri := "file://" + NormalizePath(t.FolderPath)
-		status := string(t.GetStatus())
-		if status == "" {
-			status = "open"
-		}
-		var authorID, llm, client, summary, commit, finishedAt interface{}
-		if author := t.GetAuthor(); author != "" {
-			authorID = "semio-repo/contributor/" + author
-		}
-		if val := t.GetLLM(); val != "" {
-			llm = val
-		}
-		if val := t.GetClient(); val != "" {
-			client = val
-		}
-		if val := t.GetCommit(); val != "" {
-			commit = val
-		}
-		if s := t.GetSummary(); s != "" {
-			summary = s
-		}
-		createdAtTime := t.GetDateStarted()
-		var createdAt string
-		if createdAtTime.IsZero() {
-			createdAt = time.Now().UTC().Format(time.RFC3339)
-		} else {
-			createdAt = createdAtTime.Format(time.RFC3339)
-		}
-		if f := t.GetDateFinished(); f != nil {
-			finishedAt = f.Format(time.RFC3339)
-		}
-		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, llm, client, commit, createdAt, finishedAt); err != nil {
-			return 0, err
-		}
-		for _, entry := range t.GetInteractionFiles() {
-			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
-				return 0, err
-			}
-		}
-		for i, interaction := range t.Interactions {
-			cpID := fmt.Sprintf("%s/%d", ticketID, i)
-			var cpAuthor, cpCommit, cpModel interface{}
-			if interaction.Author != "" {
-				cpAuthor = "semio-repo/contributor/" + interaction.Author
-			}
-			if interaction.Commit != "" {
-				cpCommit = interaction.Commit
-			}
-			if interaction.LLM != "" {
-				cpModel = interaction.LLM
-			}
-			cpCreated := interaction.Date
-			if cpCreated == "" {
-				cpCreated = time.Now().UTC().Format(time.RFC3339)
-			}
-			if _, err := checkpointStmt.Exec(cpID, ticketID, i, interaction.Kind, interaction.Prompt, cpModel, cpAuthor, cpCommit, cpCreated); err != nil {
-				return 0, err
-			}
-		}
-	}
-	return len(tickets), nil
-}
-
-func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
-	policies := ctx.GetPolicies()
-	policyStmt, err := tx.Prepare(`INSERT INTO policy (id, name, description) VALUES (?, ?, ?)`)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer policyStmt.Close()
-	scopeStmt, err := tx.Prepare(`INSERT INTO policy_scope (policy_id, scope) VALUES (?, ?)`)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer scopeStmt.Close()
-	kindStmt, err := tx.Prepare(`INSERT INTO statute (id, policy_id, priority, autofixable, reason, solution) VALUES (?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer kindStmt.Close()
-	totalKinds := 0
-	for _, p := range policies {
-		policyID := p.GetID()
-		var desc interface{}
-		if p.Description != nil {
-			desc = *p.Description
-		}
-		if _, err := policyStmt.Exec(policyID, p.Name, desc); err != nil {
-			return 0, 0, err
-		}
-		for _, scope := range p.Scopes {
-			if _, err := scopeStmt.Exec(policyID, scope); err != nil {
-				return 0, 0, err
-			}
-		}
-		for _, vk := range p.Statutes {
-			kindID := vk.GetID()
-			autofixable := 0
-			if vk.Autofixable {
-				autofixable = 1
-			}
-			if _, err := kindStmt.Exec(kindID, policyID, string(vk.Priority), autofixable, vk.Reason, vk.Solution); err != nil {
-				return 0, 0, err
-			}
-			totalKinds++
-		}
-	}
-	return len(policies), totalKinds, nil
-}
-
-func exportBreachs(tx *sql.Tx, breachs []*Breach) (int, error) {
-	stmt, err := tx.Prepare(`INSERT INTO breach (id, kind_id, scope, file_id, folder_id, line, column_num, excerpt, summary) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+// exportDefinitionsNew MUST insert all definitions with integer IDs and code.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportdefinitionsnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportDefinitionsNew)
+func exportDefinitionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
+	files := ctx.GetFiles()
+	stmt, err := tx.Prepare(`INSERT INTO definition (section_id, definition_kind_id, name, summary, code) VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	ctx := NewCodebaseContext()
-	ctx.LoadBundles()
-	for _, v := range breachs {
-		kindID := "semio-repo/breach-kind/" + string(v.Kind)
-		var fileID, folderID, line, column, excerpt interface{}
-		if v.Line > 0 {
-			line = v.Line
+	totalDefs := 0
+	for _, f := range files {
+		_, ok := fileIDs[f.Path]
+		if !ok {
+			continue
 		}
-		if v.Column > 0 {
-			column = v.Column
+		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
+		content, err := ReadTextFile(absPath)
+		if err != nil {
+			continue
 		}
-		if v.Excerpt != "" {
-			excerpt = v.Excerpt
+		lang := GetLanguage(f.Path)
+		if lang == nil || !lang.SupportsDefinitions() {
+			continue
 		}
-		filePath := extractFileFromScope(v.Scope)
-		if filePath != "" {
-			fileID = ctx.GetFileID(filePath)
-			dir := filepath.Dir(filePath)
-			if dir != "." && dir != "" {
-				folderID = ctx.GetFolderID(dir)
+		contentLines := strings.Split(content, "\n")
+		defs := lang.ParseDefinitions(content, contentLines)
+		sections := ParseSections(content, f.Path)
+		commentPrefix := lang.CommentPrefix()
+		for _, d := range defs {
+			sectionPath := findSectionForDefinition(sections, d.Start, d.End, "")
+			sectionKey := ""
+			if sectionPath != "" {
+				parts := strings.Split(sectionPath, "#")
+				lastSection := parts[len(parts)-1]
+				sectionKey = f.Path + "#" + lastSection
 			}
-		}
-		if _, err := stmt.Exec(v.ID, kindID, v.Scope, fileID, folderID, line, column, excerpt, v.Summary); err != nil {
-			return 0, err
+			sectionID, ok := sectionIDs[sectionKey]
+			if !ok {
+				continue
+			}
+			defKind := DeriveDefinitionKind(d.Kind)
+			kindInt := definitionKindToInt(defKind)
+			var summary interface{}
+			defObj := Definition{
+				Name:      d.Name,
+				Kind:      defKind,
+				StartLine: d.Start,
+				EndLine:   d.End,
+			}
+			if commentPrefix != "" {
+				_, summaryText := ExtractDefinitionDocstring(content, defObj, commentPrefix)
+				if summaryText != "" {
+					summary = summaryText
+				}
+			}
+			var code interface{}
+			if d.Start > 0 && d.End <= len(contentLines) {
+				codeLines := contentLines[d.Start-1 : d.End]
+				codeText := strings.Join(codeLines, "\n")
+				if codeText != "" {
+					code = codeText
+				}
+			}
+			if _, err := stmt.Exec(sectionID, kindInt, d.Name, summary, code); err != nil {
+				return 0, err
+			}
+			totalDefs++
 		}
 	}
-	return len(breachs), nil
+	return totalDefs, nil
 }
 
 // ToolExport MUST complete the operation successfully.
 // ToolExport performs the tool export operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️toolexport](semiorepo://definition/semio-repo/cli/main.go/Types/Tickets/SQLite%20Export/ToolExport)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️toolexport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ToolExport)
 func ToolExport(outputPath string) ToolResult {
 	output := NewOutput()
 	output.Info("\n📦Exporting repo to SQLite...")
@@ -23629,16 +25670,12 @@ func ToolExport(outputPath string) ToolResult {
 		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("Exported to: %s", result.Path))
+	output.Plain(fmt.Sprintf("  Projects: %d", result.Projects))
 	output.Plain(fmt.Sprintf("  Bundles: %d", result.Bundles))
 	output.Plain(fmt.Sprintf("  Folders: %d", result.Folders))
 	output.Plain(fmt.Sprintf("  Files: %d", result.Files))
 	output.Plain(fmt.Sprintf("  Sections: %d", result.Sections))
 	output.Plain(fmt.Sprintf("  Definitions: %d", result.Definitions))
-	output.Plain(fmt.Sprintf("  Contributors: %d", result.Contributors))
-	output.Plain(fmt.Sprintf("  Tickets: %d", result.Tickets))
-	output.Plain(fmt.Sprintf("  Policies: %d", result.Policies))
-	output.Plain(fmt.Sprintf("  Breach Kinds: %d", result.Statutes))
-	output.Plain(fmt.Sprintf("  Breachs: %d", result.Breachs))
 	return ToolResult{Output: *output, Data: result}
 }
 
@@ -23648,16 +25685,16 @@ func ToolExport(outputPath string) ToolResult {
 
 // #region 🔖GraphQL Context Port
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlcontextport](semiorepo://section/semio-repo/cli/main.go/Types/GraphQL%20Context%20Port)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlcontextport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Context%20Port)
 // GraphQL context port adapter for request context propagation.
 
 // RepoContext defines the interface for repo context operations.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlcontextport✂️repocontext](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Context%20Port/RepoContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlcontextport✂️repocontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Context%20Port/d/i/RepoContext)
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
 	GetProjects() []*Project
-	GetCommits(limit *int) ([]*Commit, error)
+	GetCheckpoints(limit *int) ([]*Checkpoint, error)
 	GetFolders() []*Folder
 	GetFiles() []*File
 	GetSections() []*Section
@@ -23706,11 +25743,11 @@ type RepoContext interface {
 
 // #region 🔖GraphQL Resolver
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver](semiorepo://section/semio-repo/cli/main.go/Types/GraphQL%20Resolver)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver)
 // GraphQL resolver implementation binding queries to data sources.
 
 // Resolver holds the data fields for a resolver record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver✂️resolver](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Resolver/Resolver)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver✂️resolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/Resolver)
 type Resolver struct {
 	RootDir string
 	Ctx     RepoContext
@@ -23718,14 +25755,14 @@ type Resolver struct {
 
 // NewResolver MUST initialize all required fields and return a valid resolver.
 // NewResolver creates and returns a new resolver instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver🛠️newresolver](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Resolver/NewResolver)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver🛠️newresolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/NewResolver)
 func NewResolver(rootDir string) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: NewRepoContext(rootDir)}
 }
 
 // NewResolverWithContext MUST initialize all required fields and return a valid resolver with context.
 // NewResolverWithContext creates and returns a new resolver with context instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver🛠️newresolverwithcontext](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Resolver/NewResolverWithContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlresolver🛠️newresolverwithcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/NewResolverWithContext)
 func NewResolverWithContext(rootDir string, ctx RepoContext) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: ctx}
 }
@@ -23738,7 +25775,7 @@ func (r *Resolver) context() RepoContext {
 
 // #region 🔖Default Context
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext](semiorepo://section/semio-repo/cli/main.go/Types/Default%20Context)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context)
 // Default context factory providing baseline resolver context.
 
 type defaultContext struct {
@@ -23747,7 +25784,7 @@ type defaultContext struct {
 
 // NewDefaultContext MUST initialize all required fields and return a valid default context.
 // NewDefaultContext creates and returns a new default context instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️newdefaultcontext](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/NewDefaultContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️newdefaultcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/NewDefaultContext)
 func NewDefaultContext(rootDir string) RepoContext {
 	return &defaultContext{rootDir: rootDir}
 }
@@ -23760,23 +25797,26 @@ type repoContext struct {
 
 // NewRepoContext MUST initialize all required fields and return a valid repo context.
 // NewRepoContext creates and returns a new repo context instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️newrepocontext](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/NewRepoContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️newrepocontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/NewRepoContext)
 func NewRepoContext(rootDir string) RepoContext {
 	ctx := &repoContext{rootDir: rootDir, managementProvider: DefaultManagementProvider()}
 	ctx.bundles = LoadBundles()
 	return ctx
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️managementprov](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ManagementProv)
+// ManagementProv holds the data fields for a ManagementProv record.
+// ManagementProv MUST perform the ManagementProv operation.
 func (c *repoContext) ManagementProv() ManagementProvider { return c.managementProvider }
 
 // GetRootDir MUST retrieve the requested value or return an error.
 // GetRootDir retrieves and returns the root dir.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getrootdir](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetRootDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getrootdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetRootDir)
 func (c *repoContext) GetRootDir() string { return c.rootDir }
 
 // GetFileID MUST retrieve the requested value or return an error.
 // GetFileID retrieves and returns the file i d.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfileid](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetFileID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfileid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFileID)
 func (c *repoContext) GetFileID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFileID(path)
@@ -23784,7 +25824,7 @@ func (c *repoContext) GetFileID(path string) string {
 
 // GetFolderID MUST retrieve the requested value or return an error.
 // GetFolderID retrieves and returns the folder i d.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfolderid](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetFolderID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfolderid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFolderID)
 func (c *repoContext) GetFolderID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFolderID(path)
@@ -23792,7 +25832,7 @@ func (c *repoContext) GetFolderID(path string) string {
 
 // GetBundles MUST retrieve the requested value or return an error.
 // GetBundles retrieves and returns the bundles.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getbundles](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetBundles)
 func (c *repoContext) GetBundles() []*Bundle {
 	result := make([]*Bundle, len(c.bundles))
 	for i := range c.bundles {
@@ -23803,7 +25843,7 @@ func (c *repoContext) GetBundles() []*Bundle {
 
 // GetProjects MUST retrieve the requested value or return an error.
 // GetProjects retrieves and returns the projects.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getprojects](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetProjects)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetProjects)
 func (c *repoContext) GetProjects() []*Project {
 	projects := LoadProjects()
 	res := make([]*Project, len(projects))
@@ -23813,21 +25853,21 @@ func (c *repoContext) GetProjects() []*Project {
 	return res
 }
 
-// GetCommits MUST retrieve the requested value or return an error.
-// GetCommits retrieves and returns the commits.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcommits](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetCommits)
-func (c *repoContext) GetCommits(limit *int) ([]*Commit, error) {
-	commits := LoadCommits(limit)
-	res := make([]*Commit, len(commits))
-	for i := range commits {
-		res[i] = &commits[i]
+// GetCheckpoints MUST retrieve the requested value or return an error.
+// GetCheckpoints retrieves and returns the checkpoints.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcheckpoints](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetCheckpoints)
+func (c *repoContext) GetCheckpoints(limit *int) ([]*Checkpoint, error) {
+	checkpoints := LoadCheckpoints(limit)
+	res := make([]*Checkpoint, len(checkpoints))
+	for i := range checkpoints {
+		res[i] = &checkpoints[i]
 	}
 	return res, nil
 }
 
 // GetFolders MUST retrieve the requested value or return an error.
 // GetFolders retrieves and returns the folders.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfolders](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetFolders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFolders)
 func (c *repoContext) GetFolders() []*Folder {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -23858,7 +25898,7 @@ func (c *repoContext) GetFolders() []*Folder {
 
 // GetFiles MUST retrieve the requested value or return an error.
 // GetFiles retrieves and returns the files.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFiles)
 func (c *repoContext) GetFiles() []*File {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -23891,7 +25931,7 @@ func (c *repoContext) GetFiles() []*File {
 
 // GetDefinitions MUST retrieve the requested value or return an error.
 // GetDefinitions retrieves and returns the definitions.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDefinitions)
 func (c *repoContext) GetDefinitions() []*Definition {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -23930,7 +25970,7 @@ func (c *repoContext) GetDefinitions() []*Definition {
 
 // GetSections MUST retrieve the requested value or return an error.
 // GetSections retrieves and returns the sections.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getsections](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetSections)
 func (c *repoContext) GetSections() []*Section {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -23966,7 +26006,7 @@ func (c *repoContext) GetSections() []*Section {
 
 // GetContributors MUST retrieve the requested value or return an error.
 // GetContributors retrieves and returns the contributors.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcontributors](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetContributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetContributors)
 func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -23981,7 +26021,7 @@ func (c *repoContext) GetContributors() ([]*Contributor, error) {
 
 // GetTickets MUST retrieve the requested value or return an error.
 // GetTickets retrieves and returns the tickets.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettickets](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetTickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTickets)
 func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
@@ -23998,14 +26038,14 @@ func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([
 
 // GetGoals MUST retrieve the requested value or return an error.
 // GetGoals retrieves and returns the goals.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getgoals](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetGoals)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getgoals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetGoals)
 func (c *repoContext) GetGoals() ([]*Goal, error) {
 	return ListGoals()
 }
 
 // GoalCreate MUST return a non-nil error when the operation fails.
 // GoalCreate performs the goal create operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalCreate)
 func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 
 	if input.Title == "" {
@@ -24048,9 +26088,6 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 		return nil, fmt.Errorf("goal with id %s already exists", id)
 	}
 
-	gitAuthor := GetGitAuthorGithub()
-	gitCommit := GetGitCommit()
-
 	goal := Goal{
 		ID:          id,
 		Title:       input.Title,
@@ -24061,16 +26098,6 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 		Dates:       GoalDates{Due: input.DueDate},
 		Client:      uiSlug,
 		LLM:         llmSlug,
-		Interactions: []Interaction{{
-			Kind:   string(repopkg.EventGoalOpen),
-			Prompt: input.Prompt,
-			LLM:    llmSlug,
-			Author: gitAuthor,
-			System: GetSystem(),
-			Client: uiSlug,
-			Date:   time.Now().Format("2006-01-02 15:04:05"),
-			Commit: gitCommit,
-		}},
 	}
 
 	if !input.NoManagement {
@@ -24118,7 +26145,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 	}
 	repopkg.Emit(repopkg.EventGoalOpen, "repo-cli", repopkg.GoalOpenPayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Title:       goal.Title, Description: goal.Description, Parent: goal.Parent, Author: gitAuthor,
+		Title:       goal.Title, Description: goal.Description, Parent: goal.Parent, Author: GetGitAuthorGithub(),
 	})
 	return &goal, nil
 }
@@ -24146,7 +26173,7 @@ func parseMilestoneNumber(milestone string) (int, error) {
 
 // UpdateGoalTitle MUST apply the update and return an error if the target is missing.
 // UpdateGoalTitle modifies an existing goal title entry.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️updategoaltitle](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/UpdateGoalTitle)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️updategoaltitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/UpdateGoalTitle)
 func UpdateGoalTitle(goal *Goal, title string) error {
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -24185,7 +26212,7 @@ func UpdateGoalTitle(goal *Goal, title string) error {
 
 // GoalChange MUST return a non-nil error when the operation fails.
 // GoalChange performs the goal change operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalchange](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalChange)
 func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -24271,7 +26298,7 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 
 // GoalClose MUST return a non-nil error when the operation fails.
 // GoalClose performs the goal close operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalclose](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalClose)
 func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -24291,15 +26318,6 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 
 	goal.Status = "closed"
 	goal.Summary = input.Summary
-	now := time.Now()
-	nowStr := now.Format("2006-01-02 15:04:05")
-	goal.Interactions = append(goal.Interactions, Interaction{
-		Kind:   string(repopkg.EventGoalClose),
-		Author: GetGitAuthorGithub(),
-		System: GetSystem(),
-		Commit: GetGitCommit(),
-		Date:   nowStr,
-	})
 
 	if goal.Management != nil && !input.NoManagement {
 		if isRootGoal(&goal) && goal.Management.Milestone != "" {
@@ -24328,7 +26346,7 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 
 // GoalReopen MUST return a non-nil error when the operation fails.
 // GoalReopen performs the goal reopen operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalReopen)
 func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -24362,19 +26380,6 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	if input.Parent != nil {
 		goal.Parent = *input.Parent
 	}
-
-	gitAuthor := GetGitAuthorGithub()
-	gitCommit := GetGitCommit()
-	goal.Interactions = append(goal.Interactions, Interaction{
-		Kind:   string(repopkg.EventGoalReopen),
-		Prompt: input.Prompt,
-		LLM:    input.LLM,
-		Author: gitAuthor,
-		System: GetSystem(),
-		Client: input.Client,
-		Commit: gitCommit,
-		Date:   time.Now().Format("2006-01-02 15:04:05"),
-	})
 	goal.Prompt = input.Prompt
 	goal.LLM = input.LLM
 	goal.Client = input.Client
@@ -24399,14 +26404,14 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	}
 	repopkg.Emit(repopkg.EventGoalReopen, "repo-cli", repopkg.GoalReopenPayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Author: gitAuthor,
+		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Author: GetGitAuthorGithub(),
 	})
 	return &goal, nil
 }
 
 // TicketChange MUST return a non-nil error when the operation fails.
 // TicketChange performs the ticket change operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketchange](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketChange)
 func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -24477,7 +26482,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 
 // GoalDelete MUST return a non-nil error when the operation fails.
 // GoalDelete performs the goal delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goaldelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goaldelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalDelete)
 func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -24515,7 +26520,7 @@ func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 
 // TicketDelete MUST return a non-nil error when the operation fails.
 // TicketDelete performs the ticket delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketDelete)
 func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -24546,28 +26551,28 @@ func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 
 // GetDrafts MUST retrieve the requested value or return an error.
 // GetDrafts retrieves and returns the drafts.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdrafts](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetDrafts)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdrafts](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDrafts)
 func (c *repoContext) GetDrafts() ([]*Draft, error) {
 	return ListDrafts()
 }
 
 // DraftCreate MUST return a non-nil error when the operation fails.
 // DraftCreate performs the draft create operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/DraftCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftCreate)
 func (c *repoContext) DraftCreate(input DraftCreateInput) (*Draft, error) {
 	return CreateDraft(input.Title, input.Files)
 }
 
 // DraftDelete MUST return a non-nil error when the operation fails.
 // DraftDelete performs the draft delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/DraftDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftDelete)
 func (c *repoContext) DraftDelete(id string) (bool, error) {
 	return true, DeleteDraft(id)
 }
 
 // GetPolicies MUST retrieve the requested value or return an error.
 // GetPolicies retrieves and returns the policies.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getpolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetPolicies)
 func (c *repoContext) GetPolicies() []*Policy {
 	policies := GetRegisteredPolicies()
 	result := make([]*Policy, len(policies))
@@ -24597,7 +26602,7 @@ func (c *repoContext) GetPolicies() []*Policy {
 
 // GetStatutes MUST retrieve the requested value or return an error.
 // GetStatutes retrieves and returns the statutes.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getstatutes](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetStatutes)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getstatutes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetStatutes)
 func (c *repoContext) GetStatutes() []*StatuteMeta {
 	var result []*StatuteMeta
 	for _, meta := range statuteInfoTable {
@@ -24609,7 +26614,7 @@ func (c *repoContext) GetStatutes() []*StatuteMeta {
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️analyze](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Analyze)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️analyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Analyze)
 func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -24631,7 +26636,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️fix](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Fix)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️fix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Fix)
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -24835,6 +26840,13 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 					linesToRemove[sectionEndLine+1] = true
 				}
 				fixed++
+			}
+		case BreachCodeSectionWrongFormatNewlineAfterRegion:
+			if v.Line > 0 && v.Line <= len(lines) {
+				if strings.TrimSpace(lines[v.Line-1]) == "" {
+					linesToRemove[v.Line] = true
+					fixed++
+				}
 			}
 		case BreachCodeSectionMissingEndName:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
@@ -25067,6 +27079,13 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 							}
 							insertAt--
 						}
+						newLines := make([]string, 0, len(lines)+1)
+						newLines = append(newLines, lines[:v.Line-1]...)
+						newLines = append(newLines, idLine)
+						newLines = append(newLines, lines[v.Line-1:]...)
+						lines = newLines
+						fixed++
+					} else if langName == "go" {
 						newLines := make([]string, 0, len(lines)+1)
 						newLines = append(newLines, lines[:v.Line-1]...)
 						newLines = append(newLines, idLine)
@@ -26139,6 +28158,9 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 		if err := WriteTextFile(absPath, content); err != nil {
 			return 0, err
 		}
+		if err := runFormatterAfterAutofix(file, language); err != nil {
+			return 0, err
+		}
 	}
 	return fixed, nil
 }
@@ -26274,14 +28296,14 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 
 // TicketOpen MUST return a non-nil error when the operation fails.
 // TicketOpen performs the ticket open operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketOpen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketOpen)
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue)
 }
 
 // TicketClose MUST return a non-nil error when the operation fails.
 // TicketClose performs the ticket close operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketclose](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketClose)
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	if input.All {
 		tickets, err := ListTickets(nil, nil, nil)
@@ -26340,7 +28362,7 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 
 // TicketReopen MUST return a non-nil error when the operation fails.
 // TicketReopen performs the ticket reopen operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketReopen)
 func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -26366,12 +28388,12 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 
 // FolderCreate MUST return a non-nil error when the operation fails.
 // FolderCreate performs the folder create operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldercreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FolderCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldercreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderCreate)
 func (c *repoContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
 // FolderMove MUST return a non-nil error when the operation fails.
 // FolderMove performs the folder move operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldermove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FolderMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldermove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderMove)
 func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	result := ToolFolderMove(src, dst)
 	if result.Error != "" {
@@ -26383,7 +28405,7 @@ func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 
 // FolderDelete MUST return a non-nil error when the operation fails.
 // FolderDelete performs the folder delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️folderdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FolderDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️folderdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderDelete)
 func (c *repoContext) FolderDelete(path string) error {
 	result := ToolFolderDelete(path)
 	if result.Error != "" {
@@ -26394,7 +28416,7 @@ func (c *repoContext) FolderDelete(path string) error {
 
 // FileCreate MUST return a non-nil error when the operation fails.
 // FileCreate performs the file create operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filecreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FileCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileCreate)
 func (c *repoContext) FileCreate(path string) (*File, error) {
 	result := ToolFileCreate(path)
 	if result.Error != "" {
@@ -26406,7 +28428,7 @@ func (c *repoContext) FileCreate(path string) (*File, error) {
 
 // FileMove MUST return a non-nil error when the operation fails.
 // FileMove performs the file move operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filemove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FileMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileMove)
 func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	result := ToolFileMove(src, dst)
 	if result.Error != "" {
@@ -26418,7 +28440,7 @@ func (c *repoContext) FileMove(src, dst string) (*File, error) {
 
 // FileDelete MUST return a non-nil error when the operation fails.
 // FileDelete performs the file delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filedelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FileDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filedelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileDelete)
 func (c *repoContext) FileDelete(path string) error {
 	result := ToolFileDelete(path)
 	if result.Error != "" {
@@ -26429,7 +28451,7 @@ func (c *repoContext) FileDelete(path string) error {
 
 // SectionCreate MUST return a non-nil error when the operation fails.
 // SectionCreate performs the section create operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectioncreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SectionCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectioncreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionCreate)
 func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	sectionPath := name
 	if parent != nil && *parent != "" {
@@ -26446,7 +28468,7 @@ func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section
 
 // SectionMove MUST return a non-nil error when the operation fails.
 // SectionMove performs the section move operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectionmove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SectionMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectionmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionMove)
 func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	result := ToolSectionMove(file, oldName, newName)
 	if result.Error != "" {
@@ -26459,7 +28481,7 @@ func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, erro
 
 // SectionDelete MUST return a non-nil error when the operation fails.
 // SectionDelete performs the section delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectiondelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SectionDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectiondelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionDelete)
 func (c *repoContext) SectionDelete(file, name string) error {
 	result := ToolSectionDelete(file, name)
 	if result.Error != "" {
@@ -26470,7 +28492,7 @@ func (c *repoContext) SectionDelete(file, name string) error {
 
 // Integrate MUST return a non-nil error when the operation fails.
 // Integrate performs the integrate operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️integrate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Integrate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️integrate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Integrate)
 func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	s := ""
 	if source != nil {
@@ -26497,7 +28519,7 @@ func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent 
 
 // Extract MUST return the extracted component from the input.
 // Extract extracts the extract from the source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️extract](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Extract)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️extract](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Extract)
 func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	s := ""
 	if sourceFile != nil {
@@ -26521,7 +28543,7 @@ func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*F
 
 // ContributorAdd MUST return a non-nil error when the operation fails.
 // ContributorAdd performs the contributor add operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributoradd](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/ContributorAdd)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributoradd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorAdd)
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	contributor, err := LoadContributor(input.Github)
 	if err != nil {
@@ -26576,7 +28598,7 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 
 // ContributorRemove MUST return a non-nil error when the operation fails.
 // ContributorRemove performs the contributor remove operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributorremove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/ContributorRemove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorRemove)
 func (c *repoContext) ContributorRemove(github string) error {
 	repopkg.Emit(repopkg.EventContributorRemove, "repo-cli", repopkg.ContributorPayload{
 		Github: github, Author: GetGitAuthorGithub(),
@@ -26648,7 +28670,7 @@ func ensureGoalMilestone(goal *Goal) (*ManagementMilestone, error) {
 
 // SyncManagement MUST return a non-nil error when the operation fails.
 // SyncManagement performs the sync github operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SyncManagement)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncmanagement](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SyncManagement)
 func (c *repoContext) SyncManagement() (bool, error) {
 	fmt.Println("Syncing local tickets and goals with GitHub...")
 
@@ -26894,258 +28916,258 @@ var _ RepoContext = (*repoContext)(nil)
 
 // GetRootDir MUST retrieve the requested value or return an error.
 // GetRootDir retrieves and returns the root dir.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getrootdir](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetRootDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getrootdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetRootDir)
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
 // GetBundles MUST retrieve the requested value or return an error.
 // GetBundles retrieves and returns the bundles.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getbundles](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetBundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetBundles)
 func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
 
 // GetProjects MUST retrieve the requested value or return an error.
 // GetProjects retrieves and returns the projects.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getprojects](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetProjects)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetProjects)
 func (c *defaultContext) GetProjects() []*Project { return []*Project{} }
 
-// GetCommits MUST retrieve the requested value or return an error.
-// GetCommits retrieves and returns the commits.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcommits](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetCommits)
-func (c *defaultContext) GetCommits(limit *int) ([]*Commit, error) {
-	return []*Commit{}, nil
+// GetCheckpoints MUST retrieve the requested value or return an error.
+// GetCheckpoints retrieves and returns the checkpoints.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcheckpoints](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetCheckpoints)
+func (c *defaultContext) GetCheckpoints(limit *int) ([]*Checkpoint, error) {
+	return []*Checkpoint{}, nil
 }
 
 // GetFolders MUST retrieve the requested value or return an error.
 // GetFolders retrieves and returns the folders.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfolders](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetFolders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFolders)
 func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
 
 // GetFiles MUST retrieve the requested value or return an error.
 // GetFiles retrieves and returns the files.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFiles)
 func (c *defaultContext) GetFiles() []*File { return []*File{} }
 
 // GetDefinitions MUST retrieve the requested value or return an error.
 // GetDefinitions retrieves and returns the definitions.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdefinitions](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetDefinitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDefinitions)
 func (c *defaultContext) GetDefinitions() []*Definition { return []*Definition{} }
 
 // GetSections MUST retrieve the requested value or return an error.
 // GetSections retrieves and returns the sections.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getsections](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetSections)
 func (c *defaultContext) GetSections() []*Section { return []*Section{} }
 
 // GetContributors MUST retrieve the requested value or return an error.
 // GetContributors retrieves and returns the contributors.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcontributors](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetContributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getcontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetContributors)
 func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
 
 // GetTickets MUST retrieve the requested value or return an error.
 // GetTickets retrieves and returns the tickets.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettickets](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetTickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTickets)
 func (c *defaultContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	return []*Ticket{}, nil
 }
 
 // GetPolicies MUST retrieve the requested value or return an error.
 // GetPolicies retrieves and returns the policies.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getpolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetPolicies)
 func (c *defaultContext) GetPolicies() []*Policy { return []*Policy{} }
 
 // GetStatutes MUST retrieve the requested value or return an error.
 // GetStatutes retrieves and returns the statutes.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getstatutes](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetStatutes)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getstatutes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetStatutes)
 func (c *defaultContext) GetStatutes() []*StatuteMeta { return []*StatuteMeta{} }
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️analyze](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Analyze)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️analyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Analyze)
 func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Breachs: []*Breach{}, Metrics: &AnalyzeMetrics{}}, nil
 }
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️fix](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Fix)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️fix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Fix)
 func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
 	return &FixResult{Breachs: []*Breach{}}, nil
 }
 
 // TicketOpen MUST return a non-nil error when the operation fails.
 // TicketOpen performs the ticket open operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketOpen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketOpen)
 func (c *defaultContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // TicketClose MUST return a non-nil error when the operation fails.
 // TicketClose performs the ticket close operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketclose](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketClose)
 func (c *defaultContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // TicketReopen MUST return a non-nil error when the operation fails.
 // TicketReopen performs the ticket reopen operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketReopen)
 func (c *defaultContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // TicketChange MUST return a non-nil error when the operation fails.
 // TicketChange performs the ticket change operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketchange](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketChange)
 func (c *defaultContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // FolderCreate MUST return a non-nil error when the operation fails.
 // FolderCreate performs the folder create operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldercreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FolderCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldercreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderCreate)
 func (c *defaultContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
 // FolderMove MUST return a non-nil error when the operation fails.
 // FolderMove performs the folder move operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldermove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FolderMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️foldermove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderMove)
 func (c *defaultContext) FolderMove(src, dst string) (*Folder, error) { return nil, nil }
 
 // FolderDelete MUST return a non-nil error when the operation fails.
 // FolderDelete performs the folder delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️folderdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FolderDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️folderdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderDelete)
 func (c *defaultContext) FolderDelete(path string) error { return nil }
 
 // FileCreate MUST return a non-nil error when the operation fails.
 // FileCreate performs the file create operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filecreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FileCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileCreate)
 func (c *defaultContext) FileCreate(path string) (*File, error) { return nil, nil }
 
 // FileMove MUST return a non-nil error when the operation fails.
 // FileMove performs the file move operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filemove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FileMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileMove)
 func (c *defaultContext) FileMove(src, dst string) (*File, error) { return nil, nil }
 
 // FileDelete MUST return a non-nil error when the operation fails.
 // FileDelete performs the file delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filedelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/FileDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️filedelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileDelete)
 func (c *defaultContext) FileDelete(path string) error { return nil }
 
 // SectionCreate MUST return a non-nil error when the operation fails.
 // SectionCreate performs the section create operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectioncreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SectionCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectioncreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionCreate)
 func (c *defaultContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	return nil, nil
 }
 
 // SectionMove MUST return a non-nil error when the operation fails.
 // SectionMove performs the section move operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectionmove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SectionMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectionmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionMove)
 func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	return nil, nil
 }
 
 // SectionDelete MUST return a non-nil error when the operation fails.
 // SectionDelete performs the section delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectiondelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SectionDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️sectiondelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionDelete)
 func (c *defaultContext) SectionDelete(file, name string) error { return nil }
 
 // Integrate MUST return a non-nil error when the operation fails.
 // Integrate performs the integrate operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️integrate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Integrate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️integrate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Integrate)
 func (c *defaultContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	return nil, nil
 }
 
 // Extract MUST return the extracted component from the input.
 // Extract extracts the extract from the source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️extract](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/Extract)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️extract](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Extract)
 func (c *defaultContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	return nil, nil
 }
 
 // ContributorAdd MUST return a non-nil error when the operation fails.
 // ContributorAdd performs the contributor add operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributoradd](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/ContributorAdd)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributoradd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorAdd)
 func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	return nil, nil
 }
 
 // ContributorRemove MUST return a non-nil error when the operation fails.
 // ContributorRemove performs the contributor remove operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributorremove](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/ContributorRemove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorRemove)
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
 
 // SyncManagement MUST return a non-nil error when the operation fails.
 // SyncManagement performs the sync github operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/SyncManagement)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️syncmanagement](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SyncManagement)
 func (c *defaultContext) SyncManagement() (bool, error) { return false, nil }
 
 // GetGoals MUST retrieve the requested value or return an error.
 // GetGoals retrieves and returns the goals.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getgoals](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetGoals)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getgoals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetGoals)
 func (c *defaultContext) GetGoals() ([]*Goal, error) { return []*Goal{}, nil }
 
 // GoalCreate MUST return a non-nil error when the operation fails.
 // GoalCreate performs the goal create operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalCreate)
 func (c *defaultContext) GoalCreate(input GoalCreateInput) (*Goal, error) { return nil, nil }
 
 // GoalChange MUST return a non-nil error when the operation fails.
 // GoalChange performs the goal change operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalchange](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalChange)
 func (c *defaultContext) GoalChange(input GoalChangeInput) (*Goal, error) { return nil, nil }
 
 // GoalClose MUST return a non-nil error when the operation fails.
 // GoalClose performs the goal close operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalclose](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalClose)
 func (c *defaultContext) GoalClose(input GoalCloseInput) (*Goal, error) { return nil, nil }
 
 // GoalReopen MUST return a non-nil error when the operation fails.
 // GoalReopen performs the goal reopen operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goalreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalReopen)
 func (c *defaultContext) GoalReopen(input GoalReopenInput) (*Goal, error) { return nil, nil }
 
 // GoalDelete MUST return a non-nil error when the operation fails.
 // GoalDelete performs the goal delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goaldelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GoalDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️goaldelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalDelete)
 func (c *defaultContext) GoalDelete(input GoalDeleteInput) (bool, error) { return false, nil }
 
 // TicketDelete MUST return a non-nil error when the operation fails.
 // TicketDelete performs the ticket delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TicketDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️ticketdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketDelete)
 func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { return false, nil }
 
 // GetDrafts MUST retrieve the requested value or return an error.
 // GetDrafts retrieves and returns the drafts.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdrafts](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetDrafts)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getdrafts](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDrafts)
 func (c *defaultContext) GetDrafts() ([]*Draft, error) { return []*Draft{}, nil }
 
 // DraftCreate MUST return a non-nil error when the operation fails.
 // DraftCreate performs the draft create operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/DraftCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftCreate)
 func (c *defaultContext) DraftCreate(input DraftCreateInput) (*Draft, error) { return nil, nil }
 
 // DraftDelete MUST return a non-nil error when the operation fails.
 // DraftDelete performs the draft delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/DraftDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️draftdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftDelete)
 func (c *defaultContext) DraftDelete(id string) (bool, error) { return false, nil }
 
 // GetTodos MUST retrieve the requested value or return an error.
 // GetTodos retrieves and returns the todos.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettodos](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/GetTodos)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTodos)
 func (c *defaultContext) GetTodos(filter *FilterInput) ([]*Todo, error) { return []*Todo{}, nil }
 
 // TodoCreate MUST return a non-nil error when the operation fails.
 // TodoCreate performs the todo create operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️todocreate](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TodoCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️todocreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoCreate)
 func (c *defaultContext) TodoCreate(input TodoCreateInput) (*Todo, error) { return nil, nil }
 
 // TodoChange MUST return a non-nil error when the operation fails.
 // TodoChange performs the todo change operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️todochange](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TodoChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️todochange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoChange)
 func (c *defaultContext) TodoChange(input TodoChangeInput) (*Todo, error) { return nil, nil }
 
 // TodoDelete MUST return a non-nil error when the operation fails.
 // TodoDelete performs the todo delete operation on the default context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️tododelete](semiorepo://definition/semio-repo/cli/main.go/Types/Default%20Context/TodoDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️tododelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoDelete)
 func (c *defaultContext) TodoDelete(id string) (bool, error) { return false, nil }
 
 var _ RepoContext = (*defaultContext)(nil)
@@ -27154,7 +29176,7 @@ var _ RepoContext = (*defaultContext)(nil)
 
 // #region 🔖GraphQL Executor
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor](semiorepo://section/semio-repo/cli/main.go/Types/GraphQL%20Executor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor)
 // GraphQL executor dispatching queries against the schema.
 
 func parseFileListInput(f map[string]interface{}) *FileListInput {
@@ -27184,7 +29206,7 @@ func parseFileListInput(f map[string]interface{}) *FileListInput {
 }
 
 // Executor holds the data fields for a executor record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor✂️executor](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/Executor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor✂️executor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/Executor)
 type Executor struct {
 	resolver *Resolver
 	schema   graphql.Schema
@@ -27192,7 +29214,7 @@ type Executor struct {
 
 // NewExecutor MUST initialize all required fields and return a valid executor.
 // NewExecutor creates and returns a new executor instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️newexecutor](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/NewExecutor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️newexecutor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/NewExecutor)
 func NewExecutor(rootDir string) (*Executor, error) {
 	resolver := NewResolver(rootDir)
 	schema, err := buildSchema(resolver)
@@ -27207,7 +29229,7 @@ func NewExecutor(rootDir string) (*Executor, error) {
 
 // NewExecutorWithContext MUST initialize all required fields and return a valid executor with context.
 // NewExecutorWithContext creates and returns a new executor with context instance.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️newexecutorwithcontext](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/NewExecutorWithContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️newexecutorwithcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/NewExecutorWithContext)
 func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) {
 	resolver := NewResolverWithContext(rootDir, ctx)
 	schema, err := buildSchema(resolver)
@@ -27222,7 +29244,7 @@ func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) 
 
 // Execute MUST execute the operation to completion and report any errors.
 // Execute executes the ute operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️execute](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/Execute)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️execute](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/Execute)
 func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
 	result := graphql.Do(graphql.Params{
 		Context:        ctx,
@@ -27238,7 +29260,7 @@ func (e *Executor) Execute(ctx context.Context, query string, variables map[stri
 
 // ExecuteJSON MUST execute the operation to completion and report any errors.
 // ExecuteJSON executes the ute j s o n operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️executejson](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/ExecuteJSON)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️executejson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/ExecuteJSON)
 func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error) {
 	data, err := e.Execute(ctx, query, variables)
 	if err != nil {
@@ -27253,7 +29275,7 @@ func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[
 
 // ValidateQuery MUST return nil when valid and a descriptive error otherwise.
 // ValidateQuery checks the query for correctness and returns any errors.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️validatequery](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/ValidateQuery)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️validatequery](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/ValidateQuery)
 func (e *Executor) ValidateQuery(query string) error {
 	_, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -27266,7 +29288,7 @@ func (e *Executor) ValidateQuery(query string) error {
 
 // GetOperationType MUST retrieve the requested value or return an error.
 // GetOperationType retrieves and returns the operation type.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️getoperationtype](semiorepo://definition/semio-repo/cli/main.go/Types/GraphQL%20Executor/GetOperationType)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖graphqlexecutor🛠️getoperationtype](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/GetOperationType)
 func (e *Executor) GetOperationType(query string) (string, error) {
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -27289,7 +29311,7 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 
 // #region 🔖Schema Builder
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖schemabuilder](semiorepo://section/semio-repo/cli/main.go/Types/Schema%20Builder)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖schemabuilder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Schema%20Builder)
 // Schema builder constructing the GraphQL schema from type definitions.
 
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
@@ -27422,7 +29444,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var contributorFileType *graphql.Object
 	var contributorSectionType *graphql.Object
 	var contributorDefinitionType *graphql.Object
-	var commitType *graphql.Object
+	var checkpointType *graphql.Object
 
 	packageType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Package",
@@ -28053,9 +30075,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Interaction",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"kind":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"prompt": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"commit": &graphql.Field{Type: graphql.String},
+				"kind":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"prompt":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"checkpoint": &graphql.Field{Type: graphql.String},
 				"date": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -28088,7 +30110,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			return graphql.Fields{
 				"kind":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"prompt":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"commit":     &graphql.Field{Type: graphql.String},
+				"checkpoint": &graphql.Field{Type: graphql.String},
 				"author":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"sourceKind": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"sourceId":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
@@ -28136,10 +30158,6 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"createdAt": &graphql.Field{
 				Type: graphql.String,
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					goal := p.Source.(*Goal)
-					if len(goal.Interactions) > 0 {
-						return goal.Interactions[0].Date, nil
-					}
 					return nil, nil
 				},
 			},
@@ -28176,8 +30194,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"interactions": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(interactionType))),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					goal := p.Source.(*Goal)
-					return goal.Interactions, nil
+					return []Interaction{}, nil
 				},
 			},
 		},
@@ -28245,15 +30262,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return client, nil
 					},
 				},
-				"commit": &graphql.Field{
+				"checkpoint": &graphql.Field{
 					Type: graphql.String,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						commit := ticket.GetCommit()
-						if commit == "" {
+						checkpoint := ticket.GetCheckpoint()
+						if checkpoint == "" {
 							return nil, nil
 						}
-						return commit, nil
+						return checkpoint, nil
 					},
 				},
 				"uri": &graphql.Field{
@@ -28492,15 +30509,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "ContributorContributions",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"commits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(commitType)))},
-				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketYearType)))},
-				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorBundleType)))},
+				"checkpoints": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(checkpointType)))},
+				"tickets":     &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketYearType)))},
+				"bundles":     &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorBundleType)))},
 			}
 		}),
 	})
 
-	commitType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "Commit",
+	checkpointType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Checkpoint",
 		Fields: graphql.Fields{
 			"id":    &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
 			"sha":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
@@ -28582,9 +30599,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "ContributorContributions",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"commits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(commitType)))},
-				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketYearType)))},
-				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorBundleType)))},
+				"checkpoints": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(checkpointType)))},
+				"tickets":     &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketYearType)))},
+				"bundles":     &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorBundleType)))},
 			}
 		}),
 	})
@@ -28680,8 +30697,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return res, nil
 					},
 				},
-				"commits": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(commitType))),
+				"checkpoints": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(checkpointType))),
 					Args: graphql.FieldConfigArgument{
 						"limit": &graphql.ArgumentConfig{Type: graphql.Int},
 					},
@@ -28691,7 +30708,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						if v, ok := p.Args["limit"].(int); ok {
 							limit = &v
 						}
-						return repoResolverInstance.Ctx.GetCommits(limit)
+						return repoResolverInstance.Ctx.GetCheckpoints(limit)
 					},
 				},
 				"bundles": &graphql.Field{
@@ -28827,9 +30844,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"CODE":     &graphql.EnumValueConfig{Value: FileKindCode},
 			"SCRIPT":   &graphql.EnumValueConfig{Value: FileKindScript},
 			"CONFIG":   &graphql.EnumValueConfig{Value: FileKindConfig},
-			"TEST":     &graphql.EnumValueConfig{Value: FileKindTest},
+			"LAB":      &graphql.EnumValueConfig{Value: FileKindLab},
 			"DOCS":     &graphql.EnumValueConfig{Value: FileKindDocs},
 			"RESOURCE": &graphql.EnumValueConfig{Value: FileKindResource},
+			"TEMPLATE": &graphql.EnumValueConfig{Value: FileKindTemplate},
 			"LICENSE":  &graphql.EnumValueConfig{Value: FileKindLicense},
 		},
 	})
@@ -29928,12 +31946,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 
 // #region 🔖Query Resolvers
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers](semiorepo://section/semio-repo/cli/main.go/Types/Query%20Resolvers)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers)
 // Query resolver methods implementing GraphQL read operations.
 
 // Query MUST execute the query and return matching results.
 // Query executes the query query.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️query](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Query)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️query](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Query)
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
@@ -29942,7 +31960,7 @@ type queryResolver struct{ *Resolver }
 
 // Drafts MUST return a non-nil error when the operation fails.
 // Drafts performs the drafts operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️drafts](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Drafts)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️drafts](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Drafts)
 func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDrafts()
@@ -29952,7 +31970,7 @@ func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 
 // Node MUST return a non-nil error when the operation fails.
 // Node performs the node operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️node](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Node)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️node](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Node)
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 	cleanID := strings.ReplaceAll(id, "\uFE0E", "")
@@ -30006,14 +32024,14 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		}
 	}
 
-	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	fileEmojis := []string{EmojiFileCode, EmojiFileLab, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
 	for _, fe := range fileEmojis {
 		if rest, ok := stripPrefix(cleanID, fe); ok {
 			return r.File(ctx, rest)
 		}
 	}
 
-	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant}
+	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant, EmojiDefinitionTest}
 	for _, de := range defEmojis {
 		if rest, ok := stripPrefix(cleanID, de); ok {
 			return &Definition{ID: rest}, nil
@@ -30043,8 +32061,8 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		return r.Contributor(ctx, rest)
 	}
 
-	if rest, ok := stripPrefix(cleanID, EmojiCommit); ok {
-		return &Commit{SHA: rest}, nil
+	if rest, ok := stripPrefix(cleanID, EmojiCheckpoint); ok {
+		return &Checkpoint{SHA: rest}, nil
 	}
 
 	if strings.HasPrefix(id, "repo:") {
@@ -30082,9 +32100,9 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 			return r.Ticket(ctx, y, m, d, parts[3])
 		}
 	}
-	if strings.HasPrefix(id, "commit:") {
+	if strings.HasPrefix(id, "checkpoint:") {
 
-		return &Commit{SHA: strings.TrimPrefix(id, "commit:")}, nil
+		return &Checkpoint{SHA: strings.TrimPrefix(id, "checkpoint:")}, nil
 	}
 	if strings.HasPrefix(id, "goal:") {
 
@@ -30114,7 +32132,7 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 // Repo MUST return a non-nil error when the operation fails.
 // Repo performs the repo operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️repo](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Repo)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Repo)
 func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	projects, _ := r.Projects(ctx, nil)
 	bundles, _ := r.Bundles(ctx, &FilterInput{})
@@ -30139,7 +32157,7 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 
 // Projects MUST return a non-nil error when the operation fails.
 // Projects performs the projects operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️projects](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Projects)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️projects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Projects)
 func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*Project, error) {
 	allBundles, err := r.Bundles(ctx, &FilterInput{})
 	if err != nil {
@@ -30194,7 +32212,7 @@ func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*P
 
 // Project MUST return a non-nil error when the operation fails.
 // Project performs the project operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️project](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Project)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️project](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Project)
 func (r *queryResolver) Project(ctx context.Context, name string) (*Project, error) {
 	all, err := r.Projects(ctx, nil)
 	if err != nil {
@@ -30210,7 +32228,7 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*Project, err
 
 // Bundles MUST return a non-nil error when the operation fails.
 // Bundles performs the bundles operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️bundles](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Bundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️bundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Bundles)
 func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -30228,7 +32246,7 @@ func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bu
 
 // Folders MUST return a non-nil error when the operation fails.
 // Folders performs the folders operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️folders](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Folders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️folders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Folders)
 func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -30238,7 +32256,7 @@ func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️files](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Files)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️files](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Files)
 func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -30248,7 +32266,7 @@ func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 
 // Sections MUST return a non-nil error when the operation fails.
 // Sections performs the sections operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️sections](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Sections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️sections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Sections)
 func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -30258,7 +32276,7 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 
 // Definitions MUST return a non-nil error when the operation fails.
 // Definitions performs the definitions operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️definitions](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Definitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️definitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Definitions)
 func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -30268,7 +32286,7 @@ func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) 
 
 // Contributors MUST return a non-nil error when the operation fails.
 // Contributors performs the contributors operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️contributors](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Contributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️contributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Contributors)
 func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -30286,7 +32304,7 @@ func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) (
 
 // Todos MUST return a non-nil error when the operation fails.
 // Todos performs the todos operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️todos](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Todos)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️todos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Todos)
 func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -30296,7 +32314,7 @@ func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo
 
 // Tickets MUST return a non-nil error when the operation fails.
 // Tickets performs the tickets operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️tickets](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Tickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️tickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Tickets)
 func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -30316,7 +32334,7 @@ func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day 
 }
 
 // Interactions aggregates all interactions from tickets and goals.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️interactions](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Interactions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️interactions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Interactions)
 // Interactions MUST perform the Interactions operation.
 func (r *queryResolver) Interactions(ctx context.Context) ([]InteractionResource, error) {
 	return ListInteractions()
@@ -30324,7 +32342,7 @@ func (r *queryResolver) Interactions(ctx context.Context) ([]InteractionResource
 
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️policies](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Policies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️policies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Policies)
 func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -30355,7 +32373,7 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 
 // Statutes MUST return a non-nil error when the operation fails.
 // Statutes performs the statutes operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️statutes](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Statutes)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️statutes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Statutes)
 func (r *queryResolver) Statutes(ctx context.Context) ([]*StatuteMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetStatutes(), nil
@@ -30365,7 +32383,7 @@ func (r *queryResolver) Statutes(ctx context.Context) ([]*StatuteMeta, error) {
 
 // Breachs MUST return a non-nil error when the operation fails.
 // Breachs performs the breachs operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️breachs](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Breachs)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️breachs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Breachs)
 func (r *queryResolver) Breachs(ctx context.Context, scope *string) ([]*Breach, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -30379,7 +32397,7 @@ func (r *queryResolver) Breachs(ctx context.Context, scope *string) ([]*Breach, 
 
 // Bundle MUST return a non-nil error when the operation fails.
 // Bundle performs the bundle operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️bundle](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Bundle)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️bundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Bundle)
 func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error) {
 	if r.Ctx != nil {
 		bundles := r.Ctx.GetBundles()
@@ -30397,7 +32415,7 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 
 // Folder MUST return a non-nil error when the operation fails.
 // Folder performs the folder operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️folder](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Folder)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️folder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Folder)
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -30419,7 +32437,7 @@ func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error
 
 // File MUST return a non-nil error when the operation fails.
 // File performs the file operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️file](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/File)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️file](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/File)
 func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -30450,7 +32468,7 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 
 // Section MUST return a non-nil error when the operation fails.
 // Section performs the section operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️section](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Section)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️section](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Section)
 func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []string) (*Section, error) {
 	sectionName := strings.Join(sectionPath, "#")
 	return &Section{
@@ -30460,7 +32478,7 @@ func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []
 
 // Definition MUST return a non-nil error when the operation fails.
 // Definition performs the definition operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️definition](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Definition)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️definition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Definition)
 func (r *queryResolver) Definition(ctx context.Context, path string, name string) (*Definition, error) {
 	return &Definition{
 		Name: name,
@@ -30470,7 +32488,7 @@ func (r *queryResolver) Definition(ctx context.Context, path string, name string
 
 // Contributor MUST return a non-nil error when the operation fails.
 // Contributor performs the contributor operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️contributor](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Contributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️contributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Contributor)
 func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributor, error) {
 	if r.Ctx != nil {
 		contributors, err := r.Ctx.GetContributors()
@@ -30491,7 +32509,7 @@ func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributo
 
 // Ticket MUST return a non-nil error when the operation fails.
 // Ticket performs the ticket operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️ticket](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Ticket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️ticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Ticket)
 func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error) {
 	if r.Ctx != nil {
 		y, m, d := year, month, day
@@ -30514,7 +32532,7 @@ func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int
 
 // Policy MUST return a non-nil error when the operation fails.
 // Policy performs the policy operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️policy](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Policy)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️policy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Policy)
 func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) {
 	if r.Ctx != nil {
 		policies := r.Ctx.GetPolicies()
@@ -30533,7 +32551,7 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 
 // Statute MUST return a non-nil error when the operation fails.
 // Statute performs the statute operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️statute](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Statute)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️statute](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Statute)
 func (r *queryResolver) Statute(ctx context.Context, id string) (*StatuteMeta, error) {
 	if r.Ctx != nil {
 		kinds := r.Ctx.GetStatutes()
@@ -30554,7 +32572,7 @@ func (r *queryResolver) Statute(ctx context.Context, id string) (*StatuteMeta, e
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️analyze](semiorepo://definition/semio-repo/cli/main.go/Types/Query%20Resolvers/Analyze)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️analyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Analyze)
 func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Analyze(scope)
@@ -30573,12 +32591,12 @@ func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeRes
 
 // #region 🔖Mutation Resolvers
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers](semiorepo://section/semio-repo/cli/main.go/Types/Mutation%20Resolvers)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers)
 // Mutation resolver methods implementing GraphQL write operations.
 
 // Mutation MUST complete the operation successfully.
 // Mutation performs the mutation operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️mutation](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/Mutation)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️mutation](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Mutation)
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
@@ -30587,7 +32605,7 @@ type mutationResolver struct{ *Resolver }
 
 // SyncManagement MUST return a non-nil error when the operation fails.
 // SyncManagement performs the sync github operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️syncgithub](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/SyncManagement)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️syncmanagement](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SyncManagement)
 func (r *mutationResolver) SyncManagement(ctx context.Context) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SyncManagement()
@@ -30597,7 +32615,7 @@ func (r *mutationResolver) SyncManagement(ctx context.Context) (bool, error) {
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️fix](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/Fix)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️fix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Fix)
 func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Fix(scope)
@@ -30611,7 +32629,7 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 
 // DraftCreate MUST return a non-nil error when the operation fails.
 // DraftCreate performs the draft create operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️draftcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/DraftCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️draftcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/DraftCreate)
 func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInput) (*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftCreate(input)
@@ -30621,7 +32639,7 @@ func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInp
 
 // DraftDelete MUST return a non-nil error when the operation fails.
 // DraftDelete performs the draft delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️draftdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/DraftDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️draftdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/DraftDelete)
 func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftDelete(id)
@@ -30631,7 +32649,7 @@ func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, er
 
 // TicketOpen MUST return a non-nil error when the operation fails.
 // TicketOpen performs the ticket open operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketopen](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TicketOpen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketOpen)
 func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketOpen(input)
@@ -30641,7 +32659,7 @@ func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput
 
 // TicketClose MUST return a non-nil error when the operation fails.
 // TicketClose performs the ticket close operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketclose](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TicketClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketClose)
 func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketClose(input)
@@ -30651,7 +32669,7 @@ func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInp
 
 // TicketReopen MUST return a non-nil error when the operation fails.
 // TicketReopen performs the ticket reopen operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TicketReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketReopen)
 func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketReopen(input)
@@ -30661,7 +32679,7 @@ func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenI
 
 // TicketChange MUST return a non-nil error when the operation fails.
 // TicketChange performs the ticket change operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketchange](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TicketChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketChange)
 func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketChange(input)
@@ -30671,7 +32689,7 @@ func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeI
 
 // GoalCreate MUST return a non-nil error when the operation fails.
 // GoalCreate performs the goal create operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalcreate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/GoalCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalCreate)
 func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalCreate(input)
@@ -30681,7 +32699,7 @@ func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput
 
 // GoalChange MUST return a non-nil error when the operation fails.
 // GoalChange performs the goal change operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalchange](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/GoalChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalchange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalChange)
 func (r *mutationResolver) GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error) {
 	if r.Ctx != nil {
 		input.ID = id
@@ -30692,7 +32710,7 @@ func (r *mutationResolver) GoalChange(ctx context.Context, id string, input Goal
 
 // GoalClose MUST return a non-nil error when the operation fails.
 // GoalClose performs the goal close operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalclose](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/GoalClose)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalClose)
 func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalClose(input)
@@ -30702,7 +32720,7 @@ func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) 
 
 // TodoCreate MUST return a non-nil error when the operation fails.
 // TodoCreate performs the todo create operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️todocreate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TodoCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️todocreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TodoCreate)
 func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoCreate(input)
@@ -30712,7 +32730,7 @@ func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput
 
 // TodoChange MUST return a non-nil error when the operation fails.
 // TodoChange performs the todo change operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️todochange](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TodoChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️todochange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TodoChange)
 func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoChange(input)
@@ -30722,7 +32740,7 @@ func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput
 
 // TodoDelete MUST return a non-nil error when the operation fails.
 // TodoDelete performs the todo delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️tododelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TodoDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️tododelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TodoDelete)
 func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoDelete(id)
@@ -30732,7 +32750,7 @@ func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, err
 
 // GoalReopen MUST return a non-nil error when the operation fails.
 // GoalReopen performs the goal reopen operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalreopen](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/GoalReopen)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goalreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalReopen)
 func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalReopen(input)
@@ -30742,7 +32760,7 @@ func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput
 
 // GoalDelete MUST return a non-nil error when the operation fails.
 // GoalDelete performs the goal delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goaldelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/GoalDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️goaldelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalDelete)
 func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalDelete(input)
@@ -30752,7 +32770,7 @@ func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput
 
 // TicketDelete MUST return a non-nil error when the operation fails.
 // TicketDelete performs the ticket delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/TicketDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️ticketdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketDelete)
 func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketDelete(input)
@@ -30762,7 +32780,7 @@ func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteI
 
 // ContributorAdd MUST return a non-nil error when the operation fails.
 // ContributorAdd performs the contributor add operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️contributoradd](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/ContributorAdd)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️contributoradd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/ContributorAdd)
 func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
 	if r.Ctx != nil {
 		return r.Ctx.ContributorAdd(input)
@@ -30772,7 +32790,7 @@ func (r *mutationResolver) ContributorAdd(ctx context.Context, input Contributor
 
 // ContributorRemove MUST return a non-nil error when the operation fails.
 // ContributorRemove performs the contributor remove operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️contributorremove](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/ContributorRemove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️contributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/ContributorRemove)
 func (r *mutationResolver) ContributorRemove(ctx context.Context, github string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.ContributorRemove(github)
@@ -30783,7 +32801,7 @@ func (r *mutationResolver) ContributorRemove(ctx context.Context, github string)
 
 // FolderCreate MUST return a non-nil error when the operation fails.
 // FolderCreate performs the folder create operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️foldercreate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/FolderCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️foldercreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FolderCreate)
 func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderCreate(path)
@@ -30793,7 +32811,7 @@ func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Fold
 
 // FolderMove MUST return a non-nil error when the operation fails.
 // FolderMove performs the folder move operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️foldermove](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/FolderMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️foldermove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FolderMove)
 func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderMove(src, dst)
@@ -30803,7 +32821,7 @@ func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst strin
 
 // FolderDelete MUST return a non-nil error when the operation fails.
 // FolderDelete performs the folder delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️folderdelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/FolderDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️folderdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FolderDelete)
 func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FolderDelete(path)
@@ -30814,7 +32832,7 @@ func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool,
 
 // FileCreate MUST return a non-nil error when the operation fails.
 // FileCreate performs the file create operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️filecreate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/FileCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️filecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FileCreate)
 func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileCreate(path)
@@ -30824,7 +32842,7 @@ func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, 
 
 // FileMove MUST return a non-nil error when the operation fails.
 // FileMove performs the file move operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️filemove](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/FileMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️filemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FileMove)
 func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileMove(src, dst)
@@ -30834,7 +32852,7 @@ func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string)
 
 // FileDelete MUST return a non-nil error when the operation fails.
 // FileDelete performs the file delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️filedelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/FileDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️filedelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FileDelete)
 func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FileDelete(path)
@@ -30845,7 +32863,7 @@ func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, e
 
 // SectionCreate MUST return a non-nil error when the operation fails.
 // SectionCreate performs the section create operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️sectioncreate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/SectionCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️sectioncreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SectionCreate)
 func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionCreate(file, name, parent)
@@ -30855,7 +32873,7 @@ func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name 
 
 // SectionMove MUST return a non-nil error when the operation fails.
 // SectionMove performs the section move operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️sectionmove](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/SectionMove)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️sectionmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SectionMove)
 func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionMove(file, oldName, newName)
@@ -30865,7 +32883,7 @@ func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName
 
 // SectionDelete MUST return a non-nil error when the operation fails.
 // SectionDelete performs the section delete operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️sectiondelete](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/SectionDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️sectiondelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SectionDelete)
 func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.SectionDelete(file, name)
@@ -30876,7 +32894,7 @@ func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name 
 
 // Integrate MUST return a non-nil error when the operation fails.
 // Integrate performs the integrate operation on the mutation resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️integrate](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/Integrate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️integrate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Integrate)
 func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Integrate(source, targetSection, targetFile, targetParent)
@@ -30886,7 +32904,7 @@ func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection,
 
 // Extract MUST return the extracted component from the input.
 // Extract extracts the extract from the source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️extract](semiorepo://definition/semio-repo/cli/main.go/Types/Mutation%20Resolvers/Extract)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mutationresolvers🛠️extract](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Extract)
 func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSection, targetFile *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Extract(sourceFile, sourceSection, targetFile)
@@ -30898,21 +32916,21 @@ func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSectio
 
 // #region 🔖Entity Resolvers
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers](semiorepo://section/semio-repo/cli/main.go/Types/Entity%20Resolvers)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers)
 // Entity resolver methods implementing GraphQL entity lookups.
 
 type repoResolver struct{ *Resolver }
 
 // Repo_ MUST complete the operation successfully.
 // Repo_ performs the repo_ operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️repo](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Repo_)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Repo_)
 func (r *Resolver) Repo_() RepoResolver {
 	return &repoResolver{r}
 }
 
 // Bundles MUST return a non-nil error when the operation fails.
 // Bundles performs the bundles operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️bundles](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Bundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️bundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Bundles)
 func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -30930,7 +32948,7 @@ func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInp
 
 // Folders MUST return a non-nil error when the operation fails.
 // Folders performs the folders operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️folders](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Folders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️folders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Folders)
 func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -30940,7 +32958,7 @@ func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error
 
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️files](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Files)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️files](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Files)
 func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -30950,7 +32968,7 @@ func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 
 // Sections MUST return a non-nil error when the operation fails.
 // Sections performs the sections operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️sections](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Sections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️sections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Sections)
 func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -30960,7 +32978,7 @@ func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, err
 
 // Definitions MUST return a non-nil error when the operation fails.
 // Definitions performs the definitions operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️definitions](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Definitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️definitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Definitions)
 func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -30970,7 +32988,7 @@ func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definitio
 
 // Contributors MUST return a non-nil error when the operation fails.
 // Contributors performs the contributors operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️contributors](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Contributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️contributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Contributors)
 func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -30988,7 +33006,7 @@ func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *Filt
 
 // Todos MUST return a non-nil error when the operation fails.
 // Todos performs the todos operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️todos](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Todos)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️todos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Todos)
 func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -30998,7 +33016,7 @@ func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput
 
 // Tickets MUST return a non-nil error when the operation fails.
 // Tickets performs the tickets operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️tickets](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Tickets)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️tickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Tickets)
 func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -31019,7 +33037,7 @@ func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month 
 
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️policies](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Policies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️policies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Policies)
 func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -31050,7 +33068,7 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 
 // Statutes MUST return a non-nil error when the operation fails.
 // Statutes performs the statutes operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️statutes](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Statutes)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️statutes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Statutes)
 func (r *repoResolver) Statutes(ctx context.Context, obj *Repo) ([]*StatuteMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetStatutes(), nil
@@ -31060,7 +33078,7 @@ func (r *repoResolver) Statutes(ctx context.Context, obj *Repo) ([]*StatuteMeta,
 
 // Breachs MUST return a non-nil error when the operation fails.
 // Breachs performs the breachs operation on the repo resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️breachs](semiorepo://definition/semio-repo/cli/main.go/Types/Entity%20Resolvers/Breachs)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖entityresolvers🛠️breachs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Breachs)
 func (r *repoResolver) Breachs(ctx context.Context, obj *Repo, scope *string) ([]*Breach, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -31081,11 +33099,11 @@ func (r *repoResolver) Breachs(ctx context.Context, obj *Repo, scope *string) ([
 
 // #region 🔖Resolver Interfaces
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces](semiorepo://section/semio-repo/cli/main.go/Types/Resolver%20Interfaces)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces)
 // Resolver interface definitions for the GraphQL server.
 
 // QueryResolver defines the interface for query resolver operations.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️queryresolver](semiorepo://definition/semio-repo/cli/main.go/Types/Resolver%20Interfaces/QueryResolver)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️queryresolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces/d/i/QueryResolver)
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (Node, error)
 	Repo(ctx context.Context) (*Repo, error)
@@ -31111,7 +33129,7 @@ type QueryResolver interface {
 }
 
 // MutationResolver defines the interface for mutation resolver operations.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️mutationresolver](semiorepo://definition/semio-repo/cli/main.go/Types/Resolver%20Interfaces/MutationResolver)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️mutationresolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces/d/i/MutationResolver)
 type MutationResolver interface {
 	SyncManagement(ctx context.Context) (bool, error)
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
@@ -31137,7 +33155,7 @@ type MutationResolver interface {
 }
 
 // RepoResolver defines the interface for repo resolver operations.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️reporesolver](semiorepo://definition/semio-repo/cli/main.go/Types/Resolver%20Interfaces/RepoResolver)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖resolverinterfaces✂️reporesolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces/d/i/RepoResolver)
 type RepoResolver interface {
 	Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error)
 	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
@@ -31154,7 +33172,7 @@ type RepoResolver interface {
 
 // #region 🔖Mcp
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp](semiorepo://section/semio-repo/cli/main.go/Types/Mcp)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp)
 // MCP protocol handlers for the model context protocol server.
 
 func createMcpServer() *server.MCPServer {
@@ -31284,12 +33302,12 @@ func createMcpServer() *server.MCPServer {
 		handleContributorResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semiorepo://cms", "Commits", mcp.WithMIMEType("text/plain")),
-		handleCommitsResource,
+		mcp.NewResource("semiorepo://cms", "Checkpoints", mcp.WithMIMEType("text/plain")),
+		handleCheckpointsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://cms/{sha}", "Commit"),
-		handleCommitResource,
+		mcp.NewResourceTemplate("semiorepo://cms/{sha}", "Checkpoint"),
+		handleCheckpointResource,
 	)
 	s.AddTool(
 		mcp.NewTool("fix",
@@ -31531,7 +33549,7 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("tree",
-			mcp.WithDescription("Show monorepo tree with optional query filter. Replaces all list and tree commands. Use query to filter by kind (e.g. 'goals', 'tickets', 'files', 'sections', 'definitions', 'policies', 'contributors', 'projects', 'bundles', 'folders', 'drafts', 'commits') or search for specific items."),
+			mcp.WithDescription("Show monorepo tree with optional query filter. Replaces all list and tree commands. Use query to filter by kind (e.g. 'goals', 'tickets', 'files', 'sections', 'definitions', 'policies', 'contributors', 'projects', 'bundles', 'folders', 'drafts', 'checkpoints') or search for specific items."),
 			mcp.WithString("query", mcp.Description("Optional query to filter the tree (e.g. 'goals', 'tickets 2026', 'files semio/js', 'policies')")),
 		),
 		mcpTree,
@@ -31572,7 +33590,7 @@ func toolResultToMCP(result ToolResult) (*mcp.CallToolResult, error) {
 
 // #region 🔖Args
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖args](semiorepo://section/semio-repo/cli/main.go/Types/Mcp/Args)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖args](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args)
 // Argument parsing utilities for CLI and MCP commands.
 func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
@@ -31663,7 +33681,7 @@ func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
 
 // #region 🔖Paths
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖paths](semiorepo://section/semio-repo/cli/main.go/Types/Mcp/Paths)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖paths](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths)
 // Path resolution utilities for file and folder operations.
 func requireFilePath(path string) error {
 	info, err := os.Stat(path)
@@ -31719,7 +33737,7 @@ func requireFolderTargetPath(path string) error {
 
 // #region 🔖GraphQL
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖graphql](semiorepo://section/semio-repo/cli/main.go/Types/Mcp/GraphQL)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖graphql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/GraphQL)
 // GraphQL query and mutation string constants.
 
 func jsonToYaml(jsonStr string) (string, error) {
@@ -31742,7 +33760,7 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 
 // #region 🔖Handlers
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖handlers](semiorepo://section/semio-repo/cli/main.go/Types/Mcp/Handlers)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖handlers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers)
 // Request handler functions for CLI and MCP operations.
 
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
@@ -32388,7 +34406,7 @@ func navigateTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 
 // #region 🔖Mcp Resources Handlers
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖handlers🔖mcpresourceshandlers](semiorepo://section/semio-repo/cli/main.go/Types/Mcp/Handlers/Mcp%20Resources%20Handlers)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖mcp🔖handlers🔖mcpresourceshandlers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers)
 // MCP resource handler functions for resource listing and reading.
 
 func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -32820,7 +34838,7 @@ func handleStatuteResource(ctx context.Context, request mcp.ReadResourceRequest)
 }
 
 func handleContributorsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Contributors { repo { contributors { id emails name contributions { commits { id } tickets { id } } } } }`
+	query := `query Contributors { repo { contributors { id emails name contributions { checkpoints { id } tickets { id } } } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -32840,7 +34858,7 @@ func handleContributorsResource(ctx context.Context, request mcp.ReadResourceReq
 
 func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := strings.TrimPrefix(request.Params.URI, "semiorepo://cs/")
-	query := `query Contributor($id: String!) { contributor(id: $id) { id emails name contributions { commits { id } tickets { id } } } }`
+	query := `query Contributor($id: String!) { contributor(id: $id) { id emails name contributions { checkpoints { id } tickets { id } } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
 		return nil, err
@@ -32858,8 +34876,8 @@ func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequ
 	}, nil
 }
 
-func handleCommitsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Commits { repo { commits { id sha title date } } }`
+func handleCheckpointsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Checkpoints { repo { checkpoints { id sha title date } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -32877,8 +34895,8 @@ func handleCommitsResource(ctx context.Context, request mcp.ReadResourceRequest)
 	}, nil
 }
 
-func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	return nil, fmt.Errorf("commit resource not implemented")
+func handleCheckpointResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	return nil, fmt.Errorf("checkpoint resource not implemented")
 }
 
 // #endregion 🔖Mcp Resources Handlers
@@ -32893,7 +34911,7 @@ func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) 
 
 // #region 🔖GraphQL Helpers
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖graphqlhelpers](semiorepo://section/semio-repo/cli/main.go/Types/Cli/GraphQL%20Helpers)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli)
 // GraphQL helper functions for query construction and execution.
 
 func printGQL(query string, variables map[string]interface{}) error {
@@ -32909,7 +34927,7 @@ func printGQL(query string, variables map[string]interface{}) error {
 
 // #region 🔖Analyze Command
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖analyzecommand](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Analyze%20Command)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖analyzecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Analyze%20Command)
 // Analyze command implementation for policy breach detection.
 
 var analyzeCmd = &cobra.Command{
@@ -32966,11 +34984,11 @@ var analyzeCmd = &cobra.Command{
 
 // #region 🔖Fix Command
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fixcommand](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Fix%20Command)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fixcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Fix%20Command)
 // Fix command implementation for automatic policy breach repair.
 
-var fixCmd = &cobra.Command{
-	Use:   "fix [scope]",
+var autofixCmd = &cobra.Command{
+	Use:   "autofix [scope]",
 	Short: "Apply autofixes for breachs",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var scope *string
@@ -33003,12 +35021,12 @@ var fixCmd = &cobra.Command{
 
 // #region 🔖Missing Utilities
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities)
 // Utility functions that are missing from the main codebase.
 
 // ScopeToFiles MUST return a non-nil error when the operation fails.
 // ScopeToFiles performs the scope to files operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️scopetofiles](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/ScopeToFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️scopetofiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/ScopeToFiles)
 func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
 	var files []string
@@ -33095,17 +35113,14 @@ func filterConsideredFiles(files []string) []string {
 
 // GitIndexRef is the git ref for the staging index. Used for unstaged-only diffs (index vs working tree).
 // Requirements: ticket close and interaction finish use only unstaged diffs; git diff runs without tree-ish for index vs working tree.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🪨gitindexref](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GitIndexRef)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🪨gitindexref](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GitIndexRef)
 const GitIndexRef = ":0"
 
 // ComputeTicketFiles MUST return the computed result deterministically.
 // ComputeTicketFiles computes and returns the ticket files.
 // Uses unstaged diffs only (index vs working tree) for complete, current working state.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️computeticketfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/ComputeTicketFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️computeticketfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/ComputeTicketFiles)
 func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
-	if len(ticket.Interactions) == 0 && len(ticket.Agents) == 0 {
-		return nil, fmt.Errorf("no interactions found for ticket")
-	}
 	files = normalizeTicketFileInputs(files)
 	files = FilterTicketWorkspaceFiles(ticket, files)
 	files = filterConsideredFiles(files)
@@ -33161,13 +35176,13 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 
 // GetGitDiffLines MUST retrieve the requested value or return an error.
 // GetGitDiffLines retrieves and returns the git diff lines.
-// For unstaged-only diffs use baseCommit GitIndexRef (index vs working tree).
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getgitdifflines](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GetGitDiffLines)
-func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]*DiffLines, error) {
-	if baseCommit == "" {
-		return nil, fmt.Errorf("base commit or GitIndexRef is required")
+// For unstaged-only diffs use baseCheckpoint GitIndexRef (index vs working tree).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getgitdifflines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetGitDiffLines)
+func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map[string]*DiffLines, error) {
+	if baseCheckpoint == "" {
+		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
 	}
-	args := BuildGitDiffArgs("-U0", baseCommit, headCommit, paths)
+	args := BuildGitDiffArgs("-U0", baseCheckpoint, headCheckpoint, paths)
 	stdout, stderr, exitCode := ExecCommand("git", args, "")
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
@@ -33228,7 +35243,7 @@ func buildBreachID(scope string, line int, col int) string {
 
 // CanCloseTicket MUST return a deterministic boolean result.
 // CanCloseTicket performs the can close ticket operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️cancloseticket](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/CanCloseTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️cancloseticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/CanCloseTicket)
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	var reasons []string
 	if ticket == nil {
@@ -33240,7 +35255,7 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 
 // GetBundleByPath MUST retrieve the requested value or return an error.
 // GetBundleByPath retrieves and returns the bundle by path.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getbundlebypath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GetBundleByPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getbundlebypath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetBundleByPath)
 func GetBundleByPath(path string) *Bundle {
 	bundles := GetProjects()
 	normalizedPath := NormalizePath(path)
@@ -33419,14 +35434,32 @@ func buildSectionID(fileID string, sectionPath []string) string {
 	return result
 }
 
+func isTestFunctionName(name string) bool {
+	// Go: TestXxx, BenchmarkXxx, FuzzXxx (starts with capital after prefix)
+	for _, prefix := range []string{"Test", "Benchmark", "Fuzz"} {
+		if strings.HasPrefix(name, prefix) && len(name) > len(prefix) && name[len(prefix)] >= 'A' && name[len(prefix)] <= 'Z' {
+			return true
+		}
+	}
+	// Python: test_xxx
+	if strings.HasPrefix(name, "test_") {
+		return true
+	}
+	return false
+}
+
 func buildDefinitionID(fileID string, sectionPath []string, name string, kind DefinitionKind) string {
-	data := map[string]interface{}{"kind": string(kind)}
+	effectiveKind := kind
+	if kind == DefinitionKindImplementation && strings.Contains(fileID, emojiText(EmojiFileLab)) && isTestFunctionName(name) {
+		effectiveKind = DefinitionKindTest
+	}
+	data := map[string]interface{}{"kind": string(effectiveKind)}
 	return buildSectionID(fileID, sectionPath) + definitionKindEmoji(data) + Flat(name)
 }
 
 // GuessSectionName MUST complete the operation successfully.
 // GuessSectionName performs the guess section name operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️guesssectionname](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GuessSectionName)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️guesssectionname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GuessSectionName)
 func GuessSectionName(filePath string) string {
 	base := filepath.Base(filePath)
 	ext := filepath.Ext(base)
@@ -33445,14 +35478,14 @@ func GuessSectionName(filePath string) string {
 
 // GetGitDiffSectionLineMetrics MUST retrieve the requested value or return an error.
 // GetGitDiffSectionLineMetrics retrieves and returns the git diff section line metrics.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getgitdiffsectionlinemetrics](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GetGitDiffSectionLineMetrics)
-func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getgitdiffsectionlinemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetGitDiffSectionLineMetrics)
+func GetGitDiffSectionLineMetrics(baseCheckpoint, endCheckpoint, filePath string) map[string]LineMetrics {
 	return nil
 }
 
 // FlattenSections MUST return a single-level collection with all nested items.
 // FlattenSections flattens the nested sections into a single level.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️flattensections](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/FlattenSections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️flattensections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/FlattenSections)
 func FlattenSections(sections []Section) []Section {
 	var result []Section
 	var flatten func(secs []Section)
@@ -33605,29 +35638,29 @@ func findSectionForLine(sections []Section, line int) string {
 
 // BuildGitDiffArgs MUST construct and return the fully initialized result.
 // BuildGitDiffArgs constructs and returns the git diff args.
-// GitIndexRef as baseCommit yields unstaged-only diff (index vs working tree) with no tree-ish.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️buildgitdiffargs](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/BuildGitDiffArgs)
-func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
-	if baseCommit == GitIndexRef {
+// GitIndexRef as baseCheckpoint yields unstaged-only diff (index vs working tree) with no tree-ish.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️buildgitdiffargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/BuildGitDiffArgs)
+func BuildGitDiffArgs(flag, baseCheckpoint, headCheckpoint string, paths []string) []string {
+	if baseCheckpoint == GitIndexRef {
 		if len(paths) == 0 {
 			return []string{"diff", flag, "-M"}
 		}
 		return append([]string{"diff", flag, "-M", "--"}, paths...)
 	}
-	if headCommit == "" {
+	if headCheckpoint == "" {
 		if len(paths) == 0 {
-			return []string{"diff", flag, "-M", baseCommit}
+			return []string{"diff", flag, "-M", baseCheckpoint}
 		}
-		return append([]string{"diff", flag, "-M", baseCommit, "--"}, paths...)
+		return append([]string{"diff", flag, "-M", baseCheckpoint, "--"}, paths...)
 	}
 	if len(paths) == 0 {
-		return []string{"diff", flag, "-M", baseCommit, headCommit}
+		return []string{"diff", flag, "-M", baseCheckpoint, headCheckpoint}
 	}
-	return append([]string{"diff", flag, "-M", baseCommit, headCommit, "--"}, paths...)
+	return append([]string{"diff", flag, "-M", baseCheckpoint, headCheckpoint, "--"}, paths...)
 }
 
 // GitDiffStatus holds the data fields for a git diff status record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities✂️gitdiffstatus](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GitDiffStatus)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities✂️gitdiffstatus](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GitDiffStatus)
 type GitDiffStatus struct {
 	Status string
 	From   string
@@ -33636,16 +35669,16 @@ type GitDiffStatus struct {
 
 // GetGitDiffStatus MUST retrieve the requested value or return an error.
 // GetGitDiffStatus retrieves and returns the git diff status.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getgitdiffstatus](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GetGitDiffStatus)
-func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffStatus, error) {
-	if baseCommit == "" {
-		return nil, fmt.Errorf("base commit or GitIndexRef is required")
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getgitdiffstatus](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetGitDiffStatus)
+func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]GitDiffStatus, error) {
+	if baseCheckpoint == "" {
+		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
 	}
 	args := []string{"diff", "--name-status", "-M"}
-	if baseCommit != GitIndexRef {
-		args = append(args, baseCommit)
-		if headCommit != "" {
-			args = append(args, headCommit)
+	if baseCheckpoint != GitIndexRef {
+		args = append(args, baseCheckpoint)
+		if headCheckpoint != "" {
+			args = append(args, headCheckpoint)
 		}
 	}
 	if len(paths) > 0 {
@@ -33687,7 +35720,7 @@ func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffS
 
 // GetFolderChildren MUST retrieve the requested value or return an error.
 // GetFolderChildren retrieves and returns the folder children.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getfolderchildren](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GetFolderChildren)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getfolderchildren](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetFolderChildren)
 func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -33733,7 +35766,7 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 
 // GetFolderFiles MUST retrieve the requested value or return an error.
 // GetFolderFiles retrieves and returns the folder files.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getfolderfiles](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Utilities/GetFolderFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getfolderfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetFolderFiles)
 func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -33776,7 +35809,7 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 
 // AnalyzeFile MUST return a non-nil error when the operation fails.
 // AnalyzeFile performs the analyze file operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️analyzefile](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/AnalyzeFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️analyzefile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/AnalyzeFile)
 func AnalyzeFile(filePath string, bundles []Bundle) ([]Breach, error) {
 	scope := Scope{
 		Kind:     ScopeFile,
@@ -33790,7 +35823,7 @@ func AnalyzeFile(filePath string, bundles []Bundle) ([]Breach, error) {
 
 // ParseContributorIdentity MUST return the parsed result or an error for invalid input.
 // ParseContributorIdentity parses and returns the contributor identity from the input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️parsecontributoridentity](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/ParseContributorIdentity)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️parsecontributoridentity](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ParseContributorIdentity)
 func ParseContributorIdentity(line string) (name, email string, ok bool) {
 	re := regexp.MustCompile(`\d{4}\s+(.+?)\s*<([^>]+)>`)
 	m := re.FindStringSubmatch(line)
@@ -33820,10 +35853,10 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 
 // ListContributors MUST return all available contributors entries.
 // ListContributors returns a list of contributors entries.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️listcontributors](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/ListContributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️listcontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ListContributors)
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
-	dir := filepath.Join(GetRepoMetaDir(), "👤")
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻")
 	if !FileExists(dir) {
 		return []Contributor{{Github: "unknown", Name: "Unknown"}}, nil
 	}
@@ -33849,7 +35882,7 @@ func ListContributors() ([]Contributor, error) {
 
 // StreamContributors MUST invoke the callback for each matching contributors entry.
 // StreamContributors streams contributors entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️streamcontributors](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/StreamContributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️streamcontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/StreamContributors)
 func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -33905,28 +35938,28 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 
 // GetContributorAvatarPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarPath retrieves and returns the contributor avatar path.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarpath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetContributorAvatarPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorAvatarPath)
 func GetContributorAvatarPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "👤", github, "avatar.png")
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github, "avatar.png")
 }
 
 // GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarroundpath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetContributorAvatarRoundPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarroundpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorAvatarRoundPath)
 func GetContributorAvatarRoundPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "👤", github, "avatar-round.png")
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github, "avatar-round.png")
 }
 
 // GetContributorPath MUST retrieve the requested value or return an error.
 // GetContributorPath retrieves and returns the contributor path.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributorpath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetContributorPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributorpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorPath)
 func GetContributorPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "👤", github)
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github)
 }
 
 // CreateContributor MUST create a new entry and return an error on conflict.
 // CreateContributor creates a new contributor entry.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️createcontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/CreateContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️createcontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/CreateContributor)
 func CreateContributor(github string) (*Contributor, error) {
 	dir := GetContributorPath(github)
 	if FileExists(dir) {
@@ -33941,7 +35974,7 @@ func CreateContributor(github string) (*Contributor, error) {
 
 // LoadContributor MUST return all matching contributor from the data source.
 // LoadContributor loads and returns contributor from the data source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️loadcontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/LoadContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️loadcontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/LoadContributor)
 func LoadContributor(github string) (*Contributor, error) {
 	path := filepath.Join(GetContributorPath(github), "contributor.json")
 	if !FileExists(path) {
@@ -33960,7 +35993,7 @@ func LoadContributor(github string) (*Contributor, error) {
 
 // SaveContributor MUST persist the contributor atomically to the data store.
 // SaveContributor persists contributor to the data store.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️savecontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/SaveContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️savecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/SaveContributor)
 func SaveContributor(c Contributor) error {
 	dir := GetContributorPath(c.Github)
 	if !FileExists(dir) {
@@ -33975,9 +36008,9 @@ func SaveContributor(c Contributor) error {
 
 // RemoveContributor MUST remove the target and return an error on failure.
 // RemoveContributor removes the specified contributor.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️removecontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/RemoveContributor)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️removecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/RemoveContributor)
 func RemoveContributor(github string) error {
-	dir := filepath.Join(GetRepoMetaDir(), "👤", github)
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻", github)
 	if !FileExists(dir) {
 		return fmt.Errorf("contributor not found: %s", github)
 	}
@@ -33986,7 +36019,7 @@ func RemoveContributor(github string) error {
 
 // GetRegisteredPolicies MUST retrieve the requested value or return an error.
 // GetRegisteredPolicies retrieves and returns the registered policies.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getregisteredpolicies](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetRegisteredPolicies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getregisteredpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetRegisteredPolicies)
 func GetRegisteredPolicies() []PolicyDef {
 	return GetPolicies()
 }
@@ -34022,68 +36055,68 @@ func init() {
 
 // #region 🔖Resolver Methods
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods)
 // Resolver method implementations for GraphQL field resolution.
 
 // Bundles MUST return a non-nil error when the operation fails.
 // Bundles performs the bundles operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️bundles](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Bundles)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️bundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Bundles)
 func (r *Resolver) Bundles(ctx context.Context, repo *Repo) ([]*Bundle, error) {
 	return r.Ctx.GetBundles(), nil
 }
 
 // Folders MUST return a non-nil error when the operation fails.
 // Folders performs the folders operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️folders](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Folders)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️folders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Folders)
 func (r *Resolver) Folders(ctx context.Context, repo *Repo) ([]*Folder, error) {
 	return r.Ctx.GetFolders(), nil
 }
 
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️files](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Files)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️files](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Files)
 func (r *Resolver) Files(ctx context.Context, repo *Repo) ([]*File, error) {
 	return r.Ctx.GetFiles(), nil
 }
 
 // Sections MUST return a non-nil error when the operation fails.
 // Sections performs the sections operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️sections](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Sections)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️sections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Sections)
 func (r *Resolver) Sections(ctx context.Context, repo *Repo) ([]*Section, error) {
 	return r.Ctx.GetSections(), nil
 }
 
 // Definitions MUST return a non-nil error when the operation fails.
 // Definitions performs the definitions operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️definitions](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Definitions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️definitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Definitions)
 func (r *Resolver) Definitions(ctx context.Context, repo *Repo) ([]*Definition, error) {
 	return r.Ctx.GetDefinitions(), nil
 }
 
 // Contributors MUST return a non-nil error when the operation fails.
 // Contributors performs the contributors operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️contributors](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Contributors)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️contributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Contributors)
 func (r *Resolver) Contributors(ctx context.Context, repo *Repo) ([]*Contributor, error) {
 	return r.Ctx.GetContributors()
 }
 
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️policies](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Policies)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️policies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Policies)
 func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) {
 	return r.Ctx.GetPolicies(), nil
 }
 
 // Statutes MUST return a non-nil error when the operation fails.
 // Statutes performs the statutes operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️statutes](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Statutes)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️statutes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Statutes)
 func (r *Resolver) Statutes(ctx context.Context, repo *Repo) ([]*StatuteMeta, error) {
 	return r.Ctx.GetStatutes(), nil
 }
 
 // Breachs MUST return a non-nil error when the operation fails.
 // Breachs performs the breachs operation on the resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️breachs](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Resolver%20Methods/Breachs)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖resolvermethods🛠️breachs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Breachs)
 func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*Breach, error) {
 	analysis, err := r.Ctx.Analyze(scope)
 	if err != nil {
@@ -34096,12 +36129,12 @@ func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*B
 
 // #region 🔖Missing Tool Functions
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions)
 // Tool function stubs for unimplemented features.
 
 // ToolAnalyze MUST complete the operation successfully.
 // ToolAnalyze performs the tool analyze operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolanalyze](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolAnalyze)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolanalyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolAnalyze)
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	scope := ParseScope(scopeRaw)
 	bundles := GetProjects()
@@ -34116,10 +36149,10 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	}
 
 	report := AnalyzeReport{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Status:    "success",
-		Scope:     scopeRaw,
-		Breachs:   breachs,
+		Second:  time.Now().Format(time.RFC3339),
+		Status:  "success",
+		Scope:   scopeRaw,
+		Breachs: breachs,
 		Summary: Summary{
 			Total:      len(breachs),
 			ByPriority: byPriority,
@@ -34133,7 +36166,7 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 
 // ToolFix MUST complete the operation successfully.
 // ToolFix performs the tool fix operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolfix](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolFix)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolfix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolFix)
 func ToolFix(scopeRaw string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.Fix(&scopeRaw)
@@ -34148,7 +36181,7 @@ func ToolFix(scopeRaw string) ToolResult {
 
 // ToolPolicyList MUST complete the operation successfully.
 // ToolPolicyList performs the tool policy list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicylist](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolPolicyList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicylist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyList)
 func ToolPolicyList() ToolResult {
 	result := toolResultFromTreeList(TreeNodePolicy)
 	result.Data = GetRegisteredPolicies()
@@ -34157,7 +36190,7 @@ func ToolPolicyList() ToolResult {
 
 // ToolPolicyTree MUST complete the operation successfully.
 // ToolPolicyTree performs the tool policy tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicytree](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolPolicyTree)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicytree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyTree)
 func ToolPolicyTree() ToolResult {
 	allPolicies := GetRegisteredPolicies()
 	var sb strings.Builder
@@ -34177,14 +36210,14 @@ func ToolPolicyTree() ToolResult {
 
 // ToolPolicyCheck MUST complete the operation successfully.
 // ToolPolicyCheck performs the tool policy check operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicycheck](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolPolicyCheck)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicycheck](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyCheck)
 func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	return ToolAnalyze(scopeRaw, []string{policyID})
 }
 
 // ToolPolicyBreachList MUST complete the operation successfully.
 // ToolPolicyBreachList performs the tool policy breach list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicybreachlist](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Missing%20Tool%20Functions/ToolPolicyBreachList)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicybreachlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyBreachList)
 func ToolPolicyBreachList(policyID string) ToolResult {
 
 	return ToolAnalyze("semio", []string{policyID})
@@ -34194,7 +36227,7 @@ func ToolPolicyBreachList(policyID string) ToolResult {
 
 // #region 🔖Benchmark Command
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖benchmarkcommand](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Benchmark%20Command)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖benchmarkcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command)
 // Benchmark command implementation for performance measurement.
 
 var benchmarkCmd = &cobra.Command{
@@ -34206,7 +36239,7 @@ var benchmarkCmd = &cobra.Command{
 var benchmarkDryRun bool
 
 // BenchmarkResult holds the data fields for a benchmark result record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖benchmarkcommand✂️benchmarkresult](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Benchmark%20Command/BenchmarkResult)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖benchmarkcommand✂️benchmarkresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/BenchmarkResult)
 type BenchmarkResult struct {
 	Test string
 	Lang string
@@ -34391,7 +36424,7 @@ func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
 
 // #region 🔖Preflight Command
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖preflightcommand](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Preflight%20Command)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖preflightcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command)
 // Preflight command implementation for pre-publish validation.
 
 var preflightCmd = &cobra.Command{
@@ -34411,7 +36444,7 @@ func runPreflight(cmd *cobra.Command, args []string) error {
 		command = args[0]
 	}
 	switch command {
-	case "fix":
+	case "autofix":
 		return runPreflightFix()
 	case "analyze":
 		return runPreflightAnalyze()
@@ -34449,8 +36482,8 @@ func runPreflight(cmd *cobra.Command, args []string) error {
 }
 
 func runPreflightFix() error {
-	fmt.Println("Running fix...")
-	return fixCmd.RunE(fixCmd, []string{})
+	fmt.Println("Running autofix...")
+	return autofixCmd.RunE(autofixCmd, []string{})
 }
 
 func runPreflightAnalyze() error {
@@ -34475,47 +36508,59 @@ func runNx(target string, args ...string) error {
 
 // #region 🔖Hooks
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Hooks)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks)
 // Hook event types, context, handler, and blocked tool patterns for git and agent lifecycle hooks.
 
 // HookEvent represents a lifecycle event kind for hooks.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookEvent)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookEvent)
 type HookEvent string
 
 const (
-	HookGitCommitStarting            HookEvent = "git.commit.starting"
-	HookGitCommitEnded               HookEvent = "git.commit.ended"
-	HookAgentStarted                 HookEvent = "agent.started"
-	HookAgentEnded                   HookEvent = "agent.ended"
-	HookAgentPromptSubmitting        HookEvent = "agent.prompt.submitting"
-	HookAgentCompacting              HookEvent = "agent.compacting"
-	HookAgentToolStarting            HookEvent = "agent.tool.starting"
-	HookAgentToolEnded               HookEvent = "agent.tool.ended"
-	HookAgentToolPlanUpdating        HookEvent = "agent.tool.plan.updating"
-	HookAgentToolSearchStarting      HookEvent = "agent.tool.search.starting"
-	HookAgentToolSearchEnded         HookEvent = "agent.tool.search.ended"
-	HookAgentToolCodeEditStarting    HookEvent = "agent.tool.code.edit.starting"
-	HookAgentToolCodeEditEnded       HookEvent = "agent.tool.code.edit.ended"
-	HookAgentToolTestStarting        HookEvent = "agent.tool.test.starting"
-	HookAgentToolTestEnded           HookEvent = "agent.tool.test.ended"
-	HookAgentToolBuildStarting       HookEvent = "agent.tool.build.starting"
-	HookAgentToolBuildEnded          HookEvent = "agent.tool.build.ended"
-	HookAgentToolTerminalStarting    HookEvent = "agent.tool.terminal.starting"
-	HookAgentToolTerminalEnded       HookEvent = "agent.tool.terminal.ended"
+	HookVersionCheckpointStarting     HookEvent = "version.checkpoint.starting"
+	HookVersionCheckpointEnded        HookEvent = "version.checkpoint.ended"
+	HookVersionCheckinStarting        HookEvent = "version.checkin.starting"
+	HookVersionCheckinEnded           HookEvent = "version.checkin.ended"
+	HookVersionCheckoutStarting       HookEvent = "version.checkout.starting"
+	HookVersionCheckoutEnded          HookEvent = "version.checkout.ended"
+	HookAgentStarted                  HookEvent = "agent.started"
+	HookAgentEnded                    HookEvent = "agent.ended"
+	HookAgentPromptSubmitting         HookEvent = "agent.prompt.submitting"
+	HookAgentCompacting               HookEvent = "agent.compacting"
+	HookAgentToolStarting             HookEvent = "agent.tool.starting"
+	HookAgentToolEnded                HookEvent = "agent.tool.ended"
+	HookAgentToolPlanUpdatingStarting HookEvent = "agent.tool.plan.updating.starting"
+	HookAgentToolPlanUpdatingEnded    HookEvent = "agent.tool.plan.updating.ended"
+	HookAgentToolSearchStarting       HookEvent = "agent.tool.search.starting"
+	HookAgentToolSearchEnded          HookEvent = "agent.tool.search.ended"
+	HookAgentToolCodeEditStarting     HookEvent = "agent.tool.code.edit.starting"
+	HookAgentToolCodeEditEnded        HookEvent = "agent.tool.code.edit.ended"
+	HookAgentToolTestStarting         HookEvent = "agent.tool.test.starting"
+	HookAgentToolTestEnded            HookEvent = "agent.tool.test.ended"
+	HookAgentToolBuildStarting        HookEvent = "agent.tool.build.starting"
+	HookAgentToolBuildEnded           HookEvent = "agent.tool.build.ended"
+	HookAgentToolTerminalStarting     HookEvent = "agent.tool.terminal.starting"
+	HookAgentToolTerminalEnded        HookEvent = "agent.tool.terminal.ended"
+	HookAgentThinkingStarting         HookEvent = "agent.thinking.starting"
+	HookAgentThinkingEnded            HookEvent = "agent.thinking.ended"
 )
 
 // AllHookEvents lists every valid hook event slug.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️allhookevents](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/AllHookEvents)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🪨allhookevents](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/AllHookEvents)
 var AllHookEvents = []HookEvent{
-	HookGitCommitStarting,
-	HookGitCommitEnded,
+	HookVersionCheckpointStarting,
+	HookVersionCheckpointEnded,
+	HookVersionCheckinStarting,
+	HookVersionCheckinEnded,
+	HookVersionCheckoutStarting,
+	HookVersionCheckoutEnded,
 	HookAgentStarted,
 	HookAgentEnded,
 	HookAgentPromptSubmitting,
 	HookAgentCompacting,
 	HookAgentToolStarting,
 	HookAgentToolEnded,
-	HookAgentToolPlanUpdating,
+	HookAgentToolPlanUpdatingStarting,
+	HookAgentToolPlanUpdatingEnded,
 	HookAgentToolSearchStarting,
 	HookAgentToolSearchEnded,
 	HookAgentToolCodeEditStarting,
@@ -34526,34 +36571,39 @@ var AllHookEvents = []HookEvent{
 	HookAgentToolBuildEnded,
 	HookAgentToolTerminalStarting,
 	HookAgentToolTerminalEnded,
+	HookAgentThinkingStarting,
+	HookAgentThinkingEnded,
 }
 
 // HookKind categorizes a hook as either a git hook or an agent hook.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookKind)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)
 type HookKind string
 
 const (
-	HookKindGit   HookKind = "git"
-	HookKindAgent HookKind = "agent"
+	HookKindVersion HookKind = "version"
+	HookKindAgent   HookKind = "agent"
 )
 
 // HookEventKind returns the hook kind for the given event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookeventkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookEventKind)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️hookeventkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookEventKind)
+// HookEventKind MUST perform the HookEventKind operation.
 func HookEventKind(e HookEvent) HookKind {
 	switch e {
-	case HookGitCommitStarting, HookGitCommitEnded:
-		return HookKindGit
+	case HookVersionCheckpointStarting, HookVersionCheckpointEnded,
+		HookVersionCheckinStarting, HookVersionCheckinEnded,
+		HookVersionCheckoutStarting, HookVersionCheckoutEnded:
+		return HookKindVersion
 	default:
 		return HookKindAgent
 	}
 }
 
 // HookContext carries event metadata and a codebase handle for hook handlers.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookcontext](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookContext)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookContext)
 type HookContext struct {
 	Event      HookEvent         `json:"event"`
 	Client     string            `json:"client"`
-	Timestamp  string            `json:"timestamp"`
+	Second     string            `json:"second"`
 	RepoRoot   string            `json:"repoRoot"`
 	ToolName   string            `json:"toolName,omitempty"`
 	ToolArgs   string            `json:"toolArgs,omitempty"`
@@ -34564,71 +36614,79 @@ type HookContext struct {
 }
 
 // HookPlanStep represents a single step in a plan/task list update event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookplanstep](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookPlanStep)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookplanstep](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookPlanStep)
 type HookPlanStep struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
 }
 
 // HookResult represents the outcome of a hook invocation with event-specific data.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresult](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResult)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResult)
 type HookResult interface {
 	IsAllowed() bool
 	GetMessage() string
 }
 
 // HookResultBase provides common fields for all hook results.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultbase](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultBase)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultbase](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultBase)
 type HookResultBase struct {
 	Allowed bool   `json:"allowed"`
 	Message string `json:"message,omitempty"`
 	Raw     any    `json:"-"`
 }
 
-func (h HookResultBase) IsAllowed() bool    { return h.Allowed }
+// IsAllowed holds the data fields for a IsAllowed record.
+// IsAllowed MUST perform the IsAllowed operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️isallowed](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/IsAllowed)
+func (h HookResultBase) IsAllowed() bool { return h.Allowed }
+
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️getmessage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/GetMessage)
+// GetMessage holds the data fields for a GetMessage record.
+// GetMessage MUST perform the GetMessage operation.
 func (h HookResultBase) GetMessage() string { return h.Message }
 
 // HookResultAgentBase provides shared fields for all agent hook results.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentBase)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)
 type HookResultAgentBase struct {
 	HookResultBase
+	Checkpoint string `json:"checkpoint,omitempty"`
 	Session    string `json:"session,omitempty"`
-	Timestamp  string `json:"timestamp,omitempty"`
+	Second     string `json:"second,omitempty"`
 	Client     string `json:"client,omitempty"`
 	LLM        string `json:"llm,omitempty"`
 	Transcript string `json:"transcript,omitempty"`
 	MessageID  string `json:"message,omitempty"`
-	Parent     string `json:"parent,omitempty"`
+	Parent     string `json:"parent"`
 }
 
 // HookResultAgentStarted represents the result of an agent started event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentStarted)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentstarted](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)
 type HookResultAgentStarted struct {
 	HookResultAgentBase
 }
 
 // HookResultAgentEnded represents the result of an agent ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentEnded)
 type HookResultAgentEnded struct {
 	HookResultAgentBase
 }
 
 // HookResultAgentPromptSubmitting represents the result of an agent prompt submitting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentpromptsubmitting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentPromptSubmitting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentpromptsubmitting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentPromptSubmitting)
 type HookResultAgentPromptSubmitting struct {
 	HookResultAgentBase
 	Prompt string `json:"prompt,omitempty"`
 }
 
 // HookResultAgentCompacting represents the result of an agent compacting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentcompacting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentCompacting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentcompacting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentCompacting)
 type HookResultAgentCompacting struct {
 	HookResultAgentBase
 	Chat string `json:"chat,omitempty"`
 }
 
 // HookResultAgentToolStarting represents the result of an agent tool starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolStarting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolStarting)
 type HookResultAgentToolStarting struct {
 	HookResultAgentBase
 	Name  string          `json:"name,omitempty"`
@@ -34636,7 +36694,7 @@ type HookResultAgentToolStarting struct {
 }
 
 // HookResultAgentToolEnded represents the result of an agent tool ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolEnded)
 type HookResultAgentToolEnded struct {
 	HookResultAgentBase
 	Name     string          `json:"name,omitempty"`
@@ -34645,31 +36703,40 @@ type HookResultAgentToolEnded struct {
 }
 
 // HookResultAgentToolPlanUpdating represents the result of an agent tool plan updating event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolplanupdating](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolPlanUpdating)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolplanupdating](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolPlanUpdating)
 type HookResultAgentToolPlanUpdating struct {
 	HookResultAgentBase
 	Steps []HookPlanStep `json:"steps,omitempty"`
 }
 
 // HookResultAgentToolSearchStarting represents the result of an agent tool search starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearchStarting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolSearchStarting)
 type HookResultAgentToolSearchStarting struct {
 	HookResultAgentBase
-	Pages  []string `json:"pages,omitempty"`
-	Ranges []string `json:"ranges,omitempty"`
+	Pages       []string               `json:"pages,omitempty"`
+	Ranges      []string               `json:"ranges,omitempty"`
+	Definitions []HookSearchDefinition `json:"definitions,omitempty"`
 }
 
 // HookResultAgentToolSearchEnded represents the result of an agent tool search ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolSearchEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolSearchEnded)
 type HookResultAgentToolSearchEnded struct {
 	HookResultAgentBase
-	Pages  []string `json:"pages,omitempty"`
-	Ranges []string `json:"ranges,omitempty"`
-	Error  string   `json:"error,omitempty"`
+	Pages       []string               `json:"pages,omitempty"`
+	Ranges      []string               `json:"ranges,omitempty"`
+	Definitions []HookSearchDefinition `json:"definitions,omitempty"`
+	Error       string                 `json:"error,omitempty"`
+}
+
+// HookSearchDefinition holds search line coverage for a resolved definition.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooksearchdefinition](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookSearchDefinition)
+type HookSearchDefinition struct {
+	ID  string `json:"id,omitempty"`
+	Loc int    `json:"loc,omitempty"`
 }
 
 // HookResultAgentToolCodeEditStarting represents the result of an agent tool code edit starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditStarting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolCodeEditStarting)
 type HookResultAgentToolCodeEditStarting struct {
 	HookResultAgentBase
 	Path string `json:"path,omitempty"`
@@ -34679,7 +36746,7 @@ type HookResultAgentToolCodeEditStarting struct {
 }
 
 // HookResultAgentToolCodeEditEnded represents the result of an agent tool code edit ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolCodeEditEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolCodeEditEnded)
 type HookResultAgentToolCodeEditEnded struct {
 	HookResultAgentBase
 	Path string `json:"path,omitempty"`
@@ -34688,30 +36755,32 @@ type HookResultAgentToolCodeEditEnded struct {
 }
 
 // HookResultAgentToolTestStarting represents the result of an agent tool test starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolteststarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTestStarting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolteststarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolTestStarting)
 type HookResultAgentToolTestStarting struct {
 	HookResultAgentBase
+	Files   []string `json:"files,omitempty"`
 	Tests   []string `json:"tests,omitempty"`
 	Timeout string   `json:"timeout,omitempty"`
 }
 
 // HookResultAgentToolTestEnded represents the result of an agent tool test ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttooltestended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTestEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttooltestended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolTestEnded)
 type HookResultAgentToolTestEnded struct {
 	HookResultAgentBase
+	Files     []string `json:"files,omitempty"`
 	Succeeded []string `json:"succeeded,omitempty"`
 	Failed    []string `json:"failed,omitempty"`
 }
 
 // HookResultAgentToolBuildStarting represents the result of an agent tool build starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolbuildstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolBuildStarting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolbuildstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolBuildStarting)
 type HookResultAgentToolBuildStarting struct {
 	HookResultAgentBase
 	Bundles []string `json:"bundles,omitempty"`
 }
 
 // HookResultAgentToolBuildEnded represents the result of an agent tool build ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolbuildended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolBuildEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolbuildended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolBuildEnded)
 type HookResultAgentToolBuildEnded struct {
 	HookResultAgentBase
 	Succeeded []string `json:"succeeded,omitempty"`
@@ -34719,14 +36788,14 @@ type HookResultAgentToolBuildEnded struct {
 }
 
 // HookResultAgentToolTerminalStarting represents the result of an agent tool terminal starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolterminalstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTerminalStarting)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolterminalstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolTerminalStarting)
 type HookResultAgentToolTerminalStarting struct {
 	HookResultAgentBase
 	Command string `json:"command,omitempty"`
 }
 
 // HookResultAgentToolTerminalEnded represents the result of an agent tool terminal ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolterminalended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentToolTerminalEnded)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagenttoolterminalended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolTerminalEnded)
 type HookResultAgentToolTerminalEnded struct {
 	HookResultAgentBase
 	Command    string `json:"command,omitempty"`
@@ -34736,37 +36805,95 @@ type HookResultAgentToolTerminalEnded struct {
 	Stderr     string `json:"stderr,omitempty"`
 }
 
-// HookResultGitCommitStarting represents the result of a git commit starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultgitcommitstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultGitCommitStarting)
-type HookResultGitCommitStarting struct {
-	HookResultBase
-	Message string `json:"message,omitempty"` // Override generic message if needed, but Base Message is fine for output
+// HookResultAgentThinkingStarting represents the result of an agent thinking starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentthinkingstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentThinkingStarting)
+type HookResultAgentThinkingStarting struct {
+	HookResultAgentBase
 }
 
-// HookResultGitCommitEnded represents the result of a git commit ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultgitcommitended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultGitCommitEnded)
-type HookResultGitCommitEnded struct {
+// HookResultAgentThinkingEnded represents the result of an agent thinking ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentthinkingended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentThinkingEnded)
+type HookResultAgentThinkingEnded struct {
+	HookResultAgentBase
+}
+
+// HookResultVersionCheckpointStarting represents the result of a version checkpoint starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckpointstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultVersionCheckpointStarting)
+type HookResultVersionCheckpointStarting struct {
 	HookResultBase
-	SHA string `json:"sha,omitempty"`
+	Checkpoint  string `json:"checkpoint,omitempty"`
+	Description string `json:"description,omitempty"`
+	Second      string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckpointEnded represents the result of a version checkpoint ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckpointended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultVersionCheckpointEnded)
+type HookResultVersionCheckpointEnded struct {
+	HookResultBase
+	Checkpoint  string `json:"checkpoint,omitempty"`
+	Description string `json:"description,omitempty"`
+	Second      string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckinStarting represents the result of a version checkin starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckinstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultVersionCheckinStarting)
+type HookResultVersionCheckinStarting struct {
+	HookResultBase
+	Checkpoint string `json:"checkpoint,omitempty"`
+	Second     string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckinEnded represents the result of a version checkin ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckinended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultVersionCheckinEnded)
+type HookResultVersionCheckinEnded struct {
+	HookResultBase
+	Checkpoint string `json:"checkpoint,omitempty"`
+	Second     string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckoutStarting represents the result of a version checkout starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckoutstarting](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultVersionCheckoutStarting)
+type HookResultVersionCheckoutStarting struct {
+	HookResultBase
+	Checkpoint  string   `json:"checkpoint,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Checkpoints []string `json:"checkpoints,omitempty"`
+	Archive     []string `json:"archive,omitempty"`
+}
+
+// HookResultVersionCheckoutEnded represents the result of a version checkout ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckoutended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultVersionCheckoutEnded)
+type HookResultVersionCheckoutEnded struct {
+	HookResultBase
+	Checkpoint  string `json:"checkpoint,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// HookLogNative bundles the native (client-specific) hook input and output.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklognative](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookLogNative)
+type HookLogNative struct {
+	Event    json.RawMessage `json:"event"`
+	Response json.RawMessage `json:"response,omitempty"`
 }
 
 // HookLogResponse represents the hook response data for audit logging.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogresponse](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogResponse)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogresponse](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookLogResponse)
 type HookLogResponse struct {
 	Allowed bool   `json:"allowed"`
 	Blocked *bool  `json:"blocked,omitempty"`
 	Reason  string `json:"reason,omitempty"`
 }
 
-// HookLogEntry pairs input, event, response and event-specific data for audit logging.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogentry](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogEntry)
+// HookLogEntry pairs native client data, semio-repo event data, and semio-repo response data for audit logging.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookLogEntry)
 type HookLogEntry struct {
-	Raw      json.RawMessage `json:"raw"`
+	Native   HookLogNative   `json:"native"`
 	Event    json.RawMessage `json:"event"`
 	Response HookLogResponse `json:"response"`
 }
 
-// BlockedToolPatterns lists shell command patterns that MUST always be denied.
+// BlockedToolPatterns holds the data fields for a BlockedToolPatterns record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🪨blockedtoolpatterns](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/BlockedToolPatterns)
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️blockedtoolpatterns](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/BlockedToolPatterns)
 var BlockedToolPatterns = []string{
 	"git checkout",
@@ -34781,6 +36908,14 @@ var BlockedToolPatterns = []string{
 // shellSegmentRE splits a command string by common shell operators.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️shellsegmentre](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/shellSegmentRE)
 var shellSegmentRE = regexp.MustCompile(`&&|\|\||;|\|`)
+
+// shellSequenceRE splits a command string by sequence operators (&&, ||, ;) but NOT pipe (|).
+// This is used for command classification where pipe chains should be treated as a single command.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️shellsequencere](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/shellSequenceRE)
+var shellSequenceRE = regexp.MustCompile(`&&|\|\||;`)
+var grepLineWithPathRE = regexp.MustCompile(`^([^:]+):([0-9]+)([:\-].*)?$`)
+var grepContextWithPathRE = regexp.MustCompile(`^(.+?)-([0-9]+)-`)
+var grepLineOnlyRE = regexp.MustCompile(`^([0-9]+)([:\-].*)?$`)
 
 // splitCommandSegments splits a shell command string by operators (&&, ||, ;, |) into individual segments.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️splitcommandsegments](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/splitCommandSegments)
@@ -34818,7 +36953,8 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 // IsToolBlocked checks whether a tool invocation matches a blocked pattern.
 // Uses segment-start matching: only blocks if a command segment STARTS WITH a blocked pattern,
 // preventing false positives from grep/echo commands that mention blocked patterns in arguments.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️istoolblocked](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/IsToolBlocked)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️istoolblocked](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/IsToolBlocked)
+// IsToolBlocked MUST perform the IsToolBlocked operation.
 func IsToolBlocked(toolName string, toolArgs string) (bool, string) {
 	for _, segment := range splitCommandSegments(toolArgs) {
 		if blocked, reason := isCommandSegmentBlocked(segment); blocked {
@@ -34873,6 +37009,13 @@ func extractCommandFromStdin(input json.RawMessage) string {
 			return cmd
 		}
 	}
+	if eventData, ok := data["event"].(map[string]interface{}); ok {
+		if eventInput, ok := eventData["input"].(map[string]interface{}); ok {
+			if cmd, ok := eventInput["command"].(string); ok {
+				return cmd
+			}
+		}
+	}
 	return ""
 }
 
@@ -34886,10 +37029,28 @@ func extractToolNameFromStdin(input json.RawMessage) string {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return ""
 	}
+
+	if nativeData, ok := data["native"].(map[string]interface{}); ok {
+		if eventData, ok := nativeData["event"].(map[string]interface{}); ok {
+			if tn, ok := eventData["tool_name"].(string); ok {
+				return tn
+			}
+		}
+	}
+
+	if eventData, ok := data["event"].(map[string]interface{}); ok {
+		if tn, ok := eventData["tool_name"].(string); ok {
+			return tn
+		}
+		if tn, ok := eventData["name"].(string); ok {
+			return tn
+		}
+	}
+
 	if tn, ok := data["tool_name"].(string); ok {
 		return tn
 	}
-	// For windsurf pre_run_command, extract the tool name from the command if it's a known tool
+
 	if inputData, ok := data["input"].(map[string]interface{}); ok {
 		var cmd string
 		if toolInfo, ok := inputData["tool_info"].(map[string]interface{}); ok {
@@ -34916,8 +37077,19 @@ func extractToolNameFromStdin(input json.RawMessage) string {
 					return "grep_search"
 				case "find", "fd":
 					return "file_search"
-				case "sed", "awk":
-					return "replace_string_in_file"
+				case "awk", "gawk", "mawk", "nawk":
+					return "read_file"
+				case "sed":
+					for _, arg := range parts[1:] {
+						if strings.HasPrefix(arg, "--") {
+							if arg == "--in-place" {
+								return "replace_string_in_file"
+							}
+						} else if strings.HasPrefix(arg, "-") && strings.ContainsRune(arg, 'i') {
+							return "replace_string_in_file"
+						}
+					}
+					return "read_file"
 				case "cat", "bat", "less", "more":
 					return "read_file"
 				case "ls", "exa", "eza", "tree":
@@ -34952,7 +37124,7 @@ func extractHookEventNameFromStdin(input json.RawMessage) string {
 }
 
 // ToolKind classifies a tool invocation for routing native client events to neutral hook events.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️toolkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/ToolKind)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️toolkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ToolKind)
 type ToolKind string
 
 const (
@@ -34970,13 +37142,13 @@ const (
 func classifyTool(toolName string) ToolKind {
 	lower := strings.ToLower(toolName)
 	switch lower {
-	case "manage_todo_list", "task", "todo_tool":
+	case "manage_todo_list", "task", "todo_tool", "todowrite":
 		return ToolKindPlan
 	case "read_file", "grep_search", "file_search", "semantic_search", "list_dir",
 		"get_errors", "read", "readfile", "searchfiles", "grepsearch", "listdir",
 		"list_code_usages", "get_search_view_results",
 		"geterrors", "getsearchviewresults", "listcodeusages",
-		"fetch_webpage", "open_simple_browser":
+		"fetch_webpage", "open_simple_browser", "grep":
 		return ToolKindCodeSearch
 	case "replace_string_in_file", "create_file", "multi_replace_string_in_file",
 		"edit", "write", "editfile", "createfile", "multiedit", "create_directory",
@@ -34994,16 +37166,238 @@ func classifyTool(toolName string) ToolKind {
 	}
 }
 
+// jsTestRunnerBins are direct JS test runner binary names.
+var jsTestRunnerBins = map[string]bool{
+	"jest": true, "vitest": true, "mocha": true, "jasmine": true,
+	"ava": true, "tape": true, "qunit": true, "karma": true,
+}
+
+// pyTestRunnerBins are direct Python test runner binary names.
+var pyTestRunnerBins = map[string]bool{
+	"pytest": true, "py.test": true, "nosetests": true, "nose2": true,
+}
+
+// detectCompoundTestKind returns ToolKindTest when bin+subcommand forms a test invocation.
+func detectCompoundTestKind(bin string, parts []string) ToolKind {
+	sub := ""
+	if len(parts) > 1 {
+		sub = parts[1]
+	}
+	switch bin {
+	case "go":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "cargo":
+		if sub == "test" || sub == "nextest" {
+			return ToolKindTest
+		}
+	case "npm", "pnpm":
+		if sub == "test" || sub == "run" && len(parts) > 2 && parts[2] == "test" {
+			return ToolKindTest
+		}
+	case "yarn":
+		if sub == "test" || sub == "jest" || sub == "vitest" || sub == "mocha" {
+			return ToolKindTest
+		}
+	case "bun":
+		if sub == "test" || sub == "run" && len(parts) > 2 && parts[2] == "test" {
+			return ToolKindTest
+		}
+	case "npx", "bunx", "pnpx":
+		if len(parts) > 1 {
+			runner := filepath.Base(parts[1])
+			if jsTestRunnerBins[runner] {
+				return ToolKindTest
+			}
+		}
+	case "dotnet":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "swift":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "dart":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "flutter":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "python", "python3":
+		for _, arg := range parts[1:] {
+			if arg == "-m" {
+				continue
+			}
+			if arg == "pytest" || arg == "unittest" || arg == "nose2" {
+				return ToolKindTest
+			}
+			break
+		}
+	case "uv":
+		// uv run pytest / uv run python -m pytest
+		if sub == "run" && len(parts) > 2 {
+			runner := filepath.Base(parts[2])
+			if pyTestRunnerBins[runner] || runner == "pytest" {
+				return ToolKindTest
+			}
+		}
+	case "uvx":
+		// uvx pytest
+		if len(parts) > 1 && pyTestRunnerBins[filepath.Base(parts[1])] {
+			return ToolKindTest
+		}
+	case "mix":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "lein":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "cabal":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "stack":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "sbt":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "mvn", "mvnw":
+		if sub == "test" || sub == "verify" {
+			return ToolKindTest
+		}
+	case "gradle", "gradlew":
+		if sub == "test" {
+			return ToolKindTest
+		}
+	case "make":
+		if sub == "test" || sub == "check" || sub == "spec" {
+			return ToolKindTest
+		}
+	case "rake":
+		if sub == "test" || sub == "spec" || sub == "rspec" {
+			return ToolKindTest
+		}
+	case "bundle":
+		// bundle exec rspec / bundle exec minitest
+		if sub == "exec" && len(parts) > 2 {
+			runner := filepath.Base(parts[2])
+			if runner == "rspec" || runner == "minitest" || runner == "rake" {
+				return ToolKindTest
+			}
+		}
+	case "php":
+		// php artisan test
+		if sub == "artisan" && len(parts) > 2 && parts[2] == "test" {
+			return ToolKindTest
+		}
+	}
+	return ToolKindTerminal
+}
+
 // classifyCommandKind maps a shell command string to its semantic ToolKind.
+// For compound commands (e.g. "cd /path && go test ./..."), splits by sequence operators
+// (&&, ||, ;) and returns the highest-priority non-terminal classification.
+// Pipe chains (|) are treated as a single command (the first segment determines the kind).
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️classifycommandkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/classifyCommandKind)
 func classifyCommandKind(command string) ToolKind {
 	command = strings.TrimSpace(command)
 	if command == "" {
 		return ToolKindTerminal
 	}
+	// Split by sequence operators (&&, ||, ;) to handle compound commands.
+	sequenceSegments := shellSequenceRE.Split(command, -1)
+	if len(sequenceSegments) > 1 {
+		// For compound commands, classify each segment and return the highest-priority kind.
+		// Priority: Test > Build > CodeEdit > CodeSearch > Terminal
+		best := ToolKindTerminal
+		for _, seg := range sequenceSegments {
+			seg = strings.TrimSpace(seg)
+			if seg == "" {
+				continue
+			}
+			kind := classifySingleCommandKind(seg)
+			if toolKindPriority(kind) > toolKindPriority(best) {
+				best = kind
+			}
+		}
+		return best
+	}
+	return classifySingleCommandKind(command)
+}
+
+// toolKindPriority returns a numeric priority for ToolKind classification.
+// Higher values take precedence in compound command classification.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️toolkindpriority](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/toolKindPriority)
+func toolKindPriority(kind ToolKind) int {
+	switch kind {
+	case ToolKindTest:
+		return 5
+	case ToolKindBuild:
+		return 4
+	case ToolKindCodeEdit:
+		return 3
+	case ToolKindCodeSearch:
+		return 2
+	case ToolKindPlan:
+		return 1
+	default:
+		return 0
+	}
+}
+
+// classifySingleCommandKind classifies a single command segment (no &&, ||, ; operators).
+// For pipe chains, only the first command in the pipe chain is considered.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️classifysinglecommandkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/classifySingleCommandKind)
+func classifySingleCommandKind(command string) ToolKind {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return ToolKindTerminal
+	}
+	// For pipe chains (e.g. "go test ... | tail -80"), classify by the first segment.
+	if pipeIdx := strings.Index(command, "|"); pipeIdx >= 0 {
+		// Make sure it's a single pipe, not || (already handled by the caller).
+		if pipeIdx+1 < len(command) && command[pipeIdx+1] != '|' {
+			command = strings.TrimSpace(command[:pipeIdx])
+		}
+	}
 	parts := strings.Fields(command)
+	if len(parts) == 0 {
+		return ToolKindTerminal
+	}
 	bin := filepath.Base(parts[0])
+	// check compound test commands (e.g. "go test", "npm test", "cargo nextest")
+	if kind := detectCompoundTestKind(bin, parts); kind != ToolKindTerminal {
+		return kind
+	}
 	switch bin {
+	// direct test runner binaries
+	case "jest", "vitest", "mocha", "jasmine", "ava", "tape", "qunit", "karma":
+		return ToolKindTest
+	case "pytest", "py.test", "nosetests", "nose2", "tox":
+		return ToolKindTest
+	case "rspec":
+		return ToolKindTest
+	case "phpunit", "pest":
+		return ToolKindTest
+	case "bats", "shunit2":
+		return ToolKindTest
+	case "prove":
+		return ToolKindTest
+	case "busted":
+		return ToolKindTest
+	case "ctest":
+		return ToolKindTest
+	case "nunit-console", "nunit3-console":
+		return ToolKindTest
 	case "grep", "rg", "ag", "ack", "ack-grep":
 		return ToolKindCodeSearch
 	case "find", "fd", "fdfind", "locate", "mlocate":
@@ -35036,8 +37430,20 @@ func classifyCommandKind(command string) ToolKind {
 		return ToolKindCodeSearch
 	case "test", "[":
 		return ToolKindCodeSearch
-	case "sed", "awk", "gawk", "mawk", "nawk":
-		return ToolKindCodeEdit
+	case "awk", "gawk", "mawk", "nawk":
+		return ToolKindCodeSearch
+	case "sed":
+		// sed is read-only unless -i (in-place) flag is present.
+		for _, arg := range parts[1:] {
+			if strings.HasPrefix(arg, "--") {
+				if arg == "--in-place" {
+					return ToolKindCodeEdit
+				}
+			} else if strings.HasPrefix(arg, "-") && strings.ContainsRune(arg, 'i') {
+				return ToolKindCodeEdit
+			}
+		}
+		return ToolKindCodeSearch
 	case "rm", "mv", "cp", "install":
 		return ToolKindCodeEdit
 	case "mkdir", "rmdir":
@@ -35066,7 +37472,7 @@ func classifyCommandKind(command string) ToolKind {
 func resolvePreToolUse(kind ToolKind) HookEvent {
 	switch kind {
 	case ToolKindPlan:
-		return HookAgentToolPlanUpdating
+		return HookAgentToolPlanUpdatingStarting
 	case ToolKindCodeSearch:
 		return HookAgentToolSearchStarting
 	case ToolKindCodeEdit:
@@ -35086,6 +37492,8 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolveposttoolusse](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolvePostToolUse)
 func resolvePostToolUse(kind ToolKind) HookEvent {
 	switch kind {
+	case ToolKindPlan:
+		return HookAgentToolPlanUpdatingEnded
 	case ToolKindCodeSearch:
 		return HookAgentToolSearchEnded
 	case ToolKindCodeEdit:
@@ -35157,23 +37565,19 @@ func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, e
 	case "afterFileEdit", "afterTabFileEdit":
 		return HookAgentToolCodeEditEnded, "", nil
 	case "beforeShellExecution":
-		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearchStarting, "", nil
+		if kind == ToolKindGeneric {
+			kind = ToolKindTerminal
 		}
-		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEditStarting, "", nil
-		}
-		return HookAgentToolTerminalStarting, "", nil
+		return resolvePreToolUse(kind), "", nil
 	case "afterShellExecution":
-		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearchEnded, "", nil
+		if kind == ToolKindGeneric {
+			kind = ToolKindTerminal
 		}
-		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEditEnded, "", nil
-		}
-		return HookAgentToolTerminalEnded, "", nil
-	case "afterAgentResponse", "afterAgentThought":
+		return resolvePostToolUse(kind), "", nil
+	case "afterAgentResponse":
 		return HookAgentEnded, "", nil
+	case "afterAgentThought":
+		return HookAgentThinkingEnded, "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for cursor-chat", nativeEvent)
 	}
@@ -35202,21 +37606,15 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 	case "post_write_code":
 		return HookAgentToolCodeEditEnded, "", nil
 	case "pre_run_command":
-		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearchStarting, "", nil
+		if kind == ToolKindGeneric {
+			kind = ToolKindTerminal
 		}
-		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEditStarting, "", nil
-		}
-		return HookAgentToolTerminalStarting, "", nil
+		return resolvePreToolUse(kind), "", nil
 	case "post_run_command":
-		if kind == ToolKindCodeSearch {
-			return HookAgentToolSearchEnded, "", nil
+		if kind == ToolKindGeneric {
+			kind = ToolKindTerminal
 		}
-		if kind == ToolKindCodeEdit {
-			return HookAgentToolCodeEditEnded, "", nil
-		}
-		return HookAgentToolTerminalEnded, "", nil
+		return resolvePostToolUse(kind), "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for windsurf-chat", nativeEvent)
 	}
@@ -35241,7 +37639,7 @@ func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent,
 	case "PreCompact":
 		return HookAgentCompacting, "", nil
 	case "TaskCompleted":
-		return HookAgentToolPlanUpdating, "", nil
+		return HookAgentToolPlanUpdatingEnded, "", nil
 	case "Notification", "TeammateIdle", "PermissionRequest":
 		return HookAgentToolStarting, "", nil
 	case "PreToolUse":
@@ -35255,7 +37653,8 @@ func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent,
 
 // ResolveHookEvent resolves an event string (neutral or native) to a neutral HookEvent.
 // Inlet adapter: native client events are resolved based on client and tool classification.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️resolvehookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/ResolveHookEvent)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvehookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ResolveHookEvent)
+// ResolveHookEvent MUST perform the ResolveHookEvent operation.
 func ResolveHookEvent(eventStr string, client string, toolName string, input json.RawMessage) (HookEvent, string, error) {
 	if event, err := ValidateHookEvent(eventStr); err == nil {
 		return event, "", nil
@@ -35263,8 +37662,11 @@ func ResolveHookEvent(eventStr string, client string, toolName string, input jso
 	kind := classifyTool(toolName)
 	if kind == ToolKindTerminal || kind == ToolKindGeneric {
 		if cmd := extractCommandFromStdin(input); cmd != "" {
-			if cmdKind := classifyCommandKind(cmd); cmdKind != ToolKindTerminal {
+			cmdKind := classifyCommandKind(cmd)
+			if cmdKind != ToolKindTerminal {
 				kind = cmdKind
+			} else {
+				kind = ToolKindTerminal
 			}
 		}
 	}
@@ -35297,8 +37699,10 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 		return "UserPromptSubmit"
 	case HookAgentCompacting:
 		return "PreCompact"
-	case HookAgentToolPlanUpdating:
+	case HookAgentToolPlanUpdatingStarting:
 		return "PreToolUse"
+	case HookAgentToolPlanUpdatingEnded:
+		return "PostToolUse"
 	case HookAgentToolSearchStarting:
 		return "PreToolUse"
 	case HookAgentToolSearchEnded:
@@ -35391,7 +37795,397 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	return string(out)
 }
 
-// logHook writes hook input, event and response to .semio-repo/📜/🪝/🤖/<session-id>/<timestamp>_<hook-kind>.json.
+// extractCheckpointIDFromResult extracts the checkpoint/checkpoint ID from a hook result.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extractcheckpointidfromresult](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractCheckpointIDFromResult)
+func extractCheckpointIDFromResult(result HookResult, repoRoot string) string {
+	switch r := result.(type) {
+	case HookResultVersionCheckpointEnded:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	case HookResultVersionCheckinStarting:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	case HookResultVersionCheckinEnded:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	case HookResultVersionCheckoutEnded:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	}
+	vcp := DefaultVersionControlProvider()
+	if sha, err := vcp.CurrentCheckpoint(repoRoot); err == nil && sha != "" {
+		return sha
+	}
+	return "unknown"
+}
+
+// resolvePathToFileID converts a raw file path (absolute or relative) to a semio-repo file ID.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvepathtofiled](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolvePathToFileID)
+func resolvePathToFileID(path string) string {
+	if path == "" {
+		return ""
+	}
+	normalized := normalizeHookPath(path)
+	if normalized == "" {
+		return ""
+	}
+	return buildFileID(normalized, nil)
+}
+
+// resolveRangeRef converts a "path#Lstart-Lend" or "path#Lstart" reference to a semio-repo range/line ID.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolverangeref](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveRangeRef)
+func resolveRangeRef(ref string) string {
+	if ref == "" {
+		return ""
+	}
+	hashIdx := strings.Index(ref, "#L")
+	if hashIdx < 0 {
+
+		return resolvePathToFileID(ref)
+	}
+	filePath := ref[:hashIdx]
+	lineRef := ref[hashIdx+2:]
+	fileID := resolvePathToFileID(filePath)
+	if fileID == "" {
+		return ref
+	}
+
+	dashIdx := strings.Index(lineRef, "-L")
+	if dashIdx >= 0 {
+		startStr := lineRef[:dashIdx]
+		endStr := lineRef[dashIdx+2:]
+		return fileID + "📌" + startStr + "📌" + endStr
+	}
+	return fileID + "📌" + lineRef
+}
+
+func resolveEventCheckpointID(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+	if strings.HasPrefix(trimmed, "checkpoint:") {
+		trimmed = strings.TrimPrefix(trimmed, "checkpoint:")
+	}
+	if strings.Contains(trimmed, emojiText(EmojiCheckpoint)) {
+		return trimmed
+	}
+	return GetArtifactID("checkpoint", map[string]interface{}{"sha": trimmed})
+}
+
+func resolveEventSessionID(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+	return normalizeTicketSessionID(trimmed)
+}
+
+func resolveEventSecondID(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+	if strings.Contains(trimmed, emojiText(EmojiYear)) && strings.Contains(trimmed, emojiText(EmojiSecond)) {
+		return trimmed
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, trimmed)
+	if err != nil {
+		return trimmed
+	}
+	return FormatSecond(parsed.UTC())
+}
+
+// SessionMeta represents session-level metadata persisted alongside agent events.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️sessionmeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/SessionMeta)
+// SessionMeta MUST persist id, uri, contributor, client, second, transcript, and plan for the session.
+type SessionMeta struct {
+	ID          string           `json:"id"`
+	URI         string           `json:"uri,omitempty"`
+	Contributor string           `json:"contributor,omitempty"`
+	Client      string           `json:"client,omitempty"`
+	Second      string           `json:"second,omitempty"`
+	Transcript  string           `json:"transcript,omitempty"`
+	Plan        *TicketAgentPlan `json:"plan,omitempty"`
+}
+
+// writeSessionMeta MUST persist session metadata without overwriting existing data.
+// writeSessionMeta writes a minimal session.json file for the given session directory.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️writesessionmeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/WriteSessionMeta)
+func writeSessionMeta(dir, sessionID string, meta SessionMeta) {
+	if sessionID == "" || dir == "" {
+		return
+	}
+	path := filepath.Join(dir, "session.json")
+	if _, err := os.Stat(path); err == nil {
+		return
+	}
+	data, err := json.MarshalIndent(meta, "", "  ")
+	if err != nil {
+		return
+	}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	_, _ = f.Write(data)
+}
+
+// mergeTicketAgentPlanSteps MUST merge incoming plan steps with existing ones, preserving timestamps and marking removed steps as abandoned.
+// mergeTicketAgentPlanSteps merges incoming hook plan steps into existing tracked steps using name-based matching.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️mergeticketagentplansteps](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/mergeTicketAgentPlanSteps)
+func mergeTicketAgentPlanSteps(existing []TicketAgentPlanStep, incoming []HookPlanStep, second string) []TicketAgentPlanStep {
+	existingByName := make(map[string]TicketAgentPlanStep, len(existing))
+	for _, s := range existing {
+		existingByName[s.Name] = s
+	}
+	incomingNames := make(map[string]bool, len(incoming))
+	merged := make([]TicketAgentPlanStep, 0, len(incoming)+len(existing))
+	for _, s := range incoming {
+		incomingNames[s.Name] = true
+		step := TicketAgentPlanStep{Name: s.Name}
+		if old, ok := existingByName[s.Name]; ok {
+			step.Started = old.Started
+			step.Completed = old.Completed
+		}
+		switch s.Status {
+		case "completed":
+			if step.Completed == "" {
+				step.Completed = second
+			}
+		case "in-progress", "in_progress":
+			if step.Started == "" {
+				step.Started = second
+			}
+		}
+		merged = append(merged, step)
+	}
+	for _, s := range existing {
+		if !incomingNames[s.Name] && s.Abandoned == "" {
+			s.Abandoned = second
+			merged = append(merged, s)
+		}
+	}
+	return merged
+}
+
+// updateSessionMetaPlan MUST read existing session.json, merge plan steps, and write back.
+// updateSessionMetaPlan updates the plan field of session.json with merged steps from a plan update event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️updatesessionmetaplan](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/updateSessionMetaPlan)
+func updateSessionMetaPlan(dir string, steps []HookPlanStep, second string) {
+	if dir == "" || len(steps) == 0 {
+		return
+	}
+	path := filepath.Join(dir, "session.json")
+	var meta SessionMeta
+	if data, err := os.ReadFile(path); err == nil {
+		_ = json.Unmarshal(data, &meta)
+	}
+	var existing []TicketAgentPlanStep
+	if meta.Plan != nil {
+		existing = meta.Plan.Steps
+	}
+	merged := mergeTicketAgentPlanSteps(existing, steps, second)
+	meta.Plan = &TicketAgentPlan{Steps: merged}
+	data, err := json.MarshalIndent(meta, "", "  ")
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(path, data, 0644)
+}
+
+// resolveTestNamesToDefinitionIDs resolves test function names to definition IDs using the given test file paths.
+// For each file path, it reads the file, parses definitions, and matches by name (case-insensitive).
+// Returns a map from original test name → definition ID.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvetestnamestodefinitionids](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestNamesToDefinitionIDs)
+func resolveTestNamesToDefinitionIDs(filePaths []string, names []string) map[string]string {
+	if len(filePaths) == 0 || len(names) == 0 {
+		return nil
+	}
+	// Build a case-insensitive lookup of names we want to resolve.
+	nameLower := make(map[string][]string, len(names))
+	for _, n := range names {
+		key := strings.ToLower(n)
+		nameLower[key] = append(nameLower[key], n)
+	}
+	result := make(map[string]string, len(names))
+	for _, fp := range filePaths {
+		normalized := normalizeHookPath(fp)
+		if normalized == "" {
+			continue
+		}
+		absPath := normalized
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(GetRootDir(), absPath)
+		}
+		content, err := os.ReadFile(absPath)
+		if err != nil {
+			continue
+		}
+		definitions := ParseDefinitions(string(content), normalized)
+		for i := range definitions {
+			defNameLower := strings.ToLower(definitions[i].Name)
+			if origNames, found := nameLower[defNameLower]; found {
+				defID := definitions[i].GetID()
+				for _, orig := range origNames {
+					if _, already := result[orig]; !already {
+						result[orig] = defID
+					}
+				}
+			}
+		}
+	}
+	return result
+}
+
+// resolveTestItems resolves a slice of test-related items (test names or file paths) to IDs.
+// File paths are resolved to file IDs. Non-file-path items are resolved to definition IDs
+// using the provided file context.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvetestitems](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestItems)
+func resolveTestItems(items []interface{}, contextFiles []string) []interface{} {
+	if len(items) == 0 {
+		return items
+	}
+	// First pass: resolve file paths, collect non-file names.
+	resolved := make([]interface{}, len(items))
+	var testNames []string
+	var testNameIndices []int
+	for i, item := range items {
+		if s, ok := item.(string); ok && s != "" {
+			if looksLikeFilePath(s) {
+				resolved[i] = resolvePathToFileID(s)
+				contextFiles = append(contextFiles, s)
+			} else {
+				testNames = append(testNames, s)
+				testNameIndices = append(testNameIndices, i)
+				resolved[i] = item // placeholder
+			}
+		} else {
+			resolved[i] = item
+		}
+	}
+	// Second pass: resolve test names using file context.
+	if len(testNames) > 0 && len(contextFiles) > 0 {
+		nameToID := resolveTestNamesToDefinitionIDs(contextFiles, testNames)
+		for j, idx := range testNameIndices {
+			if id, found := nameToID[testNames[j]]; found {
+				resolved[idx] = id
+			}
+		}
+	}
+	return resolved
+}
+
+// resolveEventIDs resolves raw file paths and range references in event data to semio-repo IDs.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolveeventids](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveEventIDs)
+func resolveEventIDs(eventMap map[string]interface{}) {
+
+	if checkpoint, ok := eventMap["checkpoint"].(string); ok && checkpoint != "" {
+		eventMap["checkpoint"] = resolveEventCheckpointID(checkpoint)
+	}
+	if session, ok := eventMap["session"].(string); ok && session != "" {
+		eventMap["session"] = resolveEventSessionID(session)
+	}
+	if second, ok := eventMap["second"].(string); ok && second != "" {
+		eventMap["second"] = resolveEventSecondID(second)
+	}
+
+	if path, ok := eventMap["path"].(string); ok && path != "" {
+		eventMap["path"] = resolvePathToFileID(path)
+	}
+
+	if pages, ok := eventMap["pages"].([]interface{}); ok {
+		resolved := make([]interface{}, len(pages))
+		for i, p := range pages {
+			if s, ok := p.(string); ok && s != "" {
+				if looksLikeFilePath(s) {
+					resolved[i] = resolvePathToFileID(s)
+				} else {
+					resolved[i] = s
+				}
+			} else {
+				resolved[i] = p
+			}
+		}
+		eventMap["pages"] = resolved
+	}
+
+	if ranges, ok := eventMap["ranges"].([]interface{}); ok {
+		resolved := make([]interface{}, len(ranges))
+		for i, r := range ranges {
+			if s, ok := r.(string); ok && s != "" {
+				resolved[i] = resolveRangeRef(s)
+			} else {
+				resolved[i] = r
+			}
+		}
+		eventMap["ranges"] = resolved
+	}
+
+	// Collect file context from the "files" field for test name resolution.
+	var contextFiles []string
+	if files, ok := eventMap["files"].([]interface{}); ok {
+		resolvedFiles := make([]interface{}, len(files))
+		for i, f := range files {
+			if s, ok := f.(string); ok && s != "" {
+				if looksLikeFilePath(s) {
+					contextFiles = append(contextFiles, s)
+					resolvedFiles[i] = resolvePathToFileID(s)
+				} else {
+					resolvedFiles[i] = f
+				}
+			} else {
+				resolvedFiles[i] = f
+			}
+		}
+		eventMap["files"] = resolvedFiles
+	}
+
+	if tests, ok := eventMap["tests"].([]interface{}); ok {
+		eventMap["tests"] = resolveTestItems(tests, contextFiles)
+	}
+
+	for _, key := range []string{"succeeded", "failed"} {
+		if items, ok := eventMap[key].([]interface{}); ok {
+			eventMap[key] = resolveTestItems(items, contextFiles)
+		}
+	}
+
+	// No resolution needed for bundles
+}
+
+// looksLikeFilePath returns true if s looks like a file system path (not a query/pattern/name).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️lookslikefilepath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/looksLikeFilePath)
+func looksLikeFilePath(s string) bool {
+	if strings.HasPrefix(s, "/") || strings.HasPrefix(s, "./") || strings.HasPrefix(s, "../") {
+		return true
+	}
+	if strings.Contains(s, "/") && strings.Contains(s, ".") {
+		return true
+	}
+
+	ext := filepath.Ext(s)
+	if ext != "" {
+		switch strings.ToLower(ext) {
+		case ".go", ".ts", ".tsx", ".js", ".jsx", ".py", ".rs", ".cs", ".json", ".yaml", ".yml",
+			".toml", ".md", ".txt", ".html", ".css", ".scss", ".less", ".xml", ".svg", ".sql",
+			".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd", ".g4", ".proto", ".graphql",
+			".gql", ".lock", ".cfg", ".ini", ".env", ".test", ".spec", ".snap":
+			return true
+		}
+	}
+	return false
+}
+
+// logHook writes hook input, event and response to:
+//   - Version events: .semio-repo/⚡/🔀/YY/MM/DD/<checkpoint-id>/MMSS_<version-event-kind>.json
+//   - Agent events:   .semio-repo/⚡/🤖/YY/MM/DD/<session-id>/MMSS_<agent-event-kind>.json
+//
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️loghook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/logHook)
 func logHook(hctx HookContext, result HookResult) {
 	repoRoot := hctx.RepoRoot
@@ -35402,16 +38196,27 @@ func logHook(hctx HookContext, result HookResult) {
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
-	sessionID := extractSessionIDFromInput(hctx.Input)
-	if sessionID == "" {
-		sessionID = "unknown"
+	now := time.Now().UTC()
+	yy := fmt.Sprintf("%02d", now.Year()%100)
+	mm := fmt.Sprintf("%02d", int(now.Month()))
+	dd := fmt.Sprintf("%02d", now.Day())
+	hhmmss := now.Format("150405")
+	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
+	var logDir string
+	kind := HookEventKind(hctx.Event)
+	if kind == HookKindVersion {
+		checkpointID := extractCheckpointIDFromResult(result, repoRoot)
+		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🔀", yy, mm, dd, checkpointID)
+	} else {
+		sessionID := extractSessionIDFromInput(hctx.Input)
+		if sessionID == "" {
+			sessionID = "unknown"
+		}
+		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🤖", yy, mm, dd, sessionID)
 	}
-	logDir := filepath.Join(repoRoot, ".semio-repo", "📜", "🪝", "🤖", sessionID)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return
 	}
-	ts := time.Now().UTC().Format("060102150405")
-	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
 	var logResponse HookLogResponse
 	logResponse.Allowed = result.IsAllowed()
 	if !result.IsAllowed() {
@@ -35425,14 +38230,59 @@ func logHook(hctx HookContext, result HookResult) {
 	if eventMap == nil {
 		eventMap = map[string]interface{}{}
 	}
+	delete(eventMap, "allowed")
 	eventMap["kind"] = string(hctx.Event)
+	eventMap["contributor"] = contributorGithubToSemioID(GetGitAuthorGithub())
+	resolveEventIDs(eventMap)
 	resultData, _ = json.Marshal(eventMap)
-	entry := HookLogEntry{Raw: hctx.Input, Event: resultData, Response: logResponse}
+
+	var nativeResponse json.RawMessage
+	provider := GetEditorProvider(hctx.Client)
+	if provider != nil {
+		hookEventName := extractHookEventNameFromStdin(hctx.Input)
+		if hookEventName == "" {
+			hookEventName = provider.NativeEventFromHookEvent(hctx.Event, hctx.ParentInfo)
+		}
+		if hookEventName != "" {
+			out := provider.FormatHookOutput(hookEventName, result)
+			if out != "" {
+				nativeResponse = json.RawMessage(out)
+			}
+		}
+	}
+	native := HookLogNative{Event: hctx.Input, Response: nativeResponse}
+	entry := HookLogEntry{Native: native, Event: resultData, Response: logResponse}
 	data, err := json.MarshalIndent(entry, "", "  ")
 	if err != nil {
 		return
 	}
-	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s.json", ts, hookKind)), data, 0644)
+	eventFileName := fmt.Sprintf("%s_%s.json", hhmmss, hookKind)
+	_ = os.WriteFile(filepath.Join(logDir, eventFileName), data, 0644)
+
+	if kind != HookKindVersion && hctx.Event == HookAgentStarted {
+		sessionID := extractSessionIDFromInput(hctx.Input)
+		if sessionID == "" {
+			sessionID = "unknown"
+		}
+		meta := SessionMeta{
+			ID:          sessionID,
+			URI:         GetArtifactURI("session", map[string]interface{}{"uuid": sessionID}),
+			Contributor: contributorGithubToSemioID(GetGitAuthorGithub()),
+			Client:      hctx.Client,
+			Second:      hctx.Second,
+			Transcript:  extractTranscriptFromInput(hctx.Input),
+		}
+		writeSessionMeta(logDir, sessionID, meta)
+	}
+	if kind != HookKindVersion && hctx.Event == HookAgentToolPlanUpdatingEnded {
+		if planResult, ok := result.(HookResultAgentToolPlanUpdating); ok && len(planResult.Steps) > 0 {
+			second := hctx.Second
+			if second == "" {
+				second = time.Now().UTC().Format(time.RFC3339)
+			}
+			updateSessionMetaPlan(logDir, planResult.Steps, second)
+		}
+	}
 }
 
 // dispatchHook routes the hook event to its handler and returns the specific result.
@@ -35442,19 +38292,26 @@ func dispatchHook(hctx HookContext) HookResult {
 	if len(hctx.Input) > 0 {
 		raw = hctx.Input
 	}
+
+	currentCheckpoint := ""
+	vcp := DefaultVersionControlProvider()
+	if sha, err := vcp.CurrentCheckpoint(hctx.RepoRoot); err == nil && sha != "" {
+		currentCheckpoint = sha
+	}
 	sessionID := extractSessionIDFromInput(hctx.Input)
 	llm := extractLLMFromInput(hctx.Input)
 	transcript := extractTranscriptFromInput(hctx.Input)
 	messageID := extractMessageIDFromInput(hctx.Input)
 	parentMsgID := extractParentMessageIDFromInput(hctx.Input)
 	if parentMsgID == "" {
-		parentMsgID = hctx.ParentInfo
+		parentMsgID = resolveParentSessionID(hctx.ParentInfo, hctx.Input)
 	}
 	agentBase := func(msg string) HookResultAgentBase {
 		return HookResultAgentBase{
 			HookResultBase: HookResultBase{Allowed: true, Message: msg, Raw: raw},
+			Checkpoint:     currentCheckpoint,
 			Session:        sessionID,
-			Timestamp:      hctx.Timestamp,
+			Second:         hctx.Second,
 			Client:         hctx.Client,
 			LLM:            llm,
 			Transcript:     transcript,
@@ -35463,24 +38320,53 @@ func dispatchHook(hctx HookContext) HookResult {
 		}
 	}
 	switch hctx.Event {
-	case HookGitCommitStarting:
-		res := runCommitStartingHook(hctx)
+	case HookVersionCheckpointStarting:
+		res := runCheckpointStartingHook(hctx)
 		res.Raw = raw
-		res.Message = extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot)
-		if res.Message == "" && !res.Allowed {
-			res.Message = "pre-commit checks failed"
+		res.Checkpoint = currentCheckpoint
+		res.Description = extractCheckpointMessageFromInput(hctx.Input, hctx.RepoRoot)
+		res.Second = hctx.Second
+		if res.Description == "" && !res.Allowed {
+			res.Description = "pre-checkpoint checks failed"
 		}
 		return res
-	case HookGitCommitEnded:
-		return HookResultGitCommitEnded{
-			HookResultBase: HookResultBase{Allowed: true, Message: extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot), Raw: raw},
-			SHA:            extractCommitSHAFromInput(hctx.Input),
+	case HookVersionCheckpointEnded:
+		checkpointSHA := extractCheckpointSHAFromInput(hctx.Input)
+		if checkpointSHA == "" {
+			checkpointSHA = currentCheckpoint
+		}
+		return HookResultVersionCheckpointEnded{
+			HookResultBase: HookResultBase{Allowed: true, Message: extractCheckpointMessageFromInput(hctx.Input, hctx.RepoRoot), Raw: raw},
+			Checkpoint:     checkpointSHA,
+			Description:    extractCheckpointMessageFromInput(hctx.Input, hctx.RepoRoot),
+			Second:         hctx.Second,
+		}
+	case HookVersionCheckinStarting:
+		return HookResultVersionCheckinStarting{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkin.starting acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Second:         hctx.Second,
+		}
+	case HookVersionCheckinEnded:
+		return HookResultVersionCheckinEnded{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkin.ended acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Second:         hctx.Second,
+		}
+	case HookVersionCheckoutStarting:
+		return HookResultVersionCheckoutStarting{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkout.starting acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Description:    extractCheckpointMessageFromInput(hctx.Input, hctx.RepoRoot),
+		}
+	case HookVersionCheckoutEnded:
+		return HookResultVersionCheckoutEnded{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkout.ended acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Description:    extractCheckpointMessageFromInput(hctx.Input, hctx.RepoRoot),
 		}
 	case HookAgentStarted:
-		parent := hctx.ParentInfo
-		if parent == "" {
-			parent = extractParentFromInput(hctx.Input)
-		}
+		parent := resolveParentSessionID(hctx.ParentInfo, hctx.Input)
 		ab := agentBase("agent.started acknowledged")
 		ab.Parent = parent
 		return HookResultAgentStarted{HookResultAgentBase: ab}
@@ -35525,9 +38411,9 @@ func dispatchHook(hctx HookContext) HookResult {
 			Input:               extractToolInputFromStdin(hctx.Input),
 			Response:            extractToolResponseFromStdin(hctx.Input),
 		}
-	case HookAgentToolPlanUpdating:
+	case HookAgentToolPlanUpdatingStarting, HookAgentToolPlanUpdatingEnded:
 		return HookResultAgentToolPlanUpdating{
-			HookResultAgentBase: agentBase("agent.tool.plan.updating acknowledged"),
+			HookResultAgentBase: agentBase(fmt.Sprintf("%s acknowledged", hctx.Event)),
 			Steps:               extractPlanStepsFromInput(hctx.Input, hctx.ToolArgs),
 		}
 	case HookAgentToolSearchStarting:
@@ -35536,6 +38422,7 @@ func dispatchHook(hctx HookContext) HookResult {
 			HookResultAgentBase: agentBase(""),
 			Pages:               pages,
 			Ranges:              ranges,
+			Definitions:         extractSearchDefinitionReadsFromInput(hctx.Input, hctx.ToolArgs),
 		}
 	case HookAgentToolSearchEnded:
 		pages, ranges := extractSearchFromInput(hctx.Input, hctx.ToolArgs)
@@ -35543,6 +38430,7 @@ func dispatchHook(hctx HookContext) HookResult {
 			HookResultAgentBase: agentBase(""),
 			Pages:               pages,
 			Ranges:              ranges,
+			Definitions:         extractSearchDefinitionReadsFromInput(hctx.Input, hctx.ToolArgs),
 			Error:               extractSearchErrorFromInput(hctx.Input),
 		}
 	case HookAgentToolCodeEditStarting:
@@ -35563,16 +38451,18 @@ func dispatchHook(hctx HookContext) HookResult {
 			New:                 new_,
 		}
 	case HookAgentToolTestStarting:
-		tests, timeout := extractTestStartingFromInput(hctx.Input, hctx.ToolArgs)
+		files, tests, timeout := extractTestStartingFromInput(hctx.Input, hctx.ToolArgs)
 		return HookResultAgentToolTestStarting{
 			HookResultAgentBase: agentBase(""),
+			Files:               files,
 			Tests:               tests,
 			Timeout:             timeout,
 		}
 	case HookAgentToolTestEnded:
-		succeeded, failed := extractTestEndedFromInput(hctx.Input)
+		files, succeeded, failed := extractTestEndedFromInput(hctx.Input)
 		return HookResultAgentToolTestEnded{
 			HookResultAgentBase: agentBase(""),
+			Files:               files,
 			Succeeded:           succeeded,
 			Failed:              failed,
 		}
@@ -35611,13 +38501,22 @@ func dispatchHook(hctx HookContext) HookResult {
 			Stdout:              stdout,
 			Stderr:              stderr,
 		}
+	case HookAgentThinkingStarting:
+		return HookResultAgentThinkingStarting{
+			HookResultAgentBase: agentBase(extractThinkingTextFromInput(hctx.Input)),
+		}
+	case HookAgentThinkingEnded:
+		return HookResultAgentThinkingEnded{
+			HookResultAgentBase: agentBase(extractThinkingTextFromInput(hctx.Input)),
+		}
 	default:
 		return HookResultBase{Allowed: false, Message: fmt.Sprintf("unknown hook event: %s", hctx.Event), Raw: raw}
 	}
 }
 
 // RunHook executes the hook logic for the given context and logs the invocation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️runhook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/RunHook)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️runhook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/RunHook)
+// RunHook MUST perform the RunHook operation.
 func RunHook(hctx HookContext) HookResult {
 	if hctx.RepoRoot != "" {
 		SetRootDir(hctx.RepoRoot)
@@ -35625,6 +38524,12 @@ func RunHook(hctx HookContext) HookResult {
 	result := dispatchHook(hctx)
 	logHook(hctx, result)
 	trackHookInOpenTicket(hctx, result)
+	if hctx.Event == HookVersionCheckpointEnded {
+		checkpointID := extractCheckpointIDFromResult(result, hctx.RepoRoot)
+		if checkpointID != "" {
+			storeCheckpointDiff(hctx.RepoRoot, checkpointID)
+		}
+	}
 	return result
 }
 
@@ -35667,6 +38572,74 @@ func appendUniqueString(values []string, value string) []string {
 	return append(values, value)
 }
 
+var (
+	runtimeTicketSessionIDOnce sync.Once
+	runtimeTicketSessionID     string
+	testSessionIDOverride      string // overrides currentTicketSessionID in tests only
+)
+
+func normalizeTicketSessionID(value string) string {
+	normalized := strings.TrimSpace(value)
+	if normalized == "" {
+		return ""
+	}
+	for _, prefix := range []string{
+		emojiText(EmojiSessionRunning),
+		emojiText(EmojiSessionCompleted),
+		emojiText(EmojiSessionInterrupted),
+		emojiText(EmojiSession),
+	} {
+		if strings.HasPrefix(normalized, prefix) {
+			normalized = strings.TrimPrefix(normalized, prefix)
+			break
+		}
+	}
+	normalized = Flat(normalized)
+	if normalized == "" {
+		return ""
+	}
+	return emojiText(EmojiSession) + normalized
+}
+
+func appendTicketSessionID(ticket *Ticket, sessionID string) {
+	if ticket == nil {
+		return
+	}
+	normalized := normalizeTicketSessionID(sessionID)
+	if normalized == "" {
+		return
+	}
+	ticket.Sessions = appendUniqueString(ticket.Sessions, normalized)
+}
+
+func currentTicketSessionID() string {
+	if testSessionIDOverride != "" {
+		return testSessionIDOverride
+	}
+	runtimeTicketSessionIDOnce.Do(func() {
+		candidates := []string{
+			os.Getenv("SEMIO_SESSION_ID"),
+			os.Getenv("SEMIOR_SESSION_ID"),
+			os.Getenv("SEMIOR_AGENT_SESSION_ID"),
+			os.Getenv("CODEX_THREAD_ID"),
+			os.Getenv("COPILOT_CHAT_SESSION_ID"),
+			os.Getenv("WINDSURF_SESSION_ID"),
+			os.Getenv("CLAUDE_SESSION_ID"),
+			os.Getenv("ANTIGRAVITY_SESSION_ID"),
+		}
+		for _, candidate := range candidates {
+			if strings.TrimSpace(candidate) != "" {
+				runtimeTicketSessionID = candidate
+				break
+			}
+		}
+		if runtimeTicketSessionID == "" {
+			runtimeTicketSessionID = fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
+		}
+	})
+	return runtimeTicketSessionID
+}
+
 func extractSessionIDFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
@@ -35675,7 +38648,7 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return ""
 	}
-	for _, key := range []string{"trajectory_id", "trajectoryId", "sessionId", "session_id", "conversationId", "conversation_id"} {
+	for _, key := range []string{"trajectory_id", "trajectoryId", "sessionId", "session_id", "conversationId", "conversation_id", "agent_id", "agentId"} {
 		if value, ok := data[key].(string); ok {
 			value = strings.TrimSpace(value)
 			if value != "" {
@@ -35686,13 +38659,16 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 	return ""
 }
 
-func extractTimestampFromInput(input json.RawMessage) string {
+func extractSecondFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
 	}
 	var data map[string]interface{}
 	if err := json.Unmarshal(input, &data); err != nil {
 		return ""
+	}
+	if v, ok := data["second"].(string); ok && v != "" {
+		return strings.TrimSpace(v)
 	}
 	if v, ok := data["timestamp"].(string); ok && v != "" {
 		return strings.TrimSpace(v)
@@ -35732,6 +38708,20 @@ func extractPromptFromInput(input json.RawMessage) string {
 			}
 		}
 	}
+
+	if native, ok := data["native"].(map[string]interface{}); ok {
+		if event, ok := native["event"].(map[string]interface{}); ok {
+			if toolInfo, ok := event["tool_info"].(map[string]interface{}); ok {
+				if userPrompt, ok := toolInfo["user_prompt"].(string); ok && strings.TrimSpace(userPrompt) != "" {
+					return strings.TrimSpace(userPrompt)
+				}
+				if prompt, ok := toolInfo["prompt"].(string); ok && strings.TrimSpace(prompt) != "" {
+					return strings.TrimSpace(prompt)
+				}
+			}
+		}
+	}
+
 	return ""
 }
 
@@ -35754,6 +38744,48 @@ func extractLLMFromInput(input json.RawMessage) string {
 	return ""
 }
 
+func extractThinkingTextFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	if text, ok := data["text"].(string); ok && strings.TrimSpace(text) != "" {
+		return strings.TrimSpace(text)
+	}
+	if native, ok := data["native"].(map[string]interface{}); ok {
+		if event, ok := native["event"].(map[string]interface{}); ok {
+			if text, ok := event["text"].(string); ok && strings.TrimSpace(text) != "" {
+				return strings.TrimSpace(text)
+			}
+		}
+	}
+	return ""
+}
+
+// extractToolInputMapFromData resolves tool_input from multiple native event wrapper formats.
+// Checks data["tool_input"], data["native"]["event"]["tool_input"], and data["event"]["tool_input"].
+func extractToolInputMapFromData(data map[string]interface{}) map[string]interface{} {
+	if ti, ok := data["tool_input"].(map[string]interface{}); ok {
+		return ti
+	}
+	if native, ok := data["native"].(map[string]interface{}); ok {
+		if event, ok := native["event"].(map[string]interface{}); ok {
+			if ti, ok := event["tool_input"].(map[string]interface{}); ok {
+				return ti
+			}
+		}
+	}
+	if event, ok := data["event"].(map[string]interface{}); ok {
+		if ti, ok := event["tool_input"].(map[string]interface{}); ok {
+			return ti
+		}
+	}
+	return nil
+}
+
 func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
 	if len(input) == 0 {
 		return nil
@@ -35764,6 +38796,20 @@ func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
 	}
 	if ti, ok := data["tool_input"]; ok {
 		return ti
+	}
+	// Check native.event.tool_input for Claude Code native event format.
+	if native, ok := data["native"]; ok {
+		var nativeData map[string]json.RawMessage
+		if err := json.Unmarshal(native, &nativeData); err == nil {
+			if event, ok := nativeData["event"]; ok {
+				var eventData map[string]json.RawMessage
+				if err := json.Unmarshal(event, &eventData); err == nil {
+					if ti, ok := eventData["tool_input"]; ok {
+						return ti
+					}
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -35789,9 +38835,7 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 	if len(input) > 0 {
 		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
-			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
-				toolInput = ti
-			}
+			toolInput = extractToolInputMapFromData(data)
 		}
 	}
 	if toolInput == nil && toolArgs != "" {
@@ -35835,33 +38879,118 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 	return steps
 }
 
+// extractFilePathFromNativeToolInfo extracts a file_path from native event formats
+// (e.g., Windsurf tool_info.file_path, or direct file_path/filePath/path keys).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extractfilepathfromnativetoolinfo](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractFilePathFromNativeToolInfo)
+func extractFilePathFromNativeToolInfo(data map[string]interface{}) string {
+	if data == nil {
+		return ""
+	}
+	// Check tool_info.file_path (Windsurf native)
+	if ti, ok := data["tool_info"].(map[string]interface{}); ok {
+		for _, k := range []string{"file_path", "filePath", "path"} {
+			if v, ok := ti[k].(string); ok && v != "" {
+				return v
+			}
+		}
+	}
+	// Check native.event.tool_info.file_path (wrapped native)
+	if native, ok := data["native"].(map[string]interface{}); ok {
+		if event, ok := native["event"].(map[string]interface{}); ok {
+			if ti, ok := event["tool_info"].(map[string]interface{}); ok {
+				for _, k := range []string{"file_path", "filePath", "path"} {
+					if v, ok := ti[k].(string); ok && v != "" {
+						return v
+					}
+				}
+			}
+		}
+	}
+	// Check input.tool_info.file_path (nested input)
+	if inputData, ok := data["input"].(map[string]interface{}); ok {
+		if ti, ok := inputData["tool_info"].(map[string]interface{}); ok {
+			for _, k := range []string{"file_path", "filePath", "path"} {
+				if v, ok := ti[k].(string); ok && v != "" {
+					return v
+				}
+			}
+		}
+	}
+	// Check direct file_path/filePath/path at top level
+	for _, k := range []string{"file_path", "filePath", "path"} {
+		if v, ok := data[k].(string); ok && v != "" {
+			if looksLikeFilePath(v) {
+				return v
+			}
+		}
+	}
+	return ""
+}
+
 func extractSearchFromInput(input json.RawMessage, toolArgs string) (pages []string, ranges []string) {
+	var data map[string]interface{}
 	var toolInput map[string]interface{}
 	if len(input) > 0 {
-		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
-			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
-				toolInput = ti
-			}
+			toolInput = extractToolInputMapFromData(data)
 		}
 	}
 	if toolInput == nil && toolArgs != "" {
 		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
 	}
-	if toolInput == nil {
-		return nil, nil
-	}
 	var filePath string
-	for _, k := range []string{"filePath", "path", "file_path"} {
-		if v, ok := toolInput[k].(string); ok && v != "" {
-			filePath = v
-			break
+	var startLine, endLine float64
+	var hasStart, hasEnd bool
+	if toolInput != nil {
+		// Read tool uses file_path; Windsurf/Cursor may use filePath or path.
+		// Grep tool uses path with a pattern key — only treat path as file if no pattern.
+		_, hasPattern := toolInput["pattern"]
+		if !hasPattern {
+			for _, k := range []string{"file_path", "filePath", "path"} {
+				if v, ok := toolInput[k].(string); ok && v != "" {
+					filePath = v
+					break
+				}
+			}
+		} else {
+			// Grep-style: check file_path only (not path which is a search root).
+			for _, k := range []string{"file_path", "filePath"} {
+				if v, ok := toolInput[k].(string); ok && v != "" {
+					filePath = v
+					break
+				}
+			}
+		}
+		startLine, hasStart = toolInput["startLine"].(float64)
+		endLine, hasEnd = toolInput["endLine"].(float64)
+		// Read tool (Claude Code): offset=start line (1-based), limit=line count.
+		// Only apply when explicit startLine/endLine are absent.
+		if !hasStart && !hasEnd {
+			if offset, ok := toolInput["offset"].(float64); ok && offset > 0 {
+				startLine = offset
+				hasStart = true
+			}
+			if limit, ok := toolInput["limit"].(float64); ok && limit > 0 {
+				if hasStart {
+					endLine = startLine + limit - 1
+				} else {
+					startLine = 1
+					endLine = limit
+					hasStart = true
+				}
+				hasEnd = true
+			}
 		}
 	}
+	// Fallback: extract file_path from native event formats (e.g. Windsurf tool_info.file_path)
+	if filePath == "" && data != nil {
+		filePath = extractFilePathFromNativeToolInfo(data)
+	}
 	if filePath != "" {
-		startLine, hasStart := toolInput["startLine"].(float64)
-		endLine, hasEnd := toolInput["endLine"].(float64)
-		if hasStart && startLine > 0 {
+		info, statErr := os.Stat(filePath)
+		if statErr == nil && info.IsDir() {
+			// Directory path: no file range to build
+		} else if hasStart && startLine > 0 {
 			if hasEnd && endLine > 0 {
 				if startLine == endLine {
 					ranges = append(ranges, fmt.Sprintf("%s#L%d", filePath, int(startLine)))
@@ -35872,27 +39001,320 @@ func extractSearchFromInput(input json.RawMessage, toolArgs string) (pages []str
 				ranges = append(ranges, fmt.Sprintf("%s#L%d", filePath, int(startLine)))
 			}
 		} else {
-			pages = append(pages, filePath)
+			ranges = append(ranges, buildFullFileRange(filePath))
 		}
 	}
-	for _, k := range []string{"query", "pattern"} {
-		if v, ok := toolInput[k].(string); ok && v != "" {
-			pages = append(pages, v)
-			break
+	if toolInput != nil {
+		for _, k := range []string{"url", "uri", "webpage", "page"} {
+			if v, ok := toolInput[k].(string); ok && v != "" {
+				if isWebPageRef(v) {
+					pages = append(pages, v)
+				}
+			}
 		}
-	}
-	for _, k := range []string{"includePattern", "include", "glob"} {
-		if v, ok := toolInput[k].(string); ok && v != "" {
-			pages = append(pages, v)
-		} else if arr, ok := toolInput[k].([]interface{}); ok {
-			for _, item := range arr {
-				if s, ok := item.(string); ok && s != "" {
-					pages = append(pages, s)
+		for _, k := range []string{"urls", "uris", "webpages", "pages"} {
+			if v, ok := toolInput[k].(string); ok && v != "" {
+				if isWebPageRef(v) {
+					pages = append(pages, v)
+				}
+			} else if arr, ok := toolInput[k].([]interface{}); ok {
+				for _, item := range arr {
+					if s, ok := item.(string); ok && s != "" {
+						if isWebPageRef(s) {
+							pages = append(pages, s)
+						}
+					}
 				}
 			}
 		}
 	}
 	return pages, ranges
+}
+
+func extractSearchDefinitionReadsFromInput(input json.RawMessage, toolArgs string) []HookSearchDefinition {
+	filesToLines := map[string]map[int]struct{}{}
+	_, ranges := extractSearchFromInput(input, toolArgs)
+	mergeRangeLineReads(filesToLines, ranges)
+
+	command := extractTerminalCommandFromInput(input, toolArgs)
+	if shouldExecuteSearchCommand(command) {
+		cwd := extractCommandCwdFromInput(input)
+		if cwd == "" {
+			if wd, err := os.Getwd(); err == nil {
+				cwd = wd
+			}
+		}
+		stdout, stderr, _ := ExecCommand("bash", []string{"-lc", command}, cwd)
+		mergeCommandLineReads(filesToLines, command, cwd, stdout)
+		mergeCommandLineReads(filesToLines, command, cwd, stderr)
+	}
+	return buildDefinitionReads(filesToLines)
+}
+
+func shouldExecuteSearchCommand(command string) bool {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return false
+	}
+	if strings.Contains(command, ">") || strings.Contains(command, "<<") {
+		return false
+	}
+	segments := splitCommandSegments(command)
+	if len(segments) == 0 {
+		return false
+	}
+	for _, segment := range segments {
+		if classifyCommandKind(segment) != ToolKindCodeSearch {
+			return false
+		}
+	}
+	return true
+}
+
+func extractCommandCwdFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	if toolInfo, ok := data["tool_info"].(map[string]interface{}); ok {
+		if cwd, ok := toolInfo["cwd"].(string); ok {
+			return strings.TrimSpace(cwd)
+		}
+	}
+	if nested, ok := data["input"].(map[string]interface{}); ok {
+		if toolInfo, ok := nested["tool_info"].(map[string]interface{}); ok {
+			if cwd, ok := toolInfo["cwd"].(string); ok {
+				return strings.TrimSpace(cwd)
+			}
+		}
+	}
+	return ""
+}
+
+func mergeRangeLineReads(filesToLines map[string]map[int]struct{}, ranges []string) {
+	for _, ref := range ranges {
+		path, start, end, ok := parseRangeRef(ref)
+		if !ok {
+			continue
+		}
+		if _, ok := filesToLines[path]; !ok {
+			filesToLines[path] = map[int]struct{}{}
+		}
+		for line := start; line <= end; line++ {
+			filesToLines[path][line] = struct{}{}
+		}
+	}
+}
+
+func parseRangeRef(ref string) (string, int, int, bool) {
+	hashIdx := strings.Index(ref, "#L")
+	if hashIdx < 0 {
+		return "", 0, 0, false
+	}
+	path := strings.TrimSpace(ref[:hashIdx])
+	if path == "" {
+		return "", 0, 0, false
+	}
+	lineRef := strings.TrimSpace(ref[hashIdx+2:])
+	if lineRef == "" {
+		return "", 0, 0, false
+	}
+	if dash := strings.Index(lineRef, "-L"); dash >= 0 {
+		start, errStart := strconv.Atoi(strings.TrimSpace(lineRef[:dash]))
+		end, errEnd := strconv.Atoi(strings.TrimSpace(lineRef[dash+2:]))
+		if errStart != nil || errEnd != nil || start <= 0 || end < start {
+			return "", 0, 0, false
+		}
+		return path, start, end, true
+	}
+	line, err := strconv.Atoi(lineRef)
+	if err != nil || line <= 0 {
+		return "", 0, 0, false
+	}
+	return path, line, line, true
+}
+
+func mergeCommandLineReads(filesToLines map[string]map[int]struct{}, command string, cwd string, output string) {
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return
+	}
+	candidateFiles := collectExistingFilesFromCommand(command, cwd)
+	singleFile := ""
+	if len(candidateFiles) == 1 {
+		singleFile = candidateFiles[0]
+	}
+	for _, rawLine := range strings.Split(output, "\n") {
+		line := strings.TrimSpace(rawLine)
+		if line == "" || line == "--" {
+			continue
+		}
+		if m := grepLineWithPathRE.FindStringSubmatch(line); len(m) == 4 {
+			if num, err := strconv.Atoi(m[2]); err == nil && num > 0 {
+				path := resolveCommandFilePath(m[1], cwd)
+				if path != "" {
+					appendLineRead(filesToLines, path, num)
+				}
+			}
+			continue
+		}
+		if m := grepContextWithPathRE.FindStringSubmatch(line); len(m) == 3 {
+			if num, err := strconv.Atoi(m[2]); err == nil && num > 0 {
+				path := resolveCommandFilePath(m[1], cwd)
+				if path != "" {
+					appendLineRead(filesToLines, path, num)
+				}
+			}
+			continue
+		}
+		if singleFile != "" {
+			if m := grepLineOnlyRE.FindStringSubmatch(line); len(m) == 3 {
+				if num, err := strconv.Atoi(m[1]); err == nil && num > 0 {
+					appendLineRead(filesToLines, singleFile, num)
+				}
+			}
+		}
+	}
+}
+
+func collectExistingFilesFromCommand(command string, cwd string) []string {
+	unique := map[string]struct{}{}
+	var files []string
+	for _, segment := range splitCommandSegments(command) {
+		for _, token := range strings.Fields(segment) {
+			candidate := strings.Trim(token, `"'`)
+			if candidate == "" || strings.HasPrefix(candidate, "-") {
+				continue
+			}
+			if strings.ContainsAny(candidate, "*?[]{}$") {
+				continue
+			}
+			path := resolveCommandFilePath(candidate, cwd)
+			if path == "" {
+				continue
+			}
+			if _, seen := unique[path]; seen {
+				continue
+			}
+			unique[path] = struct{}{}
+			files = append(files, path)
+		}
+	}
+	return files
+}
+
+func resolveCommandFilePath(value string, cwd string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	if strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://") {
+		return ""
+	}
+	path := value
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(cwd, path)
+	}
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() {
+		return ""
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	return abs
+}
+
+func appendLineRead(filesToLines map[string]map[int]struct{}, path string, line int) {
+	if path == "" || line <= 0 {
+		return
+	}
+	if _, ok := filesToLines[path]; !ok {
+		filesToLines[path] = map[int]struct{}{}
+	}
+	filesToLines[path][line] = struct{}{}
+}
+
+func buildDefinitionReads(filesToLines map[string]map[int]struct{}) []HookSearchDefinition {
+	var result []HookSearchDefinition
+	for filePath, lineSet := range filesToLines {
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			continue
+		}
+		definitions := ParseDefinitions(string(content), filePath)
+		for i := range definitions {
+			loc := countDefinitionReadLines(definitions[i], lineSet)
+			if loc <= 0 {
+				continue
+			}
+			result = append(result, HookSearchDefinition{
+				ID:  definitions[i].GetID(),
+				Loc: loc,
+			})
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].ID == result[j].ID {
+			return result[i].Loc < result[j].Loc
+		}
+		return result[i].ID < result[j].ID
+	})
+	return result
+}
+
+func countDefinitionReadLines(def Definition, lineSet map[int]struct{}) int {
+	if len(lineSet) == 0 {
+		return 0
+	}
+	start := def.StartLine
+	if start <= 0 {
+		start = 1
+	}
+	end := def.EndLine
+	if end < start {
+		end = start
+	}
+	count := 0
+	for line := range lineSet {
+		if line >= start && line <= end {
+			count++
+		}
+	}
+	return count
+}
+
+func buildFullFileRange(filePath string) string {
+	const fallbackLine = 1
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Sprintf("%s#L%d", filePath, fallbackLine)
+	}
+
+	lineCount := bytes.Count(content, []byte{'\n'})
+	if len(content) == 0 || content[len(content)-1] != '\n' {
+		lineCount++
+	}
+	if lineCount <= 1 {
+		return fmt.Sprintf("%s#L1", filePath)
+	}
+	return fmt.Sprintf("%s#L1-L%d", filePath, lineCount)
+}
+
+func isWebPageRef(value string) bool {
+	parsed, err := url.Parse(value)
+	if err != nil {
+		return false
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return false
+	}
+	return parsed.Host != ""
 }
 
 func extractSearchErrorFromInput(input json.RawMessage) string {
@@ -35917,31 +39339,735 @@ func extractSearchErrorFromInput(input json.RawMessage) string {
 	return ""
 }
 
-func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (tests []string, timeout string) {
-	var toolInput map[string]interface{}
-	if len(input) > 0 {
-		var data map[string]interface{}
-		if err := json.Unmarshal(input, &data); err == nil {
-			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
-				toolInput = ti
+// parseGoTimeoutToSeconds converts a Go duration string (e.g. "2m30s") to seconds.
+func parseGoTimeoutToSeconds(dur string) string {
+	d, err := time.ParseDuration(dur)
+	if err != nil {
+		return dur
+	}
+	return fmt.Sprintf("%d", int64(d.Seconds()))
+}
+
+// extractTestSegmentFromCommand finds the first test-relevant segment in a compound shell command.
+// For "cd /path && go test ./... | tail -80", returns "go test ./...".
+// Returns the original command if it's not compound. Returns "" if no test segment found.
+// Also extracts cwd from any preceding "cd <dir>" segment.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extracttestsegmentfromcommand](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractTestSegmentFromCommand)
+func extractTestSegmentFromCommand(command string) (testSegment string, extractedCwd string) {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return "", ""
+	}
+	// Split by sequence operators (&&, ||, ;)
+	sequenceSegments := shellSequenceRE.Split(command, -1)
+	if len(sequenceSegments) <= 1 {
+		// No compound operators, strip pipe tail and check if it's a test command.
+		seg := command
+		if pipeIdx := strings.Index(seg, "|"); pipeIdx >= 0 && (pipeIdx+1 >= len(seg) || seg[pipeIdx+1] != '|') {
+			seg = strings.TrimSpace(seg[:pipeIdx])
+		}
+		if classifySingleCommandKind(seg) == ToolKindTest {
+			return seg, ""
+		}
+		return "", ""
+	}
+	// For compound commands, find the first test segment and extract cwd from cd segments.
+	for _, seg := range sequenceSegments {
+		seg = strings.TrimSpace(seg)
+		if seg == "" {
+			continue
+		}
+		// Extract cwd from "cd <dir>" segments.
+		fields := strings.Fields(seg)
+		if len(fields) >= 2 && fields[0] == "cd" {
+			extractedCwd = fields[1]
+			continue
+		}
+		// Strip pipe tail for classification and return.
+		cleanSeg := seg
+		if pipeIdx := strings.Index(cleanSeg, "|"); pipeIdx >= 0 && (pipeIdx+1 >= len(cleanSeg) || cleanSeg[pipeIdx+1] != '|') {
+			cleanSeg = strings.TrimSpace(cleanSeg[:pipeIdx])
+		}
+		if classifySingleCommandKind(cleanSeg) == ToolKindTest {
+			return cleanSeg, extractedCwd
+		}
+	}
+	return "", extractedCwd
+}
+
+// resolveTestFilesFromCommand parses a test command and resolves the target paths/packages
+// to actual test file paths on disk. Supports Go, Python, JS/TS, Rust, C#, Ruby, and more.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvetestfilesfromcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestFilesFromCommand)
+func resolveTestFilesFromCommand(command string, cwd string) []string {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return nil
+	}
+	if cwd == "" {
+		cwd = GetRootDir()
+	}
+	// Handle compound commands by extracting the test-relevant segment and cwd.
+	testSeg, extractedCwd := extractTestSegmentFromCommand(command)
+	if testSeg != "" && testSeg != command {
+		command = testSeg
+		if extractedCwd != "" {
+			if filepath.IsAbs(extractedCwd) {
+				cwd = extractedCwd
+			} else {
+				cwd = filepath.Join(cwd, extractedCwd)
 			}
+		}
+	}
+	parts := strings.Fields(command)
+	if len(parts) == 0 {
+		return nil
+	}
+	bin := filepath.Base(parts[0])
+
+	switch bin {
+	case "go":
+		return resolveGoTestFiles(parts, cwd)
+	case "cargo":
+		return resolveCargoTestFiles(parts, cwd)
+	case "dotnet":
+		return resolveDotnetTestFiles(parts, cwd)
+	case "python", "python3":
+		return resolvePythonTestFiles(parts, cwd)
+	case "pytest", "py.test":
+		return resolvePytestFiles(parts[1:], cwd)
+	case "uv":
+		if len(parts) > 2 && parts[1] == "run" {
+			runner := filepath.Base(parts[2])
+			if runner == "pytest" || pyTestRunnerBins[runner] {
+				return resolvePytestFiles(parts[3:], cwd)
+			}
+		}
+		return nil
+	case "uvx":
+		if len(parts) > 1 && pyTestRunnerBins[filepath.Base(parts[1])] {
+			return resolvePytestFiles(parts[2:], cwd)
+		}
+		return nil
+	case "npm", "pnpm":
+		return resolveNpmTestFiles(parts, cwd)
+	case "yarn":
+		return resolveYarnTestFiles(parts, cwd)
+	case "npx", "bunx", "pnpx":
+		if len(parts) > 1 {
+			runner := filepath.Base(parts[1])
+			if jsTestRunnerBins[runner] {
+				return resolveJSTestRunnerFiles(runner, parts[2:], cwd)
+			}
+		}
+		return nil
+	case "bun":
+		if len(parts) > 1 && parts[1] == "test" {
+			return resolveJSTestRunnerFiles("bun", parts[2:], cwd)
+		}
+		return nil
+	case "jest", "vitest", "mocha", "jasmine", "ava":
+		return resolveJSTestRunnerFiles(bin, parts[1:], cwd)
+	case "rspec":
+		return resolveRspecFiles(parts[1:], cwd)
+	default:
+		return nil
+	}
+}
+
+// resolveGoTestFiles resolves "go test ./path/..." to actual _test.go files.
+func resolveGoTestFiles(parts []string, cwd string) []string {
+	if len(parts) < 2 || parts[1] != "test" {
+		return nil
+	}
+	// Collect package patterns (positional args after "go test" that don't start with -)
+	var pkgPatterns []string
+	for i := 2; i < len(parts); i++ {
+		arg := parts[i]
+		if arg == "--" {
+			break
+		}
+		if strings.HasPrefix(arg, "-") {
+			// Skip flags with values
+			if !strings.Contains(arg, "=") {
+				switch arg {
+				case "-run", "-bench", "-timeout", "-count", "-parallel", "-cpu",
+					"-coverprofile", "-outputdir", "-blockprofile", "-cpuprofile",
+					"-memprofile", "-mutexprofile", "-trace", "-o":
+					i++ // skip value
+				}
+			}
+			continue
+		}
+		pkgPatterns = append(pkgPatterns, arg)
+	}
+	if len(pkgPatterns) == 0 {
+		pkgPatterns = []string{"."}
+	}
+
+	var result []string
+	rootDir := GetRootDir()
+	for _, pattern := range pkgPatterns {
+		// Resolve the pattern relative to cwd
+		var baseDir string
+		isRecursive := strings.HasSuffix(pattern, "/...")
+		cleanPattern := strings.TrimSuffix(pattern, "/...")
+		cleanPattern = strings.TrimPrefix(cleanPattern, "./")
+
+		if filepath.IsAbs(cleanPattern) {
+			baseDir = cleanPattern
+		} else {
+			baseDir = filepath.Join(cwd, cleanPattern)
+		}
+
+		if isRecursive {
+			_ = filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return nil
+				}
+				if info.IsDir() {
+					return nil
+				}
+				if strings.HasSuffix(info.Name(), "_test.go") {
+					relPath, err := filepath.Rel(rootDir, path)
+					if err == nil {
+						result = append(result, relPath)
+					} else {
+						result = append(result, path)
+					}
+				}
+				return nil
+			})
+		} else {
+			entries, err := os.ReadDir(baseDir)
+			if err == nil {
+				for _, e := range entries {
+					if !e.IsDir() && strings.HasSuffix(e.Name(), "_test.go") {
+						path := filepath.Join(baseDir, e.Name())
+						relPath, err := filepath.Rel(rootDir, path)
+						if err == nil {
+							result = append(result, relPath)
+						} else {
+							result = append(result, path)
+						}
+					}
+				}
+			}
+		}
+	}
+	return result
+}
+
+// resolveCargoTestFiles resolves "cargo test" to Rust test files in the project.
+func resolveCargoTestFiles(parts []string, cwd string) []string {
+	if len(parts) < 2 || (parts[1] != "test" && parts[1] != "nextest") {
+		return nil
+	}
+	return findTestFilesByPatterns(cwd, []string{"**/*_test.rs", "**/tests/**/*.rs", "**/tests.rs"}, []string{".rs"}, true)
+}
+
+// resolveDotnetTestFiles resolves "dotnet test" to C# test files.
+func resolveDotnetTestFiles(parts []string, cwd string) []string {
+	if len(parts) < 2 || parts[1] != "test" {
+		return nil
+	}
+	// Check if a specific project path is provided
+	projectDir := cwd
+	for i := 2; i < len(parts); i++ {
+		if !strings.HasPrefix(parts[i], "-") && !strings.HasPrefix(parts[i], "/") {
+			candidate := filepath.Join(cwd, parts[i])
+			if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+				projectDir = candidate
+			}
+			break
+		}
+	}
+	return findTestFilesByPatterns(projectDir, nil, []string{".cs"}, true)
+}
+
+// resolvePythonTestFiles resolves "python -m pytest ..." to test files.
+func resolvePythonTestFiles(parts []string, cwd string) []string {
+	for i := 1; i < len(parts); i++ {
+		if parts[i] == "-m" {
+			continue
+		}
+		if parts[i] == "pytest" || parts[i] == "unittest" || parts[i] == "nose2" {
+			return resolvePytestFiles(parts[i+1:], cwd)
+		}
+		break
+	}
+	return nil
+}
+
+// resolvePytestFiles resolves pytest target paths to test files.
+func resolvePytestFiles(args []string, cwd string) []string {
+	var targets []string
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		// pytest supports path::function syntax
+		path := strings.SplitN(arg, "::", 2)[0]
+		if path != "" {
+			targets = append(targets, path)
+		}
+	}
+	if len(targets) == 0 {
+		targets = []string{"."}
+	}
+
+	rootDir := GetRootDir()
+	var result []string
+	for _, target := range targets {
+		absTarget := target
+		if !filepath.IsAbs(absTarget) {
+			absTarget = filepath.Join(cwd, absTarget)
+		}
+		info, err := os.Stat(absTarget)
+		if err != nil {
+			continue
+		}
+		if !info.IsDir() {
+			// Single file
+			if isPythonTestFile(info.Name()) {
+				relPath, err := filepath.Rel(rootDir, absTarget)
+				if err == nil {
+					result = append(result, relPath)
+				} else {
+					result = append(result, absTarget)
+				}
+			}
+			continue
+		}
+		// Directory: walk for test files
+		_ = filepath.Walk(absTarget, func(path string, fi os.FileInfo, err error) error {
+			if err != nil || fi.IsDir() {
+				return nil
+			}
+			if isPythonTestFile(fi.Name()) {
+				relPath, err := filepath.Rel(rootDir, path)
+				if err == nil {
+					result = append(result, relPath)
+				} else {
+					result = append(result, path)
+				}
+			}
+			return nil
+		})
+	}
+	return result
+}
+
+// isPythonTestFile returns true if the file name matches Python test file conventions.
+func isPythonTestFile(name string) bool {
+	lower := strings.ToLower(name)
+	if !strings.HasSuffix(lower, ".py") {
+		return false
+	}
+	base := strings.TrimSuffix(lower, ".py")
+	return strings.HasPrefix(base, "test_") || strings.HasSuffix(base, "_test") ||
+		strings.HasSuffix(base, ".test") || base == "conftest"
+}
+
+// resolveNpmTestFiles resolves "npm test" or "npm run test" to JS/TS test files.
+func resolveNpmTestFiles(parts []string, cwd string) []string {
+	if len(parts) < 2 {
+		return nil
+	}
+	if parts[1] == "test" || (parts[1] == "run" && len(parts) > 2 && parts[2] == "test") {
+		return findJSTestFiles(cwd)
+	}
+	return nil
+}
+
+// resolveYarnTestFiles resolves "yarn test" or "yarn jest" etc to JS/TS test files.
+func resolveYarnTestFiles(parts []string, cwd string) []string {
+	if len(parts) < 2 {
+		return nil
+	}
+	switch parts[1] {
+	case "test", "jest", "vitest", "mocha":
+		return findJSTestFiles(cwd)
+	}
+	return nil
+}
+
+// resolveJSTestRunnerFiles resolves direct JS test runner invocations to test files.
+func resolveJSTestRunnerFiles(runner string, args []string, cwd string) []string {
+	// Check if specific files/dirs are provided as positional args
+	var targets []string
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		targets = append(targets, arg)
+	}
+	if len(targets) > 0 {
+		rootDir := GetRootDir()
+		var result []string
+		for _, target := range targets {
+			absTarget := target
+			if !filepath.IsAbs(absTarget) {
+				absTarget = filepath.Join(cwd, absTarget)
+			}
+			info, err := os.Stat(absTarget)
+			if err != nil {
+				continue
+			}
+			if !info.IsDir() {
+				if isJSTestFile(info.Name()) {
+					relPath, _ := filepath.Rel(rootDir, absTarget)
+					if relPath != "" {
+						result = append(result, relPath)
+					} else {
+						result = append(result, absTarget)
+					}
+				}
+				continue
+			}
+			_ = filepath.Walk(absTarget, func(path string, fi os.FileInfo, err error) error {
+				if err != nil || fi.IsDir() {
+					return nil
+				}
+				if isJSTestFile(fi.Name()) {
+					relPath, _ := filepath.Rel(rootDir, path)
+					if relPath != "" {
+						result = append(result, relPath)
+					} else {
+						result = append(result, path)
+					}
+				}
+				return nil
+			})
+		}
+		if len(result) > 0 {
+			return result
+		}
+	}
+	return findJSTestFiles(cwd)
+}
+
+// resolveRspecFiles resolves rspec target paths to Ruby test files.
+func resolveRspecFiles(args []string, cwd string) []string {
+	var targets []string
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		// rspec supports path:line syntax
+		path := strings.SplitN(arg, ":", 2)[0]
+		if path != "" {
+			targets = append(targets, path)
+		}
+	}
+	if len(targets) == 0 {
+		targets = []string{"spec"}
+	}
+	rootDir := GetRootDir()
+	var result []string
+	for _, target := range targets {
+		absTarget := target
+		if !filepath.IsAbs(absTarget) {
+			absTarget = filepath.Join(cwd, absTarget)
+		}
+		info, err := os.Stat(absTarget)
+		if err != nil {
+			continue
+		}
+		if !info.IsDir() {
+			if strings.HasSuffix(info.Name(), "_spec.rb") {
+				relPath, _ := filepath.Rel(rootDir, absTarget)
+				if relPath != "" {
+					result = append(result, relPath)
+				}
+			}
+			continue
+		}
+		_ = filepath.Walk(absTarget, func(path string, fi os.FileInfo, err error) error {
+			if err != nil || fi.IsDir() {
+				return nil
+			}
+			if strings.HasSuffix(fi.Name(), "_spec.rb") {
+				relPath, _ := filepath.Rel(rootDir, path)
+				if relPath != "" {
+					result = append(result, relPath)
+				}
+			}
+			return nil
+		})
+	}
+	return result
+}
+
+// isJSTestFile returns true if the file name matches JS/TS test file conventions.
+func isJSTestFile(name string) bool {
+	lower := strings.ToLower(name)
+	for _, ext := range []string{".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"} {
+		if !strings.HasSuffix(lower, ext) {
+			continue
+		}
+		base := strings.TrimSuffix(lower, ext)
+		if strings.HasSuffix(base, ".test") || strings.HasSuffix(base, ".spec") ||
+			strings.HasSuffix(base, "_test") || strings.HasSuffix(base, "_spec") {
+			return true
+		}
+	}
+	return false
+}
+
+// findJSTestFiles finds all JS/TS test files in a directory tree.
+func findJSTestFiles(rootCwd string) []string {
+	rootDir := GetRootDir()
+	var result []string
+	_ = filepath.Walk(rootCwd, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			base := filepath.Base(path)
+			if base == "node_modules" || base == ".git" || base == "dist" || base == "build" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if isJSTestFile(info.Name()) {
+			relPath, _ := filepath.Rel(rootDir, path)
+			if relPath != "" {
+				result = append(result, relPath)
+			}
+		}
+		return nil
+	})
+	return result
+}
+
+// findTestFilesByPatterns finds test files in a directory tree matching common conventions.
+// If filterIsTest is true, only files whose DeriveFileKind is "lab" are included.
+func findTestFilesByPatterns(dir string, _ []string, exts []string, filterIsTest bool) []string {
+	rootDir := GetRootDir()
+	var result []string
+	extSet := make(map[string]bool, len(exts))
+	for _, e := range exts {
+		extSet[strings.ToLower(e)] = true
+	}
+	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			base := filepath.Base(path)
+			if base == ".git" || base == "node_modules" || base == "target" || base == "bin" || base == "obj" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(info.Name()))
+		if !extSet[ext] {
+			return nil
+		}
+		if filterIsTest && DeriveFileKind(info.Name()) != FileKindLab {
+			return nil
+		}
+		relPath, _ := filepath.Rel(rootDir, path)
+		if relPath != "" {
+			result = append(result, relPath)
+		}
+		return nil
+	})
+	return result
+}
+
+// resolveAllTestDefinitionIDs parses test files for all test definitions and returns their IDs,
+// including section path information. This resolves ALL test definitions in the given files.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvealltestdefinitionids](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveAllTestDefinitionIDs)
+func resolveAllTestDefinitionIDs(filePaths []string) []string {
+	if len(filePaths) == 0 {
+		return nil
+	}
+	var result []string
+	rootDir := GetRootDir()
+	for _, fp := range filePaths {
+		normalized := normalizeHookPath(fp)
+		if normalized == "" {
+			continue
+		}
+		absPath := normalized
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(rootDir, absPath)
+		}
+		content, err := os.ReadFile(absPath)
+		if err != nil {
+			continue
+		}
+		contentStr := string(content)
+		definitions := ParseDefinitions(contentStr, normalized)
+		sections := ParseSections(contentStr, normalized)
+		fileID := buildFileID(normalized, nil)
+		for i := range definitions {
+			// Only include test definitions
+			effectiveKind := definitions[i].Kind
+			if effectiveKind == DefinitionKindImplementation && strings.Contains(fileID, emojiText(EmojiFileLab)) && isTestFunctionName(definitions[i].Name) {
+				effectiveKind = DefinitionKindTest
+			}
+			if effectiveKind != DefinitionKindTest {
+				continue
+			}
+			// Find section path for this definition
+			sectionPath := ""
+			if len(sections) > 0 {
+				sectionPath = findSectionForDefinition(sections, definitions[i].StartLine, definitions[i].EndLine, "")
+			}
+			// Build definition ID with section path
+			var sectionParts []string
+			if sectionPath != "" {
+				sectionParts = strings.Split(strings.ReplaceAll(sectionPath, "#", "/"), "/")
+			}
+			defID := buildDefinitionID(fileID, sectionParts, definitions[i].Name, effectiveKind)
+			result = append(result, defID)
+		}
+	}
+	return result
+}
+
+// parseTestInfoFromCommand extracts test filters and timeout from a shell command string.
+// For compound commands (e.g. "cd /path && go test -run TestFoo"), extracts the test segment first.
+// Returns a non-empty tests slice ([""] for "all tests") and timeout in seconds.
+func parseTestInfoFromCommand(command string) (tests []string, timeout string) {
+	// Handle compound commands by extracting the test-relevant segment.
+	testSeg, _ := extractTestSegmentFromCommand(command)
+	if testSeg != "" {
+		command = testSeg
+	}
+	parts := strings.Fields(command)
+	for i := 0; i < len(parts); i++ {
+		arg := parts[i]
+		val := ""
+		if strings.Contains(arg, "=") {
+			kv := strings.SplitN(arg, "=", 2)
+			arg, val = kv[0], kv[1]
+		} else if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "-") {
+			val = parts[i+1]
+		}
+		switch arg {
+		// Go: -run <pattern>, -timeout <duration>
+		case "-run":
+			if val != "" {
+				tests = append(tests, val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		case "-timeout":
+			if val != "" {
+				timeout = parseGoTimeoutToSeconds(val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// pytest: -k <expression>
+		case "-k":
+			if val != "" {
+				tests = append(tests, val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// pytest / mocha / jest: --timeout <ms>
+		case "--timeout":
+			if val != "" {
+				timeout = val
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// jest: -t or --testNamePattern <pattern>
+		case "-t", "--testNamePattern":
+			if val != "" {
+				tests = append(tests, val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// mocha: --grep <pattern>
+		case "--grep":
+			if val != "" {
+				tests = append(tests, val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// dotnet test / cargo test: --filter <expression>
+		case "--filter":
+			if val != "" {
+				tests = append(tests, val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// rspec: --example <description>
+		case "--example":
+			if val != "" {
+				tests = append(tests, val)
+				if !strings.Contains(parts[i], "=") {
+					i++
+				}
+			}
+		// cargo test positional: cargo test -- <filter>
+		case "--":
+			if i+1 < len(parts) {
+				tests = append(tests, parts[i+1])
+				i++
+			}
+		}
+	}
+	if len(tests) == 0 {
+		tests = []string{""}
+	}
+	return tests, timeout
+}
+
+func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (files []string, tests []string, timeout string) {
+	var toolInput map[string]interface{}
+	var rawData map[string]interface{}
+	if len(input) > 0 {
+		if err := json.Unmarshal(input, &rawData); err == nil {
+			toolInput = extractToolInputMapFromData(rawData)
 		}
 	}
 	if toolInput == nil && toolArgs != "" {
 		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
 	}
 	if toolInput == nil {
-		return nil, ""
+		toolInput = map[string]interface{}{}
 	}
-	for _, k := range []string{"files", "testNames", "test_names", "tests"} {
+	// Extract files separately from test names.
+	for _, k := range []string{"files"} {
 		if arr, ok := toolInput[k].([]interface{}); ok {
 			for _, item := range arr {
 				if s, ok := item.(string); ok && s != "" {
-					tests = append(tests, s)
+					files = append(files, s)
 				}
 			}
 		} else if v, ok := toolInput[k].(string); ok && v != "" {
-			tests = append(tests, v)
+			files = append(files, v)
+		}
+	}
+	for _, k := range []string{"testNames", "test_names", "tests"} {
+		if arr, ok := toolInput[k].([]interface{}); ok {
+			for _, item := range arr {
+				if s, ok := item.(string); ok && s != "" {
+					if looksLikeFilePath(s) {
+						files = append(files, s)
+					} else {
+						tests = append(tests, s)
+					}
+				}
+			}
+		} else if v, ok := toolInput[k].(string); ok && v != "" {
+			if looksLikeFilePath(v) {
+				files = append(files, v)
+			} else {
+				tests = append(tests, v)
+			}
 		}
 	}
 	for _, k := range []string{"timeout", "timeoutMs"} {
@@ -35954,16 +40080,86 @@ func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (tests
 			break
 		}
 	}
-	return tests, timeout
+
+	// Extract command from multiple sources (tool_input.command, tool_info.command_line, etc.)
+	cmd := extractCommandFromStdin(input)
+	if cmd == "" {
+		if c, ok := toolInput["command"].(string); ok {
+			cmd = c
+		}
+	}
+
+	// Parse test filter patterns and timeout from the command
+	if cmd != "" && len(files) == 0 && len(tests) == 0 {
+		parsedTests, parsedTimeout := parseTestInfoFromCommand(cmd)
+		for _, pt := range parsedTests {
+			if looksLikeFilePath(pt) {
+				files = append(files, pt)
+			} else {
+				tests = append(tests, pt)
+			}
+		}
+		if timeout == "" {
+			timeout = parsedTimeout
+		}
+	}
+
+	// Resolve test files from the command when no explicit files are provided.
+	if cmd != "" && len(files) == 0 {
+		cwd := ""
+		if rawData != nil {
+			cwd = extractCommandCwdFromInput(input)
+		}
+		commandFiles := resolveTestFilesFromCommand(cmd, cwd)
+		if len(commandFiles) > 0 {
+			files = commandFiles
+		}
+	}
+
+	// Resolve all test definition IDs from the discovered files.
+	// Only resolve when tests are empty or contain only the wildcard "".
+	if len(files) > 0 && (len(tests) == 0 || (len(tests) == 1 && tests[0] == "")) {
+		resolvedTests := resolveAllTestDefinitionIDs(files)
+		if len(resolvedTests) > 0 {
+			tests = resolvedTests
+		}
+	}
+
+	return files, tests, timeout
 }
 
-func extractTestEndedFromInput(input json.RawMessage) (succeeded []string, failed []string) {
+func extractTestEndedFromInput(input json.RawMessage) (files []string, succeeded []string, failed []string) {
 	if len(input) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	var data map[string]interface{}
 	if err := json.Unmarshal(input, &data); err != nil {
-		return nil, nil
+		return nil, nil, nil
+	}
+	// Extract files from tool_input for definition resolution context.
+	if ti := extractToolInputMapFromData(data); ti != nil {
+		for _, k := range []string{"files"} {
+			if arr, ok := ti[k].([]interface{}); ok {
+				for _, item := range arr {
+					if s, ok := item.(string); ok && s != "" {
+						files = append(files, s)
+					}
+				}
+			} else if v, ok := ti[k].(string); ok && v != "" {
+				files = append(files, v)
+			}
+		}
+	}
+	// Also resolve test files from command when no explicit files are provided.
+	if len(files) == 0 {
+		cmd := extractCommandFromStdin(input)
+		if cmd != "" {
+			cwd := extractCommandCwdFromInput(input)
+			commandFiles := resolveTestFilesFromCommand(cmd, cwd)
+			if len(commandFiles) > 0 {
+				files = commandFiles
+			}
+		}
 	}
 	toolOutput := data
 	if to, ok := data["tool_output"].(map[string]interface{}); ok {
@@ -35987,7 +40183,7 @@ func extractTestEndedFromInput(input json.RawMessage) (succeeded []string, faile
 			}
 		}
 	}
-	return succeeded, failed
+	return files, succeeded, failed
 }
 
 func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []string {
@@ -35995,9 +40191,7 @@ func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []stri
 	if len(input) > 0 {
 		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
-			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
-				toolInput = ti
-			}
+			toolInput = extractToolInputMapFromData(data)
 		}
 	}
 	if toolInput == nil && toolArgs != "" {
@@ -36059,9 +40253,7 @@ func extractCodeEditFromInput(input json.RawMessage, toolArgs string) (path stri
 	if len(input) > 0 {
 		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
-			if ti, ok := data["tool_input"].(map[string]interface{}); ok {
-				toolInput = ti
-			}
+			toolInput = extractToolInputMapFromData(data)
 		}
 	}
 	if toolInput == nil && toolArgs != "" {
@@ -36188,7 +40380,7 @@ func extractChatFromInput(input json.RawMessage) string {
 	return ""
 }
 
-func extractCommitMessageFromInput(input json.RawMessage, repoRoot string) string {
+func extractCheckpointMessageFromInput(input json.RawMessage, repoRoot string) string {
 	if len(input) > 0 {
 		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
@@ -36199,8 +40391,8 @@ func extractCommitMessageFromInput(input json.RawMessage, repoRoot string) strin
 			}
 		}
 	}
-	commitMsgFile := filepath.Join(repoRoot, ".git", "COMMIT_EDITMSG")
-	if data, err := os.ReadFile(commitMsgFile); err == nil {
+	checkpointMsgFile := filepath.Join(repoRoot, ".git", "COMMIT_EDITMSG")
+	if data, err := os.ReadFile(checkpointMsgFile); err == nil {
 		msg := strings.TrimSpace(string(data))
 		if msg != "" {
 			return msg
@@ -36209,18 +40401,41 @@ func extractCommitMessageFromInput(input json.RawMessage, repoRoot string) strin
 	return ""
 }
 
-func extractCommitSHAFromInput(input json.RawMessage) string {
+func extractCheckpointSHAFromInput(input json.RawMessage) string {
 	if len(input) > 0 {
 		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
-			for _, key := range []string{"sha", "commit_sha", "commitSha", "hash"} {
+			for _, key := range []string{"sha", "checkpoint_sha", "checkpointSha", "hash"} {
 				if v, ok := data[key].(string); ok && v != "" {
 					return strings.TrimSpace(v)
 				}
 			}
 		}
 	}
-	return GetGitCommit()
+	return GetGitCheckpoint()
+}
+
+func normalizeParentSessionID(parent string) string {
+	parent = strings.TrimSpace(parent)
+	if parent == "" {
+		return ""
+	}
+	if strings.EqualFold(parent, "subagent") {
+		return ""
+	}
+	return parent
+}
+
+func extractParentFromMap(data map[string]interface{}) string {
+	for _, key := range []string{"parent", "parentInfo", "parent_info", "parentSessionId", "parent_session_id", "parentId", "parent_id"} {
+		if v, ok := data[key].(string); ok {
+			parent := normalizeParentSessionID(v)
+			if parent != "" {
+				return parent
+			}
+		}
+	}
+	return ""
 }
 
 func extractParentFromInput(input json.RawMessage) string {
@@ -36231,12 +40446,32 @@ func extractParentFromInput(input json.RawMessage) string {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return ""
 	}
-	for _, key := range []string{"parent", "parentInfo", "parent_info", "source"} {
-		if v, ok := data[key].(string); ok && v != "" {
-			return strings.TrimSpace(v)
+	if parent := extractParentFromMap(data); parent != "" {
+		return parent
+	}
+	for _, key := range []string{"event", "native"} {
+		if nested, ok := data[key].(map[string]interface{}); ok {
+			if parent := extractParentFromMap(nested); parent != "" {
+				return parent
+			}
+			if key == "native" {
+				if nativeEvent, ok := nested["event"].(map[string]interface{}); ok {
+					if parent := extractParentFromMap(nativeEvent); parent != "" {
+						return parent
+					}
+				}
+			}
 		}
 	}
 	return ""
+}
+
+func resolveParentSessionID(parentInfo string, input json.RawMessage) string {
+	parent := normalizeParentSessionID(parentInfo)
+	if parent != "" {
+		return parent
+	}
+	return extractParentFromInput(input)
 }
 
 func extractTranscriptFromInput(input json.RawMessage) string {
@@ -36299,60 +40534,6 @@ func normalizeHookPath(path string) string {
 	return strings.TrimPrefix(path, "./")
 }
 
-func applyHookPathToAgentDiffModified(agent *TicketAgent, path string) {
-	normalized := normalizeHookPath(path)
-	if normalized == "" {
-		return
-	}
-	if agent.Diff == nil {
-		agent.Diff = &TicketAgentDiff{}
-	}
-	fileID := buildFileID(normalized, nil)
-	agent.Diff.Files.Modified = appendUniqueString(agent.Diff.Files.Modified, fileID)
-	dir := filepath.Dir(normalized)
-	if dir != "." && dir != "" {
-		folderID := buildFolderID(dir, nil)
-		agent.Diff.Folders.Modified = appendUniqueString(agent.Diff.Folders.Modified, folderID)
-	}
-	bundle := GetBundleByPath(normalized)
-	if bundle != nil {
-		agent.Diff.Bundles.Modified = appendUniqueString(agent.Diff.Bundles.Modified, bundle.GetID())
-		projectName := bundle.ProjectName
-		if projectName == "" {
-			parts := strings.SplitN(bundle.Name, "/", 2)
-			projectName = parts[0]
-		}
-		pKind := DeriveProjectKind(projectName)
-		projectID := emojiText(string(pKind)) + Flat(projectName)
-		agent.Diff.Projects.Modified = appendUniqueString(agent.Diff.Projects.Modified, projectID)
-	}
-}
-
-func applyCodeBlockRefsToAgentDiff(agent *TicketAgent, block *TicketAgentEventCodeBlock) {
-	if block == nil || len(block.Sections) == 0 {
-		return
-	}
-	if agent.Diff == nil {
-		agent.Diff = &TicketAgentDiff{}
-	}
-	for _, ref := range block.Sections {
-		agent.Diff.Sections.Modified = appendUniqueString(agent.Diff.Sections.Modified, ref.Section)
-		for _, defID := range ref.Definitions {
-			agent.Diff.Definitions.Modified = appendUniqueString(agent.Diff.Definitions.Modified, defID)
-		}
-	}
-}
-
-func hasTicketAgentDiffData(diff TicketAgentDiff) bool {
-	stats := []TicketAgentDiffStats{diff.Projects, diff.Bundles, diff.Folders, diff.Files, diff.Sections, diff.Definitions}
-	for _, item := range stats {
-		if len(item.Deleted) > 0 || len(item.Renamed) > 0 || len(item.Modified) > 0 || len(item.Created) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
 func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	for i := range ticket.Agents {
 		if ticket.Agents[i].Session == sessionID {
@@ -36371,69 +40552,8 @@ func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	return len(ticket.Agents) - 1
 }
 
-func setSectionsFilePath(sections []Section, filePath string) {
-	for i := range sections {
-		sections[i].FilePath = filePath
-		setSectionsFilePath(sections[i].Children, filePath)
-	}
-}
-
-func resolveCodeBlockRefs(filePath string, code string, fileContent string) *TicketAgentEventCodeBlock {
-	if code == "" {
-		return nil
-	}
-	loc := strings.Count(code, "\n") + 1
-	if strings.HasSuffix(code, "\n") {
-		loc--
-	}
-	block := &TicketAgentEventCodeBlock{LOC: loc}
-	normPath := normalizeHookPath(filePath)
-	if normPath == "" || fileContent == "" {
-		return block
-	}
-	sections := ParseSections(fileContent, normPath)
-	if len(sections) == 0 {
-		return block
-	}
-	setSectionsFilePath(sections, normPath)
-	definitions := ParseDefinitions(fileContent, normPath)
-	sections = HydrateSectionsWithDefinitions(sections, definitions)
-	idx := strings.Index(fileContent, code)
-	if idx < 0 {
-		return block
-	}
-	startLine := strings.Count(fileContent[:idx], "\n") + 1
-	endLine := startLine + loc - 1
-	sectionMap := map[string][]string{}
-	var collectSectionDefs func(secs []Section)
-	collectSectionDefs = func(secs []Section) {
-		for _, sec := range secs {
-			if sec.EndLine < startLine || sec.StartLine > endLine {
-				continue
-			}
-			secID := sec.GetID()
-			if _, exists := sectionMap[secID]; !exists {
-				sectionMap[secID] = []string{}
-			}
-			for _, def := range sec.Definitions {
-				if def.EndLine < startLine || def.StartLine > endLine {
-					continue
-				}
-				sectionMap[secID] = appendUniqueString(sectionMap[secID], def.GetID())
-			}
-			collectSectionDefs(sec.Children)
-		}
-	}
-	collectSectionDefs(sections)
-	for secID, defs := range sectionMap {
-		block.Sections = append(block.Sections, TicketAgentEventSectionRef{
-			Section:     secID,
-			Definitions: defs,
-		})
-	}
-	return block
-}
-
+// trackHookInOpenTicket updates agent metadata and plan in the latest open ticket.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️trackhookinopenticket](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/trackHookInOpenTicket)
 func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	ticket, err := latestOpenTicket()
 	if err != nil || ticket == nil {
@@ -36449,10 +40569,6 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	}
 	agentIndex := ensureTicketAgent(ticket, sessionID, hctx.Client)
 	agent := &ticket.Agents[agentIndex]
-	timestamp := hctx.Timestamp
-	if timestamp == "" {
-		timestamp = time.Now().UTC().Format(time.RFC3339)
-	}
 	llm := extractLLMFromInput(hctx.Input)
 	if llm != "" && agent.LLM == "" {
 		agent.LLM = llm
@@ -36461,180 +40577,162 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	if transcript != "" && agent.Transcript == "" {
 		agent.Transcript = transcript
 	}
-	if hctx.Event == HookAgentPromptSubmitting {
-		promptText := extractPromptFromInput(hctx.Input)
-		if promptText == "" {
-			promptText = strings.TrimSpace(hctx.ToolArgs)
+	if hctx.Event == HookAgentToolPlanUpdatingEnded {
+		second := hctx.Second
+		if second == "" {
+			second = time.Now().UTC().Format(time.RFC3339)
 		}
-		agent.Events = append(agent.Events, TicketAgentEvent{
-			Kind:      string(HookAgentPromptSubmitting),
-			Timestamp: timestamp,
-			Prompt:    promptText,
-		})
-		_ = SaveTicket(ticket)
-		return
-	}
-	if hctx.Event == HookAgentToolPlanUpdating {
 		if planResult, ok := result.(HookResultAgentToolPlanUpdating); ok && len(planResult.Steps) > 0 {
-			steps := make([]TicketAgentPlanStep, len(planResult.Steps))
-			for i, s := range planResult.Steps {
-				step := TicketAgentPlanStep{Name: s.Name}
-				switch s.Status {
-				case "completed":
-					step.Completed = timestamp
-				case "in-progress":
-					step.Started = timestamp
-				}
-				steps[i] = step
+			var existing []TicketAgentPlanStep
+			if agent.Plan != nil {
+				existing = agent.Plan.Steps
 			}
-			agent.Plan = &TicketAgentPlan{Steps: steps}
-		}
-		_ = SaveTicket(ticket)
-		return
-	}
-	event := TicketAgentEvent{
-		Kind:      string(hctx.Event),
-		Timestamp: timestamp,
-	}
-	if !result.IsAllowed() {
-		event.Denied = result.GetMessage()
-		if event.Denied == "" {
-			event.Denied = "blocked"
+			merged := mergeTicketAgentPlanSteps(existing, planResult.Steps, second)
+			agent.Plan = &TicketAgentPlan{Steps: merged}
 		}
 	}
-	switch r := result.(type) {
-	case HookResultAgentToolSearchStarting:
-		q := strings.Join(r.Pages, ", ")
-		if len(r.Ranges) > 0 {
-			if q != "" {
-				q += " " + strings.Join(r.Ranges, ", ")
-			} else {
-				q = strings.Join(r.Ranges, ", ")
-			}
-		}
-		event.Query = q
-		applyHookPathToAgentDiffModified(agent, hctx.FilePath)
-	case HookResultAgentToolSearchEnded:
-		q := strings.Join(r.Pages, ", ")
-		if len(r.Ranges) > 0 {
-			if q != "" {
-				q += " " + strings.Join(r.Ranges, ", ")
-			} else {
-				q = strings.Join(r.Ranges, ", ")
-			}
-		}
-		event.Query = q
-		applyHookPathToAgentDiffModified(agent, hctx.FilePath)
-	case HookResultAgentToolCodeEditStarting:
-		if r.Path != "" {
-			event.File = normalizeHookPath(r.Path)
-			applyHookPathToAgentDiffModified(agent, r.Path)
-		}
-	case HookResultAgentToolCodeEditEnded:
-		if r.Path != "" {
-			event.File = normalizeHookPath(r.Path)
-			applyHookPathToAgentDiffModified(agent, r.Path)
-		}
-		if r.Old != "" || r.New != "" {
-			var fileContent string
-			if r.Path != "" {
-				normPath := normalizeHookPath(r.Path)
-				absPath := filepath.Join(GetRootDir(), normPath)
-				if content, err := ReadTextFile(absPath); err == nil {
-					fileContent = content
-				}
-			}
-			if r.Old != "" && fileContent != "" {
-				idx := strings.Index(fileContent, r.Old)
-				if idx >= 0 {
-					event.Line = strings.Count(fileContent[:idx], "\n") + 1
-				}
-			}
-			event.Old = resolveCodeBlockRefs(r.Path, r.Old, fileContent)
-			newContent := fileContent
-			if r.Old != "" && r.New != "" && fileContent != "" {
-				newContent = strings.Replace(fileContent, r.Old, r.New, 1)
-			}
-			event.New = resolveCodeBlockRefs(r.Path, r.New, newContent)
-			applyCodeBlockRefsToAgentDiff(agent, event.Old)
-			applyCodeBlockRefsToAgentDiff(agent, event.New)
-		}
-	case HookResultAgentToolTestStarting:
-		if len(r.Tests) > 0 {
-			event.Query = strings.Join(r.Tests, ", ")
-		}
-	case HookResultAgentToolTestEnded:
-		if len(r.Succeeded) > 0 || len(r.Failed) > 0 {
-			event.Query = fmt.Sprintf("succeeded:%d failed:%d", len(r.Succeeded), len(r.Failed))
-		}
-	case HookResultAgentToolBuildStarting:
-		if len(r.Bundles) > 0 {
-			event.Query = strings.Join(r.Bundles, ", ")
-		}
-	case HookResultAgentToolBuildEnded:
-		if len(r.Succeeded) > 0 || len(r.Failed) > 0 {
-			event.Query = fmt.Sprintf("succeeded:%d failed:%d", len(r.Succeeded), len(r.Failed))
-		}
-	case HookResultAgentToolTerminalStarting:
-		if r.Command != "" {
-			event.Query = r.Command
-		}
-	case HookResultAgentToolTerminalEnded:
-		if r.Command != "" {
-			event.Query = r.Command
-		}
-	case HookResultAgentToolStarting:
-		if r.Name != "" {
-			event.Query = r.Name
-		}
-	case HookResultAgentToolEnded:
-		if r.Name != "" {
-			event.Query = r.Name
-		}
-	}
-	if event.File == "" && hctx.FilePath != "" {
-		event.File = normalizeHookPath(hctx.FilePath)
-	}
-	if event.Query == "" {
-		toolArgs := parseHookToolArgs(hctx.ToolArgs)
-		if len(toolArgs) > 0 {
-			if value, ok := toolArgs["query"].(string); ok {
-				q := strings.TrimSpace(value)
-				if q != "" {
-					event.Query = q
-				}
-			}
-		}
-	}
-	if event.Query == "" && strings.EqualFold(hctx.ToolName, "mcp0_tree") {
-		event.Query = strings.TrimSpace(hctx.ToolArgs)
-	}
-	agent.Events = append(agent.Events, event)
 	_ = SaveTicket(ticket)
 }
 
-func runCommitStartingHook(hctx HookContext) HookResultGitCommitStarting {
+// computeCheckpointDiff computes a semantic code diff from git changes for a checkpoint.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️computecheckpointdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/computeCheckpointDiff)
+func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff {
+	diff := &CheckpointDiff{}
+	stdout, _, exitCode := ExecCommand("git", []string{"diff-tree", "--no-commit-id", "-r", "--name-status", checkpointID}, repoRoot)
+	if exitCode != 0 {
+		return diff
+	}
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		status := parts[0]
+		filePath := parts[1]
+		fileID := buildFileID(filePath, nil)
+		dir := filepath.Dir(filePath)
+		folderID := ""
+		if dir != "." && dir != "" {
+			folderID = buildFolderID(dir, nil)
+		}
+		var bundleID, projectID string
+		bundle := GetBundleByPath(filePath)
+		if bundle != nil {
+			bundleID = bundle.GetID()
+			projectName := bundle.ProjectName
+			if projectName == "" {
+				nameParts := strings.SplitN(bundle.Name, "/", 2)
+				projectName = nameParts[0]
+			}
+			pKind := DeriveProjectKind(projectName)
+			projectID = emojiText(string(pKind)) + Flat(projectName)
+		}
+		switch {
+		case status == "A":
+			diff.Files.Created = appendUniqueString(diff.Files.Created, fileID)
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		case status == "D":
+			diff.Files.Deleted = appendUniqueString(diff.Files.Deleted, fileID)
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		case strings.HasPrefix(status, "R"):
+			if len(parts) >= 3 {
+				oldPath := parts[1]
+				newPath := parts[2]
+				oldFileID := buildFileID(oldPath, nil)
+				newFileID := buildFileID(newPath, nil)
+				diff.Files.Renamed = append(diff.Files.Renamed, CheckpointDiffRename{From: oldFileID, To: newFileID})
+			} else {
+				diff.Files.Modified = appendUniqueString(diff.Files.Modified, fileID)
+			}
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		default:
+			diff.Files.Modified = appendUniqueString(diff.Files.Modified, fileID)
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		}
+	}
+	return diff
+}
+
+// storeCheckpointDiff stores a semantic code diff at .semio-repo/🔀/YY/MM/DD/<checkpoint-id>.json.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️storecheckpointdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/storeCheckpointDiff)
+func storeCheckpointDiff(repoRoot string, checkpointID string) {
+	if checkpointID == "" || checkpointID == "unknown" {
+		return
+	}
+	diff := computeCheckpointDiff(repoRoot, checkpointID)
+	now := time.Now().UTC()
+	yy := fmt.Sprintf("%02d", now.Year()%100)
+	mm := fmt.Sprintf("%02d", int(now.Month()))
+	dd := fmt.Sprintf("%02d", now.Day())
+	diffDir := filepath.Join(repoRoot, ".semio-repo", "🔀", yy, mm, dd)
+	if err := os.MkdirAll(diffDir, 0755); err != nil {
+		return
+	}
+	data, err := json.MarshalIndent(diff, "", "  ")
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(filepath.Join(diffDir, checkpointID+".json"), data, 0644)
+}
+
+func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStarting {
 	repoRoot := hctx.RepoRoot
 	if repoRoot == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
-			return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}}
+			return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}}
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
 	SetRootDir(repoRoot)
-	fmt.Println("Running pre-commit hooks...")
+	fmt.Println("Running pre-checkpoint hooks...")
 	if err := runPreflightFix(); err != nil {
-		return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-commit fix failed: %v", err)}}
+		return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-checkpoint fix failed: %v", err)}}
 	}
 	if err := runPreflightAnalyze(); err != nil {
-		return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-commit analyze failed: %v", err)}}
+		return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-checkpoint analyze failed: %v", err)}}
 	}
-	return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: true, Message: "pre-commit checks passed"}}
+	return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: true, Message: "pre-checkpoint checks passed"}}
 }
 
 // ValidateHookEvent checks if the given string is a valid hook event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️validatehookevent](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/ValidateHookEvent)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️validatehookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ValidateHookEvent)
+// ValidateHookEvent MUST perform the ValidateHookEvent operation.
 func ValidateHookEvent(s string) (HookEvent, error) {
 	for _, e := range AllHookEvents {
 		if string(e) == s {
@@ -36661,9 +40759,13 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Long: `Run a lifecycle hook for a given event and client.
 Accepts neutral semio-repo events or native client events (inlet adapter resolves to neutral).
 
-🦑 Git hooks:
-  git.commit.starting          Run before a git commit (pre-commit)
-  git.commit.ended             Run after a git commit (post-commit)
+📦 Version hooks:
+  version.checkpoint.starting  Run before a version checkpoint (e.g. pre-checkpoint)
+  version.checkpoint.ended     Run after a version checkpoint (e.g. post-checkpoint)
+  version.checkin.starting     Run before a version checkin (e.g. fast-forward to main)
+  version.checkin.ended        Run after a version checkin
+  version.checkout.starting    Run before a version checkout (e.g. squash merge)
+  version.checkout.ended       Run after a version checkout
 
 🤖 Neutral agent hooks:
   agent.started                Agent session started
@@ -36672,7 +40774,8 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
   agent.compacting             Context compaction event
   agent.tool.starting          Tool starting (generic, excludes plan, search, code, test, build, terminal)
   agent.tool.ended             Tool completed (generic, excludes plan, search, code, test, build, terminal)
-  agent.tool.plan.updating     Plan/task list updating
+  agent.tool.plan.updating.starting  Plan/task list updating start
+  agent.tool.plan.updating.ended     Plan/task list updating end
   agent.tool.search.starting   Code search/read starting
   agent.tool.search.ended      Code search/read ended
   agent.tool.code.edit.starting Code edit starting
@@ -36683,6 +40786,8 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
   agent.tool.build.ended       Build completed
   agent.tool.terminal.starting Terminal command starting (supports blocking)
   agent.tool.terminal.ended    Terminal command completed
+  agent.thinking.starting      Agent thinking started
+  agent.thinking.ended         Agent thinking completed (cursor: afterAgentThought)
 
 🏢 Native client events (resolved by inlet adapter):
   copilot-chat:    SessionStart, Stop, SubagentStart, SubagentStop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse
@@ -36706,8 +40811,15 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
 				repoRoot = findRepoRoot(cwd)
 			}
 			var input json.RawMessage
-			if stat, err := os.Stdin.Stat(); err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
-				if data, err := io.ReadAll(os.Stdin); err == nil && len(data) > 0 {
+			stdinReader := cmd.InOrStdin()
+			if stdinReader == os.Stdin {
+				if stat, err := os.Stdin.Stat(); err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
+					if data, err := io.ReadAll(os.Stdin); err == nil && len(data) > 0 {
+						input = json.RawMessage(data)
+					}
+				}
+			} else {
+				if data, err := io.ReadAll(stdinReader); err == nil && len(data) > 0 {
 					input = json.RawMessage(data)
 				}
 			}
@@ -36726,7 +40838,7 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
 			hctx := HookContext{
 				Event:      event,
 				Client:     client,
-				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Second:     time.Now().UTC().Format(time.RFC3339),
 				RepoRoot:   repoRoot,
 				ToolName:   toolName,
 				ToolArgs:   toolArgs,
@@ -36772,11 +40884,11 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
 
 // #region 🔖Configure
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Configure)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure)
 // Configure command auto-generates native hook configs for all supported clients.
 
 // ClientHookMapping maps client names to their native event configuration format.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure✂️clienthookmapping](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Configure/ClientHookMapping)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖configure✂️clienthookmapping](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/ClientHookMapping)
 type ClientHookMapping struct {
 	Client     string
 	ConfigPath string
@@ -36832,8 +40944,8 @@ func configureGitHooks(repoRoot string) error {
 	if err := os.MkdirAll(hooksDir, 0755); err != nil {
 		return err
 	}
-	preCommitPath := filepath.Join(hooksDir, "pre-commit")
-	preCommitScript := `#!/usr/bin/env sh
+	preCheckpointPath := filepath.Join(hooksDir, "pre-commit")
+	preCheckpointScript := `#!/usr/bin/env sh
 set -eu
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$repo_root" ] || [ ! -f "$repo_root/.pre-commit-config.yaml" ]; then
@@ -36851,20 +40963,20 @@ fi
 echo "pre-commit is required. install with: uv sync --group dev" >&2
 exit 1
 `
-	if err := os.WriteFile(preCommitPath, []byte(preCommitScript), 0755); err != nil {
+	if err := os.WriteFile(preCheckpointPath, []byte(preCheckpointScript), 0755); err != nil {
 		return err
 	}
-	postCommitPath := filepath.Join(hooksDir, "post-commit")
-	postCommitScript := `#!/usr/bin/env sh
+	postCheckpointPath := filepath.Join(hooksDir, "post-commit")
+	postCheckpointScript := `#!/usr/bin/env sh
 set -eu
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
   exit 0
 fi
 cd "$repo_root"
-./semio-repo/cli/cli hook git.commit.ended
+./semio-repo/cli/cli hook version.checkpoint.ended
 `
-	if err := os.WriteFile(postCommitPath, []byte(postCommitScript), 0755); err != nil {
+	if err := os.WriteFile(postCheckpointPath, []byte(postCheckpointScript), 0755); err != nil {
 		return err
 	}
 	return nil
@@ -37071,17 +41183,18 @@ func generateClaudeCodeConfig(repoRoot string) (string, error) {
 	if _, err := os.Stat(cursorHooksPath); err == nil {
 		cursorHooksExist = true
 	}
-	if !cursorHooksExist {
-		hookEntry := func(cmd string) []map[string]interface{} {
-			return []map[string]interface{}{
-				{
-					"matcher": "",
-					"hooks": []map[string]interface{}{
-						{"type": "command", "command": cmd},
-					},
+	hookEntry := func(cmd string) []map[string]interface{} {
+		return []map[string]interface{}{
+			{
+				"matcher": "",
+				"hooks": []map[string]interface{}{
+					{"type": "command", "command": cmd},
 				},
-			}
+			},
 		}
+	}
+	if !cursorHooksExist {
+		// All events: cursor is absent so claude-code must handle the full lifecycle.
 		existing["hooks"] = map[string]interface{}{
 			"SessionStart":       hookEntry(fmt.Sprintf("%s hook SessionStart claude-code", c)),
 			"SessionEnd":         hookEntry(fmt.Sprintf("%s hook SessionEnd claude-code", c)),
@@ -37099,7 +41212,16 @@ func generateClaudeCodeConfig(repoRoot string) (string, error) {
 			"TeammateIdle":       hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
 		}
 	} else {
-		delete(existing, "hooks")
+		// Cursor handles shared lifecycle events (session, prompt, tool use). Only keep
+		// claude-code-exclusive events that cursor does not fire to avoid duplicate logging
+		// where cursor fires both .cursor/hooks.json (cursor-chat) and .claude/settings.json
+		// (claude-code) for the same event, causing cursor events to be misidentified.
+		existing["hooks"] = map[string]interface{}{
+			"PermissionRequest": hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
+			"TaskCompleted":     hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
+			"Notification":      hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
+			"TeammateIdle":      hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
+		}
 	}
 	out, err := json.MarshalIndent(existing, "", "  ")
 	if err != nil {
@@ -37134,7 +41256,7 @@ func generateDroidConfig(repoRoot string) (string, error) {
 
 // #region 🔖Update Command
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Update%20Command)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command)
 // Update command implementation for dependency updates.
 
 var updateCmd = &cobra.Command{
@@ -37154,7 +41276,7 @@ func init() {
 }
 
 // DependabotConfig holds the data fields for a dependabot config record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand✂️dependabotconfig](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Update%20Command/DependabotConfig)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand✂️dependabotconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/DependabotConfig)
 type DependabotConfig struct {
 	Version int `yaml:"version"`
 	Updates []struct {
@@ -37175,7 +41297,7 @@ type DependabotConfig struct {
 }
 
 // UpdateConfig holds the data fields for a update config record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand✂️updateconfig](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Update%20Command/UpdateConfig)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand✂️updateconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/UpdateConfig)
 type UpdateConfig struct {
 	Exclude               map[string][]string
 	Constraints           map[string][]Constraint
@@ -37194,7 +41316,7 @@ type UpdateConfig struct {
 }
 
 // Constraint holds the data fields for a constraint record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand✂️constraint](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Update%20Command/Constraint)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖updatecommand✂️constraint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/Constraint)
 type Constraint struct {
 	Dependency string
 	MaxMajor   int
@@ -37505,12 +41627,12 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 
 // #region 🔖File Utilities
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fileutilities](semiorepo://section/semio-repo/cli/main.go/Types/Cli/File%20Utilities)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fileutilities](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/File%20Utilities)
 // File utility functions for reading, writing and path manipulation.
 
 // MoveFile MUST return a non-nil error when the operation fails.
 // MoveFile performs the move file operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fileutilities🛠️movefile](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/File%20Utilities/MoveFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fileutilities🛠️movefile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/File%20Utilities/d/i/MoveFile)
 func MoveFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -37537,7 +41659,7 @@ func MoveFile(sourcePath, destPath string) error {
 
 // CopyFile MUST return a non-nil error when the operation fails.
 // CopyFile performs the copy file operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fileutilities🛠️copyfile](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/File%20Utilities/CopyFile)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖fileutilities🛠️copyfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/File%20Utilities/d/i/CopyFile)
 func CopyFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -37560,19 +41682,19 @@ func CopyFile(sourcePath, destPath string) error {
 
 // #region 🔖Goals
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals](semiorepo://section/semio-repo/cli/main.go/Types/Cli/Goals)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals)
 // Goal management functions for planning and tracking.
 
 // GetRepoGoalsDir MUST retrieve the requested value or return an error.
 // GetRepoGoalsDir retrieves and returns the repo goals dir.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️getrepogoalsdir](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/GetRepoGoalsDir)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️getrepogoalsdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/GetRepoGoalsDir)
 func GetRepoGoalsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "🎯")
 }
 
 // ListGoals MUST return all available goals entries.
 // ListGoals returns a list of goals entries.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️listgoals](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/ListGoals)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️listgoals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ListGoals)
 func ListGoals() ([]*Goal, error) {
 	dir := GetRepoGoalsDir()
 	var goals []*Goal
@@ -37611,7 +41733,7 @@ func ListGoals() ([]*Goal, error) {
 
 // ReadGoal MUST return the goal content or an error if unavailable.
 // ReadGoal reads and returns goal from the source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️readgoal](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/ReadGoal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️readgoal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ReadGoal)
 func ReadGoal(id string) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(id), "goal.json")
@@ -37628,12 +41750,18 @@ func ReadGoal(id string) (*Goal, error) {
 	}
 	goal.ID = id
 	goal.Path = path
+
+	if idx := strings.LastIndex(id, "/"); idx != -1 {
+		goal.Parent = id[:idx]
+	} else {
+		goal.Parent = ""
+	}
 	return &goal, nil
 }
 
 // StreamGoals MUST invoke the callback for each matching goals entry.
 // StreamGoals streams goals entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️streamgoals](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/StreamGoals)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️streamgoals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/StreamGoals)
 func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -37665,7 +41793,7 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 
 // StreamStatutes MUST invoke the callback for each matching statutes entry.
 // StreamStatutes streams statutes entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️streamstatutes](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/StreamStatutes)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️streamstatutes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/StreamStatutes)
 func StreamStatutes(ctx context.Context, out chan<- StatuteMeta, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -37689,17 +41817,17 @@ func StreamStatutes(ctx context.Context, out chan<- StatuteMeta, opts ...StreamO
 	return nil
 }
 
-// StreamCommits MUST invoke the callback for each matching commits entry.
-// StreamCommits streams commits entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️streamcommits](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/StreamCommits)
-func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...StreamOptions) error {
+// StreamCheckpoints MUST invoke the callback for each matching checkpoints entry.
+// StreamCheckpoints streams checkpoints entries through the callback.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️streamcheckpoints](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/StreamCheckpoints)
+func StreamCheckpoints(ctx context.Context, limit *int, out chan<- Checkpoint, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
 	if len(opts) > 0 {
 		options = opts[0]
 	}
-	commits := LoadCommits(limit)
-	for _, c := range commits {
+	checkpoints := LoadCheckpoints(limit)
+	for _, c := range checkpoints {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -37716,9 +41844,277 @@ func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...S
 	return nil
 }
 
+// #region 🔖Sessions
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions)
+// Session entity model, streaming, and ID/URI helpers.
+
+// SessionKind represents the status of a session.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions✂️sessionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/SessionKind)
+type SessionKind string
+
+const (
+	SessionKindRunning     SessionKind = "running"
+	SessionKindCompleted   SessionKind = "completed"
+	SessionKindInterrupted SessionKind = "interrupted"
+)
+
+// Session holds the data fields for a session record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions✂️session](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/Session)
+type Session struct {
+	UUID      string      `json:"uuid"`
+	Year      int         `json:"year"`
+	Month     int         `json:"month"`
+	Day       int         `json:"day"`
+	Kind      SessionKind `json:"kind"`
+	Client    string      `json:"client,omitempty"`
+	LLM       string      `json:"llm,omitempty"`
+	StartedAt string      `json:"startedAt,omitempty"`
+	EndedAt   string      `json:"endedAt,omitempty"`
+}
+
+// GetID returns the semio repo ID for a session.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/GetID)
+// GetID MUST perform the GetID operation.
+func (s *Session) GetID() string {
+	return GetArtifactID("session", map[string]interface{}{
+		"parentId": GetArtifactID("day", map[string]interface{}{
+			"parentId": GetArtifactID("month", map[string]interface{}{
+				"parentId": GetArtifactID("year", map[string]interface{}{
+					"parentId": "",
+					"yy":       fmt.Sprintf("%02d", s.Year),
+				}),
+				"mm": fmt.Sprintf("%02d", s.Month),
+			}),
+			"dd": fmt.Sprintf("%02d", s.Day),
+		}),
+		"uuid": s.UUID,
+	})
+}
+
+// GetURI returns the semio repo URI for a session.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/GetURI)
+// GetURI MUST perform the GetURI operation.
+func (s *Session) GetURI() string {
+	return GetArtifactURI("session", map[string]interface{}{
+		"uuid": s.UUID,
+	})
+}
+
+// SessionKindEmoji returns the emoji for the given session kind.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️sessionkindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/SessionKindEmoji)
+// SessionKindEmoji MUST perform the SessionKindEmoji operation.
+func SessionKindEmoji(kind SessionKind) string {
+	switch kind {
+	case SessionKindRunning:
+		return EmojiSessionRunning
+	case SessionKindCompleted:
+		return EmojiSessionCompleted
+	case SessionKindInterrupted:
+		return EmojiSessionInterrupted
+	}
+	return EmojiSession
+}
+
+// DeriveSessionKind determines the session kind by examining its event files.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️derivesessionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/DeriveSessionKind)
+// DeriveSessionKind MUST perform the DeriveSessionKind operation.
+func DeriveSessionKind(sessionDir string) SessionKind {
+	entries, err := os.ReadDir(sessionDir)
+	if err != nil {
+		return SessionKindInterrupted
+	}
+	for _, e := range entries {
+		if strings.Contains(e.Name(), "agent-ended") {
+			return SessionKindCompleted
+		}
+	}
+	if len(entries) == 0 {
+		return SessionKindInterrupted
+	}
+
+	var latestTime time.Time
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		if info.ModTime().After(latestTime) {
+			latestTime = info.ModTime()
+		}
+	}
+	if !latestTime.IsZero() && time.Since(latestTime) < 30*time.Minute {
+		return SessionKindRunning
+	}
+	return SessionKindInterrupted
+}
+
+// ExtractSessionClient reads the client from session event files.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️extractsessionclient](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/ExtractSessionClient)
+// ExtractSessionClient MUST perform the ExtractSessionClient operation.
+func ExtractSessionClient(sessionDir string) string {
+	metaPath := filepath.Join(sessionDir, "session.json")
+	if data, err := os.ReadFile(metaPath); err == nil {
+		var meta SessionMeta
+		if err := json.Unmarshal(data, &meta); err == nil && meta.Client != "" {
+			return meta.Client
+		}
+	}
+	entries, err := os.ReadDir(sessionDir)
+	if err != nil || len(entries) == 0 {
+		return ""
+	}
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") || e.Name() == "session.json" {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(sessionDir, e.Name()))
+		if err != nil {
+			continue
+		}
+		var entry struct {
+			Event struct {
+				Client string `json:"client"`
+			} `json:"event"`
+		}
+		if err := json.Unmarshal(data, &entry); err == nil && entry.Event.Client != "" {
+			return entry.Event.Client
+		}
+	}
+	return ""
+}
+
+// ExtractSessionSecond reads the earliest second from session event files.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️extractsessionsecond](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/ExtractSessionSecond)
+// ExtractSessionSecond MUST perform the ExtractSessionSecond operation.
+func ExtractSessionSecond(sessionDir string) string {
+	metaPath := filepath.Join(sessionDir, "session.json")
+	if data, err := os.ReadFile(metaPath); err == nil {
+		var meta SessionMeta
+		if err := json.Unmarshal(data, &meta); err == nil && meta.Second != "" {
+			return meta.Second
+		}
+	}
+	entries, err := os.ReadDir(sessionDir)
+	if err != nil || len(entries) == 0 {
+		return ""
+	}
+	var earliest string
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") || e.Name() == "session.json" {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(sessionDir, e.Name()))
+		if err != nil {
+			continue
+		}
+		var entry struct {
+			Event struct {
+				Second string `json:"second"`
+			} `json:"event"`
+		}
+		if err := json.Unmarshal(data, &entry); err == nil && entry.Event.Second != "" {
+			if earliest == "" || entry.Event.Second < earliest {
+				earliest = entry.Event.Second
+			}
+		}
+	}
+	return earliest
+}
+
+// StreamSessions streams all sessions found in the events directory.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️streamsessions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/StreamSessions)
+// StreamSessions MUST perform the StreamSessions operation.
+func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+	rootDir := GetRootDir()
+	agentEventsDir := filepath.Join(rootDir, ".semio-repo", "⚡", "🤖")
+	yearDirs, err := os.ReadDir(agentEventsDir)
+	if err != nil {
+		return nil
+	}
+	for _, yd := range yearDirs {
+		if !yd.IsDir() {
+			continue
+		}
+		yy, err := strconv.Atoi(yd.Name())
+		if err != nil {
+			continue
+		}
+		monthDirs, err := os.ReadDir(filepath.Join(agentEventsDir, yd.Name()))
+		if err != nil {
+			continue
+		}
+		for _, md := range monthDirs {
+			if !md.IsDir() {
+				continue
+			}
+			mm, err := strconv.Atoi(md.Name())
+			if err != nil {
+				continue
+			}
+			dayDirs, err := os.ReadDir(filepath.Join(agentEventsDir, yd.Name(), md.Name()))
+			if err != nil {
+				continue
+			}
+			for _, dd := range dayDirs {
+				if !dd.IsDir() {
+					continue
+				}
+				dayNum, err := strconv.Atoi(dd.Name())
+				if err != nil {
+					continue
+				}
+				sessionDirs, err := os.ReadDir(filepath.Join(agentEventsDir, yd.Name(), md.Name(), dd.Name()))
+				if err != nil {
+					continue
+				}
+				for _, sd := range sessionDirs {
+					if !sd.IsDir() {
+						continue
+					}
+					sessionDir := filepath.Join(agentEventsDir, yd.Name(), md.Name(), dd.Name(), sd.Name())
+					kind := DeriveSessionKind(sessionDir)
+					client := ExtractSessionClient(sessionDir)
+					startedAt := ExtractSessionSecond(sessionDir)
+					s := Session{
+						UUID:      sd.Name(),
+						Year:      yy,
+						Month:     mm,
+						Day:       dayNum,
+						Kind:      kind,
+						Client:    client,
+						StartedAt: startedAt,
+					}
+					if !matchesFilter(s.UUID, options) && !matchesFilter(string(s.Kind), options) && !matchesFilter(s.Client, options) {
+						continue
+					}
+					if !matchesQuery(s.UUID+" "+string(s.Kind)+" "+s.Client, options) {
+						continue
+					}
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					case out <- s:
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// #endregion 🔖Sessions
+
 // SaveGoal MUST persist the goal atomically to the data store.
 // SaveGoal persists goal to the data store.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️savegoal](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Goals/SaveGoal)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🛠️savegoal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/SaveGoal)
 func SaveGoal(goal Goal) error {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(goal.ID), "goal.json")
@@ -37967,9 +42363,9 @@ func ghDeleteIssue(issueURLOrNumber string) error {
 
 // ResolveContributorContributions MUST return the resolved value or an error if unresolvable.
 // ResolveContributorContributions resolves and returns the contributor contributions.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️resolvecontributorcontributions](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/ResolveContributorContributions)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️resolvecontributorcontributions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ResolveContributorContributions)
 func ResolveContributorContributions(tickets []*Ticket) *ContributorContributionsTree {
-	commitsMap := map[string]*Commit{}
+	checkpointsMap := map[string]*Checkpoint{}
 
 	var allBundles []*Bundle
 	if repoResolverInstance != nil && repoResolverInstance.Ctx != nil {
@@ -37986,11 +42382,11 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 	}
 
 	for _, t := range tickets {
-		sha := t.GetCommit()
+		sha := t.GetCheckpoint()
 		if sha != "" {
-			if _, exists := commitsMap[sha]; !exists {
-				commitsMap[sha] = &Commit{
-					ID:    "semio-repo/commit/" + sha,
+			if _, exists := checkpointsMap[sha]; !exists {
+				checkpointsMap[sha] = &Checkpoint{
+					ID:    "semio-repo/checkpoint/" + sha,
 					SHA:   sha,
 					Title: t.GetTitle(),
 					Date:  t.GetDateStarted(),
@@ -37999,12 +42395,12 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 		}
 	}
 
-	commits := []*Commit{}
-	for _, c := range commitsMap {
-		commits = append(commits, c)
+	checkpoints := []*Checkpoint{}
+	for _, c := range checkpointsMap {
+		checkpoints = append(checkpoints, c)
 	}
-	sort.Slice(commits, func(i, j int) bool {
-		return commits[i].Date.After(commits[j].Date)
+	sort.Slice(checkpoints, func(i, j int) bool {
+		return checkpoints[i].Date.After(checkpoints[j].Date)
 	})
 
 	type DefNode struct {
@@ -38172,9 +42568,9 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 	sort.Slice(resBundles, func(i, j int) bool { return resBundles[i].Name < resBundles[j].Name })
 
 	return &ContributorContributionsTree{
-		Commits: commits,
-		Tickets: tickets,
-		Bundles: resBundles,
+		Checkpoints: checkpoints,
+		Tickets:     tickets,
+		Bundles:     resBundles,
 	}
 }
 
@@ -38182,12 +42578,12 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 
 // #region 🔖Todos
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos](semiorepo://section/semio-repo/cli/main.go/Types/Todos)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos)
 // Todo tracking functions for task management.
 
 // GetTodos MUST retrieve the requested value or return an error.
 // GetTodos retrieves and returns the todos.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️gettodos](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/GetTodos)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️gettodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/GetTodos)
 func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 	allTodos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -38208,7 +42604,7 @@ func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 
 // ScanTodos MUST scan the input completely and collect all matches.
 // ScanTodos scans and collects todos from the input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️scantodos](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/ScanTodos)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️scantodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/ScanTodos)
 func ScanTodos(rootDir string) ([]*Todo, error) {
 	var todos []*Todo
 	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
@@ -38244,7 +42640,7 @@ func ScanTodos(rootDir string) ([]*Todo, error) {
 
 // ParseTodoMarkdown MUST return the parsed result or an error for invalid input.
 // ParseTodoMarkdown parses and returns the todo markdown from the input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️parsetodomarkdown](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/ParseTodoMarkdown)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️parsetodomarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/ParseTodoMarkdown)
 func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -38273,7 +42669,7 @@ func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 
 // ParseTodoComments MUST return the parsed result or an error for invalid input.
 // ParseTodoComments parses and returns the todo comments from the input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️parsetodocomments](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/ParseTodoComments)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️parsetodocomments](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/ParseTodoComments)
 func ParseTodoComments(content string, filePath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -38299,7 +42695,7 @@ func ParseTodoComments(content string, filePath string) []*Todo {
 
 // TodoCreate MUST return a non-nil error when the operation fails.
 // TodoCreate performs the todo create operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️todocreate](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/TodoCreate)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️todocreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoCreate)
 func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 
 	info, err := os.Stat(input.ParentID)
@@ -38349,14 +42745,14 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 
 // TodoChange MUST return a non-nil error when the operation fails.
 // TodoChange performs the todo change operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️todochange](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/TodoChange)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️todochange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoChange)
 func (c *repoContext) TodoChange(input TodoChangeInput) (*Todo, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 // TodoDelete MUST return a non-nil error when the operation fails.
 // TodoDelete performs the todo delete operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️tododelete](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/TodoDelete)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️tododelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoDelete)
 func (c *repoContext) TodoDelete(id string) (bool, error) {
 	todos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -38385,7 +42781,7 @@ func (c *repoContext) TodoDelete(id string) (bool, error) {
 
 // TodoToTicket MUST return a non-nil error when the operation fails.
 // TodoToTicket performs the todo to ticket operation on the repo context.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️todototicket](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/TodoToTicket)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🛠️todototicket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoToTicket)
 func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, error) {
 	todos, _ := ScanTodos(c.rootDir)
 	var todo *Todo
@@ -38400,7 +42796,6 @@ func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, e
 	}
 
 	if input.Title == "" {
-		input.Title = todo.Name
 	}
 	input.Prompt = fmt.Sprintf("%s\n\n%s", todo.Description, input.Prompt)
 
@@ -38441,11 +42836,11 @@ func removeLineFromFile(path string, lineNum int) {
 
 // #region 🔖Artifact ID
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering](semiorepo://section/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering)
 // Artifact ID parsing and resolution utilities.
 
 // SemanticId holds the data fields for a semantic id record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid✂️semanticid](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/SemanticId)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid✂️semanticid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/SemanticId)
 type SemanticId struct {
 	Emoji string
 	Value string
@@ -38470,7 +42865,7 @@ func emojiText(emoji string) string {
 
 // String MUST return a non-empty string representation.
 // String returns the string representation of the semantic id.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️string](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/String)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/String)
 func (s SemanticId) String() string {
 	if s.Value == "" {
 		return emojiText(s.Emoji)
@@ -38527,8 +42922,8 @@ func fileKindEmoji(data map[string]interface{}) string {
 	switch fkind {
 	case "code":
 		return emojiText(EmojiFileCode)
-	case "test":
-		return emojiText(EmojiFileTest)
+	case "lab":
+		return emojiText(EmojiFileLab)
 	case "script":
 		return emojiText(EmojiFileScript)
 	case "docs":
@@ -38537,6 +42932,8 @@ func fileKindEmoji(data map[string]interface{}) string {
 		return emojiText(EmojiFileConfig)
 	case "resource":
 		return emojiText(EmojiFileResource)
+	case "template":
+		return emojiText(EmojiFileTemplate)
 	case "license":
 		return emojiText(EmojiFileLicense)
 	}
@@ -38560,6 +42957,8 @@ func definitionKindEmoji(data map[string]interface{}) string {
 		return emojiText(EmojiDefinitionInterface)
 	case DefinitionKindConstant:
 		return emojiText(EmojiDefinitionConstant)
+	case DefinitionKindTest:
+		return emojiText(EmojiDefinitionTest)
 	}
 	return emojiText(EmojiDefinitionImpl)
 }
@@ -38571,6 +42970,93 @@ func goalArtifactID(rawGoalID string) string {
 		result += emojiText(EmojiGoal) + Flat(p)
 	}
 	return result
+}
+
+// goalPathToSemioID converts a filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI")
+// to the semio repo emoji ID format (e.g. "🎯aioptimizedrepo🎯repocli").
+func goalPathToSemioID(goalPath string) string {
+	if goalPath == "" {
+		return ""
+	}
+	return goalArtifactID(goalPath)
+}
+
+// semioIDToGoalPath converts a semio repo emoji goal ID (e.g. "🎯aioptimizedrepo🎯repocli")
+// back to its filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI") by scanning the
+// goals directory and matching each segment's Flat() value.
+func semioIDToGoalPath(semioID string) string {
+	if semioID == "" {
+		return ""
+	}
+	goalEmoji := emojiText(EmojiGoal)
+	trimmed := semioID
+	if strings.HasPrefix(trimmed, goalEmoji) {
+		trimmed = trimmed[len(goalEmoji):]
+	}
+	segments := strings.Split(trimmed, goalEmoji)
+	if len(segments) == 0 {
+		return ""
+	}
+
+	dir := GetRepoGoalsDir()
+	var pathParts []string
+	currentDir := dir
+
+	for _, seg := range segments {
+		if seg == "" {
+			continue
+		}
+		entries, err := os.ReadDir(currentDir)
+		if err != nil {
+			return semioID
+		}
+		found := false
+		for _, entry := range entries {
+			if entry.IsDir() && Flat(entry.Name()) == seg {
+				pathParts = append(pathParts, entry.Name())
+				currentDir = filepath.Join(currentDir, entry.Name())
+				found = true
+				break
+			}
+		}
+		if !found {
+			return semioID
+		}
+	}
+	return strings.Join(pathParts, "/")
+}
+
+// contributorGithubToSemioID converts a github username to the semio contributor ID format.
+func contributorGithubToSemioID(github string) string {
+	if github == "" || github == "unknown" {
+		return github
+	}
+	prefix := emojiText(EmojiContributor)
+	if strings.HasPrefix(github, prefix) {
+		return github
+	}
+	return prefix + Flat(github)
+}
+
+// semioIDToContributorGithub converts a semio contributor ID back to a github username.
+func semioIDToContributorGithub(semioID string) string {
+	if semioID == "" || semioID == "unknown" {
+		return semioID
+	}
+	prefix := emojiText(EmojiContributor)
+	if !strings.HasPrefix(semioID, prefix) {
+		return semioID
+	}
+	flat := semioID[len(prefix):]
+	contributors, err := ListContributors()
+	if err == nil {
+		for _, c := range contributors {
+			if Flat(c.Github) == flat {
+				return c.Github
+			}
+		}
+	}
+	return flat
 }
 
 func interactionKindEmoji(data map[string]interface{}) string {
@@ -38651,6 +43137,8 @@ func definitionKindCodeFromEmoji(emoji string) string {
 		return "f"
 	case emojiText(EmojiDefinitionConstant):
 		return "c"
+	case emojiText(EmojiDefinitionTest):
+		return "t"
 	}
 	return "i"
 }
@@ -38678,6 +43166,9 @@ func projectKindCode(data map[string]interface{}) string {
 	return "u"
 }
 
+// ProjectKindToCode MUST perform the ProjectKindToCode operation.
+// ProjectKindToCode holds the data fields for a ProjectKindToCode record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️projectkindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ProjectKindToCode)
 func ProjectKindToCode(k ProjectKind) string {
 	switch k {
 	case ProjectKindInfrastructure:
@@ -38713,6 +43204,9 @@ func bundleKindCode(data map[string]interface{}) string {
 	return "l"
 }
 
+// BundleKindToCode holds the data fields for a BundleKindToCode record.
+// BundleKindToCode MUST perform the BundleKindToCode operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/BundleKindToCode)
 func BundleKindToCode(k BundleKind) string {
 	switch k {
 	case BundleKindRepo:
@@ -38739,6 +43233,9 @@ func folderKindCode(data map[string]interface{}) string {
 	return "req"
 }
 
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/FolderKindToCode)
+// FolderKindToCode MUST perform the FolderKindToCode operation.
+// FolderKindToCode performs the FolderKindToCode operation.
 func FolderKindToCode(k FolderKind) string {
 	if k == FolderKindOrganization {
 		return "org"
@@ -38753,6 +43250,8 @@ func definitionKindCode(data map[string]interface{}) string {
 		return "f"
 	case DefinitionKindConstant:
 		return "c"
+	case DefinitionKindTest:
+		return "t"
 	}
 	return "i"
 }
@@ -38763,11 +43262,16 @@ func interactionKindCode(data map[string]interface{}) string {
 }
 
 func containsUriSection(uri string) bool {
-	return strings.Contains(uri, "/s/")
+	if strings.HasPrefix(uri, "semiorepo://section/") {
+		return true
+	}
+
+	// so require /s/ without a subsequent /d/ to match only section URIs
+	return strings.Contains(uri, "/s/") && !strings.Contains(uri, "/d/")
 }
 
 func containsUriDefinition(uri string) bool {
-	return strings.Contains(uri, "/d/")
+	return strings.Contains(uri, "/d/") || strings.HasPrefix(uri, "semiorepo://definition/")
 }
 
 func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []string) {
@@ -38833,7 +43337,7 @@ func extractFileAndDefinitionFromUri(uri string) (filePath string, defName strin
 }
 
 // ArtifactRef holds the data fields for a artifact ref record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid✂️artifactref](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/ArtifactRef)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid✂️artifactref](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ArtifactRef)
 type ArtifactRef struct {
 	Kind         string
 	Path         string
@@ -38842,7 +43346,7 @@ type ArtifactRef struct {
 
 // ParseArtifactRef MUST return the parsed result or an error for invalid input.
 // ParseArtifactRef parses and returns the artifact ref from the input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️parseartifactref](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/ParseArtifactRef)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️parseartifactref](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ParseArtifactRef)
 func ParseArtifactRef(ref string) ArtifactRef {
 	clean := strings.ReplaceAll(ref, "\uFE0E", "")
 	clean = strings.ReplaceAll(clean, "\uFE0F", "")
@@ -38890,7 +43394,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 		}
 	}
 
-	fileEmojis := []string{"💻", "🧪", "📜", "📃", "⚙️", "💾", "⚖️", "📄"}
+	fileEmojis := []string{"💻", "🥼", "📜", "📃", "⚙️", "💾", "⚖️", "📄"}
 	for _, e := range fileEmojis {
 		if strings.HasPrefix(clean, e) {
 			rest := clean[len(e):]
@@ -38920,7 +43424,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 
 // UnSlugify MUST complete the operation successfully.
 // UnSlugify performs the un slugify operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️unslugify](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/UnSlugify)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️unslugify](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/UnSlugify)
 func UnSlugify(slug string) string {
 	parts := strings.Split(slug, "-")
 	for i, p := range parts {
@@ -38933,7 +43437,7 @@ func UnSlugify(slug string) string {
 
 // FindSectionBySlug MUST return the matching result or an error if not found.
 // FindSectionBySlug locates and returns the matching section by slug.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️findsectionbyslug](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/FindSectionBySlug)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️findsectionbyslug](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/FindSectionBySlug)
 func FindSectionBySlug(sections []Section, slug string) *Section {
 	for i := range sections {
 		if Slugify(sections[i].Name) == slug {
@@ -38948,7 +43452,7 @@ func FindSectionBySlug(sections []Section, slug string) *Section {
 
 // ResolveSectionName MUST return the resolved value or an error if unresolvable.
 // ResolveSectionName resolves and returns the section name.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️resolvesectionname](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/ResolveSectionName)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️resolvesectionname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ResolveSectionName)
 func ResolveSectionName(filePath string, slug string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -38969,7 +43473,7 @@ func ResolveSectionName(filePath string, slug string) string {
 
 // SectionIdValueToUriPath MUST complete the operation successfully.
 // SectionIdValueToUriPath performs the section id value to uri path operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️sectionidvaluetouripath](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/SectionIdValueToUriPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️sectionidvaluetouripath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/SectionIdValueToUriPath)
 func SectionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	if hashIdx < 0 {
@@ -38987,7 +43491,7 @@ func SectionIdValueToUriPath(value string) string {
 
 // DefinitionIdValueToUriPath MUST complete the operation successfully.
 // DefinitionIdValueToUriPath performs the definition id value to uri path operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionidvaluetouripath](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/DefinitionIdValueToUriPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionidvaluetouripath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/DefinitionIdValueToUriPath)
 func DefinitionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	paragraphIdx := strings.Index(value, "§")
@@ -39014,7 +43518,7 @@ func DefinitionIdValueToUriPath(value string) string {
 
 // ParseSectionUriPath MUST return the parsed result or an error for invalid input.
 // ParseSectionUriPath parses and returns the section uri path from the input.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsesectionuripath](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/ParseSectionUriPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsesectionuripath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ParseSectionUriPath)
 func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string) {
 	parts := strings.Split(uriPath, "/")
 	fileEnd := -1
@@ -39035,7 +43539,7 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 
 // StatuteIdToUriPath MUST complete the operation successfully.
 // StatuteIdToUriPath performs the statute id to uri path operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️statuteidtouripath](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/StatuteIdToUriPath)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️statuteidtouripath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/StatuteIdToUriPath)
 func StatuteIdToUriPath(id string) string {
 	parts := strings.Split(id, "/")
 	for i, p := range parts {
@@ -39046,7 +43550,7 @@ func StatuteIdToUriPath(id string) string {
 
 // StatuteUriPathToId MUST complete the operation successfully.
 // StatuteUriPathToId performs the statute uri path to id operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️statuteuripathtoid](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/StatuteUriPathToId)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️statuteuripathtoid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/StatuteUriPathToId)
 func StatuteUriPathToId(uriPath string) string {
 	parts := strings.Split(uriPath, "/")
 	for i, p := range parts {
@@ -39057,7 +43561,7 @@ func StatuteUriPathToId(uriPath string) string {
 
 // GetArtifactID MUST retrieve the requested value or return an error.
 // GetArtifactID retrieves and returns the artifact i d.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifactid](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/GetArtifactID)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifactid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/GetArtifactID)
 func GetArtifactID(kind string, data map[string]interface{}) string {
 	parentId, _ := data["parentId"].(string)
 	switch kind {
@@ -39093,6 +43597,8 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	case "second":
 		ss, _ := data["ss"].(string)
 		return parentId + emojiText(EmojiSecond) + ss
+	case "codebase":
+		return parentId + emojiText(EmojiCodebase)
 	case "projects":
 		return parentId + emojiText(EmojiProjects)
 	case "project":
@@ -39124,6 +43630,10 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 			path, _ = data["id"].(string)
 		}
 		name := filepath.Base(path)
+		ext := filepath.Ext(name)
+		if ext != "" {
+			name = strings.TrimSuffix(name, ext)
+		}
 		return parentId + fileKindEmoji(data) + Flat(name)
 	case "sections":
 		return parentId + emojiText(EmojiSections)
@@ -39269,9 +43779,9 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	case "contributor":
 		github, _ := data["github"].(string)
 		return emojiText(EmojiContributor) + Flat(github)
-	case "commits":
-		return parentId + emojiText(EmojiCommits)
-	case "commit":
+	case "checkpoints":
+		return parentId + emojiText(EmojiCheckpoints)
+	case "checkpoint":
 		sha, _ := data["sha"].(string)
 		contributorId, _ := data["contributorId"].(string)
 		if contributorId == "" {
@@ -39279,7 +43789,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 				contributorId = emojiText(EmojiContributor) + Flat(authorId)
 			}
 		}
-		return contributorId + emojiText(EmojiCommit) + sha
+		return contributorId + emojiText(EmojiCheckpoint) + sha
 	case "line":
 		lineNum, _ := data["line"].(float64)
 		return parentId + emojiText(EmojiLine) + fmt.Sprintf("%d", int(lineNum))
@@ -39303,13 +43813,21 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		contributorId, _ := data["contributorId"].(string)
 		entityID, _ := data["entityId"].(string)
 		return secondId + contributorId + entityID + k
+	case "sessions":
+		return parentId + emojiText(EmojiSessions)
+	case "session":
+		uuid, _ := data["uuid"].(string)
+		if uuid == "" {
+			uuid, _ = data["id"].(string)
+		}
+		return parentId + emojiText(EmojiSession) + Flat(uuid)
 	}
 	return ""
 }
 
 // GetArtifactURI MUST retrieve the requested value or return an error.
 // GetArtifactURI retrieves and returns the artifact u r i.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/GetArtifactURI)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/GetArtifactURI)
 func GetArtifactURI(kind string, data map[string]interface{}) string {
 	parentUri, _ := data["parentUri"].(string)
 	switch kind {
@@ -39384,6 +43902,8 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 		}
 		ss, _ := data["ss"].(string)
 		return fmt.Sprintf("semiorepo://y/%s/m/%s/d/%s/h/%s/min/%s/s/%s", yy, mm, dd, hh, min, ss)
+	case "codebase":
+		return "semiorepo://cb"
 	case "projects":
 		return "semiorepo://p"
 	case "project":
@@ -39654,9 +44174,9 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	case "contributor":
 		id, _ := data["github"].(string)
 		return fmt.Sprintf("semiorepo://cs/%s", PathToUriPath(id))
-	case "commits":
+	case "checkpoints":
 		return "semiorepo://cms"
-	case "commit":
+	case "checkpoint":
 		sha, _ := data["sha"].(string)
 		return fmt.Sprintf("semiorepo://cms/%s", sha)
 	case "interactions":
@@ -39678,6 +44198,14 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 			return "semiorepo://is/on/" + url.PathEscape(entityUri) + "/" + kind
 		}
 		return ""
+	case "sessions":
+		return "semiorepo://s"
+	case "session":
+		uuid, _ := data["uuid"].(string)
+		if uuid == "" {
+			uuid, _ = data["id"].(string)
+		}
+		return fmt.Sprintf("semiorepo://s/%s", PathToUriPath(uuid))
 	}
 	return ""
 }
@@ -39878,7 +44406,7 @@ func buildDefinitionUriFromIdValue(id string, dkc string) string {
 
 // IdToUri MUST complete the operation successfully.
 // IdToUri performs the id to uri operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/IdToUri)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/IdToUri)
 func IdToUri(id string) string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -39925,7 +44453,7 @@ func IdToUri(id string) string {
 	}
 	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch, EmojiProjectMono}
 	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
-	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant}
+	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant, EmojiDefinitionTest}
 	interactionEmojis := []string{EmojiInteractionStarted, EmojiInteractionEdited, EmojiInteractionFinished, EmojiInteractionRestarted, EmojiInteractionDeleted}
 	for _, ie := range interactionEmojis {
 		if entityPart, ok := hasSuffix(normalized, ie); ok {
@@ -39943,9 +44471,10 @@ func IdToUri(id string) string {
 	implEmoji := norm(EmojiDefinitionImpl)
 	interfaceEmoji := norm(EmojiDefinitionInterface)
 	constantEmoji := norm(EmojiDefinitionConstant)
+	testEmoji := norm(EmojiDefinitionTest)
 	if idx := strings.Index(normalized, sectionEmoji); idx > 0 {
 		hasDefinitionSuffix := false
-		for _, de := range []string{implEmoji, interfaceEmoji, constantEmoji} {
+		for _, de := range []string{implEmoji, interfaceEmoji, constantEmoji, testEmoji} {
 			if defIdx := strings.LastIndex(normalized, de); defIdx > idx {
 				hasDefinitionSuffix = true
 				break
@@ -40000,6 +44529,11 @@ skipSectionChain:
 			return result
 		}
 	}
+	if idx := strings.LastIndex(normalized, testEmoji); idx > 0 {
+		if result := handleDefinition(idx, len(testEmoji), EmojiDefinitionTest); result != "" {
+			return result
+		}
+	}
 	for _, pe := range projectEmojis {
 		if rest, ok := hasPrefix(normalized, pe); ok {
 			pkc := projectKindCodeFromEmoji(pe)
@@ -40016,7 +44550,7 @@ skipSectionChain:
 			return buildFileUriFromPath(rest)
 		}
 	}
-	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	fileEmojis := []string{EmojiFileCode, EmojiFileLab, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
 	for _, fe := range fileEmojis {
 		if rest, ok := hasPrefix(normalized, fe); ok {
 			return buildFileUriFromPath(rest)
@@ -40076,18 +44610,24 @@ skipSectionChain:
 		}
 		return "semiorepo://cs/" + rest
 	}
-	if rest, ok := hasPrefix(normalized, EmojiCommit); ok {
+	if rest, ok := hasPrefix(normalized, EmojiCheckpoint); ok {
 		if rest == "" {
 			return "semiorepo://cms"
 		}
 		return "semiorepo://cms/" + rest
+	}
+	if rest, ok := hasPrefix(normalized, EmojiSession); ok {
+		if rest == "" {
+			return "semiorepo://s"
+		}
+		return "semiorepo://s/" + rest
 	}
 	return ""
 }
 
 // UriToId MUST complete the operation successfully.
 // UriToId performs the uri to id operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid](semiorepo://definition/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Artifact%20ID/UriToId)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/UriToId)
 func UriToId(uri string) string {
 	if !strings.HasPrefix(uri, "semiorepo://") {
 		return ""
@@ -40149,8 +44689,12 @@ func UriToId(uri string) string {
 	case strings.HasPrefix(p, "f/"):
 		fRest := strings.TrimPrefix(p, "f/")
 		fParts := strings.SplitN(fRest, "/", 2)
-		fileName := fParts[0]
-		fileId := emojiText(EmojiFileCode) + Flat(PathFromUriPath(fileName))
+		fileName := PathFromUriPath(fParts[0])
+		ext := filepath.Ext(fileName)
+		if ext != "" {
+			fileName = strings.TrimSuffix(fileName, ext)
+		}
+		fileId := emojiText(EmojiFileCode) + Flat(fileName)
 		if len(fParts) == 1 {
 			return fileId
 		}
@@ -40208,10 +44752,15 @@ func UriToId(uri string) string {
 		v := strings.TrimPrefix(p, "cs/")
 		return emojiText(EmojiContributor) + Flat(v)
 	case p == "cms":
-		return emojiText(EmojiCommits)
+		return emojiText(EmojiCheckpoints)
 	case strings.HasPrefix(p, "cms/"):
 		v := strings.TrimPrefix(p, "cms/")
-		return emojiText(EmojiCommit) + Flat(v)
+		return emojiText(EmojiCheckpoint) + Flat(v)
+	case p == "s":
+		return emojiText(EmojiSessions)
+	case strings.HasPrefix(p, "s/"):
+		v := strings.TrimPrefix(p, "s/")
+		return emojiText(EmojiSession) + Flat(v)
 	case p == "is":
 		return ""
 	case strings.HasPrefix(p, "is/on/"):
@@ -40290,6 +44839,8 @@ func definitionEmojiFromCode(code string) string {
 		return EmojiDefinitionInterface
 	case "c":
 		return EmojiDefinitionConstant
+	case "t":
+		return EmojiDefinitionTest
 	}
 	return EmojiDefinitionImpl
 }
@@ -40320,8 +44871,12 @@ func uriSubPathToId(parentId string, subPath string) string {
 	if strings.HasPrefix(subPath, "f/") {
 		fRest := strings.TrimPrefix(subPath, "f/")
 		fParts := strings.SplitN(fRest, "/", 2)
-		fileName := fParts[0]
-		fileId := emojiText(EmojiFileCode) + Flat(PathFromUriPath(fileName))
+		fileName := PathFromUriPath(fParts[0])
+		ext := filepath.Ext(fileName)
+		if ext != "" {
+			fileName = strings.TrimSuffix(fileName, ext)
+		}
+		fileId := emojiText(EmojiFileCode) + Flat(fileName)
 		if len(fParts) == 1 {
 			return fileId
 		}
@@ -40432,7 +44987,7 @@ func parseGoalUri(rest string) string {
 
 // #region 🔖Entity Rendering
 
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖entityrendering](semiorepo://section/semio-repo/cli/main.go/Types/Todos/Entity%20Rendering/Entity%20Rendering)
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖entityrendering](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering)
 // Entity rendering functions for formatted output generation.
 
 func extractCreatedStr(data map[string]interface{}) string {
@@ -40623,7 +45178,7 @@ func collectEntityProps(kind string, data map[string]interface{}, truncateDesc b
 	case "project":
 		desc, _ := data["description"].(string)
 		appendNonEmpty(desc)
-	case "commit":
+	case "checkpoint":
 		msg, _ := data["message"].(string)
 		appendNonEmpty(msg)
 	case "root":
@@ -40638,30 +45193,11 @@ func collectEntityProps(kind string, data map[string]interface{}, truncateDesc b
 func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) string {
 	id := GetArtifactID(kind, data)
 	props := collectEntityProps(kind, data, false)
-	propColor := func(i int) string {
-		switch i {
-		case 0:
-			return ColorYellow
-		case 1:
-			return ColorBlue
-		case 2:
-			return ColorGreen
-		default:
-			return ColorDim
-		}
-	}
-	out := ""
-	if id != "" {
-		out = fmt.Sprintf("%s", colorize(sanitizeProp(id), ColorBold, isTTY))
-	}
-	for i, p := range props {
-		if out == "" {
-			out = colorize(p, propColor(i), isTTY)
-		} else {
-			out += fmt.Sprintf(" %s", colorize(p, propColor(i), isTTY))
-		}
-	}
-	return sanitizeSingleLine(out)
+	return sanitizeSingleLine(renderTemplate(textTpl, "text/entity", map[string]interface{}{
+		"ID":    id,
+		"Props": props,
+		"IsTTY": isTTY,
+	}))
 }
 
 func inferEntityKind(key string) string {
@@ -40683,7 +45219,7 @@ func inferEntityKind(key string) string {
 		{"breachkind", "statute"},
 		{"bundle", "bundle"},
 		{"project", "project"},
-		{"commit", "commit"},
+		{"checkpoint", "checkpoint"},
 		{"repo", "root"},
 		{"syncgithub", "root"},
 		{"syncmanagement", "root"},
@@ -40703,15 +45239,22 @@ func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	uri := GetArtifactURI(kind, data)
 	props := collectEntityProps(kind, data, false)
-	out := fmt.Sprintf("[%s](%s)", sanitizeProp(id), uri)
-	for _, p := range props {
-		out += fmt.Sprintf(" - `%s`", p)
-	}
-	return sanitizeSingleLine(out)
+	return sanitizeSingleLine(renderTemplate(mdTpl, "md/entity_link", map[string]interface{}{
+		"ID":    id,
+		"URI":   uri,
+		"Props": props,
+	}))
 }
 
 func renderEntityMarkdown(kind string, data map[string]interface{}) string {
-	return "- " + renderEntityMarkdownLink(kind, data)
+	id := GetArtifactID(kind, data)
+	uri := GetArtifactURI(kind, data)
+	props := collectEntityProps(kind, data, false)
+	return sanitizeSingleLine(renderTemplate(mdTpl, "md/entity_item", map[string]interface{}{
+		"ID":    id,
+		"URI":   uri,
+		"Props": props,
+	}))
 }
 
 func getTerminalWidth() int {

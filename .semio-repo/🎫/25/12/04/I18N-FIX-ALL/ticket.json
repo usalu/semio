@@ -1,18 +1,6 @@
 {
   "title": "Fix all i18n errors and warnings",
   "status": "closed",
-  "prompt": "Fix all i18n errors and warnings",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.866Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Fix all i18n errors and warnings",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Fix all i18n errors and warnings",
+  "goal": "🎯aioptimizedrepo"
 }

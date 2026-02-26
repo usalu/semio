@@ -6,36 +6,5 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/640"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "sessions": [
-    {
-      "id": "1771717426152801669-4711711945898715965",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "windsurf-chat",
-      "prompts": [
-        {
-          "timestamp": "2026-02-21T23:43:36Z"
-        },
-        {
-          "timestamp": "2026-02-21T23:44:11Z",
-          "events": [
-            {
-              "kind": "agent.started",
-              "timestamp": "2026-02-21T23:44:59Z"
-            }
-          ]
-        },
-        {
-          "timestamp": "2026-02-21T23:45:10Z",
-          "events": [
-            {
-              "kind": "agent.started",
-              "timestamp": "2026-02-21T23:45:30Z"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
 }

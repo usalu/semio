@@ -1,18 +1,6 @@
 {
   "title": "Remove transaction props from elements",
   "status": "closed",
-  "prompt": "Remove transaction props from elements",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.92Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Remove transaction props from elements",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Remove transaction props from elements",
+  "goal": "🎯aioptimizedrepo"
 }

@@ -1,62 +1,10 @@
 {
   "title": "Adapt Entity Id Requirements",
   "status": "closed",
-  "prompt": "Adapt all implementations and tests to match the updated semio repo entity ID requirements. Update GetArtifactID, Flat, tests, and all related code.",
+  "description": "Adapt all implementations and tests to match the updated semio repo entity ID requirements. Update GetArtifactID, Flat, tests, and all related code.",
   "summary": "Adapted entity kind repo→root in all 10 locations in main.go and 5 in main_test.go. Fixed pruneUnmatched tree search to keep children of matched nodes. Fixed StreamFiles scope resolution for bundle paths like semio/go. Fixed 6 pre-existing TestFormatResult failures and 3 fixture file ID mismatches. Added short-mode skips to 15+ slow integration tests. All short tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/572"
   },
-  "goal": "OPERATIONAL-REPO/R26-02",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-15 15:24:28",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
-      "prompt": "Adapt all implementations and tests to match the updated semio repo entity ID requirements. Update GetArtifactID, Flat, tests, and all related code.",
-      "llm": "opus-4-6"
-    },
-    {
-      "kind": "ticket.close",
-      "date": "2026-02-15 17:56:51",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
-      "diff": {
-        "bundles": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        },
-        "folders": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "files": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "sections": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        },
-        "definitions": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        }
-      }
-    }
-  ]
+  "goal": "🎯operationalrepo🎯r2602"
 }

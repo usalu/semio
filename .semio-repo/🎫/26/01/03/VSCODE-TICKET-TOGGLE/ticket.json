@@ -1,18 +1,6 @@
 {
   "title": "VSCODE-TICKET-TOGGLE",
   "status": "closed",
-  "prompt": "When pressing close or reopen on ticket tree item in VSCode it opens a command instead of closing/reopening the clicked ticket.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-01-03T01:47:38Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
-      "prompt": "When pressing close or reopen on ticket tree item in VSCode it opens a command instead of closing/reopening the clicked ticket.",
-      "llm": "\"\""
-    }
-  ]
+  "description": "When pressing close or reopen on ticket tree item in VSCode it opens a command instead of closing/reopening the clicked ticket.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
 }

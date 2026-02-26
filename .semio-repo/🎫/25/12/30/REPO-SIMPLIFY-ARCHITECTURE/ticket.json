@@ -1,18 +1,6 @@
 {
   "title": "REPO-SIMPLIFY-ARCHITECTURE",
   "status": "closed",
-  "prompt": "\"Refactor repo script architecture: simplify to non-interactive JSON-output commands, move interactivity to VSCode extension with QuickPick wizards\"",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "",
-      "author": "",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "\"Refactor repo script architecture: simplify to non-interactive JSON-output commands, move interactivity to VSCode extension with QuickPick wizards\"",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\"Refactor repo script architecture: simplify to non-interactive JSON-output commands, move interactivity to VSCode extension with QuickPick wizards\"",
+  "goal": "🎯aioptimizedrepo"
 }

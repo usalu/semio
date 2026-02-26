@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [🧰semiorepo🖱️vscode🥼extensiontestts](semiorepo://file/semio-repo/vscode/extension.test.ts)
+// [🧰semiorepo🖱️vscode🥼extensiontestts](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -18,7 +17,6 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
-
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
@@ -33,8 +31,13 @@ import {
   TicketInteraction,
   TreeNodeData,
   buildCliTreeArgs,
+  buildEntityEmojiPattern,
+  buildEntityIdRegex,
+  ENTITY_EMOJIS,
+  ENTITY_ID_REGEX,
   extractLeadingEmoji,
   extractRepoResult,
+  hasRepoAccess,
   invalidateTreeNodeCache,
   parseRepoEvents,
   parseUri,
@@ -47,15 +50,73 @@ import {
 // #endregion 🔖Imports
 
 // #region 🔖Constants
-
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixBreach", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate", "semio.navigateTo"];
-const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
+const EXPECTED_COMMANDS = [
+  "semio.analyze",
+  "semio.analyzeFile",
+  "semio.autofix",
+  "semio.autofixFile",
+  "semio.policyList",
+  "semio.ticketOpen",
+  "semio.ticketList",
+  "semio.ticketClose",
+  "semio.ticketRead",
+  "semio.ticketOpen",
+  "semio.projectList",
+  "semio.contributorAdd",
+  "semio.contributorList",
+  "semio.contributorRemove",
+  "semio.sectionTree",
+  "semio.definitionList",
+  "semio.folderTree",
+  "semio.folderCreate",
+  "semio.folderMove",
+  "semio.folderDelete",
+  "semio.folderList",
+  "semio.fileCreate",
+  "semio.fileMove",
+  "semio.fileDelete",
+  "semio.fileList",
+  "semio.fileTree",
+  "semio.sectionCreate",
+  "semio.sectionMove",
+  "semio.sectionDelete",
+  "semio.sectionIntegrate",
+  "semio.sectionList",
+  "semio.definitionTree",
+  "semio.projectTree",
+  "semio.policyCheck",
+  "semio.refreshDiagnostics",
+  "semio.autofixBreach",
+  "semio.copyId",
+  "semio.mailto",
+  "semio.openLink",
+  "semio.refreshMonorepo",
+  "semio.refreshCodebase",
+  "semio.copyCheckpointSha",
+  "semio.openCheckpointInGitHub",
+  "semio.ticketReopen",
+  "semio.refreshItem",
+  "semio.navigate",
+  "semio.navigateTo",
+];
+const EXPECTED_CONSTRAINTS = [
+  "guid-unique",
+  "type-name-unique",
+  "design-name-unique",
+  "piece-name-unique",
+  "quality-name-unique",
+  "port-name-unique",
+  "file-name-unique",
+  "folder-name-unique",
+  "connector-name-unique",
+  "model-name-unique",
+  "layer-path-unique",
+];
 const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
 
 // #endregion 🔖Constants
 
 // #region 🔖Utilities
-
 function getWorkspaceRoot(): string {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? path.join(__dirname, "../../../..");
 }
@@ -82,7 +143,6 @@ async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vsco
 // #endregion 🔖Utilities
 
 // #region 🔖Extension Activation
-
 suiteSetup(async function () {
   this.timeout(30000);
   await openFixture("semio/kit_metabolism.json");
@@ -92,7 +152,6 @@ suiteSetup(async function () {
 // #endregion 🔖Extension Activation
 
 // #region 🔖RepoEvent Parsing Tests
-
 suite("RepoEvent Parsing Test Suite", () => {
   test("parseRepoEvents handles result field correctly", () => {
     const output = '{"kind":"result","result":{"data":{"breachs":[{"id":"v1"}]}}}';
@@ -107,9 +166,7 @@ suite("RepoEvent Parsing Test Suite", () => {
   });
 
   test("extractRepoResult extracts data from result field", () => {
-    const events: RepoEvent[] = [
-      { kind: "result", result: { data: { breachs: [{ id: "v1" }] } } }
-    ];
+    const events: RepoEvent[] = [{ kind: "result", result: { data: { breachs: [{ id: "v1" }] } } }];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
     const data = extracted.data as any;
@@ -119,9 +176,7 @@ suite("RepoEvent Parsing Test Suite", () => {
   });
 
   test("extractRepoResult falls back to data field if result is missing", () => {
-    const events: RepoEvent[] = [
-      { kind: "result", data: { breachs: [{ id: "v2" }] } }
-    ];
+    const events: RepoEvent[] = [{ kind: "result", data: { breachs: [{ id: "v2" }] } }];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
     const data = extracted.data as any;
@@ -131,9 +186,7 @@ suite("RepoEvent Parsing Test Suite", () => {
   });
 
   test("extractRepoResult prefers result over data field", () => {
-    const events: RepoEvent[] = [
-      { kind: "result", result: { data: { breachs: [{ id: "from-result" }] } }, data: { breachs: [{ id: "from-data" }] } }
-    ];
+    const events: RepoEvent[] = [{ kind: "result", result: { data: { breachs: [{ id: "from-result" }] } }, data: { breachs: [{ id: "from-data" }] } }];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
     const data = extracted.data as any;
@@ -142,16 +195,14 @@ suite("RepoEvent Parsing Test Suite", () => {
   });
 
   test("extractRepoResult handles fatal errors", () => {
-    const events: RepoEvent[] = [
-      { kind: "error", error: { message: "Fatal error occurred", fatal: true } }
-    ];
+    const events: RepoEvent[] = [{ kind: "error", error: { message: "Fatal error occurred", fatal: true } }];
     assert.throws(() => extractRepoResult(events), /Fatal error occurred/);
   });
 
   test("extractRepoResult ignores non-fatal errors", () => {
     const events: RepoEvent[] = [
       { kind: "error", error: { message: "Non-fatal warning", fatal: false } },
-      { kind: "result", result: { data: { breachs: [] } } }
+      { kind: "result", result: { data: { breachs: [] } } },
     ];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
@@ -160,7 +211,7 @@ suite("RepoEvent Parsing Test Suite", () => {
   test("extractRepoResult uses last result when multiple result events", () => {
     const events: RepoEvent[] = [
       { kind: "result", result: { data: { breachs: [{ id: "first" }] } } },
-      { kind: "result", result: { data: { breachs: [{ id: "last" }] } } }
+      { kind: "result", result: { data: { breachs: [{ id: "last" }] } } },
     ];
     const extracted = extractRepoResult(events);
     const data = extracted.data as any;
@@ -171,7 +222,6 @@ suite("RepoEvent Parsing Test Suite", () => {
 // #endregion 🔖RepoEvent Parsing Tests
 
 // #region 🔖Command Registration Tests
-
 suite("Command Registration Test Suite", () => {
   test("All expected commands are registered", async () => {
     const extension = vscode.extensions.getExtension("usalu.semio-repo");
@@ -188,7 +238,6 @@ suite("Command Registration Test Suite", () => {
 // #endregion 🔖Command Registration Tests
 
 // #region 🔖Kit Validation Tests
-
 suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
 
@@ -274,7 +323,6 @@ suite("Kit Validation Test Suite", function () {
 // #endregion 🔖Kit Validation Tests
 
 // #region 🔖Repo Diagnostics Tests
-
 suite("Repo Diagnostics Test Suite", function () {
   this.timeout(30000);
 
@@ -345,7 +393,6 @@ suite("Repo Diagnostics Test Suite", function () {
 // #endregion 🔖Repo Diagnostics Tests
 
 // #region 🔖Refresh Diagnostics Tests
-
 suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
 
@@ -365,7 +412,6 @@ suite("Refresh Diagnostics Test Suite", function () {
 // #endregion 🔖Refresh Diagnostics Tests
 
 // #region 🔖Sidebar View Tests
-
 suite("Sidebar View Test Suite", function () {
   this.timeout(15000);
 
@@ -424,14 +470,14 @@ suite("Sidebar View Test Suite", function () {
     assert.ok(commands.includes("semio.refreshMonorepo"), "refreshMonorepo command should be registered");
   });
 
-  test("Copy commit SHA command is available", async function () {
+  test("Copy checkpoint SHA command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.copyCommitSha"), "copyCommitSha command should be registered");
+    assert.ok(commands.includes("semio.copyCheckpointSha"), "copyCheckpointSha command should be registered");
   });
 
-  test("Open commit in GitHub command is available", async function () {
+  test("Open checkpoint in GitHub command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.openCommitInGitHub"), "openCommitInGitHub command should be registered");
+    assert.ok(commands.includes("semio.openCheckpointInGitHub"), "openCheckpointInGitHub command should be registered");
   });
 
   test("Ticket reopen command is available", async function () {
@@ -453,7 +499,7 @@ suite("Sidebar View Test Suite", function () {
       "semio.filter.toggle.file.code",
       "semio.filter.toggle.file.script",
       "semio.filter.toggle.file.config",
-      "semio.filter.toggle.file.test",
+      "semio.filter.toggle.file.lab",
       "semio.filter.toggle.file.docs",
       "semio.filter.toggle.file.resource",
       "semio.filter.toggle.file.license",
@@ -464,10 +510,10 @@ suite("Sidebar View Test Suite", function () {
       "semio.filter.toggle.policy.all",
       "semio.filter.toggle.contributor.none",
       "semio.filter.toggle.contributor.all",
-      "semio.filter.toggle.commit.none",
-      "semio.filter.toggle.commit.all",
+      "semio.filter.toggle.checkpoint.none",
+      "semio.filter.toggle.checkpoint.all",
     ];
-    const missing = newFilterCommands.filter(cmd => !commands.includes(cmd));
+    const missing = newFilterCommands.filter((cmd) => !commands.includes(cmd));
     assert.strictEqual(missing.length, 0, `Missing new filter commands: ${missing.join(", ")}`);
   });
 });
@@ -475,7 +521,6 @@ suite("Sidebar View Test Suite", function () {
 // #endregion 🔖Sidebar View Tests
 
 // #region 🔖Sections View Tests
-
 suite("Sections View Test Suite", function () {
   this.timeout(30000);
 
@@ -537,11 +582,7 @@ suite("Sections View Test Suite", function () {
 
   test("Sections tree view refreshes on file change", async function () {
     const root = getWorkspaceRoot();
-    const candidatePaths = [
-      path.join(root, "semio-repo", "vscode", "extension.ts"),
-      path.join(root, "@semio-repo/vscode/extension.ts"),
-      path.join(root, "extension.ts"),
-    ];
+    const candidatePaths = [path.join(root, "semio-repo", "vscode", "extension.ts"), path.join(root, "@semio-repo/vscode/extension.ts"), path.join(root, "extension.ts")];
     const existing = candidatePaths.find((p) => fs.existsSync(p));
     if (existing) {
       await vscode.workspace.openTextDocument(vscode.Uri.file(existing));
@@ -565,20 +606,59 @@ suite("Filter Provider Test Suite", () => {
     const provider = new FilterTreeDataProvider();
     const children = await provider.getChildren();
     assert.strictEqual(children.length, 13, "Should have 13 root elements (search + 12 filters)");
-    const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
-    assert.ok(labels.some(l => l.startsWith("🔍Search")), "Should have Search");
-    assert.ok(labels.some(l => l.startsWith("🏗️Projects")), "Should have Projects");
-    assert.ok(labels.some(l => l.startsWith("📦Bundles")), "Should have Bundles");
-    assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");
-    assert.ok(labels.some(l => l.startsWith("📄Files")), "Should have Files");
-    assert.ok(labels.some(l => l.startsWith("🔖Sections")), "Should have Sections");
-    assert.ok(labels.some(l => l.startsWith("🏷️Definitions")), "Should have Definitions");
-    assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
-    assert.ok(labels.some(l => l.startsWith("🎫Tickets")), "Should have Tickets");
-    assert.ok(labels.some(l => l.startsWith("🎫Dates")), "Should have Dates");
-    assert.ok(labels.some(l => l.startsWith("�️Policies")), "Should have Policies");
-    assert.ok(labels.some(l => l.startsWith("🧑‍💻Contributors")), "Should have Contributors");
-    assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
+    const labels = children.map((c: FilterTreeItem) => (typeof c.label === "string" ? c.label : (c.label as vscode.TreeItemLabel).label));
+    assert.ok(
+      labels.some((l) => l.startsWith("🔍Search")),
+      "Should have Search",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🏗️Projects")),
+      "Should have Projects",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("📦Bundles")),
+      "Should have Bundles",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("�Folders")),
+      "Should have Folders",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("📄Files")),
+      "Should have Files",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🔖Sections")),
+      "Should have Sections",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🏷️Definitions")),
+      "Should have Definitions",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🎯Goals")),
+      "Should have Goals",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🎫Tickets")),
+      "Should have Tickets",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🎫Dates")),
+      "Should have Dates",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("�️Policies")),
+      "Should have Policies",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🧑‍💻Contributors")),
+      "Should have Contributors",
+    );
+    assert.ok(
+      labels.some((l) => l.startsWith("🔄Checkpoints")),
+      "Should have Checkpoints",
+    );
   });
 
   test("Time category returns year values when available", async () => {
@@ -587,7 +667,7 @@ suite("Filter Provider Test Suite", () => {
     const timeItem = new FilterTreeItem("🎫Dates", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time");
     const children = await provider.getChildren(timeItem);
     assert.strictEqual(children.length, 2, "Should have 2 year items");
-    const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : '');
+    const labels = children.map((c: FilterTreeItem) => (typeof c.label === "string" ? c.label : ""));
     assert.ok(labels.includes("2024"), "Should have 2024");
     assert.ok(labels.includes("2025"), "Should have 2025");
   });
@@ -730,20 +810,25 @@ suite("Monorepo Provider Test Suite", () => {
     assert.ok(provider);
   });
 
-  test("Root elements are populated from CLI tree", async function () {
+  test("Root elements are populated from CLI search command", async function () {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const children = await provider.getChildren();
-    if (children.length === 0) return;
-    const labels = children.map(c => c.label as string);
-    assert.ok(labels.some(l => l.includes("Projects")), "Should have Projects category");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at semio-repo/cli/cli");
+    assert.ok(children.length > 0, "CLI returned no children — check that 'search' command exists");
+    const labels = children.map((c) => c.label as string);
+    assert.ok(
+      labels.some((l) => l.includes("Codebase")),
+      "Should have Codebase category",
+    );
   });
 
   test("Root elements have category contextValue", async function () {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    if (roots.length === 0) return;
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at semio-repo/cli/cli");
+    assert.ok(roots.length > 0, "CLI returned no root elements — check that 'search' command exists");
     for (const r of roots) {
       assert.strictEqual(r.contextValue, "category", `Root ${r.label} should have category contextValue`);
     }
@@ -760,15 +845,15 @@ suite("Monorepo Provider Test Suite", () => {
     assert.strictEqual(item.nodeId, undefined);
   });
 
-  test("Projects root expands to at least one project when repo CLI is available", async function () {
+  test("Codebase root expands to at least one child when repo CLI is available", async function () {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    const projectsRoot = roots.find((r: MonorepoTreeItem) => (r.label as string).includes("Projects"));
-    if (!projectsRoot) return;
-    const expanded = await provider.getChildren(projectsRoot);
-    if (expanded.length === 0) return;
-    assert.ok(expanded.length > 0);
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at semio-repo/cli/cli");
+    const codebaseRoot = roots.find((r: MonorepoTreeItem) => (r.label as string).includes("Codebase"));
+    assert.ok(codebaseRoot, "Codebase category not found in tree root");
+    const expanded = await provider.getChildren(codebaseRoot);
+    assert.ok(expanded.length > 0, "Codebase category is empty — CLI search returned no children");
   });
 });
 
@@ -780,7 +865,7 @@ suite("Data Structures Test Suite", () => {
       client: "vscode",
       author: "user",
       date: "2024-01-01",
-      commit: "sha123"
+      checkpoint: "sha123",
     };
     assert.ok(interaction);
     assert.strictEqual(interaction.client, "vscode");
@@ -794,10 +879,10 @@ suite("Data Structures Test Suite", () => {
       slug: "test-ticket",
       frontmatter: {
         status: "open",
-        prompt: "test"
+        prompt: "test",
       },
       folderPath: "/path/to/ticket",
-      interactions: []
+      interactions: [],
     };
     assert.ok(ticket);
     assert.ok(Array.isArray(ticket.interactions));
@@ -805,7 +890,6 @@ suite("Data Structures Test Suite", () => {
 });
 
 // #region 🔖CLI Tree Helper Tests
-
 suite("extractLeadingEmoji Test Suite", () => {
   test("Extracts single emoji from start", () => {
     assert.strictEqual(extractLeadingEmoji("💻coda/py/coda.py"), "💻");
@@ -824,14 +908,14 @@ suite("extractLeadingEmoji Test Suite", () => {
   });
 
   test("Extracts category emoji", () => {
-    assert.strictEqual(extractLeadingEmoji("🏗️Projects"), "🏗️");
+    assert.strictEqual(extractLeadingEmoji("🖥️Codebase"), "🖥️");
   });
 });
 
 suite("treeNodeDisplayLabel Test Suite", () => {
   test("Category node uses Label directly", () => {
-    const node: TreeNodeData = { Kind: "category", ID: "", Label: "🏗️Projects", URI: "" };
-    assert.strictEqual(treeNodeDisplayLabel(node), "🏗️Projects");
+    const node: TreeNodeData = { Kind: "category", ID: "", Label: "🖥️Codebase", URI: "" };
+    assert.strictEqual(treeNodeDisplayLabel(node), "🖥️Codebase");
   });
 
   test("Ticket node gets status icon", () => {
@@ -861,8 +945,8 @@ suite("treeNodeDisplayLabel Test Suite", () => {
     assert.ok(label.includes("🧑‍💻"));
   });
 
-  test("Commit node gets fallback emoji", () => {
-    const node: TreeNodeData = { Kind: "commit", ID: "", Label: "Fix bug", URI: "" };
+  test("Checkpoint node gets fallback emoji", () => {
+    const node: TreeNodeData = { Kind: "checkpoint", ID: "", Label: "Fix bug", URI: "" };
     const label = treeNodeDisplayLabel(node);
     assert.ok(label.includes("🔀"));
   });
@@ -896,14 +980,13 @@ suite("treeNodeContextValue Test Suite", () => {
 
 suite("Breach Kind Hierarchy Test Suite", () => {
   test("Renders nested statute tree structure correctly", () => {
-
     const breachNode: TreeNodeData = {
       Kind: "statute",
       ID: "🚫Code#Header#Missing Region",
       Label: "🚫Code#Header#Missing Region",
       Description: "Header required",
       URI: "semiorepo://statute/code/header/missing-region",
-      Data: { autofixable: true }
+      Data: { autofixable: true },
     };
 
     const categoryNode: TreeNodeData = {
@@ -911,7 +994,7 @@ suite("Breach Kind Hierarchy Test Suite", () => {
       ID: "header",
       Label: "header",
       URI: "",
-      Children: [breachNode]
+      Children: [breachNode],
     };
 
     const policyNode: TreeNodeData = {
@@ -919,7 +1002,7 @@ suite("Breach Kind Hierarchy Test Suite", () => {
       ID: "�️code",
       Label: "👮️code",
       URI: "semiorepo://policy/code",
-      Children: [categoryNode]
+      Children: [categoryNode],
     };
 
     const policyItem = treeNodeToItem(policyNode);
@@ -983,7 +1066,6 @@ suite("buildCliTreeArgs Test Suite", () => {
 // #endregion 🔖CLI Tree Helper Tests
 
 // #region 🔖RepoEvent Extended Tests
-
 suite("RepoEvent Extended Parsing Test Suite", () => {
   test("parseRepoEvents handles multiple lines", () => {
     const output = '{"kind":"start"}\n{"kind":"result","result":{"data":"hello"}}\n{"kind":"done"}\n';
@@ -1006,22 +1088,14 @@ suite("RepoEvent Extended Parsing Test Suite", () => {
   });
 
   test("extractRepoResult skips control events (start, progress, log, done)", () => {
-    const events = [
-      { kind: "start" },
-      { kind: "progress" },
-      { kind: "log" },
-      { kind: "result", result: { data: { value: 42 } } },
-      { kind: "done" },
-    ];
+    const events = [{ kind: "start" }, { kind: "progress" }, { kind: "log" }, { kind: "result", result: { data: { value: 42 } } }, { kind: "done" }];
     const result = extractRepoResult(events);
     assert.ok(result.data);
     assert.strictEqual((result.data as any).value, 42);
   });
 
   test("extractRepoResult collects section results", () => {
-    const events = [
-      { kind: "section", result: undefined, data: undefined },
-    ];
+    const events = [{ kind: "section", result: undefined, data: undefined }];
     const result = extractRepoResult(events);
     assert.ok(result);
   });
@@ -1030,7 +1104,6 @@ suite("RepoEvent Extended Parsing Test Suite", () => {
 // #endregion 🔖RepoEvent Extended Tests
 
 // #region 🔖URI Resolution Tests
-
 suite("slugify Test Suite", () => {
   test("Converts text to uppercase slug", () => {
     assert.strictEqual(slugify("Hello World"), "HELLO-WORLD");
@@ -1066,6 +1139,13 @@ suite("parseUri Test Suite", () => {
     const result = parseUri("semiorepo://repo");
     assert.ok(result);
     assert.strictEqual(result!.type, "repo");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses codebase URI", () => {
+    const result = parseUri("semiorepo://cb");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "cb");
     assert.strictEqual(result!.path, "");
   });
 
@@ -1251,17 +1331,17 @@ suite("parseUri Test Suite", () => {
     assert.strictEqual(result!.path, "usalu");
   });
 
-  test("Parses commits collection URI (no path)", () => {
-    const result = parseUri("semiorepo://commits");
+  test("Parses checkpoints collection URI (no path)", () => {
+    const result = parseUri("semiorepo://checkpoints");
     assert.ok(result);
-    assert.strictEqual(result!.type, "commits");
+    assert.strictEqual(result!.type, "checkpoints");
     assert.strictEqual(result!.path, "");
   });
 
-  test("Parses commit URI", () => {
-    const result = parseUri("semiorepo://commit/abc123def");
+  test("Parses checkpoint URI", () => {
+    const result = parseUri("semiorepo://checkpoint/abc123def");
     assert.ok(result);
-    assert.strictEqual(result!.type, "commit");
+    assert.strictEqual(result!.type, "checkpoint");
     assert.strictEqual(result!.path, "abc123def");
   });
 
@@ -1315,7 +1395,7 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles collection URIs gracefully", async function () {
-    const collections = ["projects", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "statutes", "contributors", "commits"];
+    const collections = ["cb", "projects", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "statutes", "contributors", "checkpoints"];
     for (const collection of collections) {
       await vscode.commands.executeCommand("semio.navigate", `semiorepo://${collection}`);
     }
@@ -1377,9 +1457,9 @@ suite("Navigation Commands Test Suite", function () {
     assert.ok(true, "Should not throw on contributor URI");
   });
 
-  test("semio.navigate handles commit URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://commit/abc123");
-    assert.ok(true, "Should not throw on commit URI");
+  test("semio.navigate handles checkpoint URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://checkpoint/abc123");
+    assert.ok(true, "Should not throw on checkpoint URI");
   });
 
   test("semio.navigate handles section URI gracefully", async function () {
@@ -1404,3 +1484,273 @@ suite("Navigation Commands Test Suite", function () {
 });
 
 // #endregion 🔖URI Resolution Tests
+
+// #region 🔖Entity Emoji Registry Tests
+
+suite("Entity Emoji Registry Test Suite", () => {
+  test("ENTITY_EMOJIS contains all project kind emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user project emoji");
+    assert.ok(ENTITY_EMOJIS.has("🧰"), "should contain infra project emoji");
+    assert.ok(ENTITY_EMOJIS.has("🔬"), "should contain research project emoji");
+    assert.ok(ENTITY_EMOJIS.has("🌱"), "should contain mono project emoji");
+  });
+
+  test("ENTITY_EMOJIS contains all bundle kind emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("📚"), "should contain library bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("🛂"), "should contain schema bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("⌨️"), "should contain binary bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("🖱️"), "should contain ui bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("📔"), "should contain example bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("🌐"), "should contain site bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("🏪"), "should contain assets bundle emoji");
+    assert.ok(ENTITY_EMOJIS.has("🪆"), "should contain repo bundle emoji");
+  });
+
+  test("ENTITY_EMOJIS contains folder kind emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("🗃️"), "should contain org folder emoji");
+    assert.ok(ENTITY_EMOJIS.has("🛅"), "should contain required folder emoji");
+  });
+
+  test("ENTITY_EMOJIS contains all file kind emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("💻"), "should contain code file emoji");
+    assert.ok(ENTITY_EMOJIS.has("🥼"), "should contain lab file emoji");
+    assert.ok(ENTITY_EMOJIS.has("📜"), "should contain script file emoji");
+    assert.ok(ENTITY_EMOJIS.has("📃"), "should contain docs file emoji");
+    assert.ok(ENTITY_EMOJIS.has("⚙️"), "should contain config file emoji");
+    assert.ok(ENTITY_EMOJIS.has("💾"), "should contain resource file emoji");
+    assert.ok(ENTITY_EMOJIS.has("📋"), "should contain template file emoji");
+    assert.ok(ENTITY_EMOJIS.has("⚖️"), "should contain license file emoji");
+  });
+
+  test("ENTITY_EMOJIS contains section and definition emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("🔖"), "should contain section emoji");
+    assert.ok(ENTITY_EMOJIS.has("🛠️"), "should contain impl definition emoji");
+    assert.ok(ENTITY_EMOJIS.has("✂️"), "should contain interface definition emoji");
+    assert.ok(ENTITY_EMOJIS.has("🪨"), "should contain constant definition emoji");
+    assert.ok(ENTITY_EMOJIS.has("🧪"), "should contain test definition emoji");
+  });
+
+  test("ENTITY_EMOJIS contains time hierarchy emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("🎆"), "should contain year emoji");
+    assert.ok(ENTITY_EMOJIS.has("🌙"), "should contain month emoji");
+    assert.ok(ENTITY_EMOJIS.has("☀️"), "should contain day emoji");
+    assert.ok(ENTITY_EMOJIS.has("⏰"), "should contain hour emoji");
+    assert.ok(ENTITY_EMOJIS.has("⌚"), "should contain minute emoji");
+    assert.ok(ENTITY_EMOJIS.has("⏱️"), "should contain second emoji");
+  });
+
+  test("ENTITY_EMOJIS contains management emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("🎯"), "should contain goal emoji");
+    assert.ok(ENTITY_EMOJIS.has("🎫"), "should contain ticket emoji");
+    assert.ok(ENTITY_EMOJIS.has("📝"), "should contain draft emoji");
+    assert.ok(ENTITY_EMOJIS.has("👮"), "should contain policy emoji");
+    assert.ok(ENTITY_EMOJIS.has("🚫"), "should contain breach emoji");
+    assert.ok(ENTITY_EMOJIS.has("🧑‍💻"), "should contain contributor emoji");
+    assert.ok(ENTITY_EMOJIS.has("🔀"), "should contain checkpoint emoji");
+  });
+
+  test("ENTITY_EMOJIS contains session emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("⚪"), "should contain session emoji");
+    assert.ok(ENTITY_EMOJIS.has("🟡"), "should contain session-running emoji");
+    assert.ok(ENTITY_EMOJIS.has("🟢"), "should contain session-completed emoji");
+    assert.ok(ENTITY_EMOJIS.has("🔴"), "should contain session-interrupted emoji");
+  });
+
+  test("ENTITY_EMOJIS contains collection/plural emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("🖥️"), "should contain codebase emoji");
+    assert.ok(ENTITY_EMOJIS.has("🏗️"), "should contain projects emoji");
+    assert.ok(ENTITY_EMOJIS.has("📦"), "should contain bundles emoji");
+    assert.ok(ENTITY_EMOJIS.has("📁"), "should contain folders emoji");
+    assert.ok(ENTITY_EMOJIS.has("📄"), "should contain files emoji");
+    assert.ok(ENTITY_EMOJIS.has("🏷️"), "should contain definitions emoji");
+  });
+
+  test("ENTITY_EMOJIS maps to correct kind names", () => {
+    assert.strictEqual(ENTITY_EMOJIS.get("👤"), "project-user");
+    assert.strictEqual(ENTITY_EMOJIS.get("🧰"), "project-infrastructure");
+    assert.strictEqual(ENTITY_EMOJIS.get("💻"), "file-code");
+    assert.strictEqual(ENTITY_EMOJIS.get("🔖"), "section");
+    assert.strictEqual(ENTITY_EMOJIS.get("🛠️"), "definition-implementation");
+    assert.strictEqual(ENTITY_EMOJIS.get("🎯"), "goal");
+    assert.strictEqual(ENTITY_EMOJIS.get("🎫"), "ticket");
+    assert.strictEqual(ENTITY_EMOJIS.get("🧑‍💻"), "contributor");
+  });
+
+  test("buildEntityEmojiPattern returns non-empty pattern", () => {
+    const pattern = buildEntityEmojiPattern();
+    assert.ok(pattern.length > 0, "pattern should be non-empty");
+    // Pattern should contain all emojis as alternations
+    assert.ok(pattern.includes("👤"), "should contain user emoji");
+    assert.ok(pattern.includes("🧰"), "should contain infra emoji");
+    assert.ok(pattern.includes("💻"), "should contain code file emoji");
+  });
+
+  test("buildEntityIdRegex returns a valid RegExp with 'g' flag", () => {
+    const regex = buildEntityIdRegex();
+    assert.ok(regex instanceof RegExp, "should be a RegExp");
+    assert.ok(regex.flags.includes("g"), "should have global flag");
+  });
+
+  test("ENTITY_ID_REGEX is a valid pre-compiled RegExp", () => {
+    assert.ok(ENTITY_ID_REGEX instanceof RegExp, "should be a RegExp");
+    assert.ok(ENTITY_ID_REGEX.flags.includes("g"), "should have global flag");
+  });
+});
+
+// #endregion 🔖Entity Emoji Registry Tests
+
+// #region 🔖Entity ID Regex Matching Tests
+
+suite("Entity ID Regex Matching Test Suite", () => {
+  test("matches bare infrastructure project ID (🧰)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "See 🧰semiorepo⌨️cli for CLI details.";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one ID");
+    assert.strictEqual(matches[0][3], "🧰semiorepo⌨️cli");
+  });
+
+  test("matches bare user project ID (👤)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Main project: 👤semio📚js";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one ID");
+    assert.strictEqual(matches[0][3], "👤semio📚js");
+  });
+
+  test("matches markdown link with user project ID", () => {
+    const regex = buildEntityIdRegex();
+    const text = "[👤semio📚js💻semiots](semiorepo://p/u/semio/b/l/js/f/semio.ts)";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one markdown link");
+    assert.strictEqual(matches[0][1], "👤semio📚js💻semiots");
+    assert.strictEqual(matches[0][2], "semiorepo://p/u/semio/b/l/js/f/semio.ts");
+  });
+
+  test("matches goal ID (🎯)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Goal: 🎯r26021🎯runningsketchpad";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one goal ID");
+    assert.strictEqual(matches[0][3], "🎯r26021🎯runningsketchpad");
+  });
+
+  test("matches ticket ID (🎫)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Ticket: 🎫implementcodelens";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one ticket ID");
+    assert.strictEqual(matches[0][3], "🎫implementcodelens");
+  });
+
+  test("matches section ID (🔖)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Section: 🔖statemanagement";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one section ID");
+    assert.strictEqual(matches[0][3], "🔖statemanagement");
+  });
+
+  test("matches definition ID (🛠️)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Definition: 🛠️createsketchpadstore";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one definition ID");
+    assert.strictEqual(matches[0][3], "🛠️createsketchpadstore");
+  });
+
+  test("matches contributor ID (🧑‍💻)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Contributor: 🧑‍💻ueli";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one contributor ID");
+    assert.strictEqual(matches[0][3], "🧑‍💻ueli");
+  });
+
+  test("matches full nested entity ID", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Full: 👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match one full ID");
+    assert.strictEqual(matches[0][3], "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore");
+  });
+
+  test("matches multiple IDs in same text", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Compare 🧰semiorepo⌨️cli with 👤semio📚js and 🎯goalname";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 3, "should match three IDs");
+  });
+
+  test("matches time hierarchy IDs", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Time: 🎆26🌙02☀️15⏰14⌚33⏱️38";
+    const matches = [...text.matchAll(regex)];
+    assert.ok(matches.length >= 1, "should match at least one time ID");
+  });
+
+  test("matches policy and breach IDs", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Policy: 👮godfiles Breach: 🚫violation";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 2, "should match policy and breach IDs");
+  });
+
+  test("does not match plain text without entity emojis", () => {
+    const regex = buildEntityIdRegex();
+    const text = "This is plain text without any entity IDs.";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 0, "should not match plain text");
+  });
+
+  test("does not match emojis that are not entity emojis", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Random emojis: 😀 🎉 🚀 without IDs";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 0, "should not match non-entity emojis");
+  });
+
+  test("matches research project ID (🔬)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Research: 🔬experiments";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match research project ID");
+  });
+
+  test("matches checkpoint ID (🔀)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Checkpoint: 🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match checkpoint ID");
+  });
+
+  test("matches session ID (⚪)", () => {
+    const regex = buildEntityIdRegex();
+    const text = "Session: ⚪e753ed61-e8cc-49b7-88f7-dda53b8d5a15";
+    const matches = [...text.matchAll(regex)];
+    assert.strictEqual(matches.length, 1, "should match session ID");
+  });
+});
+
+// #endregion 🔖Entity ID Regex Matching Tests
+
+// #region 🔖CodeLens Behavior Tests
+
+suite("CodeLens Behavior Test Suite", () => {
+  test("semio.summarize command is registered", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.summarize"), "summarize command should be registered");
+  });
+
+  test("semio.navigate command is registered", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.navigate"), "navigate command should be registered");
+  });
+
+  test("semio.summarize does not throw on unknown ID", async function () {
+    await vscode.commands.executeCommand("semio.summarize", "🧰unknownentity");
+    assert.ok(true, "should not throw on unknown entity");
+  });
+});
+
+// #endregion 🔖CodeLens Behavior Tests

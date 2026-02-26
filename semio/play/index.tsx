@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🌐play💻indextsx](semiorepo://file/semio/play/index.tsx)
+// [👤semio🌐play💻index](semiorepo://p/u/semio/b/w/play/f/index.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Entrypoint
-
-// [👤semio🌐play💻indextsx🔖entrypoint](semiorepo://section/semio/play/index.tsx/Entrypoint)
+// [👤semio🌐play💻index🔖entrypoint](semiorepo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
 // Play application entrypoint registering sketchpad apps and rendering the root.
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 

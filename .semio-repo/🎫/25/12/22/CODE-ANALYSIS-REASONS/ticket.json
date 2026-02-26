@@ -1,18 +1,6 @@
 {
   "title": "CODE-ANALYSIS-REASONS",
   "status": "closed",
-  "prompt": "\u003ee-",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-22T22:28:39.916Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "\u003ee-",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\u003ee-",
+  "goal": "🎯aioptimizedrepo"
 }

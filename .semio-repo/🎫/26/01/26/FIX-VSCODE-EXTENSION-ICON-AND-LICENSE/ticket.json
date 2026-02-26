@@ -1,19 +1,8 @@
 {
   "title": "Fix Vscode Extension Icon and License",
   "status": "closed",
-  "prompt": "",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/212"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "",
-      "author": "",
-      "system": "",
-      "client": "",
-      "commit": ""
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
 }

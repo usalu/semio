@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚go🥼semiobenchmarkgo](semiorepo://file/semio/go/semio_benchmark.go)
+// [👤semio📚go🥼semiobenchmarkgo](semiorepo://p/u/semio/b/l/go/f/semio_benchmark.go)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -110,7 +109,7 @@ func main() {
 
 			panic("Schema not found at " + schemaPath + ": " + err.Error())
 		}
-		
+
 		err = semio.KitToZip(kit, files, "temp_benchmark_metabolism.zip", string(schemaData))
 		if err != nil {
 			panic(err)

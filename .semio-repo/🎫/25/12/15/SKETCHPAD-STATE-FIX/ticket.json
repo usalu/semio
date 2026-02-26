@@ -1,18 +1,6 @@
 {
   "title": "Fix sketchpad state machine wildcard event handling",
   "status": "closed",
-  "prompt": "Fix apps not working after wildcard refactor - state not changing",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.96Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "2fb81ef29354981c1b9625769dba4a06360a4aef",
-      "prompt": "Fix apps not working after wildcard refactor - state not changing",
-      "llm": "sonnet-4.5"
-    }
-  ]
+  "description": "Fix apps not working after wildcard refactor - state not changing",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
 }

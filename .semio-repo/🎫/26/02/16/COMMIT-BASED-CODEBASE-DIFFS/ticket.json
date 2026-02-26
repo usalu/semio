@@ -1,21 +1,13 @@
 {
   "title": "Commit Based Codebase Diffs",
   "status": "open",
-  "prompt": "Change the codebase diff mechanism. Instead of computing diffs on ticket close, require files on ticket open and close (accept path, id and uri). Remove diff computation from ticket interactions. Introduce a git hook that adds the commit message as a commit under .semio-repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE with the complete codebase diff covering all diffable entities.",
+  "description": "Change the codebase diff mechanism. Instead of computing diffs on ticket close, require files on ticket open and close (accept path, id and uri). Remove diff computation from ticket interactions. Introduce a git hook that adds the commit message as a commit under .semio-repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE with the complete codebase diff covering all diffable entities.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/593"
   },
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-16 18:09:29",
-      "author": "usalu",
-      "system": "linux",
-      "client": "windsurf-chat",
-      "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
-      "prompt": "Change the codebase diff mechanism. Instead of computing diffs on ticket close, require files on ticket open and close (accept path, id and uri). Remove diff computation from ticket interactions. Introduce a git hook that adds the commit message as a commit under .semio-repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE with the complete codebase diff covering all diffable entities.",
-      "llm": "sonnet-4-5"
-    }
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪39ad8b9fe5a74323a1c5966e353644f5",
+    "⚪1a1a212aee684a078bc08dfcca485927"
   ]
 }

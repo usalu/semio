@@ -47,7 +47,7 @@
     "pre-commit": "uv run --group dev pre-commit run --all-files",
     "pre-commit:install": "uv run --group dev pre-commit install --install-hooks",
     "configure": "semio-repo/cli/cli configure",
-    "mcp:inspector": "npx @modelcontextprotocol/inspector"
+    "mcp:inspector": "HOST=0.0.0.0 npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
     "@nx/eslint-plugin": "^21.6.10",

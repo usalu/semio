@@ -1,18 +1,9 @@
 {
   "title": "Test Lifecycle Ticket",
   "status": "open",
-  "prompt": "Test prompt",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-13 18:20:50",
-      "author": "usalu",
-      "system": "linux",
-      "client": "windsurf-chat",
-      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
-      "prompt": "Test prompt",
-      "llm": "sonnet-4-5"
-    }
+  "description": "Test prompt",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪9b57ce56af904029a6e9f3ff7d7669b9"
   ]
 }

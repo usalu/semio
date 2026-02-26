@@ -10,17 +10,5 @@
   "llm": "sonnet-4-5",
   "github": {
     "milestone": "https://github.com/usalu/semio/milestone/39"
-  },
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-02T20:28:52.977788529Z",
-      "author": "usalu",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "Goal for AI-optimized repository improvements",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  }
 }

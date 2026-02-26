@@ -3,42 +3,5 @@
   "status": "closed",
   "description": "Replace husky with a global pre-commit setup for the monorepo.",
   "summary": "Migrated monorepo pre-commit to pre-commit.com and validated install/run.",
-  "goal": "AI-OPTIMIZED-REPO",
-  "sessions": [
-    {
-      "id": "1771718349268618323-1352189555785701832",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "codex",
-      "llm": "gpt-5-3-codex",
-      "prompts": [
-        {
-          "timestamp": "2026-02-21T23:59:09Z",
-          "prompt": "Setup pre-commit for the monorepo."
-        }
-      ]
-    },
-    {
-      "id": "1771719641614484672-9170212926627786605",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "codex",
-      "llm": "gpt-5-3-codex",
-      "prompts": [
-        {
-          "timestamp": "2026-02-22T00:20:41Z",
-          "prompt": "Migrate monorepo hooks to pre-commit.com framework and remove husky-style git hook handling.",
-          "events": [
-            {
-              "kind": "agent.started",
-              "timestamp": "2026-02-22T00:28:59Z"
-            }
-          ]
-        },
-        {
-          "timestamp": "2026-02-22T00:29:08Z"
-        }
-      ]
-    }
-  ]
+  "goal": "🎯aioptimizedrepo"
 }

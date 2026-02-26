@@ -1,18 +1,6 @@
 {
   "title": "\"Fix diff test - schema changed, concepts now objects\"",
   "status": "closed",
-  "prompt": "\"Fix diff test - schema changed, concepts now objects\"",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.807Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "\"Fix diff test - schema changed, concepts now objects\"",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\"Fix diff test - schema changed, concepts now objects\"",
+  "goal": "🎯aioptimizedrepo"
 }

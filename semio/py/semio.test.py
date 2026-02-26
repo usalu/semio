@@ -1,6 +1,5 @@
 # region Header
-
-# [👤semio📚py🥼semiotestpy](semiorepo://file/semio/py/semio.test.py)
+# [👤semio📚py🥼semiotestpy](semiorepo://p/u/semio/b/l/py/f/semio.test.py)
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -41,6 +40,7 @@ from semio import (
 TOLERANCE = 0.001
 ASSETS_DIR = "../assets/semio"
 
+
 def load_json(filename: str) -> dict:
     path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, filename)
     if not os.path.exists(path):
@@ -48,13 +48,16 @@ def load_json(filename: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 def is_close(a, b):
     return abs(a - b) < TOLERANCE
+
 
 def vectors_equal(v1, v2):
     if v1 is None or v2 is None:
         return False
     return is_close(v1.get("x", 0), v2.get("x", 0)) and is_close(v1.get("y", 0), v2.get("y", 0)) and is_close(v1.get("z", 0), v2.get("z", 0))
+
 
 def planes_equal(p1, p2):
     if p1 is None or p2 is None:
@@ -67,10 +70,12 @@ def planes_equal(p1, p2):
         return False
     return vectors_equal(p1.get("origin"), p2.get("origin")) and vectors_equal(p1.get("xAxis"), p2.get("xAxis")) and vectors_equal(p1.get("yAxis"), p2.get("yAxis"))
 
+
 def centers_equal(c1, c2):
     if c1 is None or c2 is None:
         return c1 == c2
     return is_close(c1.get("u", 0), c2.get("u", 0)) and is_close(c1.get("v", 0), c2.get("v", 0))
+
 
 def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
     parent_guid = None
@@ -92,6 +97,7 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
                 if not p:
                     return d
     raise ValueError(f"Design {name} not found")
+
 
 def flatten_test(design_name, parent_name=None):
     kit_dict = load_json("kit_metabolism.json")
@@ -116,6 +122,7 @@ def flatten_test(design_name, parent_name=None):
         assert piece.get("center") is not None
         assert planes_equal(piece.get("plane"), expected_piece.get("plane"))
         assert centers_equal(piece.get("center"), expected_piece.get("center"))
+
 
 class TestRoundtrip:
     class TestJson:
@@ -147,6 +154,7 @@ class TestRoundtrip:
                 assert len(kit2.designs or []) == len(kit.designs or [])
                 assert len(files2) == len(files)
 
+
 class TestFlatten:
     class TestNakaginCapsuleTower:
         def test_kit_flatten_diff_apply_flat(self):
@@ -168,6 +176,7 @@ class TestFlatten:
         def test_kit_flatten_diff_apply_flat(self):
             flatten_test("Capsule Dream")
 
+
 class TestDiff:
     class TestMetabolism:
         def test_kit_diff_diffedkit_diffedkit_inversediff_kit(self):
@@ -185,6 +194,7 @@ class TestDiff:
             assert areKitsDictEqual(applied_forward, kit_diffed)
             applied_inverse = applyKitDiffDict(kit_diffed, kit_diff_inverted)
             assert areKitsDictEqual(applied_inverse, kit_original)
+
 
 class TestValidation:
     class TestMetabolism:

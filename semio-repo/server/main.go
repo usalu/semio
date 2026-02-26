@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [🧰semiorepo⌨️server💻maingo](semiorepo://file/semio-repo/server/main.go)
+// [🧰semiorepo⌨️server💻main](semiorepo://p/i/semio-repo/b/b/server/f/main.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,16 +19,14 @@
 // #endregion 🔖Header
 
 // #region 🔖Package
-
-// [🧰semiorepo⌨️server💻maingo🔖package](semiorepo://section/semio-repo/server/main.go/Package)
+// [🧰semiorepo⌨️server💻main🔖package](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Package)
 // Package declaration for the semio repo server binary. MUST be package main.
 package main
 
 // #endregion 🔖Package
 
 // #region 🔖Imports
-
-// [🧰semiorepo⌨️server💻maingo🔖imports](semiorepo://section/semio-repo/server/main.go/Imports)
+// [🧰semiorepo⌨️server💻main🔖imports](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Imports)
 // Standard library and third-party imports MUST be grouped by origin.
 import (
 	"bufio"
@@ -61,12 +58,11 @@ import (
 // #endregion 🔖Imports
 
 // #region 🔖Config
-
-// [🧰semiorepo⌨️server💻maingo🔖config](semiorepo://section/semio-repo/server/main.go/Config)
+// [🧰semiorepo⌨️server💻main🔖config](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Config)
 // Server configuration loading from environment variables. MUST provide sensible defaults.
 
 // Config holds all server configuration values.
-// [🧰semiorepo⌨️server💻maingo🔖config✂️config](semiorepo://definition/semio-repo/server/main.go/Config/Config)
+// [🧰semiorepo⌨️server💻main🔖config✂️config](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Config/d/i/Config)
 type Config struct {
 	Address          string
 	DatabasePath     string
@@ -78,6 +74,8 @@ type Config struct {
 }
 
 // loadConfig reads server configuration from environment variables with fallback defaults.
+// [🧰semiorepo⌨️server💻main🔖config🛠️loadconfig](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Config/d/i/loadConfig)
+// loadConfig MUST perform the loadConfig operation.
 func loadConfig() Config {
 	cwd, _ := os.Getwd()
 	return Config{
@@ -92,6 +90,8 @@ func loadConfig() Config {
 }
 
 // envOrDefault returns the environment variable value or the fallback if empty.
+// [🧰semiorepo⌨️server💻main🔖config🛠️envordefault](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Config/d/i/envOrDefault)
+// envOrDefault MUST perform the envOrDefault operation.
 func envOrDefault(key, fallback string) string {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		return value
@@ -100,24 +100,24 @@ func envOrDefault(key, fallback string) string {
 }
 
 // envOrDefaultInt64 returns the parsed int64 environment variable or the fallback.
+// [🧰semiorepo⌨️server💻main🔖config🛠️envordefaultint64](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Config/d/i/envOrDefaultInt64)
+// envOrDefaultInt64 MUST perform the envOrDefaultInt64 operation.
 func envOrDefaultInt64(key string, fallback int64) int64 {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		if parsed, err := strconv.ParseInt(value, 10, 64); err == nil {
 			return parsed
 		}
 	}
-	return fallback
 }
 
 // #endregion 🔖Config
 
 // #region 🔖Models
-
-// [🧰semiorepo⌨️server💻maingo🔖models](semiorepo://section/semio-repo/server/main.go/Models)
+// [🧰semiorepo⌨️server💻main🔖models](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models)
 // Data model types for tickets, scopes, warnings, breachs, events, and API request/response payloads. MUST mirror the server SQLite schema.
 
 // Ticket represents a tracked work item with lifecycle status.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticket](semiorepo://definition/semio-repo/server/main.go/Models/Ticket)
+// [🧰semiorepo⌨️server💻main🔖models✂️ticket](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/Ticket)
 type Ticket struct {
 	ID        string     `json:"id"`
 	Status    string     `json:"status"`
@@ -133,7 +133,7 @@ type Ticket struct {
 }
 
 // Scope represents a code region (file, section, or definition) with line range.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️scope](semiorepo://definition/semio-repo/server/main.go/Models/Scope)
+// [🧰semiorepo⌨️server💻main🔖models✂️scope](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/Scope)
 type Scope struct {
 	ID          string    `json:"id"`
 	Kind        string    `json:"kind"`
@@ -146,7 +146,7 @@ type Scope struct {
 }
 
 // Warning represents a detected issue such as a scope conflict between tickets.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️warning](semiorepo://definition/semio-repo/server/main.go/Models/Warning)
+// [🧰semiorepo⌨️server💻main🔖models✂️warning](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/Warning)
 type Warning struct {
 	ID             string     `json:"id"`
 	Kind           string     `json:"kind"`
@@ -160,7 +160,7 @@ type Warning struct {
 }
 
 // Breach represents a policy breach detected in source code.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️breach](semiorepo://definition/semio-repo/server/main.go/Models/Breach)
+// [🧰semiorepo⌨️server💻main🔖models✂️breach](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/Breach)
 type Breach struct {
 	ID         string     `json:"id"`
 	Kind       string     `json:"kind"`
@@ -178,7 +178,7 @@ type Breach struct {
 }
 
 // Event represents a system event persisted to the event log.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️event](semiorepo://definition/semio-repo/server/main.go/Models/Event)
+// [🧰semiorepo⌨️server💻main🔖models✂️event](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/Event)
 type Event struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
@@ -188,21 +188,21 @@ type Event struct {
 }
 
 // LineRange represents a contiguous range of line numbers.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️linerange](semiorepo://definition/semio-repo/server/main.go/Models/LineRange)
+// [🧰semiorepo⌨️server💻main🔖models✂️linerange](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/LineRange)
 type LineRange struct {
 	Start int
 	End   int
 }
 
 // DiffHunk represents a single hunk with old and new line ranges from a unified diff.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffhunk](semiorepo://definition/semio-repo/server/main.go/Models/DiffHunk)
+// [🧰semiorepo⌨️server💻main🔖models✂️diffhunk](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/DiffHunk)
 type DiffHunk struct {
 	OldRange LineRange
 	NewRange LineRange
 }
 
 // DiffFile represents a single file entry in a unified diff with its hunks.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️difffile](semiorepo://definition/semio-repo/server/main.go/Models/DiffFile)
+// [🧰semiorepo⌨️server💻main🔖models✂️difffile](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/DiffFile)
 type DiffFile struct {
 	Path    string
 	Hunks   []DiffHunk
@@ -211,20 +211,20 @@ type DiffFile struct {
 }
 
 // DiffResult aggregates all parsed diff files from a patch.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffresult](semiorepo://definition/semio-repo/server/main.go/Models/DiffResult)
+// [🧰semiorepo⌨️server💻main🔖models✂️diffresult](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/DiffResult)
 type DiffResult struct {
 	Files []DiffFile
 }
 
 // FileSnapshot holds the full content of a file for snapshot-based indexing.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️filesnapshot](semiorepo://definition/semio-repo/server/main.go/Models/FileSnapshot)
+// [🧰semiorepo⌨️server💻main🔖models✂️filesnapshot](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/FileSnapshot)
 type FileSnapshot struct {
 	Path    string `json:"path"`
 	Content string `json:"content"`
 }
 
 // TicketOpenRequest is the JSON payload for opening a new ticket.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketopenrequest](semiorepo://definition/semio-repo/server/main.go/Models/TicketOpenRequest)
+// [🧰semiorepo⌨️server💻main🔖models✂️ticketopenrequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/TicketOpenRequest)
 type TicketOpenRequest struct {
 	TicketID    string `json:"ticket_id"`
 	Title       string `json:"title"`
@@ -236,7 +236,7 @@ type TicketOpenRequest struct {
 }
 
 // TicketCloseRequest is the JSON payload for closing a ticket.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketcloserequest](semiorepo://definition/semio-repo/server/main.go/Models/TicketCloseRequest)
+// [🧰semiorepo⌨️server💻main🔖models✂️ticketcloserequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/TicketCloseRequest)
 type TicketCloseRequest struct {
 	TicketID string   `json:"ticket_id"`
 	Summary  string   `json:"summary"`
@@ -244,7 +244,7 @@ type TicketCloseRequest struct {
 }
 
 // TicketReopenRequest is the JSON payload for reopening a closed ticket.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketreopenrequest](semiorepo://definition/semio-repo/server/main.go/Models/TicketReopenRequest)
+// [🧰semiorepo⌨️server💻main🔖models✂️ticketreopenrequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/TicketReopenRequest)
 type TicketReopenRequest struct {
 	TicketID string `json:"ticket_id"`
 	Prompt   string `json:"prompt"`
@@ -253,7 +253,7 @@ type TicketReopenRequest struct {
 }
 
 // DiffIngestRequest is the JSON payload for ingesting a diff patch.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffingestrequest](semiorepo://definition/semio-repo/server/main.go/Models/DiffIngestRequest)
+// [🧰semiorepo⌨️server💻main🔖models✂️diffingestrequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/DiffIngestRequest)
 type DiffIngestRequest struct {
 	TicketID  string         `json:"ticket_id"`
 	RepoID    string         `json:"repo_id"`
@@ -262,7 +262,7 @@ type DiffIngestRequest struct {
 }
 
 // DiffIngestResponse holds the results of a diff ingestion operation.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffingestresponse](semiorepo://definition/semio-repo/server/main.go/Models/DiffIngestResponse)
+// [🧰semiorepo⌨️server💻main🔖models✂️diffingestresponse](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/DiffIngestResponse)
 type DiffIngestResponse struct {
 	ChangedFiles  []string  `json:"changed_files"`
 	ClaimedScopes []string  `json:"claimed_scopes"`
@@ -271,18 +271,18 @@ type DiffIngestResponse struct {
 	Blockers      []string  `json:"blockers"`
 }
 
-// PrecommitRequest is the JSON payload for a pre-commit check.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️precommitrequest](semiorepo://definition/semio-repo/server/main.go/Models/PrecommitRequest)
-type PrecommitRequest struct {
+// PrecheckpointRequest is the JSON payload for a pre-checkpoint check.
+// [🧰semiorepo⌨️server💻main🔖models✂️precheckpointrequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/PrecheckpointRequest)
+type PrecheckpointRequest struct {
 	TicketID      string `json:"ticket_id"`
 	Patch         string `json:"patch"`
 	Staged        bool   `json:"staged"`
-	CommitMessage string `json:"commit_message"`
+	CheckpointMessage string `json:"checkpoint_message"`
 }
 
-// PrecommitResponse holds the result of a pre-commit check.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️precommitresponse](semiorepo://definition/semio-repo/server/main.go/Models/PrecommitResponse)
-type PrecommitResponse struct {
+// PrecheckpointResponse holds the result of a pre-checkpoint check.
+// [🧰semiorepo⌨️server💻main🔖models✂️precheckpointresponse](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/PrecheckpointResponse)
+type PrecheckpointResponse struct {
 	OK           bool      `json:"ok"`
 	Blockers     []string  `json:"blockers"`
 	Warnings     []Warning `json:"warnings"`
@@ -291,27 +291,26 @@ type PrecommitResponse struct {
 }
 
 // IndexFileRequest is the JSON payload for indexing a single file.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️indexfilerequest](semiorepo://definition/semio-repo/server/main.go/Models/IndexFileRequest)
+// [🧰semiorepo⌨️server💻main🔖models✂️indexfilerequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/IndexFileRequest)
 type IndexFileRequest struct {
 	FilePath string `json:"file_path"`
-	Content  string `json:"content"`
 }
 
 // #endregion 🔖Models
 
 // #region 🔖Database
-
-// [🧰semiorepo⌨️server💻maingo🔖database](semiorepo://section/semio-repo/server/main.go/Database)
+// [🧰semiorepo⌨️server💻main🔖database](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database)
 // SQLite database layer for persistent storage of tickets, scopes, claims, warnings, breachs, and events. MUST use WAL journal mode.
 
 // Database wraps a sql.DB connection to the SQLite store.
-// [🧰semiorepo⌨️server💻maingo🔖database✂️database](semiorepo://definition/semio-repo/server/main.go/Database/Database)
+// [🧰semiorepo⌨️server💻main🔖database✂️database](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/Database)
 type Database struct {
 	db *sql.DB
 }
 
 // openDatabase opens an SQLite database and runs schema migrations.
 // MUST enable WAL journal mode and foreign keys.
+// [🧰semiorepo⌨️server💻main🔖database🛠️opendatabase](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/openDatabase)
 func openDatabase(path string) (*Database, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -331,6 +330,8 @@ func openDatabase(path string) (*Database, error) {
 }
 
 // migrate creates database tables if they do not already exist.
+// [🧰semiorepo⌨️server💻main🔖database🛠️migrate](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/migrate)
+// migrate MUST perform the migrate operation.
 func (d *Database) migrate() error {
 	statements := []string{
 		"CREATE TABLE IF NOT EXISTS repos (id TEXT PRIMARY KEY, name TEXT, path TEXT, created_at DATETIME)",
@@ -352,24 +353,30 @@ func (d *Database) migrate() error {
 
 // Close closes the underlying SQL database connection.
 // MUST release all database resources.
-// [🧰semiorepo⌨️server💻maingo🔖database🛠️close](semiorepo://definition/semio-repo/server/main.go/Database/Close)
+// [🧰semiorepo⌨️server💻main🔖database🛠️close](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/Close)
 func (d *Database) Close() error {
 	return d.db.Close()
 }
 
 // insertEvent persists a new event record.
+// [🧰semiorepo⌨️server💻main🔖database🛠️insertevent](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/insertEvent)
+// insertEvent MUST perform the insertEvent operation.
 func (d *Database) insertEvent(ctx context.Context, event Event) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO events (id, type, source, payload_json, created_at) VALUES (?, ?, ?, ?, ?)", event.ID, event.Type, event.Source, event.Payload, event.CreatedAt.UTC())
 	return err
 }
 
 // upsertTicket inserts or updates a ticket record.
+// [🧰semiorepo⌨️server💻main🔖database🛠️upsertticket](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/upsertTicket)
+// upsertTicket MUST perform the upsertTicket operation.
 func (d *Database) upsertTicket(ctx context.Context, ticket Ticket) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.Client, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
 	return err
 }
 
 // listTickets queries tickets optionally filtered by status.
+// [🧰semiorepo⌨️server💻main🔖database🛠️listtickets](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listTickets)
+// listTickets MUST perform the listTickets operation.
 func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, error) {
 	query := "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets"
 	args := []interface{}{}
@@ -398,6 +405,8 @@ func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, er
 }
 
 // getTicket retrieves a single ticket by ID.
+// [🧰semiorepo⌨️server💻main🔖database🛠️getticket](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/getTicket)
+// getTicket MUST perform the getTicket operation.
 func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, error) {
 	row := d.db.QueryRowContext(ctx, "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets WHERE id = ?", ticketID)
 	var ticket Ticket
@@ -412,6 +421,8 @@ func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, err
 }
 
 // replaceScopes deletes existing scopes for the file and inserts the new ones.
+// [🧰semiorepo⌨️server💻main🔖database🛠️replacescopes](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/replaceScopes)
+// replaceScopes MUST perform the replaceScopes operation.
 func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []Scope) error {
 	if _, err := d.db.ExecContext(ctx, "DELETE FROM scopes WHERE file_path = ?", filePath); err != nil {
 		return err
@@ -425,6 +436,8 @@ func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []
 }
 
 // listScopesByFile retrieves all scopes for a given file path.
+// [🧰semiorepo⌨️server💻main🔖database🛠️listscopesbyfile](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listScopesByFile)
+// listScopesByFile MUST perform the listScopesByFile operation.
 func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Scope, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT id, kind, file_path, section_path, definition_name, start_line, end_line, updated_at FROM scopes WHERE file_path = ?", filePath)
 	if err != nil {
@@ -443,12 +456,16 @@ func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Sco
 }
 
 // upsertClaim inserts or updates a ticket-scope claim record.
+// [🧰semiorepo⌨️server💻main🔖database🛠️upsertclaim](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/upsertClaim)
+// upsertClaim MUST perform the upsertClaim operation.
 func (d *Database) upsertClaim(ctx context.Context, ticketID string, scopeID string, claimType string, now time.Time) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO ticket_claims (ticket_id, scope_id, claim_type, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ticket_id, scope_id) DO UPDATE SET claim_type=excluded.claim_type, last_seen_at=excluded.last_seen_at", ticketID, scopeID, claimType, now.UTC(), now.UTC())
 	return err
 }
 
 // listClaimsByTicket retrieves all scopes claimed by a ticket.
+// [🧰semiorepo⌨️server💻main🔖database🛠️listclaimsbyticket](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listClaimsByTicket)
+// listClaimsByTicket MUST perform the listClaimsByTicket operation.
 func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]Scope, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT scopes.id, scopes.kind, scopes.file_path, scopes.section_path, scopes.definition_name, scopes.start_line, scopes.end_line, scopes.updated_at FROM scopes JOIN ticket_claims ON scopes.id = ticket_claims.scope_id WHERE ticket_claims.ticket_id = ?", ticketID)
 	if err != nil {
@@ -467,6 +484,8 @@ func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]S
 }
 
 // replaceWarnings removes conflict warnings and inserts the new set.
+// replaceWarnings MUST perform the replaceWarnings operation.
+// [🧰semiorepo⌨️server💻main🔖database🛠️replacewarnings](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/replaceWarnings)
 func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) error {
 	if _, err := d.db.ExecContext(ctx, "DELETE FROM warnings WHERE kind = ?", "conflict"); err != nil {
 		return err
@@ -480,6 +499,8 @@ func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) erro
 }
 
 // listWarnings retrieves warnings optionally filtered by ticket ID.
+// [🧰semiorepo⌨️server💻main🔖database🛠️listwarnings](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listWarnings)
+// listWarnings MUST perform the listWarnings operation.
 func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning, error) {
 	query := "SELECT id, kind, severity, message, ticket_id, scope_id, created_at, acknowledged_at, ack_by FROM warnings"
 	args := []interface{}{}
@@ -508,6 +529,8 @@ func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning
 }
 
 // listBreachs retrieves breachs optionally filtered by ticket ID.
+// [🧰semiorepo⌨️server💻main🔖database🛠️listbreachs](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listBreachs)
+// listBreachs MUST perform the listBreachs operation.
 func (d *Database) listBreachs(ctx context.Context, ticketID string) ([]Breach, error) {
 	query := "SELECT id, kind, priority, scope_id, file_path, line, column, summary, excerpt, autofixable, detected_at, ticket_id, resolved_at FROM breachs"
 	args := []interface{}{}
@@ -546,6 +569,8 @@ func (d *Database) listBreachs(ctx context.Context, ticketID string) ([]Breach, 
 }
 
 // listConflicts finds scopes claimed by more than one open ticket.
+// [🧰semiorepo⌨️server💻main🔖database🛠️listconflicts](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listConflicts)
+// listConflicts MUST perform the listConflicts operation.
 func (d *Database) listConflicts(ctx context.Context) ([]struct {
 	ScopeID string
 	Tickets []string
@@ -573,11 +598,16 @@ func (d *Database) listConflicts(ctx context.Context) ([]struct {
 	return results, nil
 }
 
+// [🧰semiorepo⌨️server💻main🔖database🛠️addcontributorwork](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/addContributorWork)
+// addContributorWork holds the data fields for a addContributorWork record.
+// addContributorWork MUST perform the addContributorWork operation.
 func (d *Database) addContributorWork(ctx context.Context, github string, kind string, itemID string) error {
 	_, err := d.db.ExecContext(ctx, "INSERT OR REPLACE INTO contributor_work (github, kind, item_id) VALUES (?, ?, ?)", github, kind, itemID)
 	return err
-}
 
+// removeContributorWork MUST perform the removeContributorWork operation.
+// removeContributorWork holds the data fields for a removeContributorWork record.
+// [🧰semiorepo⌨️server💻main🔖database🛠️removecontributorwork](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/removeContributorWork)
 func (d *Database) removeContributorWork(ctx context.Context, github string, kindsAndIDs []struct{ Kind, ID string }) error {
 	for _, kv := range kindsAndIDs {
 		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = ? AND item_id = ?", github, kv.Kind, kv.ID)
@@ -585,6 +615,9 @@ func (d *Database) removeContributorWork(ctx context.Context, github string, kin
 	return nil
 }
 
+// [🧰semiorepo⌨️server💻main🔖database🛠️listcontributorsonitem](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/listContributorsOnItem)
+// listContributorsOnItem holds the data fields for a listContributorsOnItem record.
+// listContributorsOnItem MUST perform the listContributorsOnItem operation.
 func (d *Database) listContributorsOnItem(ctx context.Context, kind string, itemID string) ([]string, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT github FROM contributor_work WHERE kind = ? AND item_id = ?", kind, itemID)
 	if err != nil {
@@ -602,7 +635,10 @@ func (d *Database) listContributorsOnItem(ctx context.Context, kind string, item
 	return out, nil
 }
 
-func (d *Database) removeContributorWorkForCommit(ctx context.Context, github string, files []string) error {
+// [🧰semiorepo⌨️server💻main🔖database🛠️removecontributorworkforcheckpoint](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Database/d/i/removeContributorWorkForCheckpoint)
+// removeContributorWorkForCheckpoint holds the data fields for a removeContributorWorkForCheckpoint record.
+// removeContributorWorkForCheckpoint MUST perform the removeContributorWorkForCheckpoint operation.
+func (d *Database) removeContributorWorkForCheckpoint(ctx context.Context, github string, files []string) error {
 	for _, f := range files {
 		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = 'file' AND item_id = ?", github, f)
 	}
@@ -612,16 +648,15 @@ func (d *Database) removeContributorWorkForCommit(ctx context.Context, github st
 // #endregion 🔖Database
 
 // #region 🔖EventBus
-
-// [🧰semiorepo⌨️server💻maingo🔖eventbus](semiorepo://section/semio-repo/server/main.go/EventBus)
+// [🧰semiorepo⌨️server💻main🔖eventbus](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus)
 // Asynchronous in-process event bus for decoupled event publishing and subscription. MUST persist events to the database before dispatching.
 
 // EventHandler is a callback invoked when an event of a subscribed type is published.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus✂️eventhandler](semiorepo://definition/semio-repo/server/main.go/EventBus/EventHandler)
+// [🧰semiorepo⌨️server💻main🔖eventbus✂️eventhandler](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/EventHandler)
 type EventHandler func(context.Context, Event)
 
 // EventBus is a buffered channel-based event dispatcher with persistent storage.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus✂️eventbus](semiorepo://definition/semio-repo/server/main.go/EventBus/EventBus)
+// [🧰semiorepo⌨️server💻main🔖eventbus✂️eventbus](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/EventBus)
 type EventBus struct {
 	ch       chan Event
 	handlers map[string][]EventHandler
@@ -633,7 +668,7 @@ type EventBus struct {
 
 // NewEventBus creates a new event bus backed by the given database.
 // MUST initialize the channel buffer to 256 and create a cancellable context.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️neweventbus](semiorepo://definition/semio-repo/server/main.go/EventBus/NewEventBus)
+// [🧰semiorepo⌨️server💻main🔖eventbus🛠️neweventbus](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/NewEventBus)
 func NewEventBus(db *Database) *EventBus {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EventBus{
@@ -647,14 +682,14 @@ func NewEventBus(db *Database) *EventBus {
 
 // Subscribe registers a handler for the given event type.
 // MUST append the handler to the handlers map.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️subscribe](semiorepo://definition/semio-repo/server/main.go/EventBus/Subscribe)
+// [🧰semiorepo⌨️server💻main🔖eventbus🛠️subscribe](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/Subscribe)
 func (b *EventBus) Subscribe(eventType string, handler EventHandler) {
 	b.handlers[eventType] = append(b.handlers[eventType], handler)
 }
 
 // Publish persists an event and dispatches it to subscribers.
 // MUST store the event in the database before sending to the channel.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️publish](semiorepo://definition/semio-repo/server/main.go/EventBus/Publish)
+// [🧰semiorepo⌨️server💻main🔖eventbus🛠️publish](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/Publish)
 func (b *EventBus) Publish(ctx context.Context, eventType string, source string, payload interface{}) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -666,7 +701,6 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 		Source:    source,
 		Payload:   string(payloadBytes),
 		CreatedAt: time.Now().UTC(),
-	}
 	if err := b.db.insertEvent(ctx, event); err != nil {
 		return err
 	}
@@ -680,7 +714,7 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 
 // Start launches the event dispatch goroutine.
 // MUST consume events from the channel and invoke registered handlers.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️start](semiorepo://definition/semio-repo/server/main.go/EventBus/Start)
+// [🧰semiorepo⌨️server💻main🔖eventbus🛠️start](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/Start)
 func (b *EventBus) Start() {
 	b.wg.Add(1)
 	go func() {
@@ -702,7 +736,7 @@ func (b *EventBus) Start() {
 
 // Stop cancels the event bus context and waits for the dispatch goroutine to finish.
 // MUST block until the goroutine exits.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️stop](semiorepo://definition/semio-repo/server/main.go/EventBus/Stop)
+// [🧰semiorepo⌨️server💻main🔖eventbus🛠️stop](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/EventBus/d/i/Stop)
 func (b *EventBus) Stop() {
 	b.cancel()
 	b.wg.Wait()
@@ -711,14 +745,16 @@ func (b *EventBus) Stop() {
 // #endregion 🔖EventBus
 
 // #region 🔖DiffParsing
-
-// [🧰semiorepo⌨️server💻maingo🔖diffparsing](semiorepo://section/semio-repo/server/main.go/DiffParsing)
+// [🧰semiorepo⌨️server💻main🔖diffparsing](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/DiffParsing)
 // Unified diff parser that extracts file paths and hunk line ranges from patch text. MUST handle standard git diff output format.
 
 // hunkHeader is a regex pattern matching unified diff hunk headers.
+// [🧰semiorepo⌨️server💻main🔖diffparsing🪨hunkheader](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/DiffParsing/d/i/hunkHeader)
 var hunkHeader = regexp.MustCompile(`@@ -([0-9]+)(?:,([0-9]+))? \+([0-9]+)(?:,([0-9]+))? @@`)
 
 // parseUnifiedDiff extracts file paths and hunk ranges from a unified diff patch.
+// [🧰semiorepo⌨️server💻main🔖diffparsing🛠️parseunifieddiff](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/DiffParsing/d/i/parseUnifiedDiff)
+// parseUnifiedDiff MUST perform the parseUnifiedDiff operation.
 func parseUnifiedDiff(patch string) DiffResult {
 	scanner := bufio.NewScanner(strings.NewReader(patch))
 	var files []DiffFile
@@ -736,7 +772,6 @@ func parseUnifiedDiff(patch string) DiffResult {
 		}
 		if strings.HasPrefix(line, "--- ") && current != nil {
 			if strings.Contains(line, "/dev/null") {
-				current.Created = true
 			}
 			continue
 		}
@@ -764,12 +799,16 @@ func parseUnifiedDiff(patch string) DiffResult {
 }
 
 // parseHunkInt parses a hunk header integer value.
+// [🧰semiorepo⌨️server💻main🔖diffparsing🛠️parsehunkint](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/DiffParsing/d/i/parseHunkInt)
+// parseHunkInt MUST perform the parseHunkInt operation.
 func parseHunkInt(value string) int {
 	parsed, _ := strconv.Atoi(value)
 	return parsed
 }
 
 // parseHunkIntWithDefault parses a hunk header integer or returns the fallback.
+// [🧰semiorepo⌨️server💻main🔖diffparsing🛠️parsehunkintwithdefault](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/DiffParsing/d/i/parseHunkIntWithDefault)
+// parseHunkIntWithDefault MUST perform the parseHunkIntWithDefault operation.
 func parseHunkIntWithDefault(value string, fallback int) int {
 	if value == "" {
 		return fallback
@@ -784,12 +823,11 @@ func parseHunkIntWithDefault(value string, fallback int) int {
 // #endregion 🔖DiffParsing
 
 // #region 🔖Indexing
-
-// [🧰semiorepo⌨️server💻maingo🔖indexing](semiorepo://section/semio-repo/server/main.go/Indexing)
+// [🧰semiorepo⌨️server💻main🔖indexing](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing)
 // Source code indexer that parses files into scopes covering files, sections, and definitions. MUST support region-marker-based sections and language-specific definition patterns.
 
 // IndexCache holds in-memory caches of indexed scopes partitioned by file path.
-// [🧰semiorepo⌨️server💻maingo🔖indexing✂️indexcache](semiorepo://definition/semio-repo/server/main.go/Indexing/IndexCache)
+// [🧰semiorepo⌨️server💻main🔖indexing✂️indexcache](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/IndexCache)
 type IndexCache struct {
 	Sections    map[string][]Scope
 	Definitions map[string][]Scope
@@ -797,6 +835,8 @@ type IndexCache struct {
 }
 
 // newIndexCache creates an empty IndexCache with initialized maps.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️newindexcache](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/newIndexCache)
+// newIndexCache MUST perform the newIndexCache operation.
 func newIndexCache() IndexCache {
 	return IndexCache{
 		Sections:    map[string][]Scope{},
@@ -806,6 +846,8 @@ func newIndexCache() IndexCache {
 }
 
 // buildScopesForFile parses a file into file, section, and definition scopes.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️buildscopesforfile](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/buildScopesForFile)
+// buildScopesForFile MUST perform the buildScopesForFile operation.
 func buildScopesForFile(path string, content string) []Scope {
 	lines := strings.Split(content, "\n")
 	now := time.Now().UTC()
@@ -848,6 +890,8 @@ func buildScopesForFile(path string, content string) []Scope {
 }
 
 // parseSections extracts section scopes from region markers and markdown headings.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️parsesections](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/parseSections)
+// parseSections MUST perform the parseSections operation.
 func parseSections(lines []string, ext string) []Scope {
 	var scopes []Scope
 	type sectionFrame struct {
@@ -918,6 +962,8 @@ func parseSections(lines []string, ext string) []Scope {
 }
 
 // parseRegionMarker detects region start/end markers in a line.
+// parseRegionMarker MUST perform the parseRegionMarker operation.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️parseregionmarker](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/parseRegionMarker)
 func parseRegionMarker(line string) (string, bool, bool) {
 	trimmed := strings.TrimSpace(line)
 	trimmed = strings.TrimPrefix(trimmed, "//")
@@ -935,6 +981,8 @@ func parseRegionMarker(line string) (string, bool, bool) {
 }
 
 // parseMarkdownHeading parses a markdown heading line into level and title.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️parsemarkdownheading](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/parseMarkdownHeading)
+// parseMarkdownHeading MUST perform the parseMarkdownHeading operation.
 func parseMarkdownHeading(line string) (int, string) {
 	trimmed := strings.TrimSpace(line)
 	if !strings.HasPrefix(trimmed, "#") {
@@ -955,14 +1003,17 @@ func parseMarkdownHeading(line string) (int, string) {
 }
 
 // assignSectionPaths updates section IDs to include the file path.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️assignsectionpaths](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/assignSectionPaths)
+// assignSectionPaths MUST perform the assignSectionPaths operation.
 func assignSectionPaths(sections []Scope) []Scope {
 	for i := range sections {
 		sections[i].ID = fmt.Sprintf("section:%s#%s", sections[i].FilePath, sections[i].SectionPath)
-	}
 	return sections
 }
 
 // parseDefinitions extracts definition scopes using language-specific patterns.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️parsedefinitions](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/parseDefinitions)
+// parseDefinitions MUST perform the parseDefinitions operation.
 func parseDefinitions(lines []string, ext string) []Scope {
 	var scopes []Scope
 	patterns := definitionPatterns(ext)
@@ -987,6 +1038,8 @@ func parseDefinitions(lines []string, ext string) []Scope {
 }
 
 // definitionPatterns returns language-specific regex patterns for extracting definitions.
+// [🧰semiorepo⌨️server💻main🔖indexing🛠️definitionpatterns](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Indexing/d/i/definitionPatterns)
+// definitionPatterns MUST perform the definitionPatterns operation.
 func definitionPatterns(ext string) []*regexp.Regexp {
 	switch ext {
 	case ".go":
@@ -1020,13 +1073,13 @@ func definitionPatterns(ext string) []*regexp.Regexp {
 }
 
 // #endregion 🔖Indexing
-
 // #region 🔖Claims
-
-// [🧰semiorepo⌨️server💻maingo🔖claims](semiorepo://section/semio-repo/server/main.go/Claims)
+// [🧰semiorepo⌨️server💻main🔖claims](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Claims)
 // Scope claim mapping logic that associates diff hunks with overlapping scopes. MUST detect multi-ticket conflicts.
 
 // mapClaims maps diff hunks to overlapping scopes and returns claimed IDs.
+// [🧰semiorepo⌨️server💻main🔖claims🛠️mapclaims](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Claims/d/i/mapClaims)
+// mapClaims MUST perform the mapClaims operation.
 func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 	claimed := map[string][]Scope{}
 	var claimedIDs []string
@@ -1046,7 +1099,6 @@ func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 				if rangesOverlap(hunk.NewRange, LineRange{Start: scope.StartLine, End: scope.EndLine}) {
 					if scope.Kind == "definition" || scope.Kind == "section" {
 						claimed[scope.ID] = append(claimed[scope.ID], scope)
-						claimedIDs = appendIfMissing(claimedIDs, scope.ID)
 					}
 				}
 			}
@@ -1057,6 +1109,8 @@ func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 }
 
 // filterScopesByFile returns scopes matching the given file path.
+// [🧰semiorepo⌨️server💻main🔖claims🛠️filterscopesbyfile](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Claims/d/i/filterScopesByFile)
+// filterScopesByFile MUST perform the filterScopesByFile operation.
 func filterScopesByFile(scopes []Scope, filePath string) []Scope {
 	var filtered []Scope
 	for _, scope := range scopes {
@@ -1068,6 +1122,8 @@ func filterScopesByFile(scopes []Scope, filePath string) []Scope {
 }
 
 // rangesOverlap tests whether two line ranges overlap.
+// [🧰semiorepo⌨️server💻main🔖claims🛠️rangesoverlap](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Claims/d/i/rangesOverlap)
+// rangesOverlap MUST perform the rangesOverlap operation.
 func rangesOverlap(a LineRange, b LineRange) bool {
 	if a.Start == 0 || b.Start == 0 {
 		return false
@@ -1076,6 +1132,8 @@ func rangesOverlap(a LineRange, b LineRange) bool {
 }
 
 // appendIfMissing appends a string to a slice only if it is not already present.
+// [🧰semiorepo⌨️server💻main🔖claims🛠️appendifmissing](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Claims/d/i/appendIfMissing)
+// appendIfMissing MUST perform the appendIfMissing operation.
 func appendIfMissing(list []string, value string) []string {
 	for _, item := range list {
 		if item == value {
@@ -1088,11 +1146,12 @@ func appendIfMissing(list []string, value string) []string {
 // #endregion 🔖Claims
 
 // #region 🔖Warnings
-
-// [🧰semiorepo⌨️server💻maingo🔖warnings](semiorepo://section/semio-repo/server/main.go/Warnings)
+// [🧰semiorepo⌨️server💻main🔖warnings](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Warnings)
 // Conflict warning generation from multi-ticket scope overlaps. MUST produce error-severity warnings for blocking conflicts.
 
 // buildConflictWarnings creates warning records from detected scope conflicts.
+// buildConflictWarnings MUST perform the buildConflictWarnings operation.
+// [🧰semiorepo⌨️server💻main🔖warnings🛠️buildconflictwarnings](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Warnings/d/i/buildConflictWarnings)
 func buildConflictWarnings(conflicts []struct {
 	ScopeID string
 	Tickets []string
@@ -1116,12 +1175,11 @@ func buildConflictWarnings(conflicts []struct {
 // #endregion 🔖Warnings
 
 // #region 🔖Server
-
-// [🧰semiorepo⌨️server💻maingo🔖server](semiorepo://section/semio-repo/server/main.go/Server)
-// HTTP server with ticket lifecycle, diff ingestion, pre-commit checks, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
+// [🧰semiorepo⌨️server💻main🔖server](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server)
+// HTTP server with ticket lifecycle, diff ingestion, pre-checkpoint checks, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
 
 // Server is the main HTTP server holding configuration, database, event bus, and caches.
-// [🧰semiorepo⌨️server💻maingo🔖server✂️server](semiorepo://definition/semio-repo/server/main.go/Server/Server)
+// [🧰semiorepo⌨️server💻main🔖server✂️server](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/Server)
 type Server struct {
 	config      Config
 	db          *Database
@@ -1135,7 +1193,7 @@ type Server struct {
 
 // NewServer creates a new Server with the given config, database, and event bus.
 // MUST initialize the index cache and GitHub comment cache.
-// [🧰semiorepo⌨️server💻maingo🔖server🛠️newserver](semiorepo://definition/semio-repo/server/main.go/Server/NewServer)
+// [🧰semiorepo⌨️server💻main🔖server🛠️newserver](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/NewServer)
 func NewServer(config Config, db *Database, bus *EventBus) *Server {
 	return &Server{
 		config:      config,
@@ -1148,11 +1206,15 @@ func NewServer(config Config, db *Database, bus *EventBus) *Server {
 }
 
 // newRequestContext creates a request-scoped context with a 15-second timeout.
+// newRequestContext MUST perform the newRequestContext operation.
+// [🧰semiorepo⌨️server💻main🔖server🛠️newrequestcontext](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/newRequestContext)
 func (s *Server) newRequestContext(r *http.Request) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(r.Context(), 15*time.Second)
 }
 
 // requireAuth checks the bearer token against the configured server token.
+// requireAuth MUST perform the requireAuth operation.
+// [🧰semiorepo⌨️server💻main🔖server🛠️requireauth](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/requireAuth)
 func (s *Server) requireAuth(r *http.Request) bool {
 	if s.config.Token == "" {
 		return true
@@ -1169,6 +1231,8 @@ func (s *Server) requireAuth(r *http.Request) bool {
 }
 
 // decodeJSON reads and decodes a JSON request body with size limits.
+// [🧰semiorepo⌨️server💻main🔖server🛠️decodejson](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/decodeJSON)
+// decodeJSON MUST perform the decodeJSON operation.
 func (s *Server) decodeJSON(r *http.Request, payload interface{}) error {
 	decoder := json.NewDecoder(io.LimitReader(r.Body, s.config.RequestBodyLimit))
 	decoder.DisallowUnknownFields()
@@ -1176,6 +1240,8 @@ func (s *Server) decodeJSON(r *http.Request, payload interface{}) error {
 }
 
 // writeJSON writes a JSON response with the given status code.
+// [🧰semiorepo⌨️server💻main🔖server🛠️writejson](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/writeJSON)
+// writeJSON MUST perform the writeJSON operation.
 func (s *Server) writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -1183,11 +1249,15 @@ func (s *Server) writeJSON(w http.ResponseWriter, status int, payload interface{
 }
 
 // respondError writes a JSON error response.
+// respondError MUST perform the respondError operation.
+// [🧰semiorepo⌨️server💻main🔖server🛠️responderror](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/respondError)
 func (s *Server) respondError(w http.ResponseWriter, status int, message string) {
 	s.writeJSON(w, status, map[string]string{"error": message})
 }
 
 // handleEvents accepts CLI event payloads and persists/publishes them.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleevents](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleEvents)
+// handleEvents MUST perform the handleEvents operation.
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1220,6 +1290,8 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleHealth responds with 200 OK for liveness checks.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handlehealth](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleHealth)
+// handleHealth MUST perform the handleHealth operation.
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1230,6 +1302,8 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleTicketOpen creates a new ticket from the request payload.
+// handleTicketOpen MUST perform the handleTicketOpen operation.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleticketopen](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleTicketOpen)
 func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1271,6 +1345,8 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleTicketClose closes an existing ticket with a summary.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleticketclose](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleTicketClose)
+// handleTicketClose MUST perform the handleTicketClose operation.
 func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1309,6 +1385,8 @@ func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleTicketReopen reopens a closed ticket with a new prompt.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleticketreopen](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleTicketReopen)
+// handleTicketReopen MUST perform the handleTicketReopen operation.
 func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1350,6 +1428,8 @@ func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleTicketsQuery lists tickets optionally filtered by status.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleticketsquery](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleTicketsQuery)
+// handleTicketsQuery MUST perform the handleTicketsQuery operation.
 func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1371,6 +1451,8 @@ func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleTicketDetail returns a single ticket by its path-extracted ID.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleticketdetail](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleTicketDetail)
+// handleTicketDetail MUST perform the handleTicketDetail operation.
 func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1400,6 +1482,8 @@ func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleTicketClaims returns scope claims for a ticket.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleticketclaims](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleTicketClaims)
+// handleTicketClaims MUST perform the handleTicketClaims operation.
 func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1421,6 +1505,8 @@ func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleDiffIngest ingests a diff patch, indexes changed files, maps claims, and returns results.
+// handleDiffIngest MUST perform the handleDiffIngest operation.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handlediffingest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleDiffIngest)
 func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1456,8 +1542,10 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, response)
 }
 
-// handlePrecommit runs a pre-commit check against a diff patch.
-func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
+// handlePrecheckpoint runs a pre-checkpoint check against a diff patch.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleprecheckpoint](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handlePrecheckpoint)
+// handlePrecheckpoint MUST perform the handlePrecheckpoint operation.
+func (s *Server) handlePrecheckpoint(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -1466,7 +1554,7 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 		s.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	var payload PrecommitRequest
+	var payload PrecheckpointRequest
 	if err := s.decodeJSON(r, &payload); err != nil {
 		s.respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1484,7 +1572,7 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 	}
 	blockers := result.Blockers
 	ok := len(blockers) == 0
-	response := PrecommitResponse{
+	response := PrecheckpointResponse{
 		OK:           ok,
 		Blockers:     blockers,
 		Warnings:     warnings,
@@ -1495,6 +1583,8 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleReindex walks the repo and re-indexes all files.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handlereindex](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleReindex)
+// handleReindex MUST perform the handleReindex operation.
 func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1504,7 +1594,6 @@ func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 		s.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	files, err := s.walkRepoFiles()
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1522,6 +1611,8 @@ func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleIndexFile indexes a single file from the request payload.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handleindexfile](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleIndexFile)
+// handleIndexFile MUST perform the handleIndexFile operation.
 func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1547,6 +1638,8 @@ func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleWarnings returns warnings optionally filtered by ticket ID.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handlewarnings](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleWarnings)
+// handleWarnings MUST perform the handleWarnings operation.
 func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1567,6 +1660,8 @@ func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleBreachs returns breachs optionally filtered by ticket ID.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handlebreachs](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleBreachs)
+// handleBreachs MUST perform the handleBreachs operation.
 func (s *Server) handleBreachs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1587,6 +1682,8 @@ func (s *Server) handleBreachs(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleScopes returns scopes for a given file query parameter.
+// handleScopes MUST perform the handleScopes operation.
+// [🧰semiorepo⌨️server💻main🔖server🛠️handlescopes](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handleScopes)
 func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1614,12 +1711,11 @@ func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 // #endregion 🔖Server
 
 // #region 🔖Processing
-
-// [🧰semiorepo⌨️server💻maingo🔖processing](semiorepo://section/semio-repo/server/main.go/Processing)
+// [🧰semiorepo⌨️server💻main🔖processing](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing)
 // Diff processing pipeline that indexes changed files, maps claims, detects conflicts, and produces warnings. MUST be transactional per request.
 
 // ProcessResult holds the outcome of a diff processing operation.
-// [🧰semiorepo⌨️server💻maingo🔖processing✂️processresult](semiorepo://definition/semio-repo/server/main.go/Processing/ProcessResult)
+// [🧰semiorepo⌨️server💻main🔖processing✂️processresult](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/ProcessResult)
 type ProcessResult struct {
 	ChangedFiles  []string
 	ClaimedScopes []string
@@ -1628,6 +1724,7 @@ type ProcessResult struct {
 
 // processDiff parses the patch, indexes changed files, maps claims, and detects conflicts.
 // MUST return warnings and breachs alongside the processing result.
+// [🧰semiorepo⌨️server💻main🔖processing🛠️processdiff](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/processDiff)
 func (s *Server) processDiff(ctx context.Context, ticketID string, patch string, snapshots []FileSnapshot) (ProcessResult, []Warning, []Breach, error) {
 	diff := parseUnifiedDiff(patch)
 	changedFiles := uniqueFiles(diff.Files)
@@ -1654,7 +1751,6 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 	}
 	s.cacheLock.RUnlock()
 	claimedIDs, _ := mapClaims(scopes, diff)
-	now := time.Now().UTC()
 	for _, scopeID := range claimedIDs {
 		if err := s.db.upsertClaim(ctx, ticketID, scopeID, "touched", now); err != nil {
 			return ProcessResult{}, nil, nil, err
@@ -1683,6 +1779,8 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 }
 
 // uniqueFiles extracts deduplicated file paths from a diff result.
+// [🧰semiorepo⌨️server💻main🔖processing🛠️uniquefiles](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/uniqueFiles)
+// uniqueFiles MUST perform the uniqueFiles operation.
 func uniqueFiles(files []DiffFile) []string {
 	var list []string
 	for _, file := range files {
@@ -1694,6 +1792,8 @@ func uniqueFiles(files []DiffFile) []string {
 }
 
 // snapshotMap converts a slice of file snapshots into a path-to-content map.
+// snapshotMap MUST perform the snapshotMap operation.
+// [🧰semiorepo⌨️server💻main🔖processing🛠️snapshotmap](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/snapshotMap)
 func snapshotMap(snapshots []FileSnapshot) map[string]string {
 	mapping := map[string]string{}
 	for _, snapshot := range snapshots {
@@ -1703,6 +1803,8 @@ func snapshotMap(snapshots []FileSnapshot) map[string]string {
 }
 
 // updateIndexForFile builds scopes from file content and updates both the database and cache.
+// updateIndexForFile MUST perform the updateIndexForFile operation.
+// [🧰semiorepo⌨️server💻main🔖processing🛠️updateindexforfile](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/updateIndexForFile)
 func (s *Server) updateIndexForFile(ctx context.Context, filePath string, content string) {
 	scopes := buildScopesForFile(filePath, content)
 	var fileScope Scope
@@ -1731,6 +1833,8 @@ func (s *Server) updateIndexForFile(ctx context.Context, filePath string, conten
 }
 
 // buildScopeID generates a deterministic scope ID from the scope's kind and path.
+// [🧰semiorepo⌨️server💻main🔖processing🛠️buildscopeid](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/buildScopeID)
+// buildScopeID MUST perform the buildScopeID operation.
 func buildScopeID(scope Scope) string {
 	if scope.Kind == "file" {
 		return fmt.Sprintf("file:%s", scope.FilePath)
@@ -1745,6 +1849,8 @@ func buildScopeID(scope Scope) string {
 }
 
 // walkRepoFiles walks the repo root and returns all non-hidden file paths.
+// [🧰semiorepo⌨️server💻main🔖processing🛠️walkrepofiles](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing/d/i/walkRepoFiles)
+// walkRepoFiles MUST perform the walkRepoFiles operation.
 func (s *Server) walkRepoFiles() ([]string, error) {
 	var files []string
 	err := filepath.Walk(s.config.RepoRoot, func(path string, info os.FileInfo, err error) error {
@@ -1773,21 +1879,22 @@ func (s *Server) walkRepoFiles() ([]string, error) {
 // #endregion 🔖Processing
 
 // #region 🔖Webhooks
-
-// [🧰semiorepo⌨️server💻maingo🔖webhooks](semiorepo://section/semio-repo/server/main.go/Webhooks)
+// [🧰semiorepo⌨️server💻main🔖webhooks](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks)
 // GitHub webhook handlers for issue comment caching and issue event processing. MUST verify HMAC signatures when a secret is configured.
 
 // GitHubComment stores a cached GitHub issue comment for correlating close/reopen events.
-// [🧰semiorepo⌨️server💻maingo🔖webhooks✂️githubcomment](semiorepo://definition/semio-repo/server/main.go/Webhooks/GitHubComment)
+// [🧰semiorepo⌨️server💻main🔖webhooks✂️githubcomment](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/GitHubComment)
 type GitHubComment struct {
 	Body      string
 	Actor     string
 	Repo      string
 	Issue     int
-	Timestamp time.Time
+	Second time.Time
 }
 
 // handleGitHubWebhook processes incoming GitHub webhook events.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️handlegithubwebhook](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/handleGitHubWebhook)
+// handleGitHubWebhook MUST perform the handleGitHubWebhook operation.
 func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1832,6 +1939,8 @@ func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 // verifyGitHubSignature validates the HMAC-SHA256 signature of a webhook payload.
+// verifyGitHubSignature MUST perform the verifyGitHubSignature operation.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️verifygithubsignature](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/verifyGitHubSignature)
 func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	parts := strings.SplitN(signature, "=", 2)
 	if len(parts) != 2 {
@@ -1842,8 +1951,9 @@ func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	computed := hex.EncodeToString(mac.Sum(nil))
 	return hmac.Equal([]byte(computed), []byte(parts[1]))
 }
-
 // cacheGitHubComment stores a GitHub comment for correlating subsequent events.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️cachegithubcomment](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/cacheGitHubComment)
+// cacheGitHubComment MUST perform the cacheGitHubComment operation.
 func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 	issue, repo, actor, body := extractIssueComment(payload)
 	if issue == 0 || repo == "" || actor == "" || body == "" {
@@ -1856,12 +1966,14 @@ func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 		Actor:     actor,
 		Repo:      repo,
 		Issue:     issue,
-		Timestamp: time.Now().UTC(),
+		Second: time.Now().UTC(),
 	}
 	s.ghLock.Unlock()
 }
 
 // handleGitHubIssueEvent processes GitHub issue close/reopen events.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️handlegithubissueevent](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/handleGitHubIssueEvent)
+// handleGitHubIssueEvent MUST perform the handleGitHubIssueEvent operation.
 func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]interface{}) {
 	action, _ := payload["action"].(string)
 	issueNumber := extractIssueNumber(payload)
@@ -1880,6 +1992,8 @@ func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]
 }
 
 // findCachedComment retrieves a recently cached GitHub comment for the given issue.
+// findCachedComment MUST perform the findCachedComment operation.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️findcachedcomment](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/findCachedComment)
 func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubComment {
 	key := fmt.Sprintf("%s#%d#%s", repo, issue, actor)
 	s.ghLock.Lock()
@@ -1888,7 +2002,7 @@ func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubC
 	if !ok {
 		return GitHubComment{}
 	}
-	if time.Since(comment.Timestamp) > 90*time.Second {
+	if time.Since(comment.Second) > 90*time.Second {
 		delete(s.githubCache, key)
 		return GitHubComment{}
 	}
@@ -1896,6 +2010,8 @@ func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubC
 }
 
 // extractIssueComment extracts issue number, repo, actor, and body from a webhook payload.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️extractissuecomment](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/extractIssueComment)
+// extractIssueComment MUST perform the extractIssueComment operation.
 func extractIssueComment(payload map[string]interface{}) (int, string, string, string) {
 	issueNumber := extractIssueNumber(payload)
 	repo := extractRepoFullName(payload)
@@ -1908,6 +2024,8 @@ func extractIssueComment(payload map[string]interface{}) (int, string, string, s
 }
 
 // extractIssueNumber extracts the issue number from a GitHub webhook payload.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️extractissuenumber](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/extractIssueNumber)
+// extractIssueNumber MUST perform the extractIssueNumber operation.
 func extractIssueNumber(payload map[string]interface{}) int {
 	if issue, ok := payload["issue"].(map[string]interface{}); ok {
 		if number, ok := issue["number"].(float64); ok {
@@ -1918,6 +2036,8 @@ func extractIssueNumber(payload map[string]interface{}) int {
 }
 
 // extractRepoFullName extracts the repository full name from a GitHub webhook payload.
+// extractRepoFullName MUST perform the extractRepoFullName operation.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️extractrepofullname](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/extractRepoFullName)
 func extractRepoFullName(payload map[string]interface{}) string {
 	if repo, ok := payload["repository"].(map[string]interface{}); ok {
 		if name, ok := repo["full_name"].(string); ok {
@@ -1927,6 +2047,9 @@ func extractRepoFullName(payload map[string]interface{}) string {
 	return ""
 }
 
+// handleGitHubPushEvent MUST perform the handleGitHubPushEvent operation.
+// handleGitHubPushEvent holds the data fields for a handleGitHubPushEvent record.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️handlegithubpushevent](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/handleGitHubPushEvent)
 func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]interface{}) {
 	actor := extractActorLogin(payload)
 	if actor == "" {
@@ -1937,8 +2060,8 @@ func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]i
 		}
 	}
 	var files []string
-	if commits, ok := payload["commits"].([]interface{}); ok {
-		for _, c := range commits {
+	if checkpoints, ok := payload["commits"].([]interface{}); ok {
+		for _, c := range checkpoints {
 			if cm, ok := c.(map[string]interface{}); ok {
 				if added, ok := cm["added"].([]interface{}); ok {
 					for _, a := range added {
@@ -1958,16 +2081,17 @@ func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]i
 		}
 	}
 	if actor != "" && len(files) > 0 {
-		_ = s.db.removeContributorWorkForCommit(ctx, actor, files)
+		_ = s.db.removeContributorWorkForCheckpoint(ctx, actor, files)
 	}
 }
 
 // extractActorLogin extracts the sender login from a GitHub webhook payload.
+// [🧰semiorepo⌨️server💻main🔖webhooks🛠️extractactorlogin](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/extractActorLogin)
+// extractActorLogin MUST perform the extractActorLogin operation.
 func extractActorLogin(payload map[string]interface{}) string {
 	if sender, ok := payload["sender"].(map[string]interface{}); ok {
 		if login, ok := sender["login"].(string); ok {
 			return login
-		}
 	}
 	return ""
 }
@@ -1975,11 +2099,12 @@ func extractActorLogin(payload map[string]interface{}) string {
 // #endregion 🔖Webhooks
 
 // #region 🔖Discord
-
-// [🧰semiorepo⌨️server💻maingo🔖discord](semiorepo://section/semio-repo/server/main.go/Discord)
+// [🧰semiorepo⌨️server💻main🔖discord](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord)
 // Discord notification integration for ticket lifecycle events. MUST silently skip when no webhook URL is configured.
 
-// notifyDiscord sends a message to the configured Discord webhook.
+// notifyDiscord performs the notifyDiscord operation.
+// [🧰semiorepo⌨️server💻main🔖discord🛠️notifydiscord](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/notifyDiscord)
+// notifyDiscord MUST perform the notifyDiscord operation.
 func (s *Server) notifyDiscord(title string, body string) {
 	if s.config.DiscordWebhook == "" {
 		return
@@ -1996,6 +2121,8 @@ func (s *Server) notifyDiscord(title string, body string) {
 }
 
 // registerNotifications subscribes to ticket lifecycle events and sends Discord notifications.
+// registerNotifications MUST perform the registerNotifications operation.
+// [🧰semiorepo⌨️server💻main🔖discord🛠️registernotifications](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/registerNotifications)
 func (s *Server) registerNotifications() {
 	s.bus.Subscribe("TicketOpened", func(ctx context.Context, event Event) {
 		s.notifyDiscord("# Prompt", event.Payload)
@@ -2017,11 +2144,14 @@ func (s *Server) registerNotifications() {
 			s.onCLIEvent(ctx, k, event)
 		})
 	}
-	s.bus.Subscribe(string(repopkg.EventCommit), func(ctx context.Context, event Event) {
-		s.onCommitEvent(ctx, event)
+	s.bus.Subscribe(string(repopkg.EventCheckpoint), func(ctx context.Context, event Event) {
+		s.onCheckpointEvent(ctx, event)
 	})
 }
 
+// onCLIEvent holds the data fields for a onCLIEvent record.
+// [🧰semiorepo⌨️server💻main🔖discord🛠️onclievent](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/onCLIEvent)
+// onCLIEvent MUST perform the onCLIEvent operation.
 func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event Event) {
 	s.notifyDiscord(string(kind), event.Payload)
 	author, items := s.extractAuthorAndItems(kind, event.Payload)
@@ -2041,8 +2171,11 @@ func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event E
 	}
 }
 
-func (s *Server) onCommitEvent(ctx context.Context, event Event) {
-	var p repopkg.CommitPayload
+// [🧰semiorepo⌨️server💻main🔖discord🛠️oncheckpointevent](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/onCheckpointEvent)
+// onCheckpointEvent holds the data fields for a onCheckpointEvent record.
+// onCheckpointEvent MUST perform the onCheckpointEvent operation.
+func (s *Server) onCheckpointEvent(ctx context.Context, event Event) {
+	var p repopkg.CheckpointPayload
 	if json.Unmarshal([]byte(event.Payload), &p) != nil {
 		return
 	}
@@ -2050,9 +2183,12 @@ func (s *Server) onCommitEvent(ctx context.Context, event Event) {
 	if len(files) == 0 {
 		files = p.Files
 	}
-	_ = s.db.removeContributorWorkForCommit(ctx, p.Author, files)
+	_ = s.db.removeContributorWorkForCheckpoint(ctx, p.Author, files)
 }
 
+// extractAuthorAndItems holds the data fields for a extractAuthorAndItems record.
+// extractAuthorAndItems MUST perform the extractAuthorAndItems operation.
+// [🧰semiorepo⌨️server💻main🔖discord🛠️extractauthoranditems](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/extractAuthorAndItems)
 func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON string) (author string, items []repopkg.WorkItem) {
 	switch kind {
 	case repopkg.EventTicketOpen, repopkg.EventTicketClose, repopkg.EventTicketReopen, repopkg.EventTicketChange:
@@ -2093,6 +2229,9 @@ func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON strin
 	}
 }
 
+// [🧰semiorepo⌨️server💻main🔖discord🛠️getauthorfrompayload](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/getAuthorFromPayload)
+// getAuthorFromPayload holds the data fields for a getAuthorFromPayload record.
+// getAuthorFromPayload MUST perform the getAuthorFromPayload operation.
 func getAuthorFromPayload(payloadJSON string) string {
 	var m map[string]interface{}
 	if json.Unmarshal([]byte(payloadJSON), &m) != nil {
@@ -2104,6 +2243,9 @@ func getAuthorFromPayload(payloadJSON string) string {
 	return ""
 }
 
+// [🧰semiorepo⌨️server💻main🔖discord🛠️filterout](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/filterOut)
+// filterOut holds the data fields for a filterOut record.
+// filterOut MUST perform the filterOut operation.
 func filterOut(list []string, exclude string) []string {
 	var out []string
 	for _, x := range list {
@@ -2116,25 +2258,12 @@ func filterOut(list []string, exclude string) []string {
 
 // #endregion 🔖Discord
 
-// #region 🔖Utilities
-
-// [🧰semiorepo⌨️server💻maingo🔖utilities](semiorepo://section/semio-repo/server/main.go/Utilities)
-// Shared utility functions used across the server. MUST produce unique identifiers.
-
-// newID generates a unique identifier from the current timestamp and a random value.
 func newID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
 }
 
 // #endregion 🔖Utilities
 
-// #region 🔖Main
-
-// [🧰semiorepo⌨️server💻maingo🔖main](semiorepo://section/semio-repo/server/main.go/Main)
-// Application entry point that initializes the database, event bus, server, and HTTP routes. MUST register all handlers before listening.
-
-// main initializes the server and starts listening for HTTP requests.
-// MUST open the database, start the event bus, register all routes, and block on ListenAndServe.
 func main() {
 	config := loadConfig()
 	db, err := openDatabase(config.DatabasePath)
@@ -2154,7 +2283,7 @@ func main() {
 	mux.HandleFunc("/tickets", server.handleTicketsQuery)
 	mux.HandleFunc("/tickets/", server.handleTicketDetail)
 	mux.HandleFunc("/diff/ingest", server.handleDiffIngest)
-	mux.HandleFunc("/checks/precommit", server.handlePrecommit)
+	mux.HandleFunc("/checks/precheckpoint", server.handlePrecheckpoint)
 	mux.HandleFunc("/repo/reindex", server.handleReindex)
 	mux.HandleFunc("/repo/index-file", server.handleIndexFile)
 	mux.HandleFunc("/warnings", server.handleWarnings)

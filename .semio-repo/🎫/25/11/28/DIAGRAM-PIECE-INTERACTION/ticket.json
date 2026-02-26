@@ -1,18 +1,6 @@
 {
   "title": "Fix piece hover and selection in diagram after drag and drop",
   "status": "closed",
-  "prompt": "Fix piece hover and selection in diagram after drag and drop",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.758Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Fix piece hover and selection in diagram after drag and drop",
-      "llm": "sonnet-4"
-    }
-  ]
+  "description": "Fix piece hover and selection in diagram after drag and drop",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

@@ -1,18 +1,6 @@
 {
   "title": "Fix broken panel code and extend sketchpad tests for all panel types",
   "status": "closed",
-  "prompt": "Fix broken panel code and extend sketchpad tests for all panel types",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.845Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Fix broken panel code and extend sketchpad tests for all panel types",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Fix broken panel code and extend sketchpad tests for all panel types",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

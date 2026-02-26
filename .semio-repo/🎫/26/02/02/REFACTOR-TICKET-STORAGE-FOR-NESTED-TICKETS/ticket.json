@@ -1,19 +1,7 @@
 {
   "title": "Refactor Ticket Storage for Nested Tickets",
   "status": "closed",
-  "prompt": "The semio repo cli binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
+  "description": "The semio repo cli binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
   "summary": "Bulk close",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-02T16:44:26.030129772Z",
-      "author": "usalu",
-      "system": "",
-      "client": "",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
-      "prompt": "The semio repo cli binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
-      "llm": "gemini-3-pro"
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
 }

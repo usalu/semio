@@ -1,17 +1,6 @@
 {
   "title": "Rust Flatten Design Performance Optimization",
   "status": "closed",
-  "prompt": "Migrated from legacy files",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-01-29T19:44:04.037365Z",
-      "author": "Migration Script",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "Migrated from legacy files"
-    }
-  ]
+  "description": "Migrated from legacy files",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp"
 }

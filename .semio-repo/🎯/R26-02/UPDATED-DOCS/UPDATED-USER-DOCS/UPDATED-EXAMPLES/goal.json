@@ -8,9 +8,8 @@
   },
   "client": "windsurf-chat",
   "llm": "sonnet-4-5",
-  "parent": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS",
+  "parent": "🎯r2602🎯updateddocs🎯updateduserdocs",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/371"
-  },
-  "interactions": null
+  }
 }

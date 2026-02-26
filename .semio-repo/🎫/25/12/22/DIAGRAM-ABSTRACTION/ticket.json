@@ -1,18 +1,6 @@
 {
   "title": "DIAGRAM-ABSTRACTION",
   "status": "closed",
-  "prompt": "\u003e-",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-22T22:14:17.678Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "\u003e-",
-      "llm": "sonnet-4"
-    }
-  ]
+  "description": "\u003e-",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

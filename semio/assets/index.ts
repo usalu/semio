@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🏪assets💻indexts](semiorepo://file/semio/assets/index.ts)
+// [👤semio🏪assets💻index](semiorepo://p/u/semio/b/a/assets/f/index.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 //#region 🔖Exports
-
-// [👤semio🏪assets💻indexts🔖exports](semiorepo://section/semio/assets/index.ts/Exports)
+// [👤semio🏪assets💻index🔖exports](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports)
 // Re-exports and data constants MUST come from the Metabolism kit assets.
 
 import MetabolismKitData from "./semio/kit_metabolism.json";
@@ -36,72 +34,79 @@ export { MetabolismKitData as MetabolismKit };
 /**
  * Metabolism kit types array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkittypes](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitTypes)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkittypes](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitTypes)
  **/
 export const MetabolismKitTypes = MetabolismKitData.types ?? [];
 /**
  * Metabolism kit designs array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitdesigns](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitDesigns)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitdesigns](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitDesigns)
  **/
 export const MetabolismKitDesigns = MetabolismKitData.designs ?? [];
 /**
  * Metabolism kit ports array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitports](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitPorts)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitports](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitPorts)
  **/
 export const MetabolismKitPorts = MetabolismKitData.ports ?? [];
 /**
  * Metabolism kit qualities array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitqualities](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitQualities)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitqualities](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitQualities)
  **/
 export const MetabolismKitQualities = (MetabolismKitData as { qualities?: unknown[] }).qualities ?? [];
 /**
  * Metabolism kit files array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitfiles](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitFiles)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitfiles](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitFiles)
  **/
 export const MetabolismKitFiles = MetabolismKitData.files ?? [];
 /**
  * Metabolism kit folders array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitfolders](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitFolders)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitfolders](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitFolders)
  **/
 export const MetabolismKitFolders = MetabolismKitData.folders ?? [];
 /**
  * Metabolism kit authors array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitauthors](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitAuthors)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitauthors](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitAuthors)
  **/
 export const MetabolismKitAuthors = MetabolismKitData.authors ?? [];
 /**
  * Metabolism kit tags array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkittags](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitTags)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkittags](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitTags)
  **/
 export const MetabolismKitTags = MetabolismKitData.tags ?? [];
 /**
  * Metabolism kit concepts array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitconcepts](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitConcepts)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitconcepts](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitConcepts)
  **/
 export const MetabolismKitConcepts = MetabolismKitData.concepts ?? [];
 /**
  * Metabolism kit attributes array
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitattributes](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitAttributes)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitattributes](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitAttributes)
  **/
 export const MetabolismKitAttributes = (MetabolismKitData as { attributes?: unknown[] }).attributes ?? [];
 /**
  * Metabolism kit Nakagin Capsule Tower designs subset
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitnakagincapsuletowerdesigns](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitNakaginCapsuleTowerDesigns)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitnakagincapsuletowerdesigns](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitNakaginCapsuleTowerDesigns)
  **/
 export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter((design) => design.name === "Nakagin Capsule Tower") ?? [];
 
-// Builds guid and name lookup maps from an item array
-// Callers MUST provide an array of objects with optional guid and name fields
+/**
+ * Builds guid and name lookup maps from an item array
+ *
+ * Callers MUST provide an array of objects with optional guid and name fields
+ **/
+// [👤semio🏪assets💻index🔖exports🪨buildlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/buildLookup)
+// buildLookup holds the data fields for a buildLookup record.
+ * [👤semio🏪assets💻index🔖exports🪨buildlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/buildLookup)
+ **/
 const buildLookup = (items: any[] = []) => {
   const byGuid: Record<string, any> = {};
   const byName: Record<string, any> = {};
@@ -113,58 +118,73 @@ const buildLookup = (items: any[] = []) => {
   return { byGuid, byName };
 };
 
-// Type lookup maps by guid and name
+/**
+// typeLookup holds the data fields for a typeLookup record.
+ * [👤semio🏪assets💻index🔖exports🪨typelookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/typeLookup)
+ **/
 const typeLookup = buildLookup(MetabolismKitTypes);
-// Design lookup maps by guid and name
+/**
+// [👤semio🏪assets💻index🔖exports🪨designlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/designLookup)
+ * Design lookup maps by guid and name
+ **/
 const designLookup = buildLookup(MetabolismKitDesigns);
-// Port lookup maps by guid and name
+/**
+// [👤semio🏪assets💻index🔖exports🪨portlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/portLookup)
+ * Port lookup maps by guid and name
+ **/
 const portLookup = buildLookup(MetabolismKitPorts);
 
 /**
  * Metabolism kit types indexed by guid
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkittypesbyguid](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitTypesByGuid)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkittypesbyguid](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitTypesByGuid)
  **/
 export const MetabolismKitTypesByGuid = typeLookup.byGuid;
 /**
  * Metabolism kit types indexed by name
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkittypesbyname](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitTypesByName)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkittypesbyname](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitTypesByName)
  **/
 export const MetabolismKitTypesByName = typeLookup.byName;
 /**
  * Metabolism kit designs indexed by guid
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitdesignsbyguid](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitDesignsByGuid)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitdesignsbyguid](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitDesignsByGuid)
  **/
 export const MetabolismKitDesignsByGuid = designLookup.byGuid;
 /**
  * Metabolism kit designs indexed by name
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitdesignsbyname](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitDesignsByName)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitdesignsbyname](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitDesignsByName)
  **/
 export const MetabolismKitDesignsByName = designLookup.byName;
 /**
  * Metabolism kit ports indexed by guid
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitportsbyguid](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitPortsByGuid)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitportsbyguid](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitPortsByGuid)
  **/
 export const MetabolismKitPortsByGuid = portLookup.byGuid;
 /**
  * Metabolism kit ports indexed by name
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitportsbyname](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitPortsByName)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitportsbyname](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitPortsByName)
  **/
 export const MetabolismKitPortsByName = portLookup.byName;
 
-// Nakagin Capsule Tower root design reference
+/**
+// nakaginCapsuleTowerDesign holds the data fields for a nakaginCapsuleTowerDesign record.
+ * [👤semio🏪assets💻index🔖exports🪨nakagincapsuletowerdesign](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/nakaginCapsuleTowerDesign)
+ **/
 const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "Nakagin Capsule Tower");
-// Nakagin Capsule Tower Flat variant design reference
+/**
+// nakaginCapsuleTowerFlatDesign holds the data fields for a nakaginCapsuleTowerFlatDesign record.
+ * [👤semio🏪assets💻index🔖exports🪨nakagincapsuletowerflatdesign](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/nakaginCapsuleTowerFlatDesign)
+ **/
 const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);
 /**
  * Nakagin Capsule Tower Flat variant piece data with plane and center
  *
- *  * [👤semio🏪assets💻indexts🔖exports🪨metabolismkitnakagincapsuletowerflatpieces](semiorepo://definition/semio/assets/index.ts/Exports/MetabolismKitNakaginCapsuleTowerFlatPieces)
+ *  * [👤semio🏪assets💻index🔖exports🪨metabolismkitnakagincapsuletowerflatpieces](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/MetabolismKitNakaginCapsuleTowerFlatPieces)
  **/
 export const MetabolismKitNakaginCapsuleTowerFlatPieces =
   nakaginCapsuleTowerFlatDesign?.pieces?.map((p) => ({

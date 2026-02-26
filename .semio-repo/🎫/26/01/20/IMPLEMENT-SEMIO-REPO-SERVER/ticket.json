@@ -1,19 +1,8 @@
 {
   "title": "Implement Semio Repo Server",
   "status": "closed",
-  "prompt": "",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/175"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-SERVER",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "",
-      "author": "",
-      "system": "",
-      "client": "",
-      "commit": ""
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯reposerver"
 }

@@ -1,18 +1,6 @@
 {
   "title": "OPEN-CLOSED-SKETCHPAD",
   "status": "closed",
-  "prompt": "\u003e-",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-22T20:43:22.25Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "",
-      "prompt": "\u003e-",
-      "llm": "sonnet-4"
-    }
-  ]
+  "description": "\u003e-",
+  "goal": "🎯r2602🎯runningsketchpad"
 }

@@ -1,18 +1,6 @@
 {
   "title": "node-tests-fix",
   "status": "closed",
-  "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-01-07T11:23:05Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
-      "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
-      "llm": "OPUS"
-    }
-  ]
+  "description": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
+  "goal": "🎯aioptimizedrepo"
 }

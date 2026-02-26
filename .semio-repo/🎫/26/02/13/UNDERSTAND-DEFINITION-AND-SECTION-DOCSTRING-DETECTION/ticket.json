@@ -1,54 +1,10 @@
 {
   "title": "Understand Definition and Section Docstring Detection",
   "status": "closed",
-  "prompt": "Read and document the current definition/section docstring detection, breach, and autofix logic in the semio-repo CLI",
+  "description": "Read and document the current definition/section docstring detection, breach, and autofix logic in the semio-repo CLI",
   "summary": "Documented all definition/section docstring detection, breach, and autofix logic in semio-repo CLI main.go.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/554"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DEFINITION-MECHANISM",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-13 10:03:01",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "fca8a9a0d53f7c789f1f214d7e769920fbe2cea2",
-      "prompt": "Read and document the current definition/section docstring detection, breach, and autofix logic in the semio-repo CLI",
-      "llm": "opus-4-6",
-      "diff": {
-        "bundles": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        },
-        "folders": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "files": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "sections": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        },
-        "definitions": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        }
-      }
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repodefinitionmechanism"
 }

@@ -8,9 +8,8 @@
   },
   "client": "copilot-chat",
   "llm": "gemini-3-pro",
-  "parent": "AI-OPTIMIZED-REPO/SANDBOXED-REPO",
+  "parent": "🎯aioptimizedrepo🎯sandboxedrepo",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/359"
-  },
-  "interactions": null
+  }
 }

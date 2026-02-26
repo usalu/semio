@@ -1,0 +1,15 @@
+{
+  "title": "Refactor JSON Resource References to Semio Repo ID System",
+  "status": "closed",
+  "description": "All JSON files in .semio-repo should use the semio repo id system for resource references. Convert goal paths like AI-OPTIMIZED-REPO/REPO-CLIENT to emoji-prefixed flat format like 🎯aioptimizedrepo🎯repoclient. Also convert contributor references and parent goal references. Update CLI code to handle the new format.",
+  "summary": "Refactored all .semio-repo JSON files to use semio repo ID system (emoji-prefixed flat IDs). Migration script converted 1498 references across all ticket.json and goal.json files. Updated Go CLI with MarshalJSON/UnmarshalJSON boundary conversion for Ticket and Goal structs, added goalPathToSemioID/semioIDToGoalPath/contributorGithubToSemioID/semioIDToContributorGithub conversion functions, fixed Goal.GetID() for hierarchical format. All 15 relevant tests pass including 7 new round-trip tests. Fixed pre-existing hhmmss compile error in logHook.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/702"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪1735e6d28f1d45d88dbc4badbf6ecc80",
+    "⚪bcb3d940c16d4263821546b7005e8145",
+    "⚪9b57ce56af904029a6e9f3ff7d7669b9"
+  ]
+}

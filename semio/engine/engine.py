@@ -1,6 +1,5 @@
 # region Header
-
-# [👤semio📚engine💻enginepy](semiorepo://file/semio/engine/engine.py)
+# [👤semio📚engine💻engine](semiorepo://p/u/semio/b/l/engine/f/engine.py)
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -18,8 +17,7 @@
 # endregion Header
 
 # region Imports
-
-# [👤semio📚engine💻enginepy🔖imports](semiorepo://section/semio/engine/engine.py/Imports)
+# [👤semio📚engine💻engine🔖imports](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Imports)
 # Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
 from __future__ import annotations
 import abc
@@ -149,8 +147,7 @@ from semio import (
 # endregion Imports
 
 # region Store
-
-# [👤semio📚engine💻enginepy🔖store](semiorepo://section/semio/engine/engine.py/Store)
+# [👤semio📚engine💻engine🔖store](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store)
 # Store MUST provide the data access layer for kit operations via code-based routing.
 
 codeGrammar = (
@@ -165,11 +162,13 @@ codeGrammar = (
 
 codeParser = lark.Lark(codeGrammar, start="code")
 
+
 class OperationBuilder(lark.Transformer):
     """Lark transformer that builds operation dicts from parsed code grammar trees.
     Callers MUST pass a valid parse tree from codeParser.
-    [👤semio📚engine💻enginepy🔖store🛠️operationbuilder](semiorepo://definition/semio/engine/engine.py/Store/OperationBuilder)
+    [👤semio📚engine💻engine🔖store🛠️operationbuilder](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationBuilder)
     """
+
     def code(self, children):
         if len(children) == 0:
             return {"kind": "kits"}
@@ -199,20 +198,22 @@ class OperationBuilder(lark.Transformer):
             "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
         }
 
+
 class StoreKind(enum.Enum):
     """🏪The kind of the store.
     Callers MUST use one of the defined store kinds when selecting a backend.
-    [👤semio📚engine💻enginepy🔖store🛠️storekind](semiorepo://definition/semio/engine/engine.py/Store/StoreKind)
+    [👤semio📚engine💻engine🔖store🛠️storekind](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreKind)
     """
 
     DATABASE = "database"
     REST = "rest"
     GRAPHQL = "graphql"
 
+
 class CommandKind(enum.Enum):
     """🔧 The kind of the command.
     Callers MUST use a valid CommandKind when calling Store.execute.
-    [👤semio📚engine💻enginepy🔖store🛠️commandkind](semiorepo://definition/semio/engine/engine.py/Store/CommandKind)
+    [👤semio📚engine💻engine🔖store🛠️commandkind](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/CommandKind)
     """
 
     QUERY = "query"
@@ -220,19 +221,19 @@ class CommandKind(enum.Enum):
     UPDATE = "update"
     DELETE = "delete"
 
+
 class Store(abc.ABC):
     """Abstract base class for all store backends.
     Subclasses MUST implement initialize, get, put, update, and delete methods.
-    [👤semio📚engine💻enginepy🔖store🛠️store](semiorepo://definition/semio/engine/engine.py/Store/Store)
+    [👤semio📚engine💻engine🔖store🛠️store](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Store)
     """
+
     uri: str
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
-    def execute(
-        self, command: CommandKind = CommandKind.QUERY, code: str = "", input: str = ""
-    ) -> typing.Any:
+    def execute(self, command: CommandKind = CommandKind.QUERY, code: str = "", input: str = "") -> typing.Any:
         """❕ Execute a command on the store."""
         codeTree = codeParser.parse(code)
         operation = OperationBuilder().transform(codeTree)
@@ -272,11 +273,13 @@ class Store(abc.ABC):
         """🗑 Delete an entity from the store."""
         pass
 
+
 class DatabaseStore(Store, abc.ABC):
     """Abstract database-backed store using SQLAlchemy engine and session.
     Subclasses MUST implement the fromUri classmethod to construct from a URI.
-    [👤semio📚engine💻enginepy🔖store🛠️databasestore](semiorepo://definition/semio/engine/engine.py/Store/DatabaseStore)
+    [👤semio📚engine💻engine🔖store🛠️databasestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/DatabaseStore)
     """
+
     engine: sqlalchemy.engine.Engine
 
     def __init__(self, uri: str, engine: sqlalchemy.engine.Engine) -> None:
@@ -336,9 +339,7 @@ class DatabaseStore(Store, abc.ABC):
             dump = input.model_dump()
             dump["uri"] = kitUri
             kit = Kit.parse(dump)
-            existingKit = (
-                self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
-            )
+            existingKit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
             if existingKit is not None:
                 raise KitAlreadyExists(kitUri)
             try:
@@ -354,18 +355,8 @@ class DatabaseStore(Store, abc.ABC):
         kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
         match kind:
             case "design":
-                types = [
-                    u.Type
-                    for u in self.session.query(Type, Kit)
-                    .filter(Kit.uri == kitUri)
-                    .all()
-                ]
-                existingDesigns = [
-                    d
-                    for d, _ in self.session.query(Design, Kit)
-                    .filter(Kit.uri == kitUri)
-                    .all()
-                ]
+                types = [u.Type for u in self.session.query(Type, Kit).filter(Kit.uri == kitUri).all()]
+                existingDesigns = [d for d, _ in self.session.query(Design, Kit).filter(Kit.uri == kitUri).all()]
                 designsById: dict[str, dict[str, dict[str, Design]]] = {}
                 for d in existingDesigns:
                     if d.name not in designsById:
@@ -419,22 +410,14 @@ class DatabaseStore(Store, abc.ABC):
                         for connector in list(existingType.connectors):
                             for connection in connector.connections:
                                 if connection.connectedPiece.type == existingType:
-                                    usedConnectors[
-                                        connection.connectedConnector.id_
-                                    ] = connection.connectedConnector
+                                    usedConnectors[connection.connectedConnector.id_] = connection.connectedConnector
                                 if connection.connectingPiece.type == existingType:
-                                    usedConnectors[
-                                        connection.connectingConnector.id_
-                                    ] = connection.connectingConnector
+                                    usedConnectors[connection.connectingConnector.id_] = connection.connectingConnector
                         newPorts = {p.id_: p for p in type.connectors}
-                        missingConnectors = set(usedConnectors.keys()) - set(
-                            newPorts.keys()
-                        )
+                        missingConnectors = set(usedConnectors.keys()) - set(newPorts.keys())
                         if missingConnectors:
                             raise TypeHasNotAllUsedConnectors(missingConnectors)
-                        unusedConnectors = set(existingConnectors.keys()) - set(
-                            usedConnectors.keys()
-                        )
+                        unusedConnectors = set(existingConnectors.keys()) - set(usedConnectors.keys())
 
                         existingType.icon = type.icon
                         existingType.image = type.image
@@ -443,9 +426,7 @@ class DatabaseStore(Store, abc.ABC):
                         existingType.updated = datetime.datetime.now()
                         for usedConnectorId, usedConnector in usedConnectors.items():
                             usedConnector.point = newPorts[usedConnectorId].point
-                            usedConnector.direction = newPorts[
-                                usedConnectorId
-                            ].direction
+                            usedConnector.direction = newPorts[usedConnectorId].direction
 
                             for attribute in list(usedConnector.attributes):
                                 self.session.delete(attribute)
@@ -453,9 +434,7 @@ class DatabaseStore(Store, abc.ABC):
                             self.session.flush()
 
                             newAttributes = []
-                            for newAttribute in list(
-                                newPorts[usedConnectorId].attributes
-                            ):
+                            for newAttribute in list(newPorts[usedConnectorId].attributes):
                                 newAttribute.connector = usedConnector
                                 self.session.add(newAttribute)
                                 newAttributes.append(newAttribute)
@@ -464,11 +443,7 @@ class DatabaseStore(Store, abc.ABC):
 
                         for unusedConnector in list(unusedConnectors):
                             self.session.delete(existingConnectors[unusedConnector])
-                        existingType.connectors = [
-                            p
-                            for p in existingType.connectors
-                            if p.id_ not in unusedConnectors
-                        ]
+                        existingType.connectors = [p for p in existingType.connectors if p.id_ not in unusedConnectors]
                         self.session.flush()
 
                         for newPortId, newPort in newPorts.items():
@@ -552,10 +527,11 @@ class DatabaseStore(Store, abc.ABC):
             case _:
                 raise FeatureNotYetSupported()
 
+
 class SSLMode(enum.Enum):
     """🔒 The security level of the session
     Callers MUST select the appropriate SSL mode for the target database security policy.
-    [👤semio📚engine💻enginepy🔖store🛠️sslmode](semiorepo://definition/semio/engine/engine.py/Store/SSLMode)
+    [👤semio📚engine💻engine🔖store🛠️sslmode](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SSLMode)
     """
 
     DISABLE = "disable"
@@ -565,19 +541,21 @@ class SSLMode(enum.Enum):
     VERIFY_CA = "verify-ca"
     VERIFY_FULL = "verify-full"
 
+
 def cacheDir(remoteUri: str) -> str:
     """Returns the local cache directory path for a remote kit URI.
     Callers MUST provide a valid remote URI string.
-    [👤semio📚engine💻enginepy🔖store🛠️cachedir](semiorepo://definition/semio/engine/engine.py/Store/cacheDir)
+    [👤semio📚engine💻engine🔖store🛠️cachedir](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/cacheDir)
     """
     cacheDir = os.path.expanduser("~/.semio/cache")
     encodedUri = encode(remoteUri)
     return os.path.join(cacheDir, encodedUri)
 
+
 def cache(remoteUri: str) -> str:
     """📦Cache a remote kit and delete the existing cache if it was already cached.
     Callers MUST provide a URI starting with http and ending with .zip.
-    [👤semio📚engine💻enginepy🔖store🛠️cache](semiorepo://definition/semio/engine/engine.py/Store/cache)
+    [👤semio📚engine💻engine🔖store🛠️cache](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/cache)
     """
     if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
         raise OnlyRemoteKitsCanBeCached(remoteUri)
@@ -612,16 +590,16 @@ def cache(remoteUri: str) -> str:
 
     return path
 
+
 class SqliteStore(DatabaseStore):
     """SQLite-backed store that persists kit data to a local .semio database file.
     Callers MUST use fromUri to construct instances with a valid local path.
-    [👤semio📚engine💻enginepy🔖store🛠️sqlitestore](semiorepo://definition/semio/engine/engine.py/Store/SqliteStore)
+    [👤semio📚engine💻engine🔖store🛠️sqlitestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SqliteStore)
     """
+
     path: pathlib.Path
 
-    def __init__(
-        self, uri: str, engine: sqlalchemy.engine.Engine, path: pathlib.Path
-    ) -> None:
+    def __init__(self, uri: str, engine: sqlalchemy.engine.Engine, path: pathlib.Path) -> None:
         super().__init__(uri, engine)
         self.path = path
 
@@ -629,11 +607,7 @@ class SqliteStore(DatabaseStore):
     def fromUri(cls, uri: str, path: str = "") -> "SqliteStore":
         if path == "":
             path = uri
-        sqlitePath = (
-            pathlib.Path(path)
-            / pathlib.Path(KIT_LOCAL_FOLDERNAME)
-            / pathlib.Path(KIT_LOCAL_FILENAME)
-        )
+        sqlitePath = pathlib.Path(path) / pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME)
         connectionString = f"sqlite:///{sqlitePath}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
         SessionMaker = sqlalchemy.orm.sessionmaker(bind=engine)
@@ -663,11 +637,13 @@ class SqliteStore(DatabaseStore):
     def postDeleteKit(self: "SqliteStore") -> None:
         os.kill(os.getpid(), signal.SIGTERM)
 
+
 class PostgresStore(DatabaseStore):
     """PostgreSQL-backed store for remote database connections.
     Callers MUST NOT use this class until PostgreSQL support is implemented.
-    [👤semio📚engine💻enginepy🔖store🛠️postgresstore](semiorepo://definition/semio/engine/engine.py/Store/PostgresStore)
+    [👤semio📚engine💻engine🔖store🛠️postgresstore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/PostgresStore)
     """
+
     @classmethod
     def fromUri(cls, uri: str):
         # TODO: Get connection string from environment variable.
@@ -677,11 +653,12 @@ class PostgresStore(DatabaseStore):
     def initialize(self: "DatabaseStore") -> None:
         sqlmodel.SQLModel.metadata.create_all(self.engine)
 
+
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
     Callers MUST provide either an absolute local path or an http URL.
-    [👤semio📚engine💻enginepy🔖store🛠️storefactory](semiorepo://definition/semio/engine/engine.py/Store/StoreFactory)
+    [👤semio📚engine💻engine🔖store🛠️storefactory](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreFactory)
     """
     if os.path.isabs(uri):
         return SqliteStore.fromUri(uri)
@@ -694,84 +671,88 @@ def StoreFactory(uri: str) -> Store:
         raise RemoteKitsNotYetSupported(uri)
     raise LocalKitUriIsNotAbsolute(uri)
 
+
 def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
     """Parses a code string into a store instance and operation dict.
     Callers MUST provide a valid code string matching the code grammar.
-    [👤semio📚engine💻enginepy🔖store🛠️storeandoperationfromcode](semiorepo://definition/semio/engine/engine.py/Store/storeAndOperationFromCode)
+    [👤semio📚engine💻engine🔖store🛠️storeandoperationfromcode](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/storeAndOperationFromCode)
     """
     codeTree = codeParser.parse(code)
     operation = OperationBuilder().transform(codeTree)
     store = StoreFactory(operation["kitUri"])
     return store, operation
 
+
 def get(code: str, cache=False) -> typing.Any:
     """🔍 Get an entity from the store.
     Callers MUST provide a valid code string with an encoded kit URI.
-    [👤semio📚engine💻enginepy🔖store🛠️get](semiorepo://definition/semio/engine/engine.py/Store/get)
+    [👤semio📚engine💻engine🔖store🛠️get](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/get)
     """
     store, operation = storeAndOperationFromCode(code)
     return store.get(operation)
 
+
 def put(code: str, input: str) -> typing.Any:
     """📥 Put an entity in the store.
     Callers MUST provide a valid code string and matching input data.
-    [👤semio📚engine💻enginepy🔖store🛠️put](semiorepo://definition/semio/engine/engine.py/Store/put)
+    [👤semio📚engine💻engine🔖store🛠️put](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/put)
     """
     store, operation = storeAndOperationFromCode(code)
     return store.put(operation, input)
 
+
 def delete(code: str) -> typing.Any:
     """🗑 Delete an entity from the store.
     Callers MUST provide a valid code string referencing an existing entity.
-    [👤semio📚engine💻enginepy🔖store🛠️delete](semiorepo://definition/semio/engine/engine.py/Store/delete)
+    [👤semio📚engine💻engine🔖store🛠️delete](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/delete)
     """
     store, operation = storeAndOperationFromCode(code)
     return store.delete(operation)
 
+
 # endregion Store
 
 # region Assistant
-
-# [👤semio📚engine💻enginepy🔖assistant](semiorepo://section/semio/engine/engine.py/Assistant)
+# [👤semio📚engine💻engine🔖assistant](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant)
 # Assistant MUST provide AI-powered design prediction using OpenAI structured outputs.
+
 
 def encodeForPrompt(context: str):
     """Sanitizes a context string for use in AI prompts by replacing delimiters.
     Callers MUST pass a string that will be embedded in a prompt template.
-    [👤semio📚engine💻enginepy🔖assistant🛠️encodeforprompt](semiorepo://definition/semio/engine/engine.py/Assistant/encodeForPrompt)
+    [👤semio📚engine💻engine🔖assistant🛠️encodeforprompt](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/encodeForPrompt)
     """
     return context.replace(";", ",").replace("\n", " ")
+
 
 def replaceDefault(context: str, default: str):
     """Substitutes an empty context string with the provided default value.
     Callers MUST provide a non-None default string.
-    [👤semio📚engine💻enginepy🔖assistant🛠️replacedefault](semiorepo://definition/semio/engine/engine.py/Assistant/replaceDefault)
+    [👤semio📚engine💻engine🔖assistant🛠️replacedefault](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/replaceDefault)
     """
     if context == "":
         return context.replace("", default)
     return context
 
+
 def encodeType(type: TypeContext):
     """Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
     Callers MUST provide a valid TypeContext with populated connectors.
-    [👤semio📚engine💻enginepy🔖assistant🛠️encodetype](semiorepo://definition/semio/engine/engine.py/Assistant/encodeType)
+    [👤semio📚engine💻engine🔖assistant🛠️encodetype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/encodeType)
     """
     typeClone = type.model_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
-    typeClone.description = (
-        encodeForPrompt(typeClone.description)
-        if typeClone.description != ""
-        else "NO_DESCRIPTION"
-    )
+    typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
     for connector in typeClone.connectors:
         connector.id_ = replaceDefault(connector.id_, "DEFAULT")
 
     return typeClone
 
+
 def decodeDesign(design: dict):
     """Decodes a raw AI response dict into a DesignPrediction model.
     Callers MUST provide a dict with pieces and connections arrays.
-    [👤semio📚engine💻enginepy🔖assistant🛠️decodedesign](semiorepo://definition/semio/engine/engine.py/Assistant/decodeDesign)
+    [👤semio📚engine💻engine🔖assistant🛠️decodedesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/decodeDesign)
     """
     decodedDesign = {
         "pieces": [
@@ -779,9 +760,7 @@ def decodeDesign(design: dict):
                 "id_": p["id"] if p["id"] != "DEFAULT" else "",
                 "type": {
                     "name": p["typeName"],
-                    "variant": (
-                        p["typeVariant"] if p["typeVariant"] != "DEFAULT" else ""
-                    ),
+                    "variant": (p["typeVariant"] if p["typeVariant"] != "DEFAULT" else ""),
                 },
             }
             for p in design["pieces"]
@@ -790,34 +769,18 @@ def decodeDesign(design: dict):
             {
                 "connected": {
                     "piece": {
-                        "id_": (
-                            c["connectedPieceId"]
-                            if c["connectedPieceId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectedPieceId"] if c["connectedPieceId"] != "DEFAULT" else ""),
                     },
                     "connector": {
-                        "id_": (
-                            c["connectedPieceTypePortId"]
-                            if c["connectedPieceTypePortId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectedPieceTypePortId"] if c["connectedPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
                 "connecting": {
                     "piece": {
-                        "id_": (
-                            c["connectingPieceId"]
-                            if c["connectingPieceId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectingPieceId"] if c["connectingPieceId"] != "DEFAULT" else ""),
                     },
                     "connector": {
-                        "id_": (
-                            c["connectingPieceTypePortId"]
-                            if c["connectingPieceTypePortId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectingPieceTypePortId"] if c["connectingPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
                 "gap": c["gap"],
@@ -834,11 +797,12 @@ def decodeDesign(design: dict):
     }
     return DesignPrediction.parse(decodedDesign)
 
+
 def healDesign(design: DesignPrediction, types: list[TypeContext]):
     """🩺 Heal a design by replacing missing type variants with the first variant.
     TODO: Replace prototype healing with one that makes more for every single property.
     Callers MUST provide a design with pieces referencing types available in the types list.
-    [👤semio📚engine💻enginepy🔖assistant🛠️healdesign](semiorepo://definition/semio/engine/engine.py/Assistant/healDesign)
+    [👤semio📚engine💻engine🔖assistant🛠️healdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/healDesign)
     """
     designClone = design.model_copy(deep=True)
     typeD = {}
@@ -859,20 +823,12 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
         if piece.type and piece.type.name not in typeD:
             # TODO: Remove piece if type name is not found instead of taking the first.
             try:
-                piece.type.name = difflib.get_close_matches(
-                    piece.type.name, typeD.keys(), n=1
-                )[0]
+                piece.type.name = difflib.get_close_matches(piece.type.name, typeD.keys(), n=1)[0]
             except Error:
                 piece.type.name = list(typeD.keys())[0]
-        if (
-            piece.type
-            and piece.type.name
-            and piece.type.variant not in typeD[piece.type.name]
-        ):
+        if piece.type and piece.type.name and piece.type.variant not in typeD[piece.type.name]:
             try:
-                piece.type.variant = difflib.get_close_matches(
-                    piece.type.variant, typeD[piece.type.name].keys(), n=1
-                )[0]
+                piece.type.variant = difflib.get_close_matches(piece.type.variant, typeD[piece.type.name].keys(), n=1)[0]
             except Error:
                 piece.type.variant = list(typeD[piece.type.name].keys())[0]
 
@@ -880,38 +836,24 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     for connection in designClone.connections:
         if connection.connected.piece.id_ not in pieceD:
             try:
-                connection.connected.piece.id_ = difflib.get_close_matches(
-                    connection.connected.piece.id_, pieceD.keys(), n=1
-                )[0]
+                connection.connected.piece.id_ = difflib.get_close_matches(connection.connected.piece.id_, pieceD.keys(), n=1)[0]
             except Error:
                 continue
         if connection.connecting.piece.id_ not in pieceD:
             try:
-                connection.connecting.piece.id_ = difflib.get_close_matches(
-                    connection.connecting.piece.id_, pieceD.keys(), n=1
-                )[0]
+                connection.connecting.piece.id_ = difflib.get_close_matches(connection.connecting.piece.id_, pieceD.keys(), n=1)[0]
             except Error:
                 continue
-        connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][
-            pieceD[connection.connected.piece.id_].type.variant
-        ]
-        connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][
-            pieceD[connection.connecting.piece.id_].type.variant
-        ]
+        connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][pieceD[connection.connected.piece.id_].type.variant]
+        connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][pieceD[connection.connecting.piece.id_].type.variant]
 
-        if (
-            connection.connected.connector.id_
-            not in connectorD[connectedType.name][connectedType.variant]
-        ):
+        if connection.connected.connector.id_ not in connectorD[connectedType.name][connectedType.variant]:
             connection.connected.connector.id_ = difflib.get_close_matches(
                 connection.connected.connector.id_,
                 connectorD[connectedType.name][connectedType.variant].keys(),
                 n=1,
             )[0]
-        if (
-            connection.connecting.connector.id_
-            not in connectorD[connectingType.name][connectingType.variant]
-        ):
+        if connection.connecting.connector.id_ not in connectorD[connectingType.name][connectingType.variant]:
             connection.connecting.connector.id_ = difflib.get_close_matches(
                 connection.connecting.connector.id_,
                 connectorD[connectingType.name][connectingType.variant].keys(),
@@ -920,20 +862,11 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
         validConnections.append(connection)
     designClone.connections = validConnections
 
-    designClone.connections = [
-        c for c in designClone.connections if c.connected.piece.id_ != c.connecting
-    ]
+    designClone.connections = [c for c in designClone.connections if c.connected.piece.id_ != c.connecting]
 
-    designClone.pieces = [
-        p
-        for p in designClone.pieces
-        if any(
-            c
-            for c in designClone.connections
-            if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_
-        )
-    ]
+    designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_)]
     return designClone
+
 
 try:
     openaiClient = openai.Client()
@@ -1095,19 +1028,16 @@ designResponseFormat = json.loads(
 }"""
 )
 
-def predictDesign(
-    description: str, types: list[TypeContext], design: DesignInput | None = None
-) -> DesignPrediction:
+
+def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design.
     Callers MUST ensure the openaiClient is initialized before calling.
-    [👤semio📚engine💻enginepy🔖assistant🛠️predictdesign](semiorepo://definition/semio/engine/engine.py/Assistant/predictDesign)
+    [👤semio📚engine💻engine🔖assistant🛠️predictdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/predictDesign)
     """
     if openaiClient is None:
         raise FeatureNotYetSupported("OpenAI client not available")
 
-    prompt = designGenerationPromptTemplate.render(
-        description=description, types=[encodeType(t) for t in types]
-    )
+    prompt = designGenerationPromptTemplate.render(description=description, types=[encodeType(t) for t in types])
     logger.debug("Generated prompt: {}", prompt)
     try:
         response = openaiClient.chat.completions.create(
@@ -1178,18 +1108,11 @@ def predictDesign(
             json.dumps(json.loads(result.message.content), indent=4),
         )
 
-    if (
-        result
-        and result.finish_reason == "stop"
-        and result.message.refusal is None
-        and result.message.content
-    ):
+    if result and result.finish_reason == "stop" and result.message.refusal is None and result.message.content:
         design = decodeDesign(json.loads(result.message.content))
 
         if hasattr(design, "model_dump"):
-            logger.debug(
-                "Predicted Design: {}", json.dumps(design.model_dump(), indent=4)
-            )
+            logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
 
         healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
@@ -1200,11 +1123,11 @@ def predictDesign(
 
     raise FeatureNotYetSupported("OpenAI response was invalid or incomplete")
 
+
 # endregion Assistant
 
 # region Graphql
-
-# [👤semio📚engine💻enginepy🔖graphql](semiorepo://section/semio/engine/engine.py/Graphql)
+# [👤semio📚engine💻engine🔖graphql](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql)
 # Graphql MUST map semio domain types to Graphene schema nodes for query and mutation.
 
 GRAPHQLTYPES = {
@@ -1214,18 +1137,10 @@ GRAPHQLTYPES = {
     "bool": graphene.NonNull(graphene.Boolean),
     "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
     "Attribute": graphene.NonNull(lambda: AttributeNode),
-    "list[Attribute]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AttributeNode))
-    ),
-    "list[__main__.Attribute]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AttributeNode))
-    ),
-    "list[__mp_main__.Attribute]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AttributeNode))
-    ),
-    "list[engine.Attribute]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AttributeNode))
-    ),
+    "list[Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[engine.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
     "Coord": graphene.NonNull(lambda: CoordNode),
     "typing.Optional[__main__.Coord]": lambda: CoordNode,
     "typing.Optional[__mp_main__.Coord]": lambda: CoordNode,
@@ -1239,55 +1154,27 @@ GRAPHQLTYPES = {
     "Plane": graphene.NonNull(lambda: PlaneNode),
     "Connector": graphene.NonNull(lambda: ConnectorNode),
     "ConnectorId": graphene.NonNull(lambda: ConnectorNode),
-    "list[Connector]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectorNode))
-    ),
-    "list[__main__.Connector]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectorNode))
-    ),
-    "list[__mp_main__.Connector]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectorNode))
-    ),
-    "list[engine.Connector]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectorNode))
-    ),
+    "list[Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
+    "list[__main__.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
+    "list[__mp_main__.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
+    "list[engine.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
     "Model": graphene.NonNull(lambda: ModelNode),
     "list[Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
-    "list[__main__.Model]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ModelNode))
-    ),
-    "list[__mp_main__.Model]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ModelNode))
-    ),
-    "list[engine.Model]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ModelNode))
-    ),
+    "list[__main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
+    "list[__mp_main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
+    "list[engine.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
     "Author": graphene.NonNull(lambda: AuthorNode),
-    "list[Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
-    "list[__main__.Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
-    "list[__mp_main__.Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
-    "list[engine.Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
+    "list[Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
+    "list[__main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
+    "list[__mp_main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
+    "list[engine.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
     "Type": graphene.NonNull(lambda: TypeNode),
     "TypeId": graphene.NonNull(lambda: TypeNode),
     "DesignId": graphene.NonNull(lambda: DesignNode),
     "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    "list[__main__.Type]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: TypeNode))
-    ),
-    "list[__mp_main__.Type]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: TypeNode))
-    ),
-    "list[engine.Type]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: TypeNode))
-    ),
+    "list[__main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "list[__mp_main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "list[engine.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
     "Piece": graphene.NonNull(lambda: PieceNode),
     "PieceId": graphene.NonNull(lambda: PieceNode),
     "typing.Optional[__main__.PieceId]": lambda: PieceNode,
@@ -1298,39 +1185,36 @@ GRAPHQLTYPES = {
     "typing.Optional[engine.DesignId]": lambda: DesignNode,
     "Side": graphene.NonNull(lambda: SideNode),
     "Connection": graphene.NonNull(lambda: ConnectionNode),
-    "list['Connection']": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
-    "list[__main__.Connection]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
-    "list[__mp_main__.Connection]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
-    "list[engine.Connection]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
+    "list['Connection']": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
+    "list[__main__.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
+    "list[__mp_main__.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
+    "list[engine.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
     "Design": graphene.NonNull(lambda: DesignNode),
     "Kit": graphene.NonNull(lambda: KitNode),
 }
 
+
 class Query(graphene.ObjectType):
     """GraphQL root query type exposing kit retrieval by URI.
     Callers MUST provide a valid URI when resolving kit queries.
-    [👤semio📚engine💻enginepy🔖graphql🛠️query](semiorepo://definition/semio/engine/engine.py/Graphql/Query)
+    [👤semio📚engine💻engine🔖graphql🛠️query](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql/d/i/Query)
     """
+
     node = RelayNode.Field()
     kit = graphene.Field(KitNode, uri=graphene.String(required=True))
 
     def resolve_kit(self, info, uri):
         return get(encode(uri))
 
+
 class Mutation(graphene.ObjectType):
     """GraphQL root mutation type exposing kit creation.
     Callers MUST provide a valid KitInput when creating kits.
-    [👤semio📚engine💻enginepy🔖graphql🛠️mutation](semiorepo://definition/semio/engine/engine.py/Graphql/Mutation)
+    [👤semio📚engine💻engine🔖graphql🛠️mutation](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql/d/i/Mutation)
     """
+
     createKit = graphene.Field(KitNode, kit=KitInputNode(required=True))
+
 
 graphqlSchema = graphene.Schema(
     query=Query,
@@ -1340,11 +1224,11 @@ graphqlSchema = graphene.Schema(
 # endregion Graphql
 
 # region Rest
-
-# [👤semio📚engine💻enginepy🔖rest](semiorepo://section/semio/engine/engine.py/Rest)
+# [👤semio📚engine💻engine🔖rest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest)
 # Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
+
 
 @rest.get("/kits/{encodedKitUri}")
 async def kit(
@@ -1353,7 +1237,7 @@ async def kit(
 ) -> KitOutput:
     """Retrieves a kit by its encoded URI path.
     Callers MUST provide a valid encoded kit URI in the URL path.
-    [👤semio📚engine💻enginepy🔖rest🛠️kit](semiorepo://definition/semio/engine/engine.py/Rest/kit)
+    [👤semio📚engine💻engine🔖rest🛠️kit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/kit)
     """
     try:
         return get(request.url.path.removeprefix("/api/kits/"))
@@ -1365,6 +1249,7 @@ async def kit(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 @rest.put("/kits/{encodedKitUri}")
 async def create_kit(
     request: fastapi.Request,
@@ -1373,7 +1258,7 @@ async def create_kit(
 ) -> None:
     """Creates a new kit at the specified encoded URI.
     Callers MUST provide a valid KitInput body and encoded URI.
-    [👤semio📚engine💻enginepy🔖rest🛠️createkit](semiorepo://definition/semio/engine/engine.py/Rest/create_kit)
+    [👤semio📚engine💻engine🔖rest🛠️createkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/create_kit)
     """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
@@ -1386,6 +1271,7 @@ async def create_kit(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 @rest.delete("/kits/{encodedKitUri}")
 async def delete_kit(
     request: fastapi.Request,
@@ -1393,7 +1279,7 @@ async def delete_kit(
 ) -> None:
     """Deletes an existing kit at the specified encoded URI.
     Callers MUST provide a valid encoded URI for an existing kit.
-    [👤semio📚engine💻enginepy🔖rest🛠️deletekit](semiorepo://definition/semio/engine/engine.py/Rest/delete_kit)
+    [👤semio📚engine💻engine🔖rest🛠️deletekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_kit)
     """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
@@ -1405,6 +1291,7 @@ async def delete_kit(
         statusCode = 500
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
+
 
 @rest.put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
 async def put_type(
@@ -1415,7 +1302,7 @@ async def put_type(
 ) -> None:
     """Creates or replaces a type in a kit by encoded URI and type identifier.
     Callers MUST provide a valid TypeInput body with matching name and variant.
-    [👤semio📚engine💻enginepy🔖rest🛠️puttype](semiorepo://definition/semio/engine/engine.py/Rest/put_type)
+    [👤semio📚engine💻engine🔖rest🛠️puttype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/put_type)
     """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
@@ -1428,6 +1315,7 @@ async def put_type(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 @rest.delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
 async def delete_type(
     request: fastapi.Request,
@@ -1436,7 +1324,7 @@ async def delete_type(
 ) -> None:
     """Deletes a type from a kit by encoded URI and type identifier.
     Callers MUST provide a valid encoded URI and type name with variant.
-    [👤semio📚engine💻enginepy🔖rest🛠️deletetype](semiorepo://definition/semio/engine/engine.py/Rest/delete_type)
+    [👤semio📚engine💻engine🔖rest🛠️deletetype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_type)
     """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
@@ -1448,6 +1336,7 @@ async def delete_type(
         statusCode = 500
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
+
 
 @rest.put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
 async def put_design(
@@ -1458,7 +1347,7 @@ async def put_design(
 ) -> None:
     """Creates or replaces a design in a kit by encoded URI and design identifier.
     Callers MUST provide a valid DesignInput body with matching name, variant, and view.
-    [👤semio📚engine💻enginepy🔖rest🛠️putdesign](semiorepo://definition/semio/engine/engine.py/Rest/put_design)
+    [👤semio📚engine💻engine🔖rest🛠️putdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/put_design)
     """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
@@ -1471,6 +1360,7 @@ async def put_design(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 @rest.delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
 async def delete_design(
     request: fastapi.Request,
@@ -1479,7 +1369,7 @@ async def delete_design(
 ) -> None:
     """Deletes a design from a kit by encoded URI and design identifier.
     Callers MUST provide a valid encoded URI and design name with variant and view.
-    [👤semio📚engine💻enginepy🔖rest🛠️deletedesign](semiorepo://definition/semio/engine/engine.py/Rest/delete_design)
+    [👤semio📚engine💻engine🔖rest🛠️deletedesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_design)
     """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
@@ -1492,6 +1382,7 @@ async def delete_design(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 @rest.get("/assistant/predictDesign")
 async def predict_design(
     request: fastapi.Request,
@@ -1501,7 +1392,7 @@ async def predict_design(
 ) -> DesignPrediction:
     """Predicts a design via the assistant based on a description and available types.
     Callers MUST provide a description and at least one TypeContext in the request body.
-    [👤semio📚engine💻enginepy🔖rest🛠️predictdesign](semiorepo://definition/semio/engine/engine.py/Rest/predict_design)
+    [👤semio📚engine💻engine🔖rest🛠️predictdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/predict_design)
     """
     try:
         return predictDesign(description, types, design)
@@ -1513,13 +1404,12 @@ async def predict_design(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 @rest.post("/prepare/kit")
-async def prepare_kit(
-    request: fastapi.Request, kit: KitInput = fastapi.Body(...)
-) -> KitContext:
+async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...)) -> KitContext:
     """Validates and returns a KitContext from the provided KitInput body.
     Callers MUST provide a valid KitInput in the request body.
-    [👤semio📚engine💻enginepy🔖rest🛠️preparekit](semiorepo://definition/semio/engine/engine.py/Rest/prepare_kit)
+    [👤semio📚engine💻engine🔖rest🛠️preparekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/prepare_kit)
     """
     try:
         return kit
@@ -1531,11 +1421,13 @@ async def prepare_kit(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     """JSON schema generator that strips Context suffixes from type references.
     Callers MUST use this generator when exporting context model schemas.
-    [👤semio📚engine💻enginepy🔖rest🛠️contextgeneratejsonschema](semiorepo://definition/semio/engine/engine.py/Rest/ContextGenerateJsonSchema)
+    [👤semio📚engine💻engine🔖rest🛠️contextgeneratejsonschema](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/ContextGenerateJsonSchema)
     """
+
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
         changeValues(json_schema, "$ref", lambda x: x.removesuffix("Context"))
@@ -1543,11 +1435,13 @@ class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Context"))
         return json_schema
 
+
 class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     """JSON schema generator that strips Output suffixes from type references.
     Callers MUST use this generator when exporting output model schemas.
-    [👤semio📚engine💻enginepy🔖rest🛠️outputgeneratejsonschema](semiorepo://definition/semio/engine/engine.py/Rest/OutputGenerateJsonSchema)
+    [👤semio📚engine💻engine🔖rest🛠️outputgeneratejsonschema](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/OutputGenerateJsonSchema)
     """
+
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
         changeValues(json_schema, "$ref", lambda x: x.removesuffix("Output"))
@@ -1555,11 +1449,13 @@ class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Output"))
         return json_schema
 
+
 class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     """JSON schema generator that strips Prediction suffixes from type references.
     Callers MUST use this generator when exporting prediction model schemas.
-    [👤semio📚engine💻enginepy🔖rest🛠️predictiongeneratejsonschema](semiorepo://definition/semio/engine/engine.py/Rest/PredictionGenerateJsonSchema)
+    [👤semio📚engine💻engine🔖rest🛠️predictiongeneratejsonschema](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/PredictionGenerateJsonSchema)
     """
+
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
         changeValues(json_schema, "$ref", lambda x: x.removesuffix("Prediction"))
@@ -1567,10 +1463,11 @@ class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Prediction"))
         return json_schema
 
+
 def custom_openapi():
     """Generates a custom OpenAPI schema with /api path prefix and cleaned type names.
     Callers MUST NOT call this directly; it is assigned to rest.openapi.
-    [👤semio📚engine💻enginepy🔖rest🛠️customopenapi](semiorepo://definition/semio/engine/engine.py/Rest/custom_openapi)
+    [👤semio📚engine💻engine🔖rest🛠️customopenapi](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/custom_openapi)
     """
     if rest.openapi_schema:
         return rest.openapi_schema
@@ -1592,22 +1489,23 @@ def custom_openapi():
     rest.openapi_schema = openapi_schema
     return rest.openapi_schema
 
+
 rest.openapi = custom_openapi
 
 # endregion Rest
 
 # region Mcp
-
-# [👤semio📚engine💻enginepy🔖mcp](semiorepo://section/semio/engine/engine.py/Mcp)
+# [👤semio📚engine💻engine🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
 # Mcp MUST expose kit, type, design, validation, and diff tools via Model Context Protocol.
 
 mcp = FastMCP("semio", stateless_http=True, json_response=True)
+
 
 @mcp.tool()
 def get_kit(uri: str) -> dict:
     """Get a kit from a URI. The URI can be a file path or a URL.
     Callers MUST provide a valid file path or URL as the URI.
-    [👤semio📚engine💻enginepy🔖mcp🛠️getkit](semiorepo://definition/semio/engine/engine.py/Mcp/get_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️getkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit)
     """
     try:
         result = get(encode(uri))
@@ -1615,11 +1513,12 @@ def get_kit(uri: str) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def put_kit(uri: str, kit: dict) -> dict:
     """Put a kit at a URI. Creates or updates the kit.
     Callers MUST provide a valid URI and a dict matching KitInput schema.
-    [👤semio📚engine💻enginepy🔖mcp🛠️putkit](semiorepo://definition/semio/engine/engine.py/Mcp/put_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️putkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/put_kit)
     """
     try:
         kitInput = KitInput.model_validate(kit)
@@ -1628,11 +1527,12 @@ def put_kit(uri: str, kit: dict) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def mcp_delete_kit(uri: str) -> dict:
     """Delete a kit at a URI.
     Callers MUST provide a URI referencing an existing kit.
-    [👤semio📚engine💻enginepy🔖mcp🛠️mcpdeletekit](semiorepo://definition/semio/engine/engine.py/Mcp/mcp_delete_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️mcpdeletekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/mcp_delete_kit)
     """
     try:
         delete(encode(uri))
@@ -1640,57 +1540,55 @@ def mcp_delete_kit(uri: str) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
     """Get a type from a kit by name and variant.
     Callers MUST provide a valid kit URI and type name.
-    [👤semio📚engine💻enginepy🔖mcp🛠️gettypefromkit](semiorepo://definition/semio/engine/engine.py/Mcp/get_type_from_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️gettypefromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_from_kit)
     """
     try:
-        code = (
-            encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
-        )
+        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
         result = get(code)
         return result.model_dump() if hasattr(result, "model_dump") else result
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
     """Put a type in a kit.
     Callers MUST provide a valid URI, name, variant, and TypeInput-compatible dict.
-    [👤semio📚engine💻enginepy🔖mcp🛠️puttypeinkit](semiorepo://definition/semio/engine/engine.py/Mcp/put_type_in_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️puttypeinkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/put_type_in_kit)
     """
     try:
-        code = (
-            encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
-        )
+        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
         typeInput = TypeInput.model_validate(type_data)
         put(code, typeInput)
         return {"success": True}
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
     """Delete a type from a kit.
     Callers MUST provide a valid kit URI and existing type name.
-    [👤semio📚engine💻enginepy🔖mcp🛠️deletetypefromkit](semiorepo://definition/semio/engine/engine.py/Mcp/delete_type_from_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️deletetypefromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/delete_type_from_kit)
     """
     try:
-        code = (
-            encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
-        )
+        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
         delete(code)
         return {"success": True}
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
     """Get a design from a kit by name, variant, and view.
     Callers MUST provide a valid kit URI and design name.
-    [👤semio📚engine💻enginepy🔖mcp🛠️getdesignfromkit](semiorepo://definition/semio/engine/engine.py/Mcp/get_design_from_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignfromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_from_kit)
     """
     try:
         nameVariantView = name
@@ -1704,13 +1602,12 @@ def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") 
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
-def put_design_in_kit(
-    uri: str, name: str, variant: str, view: str, design_data: dict
-) -> dict:
+def put_design_in_kit(uri: str, name: str, variant: str, view: str, design_data: dict) -> dict:
     """Put a design in a kit.
     Callers MUST provide a valid URI, name, variant, view, and DesignInput-compatible dict.
-    [👤semio📚engine💻enginepy🔖mcp🛠️putdesigninkit](semiorepo://definition/semio/engine/engine.py/Mcp/put_design_in_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️putdesigninkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/put_design_in_kit)
     """
     try:
         nameVariantView = name
@@ -1725,13 +1622,12 @@ def put_design_in_kit(
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
-def delete_design_from_kit(
-    uri: str, name: str, variant: str = "", view: str = ""
-) -> dict:
+def delete_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
     """Delete a design from a kit.
     Callers MUST provide a valid kit URI and existing design name.
-    [👤semio📚engine💻enginepy🔖mcp🛠️deletedesignfromkit](semiorepo://definition/semio/engine/engine.py/Mcp/delete_design_from_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️deletedesignfromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/delete_design_from_kit)
     """
     try:
         nameVariantView = name
@@ -1745,95 +1641,99 @@ def delete_design_from_kit(
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def validate_kit(kit: dict) -> dict:
     """Validate a kit and return any validation problems.
     Callers MUST provide a dict matching the Kit schema.
-    [👤semio📚engine💻enginepy🔖mcp🛠️validatekit](semiorepo://definition/semio/engine/engine.py/Mcp/validate_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️validatekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/validate_kit)
     """
     try:
         result = validateKitDict(kit)
-        return (
-            result.model_dump() if hasattr(result, "model_dump") else {"problems": []}
-        )
+        return result.model_dump() if hasattr(result, "model_dump") else {"problems": []}
     except Exception as e:
         return {"error": str(e)}
+
 
 @mcp.tool()
 def flatten_design(kit: dict, design_guid: str) -> dict:
     """Flatten a design by computing absolute planes for all pieces.
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻enginepy🔖mcp🛠️flattendesign](semiorepo://definition/semio/engine/engine.py/Mcp/flatten_design)
+    [👤semio📚engine💻engine🔖mcp🛠️flattendesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/flatten_design)
     """
     try:
         return flattenDesignDict(kit, design_guid)
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def get_kit_diff(before: dict, after: dict) -> dict:
     """Get the diff between two kit states.
     Callers MUST provide two valid kit dicts for comparison.
-    [👤semio📚engine💻enginepy🔖mcp🛠️getkitdiff](semiorepo://definition/semio/engine/engine.py/Mcp/get_kit_diff)
+    [👤semio📚engine💻engine🔖mcp🛠️getkitdiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_diff)
     """
     try:
         return getKitDiffDict(before, after)
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit.
     Callers MUST provide a valid base kit dict and a compatible diff dict.
-    [👤semio📚engine💻enginepy🔖mcp🛠️applykitdiff](semiorepo://definition/semio/engine/engine.py/Mcp/apply_kit_diff)
+    [👤semio📚engine💻engine🔖mcp🛠️applykitdiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/apply_kit_diff)
     """
     try:
         return applyKitDiffDict(base, diff)
     except Exception as e:
         return {"error": str(e)}
 
+
 @mcp.tool()
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     """Get the inverse of a diff (for undo operations).
     Callers MUST provide the original kit dict and the applied diff dict.
-    [👤semio📚engine💻enginepy🔖mcp🛠️inversekitdiff](semiorepo://definition/semio/engine/engine.py/Mcp/inverse_kit_diff)
+    [👤semio📚engine💻engine🔖mcp🛠️inversekitdiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/inverse_kit_diff)
     """
     try:
         return inverseKitDiffDict(original, applied_diff)
     except Exception as e:
         return {"error": str(e)}
 
+
 # endregion Mcp
 
 # region Engine
-
-# [👤semio📚engine💻enginepy🔖engine](semiorepo://section/semio/engine/engine.py/Engine)
+# [👤semio📚engine💻engine🔖engine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine)
 # Engine MUST mount REST, GraphQL, and MCP sub-applications and manage the server lifecycle.
+
 
 @contextlib.asynccontextmanager
 async def engineLifespan(app):
     """Manages the MCP session lifecycle during engine startup and shutdown.
     Callers MUST use this as the lifespan parameter for the Starlette application.
-    [👤semio📚engine💻enginepy🔖engine🛠️enginelifespan](semiorepo://definition/semio/engine/engine.py/Engine/engineLifespan)
+    [👤semio📚engine💻engine🔖engine🛠️enginelifespan](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/engineLifespan)
     """
     async with mcp.session_manager.run():
         yield
+
 
 mcp.settings.streamable_http_path = "/"
 engine = starlette.applications.Starlette(lifespan=engineLifespan)
 engine.mount("/api", rest)
 engine.mount(
     "/graphql",
-    starlette_graphene3.GraphQLApp(
-        graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()
-    ),
+    starlette_graphene3.GraphQLApp(graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()),
 )
 engine.mount("/mcp", mcp.streamable_http_app())
+
 
 def generateSchemas():
     """Exports OpenAPI, JSON Schema, SQLite schema, and GraphQL schema files to disk.
     Callers MUST run this from the engine directory with write access to output paths.
-    [👤semio📚engine💻enginepy🔖engine🛠️generateschemas](semiorepo://definition/semio/engine/engine.py/Engine/generateSchemas)
+    [👤semio📚engine💻engine🔖engine🛠️generateschemas](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/generateSchemas)
     """
     if os.path.exists("temp"):
         for root, dirs, files in os.walk("temp", topdown=False):
@@ -1870,9 +1770,7 @@ def generateSchemas():
 
     with open("../../semioonschema/design-prediction.json", "w", encoding="utf-8") as f:
         json.dump(
-            DesignPrediction.model_json_schema(
-                schema_generator=PredictionGenerateJsonSchema
-            ),
+            DesignPrediction.model_json_schema(schema_generator=PredictionGenerateJsonSchema),
             f,
             indent=4,
         )
@@ -1908,10 +1806,11 @@ def generateSchemas():
     with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
         f.write(str(graphqlSchema))
 
+
 def start_engine():
     """Starts the uvicorn server hosting the engine application.
     Callers MUST invoke this in a separate process to avoid blocking the UI.
-    [👤semio📚engine💻enginepy🔖engine🛠️startengine](semiorepo://definition/semio/engine/engine.py/Engine/start_engine)
+    [👤semio📚engine💻engine🔖engine🛠️startengine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/start_engine)
     """
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)
@@ -1924,10 +1823,11 @@ def start_engine():
         log_config=None,
     )
 
+
 def restart_engine():
     """Terminates the running engine process and starts a new one.
     Callers MUST ensure a PySide6 QApplication instance is running.
-    [👤semio📚engine💻enginepy🔖engine🛠️restartengine](semiorepo://definition/semio/engine/engine.py/Engine/restart_engine)
+    [👤semio📚engine💻engine🔖engine🛠️restartengine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/restart_engine)
     """
     import PySide6.QtWidgets
 
@@ -1938,10 +1838,11 @@ def restart_engine():
     ui_instance.engine_process = multiprocessing.Process(target=start_engine)
     ui_instance.engine_process.start()
 
+
 def run(dev_mode: bool | None = None):
     """Main entry point that starts the engine with optional dev mode and system tray UI.
     Callers MUST invoke this from the __main__ block or dev function.
-    [👤semio📚engine💻enginepy🔖engine🛠️run](semiorepo://definition/semio/engine/engine.py/Engine/run)
+    [👤semio📚engine💻engine🔖engine🛠️run](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/run)
     """
     logger.debug("Starting engine")
     multiprocessing.freeze_support()
@@ -1949,9 +1850,7 @@ def run(dev_mode: bool | None = None):
     parser = argparse.ArgumentParser(description="semio ⋅ engine")
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("--dev", help="dev mode", action="store_true")
-    parser.add_argument(
-        "--mcp-stdio", help="start mcp server over stdio", action="store_true"
-    )
+    parser.add_argument("--mcp-stdio", help="start mcp server over stdio", action="store_true")
 
     args = parser.parse_args()
     if dev_mode is None:
@@ -1983,9 +1882,7 @@ def run(dev_mode: bool | None = None):
         basedir = "../assets"
 
     icon = PySide6.QtGui.QIcon()
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512)
-    )
+    icon.addFile(os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512))
 
     tray = PySide6.QtWidgets.QSystemTrayIcon()
     tray.setIcon(icon)
@@ -2007,18 +1904,21 @@ def run(dev_mode: bool | None = None):
 
     sys.exit(ui.exec())
 
+
 def preDev():
     """Runs before dev()
     Callers MUST NOT add blocking operations in this hook.
-    [👤semio📚engine💻enginepy🔖engine🛠️predev](semiorepo://definition/semio/engine/engine.py/Engine/preDev)
+    [👤semio📚engine💻engine🔖engine🛠️predev](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/preDev)
     """
+
 
 def dev():
     """Starts the engine in development mode with debugging enabled.
     Callers MUST have debugpy available when using this entry point.
-    [👤semio📚engine💻enginepy🔖engine🛠️dev](semiorepo://definition/semio/engine/engine.py/Engine/dev)
+    [👤semio📚engine💻engine🔖engine🛠️dev](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/dev)
     """
     run(dev_mode=True)
+
 
 if __name__ == "__main__":
     run()

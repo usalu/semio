@@ -3,7 +3,7 @@ repos:
   hooks:
   - id: semio-monorepo-preflight
     name: semio monorepo preflight
-    entry: ./semio-repo/cli/cli hook git.commit.starting
+    entry: ./semio-repo/cli/cli hook version.checkpoint.starting
     language: system
     pass_filenames: false
     always_run: true

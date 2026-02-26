@@ -1,35 +1,10 @@
 {
   "title": "Fix Vscode Extension Not Showing Up in IDEs",
   "status": "closed",
-  "prompt": "The semio-repo VSCode extension is not showing up in VSCode and other IDEs after devcontainer attach. The post-attach.sh script's CLI detection searches /vscode/vscode-server/ but the actual VSCode server binary is at /home/vscode/.vscode-server/. Fix the detection to include the correct path so the extension gets installed.",
+  "description": "The semio-repo VSCode extension is not showing up in VSCode and other IDEs after devcontainer attach. The post-attach.sh script's CLI detection searches /vscode/vscode-server/ but the actual VSCode server binary is at /home/vscode/.vscode-server/. Fix the detection to include the correct path so the extension gets installed.",
   "summary": "Fixed post-attach.sh CLI detection: the VSCode remote-cli search path was wrong (/vscode/vscode-server/ vs actual /home/vscode/.vscode-server/). Added code-insiders variant path. Also improved VSIX staleness check to compare against all key source files. Manually installed the extension for the current session.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/639"
   },
-  "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-20 20:21:24",
-      "author": "usalu",
-      "system": "linux",
-      "client": "claude-code",
-      "commit": "00b7f35cbfa9da1b2714125ed6191b4a8bc8f762",
-      "prompt": "The semio-repo VSCode extension is not showing up in VSCode and other IDEs after devcontainer attach. The post-attach.sh script's CLI detection searches /vscode/vscode-server/ but the actual VSCode server binary is at /home/vscode/.vscode-server/. Fix the detection to include the correct path so the extension gets installed.",
-      "llm": "sonnet-4-5"
-    },
-    {
-      "kind": "ticket.close",
-      "date": "2026-02-20 20:22:48",
-      "author": "usalu",
-      "system": "linux",
-      "client": "claude-code",
-      "commit": "00b7f35cbfa9da1b2714125ed6191b4a8bc8f762",
-      "files": [
-        {
-          "path": "🛅devcontainer📜postattachsh"
-        }
-      ]
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer"
 }

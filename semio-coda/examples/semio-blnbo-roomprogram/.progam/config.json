@@ -1,0 +1,39 @@
+{
+    "programs": [
+        {
+            "id": "0",
+            "name": "Office Room",
+            "din276": "area.gfa.net.usbl.ofc-work.ofc-rm"
+        }
+    ],
+    "byKind": [
+        {
+            "kind": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "constraints": {
+                "min": 300
+            }
+        }
+    ],
+    "adjancency": [
+        {
+            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "type": "mandatory"
+        },
+        {
+            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "type": "desirable"
+        },
+        {
+            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "type": "neutral"
+        },
+        {
+            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "type": "negative"
+        }
+    ]
+}

@@ -1,18 +1,6 @@
 {
   "title": "\u003e-",
   "status": "closed",
-  "prompt": "\u003e-",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.894Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "\u003e-",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "\u003e-",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp"
 }

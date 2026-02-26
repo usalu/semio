@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js🗃️sketchpad💻typetsx](semiorepo://file/semio/js/sketchpad/Type.tsx)
+// [👤semio📚js🗃️sketchpad💻type](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,8 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
-
-// [👤semio📚js🗃️sketchpad💻typetsx🔖imports](semiorepo://section/semio/js/sketchpad/Type.tsx/Imports)
+// [👤semio📚js🗃️sketchpad💻type🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports)
 // External and internal dependency imports. MUST group third-party and local imports.
 
 import { arrayMove } from "@dnd-kit/sortable";
@@ -97,21 +95,22 @@ import {
   useTypeScope,
 } from "./Sketchpad";
 
+/**
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🪨kitsectionlazy](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/d/i/KitSectionLazy)
+ * KitSectionLazy holds the data fields for a KitSectionLazy record.
+ **/
 const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
 
 import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
-// #endregion 🔖Imports
-
 // #region 🔖Internal State Management
-
-// [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement](semiorepo://section/semio/js/sketchpad/Type.tsx/Internal%20State%20Management)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management)
 // TypeApp state interfaces, enums, and diffing types. MUST define all shared state shapes.
 
 /**
  * Selection state holding selected connector and model GUIDs.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappselection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppSelection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappselection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppSelection)
  **/
 export interface TypeAppSelection {
   connectors?: Guid[];
@@ -120,7 +119,7 @@ export interface TypeAppSelection {
 /**
  * Diff for added and removed connector selections.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappselectionportsdiff](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppSelectionPortsDiff)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappselectionportsdiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppSelectionPortsDiff)
  **/
 export interface TypeAppSelectionPortsDiff {
   added?: Guid[];
@@ -129,7 +128,7 @@ export interface TypeAppSelectionPortsDiff {
 /**
  * Diff for added and removed model selections.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappselectionmodelsdiff](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppSelectionModelsDiff)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappselectionmodelsdiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppSelectionModelsDiff)
  **/
 export interface TypeAppSelectionModelsDiff {
   added?: Guid[];
@@ -138,7 +137,7 @@ export interface TypeAppSelectionModelsDiff {
 /**
  * Combined selection diff for connectors and models.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappselectiondiff](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppSelectionDiff)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappselectiondiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppSelectionDiff)
  **/
 export interface TypeAppSelectionDiff {
   connectors?: TypeAppSelectionPortsDiff;
@@ -147,7 +146,7 @@ export interface TypeAppSelectionDiff {
 /**
  * Fullscreen window modes for the TypeApp.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappfullscreenwindow](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppFullscreenWindow)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappfullscreenwindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppFullscreenWindow)
  **/
 export enum TypeAppFullscreenWindow {
   None = "none",
@@ -158,7 +157,7 @@ export enum TypeAppFullscreenWindow {
 /**
  * Window kind identifiers for the TypeApp layout.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappwindowkind](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppWindowKind)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappwindowkind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppWindowKind)
  **/
 export enum TypeAppWindowKind {
   Scene = "scene",
@@ -166,7 +165,7 @@ export enum TypeAppWindowKind {
 /**
  * Presence state including cursor position and camera.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeapppresence](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppPresence)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeapppresence](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppPresence)
  **/
 export interface TypeAppPresence {
   cursor?: Coord;
@@ -175,7 +174,7 @@ export interface TypeAppPresence {
 /**
  * Hover state tracking which connector or model is hovered.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeapphover](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppHover)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeapphover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppHover)
  **/
 export interface TypeAppHover {
   connector?: Guid;
@@ -184,7 +183,7 @@ export interface TypeAppHover {
 /**
  * Presence state of another user including their name.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeapppresenceother](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppPresenceOther)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeapppresenceother](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppPresenceOther)
  **/
 export interface TypeAppPresenceOther extends TypeAppPresence {
   name: string;
@@ -192,7 +191,7 @@ export interface TypeAppPresenceOther extends TypeAppPresence {
 /**
  * Diff object describing partial changes to TypeApp state.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappdiff](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppDiff)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappdiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppDiff)
  **/
 export interface TypeAppDiff {
   selection?: TypeAppSelectionDiff;
@@ -210,13 +209,13 @@ export interface TypeAppDiff {
 /**
  * Edit record combining a TypeApp selection diff with kit-level diff metadata.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappedit](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppEdit)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappedit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppEdit)
  **/
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> { }
 /**
  * Full mutable state of a TypeApp instance.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappstate](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppState)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppState)
  **/
 export interface TypeAppState {
   fullscreenWindow: TypeAppFullscreenWindow;
@@ -236,7 +235,7 @@ export interface TypeAppState {
 /**
  * Context passed to TypeApp commands with kit, typeApp state, and target GUID.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappcommandcontext](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppCommandContext)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappcommandcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppCommandContext)
  **/
 export interface TypeAppCommandContext extends KitCommandContext {
   typeApp: TypeAppState;
@@ -245,24 +244,37 @@ export interface TypeAppCommandContext extends KitCommandContext {
 /**
  * Result of a TypeApp command containing optional app and type diffs.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement🛠️typeappcommandresult](semiorepo://definition/semio/js/sketchpad/Type.tsx/Internal%20State%20Management/TypeAppCommandResult)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappcommandresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppCommandResult)
  **/
 export interface TypeAppCommandResult {
   diff?: TypeAppDiff;
   typeDiff?: TypeDiff;
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🪨emptytypeselection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/EMPTY_TYPE_SELECTION)
+ * EMPTY_TYPE_SELECTION holds the data fields for a EMPTY_TYPE_SELECTION record.
+ **/
 const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
-const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
+// [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management/d/i/EMPTY_MODEL_TAG_ARRAY)
+ * [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement🪨emptyothers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management/d/i/EMPTY_OTHERS)
+ * EMPTY_OTHERS holds the data fields for a EMPTY_OTHERS record.
+ * [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management/d/i/EMPTY_MODEL_TAG_ARRAY)
+ * EMPTY_MODEL_TAG_ARRAY holds the data fields for a EMPTY_MODEL_TAG_ARRAY record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/EMPTY_MODEL_TAG_ARRAY)
+// EMPTY_MODEL_TAG_ARRAY holds the data fields for a EMPTY_MODEL_TAG_ARRAY record.
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
 // #endregion 🔖Internal State Management
-
 // #region 🔖Type App Plugin Registration
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖typeapppluginregistration](semiorepo://section/semio/js/sketchpad/Type.tsx/Type%20App%20Plugin%20Registration)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖typeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Type%20App%20Plugin%20Registration)
 // Plugin registration and XState event handlers for the TypeApp. MUST register all event handlers at module load.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖typeapppluginregistration🪨typeappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Type%20App%20Plugin%20Registration/d/i/typeAppPlugin)
+ * typeAppPlugin holds the data fields for a typeAppPlugin record.
+ **/
 const typeAppPlugin: AppPlugin = {
   id: "type",
   namespace: "TYPE",
@@ -288,6 +300,10 @@ const typeAppPlugin: AppPlugin = {
   },
 };
 
+/**
+ * typeAppEventConfig holds the data fields for a typeAppEventConfig record.
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖typeapppluginregistration🪨typeappeventconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Type%20App%20Plugin%20Registration/d/i/typeAppEventConfig)
+ **/
 const typeAppEventConfig = {
   namespace: "TYPE",
   appKey: "typeApps" as const,
@@ -464,9 +480,7 @@ if (typeof window !== "undefined") {
       return { typeApps: { ...apps, [key]: { ...app, selection: undefined } } };
     },
   });
-
   createKeyedTransactionHandlers({
-    namespace: "TYPE",
     appKey: "typeApps",
     keyFields: ["kitGuid", "typeGuid"],
     createDefaultState: createDefaultTypeAppState,
@@ -474,10 +488,9 @@ if (typeof window !== "undefined") {
 }
 
 // #endregion 🔖Type App Plugin Registration
-
 // #region 🔖XState Hooks
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks](semiorepo://section/semio/js/sketchpad/Type.tsx/XState%20Hooks)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks)
 // React hooks that read and write TypeApp XState machine state. MUST use memoized selectors for performance.
 
 /**
@@ -485,7 +498,7 @@ if (typeof window !== "undefined") {
  *
  * MUST return null when no kit or type scope is available.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeapp](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeApp)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeApp)
  **/
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
   const kitScope = useKitScope();
@@ -507,7 +520,7 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappselection](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppSelection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappselection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppSelection)
  **/
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const actor = useSketchpadActor();
@@ -533,7 +546,7 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeapppanelvisibility](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppPanelVisibility)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeapppanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppPanelVisibility)
  **/
 export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const actor = useSketchpadActor();
@@ -559,7 +572,7 @@ export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
  *
  * MUST return a readonly hook result.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappothers](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppOthers)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappothers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppOthers)
  **/
 export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
   const actor = useSketchpadActor();
@@ -577,7 +590,7 @@ export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappcamera](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppCamera)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappcamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppCamera)
  **/
 export function useTypeAppCamera(): HookResult<Camera | undefined> {
   const actor = useSketchpadActor();
@@ -603,7 +616,7 @@ export function useTypeAppCamera(): HookResult<Camera | undefined> {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappfocusedconnectorguid](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppFocusedConnectorGuid)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappfocusedconnectorguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppFocusedConnectorGuid)
  **/
 export function useTypeAppFocusedConnectorGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
@@ -633,7 +646,7 @@ export function useTypeAppFocusedConnectorGuid(): HookResult<Guid | undefined> {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeapphover](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppHover)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeapphover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppHover)
  **/
 export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   const actor = useSketchpadActor();
@@ -665,7 +678,7 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappactivetool](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppActiveTool)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappactivetool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppActiveTool)
  **/
 export function useTypeAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
@@ -686,6 +699,10 @@ export function useTypeAppActiveTool(): HookResult<ToolKind> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+/**
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks✂️transaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/Transaction)
+ * Transaction holds the data fields for a Transaction record.
+ **/
 interface Transaction {
   start?: () => void;
   finalize?: () => void;
@@ -697,7 +714,7 @@ interface Transaction {
  *
  * MUST return stub methods until XState transaction events are implemented.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeapptransaction](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppTransaction)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeapptransaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppTransaction)
  **/
 export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
   // TODO: Implement transaction via XState events
@@ -713,7 +730,7 @@ export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
  *
  * MUST return no-op functions when no kit or type scope is available.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappcommands](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppCommands)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppCommands)
  **/
 export function useTypeAppCommands(id?: TypeAppId) {
   const actor = useSketchpadActor();
@@ -791,7 +808,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappisportselected](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppIsPortSelected)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappisportselected](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppIsPortSelected)
  **/
 export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
@@ -822,7 +839,7 @@ export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolea
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappisporthovered](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppIsPortHovered)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappisporthovered](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppIsPortHovered)
  **/
 export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
@@ -853,7 +870,7 @@ export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappselectedmodelguid](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppSelectedModelGuid)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappselectedmodelguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppSelectedModelGuid)
  **/
 export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
@@ -882,7 +899,7 @@ export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
  *
  * MUST return a conditionalHookResult with setter availability.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🛠️usetypeappselectedmodeltags](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/useTypeAppSelectedModelTags)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🛠️usetypeappselectedmodeltags](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/useTypeAppSelectedModelTags)
  **/
 export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   const actor = useSketchpadActor();
@@ -890,9 +907,7 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const selector = useMemo(() => createTypeSelectedModelTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAG_ARRAY;
-  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_MODEL_TAGS" as const, kitGuid, typeGuid, tags: [] }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
@@ -902,16 +917,15 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   }, [actor, kitGuid, typeGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
-
 //#region 🔖Action Hooks
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks](semiorepo://section/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks)
 // Convenience React hooks wrapping state hooks into single-purpose actions. MUST return action-canAct tuples.
 
 /**
  * Tuple type for action hooks returning the action callback and a can-act boolean.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️actionhookresult](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/ActionHookResult)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️actionhookresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/ActionHookResult)
  **/
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -920,7 +934,7 @@ export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args:
  *
  * MUST clear model selection when selecting a connector.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappselectconnector](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppSelectConnector)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappselectconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppSelectConnector)
  **/
 export function useTypeAppSelectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
@@ -937,7 +951,7 @@ export function useTypeAppSelectConnector(): ActionHookResult<[connectorGuid: st
  *
  * MUST filter the connector GUID from the selection array.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappdeselectconnector](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppDeselectConnector)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappdeselectconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppDeselectConnector)
  **/
 export function useTypeAppDeselectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
@@ -957,7 +971,7 @@ export function useTypeAppDeselectConnector(): ActionHookResult<[connectorGuid: 
  *
  * MUST delegate to the hover state setter.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeapphoverport](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppHoverPort)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeapphoverport](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppHoverPort)
  **/
 export function useTypeAppHoverPort(): ActionHookResult<[connectorGuid: string]> {
   const [, setHover, canSetHover] = useTypeAppHover();
@@ -973,7 +987,7 @@ export function useTypeAppHoverPort(): ActionHookResult<[connectorGuid: string]>
  *
  * MUST delegate to the hover state setter.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeapphovermodel](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppHoverModel)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeapphovermodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppHoverModel)
  **/
 export function useTypeAppHoverModel(): ActionHookResult<[modelGuid: string]> {
   const [, setHover, canSetHover] = useTypeAppHover();
@@ -989,7 +1003,7 @@ export function useTypeAppHoverModel(): ActionHookResult<[modelGuid: string]> {
  *
  * MUST set hover to undefined.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappclearhover](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppClearHover)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappclearhover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppClearHover)
  **/
 export function useTypeAppClearHover(): ActionHookResult<[]> {
   const [, setHover, canSetHover] = useTypeAppHover();
@@ -1005,7 +1019,7 @@ export function useTypeAppClearHover(): ActionHookResult<[]> {
  *
  * MUST delegate to the focused connector state setter.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappfocusport](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppFocusPort)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappfocusport](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppFocusPort)
  **/
 export function useTypeAppFocusPort(): ActionHookResult<[connectorGuid: string]> {
   const [, setFocusedConnectorGuid, canSetFocusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
@@ -1021,7 +1035,7 @@ export function useTypeAppFocusPort(): ActionHookResult<[connectorGuid: string]>
  *
  * MUST set focused connector GUID to undefined.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappclearfocus](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppClearFocus)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappclearfocus](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppClearFocus)
  **/
 export function useTypeAppClearFocus(): ActionHookResult<[]> {
   const [, setFocusedConnectorGuid, canSetFocusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
@@ -1037,7 +1051,7 @@ export function useTypeAppClearFocus(): ActionHookResult<[]> {
  *
  * MUST set both connector and model arrays to empty.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappdeselectall](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppDeselectAll)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappdeselectall](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppDeselectAll)
  **/
 export function useTypeAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
@@ -1053,7 +1067,7 @@ export function useTypeAppDeselectAll(): ActionHookResult<[]> {
  *
  * MUST clear connector selection when selecting a model.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappselectmodel](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppSelectModel)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappselectmodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppSelectModel)
  **/
 export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
@@ -1070,7 +1084,7 @@ export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
  *
  * MUST filter the model GUID from the selection array.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappdeselectmodel](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppDeselectModel)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappdeselectmodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppDeselectModel)
  **/
 export function useTypeAppDeselectModel(): ActionHookResult<[modelGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
@@ -1090,7 +1104,7 @@ export function useTypeAppDeselectModel(): ActionHookResult<[modelGuid: string]>
  *
  * MUST delegate to the active tool state setter.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappsetactivetool](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppSetActiveTool)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappsetactivetool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppSetActiveTool)
  **/
 export function useTypeAppSetActiveTool(): ActionHookResult<[tool: ToolKind]> {
   const [, setActiveTool, canSetActiveTool] = useTypeAppActiveTool();
@@ -1106,7 +1120,7 @@ export function useTypeAppSetActiveTool(): ActionHookResult<[tool: ToolKind]> {
  *
  * MUST delegate to the camera state setter.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappsetcamera](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppSetCamera)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappsetcamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppSetCamera)
  **/
 export function useTypeAppSetCamera(): ActionHookResult<[camera: Camera]> {
   const [, setCamera, canSetCamera] = useTypeAppCamera();
@@ -1122,7 +1136,7 @@ export function useTypeAppSetCamera(): ActionHookResult<[camera: Camera]> {
  *
  * MUST flip the boolean value of the given panel key.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeapptogglepanel](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppTogglePanel)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeapptogglepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppTogglePanel)
  **/
 export function useTypeAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
   const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useTypeAppPanelVisibility();
@@ -1140,7 +1154,7 @@ export function useTypeAppTogglePanel(): ActionHookResult<[panelKey: keyof Panel
  *
  * MUST avoid duplicate tags.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappaddmodeltag](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppAddModelTag)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappaddmodeltag](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppAddModelTag)
  **/
 export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
   const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
@@ -1160,7 +1174,7 @@ export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
  *
  * MUST filter the tag string from the tags array.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappremovemodeltag](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppRemoveModelTag)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappremovemodeltag](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppRemoveModelTag)
  **/
 export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
   const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
@@ -1178,7 +1192,7 @@ export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
  *
  * MUST delegate to the selected model state setter.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🔖actionhooks🛠️usetypeappsetselectedmodel](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/Action%20Hooks/useTypeAppSetSelectedModel)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks🛠️usetypeappsetselectedmodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks/d/i/useTypeAppSetSelectedModel)
  **/
 export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: string]> {
   const [, setSelectedModel, canSetSelectedModel] = useTypeAppSelectedModelGuid();
@@ -1191,29 +1205,38 @@ export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: strin
 
 //#endregion 🔖Action Hooks
 
-const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
 /**
- * Context provider that scopes TypeApp state to a specific app instance ID.
+ * TypeAppScopeContext holds the data fields for a TypeAppScopeContext record.
+ **/
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🪨typeappscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/TypeAppScopeContext)
+ * TypeAppScopeContext holds the data fields for a TypeAppScopeContext record.
+ **/
+// [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨typeappscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/TypeAppScopeContext)
+const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
+/** TypeAppScopeProvider holds the data fields for a TypeAppScopeProvider record.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks🪨typeappscopeprovider](semiorepo://definition/semio/js/sketchpad/Type.tsx/XState%20Hooks/TypeAppScopeProvider)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🪨typeappscopeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/TypeAppScopeProvider)
  **/
 export const TypeAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
   return React.createElement(TypeAppScopeContext.Provider, { value }, props.children as any);
 };
-const useTypeAppScope = () => useContext(TypeAppScopeContext);
+// [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
+ * [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
+ * useTypeAppScope holds the data fields for a useTypeAppScope record.
+ **/
 
 // #endregion 🔖XState Hooks
 
 // #region 🔖Commands
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖commands](semiorepo://section/semio/js/sketchpad/Type.tsx/Commands)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Commands)
 // Command definitions for the TypeApp producing diffs from context. MUST return TypeAppCommandResult.
 
 /**
  * Command map producing TypeApp and type diffs from command context and arguments.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖commands🪨commands](semiorepo://definition/semio/js/sketchpad/Type.tsx/Commands/commands)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖commands🪨commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Commands/d/i/commands)
  **/
 export const commands = {
   "semio.typeApp.selectConnector": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
@@ -1354,8 +1377,6 @@ export const commands = {
     };
   },
   "semio.typeApp.clearModelTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
-    return {
-      diff: {
         selectedModelTags: [],
       },
     };
@@ -1367,15 +1388,18 @@ export const commands = {
       },
     };
   },
-};
 
 // #endregion 🔖Commands
 
 // #region 🔖Scene
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖scene](semiorepo://section/semio/js/sketchpad/Type.tsx/Scene)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene)
 // Three.js scene components for connectors, meshes, and the 3D viewport. MUST render inside a React Three Fiber canvas.
 
+/**
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨connectorvisual](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/ConnectorVisual)
+ * ConnectorVisual holds the data fields for a ConnectorVisual record.
+ **/
 const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({
   connector,
   isSelected,
@@ -1457,6 +1481,10 @@ const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖scene🪨connectorpreview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/ConnectorPreview)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨connectorpreview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/ConnectorPreview)
+ * ConnectorPreview holds the data fields for a ConnectorPreview record.
+ **/
 const ConnectorPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> = ({ position, normal }) => {
   const previewColor = "#00ff00";
 
@@ -1479,8 +1507,16 @@ const ConnectorPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> =
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖scene🪨getcomputedcolorformesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/getComputedColorForMesh)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨getcomputedcolorformesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/getComputedColorForMesh)
+ * getComputedColorForMesh holds the data fields for a getComputedColorForMesh record.
+ **/
 const getComputedColorForMesh = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
+// [👤semio📚js🗃️sketchpad💻type🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/GLTFMesh)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/GLTFMesh)
+ * GLTFMesh holds the data fields for a GLTFMesh record.
+ **/
 const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const gltf = useGLTF(url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster")), []);
@@ -1513,6 +1549,10 @@ const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointe
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
+/** FBXMesh holds the data fields for a FBXMesh record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/FBXMesh)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/FBXMesh)
+ **/
 const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const scene = useFBX(url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster")), []);
@@ -1545,6 +1585,10 @@ const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointer
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
+/** OBJMesh holds the data fields for a OBJMesh record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/OBJMesh)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/OBJMesh)
+ **/
 const OBJMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
   const obj = useLoader(OBJLoader, url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColorForMesh("--plaster")), []);
@@ -1577,6 +1621,10 @@ const OBJMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointer
   return <primitive object={clonedScene} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} onPointerOut={onPointerOut} />;
 };
 
+/**
+ * LoadedTypeMesh holds the data fields for a LoadedTypeMesh record.
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨loadedtypemesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/LoadedTypeMesh)
+ **/
 const LoadedTypeMesh: FC<{
   url: string;
   fileExtension: string;
@@ -1598,10 +1646,26 @@ const LoadedTypeMesh: FC<{
   }
 };
 
+/** selectTypeModels holds the data fields for a selectTypeModels record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypemodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypeModels)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypemodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeModels)
+ **/
 const selectTypeModels = (type: Type) => type.models;
+// [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeConcepts)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeConcepts)
+ * selectTypeConcepts holds the data fields for a selectTypeConcepts record.
+ **/
 const selectTypeConcepts = (type: Type) => type.concepts;
+/** selectTypeMeshGuid holds the data fields for a selectTypeMeshGuid record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypemeshguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypeMeshGuid)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypemeshguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeMeshGuid)
+ **/
 const selectTypeMeshGuid = (type: Type) => type.guid;
 
+/**
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypeports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypePorts)
+ * TypeMesh holds the data fields for a TypeMesh record.
+ **/
 const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
   activeTool,
   onPortPreview,
@@ -1780,9 +1844,21 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
+ * selectTypePorts holds the data fields for a selectTypePorts record.
+ **/
 const selectTypePorts = (type: Type) => type.connectors;
+// [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeGuid)
+ * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeGuid)
+ * selectTypeGuid holds the data fields for a selectTypeGuid record.
+ **/
 const selectTypeGuid = (type: Type) => type.guid;
 
+/**
+ * SceneContent holds the data fields for a SceneContent record.
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨scenecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/SceneContent)
+ **/
 const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
 
@@ -1925,15 +2001,16 @@ const SceneContent: FC = React.memo(() => {
           />
         );
       })}
-      {connectorPreview && <ConnectorPreview position={connectorPreview.position} normal={connectorPreview.normal} />}
-    </>
   );
 });
 
+/**
+ * Scene holds the data fields for a Scene record.
+ *
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/Scene)
+ **/
 const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   const [setCamera] = useTypeAppSetCamera();
-  const [deselectAll] = useTypeAppDeselectAll();
-  const [clearFocus] = useTypeAppClearFocus();
   const [camera] = useTypeAppCamera();
   const [focusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
 
@@ -1964,17 +2041,14 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
           <meshBasicMaterial color="#4f46e5" opacity={0.2} transparent />
         </mesh>
       )}
-    </SceneComponent>
   );
 };
 
 // #endregion 🔖Scene
-
 // #region 🔖Panels
 
 // [🔖semio/js/sketchpad/Type.tsx#Panels](semiorepo://section/semio/js/sketchpad/Type.tsx/PANELS)
 // Panel UI sections for the right sidebar including details and settings editors. MUST use the panel section registration API.
-
 // #region 🔖Right
 
 // [🔖semio/js/sketchpad/Type.tsx#Right](semiorepo://section/semio/js/sketchpad/Type.tsx/RIGHT)
@@ -1982,13 +2056,13 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 
 // #region 🔖Details
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details](semiorepo://section/semio/js/sketchpad/Type.tsx/Panels/Right/Details)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels)
 // Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
 /**
  * Detail panel section displaying editable type properties.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨typedetails](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/TypeDetails)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨typedetails](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/TypeDetails)
  **/
 export const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -1996,6 +2070,10 @@ export const TypeDetails: FC = () => {
   return <TypeDetailsForm />;
 };
 
+/** TypeDetailsForm holds the data fields for a TypeDetailsForm record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨typedetailsform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/TypeDetailsForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨typedetailsform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/TypeDetailsForm)
+ **/
 const TypeDetailsForm: FC = () => {
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -2064,7 +2142,7 @@ const TypeDetailsForm: FC = () => {
 /**
  * Detail panel section for managing type models with add, remove, and reorder.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨modelssection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/ModelsSection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨modelssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ModelsSection)
  **/
 export const ModelsSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -2072,6 +2150,10 @@ export const ModelsSection: FC = () => {
   return <ModelsSectionForm />;
 };
 
+/** ModelsSectionForm holds the data fields for a ModelsSectionForm record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨modelssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ModelsSectionForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨modelssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ModelsSectionForm)
+ **/
 const ModelsSectionForm: FC = () => {
   const tooltip = useTooltip();
   const [selectModel] = useTypeAppSelectModel();
@@ -2224,7 +2306,7 @@ const ModelsSectionForm: FC = () => {
 /**
  * Detail panel section listing all type connectors with inline editing.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨connectorslistsection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/ConnectorsListSection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨connectorslistsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ConnectorsListSection)
  **/
 export const ConnectorsListSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -2232,6 +2314,10 @@ export const ConnectorsListSection: FC = () => {
   return <ConnectorsListSectionForm />;
 };
 
+/** ConnectorsListSectionForm holds the data fields for a ConnectorsListSectionForm record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨connectorslistsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ConnectorsListSectionForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorslistsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsListSectionForm)
+ **/
 const ConnectorsListSectionForm: FC = () => {
   const tooltip = useTooltip();
   const [selectConnector] = useTypeAppSelectConnector();
@@ -2514,7 +2600,7 @@ const ConnectorsListSectionForm: FC = () => {
 /**
  * Detail panel section for managing type authors.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨authorssection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/AuthorsSection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨authorssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/AuthorsSection)
  **/
 export const AuthorsSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -2522,6 +2608,10 @@ export const AuthorsSection: FC = () => {
   return <AuthorsSectionForm />;
 };
 
+/** AuthorsSectionForm holds the data fields for a AuthorsSectionForm record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨authorssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/AuthorsSectionForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨authorssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AuthorsSectionForm)
+ **/
 const AuthorsSectionForm: FC = () => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
@@ -2624,7 +2714,7 @@ const AuthorsSectionForm: FC = () => {
 /**
  * Detail panel section for managing type key-value attributes.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨attributessection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/AttributesSection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨attributessection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/AttributesSection)
  **/
 export const AttributesSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -2632,6 +2722,10 @@ export const AttributesSection: FC = () => {
   return <AttributesSectionForm />;
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨attributessectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AttributesSectionForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨attributessectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AttributesSectionForm)
+ * AttributesSectionForm holds the data fields for a AttributesSectionForm record.
+ **/
 const AttributesSectionForm: FC = () => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
@@ -2761,7 +2855,7 @@ const AttributesSectionForm: FC = () => {
 /**
  * Detail panel section for editing a single selected connector.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨connectorsection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/ConnectorSection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨connectorsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ConnectorSection)
  **/
 export const ConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const isInTypeScope = useIsInTypeScope();
@@ -2769,6 +2863,10 @@ export const ConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid })
   return <ConnectorSectionForm connectorGuid={connectorGuid} />;
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
+ * ConnectorSectionForm holds the data fields for a ConnectorSectionForm record.
+ **/
 const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
@@ -2957,7 +3055,7 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
 /**
  * Detail panel section for batch-editing multiple selected connectors.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖details🪨connectorsmultiplesection](semiorepo://definition/semio/js/sketchpad/Type.tsx/Panels/Right/Details/ConnectorsMultipleSection)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨connectorsmultiplesection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSection)
  **/
 export const ConnectorsMultipleSection: FC<{ connectorGuids: Guid[] }> = ({ connectorGuids }) => {
   const isInTypeScope = useIsInTypeScope();
@@ -2965,6 +3063,10 @@ export const ConnectorsMultipleSection: FC<{ connectorGuids: Guid[] }> = ({ conn
   return <ConnectorsMultipleSectionForm connectorGuids={connectorGuids} />;
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsmultiplesectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSectionForm)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsmultiplesectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSectionForm)
+ * ConnectorsMultipleSectionForm holds the data fields for a ConnectorsMultipleSectionForm record.
+ **/
 const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connectorGuids }) => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
@@ -3070,8 +3172,6 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               value={commonPointY}
               onChange={(value: number) => {
                 updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
-              }}
-              step={0.1}
             />
           </TreeContent>
         </TreeItem>
@@ -3126,7 +3226,6 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
           </TreeContent>
         </TreeItem>
       </TreeItem>
-    </>
   );
 };
 
@@ -3134,9 +3233,13 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 
 // #region 🔖Settings
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖panels🔖right🔖settings](semiorepo://section/semio/js/sketchpad/Type.tsx/Panels/Right/Settings)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Settings)
 // Settings panel for theme, language, device, expertise, and mode selection. MUST use toggle groups and select elements.
 
+// [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖settings🪨typesettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Settings/d/i/TypeSettingsContent)
+ * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖settings🪨typesettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Settings/d/i/TypeSettingsContent)
+ * TypeSettingsContent holds the data fields for a TypeSettingsContent record.
+ **/
 const TypeSettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
   const [language, setLanguage, canSetLanguage] = useLanguage();
@@ -3175,8 +3278,6 @@ const TypeSettingsContent: FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="en">{languageEnLabel}</SelectItem>
-              <SelectItem value="de">{languageDeLabel}</SelectItem>
-            </SelectContent>
           </Select>
         </TreeContent>
       </TreeItem>
@@ -3233,19 +3334,25 @@ const TypeSettingsContent: FC = () => {
   );
 };
 
-// #endregion 🔖Settings
-
 // #endregion 🔖Right
 
 // #endregion 🔖Panels
 
 // #region 🔖Tools
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖tools](semiorepo://section/semio/js/sketchpad/Type.tsx/Tools)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools)
 // Tool definitions for selection modes and connector creation. MUST export tool objects and settings components.
 
+/**
+ * toolModules holds the data fields for a toolModules record.
+ * [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨toolmodules](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/toolModules)
+ **/
 const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Tool.tsx", { eager: true });
 
+/** ConnectorToolContent holds the data fields for a ConnectorToolContent record.
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨connectortoolcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/ConnectorToolContent)
+ * [👤semio📚js🗃️sketchpad💻type🔖tools🪨connectortoolcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools/d/i/ConnectorToolContent)
+ **/
 const ConnectorToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
   return null;
 };
@@ -3253,7 +3360,7 @@ const ConnectorToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
 /**
  * Tool definition for the connector creation tool.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨connectortool](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/ConnectorTool)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨connectortool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/ConnectorTool)
  **/
 export const ConnectorTool: Tool<TypeAppState> = {
   id: ToolKind.CONNECTOR,
@@ -3266,7 +3373,7 @@ export const ConnectorTool: Tool<TypeAppState> = {
 /**
  * Tool definition for the normal selection tool.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨selectionnormaltool](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/SelectionNormalTool)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨selectionnormaltool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/SelectionNormalTool)
  **/
 export const SelectionNormalTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_NORMAL,
@@ -3277,7 +3384,7 @@ export const SelectionNormalTool: Tool<TypeAppState> = {
 /**
  * Tool definition for the additive selection tool.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨selectionadditivetool](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/SelectionAdditiveTool)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨selectionadditivetool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/SelectionAdditiveTool)
  **/
 export const SelectionAdditiveTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_ADDITIVE,
@@ -3288,18 +3395,16 @@ export const SelectionAdditiveTool: Tool<TypeAppState> = {
 /**
  * Tool definition for the subtractive selection tool.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨selectionsubtractivetool](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/SelectionSubtractiveTool)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨typeselectsettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/TypeSelectSettings)
  **/
 export const SelectionSubtractiveTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_SUBTRACTIVE,
   icon: <RemoveIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
-
-/**
  * Settings component for switching between selection tool modes.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨typeselectsettings](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/TypeSelectSettings)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖tools🪨typeselectsettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools/d/i/TypeSelectSettings)
  **/
 export const TypeSelectSettings: FC = () => {
   const kitScope = useKitScope();
@@ -3333,7 +3438,7 @@ export const TypeSelectSettings: FC = () => {
 /**
  * Settings component for toggling the connector creation tool.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨typeconnectorsettings](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/TypeConnectorSettings)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖tools🪨typeconnectorsettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Tools/d/i/TypeConnectorSettings)
  **/
 export const TypeConnectorSettings: FC = () => {
   const kitScope = useKitScope();
@@ -3357,7 +3462,6 @@ export const TypeConnectorSettings: FC = () => {
 /**
  * Array of all TypeApp tool definitions.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨typeapptools](semiorepo://definition/semio/js/sketchpad/Type.tsx/Tools/TypeAppTools)
  **/
 export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, ConnectorTool];
 
@@ -3365,9 +3469,13 @@ export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, Selectio
 
 // #region 🔖App
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖app](semiorepo://section/semio/js/sketchpad/Type.tsx/App)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/App)
 // Main TypeApp component orchestrating panels, scene, keyboard shortcuts, and drag-and-drop. MUST register sections on mount.
 
+// [👤semio📚js🗃️sketchpad💻type🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/App)
+ * [👤semio📚js🗃️sketchpad💻type🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/App)
+ * App holds the data fields for a App record.
+ **/
 const App: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -3625,6 +3733,10 @@ const App: FC = () => {
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖app🪨typeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/TypeApp)
+ * [👤semio📚js🗃️sketchpad💻type🔖app🪨typeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/TypeApp)
+ * TypeApp holds the data fields for a TypeApp record.
+ **/
 const TypeApp: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
@@ -3650,9 +3762,7 @@ const TypeApp: FC = () => {
 
     addSection("toolbar", {
       id: "semio.sketchpad.app.type.tools.connector",
-      specificity: 20,
       order: 10,
-      toolbarGroup: {
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
         order: 10,
@@ -3679,6 +3789,10 @@ const TypeApp: FC = () => {
   );
 };
 
+// [👤semio📚js🗃️sketchpad💻type🔖app🛠️usetypeappinitialize](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/useTypeAppInitialize)
+ * [👤semio📚js🗃️sketchpad💻type🔖app🪨usetypeappinitialize](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/useTypeAppInitialize)
+ * useTypeAppInitialize holds the data fields for a useTypeAppInitialize record.
+ **/
 function useTypeAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -3715,7 +3829,6 @@ function useTypeAppInitialize() {
     });
     initializedKeyRef.current = initKey;
   }, [actor, kitGuid, typeGuid]);
-}
 
 export default TypeApp;
 
@@ -3723,13 +3836,13 @@ export default TypeApp;
 
 // #region 🔖Footer
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖footer](semiorepo://section/semio/js/sketchpad/Type.tsx/Footer)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Footer)
 // Footer component displaying model tag toggles. MUST update footer items when tags change.
 
 /**
  * Footer component rendering model tag toggle buttons.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖footer🪨typeappfooter](semiorepo://definition/semio/js/sketchpad/Type.tsx/Footer/TypeAppFooter)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖footer🪨typeappfooter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Footer/d/i/TypeAppFooter)
  **/
 export const TypeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -3738,8 +3851,6 @@ export const TypeAppFooter: FC = () => {
   const type = useType() as Type | undefined;
   const tags = useKitTags();
   const [selectedModelTags] = useTypeAppSelectedModelTags();
-  const [addModelTag] = useTypeAppAddModelTag();
-  const [removeModelTag] = useTypeAppRemoveModelTag();
 
   const addModelTagRef = useRef(addModelTag);
   const removeModelTagRef = useRef(removeModelTag);
@@ -3806,7 +3917,6 @@ export const TypeAppFooter: FC = () => {
       });
     };
   }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags]);
-
   return null;
 };
 
@@ -3814,13 +3924,13 @@ export const TypeAppFooter: FC = () => {
 
 // #region 🔖Config
 
-// [👤semio📚js🗃️sketchpad💻typetsx🔖config](semiorepo://section/semio/js/sketchpad/Type.tsx/Config)
+// [👤semio📚js🗃️sketchpad💻type🔖imports🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Config)
 // App configuration for the TypeApp including route segments, panels, and path matching. MUST define all route segments.
 
 /**
  * TypeApp configuration defining routes, panels, and path matching.
  *
- *  * [👤semio📚js🗃️sketchpad💻typetsx🔖config🪨config](semiorepo://definition/semio/js/sketchpad/Type.tsx/Config/config)
+ *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖config🪨config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Config/d/i/config)
  **/
 export const config: AppConfig = {
   id: "type",

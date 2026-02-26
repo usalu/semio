@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js⚙️eslintconfigts](semiorepo://file/semio/js/eslint.config.ts)
+// [👤semio📚js⚙️eslintconfigts](semiorepo://p/u/semio/b/l/js/f/eslint.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,14 +19,12 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-
-// [👤semio📚js⚙️eslintconfigts🔖configuration](semiorepo://section/semio/js/eslint.config.ts/Configuration)
+// [👤semio📚js⚙️eslintconfigts🔖configuration](semiorepo://p/u/semio/b/l/js/f/eslint.config.ts/s/Configuration)
 // ESLint flat configuration for the semio JS package.
 // Configuration MUST export a valid ESLint flat config array.
 
 // Default ESLint flat configuration export with no custom rules.
 // Export MUST be an array of ESLint config objects.
-export default [
-];
+export default [];
 
 // #endregion 🔖Configuration

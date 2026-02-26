@@ -1,106 +1,10 @@
 {
   "title": "Fix Emoji Variation Selector Handling in CLI Fix Command",
   "status": "closed",
-  "prompt": "When running `./semio-repo/cli/cli fix`, emojis are being replaced with text rendering (via variation selectors like VS15). The command should do the opposite - remove all variation selectors and ensure colorful emoji presentation is used instead of text presentation.",
+  "description": "When running `./semio-repo/cli/cli fix`, emojis are being replaced with text rendering (via variation selectors like VS15). The command should do the opposite - remove all variation selectors and ensure colorful emoji presentation is used instead of text presentation.",
   "summary": "The `cli fix` command is working correctly! It strips variation selectors (both VS15 and VS16) from emojis as specified in lines 305 and 541 of README.md. The perceived \"text rendering\" is actually the correct behavior - plain emojis without variation selectors render according to terminal/font defaults. The issue was outdated documentation at line 44 that incorrectly described the emoji normalization behavior. Updated README.md to accurately reflect that CLI artifact IDs use plain emojis without variation selectors for consistent cross-platform rendering.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/490"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2026-02-11 10:53:28",
-      "author": "usalu",
-      "system": "linux",
-      "client": "claude-code",
-      "commit": "81d694cc3df080b478d7aed9e8e74beba56b9eff",
-      "prompt": "When running `./semio-repo/cli/cli fix`, emojis are being replaced with text rendering (via variation selectors like VS15). The command should do the opposite - remove all variation selectors and ensure colorful emoji presentation is used instead of text presentation.",
-      "llm": "sonnet-4-5",
-      "diff": {
-        "bundles": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [
-            {
-              "path": "semio/semio/semio-repo/cli",
-              "lines": {
-                "added": 2,
-                "removed": 0
-              }
-            }
-          ],
-          "added": null
-        },
-        "folders": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [],
-          "added": []
-        },
-        "files": {
-          "deleted": [],
-          "renamed": [],
-          "modified": [
-            {
-              "path": "📃semio-repo/cli/README.md",
-              "lines": {
-                "added": 7,
-                "removed": 5
-              }
-            }
-          ],
-          "added": []
-        },
-        "sections": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [
-            {
-              "path": "📃semio-repo/cli/README.md#Docs#Monorepo Tree",
-              "lines": {
-                "added": 1,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃semio-repo/cli/README.md#Docs#Repo Tooling Sync",
-              "lines": {
-                "added": 1,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃semio-repo/cli/README.md#Docs#cli_test.go",
-              "lines": {
-                "added": 1,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃semio-repo/cli/README.md#Docs#main.go",
-              "lines": {
-                "added": 1,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃semio-repo/cli/README.md#Requirements#Tree",
-              "lines": {
-                "added": 3,
-                "removed": 1
-              }
-            }
-          ],
-          "added": null
-        },
-        "definitions": {
-          "deleted": null,
-          "renamed": [],
-          "modified": [],
-          "added": null
-        }
-      }
-    }
-  ]
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism"
 }

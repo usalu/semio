@@ -1,18 +1,6 @@
 {
   "title": "Replace JSON.stringify diffing in providers with structural equality helpers",
   "status": "closed",
-  "prompt": "\"Fix Smell 3: Replace JSON.stringify diffing pattern in TransactionPiecesProviderInner and HoverPiecesProviderInner with structural equality helpers and useSyncExternalStore\"",
-  "goal": "AI-OPTIMIZED-REPO",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-20T13:29:00.95Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
-      "prompt": "\"Fix Smell 3: Replace JSON.stringify diffing pattern in TransactionPiecesProviderInner and HoverPiecesProviderInner with structural equality helpers and useSyncExternalStore\"",
-      "llm": "opus-4-5"
-    }
-  ]
+  "description": "\"Fix Smell 3: Replace JSON.stringify diffing pattern in TransactionPiecesProviderInner and HoverPiecesProviderInner with structural equality helpers and useSyncExternalStore\"",
+  "goal": "🎯aioptimizedrepo"
 }

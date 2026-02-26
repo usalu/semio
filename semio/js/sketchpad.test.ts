@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio📚js🥼sketchpadtestts](semiorepo://file/semio/js/sketchpad.test.ts)
+// [👤semio📚js🥼sketchpadtestts](semiorepo://p/u/semio/b/l/js/f/sketchpad.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -156,7 +155,7 @@ async function openSettingsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
+    .catch(() => {});
 }
 
 async function getSettingsSections(page: Page): Promise<string[]> {
@@ -193,7 +192,7 @@ async function openDetailsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
+    .catch(() => {});
 }
 
 async function getDetailsSections(page: Page): Promise<string[]> {
@@ -1749,7 +1748,6 @@ test.describe("sketchpad", () => {
       console.log(`[Design] Lasso tool is active: ${isActive}`);
 
       if (hasDesignSelectionTool) {
-
         await designSelectionTool.click();
         await page.waitForTimeout(300);
       }

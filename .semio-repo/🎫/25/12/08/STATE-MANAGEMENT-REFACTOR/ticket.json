@@ -1,18 +1,6 @@
 {
   "title": "Complete state management refactor with triadic hooks pattern",
   "status": "closed",
-  "prompt": "Complete state management refactor with triadic hooks pattern",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
-  "interactions": [
-    {
-      "kind": "",
-      "date": "2025-12-16T17:06:07.89Z",
-      "author": "uelisaluz",
-      "system": "",
-      "client": "",
-      "commit": "0000000000000000000000000000000000000000",
-      "prompt": "Complete state management refactor with triadic hooks pattern",
-      "llm": "sonnet-4-5"
-    }
-  ]
+  "description": "Complete state management refactor with triadic hooks pattern",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
 }

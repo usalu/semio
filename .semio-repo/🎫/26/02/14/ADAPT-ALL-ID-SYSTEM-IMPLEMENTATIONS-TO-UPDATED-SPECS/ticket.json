@@ -1,21 +1,12 @@
 {
   "title": "Adapt All ID System Implementations to Updated Requirements",
   "status": "open",
-  "prompt": "Adapt all implementations and tests across Go, JS, TS, Python, C#, Rust and semio-repo CLI to the majorly updated ID system requirements with entity-emoji-prefix format. Includes entity kinds, resource kinds, diffable entities, flat string slugging rules, and interaction support.",
+  "description": "Adapt all implementations and tests across Go, JS, TS, Python, C#, Rust and semio-repo CLI to the majorly updated ID system requirements with entity-emoji-prefix format. Includes entity kinds, resource kinds, diffable entities, flat string slugging rules, and interaction support.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/570"
   },
-  "goal": "REPO",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-14 22:20:38",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
-      "prompt": "Adapt all implementations and tests across Go, JS, TS, Python, C#, Rust and semio-repo CLI to the majorly updated ID system requirements with entity-emoji-prefix format. Includes entity kinds, resource kinds, diffable entities, flat string slugging rules, and interaction support.",
-      "llm": "opus-4-6"
-    }
+  "goal": "🎯repo",
+  "sessions": [
+    "⚪1772112905554233049869449481842613692"
   ]
 }

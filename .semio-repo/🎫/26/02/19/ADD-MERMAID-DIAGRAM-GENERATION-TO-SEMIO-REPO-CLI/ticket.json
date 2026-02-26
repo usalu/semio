@@ -1,38 +1,10 @@
 {
   "title": "Add Mermaid Diagram Generation to Semio Repo CLI",
   "status": "closed",
-  "prompt": "Implement mermaid command with loc-by-projects-bundles-folders-files, loc-by-contributors, and loc-by-language subcommands that generate treemap-beta mermaid diagrams",
+  "description": "Implement mermaid command with loc-by-projects-bundles-folders-files, loc-by-contributors, and loc-by-language subcommands that generate treemap-beta mermaid diagrams",
   "summary": "Added mermaid command to CLI with three subcommands: loc-by-projects-bundles-folders-files, loc-by-contributors, and loc-by-language. Each generates treemap-beta mermaid diagram strings for LOC visualization. All 6 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/635"
   },
-  "goal": "SEMIO-REPO-CLI/MERMAID-DIAGRAMS",
-  "interactions": [
-    {
-      "kind": "ticket.open",
-      "date": "2026-02-19 16:48:18",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-      "prompt": "Implement mermaid command with loc-by-projects-bundles-folders-files, loc-by-contributors, and loc-by-language subcommands that generate treemap-beta mermaid diagrams",
-      "llm": "opus-4-6"
-    },
-    {
-      "kind": "ticket.close",
-      "date": "2026-02-19 17:01:28",
-      "author": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "b9419aabf1ad628272599dd384c7153c75ff2be7",
-      "files": [
-        {
-          "path": "🧰semiorepo⌨️cli💻maingo"
-        },
-        {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
-        }
-      ]
-    }
-  ]
+  "goal": "🎯semiorepocli🎯mermaiddiagrams"
 }

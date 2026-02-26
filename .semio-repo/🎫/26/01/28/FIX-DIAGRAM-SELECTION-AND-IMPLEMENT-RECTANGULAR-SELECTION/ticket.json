@@ -1,20 +1,7 @@
 {
   "title": "Fix Diagram Selection and Implement Rectangular Selection",
   "status": "open",
-  "prompt": "",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/244"
-  },
-  "interactions": [
-    {
-      "kind": "",
-      "date": "",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "system": "",
-      "client": "",
-      "commit": "0e45db5aec012fab2128f478cbb2e3e2a104281d",
-      "prompt": "Fix the auto-select bug, enable selectionOnDrag, configure Shift+Click behavior, and implement rectangular selection in the Diagram component for the Kit app.",
-      "llm": "gemini-3-flash"
-    }
-  ]
+  }
 }

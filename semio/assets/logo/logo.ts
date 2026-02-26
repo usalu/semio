@@ -1,6 +1,5 @@
 // #region 🔖Header
-
-// [👤semio🏪assets🛅logo💻logots](semiorepo://file/semio/assets/logo/logo.ts)
+// [👤semio🏪assets🛅logo💻logo](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,8 +21,7 @@
 // #endregion 🔖Header
 
 //#region 🔖Imports
-
-// [👤semio🏪assets🛅logo💻logots🔖imports](semiorepo://section/semio/assets/logo/logo.ts/Imports)
+// [👤semio🏪assets🛅logo💻logo🔖imports](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Imports)
 // MUST import Node.js file system, DOM parsing, and path resolution modules.
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
@@ -31,15 +29,26 @@ import * as path from "path";
 //#endregion 🔖Imports
 
 //#region 🔖Types
-
-// [👤semio🏪assets🛅logo💻logots🔖types](semiorepo://section/semio/assets/logo/logo.ts/Types)
-// Type definitions for SVG transform, group, and keyframe data structures.
+// Types MUST provide the types functionality.
+// [👤semio🏪assets🛅logo💻logo🔖types](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
+/**
+ * [👤semio🏪assets🛅logo💻logo🔖types](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
+ * Type definitions for SVG transform, group, and keyframe data structures.
+ **/
+/**
+// TransformData holds the data fields for a TransformData record.
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️transformdata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/TransformData)
+ **/
 interface TransformData {
   translate: { x: number; y: number };
   rotate: { angle: number; cx: number; cy: number };
   scale: { x: number; y: number };
 }
 
+/**
+ * GroupData holds the data fields for a GroupData record.
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️groupdata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/GroupData)
+ **/
 interface GroupData {
   id: string;
   transform: TransformData;
@@ -51,15 +60,23 @@ interface GroupData {
   };
 }
 
+// KeyframeData holds the data fields for a KeyframeData record.
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️keyframedata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/KeyframeData)
+ **/
 interface KeyframeData {
   groups: GroupData[];
 }
 //#endregion 🔖Types
 
 //#region 🔖Logo Generation
+// Logo Generation MUST provide the logo generation functionality.
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
 
-// [👤semio🏪assets🛅logo💻logots🔖logogeneration](semiorepo://section/semio/assets/logo/logo.ts/Logo%20Generation)
-// Functions for parsing SVG files and generating animated SVG logos.
+/**
+ * [👤semio🏪assets🛅logo💻logo🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️transformtomatrix](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/transformToMatrix)
+ * Functions for parsing SVG files and generating animated SVG logos.
+ **/
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
   const tx = translate.x;
   const ty = translate.y;
@@ -111,6 +128,10 @@ function transformToMatrix(translate: { x: number; y: number }, rotate: { angle:
   return `${a} ${b} ${c} ${d} ${e} ${f}`;
 }
 
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+ * [👤semio🏪assets🛅logo💻logo🔖logogeneration🪨parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+ * parseTransform holds the data fields for a parseTransform record.
+ **/
 function parseTransform(transformStr: string): TransformData {
   const result: TransformData = {
     translate: { x: 0, y: 0 },
@@ -194,10 +215,8 @@ function parseTransform(transformStr: string): TransformData {
     const values = rotateMatch[1].split(/[,\s]+/).map(Number);
     result.rotate.angle = values[0] || 0;
     result.rotate.cx = values[1] || 0;
-    result.rotate.cy = values[2] || 0;
 
     nsformStr.match(/scale\(([^)]+)\)/);
-    if (scaleMatch) {
       const values = scaleMatch[1 values[0] || 1;
       const scaleY = values[1] || values[0] || 1;
 
@@ -210,7 +229,7 @@ function parseTransform(transformStr: string): TransformData {
 
   //#region 🔖Parse SVG
 
-// [👤semio🏪assets🛅logo💻logots🔖logogeneration🔖parsesvg](semiorepo://section/semio/assets/logo/logo.ts/Logo%20Generation/Parse%20SVG)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖parsesvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Parse%20SVG)
   // MUST read SVG content and extract all group transforms and path attributes.
   // Parses an SVG file and returns keyframe data with group transforms and paths.
   function parseSVGFile(filePath: string): KeyframeData {
@@ -233,10 +252,8 @@ function parseTransform(transformStr: string): TransformData {
           transform,
           path: {
             d: pathElement.getAttribute("d") || "",
-            fill: pathElement.getAttribute("fill") || "#000000",
             stroke: pathElement.getAttribute("stroke") || "none",
             strokeWidth: pathElement.getAttribute("stroke-width") || "0",
-          },
         };
 
         groups.push(groupData);
@@ -249,7 +266,7 @@ function parseTransform(transformStr: string): TransformData {
 
   //#region 🔖Generate Keyframe Sequence
 
-// [👤semio🏪assets🛅logo💻logots🔖logogeneration🔖generatekeyframesequence](semiorepo://section/semio/assets/logo/logo.ts/Logo%20Generation/Generate%20Keyframe%20Sequence)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Generate%20Keyframe%20Sequence)
   // MUST produce forward and reverse sequence for smooth animation looping.
   // Generates a palindromic keyframe sequence with triple repetition per frame.
   function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
@@ -259,10 +276,8 @@ function parseTransform(transformStr: string): TransformData {
       sequence.push(keyframes[i]);
       sequence.push(keyframes[i]);
       sequence.push(keyframes[i]);
-    }
 
     for (let i = keyframes.length - 2; i > 0; i--) {
-      sequence.push(keyframes[i]);
       sequence.push(keyframes[i]);
       sequence.push(keyframes[i]);
     }
@@ -275,7 +290,7 @@ function parseTransform(transformStr: string): TransformData {
 
   //#region 🔖Create Animated SVG
 
-// [👤semio🏪assets🛅logo💻logots🔖logogeneration🔖createanimatedsvg](semiorepo://section/semio/assets/logo/logo.ts/Logo%20Generation/Create%20Animated%20SVG)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Create%20Animated%20SVG)
   // MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
   // Creates an animated SVG file with SMIL animations from keyframe data.
   function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {

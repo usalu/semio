@@ -219,6 +219,7 @@ enum FileKind {
   TEST
   DOCS
   RESOURCE
+  TEMPLATE
   LICENSE
 }
 
@@ -265,7 +266,7 @@ type Repo implements Node {
   name: String!
   path: String!
   projects(filter: FilterInput): [Project!]!
-  commits(limit: Int): [Commit!]!
+  checkpoints(limit: Int): [Checkpoint!]!
   bundles(filter: FilterInput): [Bundle!]!
   folders(filter: FilterInput): [Folder!]!
   files(filter: FilterInput): [File!]!
@@ -379,7 +380,7 @@ type Contributor implements Node {
   bundles: [Bundle!]!
   files: [File!]!
   tickets: [Ticket!]!
-  commits: [Commit!]!
+  checkpoints: [Checkpoint!]!
   contributions: ContributorContributions!
 }
 
@@ -395,7 +396,7 @@ type ContributorIcons {
 }
 
 type ContributorContributions {
-  commits: [Commit!]!
+  checkpoints: [Checkpoint!]!
   tickets: [TicketYear!]!
   bundles: [ContributorBundle!]!
 }
@@ -444,7 +445,7 @@ type LineMetrics {
   removed: Int!
 }
 
-type Commit implements Node {
+type Checkpoint implements Node {
   id: ID!
   sha: String!
   title: String!
@@ -485,7 +486,7 @@ type Ticket implements Node {
   author: Contributor
   llm: String
   client: TicketClient
-  commit: String
+  checkpoint: String
   goal: String
   parent: String
   dates: TicketDate!
@@ -501,7 +502,7 @@ type Interaction {
   client: String!
   prompt: String!
   author: String!
-  commit: String
+  checkpoint: String
 }
 
 type InteractionResource {
@@ -511,7 +512,7 @@ type InteractionResource {
   client: String!
   prompt: String!
   author: String!
-  commit: String
+  checkpoint: String
   sourceKind: String!
   sourceId: String!
   goalId: String
