@@ -6,7 +6,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Fixed all test failures across monorepo: Python syntax errors, schema.sql paths, build issues, emoji mismatches, fixture file ID format updates
+Fixed all test failures across the monorepo. Updated fixture files to use the new emoji-based artifact ID format (👤project🏪bundle🗃️folder💻file🔖section🛠️definition). Fixed Python syntax errors, schema.sql paths, build issues, emoji mismatches, and missing enum cases.
+
 ## Changes
 
 - semio/assets/repo/some/folder/file_fixable_expected.tsx: Updated file/section IDs to new emoji path format

@@ -27,6 +27,8 @@
 
 import { defineConfig, devices } from "@playwright/test";
 
+const shouldStartWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER !== "1";
+
 export default defineConfig({
   testMatch: ["**/*.spec.ts", "**/sketchpad.test.ts"],
   fullyParallel: false,
@@ -44,9 +46,8 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
-          executablePath: "/usr/bin/google-chrome-stable",
           args: [
-            "--disable-gpu",
+            "--headless=new",
             "--disable-dev-shm-usage",
             "--no-sandbox",
             "--disable-setuid-sandbox",
@@ -57,12 +58,14 @@ export default defineConfig({
 
   ],
 
-  webServer: {
-    command: "npm run dev:sketchpad -- --port 5173",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: shouldStartWebServer
+    ? {
+      command: "npm run dev:sketchpad -- --port 5173",
+      url: "http://localhost:5173",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120000,
+    }
+    : undefined,
 });
 
 // #endregion 🔖Playwright Configuration

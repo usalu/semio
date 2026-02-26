@@ -6,7 +6,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Verified parent connection is embedded inside PiecesSectionForm as a TreeItem using ConnectionScopeProvider+SingleConnectionInfo+SingleConnectionFields. No standalone ParentConnectionSection exists. No TypeScript errors. Dev server compiles cleanly. Section registration is clean.
+Embedding parent connection details INSIDE the piece section of the details panel (not as a separate collapsible section). When a piece is selected, the parent connection appears as a TreeItem within the piece section showing: Connecting/Connected info, Plane (Translation: Gap/Shift/Rise, Orientation: Rotation/Turn/Tilt), and Diagram (X/Y Offset).
+
 ## Changes
 
 - `semio/js/sketchpad/Design.tsx`: Added parent connection TreeItem inside `PiecesSectionForm` using `ConnectionScopeProvider` + `SingleConnectionInfo` + `SingleConnectionFields`. Removed standalone `ParentConnectionSection`/`ParentConnectionSectionForm` components. Removed panel section registration for parent connection.

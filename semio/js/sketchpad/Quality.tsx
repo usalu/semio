@@ -146,7 +146,6 @@ export enum QualityAppFullscreenWindow {
  *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖types🛠️qualityappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES/QUALITY-APP-WINDOW-KIND)
  **/
 export enum QualityAppWindowKind {
-  Workbench = "workbench",
   Formula = "formula",
   Diagram = "diagram",
   Settings = "settings",
@@ -2118,8 +2117,23 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     if (appType !== "quality") return;
+    addSection("workbench", {
+      id: "semio.sketchpad.app.quality.workbench.nodes",
+      specificity: 20,
+      order: 1,
+      content: QualityWorkbench,
+    });
+    addSection("workbench", {
+      id: "semio.sketchpad.app.quality.workbench.qualities",
+      specificity: 20,
+      order: 2,
+      content: QualityWorkbenchQualities,
+    });
 
-    return () => {};
+    return () => {
+      removeSection("workbench", "semio.sketchpad.app.quality.workbench.nodes");
+      removeSection("workbench", "semio.sketchpad.app.quality.workbench.qualities");
+    };
   }, [appType, addSection, removeSection]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -2199,6 +2213,25 @@ const App: FC<AppProps> = () => {
 
   const store = useQualityAppStore() as QualityAppStore | null;
   const [windowLayout] = useQualityAppWindowLayout();
+  const migratedWindowLayout = useMemo(() => {
+    if (!windowLayout) return windowLayout;
+    const removeWorkbenchWindowFromLayout = (layoutNode: any): any => {
+      if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
+      if (layoutNode.type === "component" && layoutNode.componentType === "workbench") return null;
+      if (Array.isArray(layoutNode.content)) {
+        const content = layoutNode.content.map((item: any) => removeWorkbenchWindowFromLayout(item)).filter(Boolean);
+        if (content.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
+        return { ...layoutNode, content };
+      }
+      if (Array.isArray(layoutNode.contentItems)) {
+        const contentItems = layoutNode.contentItems.map((item: any) => removeWorkbenchWindowFromLayout(item)).filter(Boolean);
+        if (contentItems.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
+        return { ...layoutNode, contentItems };
+      }
+      return layoutNode;
+    };
+    return removeWorkbenchWindowFromLayout(windowLayout);
+  }, [windowLayout]);
 
   const defaultLayout = useMemo(() => {
     return {
@@ -2210,17 +2243,6 @@ const App: FC<AppProps> = () => {
           content: [
             {
               type: "component",
-              componentType: QualityAppWindowKind.Workbench,
-              title: "workbench",
-            },
-          ],
-        },
-        {
-          type: "stack",
-          width: 15,
-          content: [
-            {
-              type: "component",
               componentType: QualityAppWindowKind.Formula,
               title: "Formula",
             },
@@ -2228,7 +2250,7 @@ const App: FC<AppProps> = () => {
         },
         {
           type: "stack",
-          width: 60,
+          width: 75,
           content: [
             {
               type: "component",
@@ -2254,18 +2276,6 @@ const App: FC<AppProps> = () => {
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
       windowKinds: [
-        {
-          id: QualityAppWindowKind.Workbench,
-          label: "workbench",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <QualityWorkbench />
-                <QualityWorkbenchQualities />
-              </Tree>
-            </TreeStateProvider>
-          ),
-        },
         {
           id: QualityAppWindowKind.Formula,
           label: "Formula",
@@ -2318,7 +2328,7 @@ const App: FC<AppProps> = () => {
 
   return (
     <Canvas>
-      <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
+      <LayoutCanvas windowConfig={windowConfig} layoutState={migratedWindowLayout} onLayoutChange={handleLayoutChange} />
     </Canvas>
   );
 };
@@ -2353,6 +2363,7 @@ export const config: AppConfig = {
     },
   ],
   getPanels: (): PanelDefinition[] => [
+    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
     createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),

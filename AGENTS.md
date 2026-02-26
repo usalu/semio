@@ -80,7 +80,6 @@ Make sure all tests pass.
 
 Extend/Change/Refactor whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out. Create as many tickets as needed.
-
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/🎫/YY/MM/DD/TICKETSLUG*/ticket.md`
 Dont keep any legacy api or backwards compatiblity.

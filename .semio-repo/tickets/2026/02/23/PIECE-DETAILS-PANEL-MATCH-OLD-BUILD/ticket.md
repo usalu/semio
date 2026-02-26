@@ -6,7 +6,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Restored cross-root filter synchronization lost during concurrent edits. Added globalThis singleton filter store with useSyncExternalStore for cross-React-root state sharing. Wrapped DiagramWindow/SceneWindow with DesignFilterProvider. Changed diagram filtering from hidden:true to array removal. All 7 e2e tests pass, 13 unit tests pass, 0 TS errors. Piece detail panel fully renders when piece is selected.
+Restored cross-root filter synchronization lost during concurrent edits. Added globalThis singleton filter store with useSyncExternalStore for cross-React-root state sharing. Wrapped DiagramWindow/SceneWindow with DesignFilterProvider. Changed diagram filtering from hidden:true to array removal. All 7 e2e tests pass, 13 unit tests pass, 0 TS errors. Piece detail panel fully renders (ID, Type, Variant, Connection, Plane, Diagram fields) when piece is selected.
+
 ## Changes
 
 - `semio/js/sketchpad/Design.tsx`: Added global singleton filter store (globalThis + useSyncExternalStore), wrapped DiagramWindow/SceneWindow with DesignFilterProvider, changed diagram filtering from hidden:true to array removal, synced toolbar toggles to shared store

@@ -678,6 +678,12 @@
             "beginner": "Add Child"
           }
         },
+        "duplicateType": {
+          "label": {
+            "normal": "Duplicate Type",
+            "beginner": "Duplicate Type"
+          }
+        },
         "addType": {
           "label": {
             "normal": "Add Type",

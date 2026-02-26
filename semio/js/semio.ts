@@ -6640,10 +6640,11 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
           }
         }
 
-        const childCenter = {
+        const computedChildCenter = {
           u: round(childU),
           v: round(childV),
         };
+        const childCenter = childPiece.center ?? computedChildCenter;
 
         const flatChildPiece: Piece = setAttributes(
           {

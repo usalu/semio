@@ -19,7 +19,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { Level, LevelProvider, Panel, ResizableHandle, ResizablePanel, ResizablePanelGroup, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Level, LevelProvider, Panel as ResizableSidePanel, ResizableHandle, ResizablePanel, ResizablePanelGroup, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Resizable
 const meta = {
@@ -157,7 +157,7 @@ export const PanelDefault: Story = {
     const [size, setSize] = useState(250);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <Panel
+        <ResizableSidePanel
           visible
           size={size}
           onSizeChange={setSize}
@@ -172,4 +172,3 @@ export const PanelDefault: Story = {
   },
 };
 // #endregion 🔖Panel
-

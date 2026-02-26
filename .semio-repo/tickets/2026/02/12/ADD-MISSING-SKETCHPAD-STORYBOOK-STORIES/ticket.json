@@ -2,13 +2,13 @@
   "title": "Add Missing Sketchpad Storybook Stories",
   "status": "closed",
   "prompt": "Review sketchpad exported UI components, compare against existing Storybook stories, and add missing stories to existing story files without creating new files",
-  "summary": "Added 22 missing component stories to 11 existing story files. Components: DraggableAvatar, TableAvatar, Strip, DiagramNode, DiagramSkeleton, Aside, Card, CardGrid, Spinner, LoadingRow, Section, Steps, ToolbarZone, ToolbarGroup, ToolbarDivider, ToolbarItem, TableSkeleton, Page, SidePanel, HudPanel, NotFound, PageNavigation, Panel. No new files created. All tests pass.",
+  "summary": "Fixed Storybook indexing failure by removing duplicate Panel declaration collision in Resizable stories and validating with a successful Storybook build.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/545"
   },
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2026-02-12T15:06:19.126682929Z",
-  "finished": "2026-02-12T15:20:02.415989865Z",
+  "finished": "2026-02-25T15:10:43.089137832Z",
   "interactions": [
     {
       "dates": {
@@ -739,6 +739,105 @@
               "path": "🧪semio/js/.storybook/stories/elements/window/Table.stories.tsx#TableSkeleton§SkeletonMinimal",
               "lines": {
                 "added": 8,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-25 15:08:20",
+        "finished": "2026-02-25 15:10:43"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "4010dc93d7897058f4e2aff2168723f9ccefb118",
+      "prompt": "Fix Storybook index failure caused by duplicate Panel declaration in Resizable stories and validate Storybook indexing.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx",
+              "lines": {
+                "added": 25,
+                "removed": 3
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Header",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧪semio/js/.storybook/stories/elements/aggregation/Resizable.stories.tsx#Panel§PanelDefault",
+              "lines": {
+                "added": 20,
                 "removed": 0
               }
             }

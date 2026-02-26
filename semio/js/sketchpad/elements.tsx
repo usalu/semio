@@ -843,10 +843,10 @@ interface LabelProps {
 function Label({ id, children, className, labelElementId }: LabelProps) {
   const label = useLabel(id);
   return (
-    <div className={cn("group flex items-stretch min-w-0 w-full", className)}>
+    <div data-slot="property-row" className={cn("group grid min-w-0 w-full items-center", className)} style={{ gridTemplateColumns: "96px 1fr", gap: "8px", minHeight: "24px" }}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span id={labelElementId} className="inline-flex items-center px-tiny text-xs font-medium flex-shrink-0 min-w-[80px] text-left truncate cursor-pointer transition-colors hover:bg-hover-panel">
+          <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
             {label}
           </span>
         </TooltipTrigger>
@@ -854,7 +854,9 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
           <DescriptionTooltipContent id={id} />
         </TooltipContent>
       </Tooltip>
-      {children}
+      <div data-slot="property-control" className="min-w-0">
+        {children}
+      </div>
     </div>
   );
 }
@@ -2465,13 +2467,13 @@ function Slider({
   );
 
   const sliderContent = (
-    <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
-      <div className="flex items-center gap-single h-large">
-        <div className="flex-1 min-w-0">{wrappedSlider}</div>
+    <div data-slot="slider-content" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
+      <div data-slot="slider-row" className="grid h-[22px] grid-cols-[minmax(0,1fr)_28px] items-center gap-x-[8px]">
+        <div data-slot="slider-track-cell" className="min-w-0">{wrappedSlider}</div>
         {isEditing ? (
-          <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus id={id} />
+          <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-[28px] min-w-[28px] border-0 px-0 text-right text-xs" min={min} max={max} autoFocus id={id} />
         ) : (
-          <span className="text-sm w-20 text-right px-single select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
+          <span data-slot="slider-value" className="w-[28px] text-right text-xs leading-none select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
             {displayValue}
           </span>
         )}
@@ -2648,8 +2650,9 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   const labelElementId = `${id.split(".").join("-")}-label`;
 
   const stepperElement = (
-    <div className={cn("flex h-large flex-1 min-w-0 items-stretch border transition-[border-color] focus-within:border-accent", borderClass)}>
+    <div data-slot="stepper-group" className={cn("flex h-[22px] w-[100px] min-w-[100px] items-stretch overflow-hidden rounded-[3px] border transition-[border-color] focus-within:border-accent", borderClass)}>
       <button
+        data-slot="stepper-minus"
         type="button"
         onMouseDown={handleMouseDown(-step)}
         onMouseUp={handleMouseUp}
@@ -2657,7 +2660,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className={cn("flex h-full w-large cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className={cn("flex h-[22px] w-[22px] cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <RemoveIcon className="size-tiny" />
       </button>
@@ -2706,7 +2709,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             }
           }
         }}
-        className="border-0 text-center focus-visible:border-0"
+        className="h-[22px] w-[56px] min-w-[56px] border-0 px-0 text-center focus-visible:border-0"
         step={step}
         min={min}
         max={max}
@@ -2714,6 +2717,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         id={id}
       />
       <button
+        data-slot="stepper-plus"
         type="button"
         onMouseDown={handleMouseDown(step)}
         onMouseUp={handleMouseUp}
@@ -2721,7 +2725,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className={cn("flex h-full w-large cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className={cn("flex h-[22px] w-[22px] cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <AddIcon className="size-tiny" />
       </button>
@@ -3757,7 +3761,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
   return (
-    <div className="relative py-single" style={{ paddingLeft: `${level * 0.75}rem` }}>
+    <div data-slot="tree-content" className="relative" style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${level * 0.75}rem` }}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {children}
     </div>
@@ -3859,9 +3863,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
   if (!hasChildren) {
     return (
       <div
+        data-slot="tree-section-row"
         id={id}
-        className={`relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
-        style={{ paddingLeft: `${level * 0.75}rem` }}
+        className={`relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
+        style={{ paddingLeft: `${level * 0.75}rem`, height: "20px", marginBottom: "6px" }}
         onPointerEnter={() => {
           setIsHovered(true);
           onSectionPointerEnter?.();
@@ -3883,14 +3888,14 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
         {id ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+              <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
             </TooltipTrigger>
             <TooltipContent>
               <DescriptionTooltipContent id={id} />
             </TooltipContent>
           </Tooltip>
         ) : (
-          <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+          <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
         )}
         {actions.length > 0 && (
           <div className="flex items-center gap-single">
@@ -3916,9 +3921,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
+          data-slot="tree-section-row"
           id={id}
-          className={`relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
-          style={{ paddingLeft: `${level * 0.75}rem` }}
+          className={`relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
+          style={{ paddingLeft: `${level * 0.75}rem`, height: "20px", marginBottom: "6px" }}
           role="button"
           onPointerEnter={() => {
             setIsHovered(true);
@@ -3941,14 +3947,14 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
           {id ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+                <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
               </TooltipTrigger>
               <TooltipContent>
                 <DescriptionTooltipContent id={id} />
               </TooltipContent>
             </Tooltip>
           ) : (
-            <span className="flex-1 text-xs text-muted-foreground uppercase tracking-wide truncate">{displayLabel}</span>
+            <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
           )}
           {actions.length > 0 && (
             <div className="flex items-center gap-single">
@@ -4008,7 +4014,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     paddingLeft: `${level * 0.75}rem`,
   };
 
-  const baseClasses = `relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
+  const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -4016,6 +4022,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     return (
       <>
         <div
+          data-slot="tree-item-row"
           role="treeitem"
           id={id}
           ref={setNodeRef}
@@ -4044,6 +4051,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span
+            data-slot="tree-label"
             className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable"
             onClick={(e) => {
               if (e.detail > 1) return;
@@ -4082,6 +4090,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 
   return (
     <div
+      data-slot="tree-item-row"
       role="treeitem"
       id={id}
       ref={setNodeRef}
@@ -4103,7 +4112,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as React.ReactNode}</span>
+      <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as React.ReactNode}</span>
       {actions.length > 0 && (
         <div className="flex items-center gap-single">
           {actions.map((action, index) => (
@@ -4202,7 +4211,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
-  const baseClasses = `relative flex items-center gap-single py-single hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
+  const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -4210,6 +4219,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     return (
       <>
         <div
+          data-slot="tree-item-row"
           role="treeitem"
           id={id}
           className={itemClasses}
@@ -4236,6 +4246,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           </button>
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span
+            data-slot="tree-label"
             className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable"
             onClick={(e) => {
               if (e.detail > 1) return;
@@ -4273,10 +4284,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
-    <div role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div data-slot="tree-item-row" role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
+      <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
       {actions.length > 0 && (
         <div className="flex items-center gap-single">
           {actions.map((action, index) => (
@@ -5017,7 +5028,19 @@ export interface SidePanelProps {
   className?: string;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+const SidePanel: React.FC<SidePanelProps> = ({
+  position,
+  visible = true,
+  size = 300,
+  onSizeChange,
+  tabs,
+  activeTabId,
+  onActiveTabChange,
+  minSize = 200,
+  maxSize = 600,
+  zIndex = 20,
+  className = "",
+}) => {
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
   const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
@@ -5076,14 +5099,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   return (
     <LevelProvider level="panel">
       <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
-        <div className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
+        <div data-slot="side-panel-tabs" className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
           {sortedTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = tab.id === activeTab?.id;
             return (
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
-                  <button id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
+                  <button data-slot="side-panel-tab-button" id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
                     <Icon size={16} />
                   </button>
                 </TooltipTrigger>
@@ -5095,7 +5118,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
-          <div className="p-single">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
+          <div data-slot="side-panel-content" className="p-[10px]">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
         </Scrollable>
         {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>

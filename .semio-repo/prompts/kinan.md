@@ -1,4 +1,39 @@
 
+## Prompt: Duplicate Type Visibility Without App Switch
+
+Fix and validate Sketchpad Design Workbench duplicate behavior.
+
+Context:
+- Scope only `semio/js/sketchpad/Design.tsx` and existing tests in `semio/js/sketchpad.test.ts`.
+- In Workbench Types, duplicate action id is `semio.sketchpad.common.duplicateType`.
+- Do not create new test files.
+- Do not switch to Type app after duplication.
+- Keep Workbench action renamed to `Duplicate Type` and keep it visually distinct from add-piece (different icon).
+
+Task:
+1. In Design Workbench, pressing `Duplicate Type` creates exactly one child type under the clicked parent type.
+2. The duplicated child row becomes visible in Workbench immediately.
+3. Current URL stays on the same Design route and never navigates to `/types/...`.
+4. Existing behavior remains intact (drag/drop creation, plus-add-piece, double-click navigation).
+
+Test requirements (existing `sketchpad.test.ts` only):
+1. Capture current Design URL before duplicate click.
+2. Click `semio.sketchpad.common.duplicateType` on a valid parent type row.
+3. Assert child count for that parent increases by exactly `+1`.
+4. Assert exactly one new child type guid appears.
+5. Assert URL equals pre-click URL and does not contain `/types/`.
+6. Assert new duplicated type name is visible in Workbench.
+
+Acceptance criteria:
+- Duplicate creates one visible child type in Workbench.
+- No navigation to Type app occurs.
+- Assertions are implemented in existing Design e2e flow.
+- Report exact commands and real test outcomes.
+
+------------------------------------------------------------------------------
+when adding piece in the diagram window, it should appear in the the scene window with the correct model attached to the type
+------------------------------------------------------------------------------
+
 Validate that Workbench type piece creation is fully implemented and working in Sketchpad, using the existing test structure only.
 
 Context:

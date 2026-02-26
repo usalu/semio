@@ -19,7 +19,7 @@
 
 // #region Imports
 
-import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon } from "@semio/assets";
+import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
 import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
@@ -415,7 +415,7 @@ export type Device = "desktop" | "tablet" | MobileDevice;
  *
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖types🛠️panelkey](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/PANEL-KEY)
  **/
-export type PanelKey = "details" | "tools" | "stats" | "console" | "toolbar" | "leftSidePanel" | "rightSidePanel";
+export type PanelKey = "workbench" | "details" | "tools" | "stats" | "console" | "toolbar" | "leftSidePanel" | "rightSidePanel";
 
 /**
  * Union of left and right side panel keys.
@@ -660,6 +660,7 @@ export enum PanelPosition {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖enums🛠️panelkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS/PANEL-KIND)
  **/
 export enum PanelKind {
+  WORKBENCH = "workbench",
   TOOLS = "tools",
   TOOLBAR = "toolbar",
   STATS = "stats",
@@ -823,6 +824,12 @@ export interface PanelKindConfig {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🪨panelkindconfigs](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-KIND-CONFIGS)
  **/
 export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
+  [PanelKind.WORKBENCH]: {
+    icon: WorkbenchIcon,
+    position: PanelPosition.LEFT,
+    group: "left",
+    isGroupable: true,
+  },
   [PanelKind.TOOLS]: {
     icon: ToolsIcon,
     position: PanelPosition.LEFT,
@@ -979,6 +986,7 @@ export interface SidePanelTabs {
  *  * [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel🛠️panelsections](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL/PANEL-SECTIONS)
  **/
 export interface PanelSections {
+  workbench: PanelSection[];
   details: PanelSection[];
   tools: PanelSection[];
   hud: PanelSection[];

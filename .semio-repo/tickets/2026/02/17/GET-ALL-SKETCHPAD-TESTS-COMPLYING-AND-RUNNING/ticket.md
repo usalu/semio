@@ -46,3 +46,24 @@ Sketchpad tests now comply and run end-to-end; resolved Design test timeout by r
 ## Plan
 
 Completed. No remaining actions for this ticket.
+
+## Reopen 2026-02-25
+
+### Summary
+
+Reopened to restore sketchpad e2e execution in current environment and re-verify full sketchpad test compliance.
+
+### Findings
+
+- Current run fails before app assertions with Playwright browser launch error:
+  - `browserType.launch: Failed to launch chromium because executable doesn't exist at /usr/bin/google-chrome-stable`.
+- Root cause is `executablePath` hardcoded to a non-existent system Chrome binary in `semio/js/playwright.config.ts`.
+
+### Todos
+
+- [x] Reproduce current sketchpad test failure.
+- [x] Isolate launch blocker in Playwright configuration.
+- [ ] Patch configuration in existing file.
+- [ ] Re-run sketchpad e2e suite.
+- [ ] Run unit suite for regression coverage.
+- [ ] Close ticket with updated summary/files.

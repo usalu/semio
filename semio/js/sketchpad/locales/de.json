@@ -640,6 +640,12 @@
             "beginner": "Kind hinzufügen"
           }
         },
+        "duplicateType": {
+          "label": {
+            "normal": "Typ duplizieren",
+            "beginner": "Typ duplizieren"
+          }
+        },
         "addType": {
           "label": {
             "normal": "Typ hinzufügen",

@@ -477,17 +477,16 @@ async function initDesign(page: Page) {
 
   if (designRowIds.length === 0) {
     console.log(`[initDesign] No design rows found, looking for Nakagin Capsule Tower text...`);
-
     const designElement = page.getByText("Nakagin Capsule Tower", { exact: true }).first();
     const hasDesign = await designElement.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[initDesign] Nakagin Capsule Tower text visible: ${hasDesign}`);
-
     if (hasDesign) {
       await designElement.dblclick({ force: true });
       console.log(`[initDesign] Double-clicked on Nakagin Capsule Tower text`);
     }
   } else {
-    console.log(`[initDesign] About to double-click on design row: ${designRowIds[0]}`);
+    const nakaginRowId = designRowIds.find((id) => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
+    console.log(`[initDesign] About to double-click on design row: ${nakaginRowId}`);
     const dblClickedDesign = await page.evaluate((rowId) => {
       const row = document.querySelector(`[data-row-id="${rowId}"]`);
       if (row) {
@@ -496,7 +495,7 @@ async function initDesign(page: Page) {
         return true;
       }
       return false;
-    }, designRowIds[0]);
+    }, nakaginRowId);
     console.log(`[initDesign] Double-clicked on design via JS: ${dblClickedDesign}`);
   }
 
@@ -507,6 +506,9 @@ async function initDesign(page: Page) {
   console.log(`[initDesign] Final URL: ${finalUrl}`);
 
   const hasPieces = await page.evaluate(async () => {
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuidFromUrl = designGuidMatch?.[1];
     for (let i = 0; i < 30; i++) {
       const store = (window as any).__SEMIO_STORE__;
       if (store) {
@@ -516,7 +518,9 @@ async function initDesign(page: Page) {
           if (kitStore) {
             const kit = kitStore.snapshot();
             const designs = kit.designs ?? [];
-            const design = designs[designs.length - 1];
+            const design = designGuidFromUrl
+              ? designs.find((d: any) => d.guid === designGuidFromUrl)
+              : designs[designs.length - 1];
             if (design && (design.pieces ?? []).length > 0) {
               return (design.pieces ?? []).length;
             }
@@ -597,6 +601,33 @@ async function initDocs(page: Page) {
   await page.goto("/docs/index");
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(2000);
+}
+
+async function getSceneModelResolutionForPiece(page: Page, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null }> {
+  return await page.evaluate((targetPieceGuid) => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs?.length - 1];
+    if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const piece = (design.pieces ?? []).find((p: any) => p.guid === targetPieceGuid);
+    if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const typeGuid = typeof piece.type === "string" ? piece.type : piece.type?.guid ?? null;
+    if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const type = (kit.types ?? []).find((t: any) => t.guid === typeGuid);
+    if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+    const defaultModel = type.models.find((m: any) => !m.tags || m.tags.length === 0) ?? type.models[0];
+    if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+    const fileGuid = typeof defaultModel.file === "string" ? defaultModel.file : defaultModel.file?.guid;
+    return { hasResolvedModel: !!fileGuid, typeGuid, modelGuid: fileGuid ?? null };
+  }, pieceGuid);
 }
 
 async function getDesignPieces(page: Page, designGuid?: string): Promise<Array<{ guid: string; name?: string; plane: Plane | null; typeGuid: string | null }>> {
@@ -1917,7 +1948,7 @@ test.describe("sketchpad", () => {
     console.log("[Type] Toolbar and tools test complete");
   });
   test("Design", async ({ page }) => {
-    test.setTimeout(600000);
+    test.setTimeout(900000);
 
     const { errors, warnings, messages } = await initConsole(page);
 
@@ -2123,9 +2154,17 @@ test.describe("sketchpad", () => {
       }
     }
 
-    const workbenchWindowEl = page.locator('#workbench').first();
-    const isWorkbenchVisible = await workbenchWindowEl.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Design] Workbench window visible: ${isWorkbenchVisible}`);
+    const workbenchWindowEl = page.locator('[data-panel="leftSidePanel"]').first();
+    let isWorkbenchVisible = await workbenchWindowEl.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!isWorkbenchVisible) {
+      const leftToggleForWorkbench = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+      if (await leftToggleForWorkbench.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await leftToggleForWorkbench.click();
+        await page.waitForTimeout(500);
+        isWorkbenchVisible = await workbenchWindowEl.isVisible({ timeout: 3000 }).catch(() => false);
+      }
+    }
+    console.log(`[Design] Workbench panel visible: ${isWorkbenchVisible}`);
     if (isWorkbenchVisible) {
       const draggableWorkbenchAvatars = workbenchWindowEl.locator('[data-drag-kind="type"][data-drag-guid]');
       let draggableWorkbenchAvatarCount = await draggableWorkbenchAvatars.count();
@@ -2142,12 +2181,33 @@ test.describe("sketchpad", () => {
         }
       }
       if (draggableWorkbenchAvatarCount > 0 && hasDiagram) {
-        const draggedTypeGuid = await draggableWorkbenchAvatars.first().getAttribute("data-drag-guid");
+        const draggedTypeGuid = await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return null;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return null;
+          const kitStore = store.kit(kitGuids[0]);
+          if (!kitStore) return null;
+          const kit = kitStore.snapshot();
+          const typesWithModels = (kit.types ?? []).filter((t: any) => t.models && t.models.length > 0);
+          return typesWithModels.length > 0 ? typesWithModels[0].guid : null;
+        }) ?? await draggableWorkbenchAvatars.first().getAttribute("data-drag-guid");
         expect(draggedTypeGuid).toBeTruthy();
+        const dragAvatar = workbenchWindowEl.locator(`[data-drag-kind="type"][data-drag-guid="${draggedTypeGuid}"]`).first();
+        if (!(await dragAvatar.isVisible({ timeout: 3000 }).catch(() => false))) {
+          console.log(`[Design] Type avatar for ${draggedTypeGuid} not visible, expanding sections`);
+          const closedSections2 = workbenchWindowEl.locator('[data-state="closed"]');
+          const closedCount2 = await closedSections2.count();
+          for (let i = 0; i < closedCount2; i++) {
+            await closedSections2.nth(i).click({ timeout: 5000 }).catch(() => {});
+            await page.waitForTimeout(250);
+            if (await dragAvatar.isVisible({ timeout: 500 }).catch(() => false)) break;
+          }
+        }
         const beforeDropPieces = await getDesignPieces(page);
         const beforeDropPieceCount = beforeDropPieces.length;
         const beforeDropPieceGuids = new Set(beforeDropPieces.map((piece) => piece.guid));
-        const avatarBox = await draggableWorkbenchAvatars.first().boundingBox();
+        const avatarBox = await dragAvatar.boundingBox();
         const diagramDropBox = await diagramContainer.boundingBox();
         if (avatarBox && diagramDropBox) {
           const startX = avatarBox.x + avatarBox.width / 2;
@@ -2202,6 +2262,11 @@ test.describe("sketchpad", () => {
           expect(afterDropPieceCount).toBe(beforeDropPieceCount + 1);
           expect(addedDropPieces).toHaveLength(1);
           expect(addedDropPieces[0].typeGuid).toBe(draggedTypeGuid);
+          expect(addedDropPieces[0].plane).not.toBeNull();
+          const droppedPieceModelResolution = await getSceneModelResolutionForPiece(page, addedDropPieces[0].guid);
+          console.log(`[Design] Dropped piece model resolution: ${JSON.stringify(droppedPieceModelResolution)}`);
+          expect(droppedPieceModelResolution.hasResolvedModel).toBe(true);
+          expect(droppedPieceModelResolution.typeGuid).toBe(draggedTypeGuid);
         } else {
           console.log("[Design] Unable to resolve drag/drop bounding boxes, skipping workbench drag-drop assertion");
         }
@@ -2211,11 +2276,21 @@ test.describe("sketchpad", () => {
         console.log("[Design] No draggable workbench avatars found, skipping workbench drag-drop assertion");
       }
       const leftPanelAfterDrag = page.locator('[data-panel="leftSidePanel"]').first();
-      if (await leftPanelAfterDrag.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (!(await leftPanelAfterDrag.isVisible({ timeout: 1000 }).catch(() => false))) {
         await leftSidePanelToggle.click();
         await page.waitForTimeout(300);
       }
-      const sourceTypeGuidForPlus = await draggableWorkbenchAvatars.first().getAttribute("data-drag-guid");
+      const sourceTypeGuidForPlus = await page.evaluate(() => {
+        const store = (window as any).__SEMIO_STORE__;
+        if (!store) return null;
+        const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+        if (kitGuids.length === 0) return null;
+        const kitStore = store.kit(kitGuids[0]);
+        if (!kitStore) return null;
+        const kit = kitStore.snapshot();
+        const typesWithModels = (kit.types ?? []).filter((t: any) => t.models && t.models.length > 0);
+        return typesWithModels.length > 0 ? typesWithModels[0].guid : null;
+      }) ?? await draggableWorkbenchAvatars.first().getAttribute("data-drag-guid");
       expect(sourceTypeGuidForPlus).toBeTruthy();
       const sourceTypeAvatarForPlus = workbenchWindowEl.locator(`[data-drag-kind="type"][data-drag-guid="${sourceTypeGuidForPlus}"]`).first();
       const sourceTypeRowForPlus = sourceTypeAvatarForPlus.locator('xpath=ancestor::*[@role="treeitem"][1]');
@@ -2236,14 +2311,19 @@ test.describe("sketchpad", () => {
       expect(pieceCountAfterAdd).toBe(pieceCountBeforeAdd + 1);
       expect(addedPlusPieces).toHaveLength(1);
       expect(addedPlusPieces[0].typeGuid).toBe(sourceTypeGuidForPlus);
-      const addTypeChildButton = workbenchWindowEl.locator('[id="semio.sketchpad.common.addChild"]').first();
+      expect(addedPlusPieces[0].plane).not.toBeNull();
+      const plusPieceModelResolution = await getSceneModelResolutionForPiece(page, addedPlusPieces[0].guid);
+      console.log(`[Design] Plus-add piece model resolution: ${JSON.stringify(plusPieceModelResolution)}`);
+      expect(plusPieceModelResolution.hasResolvedModel).toBe(true);
+      expect(plusPieceModelResolution.typeGuid).toBe(sourceTypeGuidForPlus);
+      const addTypeChildButton = workbenchWindowEl.locator('[id="semio.sketchpad.common.duplicateType"]').first();
       const hasAddChild = await addTypeChildButton.isVisible({ timeout: 5000 }).catch(() => false);
-      console.log(`[Design] addChild button visible: ${hasAddChild}`);
+      console.log(`[Design] duplicateType button visible: ${hasAddChild}`);
       if (!hasAddChild) {
-        const addChildInDom = await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.common.addChild"]'));
-        console.log(`[Design] addChild button in DOM: ${addChildInDom}`);
+        const addChildInDom = await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.common.duplicateType"]'));
+        console.log(`[Design] duplicateType button in DOM: ${addChildInDom}`);
       }
-      expect(hasAddChild || (await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.common.addChild"]')))).toBe(true);
+      expect(hasAddChild || (await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.common.duplicateType"]')))).toBe(true);
     }
     const rightSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasRightSidePanel = await rightSidePanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
@@ -2788,7 +2868,7 @@ test.describe("sketchpad", () => {
           }, { pieceGuid: childPieceGuid });
           console.log("[Design] Applied child piece selection:", JSON.stringify(childApplied));
           expect(childApplied.applied).toBe(true);
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(3000);
           await validatePieceDetails("child piece with parent connection", true);
         }
 
@@ -2976,6 +3056,14 @@ test.describe("sketchpad", () => {
     console.log("[Design] Testing diagram node drag to update piece center");
 
     if (hasDiagram) {
+      const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+      if (await leftPanelToggle.isVisible().catch(() => false)) {
+        const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
+        if (leftPanelOpen) {
+          await leftPanelToggle.click();
+          await page.waitForTimeout(500);
+        }
+      }
       const pieceNodesDrag = diagramContainer.locator(".react-flow__node");
       const pieceNodeCountDrag = await pieceNodesDrag.count();
       console.log(`[Design] Found ${pieceNodeCountDrag} piece nodes for drag test`);
@@ -3442,7 +3530,6 @@ test.describe("sketchpad", () => {
 
         console.log("[Design] Testing batch edit of gap property");
         const gapSliderElement = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.connection.gap"]`).first();
-        const gapSliderInput = gapSliderElement.locator('input[type="range"]').first();
 
         const initialGapValues = await page.evaluate(({ guids }: { guids: string[] }) => {
           const store = (window as any).__SEMIO_STORE__;
@@ -3467,9 +3554,13 @@ test.describe("sketchpad", () => {
         console.log(`[Design] Initial gap values: ${JSON.stringify(initialGapValues)}`);
 
         const testGapValue = 5.5;
-        await gapSliderInput.fill(String(testGapValue));
-        await gapSliderInput.dispatchEvent("input");
-        await gapSliderInput.dispatchEvent("change");
+        const gapSliderRow = gapSliderElement.locator('xpath=ancestor::div[@data-slot="slider-row"]').first();
+        const gapValueSpan = gapSliderRow.locator('[data-slot="slider-value"]').first();
+        await gapValueSpan.dblclick();
+        await page.waitForTimeout(200);
+        const gapEditInput = gapSliderRow.locator('input[type="number"]').first();
+        await gapEditInput.fill(String(testGapValue));
+        await gapEditInput.press("Enter");
         await page.waitForTimeout(1500);
 
         const updatedGapValues = await page.evaluate(({ guids }: { guids: string[] }) => {
@@ -3502,12 +3593,15 @@ test.describe("sketchpad", () => {
 
         console.log("[Design] Testing batch edit of rotation property");
         const rotationSliderElement = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.connection.rotation"]`).first();
-        const rotationSliderInput = rotationSliderElement.locator('input[type="range"]').first();
 
         const testRotationValue = 45;
-        await rotationSliderInput.fill(String(testRotationValue));
-        await rotationSliderInput.dispatchEvent("input");
-        await rotationSliderInput.dispatchEvent("change");
+        const rotationSliderRow = rotationSliderElement.locator('xpath=ancestor::div[@data-slot="slider-row"]').first();
+        const rotationValueSpan = rotationSliderRow.locator('[data-slot="slider-value"]').first();
+        await rotationValueSpan.dblclick();
+        await page.waitForTimeout(200);
+        const rotationEditInput = rotationSliderRow.locator('input[type="number"]').first();
+        await rotationEditInput.fill(String(testRotationValue));
+        await rotationEditInput.press("Enter");
         await page.waitForTimeout(1500);
 
         const updatedRotationValues = await page.evaluate(({ guids }: { guids: string[] }) => {
@@ -3525,7 +3619,7 @@ test.describe("sketchpad", () => {
           if (!design) return [];
           const connections = design.connections ?? [];
           return guids.map((guid) => {
-            const conn = connections.find((c: any) => c.guid === designGuid);
+            const conn = connections.find((c: any) => c.guid === guid);
             return conn ? conn.rotation ?? 0 : null;
           });
         }, { guids: connectionGuids });

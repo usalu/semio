@@ -6481,14 +6481,12 @@ export class KitStore {
 
   async storeFileBlobs(blobs: Map<string, Blob>): Promise<void> {
     const pathMap = this.buildFilePathMap();
-    let hasStoredBlob = false;
 
     for (const [path, blob] of blobs) {
       const fileGuid = pathMap.get(path);
       if (fileGuid) {
         const objectUrl = URL.createObjectURL(blob);
         this.regularFiles.set(path, objectUrl);
-        hasStoredBlob = true;
 
         if (this.fileProvider) {
           try {
@@ -6502,9 +6500,6 @@ export class KitStore {
           }
         }
       }
-    }
-    if (hasStoredBlob) {
-      this.updated();
     }
   }
 
@@ -14528,6 +14523,7 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
  **/
 export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sections, setSections] = useState<PanelSections>({
+    workbench: [],
     details: [],
     tools: [],
     hud: [],
@@ -17329,6 +17325,7 @@ const LayoutWrapper: FC = () => {
   const appType = useAppType();
   const panelSizes = usePanelSizes();
   const footerItems = useFooterItems();
+  const workbenchSections = usePanelSections("workbench");
   const toolsSections = usePanelSections("tools");
   const toolbarSections = usePanelSections("toolbar");
   const statsSections = usePanelSections("stats");
@@ -17347,6 +17344,7 @@ const LayoutWrapper: FC = () => {
 
   // Create mapping from PanelKind to sections
   const sectionsByKind: Record<PanelKind, PanelSection[]> = {
+    [PanelKind.WORKBENCH]: workbenchSections,
     [PanelKind.TOOLS]: toolsSections,
     [PanelKind.TOOLBAR]: toolbarSections,
     [PanelKind.STATS]: statsSections,
@@ -17401,6 +17399,7 @@ const LayoutWrapper: FC = () => {
     panelConfigs,
     addSidePanelTab,
     removeSidePanelTab,
+    workbenchSections,
     toolsSections,
     toolbarSections,
     statsSections,
@@ -17714,6 +17713,69 @@ const LayoutWrapper: FC = () => {
 
   const activeInteraction = useActiveInteraction();
   const panelOpacity = activeInteraction === "dragging" ? 0.3 : 1;
+  const rightSidePanelElementSizingClassName = [
+    "[&_[data-slot='side-panel-tabs']]:h-medium",
+    "[&_[data-slot='side-panel-tab-button']]:px-small",
+    "[&_[data-slot='side-panel-tab-button']_svg]:size-small",
+    "[&_[data-slot='side-panel-content']]:p-[10px]",
+    "[&_[data-slot='tree-content']]:!pl-0",
+    "[&_[data-slot='tree-item-row']]:min-h-[24px]",
+    "[&_[data-slot='tree-item-row']]:py-0",
+    "[&_[data-slot='tree-item-row']]:items-center",
+    "[&_[data-slot='tree-section-row']]:h-[20px]",
+    "[&_[data-slot='tree-section-row']]:py-0",
+    "[&_[data-slot='tree-section-row']]:mt-[12px]",
+    "[&_[data-slot='tree-label']]:text-xs",
+    "[&_[data-slot='tree-label']]:tracking-[0.04em]",
+    "[&_[data-slot='property-row']]:grid",
+    "[&_[data-slot='property-row']]:h-[24px]",
+    "[&_[data-slot='property-row']]:grid-cols-[96px_minmax(0,1fr)]",
+    "[&_[data-slot='property-row']]:items-center",
+    "[&_[data-slot='property-row']]:gap-x-[8px]",
+    "[&_[data-slot='property-label']]:min-w-0",
+    "[&_[data-slot='property-label']]:px-0",
+    "[&_[data-slot='property-label']]:text-xs",
+    "[&_[data-slot='property-label']]:font-normal",
+    "[&_[data-slot='input']]:!h-[22px]",
+    "[&_[data-slot='input']]:rounded-[3px]",
+    "[&_[data-slot='input']]:px-[6px]",
+    "[&_[data-slot='input']]:text-xs",
+    "[&_[data-slot='select-trigger']]:!h-[22px]",
+    "[&_[data-slot='select-trigger']]:w-full",
+    "[&_[data-slot='select-trigger']]:rounded-[3px]",
+    "[&_[data-slot='select-trigger']]:px-[6px]",
+    "[&_[data-slot='select-trigger']]:text-xs",
+    "[&_[data-slot='select-trigger']_svg]:size-[12px]",
+    "[&_[data-slot='stepper-group']]:h-[22px]",
+    "[&_[data-slot='stepper-group']]:w-[100px]",
+    "[&_[data-slot='stepper-group']]:rounded-[3px]",
+    "[&_[data-slot='stepper-minus']]:h-[22px]",
+    "[&_[data-slot='stepper-minus']]:w-[22px]",
+    "[&_[data-slot='stepper-plus']]:h-[22px]",
+    "[&_[data-slot='stepper-plus']]:w-[22px]",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!h-[22px]",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!w-[56px]",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!min-w-[56px]",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!px-0",
+    "[&_[data-slot='slider-row']]:h-[24px]",
+    "[&_[data-slot='slider-row']]:grid-cols-[minmax(0,130px)_28px]",
+    "[&_[data-slot='slider-row']]:items-center",
+    "[&_[data-slot='slider-row']]:gap-x-[8px]",
+    "[&_[data-slot='slider-track-cell']]:max-w-[130px]",
+    "[&_[data-slot='slider-value']]:w-[28px]",
+    "[&_[data-slot='slider-value']]:text-right",
+    "[&_[data-slot='button-group-item']]:h-medium",
+    "[&_[data-slot='textarea']]:text-xs",
+    "[&_[data-slot='textarea']]:rounded-[3px]",
+    "[&_[data-slot='textarea']]:px-[6px]",
+    "[&_[data-slot='textarea']]:py-[3px]",
+    "[&_[data-slot='textarea']]:min-h-[44px]",
+    "[&_[role='combobox']]:!h-[22px]",
+    "[&_[role='combobox']]:rounded-[3px]",
+    "[&_[role='combobox']]:px-[6px]",
+    "[&_[role='combobox']]:text-xs",
+    "[&_[role='combobox']_svg]:size-[12px]",
+  ].join(" ");
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<any>(null);
@@ -17903,6 +17965,9 @@ const LayoutWrapper: FC = () => {
                       ],
                       activeTabId: "chat",
                       onActiveTabChange: () => {},
+                      minSize: 150,
+                      maxSize: 500,
+                      className: rightSidePanelElementSizingClassName,
                     }
                   : panelVisibility.settings
                     ? {
@@ -17925,6 +17990,9 @@ const LayoutWrapper: FC = () => {
                         ],
                         activeTabId: "settings",
                         onActiveTabChange: () => {},
+                        minSize: 150,
+                        maxSize: 500,
+                        className: rightSidePanelElementSizingClassName,
                       }
                     : rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
                       ? {
@@ -17935,6 +18003,9 @@ const LayoutWrapper: FC = () => {
                           tabs: rightSidePanelTabs,
                           activeTabId: activeRightTabId,
                           onActiveTabChange: setActiveRightTabId,
+                          minSize: 150,
+                          maxSize: 500,
+                          className: rightSidePanelElementSizingClassName,
                         }
                       : undefined
               }

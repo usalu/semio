@@ -6,7 +6,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Complete gap analysis of detail panel: all 4 sections (Design, Piece, Connection, Connector) are FULLY MIGRATED with parity. New build adds plane xAxis/yAxis editing for pieces. Documented 14 schema properties not exposed in either build as enhancement opportunities. Key additions: piece.name, piece.props[], piece.attributes[], connection.description, connection.attributes[].
+Comprehensive gap analysis of the detail panel comparing old build (Design.Details.tsx.old) vs new build (Design.tsx) across all entity types: Design, Piece, Connection, Connector/Port.
+
 ## Plan
 
 1. Read all Zod schemas in semio.ts for canonical property definitions

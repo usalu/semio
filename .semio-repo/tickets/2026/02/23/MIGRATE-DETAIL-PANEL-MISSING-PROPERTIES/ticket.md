@@ -6,7 +6,7 @@ goal: R26-02/RUNNING-SKETCHPAD
 
 ## Summary
 
-Phase 3: Added Connecting/Connected TreeItem grouping to SingleConnectionInfo, added i18n keys for group labels, translated remaining German labels. All old build features fully migrated. TypeScript 0 errors, 13/13 tests pass.
+Completed full migration of old build detail panel features. Phase 1: piece name/description/scale/color/attributes, connection description, connector name/t. Phase 2: piece count and connection count metadata, Editing N connections message, nested connection field grouping (Plane>Translation/Orientation, Diagram). Phase 3: Connecting/Connected TreeItem grouping in SingleConnectionInfo, German translations for connector fields. All i18n in en+de. TypeScript 0 errors, 13/13 tests pass.
 ## Changes
 
 - `semio/js/sketchpad/Design.tsx`: Added piece name/description/scale/color/attributes fields to PiecesSectionForm. Added connection description to SingleConnectionFields and ConnectionsSectionForm (bulk). Added connector name and t fields to ConnectorSectionForm. Added piece count and connection count metadata to DesignSectionForm. Added "Editing N connections simultaneously" message to bulk connection editing. Restructured connection fields (gap/shift/rise, rotation/turn/tilt, u/v) into nested TreeItem groups (Plane > Translation, Plane > Orientation, Diagram). Wrapped SingleConnectionInfo connecting/connected fields under "Connecting" and "Connected" TreeItem groups.
