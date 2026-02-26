@@ -2,12 +2,12 @@
   "title": "Refactor EntityId and Diff Schemas",
   "status": "closed",
   "prompt": "Refactor EntityId and Diff Schemas",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.836Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

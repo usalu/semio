@@ -1,17 +1,17 @@
 {
   "title": "RULE-GENERALIZATION",
   "status": "closed",
-  "prompt": "\u003ee-",
-  "goal": "AI-OPTIMIZED-REPO",
+  "prompt": ">e-",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-26T23:23:12.673Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "fb102e545bdc3ee63de0e3d93cf631da7fa2fe7c",
-      "prompt": "\u003ee-",
+      "prompt": ">e-",
       "llm": "sonnet-4-5"
     }
   ]

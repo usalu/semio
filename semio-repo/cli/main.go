@@ -998,8 +998,8 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-script", false, "Exclude script files")
 	cmd.Flags().Bool("only-config", false, "Only show config files")
 	cmd.Flags().Bool("no-config", false, "Exclude config files")
-	cmd.Flags().Bool("only-test", false, "Only show test files")
-	cmd.Flags().Bool("no-test", false, "Exclude test files")
+	cmd.Flags().Bool("only-lab", false, "Only show lab files")
+	cmd.Flags().Bool("no-lab", false, "Exclude lab files")
 	cmd.Flags().Bool("only-docs", false, "Only show docs files")
 	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
 	cmd.Flags().Bool("only-resource", false, "Only show resource files")
@@ -1115,7 +1115,7 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 		{"only-code", "no-code", TreeNodeFile, FileKindCode},
 		{"only-script", "no-script", TreeNodeFile, FileKindScript},
 		{"only-config", "no-config", TreeNodeFile, FileKindConfig},
-		{"only-test", "no-test", TreeNodeFile, FileKindTest},
+		{"only-lab", "no-lab", TreeNodeFile, FileKindLab},
 		{"only-docs", "no-docs", TreeNodeFile, FileKindDocs},
 		{"only-resource", "no-resource", TreeNodeFile, FileKindResource},
 		{"only-license", "no-license", TreeNodeFile, FileKindLicense},
@@ -3278,7 +3278,7 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-code", false, "Exclude code files")
 	cmd.Flags().Bool("no-script", false, "Exclude script files")
 	cmd.Flags().Bool("no-config", false, "Exclude config files")
-	cmd.Flags().Bool("no-test", false, "Exclude test files")
+	cmd.Flags().Bool("no-lab", false, "Exclude lab files")
 	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
 	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
 	cmd.Flags().Bool("no-license", false, "Exclude license files")
@@ -3286,7 +3286,7 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("only-code", false, "Only show code files")
 	cmd.Flags().Bool("only-script", false, "Only show script files")
 	cmd.Flags().Bool("only-config", false, "Only show config files")
-	cmd.Flags().Bool("only-test", false, "Only show test files")
+	cmd.Flags().Bool("only-lab", false, "Only show lab files")
 	cmd.Flags().Bool("only-docs", false, "Only show docs files")
 	cmd.Flags().Bool("only-resource", false, "Only show resource files")
 	cmd.Flags().Bool("only-license", false, "Only show license files")
@@ -3401,8 +3401,8 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	if v, _ := cmd.Flags().GetBool("no-config"); v {
 		excludeKinds = append(excludeKinds, FileKindConfig)
 	}
-	if v, _ := cmd.Flags().GetBool("no-test"); v {
-		excludeKinds = append(excludeKinds, FileKindTest)
+	if v, _ := cmd.Flags().GetBool("no-lab"); v {
+		excludeKinds = append(excludeKinds, FileKindLab)
 	}
 	if v, _ := cmd.Flags().GetBool("no-docs"); v {
 		excludeKinds = append(excludeKinds, FileKindDocs)
@@ -3424,8 +3424,8 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	if v, _ := cmd.Flags().GetBool("only-config"); v {
 		includeKinds = append(includeKinds, FileKindConfig)
 	}
-	if v, _ := cmd.Flags().GetBool("only-test"); v {
-		includeKinds = append(includeKinds, FileKindTest)
+	if v, _ := cmd.Flags().GetBool("only-lab"); v {
+		includeKinds = append(includeKinds, FileKindLab)
 	}
 	if v, _ := cmd.Flags().GetBool("only-docs"); v {
 		includeKinds = append(includeKinds, FileKindDocs)
@@ -4104,7 +4104,7 @@ var EntityKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
 	"project", "bundle", "folder", "file", "line", "range",
 	"section", "definition", "goal", "ticket", "draft", "todo",
-	"policy", "breach", "contributor", "commit", "interaction",
+	"policy", "breach", "contributor", "commit", "interaction", "session",
 }
 
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨resourcekinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/ResourceKinds)
@@ -4118,7 +4118,7 @@ var ResourceKinds = []string{
 var DiffableKinds = []string{
 	"root", "year", "month", "day", "hour",
 	"project", "bundle", "folder", "file", "section", "definition",
-	"goal", "ticket", "contributor", "commit", "interaction",
+	"goal", "ticket", "contributor", "commit", "interaction", "session",
 }
 
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨relatedtofilekinds](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Models/Monorepo%20Tree%20Types/RelatedToFileKinds)
@@ -4126,7 +4126,7 @@ var DiffableKinds = []string{
 var RelatedToFileKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
 	"project", "bundle", "folder", "goal", "ticket", "draft", "todo",
-	"policy", "breach", "contributor", "commit", "interaction",
+	"policy", "breach", "contributor", "commit", "interaction", "session",
 }
 
 // TreeNodeKind represents a tree node kind value.
@@ -4148,6 +4148,7 @@ const (
 	TreeNodeBreach      TreeNodeKind = "breach"
 	TreeNodeContributor TreeNodeKind = "contributor"
 	TreeNodeCommit      TreeNodeKind = "commit"
+	TreeNodeSession     TreeNodeKind = "session"
 	TreeNodeStatute     TreeNodeKind = "statute"
 	TreeNodeCategory    TreeNodeKind = "category"
 )
@@ -4716,9 +4717,10 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	var commits []Commit
 	var allFolders []Folder
 	var allFiles []File
+	var sessions []Session
 
 	var wg sync.WaitGroup
-	wg.Add(8)
+	wg.Add(9)
 
 	go func() {
 		defer wg.Done()
@@ -4771,6 +4773,14 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		go func() { StreamFiles(ctx, "", fileCh) }()
 		for f := range fileCh {
 			allFiles = append(allFiles, f)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		sessionCh := make(chan Session)
+		go func() { StreamSessions(ctx, sessionCh) }()
+		for s := range sessionCh {
+			sessions = append(sessions, s)
 		}
 	}()
 	wg.Wait()
@@ -5024,7 +5034,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, policiesNode)
 
-	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "👤Contributors", URI: "semiorepo://cs"}
+	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "🧑‍💻Contributors", URI: "semiorepo://cs"}
 	sort.Slice(contributors, func(i, j int) bool { return contributors[i].Github < contributors[j].Github })
 	for _, c := range contributors {
 		label := c.Github
@@ -5064,6 +5074,39 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		commitsNode.Children = append(commitsNode.Children, cNode)
 	}
 	root.Children = append(root.Children, commitsNode)
+
+	sessionsNode := &TreeNode{Kind: TreeNodeCategory, ID: "sessions", Label: "⚪Sessions", URI: "semiorepo://s"}
+	sort.Slice(sessions, func(i, j int) bool { return sessions[i].StartedAt > sessions[j].StartedAt })
+	for si := range sessions {
+		s := &sessions[si]
+		kindEmoji := SessionKindEmoji(s.Kind)
+		label := kindEmoji + " " + s.UUID
+		if s.Client != "" {
+			label += " (" + s.Client + ")"
+		}
+		sNode := &TreeNode{
+			Kind:    TreeNodeSession,
+			ID:      s.GetID(),
+			Label:   label,
+			URI:     s.GetURI(),
+			SubKind: string(s.Kind),
+			Year:    s.Year,
+			Month:   s.Month,
+			Day:     s.Day,
+			Status:  string(s.Kind),
+			Data: map[string]interface{}{
+				"uuid":      s.UUID,
+				"kind":      string(s.Kind),
+				"client":    s.Client,
+				"startedAt": s.StartedAt,
+				"year":      float64(s.Year),
+				"month":     float64(s.Month),
+				"day":       float64(s.Day),
+			},
+		}
+		sessionsNode.Children = append(sessionsNode.Children, sNode)
+	}
+	root.Children = append(root.Children, sessionsNode)
 
 	PropagateParentIDs(root, "")
 	return root
@@ -5561,6 +5604,8 @@ func treeNodeKindToEntityKind(k TreeNodeKind) string {
 		return "contributor"
 	case TreeNodeCommit:
 		return "commit"
+	case TreeNodeSession:
+		return "session"
 	case TreeNodeCategory:
 		return ""
 	}
@@ -6864,8 +6909,8 @@ func mermaidBundleEmoji(kind BundleKind) string {
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidfileemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidFileEmoji)
 func mermaidFileEmoji(kind string) string {
 	switch kind {
-	case FileKindTest:
-		return EmojiFileTest
+	case FileKindLab:
+		return EmojiFileLab
 	case FileKindScript:
 		return EmojiFileScript
 	case FileKindDocs:
@@ -7856,7 +7901,7 @@ const (
 	FileKindCode     = "code"
 	FileKindScript   = "script"
 	FileKindConfig   = "config"
-	FileKindTest     = "test"
+	FileKindLab      = "lab"
 	FileKindDocs     = "docs"
 	FileKindResource = "resource"
 	FileKindLicense  = "license"
@@ -7879,7 +7924,7 @@ const (
 	EmojiFolderRequired       = "🛅"
 	EmojiFolderRoot           = "🌱"
 	EmojiFileCode             = "💻"
-	EmojiFileTest             = "🧪"
+	EmojiFileLab              = "🥼"
 	EmojiFileScript           = "📜"
 	EmojiFileDocs             = "📃"
 	EmojiFileConfig           = "⚙️"
@@ -7910,6 +7955,10 @@ const (
 	EmojiInteractionFinished  = "✅"
 	EmojiInteractionRestarted = "🔁"
 	EmojiInteractionDeleted   = "🗑️"
+	EmojiSession              = "⚪"
+	EmojiSessionRunning       = "🟡"
+	EmojiSessionCompleted     = "🟢"
+	EmojiSessionInterrupted   = "🔴"
 )
 
 var (
@@ -7934,6 +7983,7 @@ var (
 	EmojiBreaches     = "🚫"
 	EmojiContributors = "🧑‍💻"
 	EmojiCommits      = "🔀"
+	EmojiSessions     = "⚪"
 	EmojiInteractions = ""
 	EmojiTerritorys   = ""
 	EmojiTerritory    = ""
@@ -7960,7 +8010,7 @@ func DeriveFileKind(name string) string {
 		strings.HasSuffix(nameNoExt, ".benchmark") ||
 		strings.HasSuffix(nameNoExt, ".stories") || strings.HasSuffix(nameNoExt, ".story") ||
 		strings.HasPrefix(nameLower, "test_") || strings.HasPrefix(nameLower, "test.") || nameLower == "conftest.py" {
-		return FileKindTest
+		return FileKindLab
 	}
 
 	if strings.HasSuffix(nameNoExt, ".config") || strings.HasSuffix(nameNoExt, ".conf") ||
@@ -8462,7 +8512,44 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	if t.Status == "" {
 		t.Status = TicketStatusOpen
 	}
+	// Convert emoji-format goal ID back to filesystem path for internal use.
+	if t.Goal != "" && strings.Contains(t.Goal, emojiText(EmojiGoal)) {
+		t.Goal = semioIDToGoalPath(t.Goal)
+	}
+	// Convert emoji-format author in interactions back to github username.
+	contributorPrefix := emojiText(EmojiContributor)
+	for i := range t.Interactions {
+		if strings.HasPrefix(t.Interactions[i].Author, contributorPrefix) {
+			t.Interactions[i].Author = semioIDToContributorGithub(t.Interactions[i].Author)
+		}
+	}
+	// Convert emoji-format contributor in agents back to github username.
+	for i := range t.Agents {
+		if strings.HasPrefix(t.Agents[i].Contributor, contributorPrefix) {
+			t.Agents[i].Contributor = semioIDToContributorGithub(t.Agents[i].Contributor)
+		}
+	}
 	return nil
+}
+
+// MarshalJSON converts internal filesystem paths to semio repo emoji IDs for serialization.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️marshaljsonticket](semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/MarshalJSONTicket)
+func (t Ticket) MarshalJSON() ([]byte, error) {
+	type TicketAlias Ticket
+	alias := TicketAlias(t)
+	// Convert goal path to emoji format.
+	if alias.Goal != "" && !strings.Contains(alias.Goal, emojiText(EmojiGoal)) {
+		alias.Goal = goalPathToSemioID(alias.Goal)
+	}
+	// Convert author in interactions to emoji format.
+	for i := range alias.Interactions {
+		alias.Interactions[i].Author = contributorGithubToSemioID(alias.Interactions[i].Author)
+	}
+	// Convert contributor in agents to emoji format.
+	for i := range alias.Agents {
+		alias.Agents[i].Contributor = contributorGithubToSemioID(alias.Agents[i].Contributor)
+	}
+	return json.Marshal(alias)
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -8513,13 +8600,6 @@ func (t *Ticket) GetPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Prompt
 	}
-	for _, a := range t.Agents {
-		for _, e := range a.Events {
-			if e.Kind == string(HookAgentPromptSubmitting) && e.Prompt != "" {
-				return e.Prompt
-			}
-		}
-	}
 	return ""
 }
 
@@ -8529,13 +8609,6 @@ func (t *Ticket) GetPrompt() string {
 func (t *Ticket) GetLatestPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Prompt
-	}
-	for i := len(t.Agents) - 1; i >= 0; i-- {
-		for j := len(t.Agents[i].Events) - 1; j >= 0; j-- {
-			if t.Agents[i].Events[j].Kind == string(HookAgentPromptSubmitting) && t.Agents[i].Events[j].Prompt != "" {
-				return t.Agents[i].Events[j].Prompt
-			}
-		}
 	}
 	return t.Description
 }
@@ -8631,18 +8704,6 @@ func (t *Ticket) GetDateStarted() time.Time {
 		}
 		if parsed, err := time.Parse(time.RFC3339, t.Interactions[0].Date); err == nil {
 			return parsed
-		}
-	}
-	if len(t.Agents) > 0 {
-		for _, e := range t.Agents[0].Events {
-			if e.Kind == string(HookAgentPromptSubmitting) && e.Timestamp != "" {
-				if parsed, err := time.Parse(time.RFC3339, e.Timestamp); err == nil {
-					return parsed
-				}
-				if parsed, err := time.Parse("2006-01-02 15:04:05", e.Timestamp); err == nil {
-					return parsed
-				}
-			}
 		}
 	}
 	return time.Date(t.Year, time.Month(t.Month), t.Day, 0, 0, 0, 0, time.UTC)
@@ -9541,12 +9602,26 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 // [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces](semiorepo://section/semio-repo/cli/main.go/Providers/Provider%20Interfaces)
 // Provider interfaces define contracts for composable integrations.
 
-// SourceControlProvider defines the interface for source control operations (GitHub, GitLab, BitBucket, ...).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️sourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/SourceControlProvider)
-type SourceControlProvider interface {
+// VersionControlProvider defines the interface for version control operations (Git, ...).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerinterfaces✂️versioncontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Interfaces/VersionControlProvider)
+type VersionControlProvider interface {
 	Kind() string
 	RepoURL() (string, error)
 	Configure(repoRoot string) error
+	// Checkpoint creates a versioned snapshot (e.g. git commit).
+	Checkpoint(repoRoot string, description string) (id string, err error)
+	// CurrentCheckpoint returns the current checkpoint id (e.g. git HEAD SHA).
+	CurrentCheckpoint(repoRoot string) (string, error)
+	// Checkin fast-forwards the contributor branch to the main branch (e.g. git fast-forward contributor/latest to main).
+	Checkin(repoRoot string, contributor string) error
+	// Checkout squash-merges the contributor branch into the main branch and creates an archive branch.
+	Checkout(repoRoot string, contributor string, description string) (id string, err error)
+	// CurrentBranch returns the current branch name.
+	CurrentBranch(repoRoot string) (string, error)
+	// StagedFiles returns the list of staged file paths.
+	StagedFiles(repoRoot string) ([]string, error)
+	// StageAll stages all changes.
+	StageAll(repoRoot string) error
 }
 
 // ManagementIssue holds the data fields for a management issue record.
@@ -9905,18 +9980,18 @@ func (p *NullManagementProvider) GetCurrentUser() string { return "" }
 
 // #endregion 🔖GitHub Management Provider
 
-// #region 🔖GitHub Source Control Provider
+// #region 🔖Git Version Control Provider
 
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubsourcecontrolprovider](semiorepo://section/semio-repo/cli/main.go/Providers/GitHub%20Source%20Control%20Provider)
-// GitHub implementation of SourceControlProvider using the gh CLI.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider](semiorepo://section/semio-repo/cli/main.go/Providers/Git%20Version%20Control%20Provider)
+// Git implementation of VersionControlProvider using git CLI commands.
 
-// GitHubSourceControlProvider holds the data fields for a github source control provider record.
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖githubsourcecontrolprovider✂️githubsourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/GitHub%20Source%20Control%20Provider/GitHubSourceControlProvider)
-type GitHubSourceControlProvider struct{}
+// GitVersionControlProvider holds the data fields for a git version control provider record.
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖gitversioncontrolprovider✂️gitversioncontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Git%20Version%20Control%20Provider/GitVersionControlProvider)
+type GitVersionControlProvider struct{}
 
-func (p *GitHubSourceControlProvider) Kind() string { return "github" }
+func (p *GitVersionControlProvider) Kind() string { return "git" }
 
-func (p *GitHubSourceControlProvider) RepoURL() (string, error) {
+func (p *GitVersionControlProvider) RepoURL() (string, error) {
 	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
 		return "", err
@@ -9924,9 +9999,141 @@ func (p *GitHubSourceControlProvider) RepoURL() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func (p *GitHubSourceControlProvider) Configure(repoRoot string) error { return nil }
+func (p *GitVersionControlProvider) Configure(repoRoot string) error { return nil }
 
-// #endregion 🔖GitHub Source Control Provider
+func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description string) (string, error) {
+	if _, _, exitCode := ExecCommand("git", []string{"diff", "--cached", "--quiet"}, repoRoot); exitCode == 0 {
+		if err := p.StageAll(repoRoot); err != nil {
+			return "", fmt.Errorf("stage all failed: %w", err)
+		}
+	}
+	args := []string{"commit", "-m", description}
+	stdout, stderr, exitCode := ExecCommand("git", args, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git commit failed (exit %d): %s", exitCode, strings.TrimSpace(stderr))
+	}
+	_ = stdout
+	sha, err := p.CurrentCheckpoint(repoRoot)
+	if err != nil {
+		return "", fmt.Errorf("failed to get commit sha after commit: %w", err)
+	}
+	return sha, nil
+}
+
+func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git rev-parse HEAD failed: %s", strings.TrimSpace(stderr))
+	}
+	return strings.TrimSpace(stdout), nil
+}
+
+func (p *GitVersionControlProvider) Checkin(repoRoot string, contributor string) error {
+	contributorBranch := contributor + "/latest"
+	// Fetch latest main
+	_, stderr, exitCode := ExecCommand("git", []string{"fetch", "origin", "main"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git fetch origin main failed: %s", strings.TrimSpace(stderr))
+	}
+	// Get current branch
+	currentBranch, err := p.CurrentBranch(repoRoot)
+	if err != nil {
+		return err
+	}
+	// If not on contributor branch, switch to it
+	if currentBranch != contributorBranch {
+		_, stderr, exitCode = ExecCommand("git", []string{"switch", contributorBranch}, repoRoot)
+		if exitCode != 0 {
+			// Branch may not exist, create it
+			_, stderr, exitCode = ExecCommand("git", []string{"switch", "-c", contributorBranch}, repoRoot)
+			if exitCode != 0 {
+				return fmt.Errorf("git switch to %s failed: %s", contributorBranch, strings.TrimSpace(stderr))
+			}
+		}
+	}
+	// Fast-forward to main
+	_, stderr, exitCode = ExecCommand("git", []string{"merge", "--ff-only", "origin/main"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git fast-forward merge to main failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func (p *GitVersionControlProvider) Checkout(repoRoot string, contributor string, description string) (string, error) {
+	contributorBranch := contributor + "/latest"
+	now := time.Now().UTC()
+	archiveBranch := fmt.Sprintf("%s/%04d/%02d/%02d", contributor, now.Year(), now.Month(), now.Day())
+
+	// Create archive branch from contributor/latest
+	_, stderr, exitCode := ExecCommand("git", []string{"branch", archiveBranch, contributorBranch}, repoRoot)
+	if exitCode != 0 {
+		// Archive branch may already exist, add a counter
+		for i := 2; i <= 99; i++ {
+			candidate := fmt.Sprintf("%s-%d", archiveBranch, i)
+			_, _, ec := ExecCommand("git", []string{"branch", candidate, contributorBranch}, repoRoot)
+			if ec == 0 {
+				archiveBranch = candidate
+				break
+			}
+		}
+	}
+
+	// Switch to main
+	_, stderr, exitCode = ExecCommand("git", []string{"switch", "main"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git switch to main failed: %s", strings.TrimSpace(stderr))
+	}
+
+	// Squash merge contributor branch into main
+	_, stderr, exitCode = ExecCommand("git", []string{"merge", "--squash", contributorBranch}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git squash merge failed: %s", strings.TrimSpace(stderr))
+	}
+
+	// Commit the squash merge
+	_, stderr, exitCode = ExecCommand("git", []string{"commit", "-m", description}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git commit squash merge failed: %s", strings.TrimSpace(stderr))
+	}
+
+	sha, err := p.CurrentCheckpoint(repoRoot)
+	if err != nil {
+		return "", err
+	}
+	return sha, nil
+}
+
+func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "--abbrev-ref", "HEAD"}, repoRoot)
+	if exitCode != 0 {
+		return "", fmt.Errorf("git rev-parse --abbrev-ref HEAD failed: %s", strings.TrimSpace(stderr))
+	}
+	return strings.TrimSpace(stdout), nil
+}
+
+func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"diff", "--cached", "--name-only"}, repoRoot)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff --cached --name-only failed: %s", strings.TrimSpace(stderr))
+	}
+	var files []string
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line != "" {
+			files = append(files, line)
+		}
+	}
+	return files, nil
+}
+
+func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
+	_, stderr, exitCode := ExecCommand("git", []string{"add", "-A"}, repoRoot)
+	if exitCode != 0 {
+		return fmt.Errorf("git add -A failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+// #endregion 🔖Git Version Control Provider
 
 // #region 🔖Devcontainer Sandbox Provider
 
@@ -10241,10 +10448,10 @@ func DefaultManagementProvider() ManagementProvider {
 	return &GitHubManagementProvider{}
 }
 
-// DefaultSourceControlProvider returns the default source control provider (GitHub).
-// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultsourcecontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultSourceControlProvider)
-func DefaultSourceControlProvider() SourceControlProvider {
-	return &GitHubSourceControlProvider{}
+// DefaultVersionControlProvider returns the default version control provider (Git).
+// [🧰semiorepo⌨️cli💻maingo🔖providers🔖providerregistry🛠️defaultversioncontrolprovider](semiorepo://definition/semio-repo/cli/main.go/Providers/Provider%20Registry/DefaultVersionControlProvider)
+func DefaultVersionControlProvider() VersionControlProvider {
+	return &GitVersionControlProvider{}
 }
 
 // DefaultSandboxProvider returns the default sandbox provider (Devcontainer).
@@ -12530,31 +12737,31 @@ type Interaction struct {
 	Files   []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
-// TicketAgentRename holds a from/to pair for renamed entities.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentrename](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentRename)
-type TicketAgentRename struct {
+// CheckpointDiffRename holds a from/to pair for renamed entities.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiffrename](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/CheckpointDiffRename)
+type CheckpointDiffRename struct {
 	From string `json:"from" yaml:"from"`
 	To   string `json:"to" yaml:"to"`
 }
 
-// TicketAgentDiffStats holds deleted/renamed/modified/created lists for a diff category.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentdiffstats](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentDiffStats)
-type TicketAgentDiffStats struct {
-	Deleted  []string            `json:"deleted,omitempty" yaml:"deleted,omitempty"`
-	Renamed  []TicketAgentRename `json:"renamed,omitempty" yaml:"renamed,omitempty"`
-	Modified []string            `json:"modified,omitempty" yaml:"modified,omitempty"`
-	Created  []string            `json:"created,omitempty" yaml:"created,omitempty"`
+// CheckpointDiffStats holds deleted/renamed/modified/created lists for a diff category.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiffstats](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/CheckpointDiffStats)
+type CheckpointDiffStats struct {
+	Deleted  []string               `json:"deleted,omitempty" yaml:"deleted,omitempty"`
+	Renamed  []CheckpointDiffRename `json:"renamed,omitempty" yaml:"renamed,omitempty"`
+	Modified []string               `json:"modified,omitempty" yaml:"modified,omitempty"`
+	Created  []string               `json:"created,omitempty" yaml:"created,omitempty"`
 }
 
-// TicketAgentDiff holds diff stats for projects, bundles, folders, files, sections, and definitions.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentDiff)
-type TicketAgentDiff struct {
-	Projects    TicketAgentDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
-	Bundles     TicketAgentDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
-	Folders     TicketAgentDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
-	Files       TicketAgentDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
-	Sections    TicketAgentDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
-	Definitions TicketAgentDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
+// CheckpointDiff holds diff stats for projects, bundles, folders, files, sections, and definitions.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/CheckpointDiff)
+type CheckpointDiff struct {
+	Projects    CheckpointDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
+	Bundles     CheckpointDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+	Folders     CheckpointDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
+	Files       CheckpointDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
+	Sections    CheckpointDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
+	Definitions CheckpointDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
 }
 
 // TicketAgentPlanStep holds a single step in an agent plan with optional timestamps.
@@ -12571,46 +12778,16 @@ type TicketAgentPlan struct {
 	Steps []TicketAgentPlanStep `json:"steps,omitempty" yaml:"steps,omitempty"`
 }
 
-// TicketAgentEventSectionRef holds a section ID and its definitions in a code block.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagenteventsectionref](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentEventSectionRef)
-type TicketAgentEventSectionRef struct {
-	Section     string   `json:"section" yaml:"section"`
-	Definitions []string `json:"definitions,omitempty" yaml:"definitions,omitempty"`
-}
-
-// TicketAgentEventCodeBlock holds section refs and lines of code for old/new in a code edit.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagenteventcodeblock](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentEventCodeBlock)
-type TicketAgentEventCodeBlock struct {
-	Sections []TicketAgentEventSectionRef `json:"sections,omitempty" yaml:"sections,omitempty"`
-	LOC      int                          `json:"loc,omitempty" yaml:"loc,omitempty"`
-}
-
-// TicketAgentEvent holds an agent hook event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentevent](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgentEvent)
-type TicketAgentEvent struct {
-	Kind      string                     `json:"kind" yaml:"kind"`
-	Timestamp string                     `json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
-	Prompt    string                     `json:"prompt,omitempty" yaml:"prompt,omitempty"`
-	Query     string                     `json:"query,omitempty" yaml:"query,omitempty"`
-	File      string                     `json:"file,omitempty" yaml:"file,omitempty"`
-	Denied    string                     `json:"denied,omitempty" yaml:"denied,omitempty"`
-	Line      int                        `json:"line,omitempty" yaml:"line,omitempty"`
-	Old       *TicketAgentEventCodeBlock `json:"old,omitempty" yaml:"old,omitempty"`
-	New       *TicketAgentEventCodeBlock `json:"new,omitempty" yaml:"new,omitempty"`
-}
-
-// TicketAgent holds an agent record with contributor, plan, events, and diff.
+// TicketAgent holds an agent record with contributor and plan.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagent](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/TicketAgent)
 type TicketAgent struct {
-	Session     string             `json:"session" yaml:"session"`
-	Contributor string             `json:"contributor,omitempty" yaml:"contributor,omitempty"`
-	System      string             `json:"system,omitempty" yaml:"system,omitempty"`
-	Client      string             `json:"client,omitempty" yaml:"client,omitempty"`
-	LLM         string             `json:"llm,omitempty" yaml:"llm,omitempty"`
-	Transcript  string             `json:"transcript,omitempty" yaml:"transcript,omitempty"`
-	Plan        *TicketAgentPlan   `json:"plan,omitempty" yaml:"plan,omitempty"`
-	Events      []TicketAgentEvent `json:"events,omitempty" yaml:"events,omitempty"`
-	Diff        *TicketAgentDiff   `json:"diff,omitempty" yaml:"diff,omitempty"`
+	Session     string           `json:"session" yaml:"session"`
+	Contributor string           `json:"contributor,omitempty" yaml:"contributor,omitempty"`
+	System      string           `json:"system,omitempty" yaml:"system,omitempty"`
+	Client      string           `json:"client,omitempty" yaml:"client,omitempty"`
+	LLM         string           `json:"llm,omitempty" yaml:"llm,omitempty"`
+	Transcript  string           `json:"transcript,omitempty" yaml:"transcript,omitempty"`
+	Plan        *TicketAgentPlan `json:"plan,omitempty" yaml:"plan,omitempty"`
 }
 
 // UnmarshalJSON MUST handle both legacy and current JSON layouts.
@@ -12878,6 +13055,22 @@ type Goal struct {
 	Path string `json:"-"`
 }
 
+// MarshalJSON converts internal filesystem paths to semio repo emoji IDs for Goal serialization.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️marshaljsongoal](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/MarshalJSONGoal)
+func (g Goal) MarshalJSON() ([]byte, error) {
+	type GoalAlias Goal
+	alias := GoalAlias(g)
+	// Convert parent path to emoji format.
+	if alias.Parent != "" && !strings.Contains(alias.Parent, emojiText(EmojiGoal)) {
+		alias.Parent = goalPathToSemioID(alias.Parent)
+	}
+	// Convert author in interactions to emoji format.
+	for i := range alias.Interactions {
+		alias.Interactions[i].Author = contributorGithubToSemioID(alias.Interactions[i].Author)
+	}
+	return json.Marshal(alias)
+}
+
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Goal is node.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/IsNode)
@@ -12886,7 +13079,7 @@ func (g *Goal) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Goal.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages🛠️getid](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/GetID)
-func (g *Goal) GetID() string { return emojiText(EmojiGoal) + Flat(g.ID) }
+func (g *Goal) GetID() string { return goalArtifactID(g.ID) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Goal.
@@ -12922,69 +13115,69 @@ type GoalManagementData struct {
 type Statute string
 
 const (
-	BreachCodeFileMissingHeaderRegion               Statute = "code/file/missing-header-region"
-	BreachCodeFileWrongHeaderRegionFormat           Statute = "code/file/wrong-header-region-format"
-	BreachCodeFileMissingIdentification             Statute = "code/file/missing-identification"
-	BreachCodeFileWrongIdentificationId             Statute = "code/file/wrong-identification/id"
-	BreachCodeFileWrongIdentificationUri            Statute = "code/file/wrong-identification/uri"
-	BreachCodeFileMissingContributors               Statute = "code/file/missing-contributors"
-	BreachCodeFileMissingSummary                    Statute = "code/file/missing-summary"
-	BreachCodeFileMissingLicense                    Statute = "code/file/missing-license"
-	BreachCodeFileWrongLicense                      Statute = "code/file/wrong-license"
-	BreachCodeFileMissingRequirements                      Statute = "code/file/missing-requirements"
-	BreachCodeFileMissingDocs                       Statute = "code/file/missing-docs"
-	BreachCodeSectionEmpty                          Statute = "code/section/empty"
-	BreachCodeSectionOrphanDefinition               Statute = "code/section/orphan-definition"
-	BreachCodeSectionMissingStartName               Statute = "code/section/missing-start-name"
-	BreachCodeSectionMissingEndName                 Statute = "code/section/missing-end-name"
-	BreachCodeSectionNameMismatch                   Statute = "code/section/name-mismatch"
-	BreachCodeSectionMissingIdentification          Statute = "code/section/missing-identification"
-	BreachCodeSectionWrongIdentificationId          Statute = "code/section/wrong-identification/id"
-	BreachCodeSectionWrongIdentificationUri         Statute = "code/section/wrong-identification/uri"
-	BreachCodeSectionWrongFormat                    Statute = "code/section/wrong-format"
-	BreachCodeSectionWrongFormatSummaryTooLong      Statute = "code/section/wrong-format/summary/too-long-summary"
-	BreachCodeSectionWrongFormatRequirementsSplitBlock     Statute = "code/section/wrong-format/requirements/split-block"
-	BreachCodeSectionWrongFormatDocs                Statute = "code/section/wrong-format/docs"
-	BreachCodeSectionMissingSummary                 Statute = "code/section/missing-summary"
-	BreachCodeSectionMissingRequirements                   Statute = "code/section/missing-requirements"
-	BreachCodeSectionMissingDocs                    Statute = "code/section/missing-docs"
-	BreachCodeDefMissingIdentification              Statute = "code/definition/missing-identification"
-	BreachCodeDefWrongIdentificationId              Statute = "code/definition/wrong-identification/id"
-	BreachCodeDefWrongIdentificationUri             Statute = "code/definition/wrong-identification/uri"
-	BreachCodeDefWrongFormat                        Statute = "code/definition/wrong-format"
-	BreachCodeDefNotNativeDocstring                 Statute = "code/definition/wrong-format/not-native-docstring"
-	BreachCodeDefMissingSummary                     Statute = "code/definition/missing-summary"
-	BreachCodeDefMissingRequirements                       Statute = "code/definition/missing-requirements"
-	BreachCodeDefMissingDocs                        Statute = "code/definition/missing-docs"
-	BreachCodeCommentInline                         Statute = "code/comment/inline"
-	BreachCodeCommentBlock                          Statute = "code/comment/block"
-	BreachCodeCommentJSDoc                          Statute = "code/comment/jsdoc"
-	BreachCodeRequirementsSyntax                           Statute = "code/requirements/implementation-syntax"
-	BreachCodeDocsMissingReadme                     Statute = "code/docs/missing-readme"
-	BreachDevDocsMissingFile                        Statute = "dev-docs/missing-file"
-	BreachDevDocsMissingFolder                      Statute = "dev-docs/missing-folder"
-	BreachDevDocsWrongFilePath                      Statute = "dev-docs/wrong-file-path"
-	BreachDevDocsWrongFolderPath                    Statute = "dev-docs/wrong-folder-path"
-	BreachDevDocsWrongFileName                      Statute = "dev-docs/wrong-file-name"
-	BreachDevDocsWrongFolderName                    Statute = "dev-docs/wrong-folder-name"
-	BreachDevDocsWrongFileOrder                     Statute = "dev-docs/wrong-file-order"
-	BreachDevDocsWrongFolderOrder                   Statute = "dev-docs/wrong-folder-order"
-	BreachDevDocsMissingComponent                   Statute = "dev-docs/missing-component"
-	BreachDevDocsWrongComponentName                 Statute = "dev-docs/wrong-component-name"
-	BreachDevDocsWrongComponentOrder                Statute = "dev-docs/wrong-component-order"
-	BreachSketchpadImportThirdParty                 Statute = "sketchpad/import/third-party-outside-elements"
-	BreachSketchpadStateMultipleMachines            Statute = "sketchpad/state/multiple-machines"
-	BreachSketchpadStateCreateActor                 Statute = "sketchpad/state/create-actor-usage"
-	BreachSketchpadStateYjsAppState                 Statute = "sketchpad/state/yjs-app-state"
-	BreachSketchpadStateForbiddenStore              Statute = "sketchpad/state/forbidden-store"
-	BreachSketchpadHooksNonTriadic                  Statute = "sketchpad/hooks/non-triadic"
-	BreachCodeUnicodeEmojiVariation                 Statute = "code/unicode/emoji-variation"
-	BreachRepoMissingCommand                        Statute = "repo/missing-command"
-	BreachRepoMissingTicketTracking                 Statute = "repo/missing-ticket-tracking"
-	BreachSystemDevcontainerVscodeSettingsOutside   Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
-	BreachSystemDevcontainerVscodeExtensionsOutside Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
-	BreachFolderIllegalEmpty                        Statute = "folder/illegal/empty"
-	BreachFileIllegalUseGodfile                     Statute = "file/illegal/use-godfile"
+	BreachCodeFileMissingHeaderRegion                  Statute = "code/file/missing-header-region"
+	BreachCodeFileWrongHeaderRegionFormat              Statute = "code/file/wrong-header-region-format"
+	BreachCodeFileMissingIdentification                Statute = "code/file/missing-identification"
+	BreachCodeFileWrongIdentificationId                Statute = "code/file/wrong-identification/id"
+	BreachCodeFileWrongIdentificationUri               Statute = "code/file/wrong-identification/uri"
+	BreachCodeFileMissingContributors                  Statute = "code/file/missing-contributors"
+	BreachCodeFileMissingSummary                       Statute = "code/file/missing-summary"
+	BreachCodeFileMissingLicense                       Statute = "code/file/missing-license"
+	BreachCodeFileWrongLicense                         Statute = "code/file/wrong-license"
+	BreachCodeFileMissingRequirements                  Statute = "code/file/missing-requirements"
+	BreachCodeFileMissingDocs                          Statute = "code/file/missing-docs"
+	BreachCodeSectionEmpty                             Statute = "code/section/empty"
+	BreachCodeSectionOrphanDefinition                  Statute = "code/section/orphan-definition"
+	BreachCodeSectionMissingStartName                  Statute = "code/section/missing-start-name"
+	BreachCodeSectionMissingEndName                    Statute = "code/section/missing-end-name"
+	BreachCodeSectionNameMismatch                      Statute = "code/section/name-mismatch"
+	BreachCodeSectionMissingIdentification             Statute = "code/section/missing-identification"
+	BreachCodeSectionWrongIdentificationId             Statute = "code/section/wrong-identification/id"
+	BreachCodeSectionWrongIdentificationUri            Statute = "code/section/wrong-identification/uri"
+	BreachCodeSectionWrongFormat                       Statute = "code/section/wrong-format"
+	BreachCodeSectionWrongFormatSummaryTooLong         Statute = "code/section/wrong-format/summary/too-long-summary"
+	BreachCodeSectionWrongFormatRequirementsSplitBlock Statute = "code/section/wrong-format/requirements/split-block"
+	BreachCodeSectionWrongFormatDocs                   Statute = "code/section/wrong-format/docs"
+	BreachCodeSectionMissingSummary                    Statute = "code/section/missing-summary"
+	BreachCodeSectionMissingRequirements               Statute = "code/section/missing-requirements"
+	BreachCodeSectionMissingDocs                       Statute = "code/section/missing-docs"
+	BreachCodeDefMissingIdentification                 Statute = "code/definition/missing-identification"
+	BreachCodeDefWrongIdentificationId                 Statute = "code/definition/wrong-identification/id"
+	BreachCodeDefWrongIdentificationUri                Statute = "code/definition/wrong-identification/uri"
+	BreachCodeDefWrongFormat                           Statute = "code/definition/wrong-format"
+	BreachCodeDefNotNativeDocstring                    Statute = "code/definition/wrong-format/not-native-docstring"
+	BreachCodeDefMissingSummary                        Statute = "code/definition/missing-summary"
+	BreachCodeDefMissingRequirements                   Statute = "code/definition/missing-requirements"
+	BreachCodeDefMissingDocs                           Statute = "code/definition/missing-docs"
+	BreachCodeCommentInline                            Statute = "code/comment/inline"
+	BreachCodeCommentBlock                             Statute = "code/comment/block"
+	BreachCodeCommentJSDoc                             Statute = "code/comment/jsdoc"
+	BreachCodeRequirementsSyntax                       Statute = "code/requirements/implementation-syntax"
+	BreachCodeDocsMissingReadme                        Statute = "code/docs/missing-readme"
+	BreachDevDocsMissingFile                           Statute = "dev-docs/missing-file"
+	BreachDevDocsMissingFolder                         Statute = "dev-docs/missing-folder"
+	BreachDevDocsWrongFilePath                         Statute = "dev-docs/wrong-file-path"
+	BreachDevDocsWrongFolderPath                       Statute = "dev-docs/wrong-folder-path"
+	BreachDevDocsWrongFileName                         Statute = "dev-docs/wrong-file-name"
+	BreachDevDocsWrongFolderName                       Statute = "dev-docs/wrong-folder-name"
+	BreachDevDocsWrongFileOrder                        Statute = "dev-docs/wrong-file-order"
+	BreachDevDocsWrongFolderOrder                      Statute = "dev-docs/wrong-folder-order"
+	BreachDevDocsMissingComponent                      Statute = "dev-docs/missing-component"
+	BreachDevDocsWrongComponentName                    Statute = "dev-docs/wrong-component-name"
+	BreachDevDocsWrongComponentOrder                   Statute = "dev-docs/wrong-component-order"
+	BreachSketchpadImportThirdParty                    Statute = "sketchpad/import/third-party-outside-elements"
+	BreachSketchpadStateMultipleMachines               Statute = "sketchpad/state/multiple-machines"
+	BreachSketchpadStateCreateActor                    Statute = "sketchpad/state/create-actor-usage"
+	BreachSketchpadStateYjsAppState                    Statute = "sketchpad/state/yjs-app-state"
+	BreachSketchpadStateForbiddenStore                 Statute = "sketchpad/state/forbidden-store"
+	BreachSketchpadHooksNonTriadic                     Statute = "sketchpad/hooks/non-triadic"
+	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
+	BreachRepoMissingCommand                           Statute = "repo/missing-command"
+	BreachRepoMissingTicketTracking                    Statute = "repo/missing-ticket-tracking"
+	BreachSystemDevcontainerVscodeSettingsOutside      Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
+	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
+	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
+	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
 )
 
 var statuteInfoTable = map[Statute]StatuteMeta{
@@ -13509,7 +13702,7 @@ func (p *PolicyDef) AllKinds() []Statute {
 // AnalyzeReport holds the data fields for a analyze report record.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️analyzereport](semiorepo://definition/semio-repo/cli/main.go/Types/Languages/AnalyzeReport)
 type AnalyzeReport struct {
-	Timestamp string   `json:"timestamp"`
+	Second string   `json:"second"`
 	Status    string   `json:"status"`
 	Scope     string   `json:"scope"`
 	Summary   Summary  `json:"summary"`
@@ -13529,7 +13722,7 @@ type Summary struct {
 type FileCache struct {
 	FilePath  string   `json:"filePath"`
 	Hash      string   `json:"hash"`
-	Timestamp string   `json:"timestamp"`
+	Second string   `json:"second"`
 	Breachs   []Breach `json:"breachs"`
 }
 
@@ -14363,11 +14556,11 @@ func globByExtension(root string, patternBase string, exts []string, ignorePatte
 	return results, nil
 }
 
-// ISOTimestamp MUST complete the operation and return consistent results.
-// ISOTimestamp performs the i s o timestamp operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️isotimestamp](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/ISOTimestamp)
-func ISOTimestamp() string {
-	return time.Now().UTC().Format(time.RFC3339)
+// FormatSecond MUST complete the operation and return consistent results.
+// FormatSecond performs the i s o timestamp operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️isotimestamp](semiorepo://definition/semio-repo/cli/main.go/Types/Utils/FormatSecond)
+func FormatSecond(t time.Time) string {
+	return fmt.Sprintf("🎆%02d🌙%02d☀️%02d⏰%02d⌚%02d⏱️%02d", t.Year()%100, t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
 // FormatDate MUST produce a well-formed date string.
@@ -16527,7 +16720,7 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 }
 
 func isTestOrBenchmarkFile(file string) bool {
-	if DeriveFileKind(filepath.Base(file)) == FileKindTest {
+	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
 		return true
 	}
 	lowerPath := strings.ToLower(file)
@@ -18469,8 +18662,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 		result = append(result, CodebaseContributor{
 			ID:            c.Github,
-			URI:           ctx.FileURI(".semio-repo/👤/" + c.Github),
-			Path:          ".semio-repo/👤/" + c.Github + "/contributor.json",
+			URI:           ctx.FileURI(".semio-repo/🧑‍💻/" + c.Github),
+			Path:          ".semio-repo/🧑‍💻/" + c.Github + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
 			Emails:        c.Emails,
@@ -28827,7 +29020,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"CODE":     &graphql.EnumValueConfig{Value: FileKindCode},
 			"SCRIPT":   &graphql.EnumValueConfig{Value: FileKindScript},
 			"CONFIG":   &graphql.EnumValueConfig{Value: FileKindConfig},
-			"TEST":     &graphql.EnumValueConfig{Value: FileKindTest},
+			"LAB":      &graphql.EnumValueConfig{Value: FileKindLab},
 			"DOCS":     &graphql.EnumValueConfig{Value: FileKindDocs},
 			"RESOURCE": &graphql.EnumValueConfig{Value: FileKindResource},
 			"LICENSE":  &graphql.EnumValueConfig{Value: FileKindLicense},
@@ -30006,7 +30199,7 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		}
 	}
 
-	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	fileEmojis := []string{EmojiFileCode, EmojiFileLab, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
 	for _, fe := range fileEmojis {
 		if rest, ok := stripPrefix(cleanID, fe); ok {
 			return r.File(ctx, rest)
@@ -33823,7 +34016,7 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️listcontributors](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/ListContributors)
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
-	dir := filepath.Join(GetRepoMetaDir(), "👤")
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻")
 	if !FileExists(dir) {
 		return []Contributor{{Github: "unknown", Name: "Unknown"}}, nil
 	}
@@ -33907,21 +34100,21 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 // GetContributorAvatarPath retrieves and returns the contributor avatar path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarpath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetContributorAvatarPath)
 func GetContributorAvatarPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "👤", github, "avatar.png")
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github, "avatar.png")
 }
 
 // GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarroundpath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetContributorAvatarRoundPath)
 func GetContributorAvatarRoundPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "👤", github, "avatar-round.png")
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github, "avatar-round.png")
 }
 
 // GetContributorPath MUST retrieve the requested value or return an error.
 // GetContributorPath retrieves and returns the contributor path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributorpath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/GetContributorPath)
 func GetContributorPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "👤", github)
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github)
 }
 
 // CreateContributor MUST create a new entry and return an error on conflict.
@@ -33977,7 +34170,7 @@ func SaveContributor(c Contributor) error {
 // RemoveContributor removes the specified contributor.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️removecontributor](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/RemoveContributor)
 func RemoveContributor(github string) error {
-	dir := filepath.Join(GetRepoMetaDir(), "👤", github)
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻", github)
 	if !FileExists(dir) {
 		return fmt.Errorf("contributor not found: %s", github)
 	}
@@ -34116,7 +34309,7 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	}
 
 	report := AnalyzeReport{
-		Timestamp: time.Now().Format(time.RFC3339),
+		Second: time.Now().Format(time.RFC3339),
 		Status:    "success",
 		Scope:     scopeRaw,
 		Breachs:   breachs,
@@ -34483,32 +34676,40 @@ func runNx(target string, args ...string) error {
 type HookEvent string
 
 const (
-	HookGitCommitStarting            HookEvent = "git.commit.starting"
-	HookGitCommitEnded               HookEvent = "git.commit.ended"
-	HookAgentStarted                 HookEvent = "agent.started"
-	HookAgentEnded                   HookEvent = "agent.ended"
-	HookAgentPromptSubmitting        HookEvent = "agent.prompt.submitting"
-	HookAgentCompacting              HookEvent = "agent.compacting"
-	HookAgentToolStarting            HookEvent = "agent.tool.starting"
-	HookAgentToolEnded               HookEvent = "agent.tool.ended"
-	HookAgentToolPlanUpdating        HookEvent = "agent.tool.plan.updating"
-	HookAgentToolSearchStarting      HookEvent = "agent.tool.search.starting"
-	HookAgentToolSearchEnded         HookEvent = "agent.tool.search.ended"
-	HookAgentToolCodeEditStarting    HookEvent = "agent.tool.code.edit.starting"
-	HookAgentToolCodeEditEnded       HookEvent = "agent.tool.code.edit.ended"
-	HookAgentToolTestStarting        HookEvent = "agent.tool.test.starting"
-	HookAgentToolTestEnded           HookEvent = "agent.tool.test.ended"
-	HookAgentToolBuildStarting       HookEvent = "agent.tool.build.starting"
-	HookAgentToolBuildEnded          HookEvent = "agent.tool.build.ended"
-	HookAgentToolTerminalStarting    HookEvent = "agent.tool.terminal.starting"
-	HookAgentToolTerminalEnded       HookEvent = "agent.tool.terminal.ended"
+	HookVersionCheckpointStarting HookEvent = "version.checkpoint.starting"
+	HookVersionCheckpointEnded    HookEvent = "version.checkpoint.ended"
+	HookVersionCheckinStarting    HookEvent = "version.checkin.starting"
+	HookVersionCheckinEnded       HookEvent = "version.checkin.ended"
+	HookVersionCheckoutStarting   HookEvent = "version.checkout.starting"
+	HookVersionCheckoutEnded      HookEvent = "version.checkout.ended"
+	HookAgentStarted              HookEvent = "agent.started"
+	HookAgentEnded                HookEvent = "agent.ended"
+	HookAgentPromptSubmitting     HookEvent = "agent.prompt.submitting"
+	HookAgentCompacting           HookEvent = "agent.compacting"
+	HookAgentToolStarting         HookEvent = "agent.tool.starting"
+	HookAgentToolEnded            HookEvent = "agent.tool.ended"
+	HookAgentToolPlanUpdating     HookEvent = "agent.tool.plan.updating"
+	HookAgentToolSearchStarting   HookEvent = "agent.tool.search.starting"
+	HookAgentToolSearchEnded      HookEvent = "agent.tool.search.ended"
+	HookAgentToolCodeEditStarting HookEvent = "agent.tool.code.edit.starting"
+	HookAgentToolCodeEditEnded    HookEvent = "agent.tool.code.edit.ended"
+	HookAgentToolTestStarting     HookEvent = "agent.tool.test.starting"
+	HookAgentToolTestEnded        HookEvent = "agent.tool.test.ended"
+	HookAgentToolBuildStarting    HookEvent = "agent.tool.build.starting"
+	HookAgentToolBuildEnded       HookEvent = "agent.tool.build.ended"
+	HookAgentToolTerminalStarting HookEvent = "agent.tool.terminal.starting"
+	HookAgentToolTerminalEnded    HookEvent = "agent.tool.terminal.ended"
 )
 
 // AllHookEvents lists every valid hook event slug.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️allhookevents](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/AllHookEvents)
 var AllHookEvents = []HookEvent{
-	HookGitCommitStarting,
-	HookGitCommitEnded,
+	HookVersionCheckpointStarting,
+	HookVersionCheckpointEnded,
+	HookVersionCheckinStarting,
+	HookVersionCheckinEnded,
+	HookVersionCheckoutStarting,
+	HookVersionCheckoutEnded,
 	HookAgentStarted,
 	HookAgentEnded,
 	HookAgentPromptSubmitting,
@@ -34533,16 +34734,18 @@ var AllHookEvents = []HookEvent{
 type HookKind string
 
 const (
-	HookKindGit   HookKind = "git"
-	HookKindAgent HookKind = "agent"
+	HookKindVersion HookKind = "version"
+	HookKindAgent   HookKind = "agent"
 )
 
 // HookEventKind returns the hook kind for the given event.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookeventkind](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookEventKind)
 func HookEventKind(e HookEvent) HookKind {
 	switch e {
-	case HookGitCommitStarting, HookGitCommitEnded:
-		return HookKindGit
+	case HookVersionCheckpointStarting, HookVersionCheckpointEnded,
+		HookVersionCheckinStarting, HookVersionCheckinEnded,
+		HookVersionCheckoutStarting, HookVersionCheckoutEnded:
+		return HookKindVersion
 	default:
 		return HookKindAgent
 	}
@@ -34553,7 +34756,7 @@ func HookEventKind(e HookEvent) HookKind {
 type HookContext struct {
 	Event      HookEvent         `json:"event"`
 	Client     string            `json:"client"`
-	Timestamp  string            `json:"timestamp"`
+	Second  string            `json:"second"`
 	RepoRoot   string            `json:"repoRoot"`
 	ToolName   string            `json:"toolName,omitempty"`
 	ToolArgs   string            `json:"toolArgs,omitempty"`
@@ -34592,8 +34795,9 @@ func (h HookResultBase) GetMessage() string { return h.Message }
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultagentbase](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultAgentBase)
 type HookResultAgentBase struct {
 	HookResultBase
+	Checkpoint string `json:"checkpoint,omitempty"`
 	Session    string `json:"session,omitempty"`
-	Timestamp  string `json:"timestamp,omitempty"`
+	Second  string `json:"second,omitempty"`
 	Client     string `json:"client,omitempty"`
 	LLM        string `json:"llm,omitempty"`
 	Transcript string `json:"transcript,omitempty"`
@@ -34736,18 +34940,63 @@ type HookResultAgentToolTerminalEnded struct {
 	Stderr     string `json:"stderr,omitempty"`
 }
 
-// HookResultGitCommitStarting represents the result of a git commit starting event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultgitcommitstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultGitCommitStarting)
-type HookResultGitCommitStarting struct {
+// HookResultVersionCheckpointStarting represents the result of a version checkpoint starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckpointstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultVersionCheckpointStarting)
+type HookResultVersionCheckpointStarting struct {
 	HookResultBase
-	Message string `json:"message,omitempty"` // Override generic message if needed, but Base Message is fine for output
+	Checkpoint  string `json:"checkpoint,omitempty"`
+	Description string `json:"description,omitempty"`
+	Second   string `json:"second,omitempty"`
 }
 
-// HookResultGitCommitEnded represents the result of a git commit ended event.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultgitcommitended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultGitCommitEnded)
-type HookResultGitCommitEnded struct {
+// HookResultVersionCheckpointEnded represents the result of a version checkpoint ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckpointended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultVersionCheckpointEnded)
+type HookResultVersionCheckpointEnded struct {
 	HookResultBase
-	SHA string `json:"sha,omitempty"`
+	Checkpoint  string `json:"checkpoint,omitempty"`
+	Description string `json:"description,omitempty"`
+	Second   string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckinStarting represents the result of a version checkin starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckinstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultVersionCheckinStarting)
+type HookResultVersionCheckinStarting struct {
+	HookResultBase
+	Checkpoint string `json:"checkpoint,omitempty"`
+	Second  string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckinEnded represents the result of a version checkin ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckinended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultVersionCheckinEnded)
+type HookResultVersionCheckinEnded struct {
+	HookResultBase
+	Checkpoint string `json:"checkpoint,omitempty"`
+	Second  string `json:"second,omitempty"`
+}
+
+// HookResultVersionCheckoutStarting represents the result of a version checkout starting event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckoutstarting](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultVersionCheckoutStarting)
+type HookResultVersionCheckoutStarting struct {
+	HookResultBase
+	Checkpoint  string   `json:"checkpoint,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Checkpoints []string `json:"checkpoints,omitempty"`
+	Archive     []string `json:"archive,omitempty"`
+}
+
+// HookResultVersionCheckoutEnded represents the result of a version checkout ended event.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hookresultversioncheckoutended](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookResultVersionCheckoutEnded)
+type HookResultVersionCheckoutEnded struct {
+	HookResultBase
+	Checkpoint  string `json:"checkpoint,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// HookLogNative bundles the native (client-specific) hook input and output.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklognative](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogNative)
+type HookLogNative struct {
+	Event    json.RawMessage `json:"event"`
+	Response json.RawMessage `json:"response,omitempty"`
 }
 
 // HookLogResponse represents the hook response data for audit logging.
@@ -34758,10 +35007,10 @@ type HookLogResponse struct {
 	Reason  string `json:"reason,omitempty"`
 }
 
-// HookLogEntry pairs input, event, response and event-specific data for audit logging.
+// HookLogEntry pairs native client data, semio-repo event data, and semio-repo response data for audit logging.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️hooklogentry](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/HookLogEntry)
 type HookLogEntry struct {
-	Raw      json.RawMessage `json:"raw"`
+	Native   HookLogNative   `json:"native"`
 	Event    json.RawMessage `json:"event"`
 	Response HookLogResponse `json:"response"`
 }
@@ -35391,7 +35640,166 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	return string(out)
 }
 
-// logHook writes hook input, event and response to .semio-repo/📜/🪝/🤖/<session-id>/<timestamp>_<hook-kind>.json.
+// extractCheckpointIDFromResult extracts the checkpoint/commit ID from a hook result.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️extractcheckpointidfromresult](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/extractCheckpointIDFromResult)
+func extractCheckpointIDFromResult(result HookResult, repoRoot string) string {
+	switch r := result.(type) {
+	case HookResultVersionCheckpointEnded:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	case HookResultVersionCheckinStarting:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	case HookResultVersionCheckinEnded:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	case HookResultVersionCheckoutEnded:
+		if r.Checkpoint != "" {
+			return r.Checkpoint
+		}
+	}
+	vcp := DefaultVersionControlProvider()
+	if sha, err := vcp.CurrentCheckpoint(repoRoot); err == nil && sha != "" {
+		return sha
+	}
+	return "unknown"
+}
+
+// resolvePathToFileID converts a raw file path (absolute or relative) to a semio-repo file ID.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolvepathtofiled](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolvePathToFileID)
+func resolvePathToFileID(path string) string {
+	if path == "" {
+		return ""
+	}
+	normalized := normalizeHookPath(path)
+	if normalized == "" {
+		return ""
+	}
+	return buildFileID(normalized, nil)
+}
+
+// resolveRangeRef converts a "path#Lstart-Lend" or "path#Lstart" reference to a semio-repo range/line ID.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolverangeref](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveRangeRef)
+func resolveRangeRef(ref string) string {
+	if ref == "" {
+		return ""
+	}
+	hashIdx := strings.Index(ref, "#L")
+	if hashIdx < 0 {
+		// No line reference → resolve as file ID
+		return resolvePathToFileID(ref)
+	}
+	filePath := ref[:hashIdx]
+	lineRef := ref[hashIdx+2:] // skip "#L"
+	fileID := resolvePathToFileID(filePath)
+	if fileID == "" {
+		return ref
+	}
+	// Parse "start-Lend" or just "start"
+	dashIdx := strings.Index(lineRef, "-L")
+	if dashIdx >= 0 {
+		startStr := lineRef[:dashIdx]
+		endStr := lineRef[dashIdx+2:]
+		return fileID + "📌" + startStr + "📌" + endStr
+	}
+	return fileID + "📌" + lineRef
+}
+
+// resolveEventIDs resolves raw file paths and range references in event data to semio-repo IDs.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️resolveeventids](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/resolveEventIDs)
+func resolveEventIDs(eventMap map[string]interface{}) {
+	// Resolve "path" field (code edit events)
+	if path, ok := eventMap["path"].(string); ok && path != "" {
+		eventMap["path"] = resolvePathToFileID(path)
+	}
+	// Resolve "pages" field (search events) - each entry may be a file path or a query pattern
+	if pages, ok := eventMap["pages"].([]interface{}); ok {
+		resolved := make([]interface{}, len(pages))
+		for i, p := range pages {
+			if s, ok := p.(string); ok && s != "" {
+				if looksLikeFilePath(s) {
+					resolved[i] = resolvePathToFileID(s)
+				} else {
+					resolved[i] = s
+				}
+			} else {
+				resolved[i] = p
+			}
+		}
+		eventMap["pages"] = resolved
+	}
+	// Resolve "ranges" field (search events) - "path#Lstart-Lend" references
+	if ranges, ok := eventMap["ranges"].([]interface{}); ok {
+		resolved := make([]interface{}, len(ranges))
+		for i, r := range ranges {
+			if s, ok := r.(string); ok && s != "" {
+				resolved[i] = resolveRangeRef(s)
+			} else {
+				resolved[i] = r
+			}
+		}
+		eventMap["ranges"] = resolved
+	}
+	// Resolve "tests" items that look like file paths (test events)
+	if tests, ok := eventMap["tests"].([]interface{}); ok {
+		resolved := make([]interface{}, len(tests))
+		for i, t := range tests {
+			if s, ok := t.(string); ok && s != "" && looksLikeFilePath(s) {
+				resolved[i] = resolvePathToFileID(s)
+			} else {
+				resolved[i] = t
+			}
+		}
+		eventMap["tests"] = resolved
+	}
+	// Resolve "succeeded" and "failed" items that look like file paths (test/build events)
+	for _, key := range []string{"succeeded", "failed"} {
+		if items, ok := eventMap[key].([]interface{}); ok {
+			resolved := make([]interface{}, len(items))
+			for i, item := range items {
+				if s, ok := item.(string); ok && s != "" && looksLikeFilePath(s) {
+					resolved[i] = resolvePathToFileID(s)
+				} else {
+					resolved[i] = item
+				}
+			}
+			eventMap[key] = resolved
+		}
+	}
+	// Resolve "bundles" items (build events) - these are already bundle names, not paths
+	// No resolution needed for bundles
+}
+
+// looksLikeFilePath returns true if s looks like a file system path (not a query/pattern/name).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️lookslikefilepath](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/looksLikeFilePath)
+func looksLikeFilePath(s string) bool {
+	if strings.HasPrefix(s, "/") || strings.HasPrefix(s, "./") || strings.HasPrefix(s, "../") {
+		return true
+	}
+	if strings.Contains(s, "/") && strings.Contains(s, ".") {
+		return true
+	}
+	// Bare filenames with known extensions
+	ext := filepath.Ext(s)
+	if ext != "" {
+		switch strings.ToLower(ext) {
+		case ".go", ".ts", ".tsx", ".js", ".jsx", ".py", ".rs", ".cs", ".json", ".yaml", ".yml",
+			".toml", ".md", ".txt", ".html", ".css", ".scss", ".less", ".xml", ".svg", ".sql",
+			".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd", ".g4", ".proto", ".graphql",
+			".gql", ".lock", ".cfg", ".ini", ".env", ".test", ".spec", ".snap":
+			return true
+		}
+	}
+	return false
+}
+
+// logHook writes hook input, event and response to:
+//   - Version events: .semio-repo/⚡/🔀/YY/MM/DD/<checkpoint-id>/MMSS_<version-event-kind>.json
+//   - Agent events:   .semio-repo/⚡/🤖/YY/MM/DD/<session-id>/MMSS_<agent-event-kind>.json
+//
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️loghook](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/logHook)
 func logHook(hctx HookContext, result HookResult) {
 	repoRoot := hctx.RepoRoot
@@ -35402,16 +35810,27 @@ func logHook(hctx HookContext, result HookResult) {
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
-	sessionID := extractSessionIDFromInput(hctx.Input)
-	if sessionID == "" {
-		sessionID = "unknown"
+	now := time.Now().UTC()
+	yy := fmt.Sprintf("%02d", now.Year()%100)
+	mm := fmt.Sprintf("%02d", int(now.Month()))
+	dd := fmt.Sprintf("%02d", now.Day())
+	hhmmss := now.Format("150405")
+	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
+	var logDir string
+	kind := HookEventKind(hctx.Event)
+	if kind == HookKindVersion {
+		checkpointID := extractCheckpointIDFromResult(result, repoRoot)
+		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🔀", yy, mm, dd, checkpointID)
+	} else {
+		sessionID := extractSessionIDFromInput(hctx.Input)
+		if sessionID == "" {
+			sessionID = "unknown"
+		}
+		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🤖", yy, mm, dd, sessionID)
 	}
-	logDir := filepath.Join(repoRoot, ".semio-repo", "📜", "🪝", "🤖", sessionID)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return
 	}
-	ts := time.Now().UTC().Format("060102150405")
-	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
 	var logResponse HookLogResponse
 	logResponse.Allowed = result.IsAllowed()
 	if !result.IsAllowed() {
@@ -35426,13 +35845,30 @@ func logHook(hctx HookContext, result HookResult) {
 		eventMap = map[string]interface{}{}
 	}
 	eventMap["kind"] = string(hctx.Event)
+	resolveEventIDs(eventMap)
 	resultData, _ = json.Marshal(eventMap)
-	entry := HookLogEntry{Raw: hctx.Input, Event: resultData, Response: logResponse}
+	// Build native response from the client-specific provider
+	var nativeResponse json.RawMessage
+	provider := GetEditorProvider(hctx.Client)
+	if provider != nil {
+		hookEventName := extractHookEventNameFromStdin(hctx.Input)
+		if hookEventName == "" {
+			hookEventName = provider.NativeEventFromHookEvent(hctx.Event, hctx.ParentInfo)
+		}
+		if hookEventName != "" {
+			out := provider.FormatHookOutput(hookEventName, result)
+			if out != "" {
+				nativeResponse = json.RawMessage(out)
+			}
+		}
+	}
+	native := HookLogNative{Event: hctx.Input, Response: nativeResponse}
+	entry := HookLogEntry{Native: native, Event: resultData, Response: logResponse}
 	data, err := json.MarshalIndent(entry, "", "  ")
 	if err != nil {
 		return
 	}
-	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s.json", ts, hookKind)), data, 0644)
+	_ = os.WriteFile(filepath.Join(logDir, fmt.Sprintf("%s_%s.json", hhmmss, hookKind)), data, 0644)
 }
 
 // dispatchHook routes the hook event to its handler and returns the specific result.
@@ -35441,6 +35877,12 @@ func dispatchHook(hctx HookContext) HookResult {
 	var raw any
 	if len(hctx.Input) > 0 {
 		raw = hctx.Input
+	}
+	// Resolve current checkpoint (commit SHA) for all events.
+	currentCheckpoint := ""
+	vcp := DefaultVersionControlProvider()
+	if sha, err := vcp.CurrentCheckpoint(hctx.RepoRoot); err == nil && sha != "" {
+		currentCheckpoint = sha
 	}
 	sessionID := extractSessionIDFromInput(hctx.Input)
 	llm := extractLLMFromInput(hctx.Input)
@@ -35453,8 +35895,9 @@ func dispatchHook(hctx HookContext) HookResult {
 	agentBase := func(msg string) HookResultAgentBase {
 		return HookResultAgentBase{
 			HookResultBase: HookResultBase{Allowed: true, Message: msg, Raw: raw},
+			Checkpoint:     currentCheckpoint,
 			Session:        sessionID,
-			Timestamp:      hctx.Timestamp,
+			Second:      hctx.Second,
 			Client:         hctx.Client,
 			LLM:            llm,
 			Transcript:     transcript,
@@ -35463,18 +35906,50 @@ func dispatchHook(hctx HookContext) HookResult {
 		}
 	}
 	switch hctx.Event {
-	case HookGitCommitStarting:
-		res := runCommitStartingHook(hctx)
+	case HookVersionCheckpointStarting:
+		res := runCheckpointStartingHook(hctx)
 		res.Raw = raw
-		res.Message = extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot)
-		if res.Message == "" && !res.Allowed {
-			res.Message = "pre-commit checks failed"
+		res.Checkpoint = currentCheckpoint
+		res.Description = extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot)
+		res.Second = hctx.Second
+		if res.Description == "" && !res.Allowed {
+			res.Description = "pre-checkpoint checks failed"
 		}
 		return res
-	case HookGitCommitEnded:
-		return HookResultGitCommitEnded{
+	case HookVersionCheckpointEnded:
+		checkpointSHA := extractCommitSHAFromInput(hctx.Input)
+		if checkpointSHA == "" {
+			checkpointSHA = currentCheckpoint
+		}
+		return HookResultVersionCheckpointEnded{
 			HookResultBase: HookResultBase{Allowed: true, Message: extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot), Raw: raw},
-			SHA:            extractCommitSHAFromInput(hctx.Input),
+			Checkpoint:     checkpointSHA,
+			Description:    extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot),
+			Second:      hctx.Second,
+		}
+	case HookVersionCheckinStarting:
+		return HookResultVersionCheckinStarting{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkin.starting acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Second:      hctx.Second,
+		}
+	case HookVersionCheckinEnded:
+		return HookResultVersionCheckinEnded{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkin.ended acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Second:      hctx.Second,
+		}
+	case HookVersionCheckoutStarting:
+		return HookResultVersionCheckoutStarting{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkout.starting acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Description:    extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot),
+		}
+	case HookVersionCheckoutEnded:
+		return HookResultVersionCheckoutEnded{
+			HookResultBase: HookResultBase{Allowed: true, Message: "version.checkout.ended acknowledged", Raw: raw},
+			Checkpoint:     currentCheckpoint,
+			Description:    extractCommitMessageFromInput(hctx.Input, hctx.RepoRoot),
 		}
 	case HookAgentStarted:
 		parent := hctx.ParentInfo
@@ -35625,6 +36100,12 @@ func RunHook(hctx HookContext) HookResult {
 	result := dispatchHook(hctx)
 	logHook(hctx, result)
 	trackHookInOpenTicket(hctx, result)
+	if hctx.Event == HookVersionCheckpointEnded {
+		checkpointID := extractCheckpointIDFromResult(result, hctx.RepoRoot)
+		if checkpointID != "" {
+			storeCheckpointDiff(hctx.RepoRoot, checkpointID)
+		}
+	}
 	return result
 }
 
@@ -35686,7 +36167,7 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 	return ""
 }
 
-func extractTimestampFromInput(input json.RawMessage) string {
+func extractSecondFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
 	}
@@ -36299,60 +36780,6 @@ func normalizeHookPath(path string) string {
 	return strings.TrimPrefix(path, "./")
 }
 
-func applyHookPathToAgentDiffModified(agent *TicketAgent, path string) {
-	normalized := normalizeHookPath(path)
-	if normalized == "" {
-		return
-	}
-	if agent.Diff == nil {
-		agent.Diff = &TicketAgentDiff{}
-	}
-	fileID := buildFileID(normalized, nil)
-	agent.Diff.Files.Modified = appendUniqueString(agent.Diff.Files.Modified, fileID)
-	dir := filepath.Dir(normalized)
-	if dir != "." && dir != "" {
-		folderID := buildFolderID(dir, nil)
-		agent.Diff.Folders.Modified = appendUniqueString(agent.Diff.Folders.Modified, folderID)
-	}
-	bundle := GetBundleByPath(normalized)
-	if bundle != nil {
-		agent.Diff.Bundles.Modified = appendUniqueString(agent.Diff.Bundles.Modified, bundle.GetID())
-		projectName := bundle.ProjectName
-		if projectName == "" {
-			parts := strings.SplitN(bundle.Name, "/", 2)
-			projectName = parts[0]
-		}
-		pKind := DeriveProjectKind(projectName)
-		projectID := emojiText(string(pKind)) + Flat(projectName)
-		agent.Diff.Projects.Modified = appendUniqueString(agent.Diff.Projects.Modified, projectID)
-	}
-}
-
-func applyCodeBlockRefsToAgentDiff(agent *TicketAgent, block *TicketAgentEventCodeBlock) {
-	if block == nil || len(block.Sections) == 0 {
-		return
-	}
-	if agent.Diff == nil {
-		agent.Diff = &TicketAgentDiff{}
-	}
-	for _, ref := range block.Sections {
-		agent.Diff.Sections.Modified = appendUniqueString(agent.Diff.Sections.Modified, ref.Section)
-		for _, defID := range ref.Definitions {
-			agent.Diff.Definitions.Modified = appendUniqueString(agent.Diff.Definitions.Modified, defID)
-		}
-	}
-}
-
-func hasTicketAgentDiffData(diff TicketAgentDiff) bool {
-	stats := []TicketAgentDiffStats{diff.Projects, diff.Bundles, diff.Folders, diff.Files, diff.Sections, diff.Definitions}
-	for _, item := range stats {
-		if len(item.Deleted) > 0 || len(item.Renamed) > 0 || len(item.Modified) > 0 || len(item.Created) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
 func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	for i := range ticket.Agents {
 		if ticket.Agents[i].Session == sessionID {
@@ -36371,69 +36798,8 @@ func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	return len(ticket.Agents) - 1
 }
 
-func setSectionsFilePath(sections []Section, filePath string) {
-	for i := range sections {
-		sections[i].FilePath = filePath
-		setSectionsFilePath(sections[i].Children, filePath)
-	}
-}
-
-func resolveCodeBlockRefs(filePath string, code string, fileContent string) *TicketAgentEventCodeBlock {
-	if code == "" {
-		return nil
-	}
-	loc := strings.Count(code, "\n") + 1
-	if strings.HasSuffix(code, "\n") {
-		loc--
-	}
-	block := &TicketAgentEventCodeBlock{LOC: loc}
-	normPath := normalizeHookPath(filePath)
-	if normPath == "" || fileContent == "" {
-		return block
-	}
-	sections := ParseSections(fileContent, normPath)
-	if len(sections) == 0 {
-		return block
-	}
-	setSectionsFilePath(sections, normPath)
-	definitions := ParseDefinitions(fileContent, normPath)
-	sections = HydrateSectionsWithDefinitions(sections, definitions)
-	idx := strings.Index(fileContent, code)
-	if idx < 0 {
-		return block
-	}
-	startLine := strings.Count(fileContent[:idx], "\n") + 1
-	endLine := startLine + loc - 1
-	sectionMap := map[string][]string{}
-	var collectSectionDefs func(secs []Section)
-	collectSectionDefs = func(secs []Section) {
-		for _, sec := range secs {
-			if sec.EndLine < startLine || sec.StartLine > endLine {
-				continue
-			}
-			secID := sec.GetID()
-			if _, exists := sectionMap[secID]; !exists {
-				sectionMap[secID] = []string{}
-			}
-			for _, def := range sec.Definitions {
-				if def.EndLine < startLine || def.StartLine > endLine {
-					continue
-				}
-				sectionMap[secID] = appendUniqueString(sectionMap[secID], def.GetID())
-			}
-			collectSectionDefs(sec.Children)
-		}
-	}
-	collectSectionDefs(sections)
-	for secID, defs := range sectionMap {
-		block.Sections = append(block.Sections, TicketAgentEventSectionRef{
-			Section:     secID,
-			Definitions: defs,
-		})
-	}
-	return block
-}
-
+// trackHookInOpenTicket updates agent metadata and plan in the latest open ticket.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️trackhookinopenticket](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/trackHookInOpenTicket)
 func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	ticket, err := latestOpenTicket()
 	if err != nil || ticket == nil {
@@ -36449,10 +36815,6 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	}
 	agentIndex := ensureTicketAgent(ticket, sessionID, hctx.Client)
 	agent := &ticket.Agents[agentIndex]
-	timestamp := hctx.Timestamp
-	if timestamp == "" {
-		timestamp = time.Now().UTC().Format(time.RFC3339)
-	}
 	llm := extractLLMFromInput(hctx.Input)
 	if llm != "" && agent.LLM == "" {
 		agent.LLM = llm
@@ -36461,20 +36823,11 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	if transcript != "" && agent.Transcript == "" {
 		agent.Transcript = transcript
 	}
-	if hctx.Event == HookAgentPromptSubmitting {
-		promptText := extractPromptFromInput(hctx.Input)
-		if promptText == "" {
-			promptText = strings.TrimSpace(hctx.ToolArgs)
-		}
-		agent.Events = append(agent.Events, TicketAgentEvent{
-			Kind:      string(HookAgentPromptSubmitting),
-			Timestamp: timestamp,
-			Prompt:    promptText,
-		})
-		_ = SaveTicket(ticket)
-		return
-	}
 	if hctx.Event == HookAgentToolPlanUpdating {
+		second := hctx.Second
+		if timestamp == "" {
+			second = time.Now().UTC().Format(time.RFC3339)
+		}
 		if planResult, ok := result.(HookResultAgentToolPlanUpdating); ok && len(planResult.Steps) > 0 {
 			steps := make([]TicketAgentPlanStep, len(planResult.Steps))
 			for i, s := range planResult.Steps {
@@ -36489,148 +36842,144 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 			}
 			agent.Plan = &TicketAgentPlan{Steps: steps}
 		}
-		_ = SaveTicket(ticket)
-		return
 	}
-	event := TicketAgentEvent{
-		Kind:      string(hctx.Event),
-		Timestamp: timestamp,
-	}
-	if !result.IsAllowed() {
-		event.Denied = result.GetMessage()
-		if event.Denied == "" {
-			event.Denied = "blocked"
-		}
-	}
-	switch r := result.(type) {
-	case HookResultAgentToolSearchStarting:
-		q := strings.Join(r.Pages, ", ")
-		if len(r.Ranges) > 0 {
-			if q != "" {
-				q += " " + strings.Join(r.Ranges, ", ")
-			} else {
-				q = strings.Join(r.Ranges, ", ")
-			}
-		}
-		event.Query = q
-		applyHookPathToAgentDiffModified(agent, hctx.FilePath)
-	case HookResultAgentToolSearchEnded:
-		q := strings.Join(r.Pages, ", ")
-		if len(r.Ranges) > 0 {
-			if q != "" {
-				q += " " + strings.Join(r.Ranges, ", ")
-			} else {
-				q = strings.Join(r.Ranges, ", ")
-			}
-		}
-		event.Query = q
-		applyHookPathToAgentDiffModified(agent, hctx.FilePath)
-	case HookResultAgentToolCodeEditStarting:
-		if r.Path != "" {
-			event.File = normalizeHookPath(r.Path)
-			applyHookPathToAgentDiffModified(agent, r.Path)
-		}
-	case HookResultAgentToolCodeEditEnded:
-		if r.Path != "" {
-			event.File = normalizeHookPath(r.Path)
-			applyHookPathToAgentDiffModified(agent, r.Path)
-		}
-		if r.Old != "" || r.New != "" {
-			var fileContent string
-			if r.Path != "" {
-				normPath := normalizeHookPath(r.Path)
-				absPath := filepath.Join(GetRootDir(), normPath)
-				if content, err := ReadTextFile(absPath); err == nil {
-					fileContent = content
-				}
-			}
-			if r.Old != "" && fileContent != "" {
-				idx := strings.Index(fileContent, r.Old)
-				if idx >= 0 {
-					event.Line = strings.Count(fileContent[:idx], "\n") + 1
-				}
-			}
-			event.Old = resolveCodeBlockRefs(r.Path, r.Old, fileContent)
-			newContent := fileContent
-			if r.Old != "" && r.New != "" && fileContent != "" {
-				newContent = strings.Replace(fileContent, r.Old, r.New, 1)
-			}
-			event.New = resolveCodeBlockRefs(r.Path, r.New, newContent)
-			applyCodeBlockRefsToAgentDiff(agent, event.Old)
-			applyCodeBlockRefsToAgentDiff(agent, event.New)
-		}
-	case HookResultAgentToolTestStarting:
-		if len(r.Tests) > 0 {
-			event.Query = strings.Join(r.Tests, ", ")
-		}
-	case HookResultAgentToolTestEnded:
-		if len(r.Succeeded) > 0 || len(r.Failed) > 0 {
-			event.Query = fmt.Sprintf("succeeded:%d failed:%d", len(r.Succeeded), len(r.Failed))
-		}
-	case HookResultAgentToolBuildStarting:
-		if len(r.Bundles) > 0 {
-			event.Query = strings.Join(r.Bundles, ", ")
-		}
-	case HookResultAgentToolBuildEnded:
-		if len(r.Succeeded) > 0 || len(r.Failed) > 0 {
-			event.Query = fmt.Sprintf("succeeded:%d failed:%d", len(r.Succeeded), len(r.Failed))
-		}
-	case HookResultAgentToolTerminalStarting:
-		if r.Command != "" {
-			event.Query = r.Command
-		}
-	case HookResultAgentToolTerminalEnded:
-		if r.Command != "" {
-			event.Query = r.Command
-		}
-	case HookResultAgentToolStarting:
-		if r.Name != "" {
-			event.Query = r.Name
-		}
-	case HookResultAgentToolEnded:
-		if r.Name != "" {
-			event.Query = r.Name
-		}
-	}
-	if event.File == "" && hctx.FilePath != "" {
-		event.File = normalizeHookPath(hctx.FilePath)
-	}
-	if event.Query == "" {
-		toolArgs := parseHookToolArgs(hctx.ToolArgs)
-		if len(toolArgs) > 0 {
-			if value, ok := toolArgs["query"].(string); ok {
-				q := strings.TrimSpace(value)
-				if q != "" {
-					event.Query = q
-				}
-			}
-		}
-	}
-	if event.Query == "" && strings.EqualFold(hctx.ToolName, "mcp0_tree") {
-		event.Query = strings.TrimSpace(hctx.ToolArgs)
-	}
-	agent.Events = append(agent.Events, event)
 	_ = SaveTicket(ticket)
 }
 
-func runCommitStartingHook(hctx HookContext) HookResultGitCommitStarting {
+// computeCheckpointDiff computes a semantic code diff from git changes for a checkpoint.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️computecheckpointdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/computeCheckpointDiff)
+func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff {
+	diff := &CheckpointDiff{}
+	stdout, _, exitCode := ExecCommand("git", []string{"diff-tree", "--no-commit-id", "-r", "--name-status", checkpointID}, repoRoot)
+	if exitCode != 0 {
+		return diff
+	}
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		status := parts[0]
+		filePath := parts[1]
+		fileID := buildFileID(filePath, nil)
+		dir := filepath.Dir(filePath)
+		folderID := ""
+		if dir != "." && dir != "" {
+			folderID = buildFolderID(dir, nil)
+		}
+		var bundleID, projectID string
+		bundle := GetBundleByPath(filePath)
+		if bundle != nil {
+			bundleID = bundle.GetID()
+			projectName := bundle.ProjectName
+			if projectName == "" {
+				nameParts := strings.SplitN(bundle.Name, "/", 2)
+				projectName = nameParts[0]
+			}
+			pKind := DeriveProjectKind(projectName)
+			projectID = emojiText(string(pKind)) + Flat(projectName)
+		}
+		switch {
+		case status == "A":
+			diff.Files.Created = appendUniqueString(diff.Files.Created, fileID)
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		case status == "D":
+			diff.Files.Deleted = appendUniqueString(diff.Files.Deleted, fileID)
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		case strings.HasPrefix(status, "R"):
+			if len(parts) >= 3 {
+				oldPath := parts[1]
+				newPath := parts[2]
+				oldFileID := buildFileID(oldPath, nil)
+				newFileID := buildFileID(newPath, nil)
+				diff.Files.Renamed = append(diff.Files.Renamed, CheckpointDiffRename{From: oldFileID, To: newFileID})
+			} else {
+				diff.Files.Modified = appendUniqueString(diff.Files.Modified, fileID)
+			}
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		default:
+			diff.Files.Modified = appendUniqueString(diff.Files.Modified, fileID)
+			if folderID != "" {
+				diff.Folders.Modified = appendUniqueString(diff.Folders.Modified, folderID)
+			}
+			if bundleID != "" {
+				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
+			}
+			if projectID != "" {
+				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			}
+		}
+	}
+	return diff
+}
+
+// storeCheckpointDiff stores a semantic code diff at .semio-repo/🔀/YY/MM/DD/<checkpoint-id>.json.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks✂️storecheckpointdiff](semiorepo://definition/semio-repo/cli/main.go/Types/Cli/Hooks/storeCheckpointDiff)
+func storeCheckpointDiff(repoRoot string, checkpointID string) {
+	if checkpointID == "" || checkpointID == "unknown" {
+		return
+	}
+	diff := computeCheckpointDiff(repoRoot, checkpointID)
+	now := time.Now().UTC()
+	yy := fmt.Sprintf("%02d", now.Year()%100)
+	mm := fmt.Sprintf("%02d", int(now.Month()))
+	dd := fmt.Sprintf("%02d", now.Day())
+	diffDir := filepath.Join(repoRoot, ".semio-repo", "🔀", yy, mm, dd)
+	if err := os.MkdirAll(diffDir, 0755); err != nil {
+		return
+	}
+	data, err := json.MarshalIndent(diff, "", "  ")
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(filepath.Join(diffDir, checkpointID+".json"), data, 0644)
+}
+
+func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStarting {
 	repoRoot := hctx.RepoRoot
 	if repoRoot == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
-			return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}}
+			return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("cannot determine cwd: %v", err)}}
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
 	SetRootDir(repoRoot)
-	fmt.Println("Running pre-commit hooks...")
+	fmt.Println("Running pre-checkpoint hooks...")
 	if err := runPreflightFix(); err != nil {
-		return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-commit fix failed: %v", err)}}
+		return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-checkpoint fix failed: %v", err)}}
 	}
 	if err := runPreflightAnalyze(); err != nil {
-		return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-commit analyze failed: %v", err)}}
+		return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-checkpoint analyze failed: %v", err)}}
 	}
-	return HookResultGitCommitStarting{HookResultBase: HookResultBase{Allowed: true, Message: "pre-commit checks passed"}}
+	return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: true, Message: "pre-checkpoint checks passed"}}
 }
 
 // ValidateHookEvent checks if the given string is a valid hook event.
@@ -36661,9 +37010,13 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Long: `Run a lifecycle hook for a given event and client.
 Accepts neutral semio-repo events or native client events (inlet adapter resolves to neutral).
 
-🦑 Git hooks:
-  git.commit.starting          Run before a git commit (pre-commit)
-  git.commit.ended             Run after a git commit (post-commit)
+📦 Version hooks:
+  version.checkpoint.starting  Run before a version checkpoint (e.g. pre-commit)
+  version.checkpoint.ended     Run after a version checkpoint (e.g. post-commit)
+  version.checkin.starting     Run before a version checkin (e.g. fast-forward to main)
+  version.checkin.ended        Run after a version checkin
+  version.checkout.starting    Run before a version checkout (e.g. squash merge)
+  version.checkout.ended       Run after a version checkout
 
 🤖 Neutral agent hooks:
   agent.started                Agent session started
@@ -36726,7 +37079,7 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
 			hctx := HookContext{
 				Event:      event,
 				Client:     client,
-				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Second:  time.Now().UTC().Format(time.RFC3339),
 				RepoRoot:   repoRoot,
 				ToolName:   toolName,
 				ToolArgs:   toolArgs,
@@ -36862,7 +37215,7 @@ if [ -z "$repo_root" ] || [ ! -f "$repo_root/semio-repo/cli/cli" ]; then
   exit 0
 fi
 cd "$repo_root"
-./semio-repo/cli/cli hook git.commit.ended
+./semio-repo/cli/cli hook version.checkpoint.ended
 `
 	if err := os.WriteFile(postCommitPath, []byte(postCommitScript), 0755); err != nil {
 		return err
@@ -37602,6 +37955,13 @@ func ListGoals() ([]*Goal, error) {
 				goal.Parent = ""
 			}
 			goal.Path = path
+			// Convert emoji-format author in interactions back to github username.
+			contribPrefix := emojiText(EmojiContributor)
+			for i := range goal.Interactions {
+				if strings.HasPrefix(goal.Interactions[i].Author, contribPrefix) {
+					goal.Interactions[i].Author = semioIDToContributorGithub(goal.Interactions[i].Author)
+				}
+			}
 			goals = append(goals, &goal)
 		}
 		return nil
@@ -37628,6 +37988,19 @@ func ReadGoal(id string) (*Goal, error) {
 	}
 	goal.ID = id
 	goal.Path = path
+	// Derive parent from filesystem path (authoritative) instead of JSON value.
+	if idx := strings.LastIndex(id, "/"); idx != -1 {
+		goal.Parent = id[:idx]
+	} else {
+		goal.Parent = ""
+	}
+	// Convert emoji-format author in interactions back to github username.
+	contributorPrefix := emojiText(EmojiContributor)
+	for i := range goal.Interactions {
+		if strings.HasPrefix(goal.Interactions[i].Author, contributorPrefix) {
+			goal.Interactions[i].Author = semioIDToContributorGithub(goal.Interactions[i].Author)
+		}
+	}
 	return &goal, nil
 }
 
@@ -37715,6 +38088,250 @@ func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...S
 	}
 	return nil
 }
+
+// #region 🔖Sessions
+// [🧰semiorepo⌨️cli💻maingo🔖sessions](semiorepo://section/semio-repo/cli/main.go/Sessions)
+// Session entity model, streaming, and ID/URI helpers.
+
+// SessionKind represents the status of a session.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions✂️sessionkind](semiorepo://definition/semio-repo/cli/main.go/Sessions/SessionKind)
+type SessionKind string
+
+const (
+	SessionKindRunning     SessionKind = "running"
+	SessionKindCompleted   SessionKind = "completed"
+	SessionKindInterrupted SessionKind = "interrupted"
+)
+
+// Session holds the data fields for a session record.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions✂️session](semiorepo://definition/semio-repo/cli/main.go/Sessions/Session)
+type Session struct {
+	UUID      string      `json:"uuid"`
+	Year      int         `json:"year"`
+	Month     int         `json:"month"`
+	Day       int         `json:"day"`
+	Kind      SessionKind `json:"kind"`
+	Client    string      `json:"client,omitempty"`
+	LLM       string      `json:"llm,omitempty"`
+	StartedAt string      `json:"startedAt,omitempty"`
+	EndedAt   string      `json:"endedAt,omitempty"`
+}
+
+// GetID returns the semio repo ID for a session.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️getid](semiorepo://definition/semio-repo/cli/main.go/Sessions/GetID)
+func (s *Session) GetID() string {
+	return GetArtifactID("session", map[string]interface{}{
+		"parentId": GetArtifactID("day", map[string]interface{}{
+			"parentId": GetArtifactID("month", map[string]interface{}{
+				"parentId": GetArtifactID("year", map[string]interface{}{
+					"parentId": "",
+					"yy":       fmt.Sprintf("%02d", s.Year),
+				}),
+				"mm": fmt.Sprintf("%02d", s.Month),
+			}),
+			"dd": fmt.Sprintf("%02d", s.Day),
+		}),
+		"uuid": s.UUID,
+	})
+}
+
+// GetURI returns the semio repo URI for a session.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/Sessions/GetURI)
+func (s *Session) GetURI() string {
+	return GetArtifactURI("session", map[string]interface{}{
+		"uuid": s.UUID,
+	})
+}
+
+// SessionKindEmoji returns the emoji for the given session kind.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️sessionkindemoji](semiorepo://definition/semio-repo/cli/main.go/Sessions/SessionKindEmoji)
+func SessionKindEmoji(kind SessionKind) string {
+	switch kind {
+	case SessionKindRunning:
+		return EmojiSessionRunning
+	case SessionKindCompleted:
+		return EmojiSessionCompleted
+	case SessionKindInterrupted:
+		return EmojiSessionInterrupted
+	}
+	return EmojiSession
+}
+
+// DeriveSessionKind determines the session kind by examining its event files.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️derivesessionkind](semiorepo://definition/semio-repo/cli/main.go/Sessions/DeriveSessionKind)
+func DeriveSessionKind(sessionDir string) SessionKind {
+	entries, err := os.ReadDir(sessionDir)
+	if err != nil {
+		return SessionKindInterrupted
+	}
+	for _, e := range entries {
+		if strings.Contains(e.Name(), "agent-ended") {
+			return SessionKindCompleted
+		}
+	}
+	if len(entries) == 0 {
+		return SessionKindInterrupted
+	}
+	// Check if the latest event is recent (within 30 minutes) to determine if still running.
+	var latestTime time.Time
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		if info.ModTime().After(latestTime) {
+			latestTime = info.ModTime()
+		}
+	}
+	if !latestTime.IsZero() && time.Since(latestTime) < 30*time.Minute {
+		return SessionKindRunning
+	}
+	return SessionKindInterrupted
+}
+
+// ExtractSessionClient reads the client from session event files.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️extractsessionclient](semiorepo://definition/semio-repo/cli/main.go/Sessions/ExtractSessionClient)
+func ExtractSessionClient(sessionDir string) string {
+	entries, err := os.ReadDir(sessionDir)
+	if err != nil || len(entries) == 0 {
+		return ""
+	}
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(sessionDir, e.Name()))
+		if err != nil {
+			continue
+		}
+		var entry struct {
+			Event struct {
+				Client string `json:"client"`
+			} `json:"event"`
+		}
+		if err := json.Unmarshal(data, &entry); err == nil && entry.Event.Client != "" {
+			return entry.Event.Client
+		}
+	}
+	return ""
+}
+
+// ExtractSessionSecond reads the earliest timestamp from session event files.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️extractsessiontimestamp](semiorepo://definition/semio-repo/cli/main.go/Sessions/ExtractSessionSecond)
+func ExtractSessionSecond(sessionDir string) string {
+	entries, err := os.ReadDir(sessionDir)
+	if err != nil || len(entries) == 0 {
+		return ""
+	}
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(sessionDir, e.Name()))
+		if err != nil {
+			continue
+		}
+		var entry struct {
+			Event struct {
+				Second string `json:"second"`
+			} `json:"event"`
+		}
+		if err := json.Unmarshal(data, &entry); err == nil && entry.Event.Second != "" {
+			return entry.Event.Second
+		}
+	}
+	return ""
+}
+
+// StreamSessions streams all sessions found in the events directory.
+// [🧰semiorepo⌨️cli💻maingo🔖sessions🛠️streamsessions](semiorepo://definition/semio-repo/cli/main.go/Sessions/StreamSessions)
+func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+	rootDir := GetRootDir()
+	agentEventsDir := filepath.Join(rootDir, ".semio-repo", "⚡", "🤖")
+	yearDirs, err := os.ReadDir(agentEventsDir)
+	if err != nil {
+		return nil
+	}
+	for _, yd := range yearDirs {
+		if !yd.IsDir() {
+			continue
+		}
+		yy, err := strconv.Atoi(yd.Name())
+		if err != nil {
+			continue
+		}
+		monthDirs, err := os.ReadDir(filepath.Join(agentEventsDir, yd.Name()))
+		if err != nil {
+			continue
+		}
+		for _, md := range monthDirs {
+			if !md.IsDir() {
+				continue
+			}
+			mm, err := strconv.Atoi(md.Name())
+			if err != nil {
+				continue
+			}
+			dayDirs, err := os.ReadDir(filepath.Join(agentEventsDir, yd.Name(), md.Name()))
+			if err != nil {
+				continue
+			}
+			for _, dd := range dayDirs {
+				if !dd.IsDir() {
+					continue
+				}
+				dayNum, err := strconv.Atoi(dd.Name())
+				if err != nil {
+					continue
+				}
+				sessionDirs, err := os.ReadDir(filepath.Join(agentEventsDir, yd.Name(), md.Name(), dd.Name()))
+				if err != nil {
+					continue
+				}
+				for _, sd := range sessionDirs {
+					if !sd.IsDir() {
+						continue
+					}
+					sessionDir := filepath.Join(agentEventsDir, yd.Name(), md.Name(), dd.Name(), sd.Name())
+					kind := DeriveSessionKind(sessionDir)
+					client := ExtractSessionClient(sessionDir)
+					startedAt := ExtractSessionSecond(sessionDir)
+					s := Session{
+						UUID:      sd.Name(),
+						Year:      yy,
+						Month:     mm,
+						Day:       dayNum,
+						Kind:      kind,
+						Client:    client,
+						StartedAt: startedAt,
+					}
+					if !matchesFilter(s.UUID, options) && !matchesFilter(string(s.Kind), options) && !matchesFilter(s.Client, options) {
+						continue
+					}
+					if !matchesQuery(s.UUID+" "+string(s.Kind)+" "+s.Client, options) {
+						continue
+					}
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					case out <- s:
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// #endregion 🔖Sessions
 
 // SaveGoal MUST persist the goal atomically to the data store.
 // SaveGoal persists goal to the data store.
@@ -38527,8 +39144,8 @@ func fileKindEmoji(data map[string]interface{}) string {
 	switch fkind {
 	case "code":
 		return emojiText(EmojiFileCode)
-	case "test":
-		return emojiText(EmojiFileTest)
+	case "lab":
+		return emojiText(EmojiFileLab)
 	case "script":
 		return emojiText(EmojiFileScript)
 	case "docs":
@@ -38571,6 +39188,93 @@ func goalArtifactID(rawGoalID string) string {
 		result += emojiText(EmojiGoal) + Flat(p)
 	}
 	return result
+}
+
+// goalPathToSemioID converts a filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI")
+// to the semio repo emoji ID format (e.g. "🎯aioptimizedrepo🎯repocli").
+func goalPathToSemioID(goalPath string) string {
+	if goalPath == "" {
+		return ""
+	}
+	return goalArtifactID(goalPath)
+}
+
+// semioIDToGoalPath converts a semio repo emoji goal ID (e.g. "🎯aioptimizedrepo🎯repocli")
+// back to its filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI") by scanning the
+// goals directory and matching each segment's Flat() value.
+func semioIDToGoalPath(semioID string) string {
+	if semioID == "" {
+		return ""
+	}
+	goalEmoji := emojiText(EmojiGoal)
+	trimmed := semioID
+	if strings.HasPrefix(trimmed, goalEmoji) {
+		trimmed = trimmed[len(goalEmoji):]
+	}
+	segments := strings.Split(trimmed, goalEmoji)
+	if len(segments) == 0 {
+		return ""
+	}
+
+	dir := GetRepoGoalsDir()
+	var pathParts []string
+	currentDir := dir
+
+	for _, seg := range segments {
+		if seg == "" {
+			continue
+		}
+		entries, err := os.ReadDir(currentDir)
+		if err != nil {
+			return semioID
+		}
+		found := false
+		for _, entry := range entries {
+			if entry.IsDir() && Flat(entry.Name()) == seg {
+				pathParts = append(pathParts, entry.Name())
+				currentDir = filepath.Join(currentDir, entry.Name())
+				found = true
+				break
+			}
+		}
+		if !found {
+			return semioID
+		}
+	}
+	return strings.Join(pathParts, "/")
+}
+
+// contributorGithubToSemioID converts a github username to the semio contributor ID format.
+func contributorGithubToSemioID(github string) string {
+	if github == "" || github == "unknown" {
+		return github
+	}
+	prefix := emojiText(EmojiContributor)
+	if strings.HasPrefix(github, prefix) {
+		return github
+	}
+	return prefix + Flat(github)
+}
+
+// semioIDToContributorGithub converts a semio contributor ID back to a github username.
+func semioIDToContributorGithub(semioID string) string {
+	if semioID == "" || semioID == "unknown" {
+		return semioID
+	}
+	prefix := emojiText(EmojiContributor)
+	if !strings.HasPrefix(semioID, prefix) {
+		return semioID
+	}
+	flat := semioID[len(prefix):]
+	contributors, err := ListContributors()
+	if err == nil {
+		for _, c := range contributors {
+			if Flat(c.Github) == flat {
+				return c.Github
+			}
+		}
+	}
+	return flat
 }
 
 func interactionKindEmoji(data map[string]interface{}) string {
@@ -38890,7 +39594,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 		}
 	}
 
-	fileEmojis := []string{"💻", "🧪", "📜", "📃", "⚙️", "💾", "⚖️", "📄"}
+	fileEmojis := []string{"💻", "🥼", "📜", "📃", "⚙️", "💾", "⚖️", "📄"}
 	for _, e := range fileEmojis {
 		if strings.HasPrefix(clean, e) {
 			rest := clean[len(e):]
@@ -39303,6 +40007,14 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		contributorId, _ := data["contributorId"].(string)
 		entityID, _ := data["entityId"].(string)
 		return secondId + contributorId + entityID + k
+	case "sessions":
+		return parentId + emojiText(EmojiSessions)
+	case "session":
+		uuid, _ := data["uuid"].(string)
+		if uuid == "" {
+			uuid, _ = data["id"].(string)
+		}
+		return parentId + emojiText(EmojiSession) + Flat(uuid)
 	}
 	return ""
 }
@@ -39678,6 +40390,14 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 			return "semiorepo://is/on/" + url.PathEscape(entityUri) + "/" + kind
 		}
 		return ""
+	case "sessions":
+		return "semiorepo://s"
+	case "session":
+		uuid, _ := data["uuid"].(string)
+		if uuid == "" {
+			uuid, _ = data["id"].(string)
+		}
+		return fmt.Sprintf("semiorepo://s/%s", PathToUriPath(uuid))
 	}
 	return ""
 }
@@ -40016,7 +40736,7 @@ skipSectionChain:
 			return buildFileUriFromPath(rest)
 		}
 	}
-	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	fileEmojis := []string{EmojiFileCode, EmojiFileLab, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
 	for _, fe := range fileEmojis {
 		if rest, ok := hasPrefix(normalized, fe); ok {
 			return buildFileUriFromPath(rest)
@@ -40081,6 +40801,12 @@ skipSectionChain:
 			return "semiorepo://cms"
 		}
 		return "semiorepo://cms/" + rest
+	}
+	if rest, ok := hasPrefix(normalized, EmojiSession); ok {
+		if rest == "" {
+			return "semiorepo://s"
+		}
+		return "semiorepo://s/" + rest
 	}
 	return ""
 }
@@ -40212,6 +40938,11 @@ func UriToId(uri string) string {
 	case strings.HasPrefix(p, "cms/"):
 		v := strings.TrimPrefix(p, "cms/")
 		return emojiText(EmojiCommit) + Flat(v)
+	case p == "s":
+		return emojiText(EmojiSessions)
+	case strings.HasPrefix(p, "s/"):
+		v := strings.TrimPrefix(p, "s/")
+		return emojiText(EmojiSession) + Flat(v)
 	case p == "is":
 		return ""
 	case strings.HasPrefix(p, "is/on/"):

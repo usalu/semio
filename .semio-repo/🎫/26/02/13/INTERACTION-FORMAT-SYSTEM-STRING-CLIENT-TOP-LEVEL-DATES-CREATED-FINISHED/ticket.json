@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Interaction format: system string, client top-level, dates.created/finished",
   "summary": "Interaction format migrated: system string, client top-level, dates.created/finished. InteractionDates.Started→Created, removed legacy system object unmarshaling, GraphQL schema updated, all ticket.json and goal.json migrated.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 18:44:17",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "cursor-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",

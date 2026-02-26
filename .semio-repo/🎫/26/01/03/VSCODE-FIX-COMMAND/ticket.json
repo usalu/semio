@@ -2,12 +2,12 @@
   "title": "VSCODE-FIX-COMMAND",
   "status": "closed",
   "prompt": "\"Fix the VSCode fix command that fails with: Failed to fix breach: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/semio/playwright.config.ts. Also enable individual breach fixing.\"",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-03T02:14:06Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",

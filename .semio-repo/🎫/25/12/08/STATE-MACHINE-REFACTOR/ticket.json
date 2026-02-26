@@ -1,17 +1,17 @@
 {
   "title": "Refactor sketchpad state machine for proper state transitions",
   "status": "closed",
-  "prompt": "\u003e-",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
+  "prompt": ">-",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.889Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "unknown",
-      "prompt": "\u003e-",
+      "prompt": ">-",
       "llm": "opus-4-5"
     }
   ]

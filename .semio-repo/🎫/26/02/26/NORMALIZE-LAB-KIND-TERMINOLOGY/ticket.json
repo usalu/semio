@@ -1,0 +1,61 @@
+{
+  "title": "Normalize Lab Kind Terminology",
+  "description": "A special kind of files are labs. Labs contain tests. A test is a kind of definition. Around the codebase the term tests used for test files should be labs. Refactor naming and behavior accordingly, extend existing tests, and ensure compatibility across list/tree/rendering and model mappings.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-26 12:54:08",
+      "author": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "codex",
+      "commit": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+      "prompt": "A special kind of files are labs. Labs contain tests. A test is a kind of definition. Around the codebase the term tests used for test files should be labs. Refactor naming and behavior accordingly, extend existing tests, and ensure compatibility across list/tree/rendering and model mappings.",
+      "llm": "gpt-5-3-codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-26 13:01:29",
+      "author": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "codex",
+      "commit": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+      "summary": "Normalized file-kind terminology from test to lab across CLI and VS Code filter surfaces; updated derivation, flags, GraphQL enum, emoji mapping, and existing tests.",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
+        },
+        {
+          "path": "🧰semiorepo🖱️vscode🥼extensiontestts"
+        },
+        {
+          "path": "🧰semiorepo🖱️vscode💻extensionts"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "session": "1772110470057859428-4422118773920764617",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "windsurf-chat"
+    },
+    {
+      "session": "ad224132-d431-4315-bc1f-1c7b28538111",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "transcript": "/home/vscode/.claude/projects/-workspaces-semio/ad224132-d431-4315-bc1f-1c7b28538111.jsonl"
+    },
+    {
+      "session": "9b57ce56-af90-4029-a6e9-f3ff7d7669b9",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "windsurf-chat"
+    }
+  ]
+}

@@ -2,12 +2,12 @@
   "title": "Fix empty Kit app settings panel by splitting sections and adding i18n",
   "status": "closed",
   "prompt": "\"Fix Kit app settings panel being empty. There should be two sections appearing: kit editor and sketchpad. Extend kit app test to check for the panel and at least one item per section.\"",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-SECTION-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯reposectionmechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T15:59:29.029Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "c44e5e38193be007ca56cc649aa2f58238c1ec40",

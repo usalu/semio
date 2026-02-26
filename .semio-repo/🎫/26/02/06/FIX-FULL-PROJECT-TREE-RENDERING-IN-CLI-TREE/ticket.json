@@ -1,18 +1,18 @@
 {
   "title": "Fix Full Project Tree Rendering In Cli Tree",
   "status": "closed",
-  "prompt": "Implement the `tree \u003cquery\u003ee?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003ee` and `--no-\u003cfilter\u003ee` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
-  "summary": "Fixed full tree hierarchy rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy-\u003eentitykind-\u003estatute. Extended existing tree tests and validated with targeted go test runs.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
+  "prompt": "Implement the `tree <query>e?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-<value>e` and `--no-<filter>e` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
+  "summary": "Fixed full tree hierarchy rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy->entitykind->statute. Extended existing tree tests and validated with targeted go test runs.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-06 23:38:34",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
-      "prompt": "Implement the `tree \u003cquery\u003ee?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003ee` and `--no-\u003cfilter\u003ee` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
+      "prompt": "Implement the `tree <query>e?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-<value>e` and `--no-<filter>e` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {
@@ -2166,17 +2166,17 @@
     {
       "kind": "ticket.reopen",
       "date": "2026-02-16 02:31:41",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "fd5d919ef2e766ae252b8737756de119f1de6132",
-      "prompt": "Fix semio-repo cli tree to show full project tree hierarchy consistently. Ensure tree structure includes FOLDER*-\u003eFILE and PROJECT-\u003eBUNDLE-\u003eFOLDER*-\u003eFILE-\u003eSECTION-\u003eDEFINITION plus GOAL*-\u003eTICKET, DRAFT*, POLICY-\u003eENTITYKIND-\u003eSTATUTE. TODO/STATUTE/BREACH are excluded from generic tree view unless naturally nested.",
+      "prompt": "Fix semio-repo cli tree to show full project tree hierarchy consistently. Ensure tree structure includes FOLDER*->FILE and PROJECT->BUNDLE->FOLDER*->FILE->SECTION->DEFINITION plus GOAL*->TICKET, DRAFT*, POLICY->ENTITYKIND->STATUTE. TODO/STATUTE/BREACH are excluded from generic tree view unless naturally nested.",
       "llm": "gpt-5-mini"
     },
     {
       "kind": "ticket.close",
       "date": "2026-02-16 03:01:24",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "adfa491807cce231861ceec171ee87ab0cc15ef9",
@@ -2213,7 +2213,7 @@
               }
             },
             {
-              "path": "🧪maintestgo",
+              "path": "🥼maintestgo",
               "lines": {
                 "added": 102,
                 "removed": 11
@@ -2290,14 +2290,14 @@
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests",
+              "path": "🥼maintestgo#Policy Tests",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests",
+              "path": "🥼maintestgo#Monorepo Tree Tests",
               "lines": {
                 "added": 92,
                 "removed": 1
@@ -2717,42 +2717,42 @@
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestSectionWithIdentification",
+              "path": "🥼maintestgo#Policy Tests§TestSectionWithIdentification",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestDefinitionWithIdentification",
+              "path": "🥼maintestgo#Policy Tests§TestDefinitionWithIdentification",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests§TestBuildMonorepoTree",
+              "path": "🥼maintestgo#Monorepo Tree Tests§TestBuildMonorepoTree",
               "lines": {
                 "added": 92,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestSectionWithIdentification",
+              "path": "🥼maintestgo#Policy Tests§TestSectionWithIdentification",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestDefinitionWithIdentification",
+              "path": "🥼maintestgo#Policy Tests§TestDefinitionWithIdentification",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests§TestBuildMonorepoTree",
+              "path": "🥼maintestgo#Monorepo Tree Tests§TestBuildMonorepoTree",
               "lines": {
                 "added": 0,
                 "removed": 1

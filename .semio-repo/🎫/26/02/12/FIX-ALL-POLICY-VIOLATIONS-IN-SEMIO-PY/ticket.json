@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Fix all 985 policy breachs in semio/py/semio.py",
   "summary": "Fixed all 985 policy breachs in semio/py/semio.py: 45 section summaries, 469 definition summaries, 470 definition requirements, 1 orphan fix. 0 breachs remaining.",
-  "goal": "FIX-POLICY-VIOLATIONS/FIX-ALL-PY-VIOLATIONS",
+  "goal": "🎯fixpolicyviolations🎯fixallpyviolations",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-12 11:57:39",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",

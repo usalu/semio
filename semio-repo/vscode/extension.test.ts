@@ -453,7 +453,7 @@ suite("Sidebar View Test Suite", function () {
       "semio.filter.toggle.file.code",
       "semio.filter.toggle.file.script",
       "semio.filter.toggle.file.config",
-      "semio.filter.toggle.file.test",
+      "semio.filter.toggle.file.lab",
       "semio.filter.toggle.file.docs",
       "semio.filter.toggle.file.resource",
       "semio.filter.toggle.file.license",

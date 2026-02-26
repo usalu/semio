@@ -2,12 +2,12 @@
   "title": "VSCODE-PROBLEM-PREVIEW",
   "status": "closed",
   "prompt": "When clicking on breachs under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-03T02:57:08Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",

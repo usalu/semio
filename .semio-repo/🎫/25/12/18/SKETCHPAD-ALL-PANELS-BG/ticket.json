@@ -2,12 +2,12 @@
   "title": "Ensure all panels paint panel background",
   "status": "closed",
   "prompt": "All panels should have panel background. Currently I only see the border of e.g. details or settings panel in home. Toolbar panel is transparent but should have the panel background.",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "goal": "🎯r2602🎯runningsketchpad",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-18T18:16:24.765Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",

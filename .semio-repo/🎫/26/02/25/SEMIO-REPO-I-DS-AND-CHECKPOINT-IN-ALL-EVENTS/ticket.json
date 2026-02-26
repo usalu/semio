@@ -1,0 +1,92 @@
+{
+  "title": "Semio Repo IDs and Checkpoint in All Events",
+  "description": "All semio repo event information should use semio repo IDs. Add checkpoint (commit SHA from git provider) to all events. Ensure folder/file/line/range/section/definition IDs follow the semio-repo ID scheme. Add Checkpoint field to HookResultAgentBase and all version result types.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/701"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-25 19:27:07",
+      "author": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+      "prompt": "All semio repo event information should use semio repo IDs. Add checkpoint (commit SHA from git provider) to all events. Ensure folder/file/line/range/section/definition IDs follow the semio-repo ID scheme. Add Checkpoint field to HookResultAgentBase and all version result types.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-25 20:10:22",
+      "author": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+      "summary": "Added Checkpoint field to HookResultAgentBase and all version result types (CheckpointStarting, CheckpointEnded, CheckoutStarting, CheckoutEnded). Updated dispatchHook to resolve currentCheckpoint at function start via DefaultVersionControlProvider().CurrentCheckpoint() and populate it in all events. Renamed ID→Checkpoint in CheckpointEnded/CheckoutEnded. Updated extractCheckpointIDFromResult. Fixed mmss→hhmmss variable bug in logHook. Added 4 new tests: TestCheckpointInAllAgentEvents (17 subtests), TestCheckpointInAllVersionEvents (6 subtests), TestCheckpointInLoggedEventJSON, TestEventIDsUseSemioRepoFormat. All tests pass.",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli💻maingo"
+        },
+        {
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "session": "64ebca44-0360-43dd-b7ed-351ace78a6c4",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/64ebca44-0360-43dd-b7ed-351ace78a6c4.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Research current event/hook system",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Read key code sections in detail",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Open ticket for the task",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Add Checkpoint to HookResultAgentBase",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Add Checkpoint to version result types",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Populate Checkpoint in dispatchHook",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Add Checkpoint to resolveEventIDs",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Build and fix compile errors",
+            "completed": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Update/extend tests",
+            "started": "2026-02-25T19:38:02Z"
+          },
+          {
+            "name": "Run tests and verify"
+          },
+          {
+            "name": "Close ticket"
+          }
+        ]
+      }
+    }
+  ]
+}

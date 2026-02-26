@@ -4,12 +4,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/680"
   },
-  "goal": "REFACTORING",
+  "goal": "🎯refactoring",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-23 21:32:02",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
@@ -19,7 +19,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-23 21:39:30",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
@@ -34,14 +34,14 @@
   "agents": [
     {
       "session": "8416c95d-e387-4fc4-aabf-a5663701f617",
-      "contributor": "usalu",
+      "contributor": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "events": [
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T21:32:09Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket open \"REFACTORING\" \"Document Hardcoded URI Strings for Scheme Migration\" \"Find and document all hardcoded URI strings in semio-repo/cli/main.go that need updating from OLD to NEW scheme\" \"copilot-chat\" \"opus-4-6\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket open \"REFACTORING\" \"Document Hardcoded URI Strings for Scheme Migration\" \"Find and document all hardcoded URI strings in semio-repo/cli/main.go that need updating from OLD to NEW scheme\" \"copilot-chat\" \"opus-4-6\" 2>&1"
         },
         {
           "kind": "agent.tool.searching",
@@ -309,12 +309,12 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-23T21:38:12Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"2026/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories: file walkers (3), ticket tree URIs (4), tree category nodes (12), parseSemioIdentificationLink prefixes (8 - CRITICAL breakage), CodebaseContext helpers (2), ticket file resolution (6), StreamFolders/StreamFiles (3), ticket rendering (1), MCP resource defs (18), MCP handlers (11). Full report with line numbers, old strings, and new strings in ticket folder.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close \"2026/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories: file walkers (3), ticket tree URIs (4), tree category nodes (12), parseSemioIdentificationLink prefixes (8 - CRITICAL breakage), CodebaseContext helpers (2), ticket file resolution (6), StreamFolders/StreamFiles (3), ticket rendering (1), MCP resource defs (18), MCP handlers (11). Full report with line numbers, old strings, and new strings in ticket folder.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2>&1"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T21:38:20Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"2026/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories: file walkers (3), ticket tree URIs (4), tree category nodes (12), parseSemioIdentificationLink prefixes (8 - CRITICAL breakage), CodebaseContext helpers (2), ticket file resolution (6), StreamFolders/StreamFiles (3), ticket rendering (1), MCP resource defs (18), MCP handlers (11). Full report with line numbers, old strings, and new strings in ticket folder.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close \"2026/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories: file walkers (3), ticket tree URIs (4), tree category nodes (12), parseSemioIdentificationLink prefixes (8 - CRITICAL breakage), CodebaseContext helpers (2), ticket file resolution (6), StreamFolders/StreamFiles (3), ticket rendering (1), MCP resource defs (18), MCP handlers (11). Full report with line numbers, old strings, and new strings in ticket folder.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2>&1"
         },
         {
           "kind": "agent.tool.searching",
@@ -337,27 +337,27 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-23T21:38:45Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2>&1"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T21:38:58Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories.\" \".semio-repo/🎫/26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION/report.md\" 2>&1"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-23T21:39:02Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close --help 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close --help 2>&1"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T21:39:10Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close --help 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close --help 2>&1"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-23T21:39:13Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories.\" \"semio-repo/cli/main.go\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close \"26/02/23/DOCUMENT-HARDCODED-URI-STRINGS-FOR-SCHEME-MIGRATION\" \"Documented all ~45 hardcoded OLD-scheme URI strings in semio-repo/cli/main.go across 10 categories.\" \"semio-repo/cli/main.go\" 2>&1"
         }
       ],
       "diff": {

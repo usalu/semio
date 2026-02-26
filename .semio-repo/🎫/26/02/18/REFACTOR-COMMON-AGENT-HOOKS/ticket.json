@@ -5,12 +5,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/624"
   },
-  "goal": "DEVOPS",
+  "goal": "🎯devops",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-18 17:32:57",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",

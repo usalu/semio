@@ -2,12 +2,12 @@
   "title": "SCOPE-HIERARCHY-BUNDLES",
   "status": "closed",
   "prompt": "Add hierarchical scope mechanism, ignore flag, bundles structure for contribution tracking",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-BUNDLE-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repobundlemechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-05T15:54:12Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "6e9b79f94f6dfd840100fa1a245e71b8d3c192f2",

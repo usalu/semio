@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/435"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-06 22:34:05",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "ed14664e8b9fd928006607e1035779b1723addc0",
@@ -59,7 +59,7 @@
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go",
+              "path": "🥼︎semio-repo/cli/main_test.go",
               "lines": {
                 "added": 7321,
                 "removed": 0
@@ -95,7 +95,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Expertise Levels",
               "to": "AGENTS.md#Codebase#📁js/#Policies",
               "lines": {
                 "added": 10,
@@ -224,7 +224,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Validation#Validation Types",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field<T>e Type",
               "lines": {
                 "added": 46,
                 "removed": 46
@@ -303,8 +303,8 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 38
@@ -312,7 +312,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Store Hierarchy",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -320,7 +320,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Coordinate System#semio Coordinate System",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -328,7 +328,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#File Providers#File Operations",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -336,7 +336,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#XState Hooks",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -416,7 +416,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Transaction State Management",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration",
               "lines": {
                 "added": 39,
                 "removed": 39
@@ -424,7 +424,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Styling",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#AppConfig",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 15
@@ -432,7 +432,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📄 .devcontainer/post-create.sh",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Path Matching",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -440,7 +440,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)#Undo/Redo Behavior",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Route Segments",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 12
@@ -448,7 +448,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📄 sql/sqlite/repo/schema.sql",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -583,7 +583,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Content",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Usage",
               "lines": {
                 "added": 8,
@@ -599,7 +599,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Route Segments",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Route Segments",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)#Undo/Redo Behavior",
               "lines": {
                 "added": 12,
@@ -663,7 +663,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Scope Providers",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Command Registry",
               "lines": {
                 "added": 4,
@@ -895,7 +895,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#AppConfig",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#AppConfig",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Styling",
               "lines": {
                 "added": 15,
@@ -919,7 +919,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Transaction State Management",
               "lines": {
                 "added": 39,
@@ -927,7 +927,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#XState Hooks",
               "lines": {
                 "added": 10,
@@ -1087,7 +1087,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Components",
               "to": "AGENTS.md#Codebase#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Fix Comparison Notes",
               "lines": {
                 "added": 6,
@@ -1207,7 +1207,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field<T>e Type",
               "to": "AGENTS.md#Codebase#📁js/semio/#Validation#Validation Types",
               "lines": {
                 "added": 46,
@@ -1551,7 +1551,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Path Matching",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Path Matching",
               "to": "AGENTS.md#Codebase#📄semio-repo/cli/main.go",
               "lines": {
                 "added": 4,
@@ -10465,1344 +10465,1344 @@
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Bundle Tests§TestBundleListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Bundle Tests§TestBundleListCommand",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Bundle Tests§TestBundleTreeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Bundle Tests§TestBundleTreeCommand",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Analyze Tests§TestAnalyzeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Analyze Tests§TestAnalyzeCommand",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Analyze Tests§TestAnalyzeFile",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Analyze Tests§TestAnalyzeFile",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Codebase Tests§TestCodebaseCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Codebase Tests§TestCodebaseCommand",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestDeriveFileKind",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestDeriveFileKind",
               "lines": {
                 "added": 51,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileHeaderId",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileHeaderId",
               "lines": {
                 "added": 92,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixApplyAutofixes",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixApplyAutofixes",
               "lines": {
                 "added": 65,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixBlockComment",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixBlockComment",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixCommand",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileId",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileId",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileIdDetection",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileIdDetection",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileIdEndToEnd",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileIdEndToEnd",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileIdIdempotent",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixHeaderWrongFileIdIdempotent",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixInlineComment",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixInlineComment",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixJSDocComment",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixJSDocComment",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixMultipleBreachsSameFile",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixMultipleBreachsSameFile",
               "lines": {
                 "added": 42,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixSectionEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixSectionEmpty",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixSectionMissingEndName",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixSectionMissingEndName",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixSectionNameMismatch",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Fix Tests§TestFixSectionNameMismatch",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Helpers§executeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Helpers§executeCommand",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Helpers§executeCommandMd",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Helpers§executeCommandMd",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli#Helpers§toolOutputText",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli#Helpers§toolOutputText",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFindMatchingSectionStartName",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFindMatchingSectionStartName",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixConfigIgnored",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixConfigIgnored",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixExtractFileFromScope",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixExtractFileFromScope",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixIdempotent",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixIdempotent",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixImprovedCommentLogic",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixImprovedCommentLogic",
               "lines": {
                 "added": 98,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixNestedSections",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixNestedSections",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixNonAutofixableNotFixed",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixNonAutofixableNotFixed",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixViaGraphQL",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixViaGraphQL",
               "lines": {
                 "added": 29,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixViaRepoContext",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixViaRepoContext",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestFixStatuteMeta",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestFixStatuteMeta",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsAutofix",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsAutofix",
               "lines": {
                 "added": 115,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsCSharp",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsCSharp",
               "lines": {
                 "added": 77,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsGo",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsGo",
               "lines": {
                 "added": 106,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsPython",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsPython",
               "lines": {
                 "added": 98,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsRust",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsRust",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsShell",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsShell",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§TestScanCommentsTypeScript",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§TestScanCommentsTypeScript",
               "lines": {
                 "added": 63,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§x",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§x",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Cli§y",
+              "path": "🥼︎semio-repo/cli/main_test.go#Cli§y",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestBuildProjectLinkArgs",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestBuildProjectLinkArgs",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestBundlesNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestBundlesNonEmpty",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestContributorsNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestContributorsNonEmpty",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestFilesNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestFilesNonEmpty",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestFilterTicketWorkspaceFiles",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestFilterTicketWorkspaceFiles",
               "lines": {
                 "added": 24,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestFoldersNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestFoldersNonEmpty",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
               "lines": {
                 "added": 111,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestPoliciesNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestPoliciesNonEmpty",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
               "lines": {
                 "added": 50,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestTicketsNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestTicketsNonEmpty",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestStatutesNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestStatutesNonEmpty",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Collection Tests§TestBreachsNonEmpty",
+              "path": "🥼︎semio-repo/cli/main_test.go#Collection Tests§TestBreachsNonEmpty",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Contributor Tests§TestContributorListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Contributor Tests§TestContributorListCommand",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Definition Tests§TestDefinitionListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Definition Tests§TestDefinitionListCommand",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#File Tests§TestFileCreateMoveDelete",
+              "path": "🥼︎semio-repo/cli/main_test.go#File Tests§TestFileCreateMoveDelete",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#File Tests§TestFileListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#File Tests§TestFileListCommand",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#File Tests§TestFileTreeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#File Tests§TestFileTreeCommand",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Folder Tests§TestFolderCreateMoveDelete",
+              "path": "🥼︎semio-repo/cli/main_test.go#Folder Tests§TestFolderCreateMoveDelete",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Folder Tests§TestFolderListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Folder Tests§TestFolderListCommand",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Folder Tests§TestFolderTreeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Folder Tests§TestFolderTreeCommand",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Goal Tests§TestGoalCreateAndCleanup",
+              "path": "🥼︎semio-repo/cli/main_test.go#Goal Tests§TestGoalCreateAndCleanup",
               "lines": {
                 "added": 33,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Goal Tests§TestGoalCreateValidation",
+              "path": "🥼︎semio-repo/cli/main_test.go#Goal Tests§TestGoalCreateValidation",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Goal Tests§TestGoalHierarchy",
+              "path": "🥼︎semio-repo/cli/main_test.go#Goal Tests§TestGoalHierarchy",
               "lines": {
                 "added": 136,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Goal Tests§TestGoalList",
+              "path": "🥼︎semio-repo/cli/main_test.go#Goal Tests§TestGoalList",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLAnalyzeQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLAnalyzeQuery",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLBundlesQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLBundlesQuery",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLContributorsQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLContributorsQuery",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLFixMutation",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLFixMutation",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLPoliciesQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLPoliciesQuery",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLRepoQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLRepoQuery",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLTicketsQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#GraphQL Tests§TestGraphQLTicketsQuery",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§TestInteractionUnmarshalAuthorShapes",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§TestInteractionUnmarshalAuthorShapes",
               "lines": {
                 "added": 39,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§findTestRepoRoot",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§findTestRepoRoot",
               "lines": {
                 "added": 25,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§firstJSONLine",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§firstJSONLine",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§getTestExecutor",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§getTestExecutor",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§parseGoalCreateID",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§parseGoalCreateID",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§parseTicketCloseStatus",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§parseTicketCloseStatus",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§parseTicketOpenResult",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§parseTicketOpenResult",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§parseTicketReopenStatus",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§parseTicketReopenStatus",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Helpers§testEngineFactory",
+              "path": "🥼︎semio-repo/cli/main_test.go#Helpers§testEngineFactory",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityContributorList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityContributorList",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityDraftList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityDraftList",
               "lines": {
                 "added": 37,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityGoalList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityGoalList",
               "lines": {
                 "added": 42,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityPolicyList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityPolicyList",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityProjectList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityProjectList",
               "lines": {
                 "added": 29,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityProjectTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityProjectTree",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityTicketList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityTicketList",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolAnalyzeScope",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolAnalyzeScope",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolContributorList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolContributorList",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolDefinitionList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolDefinitionList",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolDraftLifecycle",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolDraftLifecycle",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolDraftList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolDraftList",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFileCRUD",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFileCRUD",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFileList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFileList",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFileTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFileTree",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFixScope",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFixScope",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFolderCRUD",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFolderCRUD",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFolderList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFolderList",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFolderTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolFolderTree",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolGoalList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolGoalList",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolGoalUri",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolGoalUri",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolPolicyCheck",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolPolicyCheck",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolPolicyList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolPolicyList",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolProjectList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolProjectList",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolProjectTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolProjectTree",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolSectionList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolSectionList",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolSectionTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolSectionTree",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolTicketLifecycle",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolTicketLifecycle",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolTicketList",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§TestToolTicketList",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#MCP Tool Tests§setupToolTest",
+              "path": "🥼︎semio-repo/cli/main_test.go#MCP Tool Tests§setupToolTest",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestBuildMonorepoTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestBuildMonorepoTree",
               "lines": {
                 "added": 106,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestCollapseFilteredKinds",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestCollapseFilteredKinds",
               "lines": {
                 "added": 56,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestFilterMonorepoTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestFilterMonorepoTree",
               "lines": {
                 "added": 175,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
               "lines": {
                 "added": 73,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestSearchMonorepoTree",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestSearchMonorepoTree",
               "lines": {
                 "added": 75,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestSortTreeChildren",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestSortTreeChildren",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeCommandFlags",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeCommandFlags",
               "lines": {
                 "added": 44,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterIsKindVisible",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterIsKindVisible",
               "lines": {
                 "added": 56,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesContributor",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesContributor",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesDate",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesDate",
               "lines": {
                 "added": 51,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesStatus",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesStatus",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesSubKind",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterMatchesSubKind",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeNodeKindConstants",
+              "path": "🥼︎semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeNodeKindConstants",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestDefinitionKind",
+              "path": "🥼︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestDefinitionKind",
               "lines": {
                 "added": 59,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestDefinitionsEdges",
+              "path": "🥼︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestDefinitionsEdges",
               "lines": {
                 "added": 77,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodeQuery",
+              "path": "🥼︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodeQuery",
               "lines": {
                 "added": 42,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "🥼︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 197,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestSectionsEdges",
+              "path": "🥼︎semio-repo/cli/main_test.go#Nodes and Edges Tests§TestSectionsEdges",
               "lines": {
                 "added": 82,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsByLanguage",
+              "path": "🥼︎semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsByLanguage",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsGroupedInline",
+              "path": "🥼︎semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsGroupedInline",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyCheckCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyCheckCommand",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyListCommand",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyBreachListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Policy Tests§TestPolicyBreachListCommand",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Section Tests§TestSectionListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Section Tests§TestSectionListCommand",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Section Tests§TestSectionTreeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Section Tests§TestSectionTreeCommand",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Ticket Tests§TestTicketListCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Ticket Tests§TestTicketListCommand",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Ticket Tests§TestTicketOpenContinueKeyword",
+              "path": "🥼︎semio-repo/cli/main_test.go#Ticket Tests§TestTicketOpenContinueKeyword",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Ticket Tests§TestTicketOpenNoticketKeyword",
+              "path": "🥼︎semio-repo/cli/main_test.go#Ticket Tests§TestTicketOpenNoticketKeyword",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
               "lines": {
                 "added": 349,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Analyze",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Analyze",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_FileWithSections",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_FileWithSections",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Fix",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Fix",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Lists",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Lists",
               "lines": {
                 "added": 86,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_MutationKeys",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_MutationKeys",
               "lines": {
                 "added": 90,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_NoJSONFallback",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_NoJSONFallback",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_SingleEntities",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_SingleEntities",
               "lines": {
                 "added": 55,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Additional",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Additional",
               "lines": {
                 "added": 117,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Bundle",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Bundle",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Definition",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Definition",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_File",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_File",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Folder",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Folder",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_MutationKeys",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_MutationKeys",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Section",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Section",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdToUri",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdToUri",
               "lines": {
                 "added": 37,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestInferEntityKind",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestInferEntityKind",
               "lines": {
                 "added": 43,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestLifecycleCommands",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestLifecycleCommands",
               "lines": {
                 "added": 157,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestListCommands",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestListCommands",
               "lines": {
                 "added": 125,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestMarkdownOutput",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestMarkdownOutput",
               "lines": {
                 "added": 71,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestParseSectionUriPath",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestParseSectionUriPath",
               "lines": {
                 "added": 29,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestRenderEntityMarkdownLink_AllKinds",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestRenderEntityMarkdownLink_AllKinds",
               "lines": {
                 "added": 71,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
               "lines": {
                 "added": 111,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionIdValueToUriPath",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionIdValueToUriPath",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestStreamingList",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestStreamingList",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
               "lines": {
                 "added": 103,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestUriToId",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestUriToId",
               "lines": {
                 "added": 46,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§assertValidMarkdownLink",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§assertValidMarkdownLink",
               "lines": {
                 "added": 27,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliJsonErrorsToStderr",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliJsonErrorsToStderr",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliJsonPureData",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliJsonPureData",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_ContributorOperations",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_ContributorOperations",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_DefinitionOperations",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_DefinitionOperations",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_FileOperations",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_FileOperations",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_FolderOperations",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_FolderOperations",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GoalClose",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GoalClose",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GoalOpen",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GoalOpen",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GoalReopen",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GoalReopen",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GraphQL",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_GraphQL",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_PolicyCheck",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_PolicyCheck",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_SectionOperations",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_SectionOperations",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketChange",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketChange",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketClose",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketClose",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketOpen",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketOpen",
               "lines": {
                 "added": 22,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketReopen",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests#Wrong Argument Tests§TestCliWrongArgs_TicketReopen",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_GoalLifecycle_Syntaxes_NoGithub",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_GoalLifecycle_Syntaxes_NoGithub",
               "lines": {
                 "added": 30,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_MiscCommands_NoSideEffects",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_MiscCommands_NoSideEffects",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_TicketLifecycle_Syntaxes_NoGithub",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_TicketLifecycle_Syntaxes_NoGithub",
               "lines": {
                 "added": 60,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests§TestMcpToolsSchemas",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests§TestMcpToolsSchemas",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests§TestTreeCommands",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests§TestTreeCommands",
               "lines": {
                 "added": 95,
                 "removed": 0
               }
             },
             {
-              "path": "🧪︎semio-repo/cli/main_test.go#Tree Tests§executeTreeCommand",
+              "path": "🥼︎semio-repo/cli/main_test.go#Tree Tests§executeTreeCommand",
               "lines": {
                 "added": 10,
                 "removed": 0

@@ -505,9 +505,9 @@
           "new": {
             "sections": [
               {
-                "section": "🧰semiorepo⌨️cli🧪maintestgo🔖hooktests",
+                "section": "🧰semiorepo⌨️cli🥼maintestgo🔖hooktests",
                 "definitions": [
-                  "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookalleventslogged"
+                  "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookalleventslogged"
                 ]
               }
             ],
@@ -529,9 +529,9 @@
           "new": {
             "sections": [
               {
-                "section": "🧰semiorepo⌨️cli🧪maintestgo🔖hooktests",
+                "section": "🧰semiorepo⌨️cli🥼maintestgo🔖hooktests",
                 "definitions": [
-                  "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookalleventslogged"
+                  "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookalleventslogged"
                 ]
               }
             ],
@@ -553,9 +553,9 @@
           "new": {
             "sections": [
               {
-                "section": "🧰semiorepo⌨️cli🧪maintestgo🔖hooktests",
+                "section": "🧰semiorepo⌨️cli🥼maintestgo🔖hooktests",
                 "definitions": [
-                  "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookalleventslogged"
+                  "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookalleventslogged"
                 ]
               }
             ],
@@ -704,9 +704,9 @@
           "new": {
             "sections": [
               {
-                "section": "🧰semiorepo⌨️cli🧪maintestgo🔖hooktests",
+                "section": "🧰semiorepo⌨️cli🥼maintestgo🔖hooktests",
                 "definitions": [
-                  "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookalleventslogged"
+                  "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookalleventslogged"
                 ]
               }
             ],
@@ -949,9 +949,9 @@
           "new": {
             "sections": [
               {
-                "section": "🧰semiorepo⌨️cli🧪maintestgo🔖hooktests",
+                "section": "🧰semiorepo⌨️cli🥼maintestgo🔖hooktests",
                 "definitions": [
-                  "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookcodeediteddefinitionidsarereporelative"
+                  "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookcodeediteddefinitionidsarereporelative"
                 ]
               }
             ],
@@ -1001,7 +1001,7 @@
         "files": {
           "modified": [
             "🧰semiorepo⌨️cli💻maingo",
-            "🧰semiorepo⌨️cli🧪maintestgo"
+            "🧰semiorepo⌨️cli🥼maintestgo"
           ]
         },
         "sections": {
@@ -1009,7 +1009,7 @@
             "🧰semiorepo⌨️cli💻maingo🔖types",
             "🧰semiorepo⌨️cli💻maingo🔖cli",
             "🧰semiorepo⌨️cli💻maingo🔖hooks",
-            "🧰semiorepo⌨️cli🧪maintestgo🔖hooktests"
+            "🧰semiorepo⌨️cli🥼maintestgo🔖hooktests"
           ]
         },
         "definitions": {
@@ -1023,8 +1023,8 @@
             "🧰semiorepo⌨️cli💻maingo🛠️extractcodeeditfrominput",
             "🧰semiorepo⌨️cli💻maingo🛠️trackhookinopenticket",
             "🧰semiorepo⌨️cli💻maingo🛠️vscodeeventfromhookevent",
-            "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookalleventslogged",
-            "🧰semiorepo⌨️cli🧪maintestgo🛠️testtrackhookcodeediteddefinitionidsarereporelative"
+            "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookalleventslogged",
+            "🧰semiorepo⌨️cli🥼maintestgo🛠️testtrackhookcodeediteddefinitionidsarereporelative"
           ]
         }
       }
@@ -1085,8 +1085,8 @@
     }
   ]
 }emio-repo/cli/cli hook code.edited windsurf-chat --file \"/workspaces/semio/.semio-repo/🎫/26/02/09/FIX-ID-SYSTEM-AND-EMOJI-PREFIXES/ticket.json\""
-        }
-      ]
-    }
-  ]
+}
+]
+}
+]
 }

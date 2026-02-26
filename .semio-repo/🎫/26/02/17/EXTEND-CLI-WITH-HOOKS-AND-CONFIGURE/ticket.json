@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/607"
   },
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-17 22:01:13",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -21,13 +21,13 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-17 22:13:05",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
       "files": [
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         },
         {
           "path": "🛅devcontainer📜postcreatesh"
@@ -40,7 +40,7 @@
     {
       "kind": "ticket.reopen",
       "date": "2026-02-17 23:06:14",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -50,13 +50,13 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-17 23:09:34",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
       "files": [
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         },
         {
           "path": "🧰semiorepo⌨️cli💻maingo"
@@ -66,7 +66,7 @@
     {
       "kind": "ticket.reopen",
       "date": "2026-02-17 23:12:49",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -76,7 +76,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-17 23:14:04",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad"
@@ -84,7 +84,7 @@
     {
       "kind": "ticket.reopen",
       "date": "2026-02-17 23:19:16",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -94,7 +94,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-17 23:21:30",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -103,7 +103,7 @@
           "path": "🧰semiorepo⌨️cli💻maingo"
         },
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     }

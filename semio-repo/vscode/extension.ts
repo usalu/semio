@@ -633,7 +633,7 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   if (!ff.code) args.push("--no-code");
   if (!ff.script) args.push("--no-script");
   if (!ff.config) args.push("--no-config");
-  if (!ff.test) args.push("--no-test");
+  if (!ff.lab) args.push("--no-lab");
   if (!ff.docs) args.push("--no-docs");
   if (!ff.resource) args.push("--no-resource");
   if (!ff.license) args.push("--no-license");
@@ -1298,7 +1298,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     project: { user: true, infrastructure: true, research: true },
     bundle: { library: true, binary: true, ui: true, site: true, assets: true, schema: true, default: true },
     folder: { organization: true, required: true },
-    file: { code: true, script: true, config: true, test: true, docs: true, resource: true, license: true },
+    file: { code: true, script: true, config: true, lab: true, docs: true, resource: true, license: true },
     section: { none: false, all: true },
     definition: { implementation: true, interface: true, constant: true },
     goal: { open: true, closed: true },
@@ -1748,7 +1748,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     bundle: ["library", "binary", "ui", "site", "assets", "schema", "default", "none", "all"],
     project: ["user", "infrastructure", "research", "none", "all"],
     folder: ["organization", "required", "none", "all"],
-    file: ["code", "script", "config", "test", "docs", "resource", "license", "none", "all"],
+    file: ["code", "script", "config", "lab", "docs", "resource", "license", "none", "all"],
     section: ["none", "all"],
     definition: ["implementation", "interface", "constant", "none", "all"],
     goal: ["open", "closed", "none", "all"],

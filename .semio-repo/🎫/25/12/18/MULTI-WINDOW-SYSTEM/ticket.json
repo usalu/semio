@@ -2,12 +2,12 @@
   "title": "Refactor all apps to a unified multi-window system",
   "status": "closed",
   "prompt": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "goal": "🎯r2602🎯runningsketchpad",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-18T15:18:04.589Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "",

@@ -2,12 +2,12 @@
   "title": "Right-align table create actions and show tags strip between name and action",
   "status": "closed",
   "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "goal": "🎯r2602🎯runningsketchpad",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-18T15:36:11.11Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "",

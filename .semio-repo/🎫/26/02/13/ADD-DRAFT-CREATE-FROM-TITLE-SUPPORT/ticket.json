@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Change draft creation to accept a title (like tickets/goals) instead of a raw slug. Update CLI, MCP, GraphQL, and add VSCode commands for draft create/delete.",
   "summary": "Changed draft creation to accept a title (consistent with tickets/goals) instead of a raw slug. Added VSCode commands for draft create/delete.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DRAFT-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repodraftmechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 17:26:45",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",

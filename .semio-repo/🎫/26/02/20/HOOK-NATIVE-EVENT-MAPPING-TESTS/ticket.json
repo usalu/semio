@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Test every native hook event mapping using real data from 📜 logs, refactor log format to input/event/response",
   "summary": "Refactored hook log format from {context,result} to {input,event,response}. Added HookLogEvent, HookLogResponse types, extractTimestampFromInput. Added TestNativeHookEventMappingWithRealData (85 subtests for all native events across copilot/cursor/windsurf/claude/droid/codex/antigravity with real data from log files). Added TestNativeHookEventMappingFromRealLogFiles (reads real log files for end-to-end validation). All tests pass.",
-  "goal": "HOOKS/TESTING",
+  "goal": "🎯hooks🎯testing",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-20 18:33:28",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "00b7f35cbfa9da1b2714125ed6191b4a8bc8f762",
@@ -18,7 +18,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-20 19:00:27",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "00b7f35cbfa9da1b2714125ed6191b4a8bc8f762",
@@ -27,7 +27,7 @@
           "path": "🧰semiorepo⌨️cli💻maingo"
         },
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     }

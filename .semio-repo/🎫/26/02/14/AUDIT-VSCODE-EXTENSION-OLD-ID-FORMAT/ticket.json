@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/568"
   },
-  "goal": "ANALYZING-IDS/ANALYZING-VSCODE-IDS",
+  "goal": "🎯analyzingids🎯analyzingvscodeids",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-14 15:33:15",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-14 15:34:25",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",

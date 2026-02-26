@@ -103,6 +103,9 @@
   },
   "customizations": {
     "vscode": {
+      "remoteEnv": {
+        "VSCODE_AGENT_FOLDER": "/home/vscode/.antigravity-server"
+      },
       "extensions": [
         // #region 🔖Extensions Repo
         "nrwl.angular-console",

@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Update all entity ID generation to match the new requirements: new entity kinds (root, year, month, day, hour, minute, second, line, range, todo, breach, interaction), new ID formats with hierarchical parent prefixes, new resource/diffable kind lists. Update GetArtifactID, GetID methods, entity kind enums, and write comprehensive tests for every list/tree command with exact IDs.",
   "summary": "Updated all entity ID generation to match new hierarchical requirements. Added PropagateParentIDs, goalArtifactID helper, fixed GetArtifactID for goals/tickets/commits/line/range, excluded bundle root folders from tree, updated 6 stale tests, added 20+ comprehensive entity ID tests.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-14 23:28:51",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
@@ -18,7 +18,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-15 00:53:07",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
@@ -55,7 +55,7 @@
               }
             },
             {
-              "path": "🧪maintestgo",
+              "path": "🥼maintestgo",
               "lines": {
                 "added": 27,
                 "removed": 27
@@ -76,21 +76,21 @@
               }
             },
             {
-              "path": "🧪maintestgo#GraphQL Tests",
+              "path": "🥼maintestgo#GraphQL Tests",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧪maintestgo#Cli#Fix Tests",
+              "path": "🥼maintestgo#Cli#Fix Tests",
               "lines": {
                 "added": 20,
                 "removed": 20
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests",
+              "path": "🥼maintestgo#Policy Tests",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -118,84 +118,84 @@
               }
             },
             {
-              "path": "🧪maintestgo#Cli#Fix Tests§TestFileHeaderId",
+              "path": "🥼maintestgo#Cli#Fix Tests§TestFileHeaderId",
               "lines": {
                 "added": 18,
                 "removed": 18
               }
             },
             {
-              "path": "🧪maintestgo#Cli#Fix Tests§TestFileKindEmoji",
+              "path": "🥼maintestgo#Cli#Fix Tests§TestFileKindEmoji",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestPolicyTreeCommand",
+              "path": "🥼maintestgo#Policy Tests§TestPolicyTreeCommand",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestSectionHeaderIdAndUri",
+              "path": "🥼maintestgo#Policy Tests§TestSectionHeaderIdAndUri",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestDefinitionHeaderIdAndUri",
+              "path": "🥼maintestgo#Policy Tests§TestDefinitionHeaderIdAndUri",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#GraphQL Tests§TestGraphQLTicketsQuery",
+              "path": "🥼maintestgo#GraphQL Tests§TestGraphQLTicketsQuery",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧪maintestgo#Cli#Fix Tests§TestFileHeaderId",
+              "path": "🥼maintestgo#Cli#Fix Tests§TestFileHeaderId",
               "lines": {
                 "added": 0,
                 "removed": 18
               }
             },
             {
-              "path": "🧪maintestgo#Cli#Fix Tests§TestFileKindEmoji",
+              "path": "🥼maintestgo#Cli#Fix Tests§TestFileKindEmoji",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestPolicyTreeCommand",
+              "path": "🥼maintestgo#Policy Tests§TestPolicyTreeCommand",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestSectionHeaderIdAndUri",
+              "path": "🥼maintestgo#Policy Tests§TestSectionHeaderIdAndUri",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestDefinitionHeaderIdAndUri",
+              "path": "🥼maintestgo#Policy Tests§TestDefinitionHeaderIdAndUri",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#GraphQL Tests§TestGraphQLTicketsQuery",
+              "path": "🥼maintestgo#GraphQL Tests§TestGraphQLTicketsQuery",
               "lines": {
                 "added": 0,
                 "removed": 3

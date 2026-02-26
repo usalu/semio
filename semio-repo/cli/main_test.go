@@ -250,6 +250,209 @@ func TestContributorDiscovery(t *testing.T) {
 	})
 }
 
+// #region 🔖Semio Repo ID Conversion
+
+func TestGoalPathToSemioID(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"empty", "", ""},
+		{"single segment", "AI-OPTIMIZED-REPO", emojiText(EmojiGoal) + "aioptimizedrepo"},
+		{"two segments", "AI-OPTIMIZED-REPO/REPO-CLI", emojiText(EmojiGoal) + "aioptimizedrepo" + emojiText(EmojiGoal) + "repocli"},
+		{"four segments", "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+			emojiText(EmojiGoal) + "aioptimizedrepo" + emojiText(EmojiGoal) + "repoclient" + emojiText(EmojiGoal) + "repobinary" + emojiText(EmojiGoal) + "repocli"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := goalPathToSemioID(tc.input)
+			if got != tc.expected {
+				t.Errorf("goalPathToSemioID(%q) = %q, want %q", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestSemioIDToGoalPath(t *testing.T) {
+	// This test uses the actual repo goals directory
+	goals, err := ListGoals()
+	if err != nil || len(goals) == 0 {
+		t.Skip("no goals available for round-trip test")
+	}
+	for _, g := range goals {
+		semioID := goalPathToSemioID(g.ID)
+		roundTrip := semioIDToGoalPath(semioID)
+		if roundTrip != g.ID {
+			t.Errorf("round-trip failed: %q -> %q -> %q (expected %q)", g.ID, semioID, roundTrip, g.ID)
+		}
+	}
+}
+
+func TestContributorSemioIDRoundTrip(t *testing.T) {
+	cases := []struct {
+		name     string
+		github   string
+		expected string
+	}{
+		{"empty", "", ""},
+		{"unknown", "unknown", "unknown"},
+		{"normal", "usalu", emojiText(EmojiContributor) + "usalu"},
+		{"already prefixed", emojiText(EmojiContributor) + "usalu", emojiText(EmojiContributor) + "usalu"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := contributorGithubToSemioID(tc.github)
+			if got != tc.expected {
+				t.Errorf("contributorGithubToSemioID(%q) = %q, want %q", tc.github, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestTicketMarshalJSONGoalToSemioID(t *testing.T) {
+	ticket := Ticket{
+		Title:  "Test Ticket",
+		Goal:   "AI-OPTIMIZED-REPO/REPO-CLI",
+		Status: TicketStatusOpen,
+		Interactions: []Interaction{
+			{Kind: "started", Date: "2026-01-01", Author: "usalu", Client: "copilot-chat", System: "linux", Commit: "abc"},
+		},
+		Agents: []TicketAgent{
+			{Session: "s1", Contributor: "usalu"},
+		},
+	}
+	data, err := json.Marshal(ticket)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var raw map[string]interface{}
+	json.Unmarshal(data, &raw)
+
+	goalEmoji := emojiText(EmojiGoal)
+	expectedGoal := goalEmoji + "aioptimizedrepo" + goalEmoji + "repocli"
+	if raw["goal"] != expectedGoal {
+		t.Errorf("expected goal %q, got %q", expectedGoal, raw["goal"])
+	}
+
+	contribEmoji := emojiText(EmojiContributor)
+	interactions := raw["interactions"].([]interface{})
+	firstInteraction := interactions[0].(map[string]interface{})
+	expectedAuthor := contribEmoji + "usalu"
+	if firstInteraction["author"] != expectedAuthor {
+		t.Errorf("expected author %q, got %q", expectedAuthor, firstInteraction["author"])
+	}
+
+	agents := raw["agents"].([]interface{})
+	firstAgent := agents[0].(map[string]interface{})
+	if firstAgent["contributor"] != expectedAuthor {
+		t.Errorf("expected contributor %q, got %q", expectedAuthor, firstAgent["contributor"])
+	}
+}
+
+func TestTicketUnmarshalJSONSemioIDToGoalPath(t *testing.T) {
+	goalEmoji := emojiText(EmojiGoal)
+	contribEmoji := emojiText(EmojiContributor)
+	raw := fmt.Sprintf(`{
+		"title": "Test",
+		"goal": "%saioptimizedrepo%srepoclient%srepobinary%srepocli",
+		"status": "open",
+		"interactions": [
+			{"kind":"started","date":"2026-01-01","author":"%susalu","system":"linux","client":"copilot-chat","commit":"abc"}
+		],
+		"agents": [
+			{"session":"s1","contributor":"%susalu"}
+		]
+	}`, goalEmoji, goalEmoji, goalEmoji, goalEmoji, contribEmoji, contribEmoji)
+
+	var ticket Ticket
+	if err := json.Unmarshal([]byte(raw), &ticket); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	expectedGoalPath := "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI"
+	if ticket.Goal != expectedGoalPath {
+		t.Errorf("expected goal path %q, got %q", expectedGoalPath, ticket.Goal)
+	}
+
+	if ticket.Interactions[0].Author != "usalu" {
+		t.Errorf("expected author 'usalu', got %q", ticket.Interactions[0].Author)
+	}
+
+	if ticket.Agents[0].Contributor != "usalu" {
+		t.Errorf("expected contributor 'usalu', got %q", ticket.Agents[0].Contributor)
+	}
+}
+
+func TestGoalMarshalJSONParentToSemioID(t *testing.T) {
+	goal := Goal{
+		Title:       "Test Goal",
+		Description: "desc",
+		Prompt:      "prompt",
+		Status:      "open",
+		Client:      "copilot-chat",
+		LLM:         "opus-4-6",
+		Parent:      "AI-OPTIMIZED-REPO/REPO-CLIENT",
+		Interactions: []Interaction{
+			{Kind: "started", Date: "2026-01-01", Author: "usalu", Client: "copilot-chat", System: "linux", Commit: "abc"},
+		},
+	}
+	data, err := json.Marshal(goal)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var raw map[string]interface{}
+	json.Unmarshal(data, &raw)
+
+	goalEmoji := emojiText(EmojiGoal)
+	expectedParent := goalEmoji + "aioptimizedrepo" + goalEmoji + "repoclient"
+	if raw["parent"] != expectedParent {
+		t.Errorf("expected parent %q, got %q", expectedParent, raw["parent"])
+	}
+
+	contribEmoji := emojiText(EmojiContributor)
+	interactions := raw["interactions"].([]interface{})
+	firstInteraction := interactions[0].(map[string]interface{})
+	expectedAuthor := contribEmoji + "usalu"
+	if firstInteraction["author"] != expectedAuthor {
+		t.Errorf("expected author %q, got %q", expectedAuthor, firstInteraction["author"])
+	}
+}
+
+func TestTicketGoalRoundTripThroughJSON(t *testing.T) {
+	// Test that roundtripping through JSON preserves goal path
+	ticket := Ticket{
+		Title:  "Roundtrip Test",
+		Goal:   "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+		Status: TicketStatusOpen,
+		Interactions: []Interaction{
+			{Kind: "started", Date: "2026-01-01", Author: "usalu", Client: "copilot-chat", System: "linux", Commit: "abc"},
+		},
+	}
+
+	// Marshal
+	data, err := json.Marshal(ticket)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	// Unmarshal
+	var ticket2 Ticket
+	if err := json.Unmarshal(data, &ticket2); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	if ticket2.Goal != ticket.Goal {
+		t.Errorf("round-trip failed: original %q, after round-trip %q", ticket.Goal, ticket2.Goal)
+	}
+
+	if ticket2.Interactions[0].Author != "usalu" {
+		t.Errorf("round-trip author failed: expected 'usalu', got %q", ticket2.Interactions[0].Author)
+	}
+}
+
+// #endregion 🔖Semio Repo ID Conversion
+
 func parseTicketCloseStatus(t *testing.T, output string) string {
 	t.Helper()
 	data, ok := firstJSONLine(output)
@@ -317,7 +520,7 @@ func getTestExecutor(t *testing.T) *Executor {
 
 // #endregion 🔖Helpers
 
-// #region 🔖Collection Tests
+// #region 🔖Collection
 
 func TestBundlesNonEmpty(t *testing.T) {
 	if testing.Short() {
@@ -714,9 +917,9 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Collection Tests
+// #endregion 🔖Collection
 
-// #region 🔖Nodes and Edges Tests
+// #region 🔖Nodes and Edges
 
 func TestNodesAndEdges(t *testing.T) {
 	if testing.Short() {
@@ -1183,7 +1386,7 @@ func TestDefinitionKind(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Nodes and Edges Tests
+// #endregion 🔖Nodes and Edges
 
 // #region 🔖Cli
 
@@ -1235,7 +1438,7 @@ func normalizeRelativeTimes(s string) string {
 
 // #endregion 🔖Helpers
 
-// #region 🔖Codebase Tests
+// #region 🔖Codebase
 
 func TestCodebaseCommand(t *testing.T) {
 	result := ToolCodebase()
@@ -1247,9 +1450,9 @@ func TestCodebaseCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Codebase Tests
+// #endregion 🔖Codebase
 
-// #region 🔖Analyze Tests
+// #region 🔖Analyze
 
 func TestAnalyzeCommand(t *testing.T) {
 	result := ToolAnalyze("semio/js", nil)
@@ -1265,9 +1468,9 @@ func TestAnalyzeFile(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Analyze Tests
+// #endregion 🔖Analyze
 
-// #region 🔖Fix Tests
+// #region 🔖Fix
 
 func TestFixCommand(t *testing.T) {
 	result := ToolFix("semio/js")
@@ -1300,8 +1503,8 @@ func TestFileHeaderId(t *testing.T) {
 		{"code go", "semio-repo/cli/cli.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileCode) + "cligo"},
 		{"code cs", "semio/gh/Semio.cs", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "gh" + emojiText(EmojiFileCode) + "semiocs"},
 		{"code py", "semio/engine/main.py", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileCode) + "mainpy"},
-		{"test ts", "semio/js/src/index.test.ts", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileTest) + "indextestts"},
-		{"test go", "semio-repo/cli/cli_test.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileTest) + "clitestgo"},
+		{"test ts", "semio/js/src/index.test.ts", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextestts"},
+		{"test go", "semio-repo/cli/cli_test.go", emojiText(EmojiProjectInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileLab) + "clitestgo"},
 		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfigjson"},
 		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readmemd"},
 		{"script sh", "build.sh", emojiText(EmojiFileScript) + "buildsh"},
@@ -1403,11 +1606,11 @@ func TestDeriveFileKind(t *testing.T) {
 		{"cmd script", "build.cmd", FileKindScript},
 		{"ps1 script", "setup.ps1", FileKindScript},
 		{"psm1 script", "module.psm1", FileKindScript},
-		{"test ts", "index.test.ts", FileKindTest},
-		{"test go", "main_test.go", FileKindTest},
-		{"spec ts", "app.spec.ts", FileKindTest},
-		{"benchmark go", "semio_benchmark.go", FileKindTest},
-		{"stories tsx", "Button.stories.tsx", FileKindTest},
+		{"test ts", "index.test.ts", FileKindLab},
+		{"test go", "main_test.go", FileKindLab},
+		{"spec ts", "app.spec.ts", FileKindLab},
+		{"benchmark go", "semio_benchmark.go", FileKindLab},
+		{"stories tsx", "Button.stories.tsx", FileKindLab},
 		{"json config", "tsconfig.json", FileKindConfig},
 		{"yaml config", "config.yaml", FileKindConfig},
 		{"toml config", "pyproject.toml", FileKindConfig},
@@ -1441,7 +1644,7 @@ func TestFileKindEmoji(t *testing.T) {
 		emoji string
 	}{
 		{"code", "code", "\U0001F4BB"},
-		{"test", "test", "\U0001F9EA"},
+		{"lab", "lab", emojiText(EmojiFileLab)},
 		{"script", "script", "\U0001F4DC"},
 		{"docs", "docs", "\U0001F4C3"},
 		{"config", "config", "\u2699\uFE0F"},
@@ -1947,7 +2150,7 @@ const x = 1; // trailing comment
 // another normal comment
 /* TODO: block todo */
 const y = 2; // normal trailing
-// #endregion 🔖Fix Tests
+// #endregion 🔖Fix
 `
 
 	testFile := "test_improved.tsx"
@@ -2934,7 +3137,7 @@ func TestFindMatchingSectionStartName(t *testing.T) {
 
 // #endregion 🔖Cli
 
-// #region 🔖Policy Tests
+// #region 🔖Policy
 
 func TestPolicyListCommand(t *testing.T) {
 	result := ToolPolicyList()
@@ -5143,9 +5346,9 @@ func TestPolicyGroupsGraphQL(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Policy Tests
+// #endregion 🔖Policy
 
-// #region 🔖Bundle Tests
+// #region 🔖Bundle
 
 func TestBundleListCommand(t *testing.T) {
 	result := ToolBundleList()
@@ -5182,9 +5385,9 @@ func TestBundleTreeCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Bundle Tests
+// #endregion 🔖Bundle
 
-// #region 🔖Folder Tests
+// #region 🔖Folder
 
 func TestFolderListCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
@@ -5223,9 +5426,9 @@ func TestFolderCreateMoveDelete(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Folder Tests
+// #endregion 🔖Folder
 
-// #region 🔖File Tests
+// #region 🔖File
 
 func TestFileListCommand(t *testing.T) {
 	result := ToolFileList("semio/js")
@@ -5262,9 +5465,9 @@ func TestFileCreateMoveDelete(t *testing.T) {
 	}
 }
 
-// #endregion 🔖File Tests
+// #endregion 🔖File
 
-// #region 🔖Section Tests
+// #region 🔖Section
 
 func TestSectionListCommand(t *testing.T) {
 	result := ToolSectionList("semio/js/semio.ts")
@@ -5301,9 +5504,9 @@ func TestSectionTreeCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Section Tests
+// #endregion 🔖Section
 
-// #region 🔖Definition Tests
+// #region 🔖Definition
 
 func TestDefinitionListCommand(t *testing.T) {
 	result := ToolDefinitionList("semio/js/semio.ts")
@@ -5312,9 +5515,9 @@ func TestDefinitionListCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Definition Tests
+// #endregion 🔖Definition
 
-// #region 🔖Ticket Tests
+// #region 🔖Ticket
 
 func TestTicketListCommand(t *testing.T) {
 	year := 2025
@@ -5375,9 +5578,9 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Ticket Tests
+// #endregion 🔖Ticket
 
-// #region 🔖Goal Tests
+// #region 🔖Goal
 
 func TestGoalCreateValidation(t *testing.T) {
 
@@ -5578,9 +5781,9 @@ func TestGoalList(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Goal Tests
+// #endregion 🔖Goal
 
-// #region 🔖Contributor Tests
+// #region 🔖Contributor
 
 func TestContributorListCommand(t *testing.T) {
 	result := ToolContributorList()
@@ -5592,9 +5795,9 @@ func TestContributorListCommand(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Contributor Tests
+// #endregion 🔖Contributor
 
-// #region 🔖Entity ID Tests
+// #region 🔖Entity ID
 
 func TestGetArtifactID_Root(t *testing.T) {
 	id := GetArtifactID("root", map[string]interface{}{})
@@ -5839,7 +6042,7 @@ func TestGetArtifactID_File(t *testing.T) {
 		expected string
 	}{
 		{"code file", map[string]interface{}{"path": "semio/js/sketchpad/Design.tsx", "name": "Design.tsx", "kind": "code", "parentId": folderId}, folderId + emojiText(EmojiFileCode) + "designtsx"},
-		{"test file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "name": "sketchpad.test.ts", "kind": "test", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileTest) + "sketchpadtestts"},
+		{"test file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "name": "sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtestts"},
 		{"config file at root", map[string]interface{}{"path": ".devcontainer/devcontainer.json", "name": "devcontainer.json", "kind": "config", "parentId": emojiText(EmojiFolderRequired) + "devcontainer"}, emojiText(EmojiFolderRequired) + "devcontainer" + emojiText(EmojiFileConfig) + "devcontainerjson"},
 	}
 	for _, tc := range cases {
@@ -6135,6 +6338,162 @@ func TestGetArtifactID_Interaction(t *testing.T) {
 	}
 }
 
+func TestGetArtifactID_Sessions(t *testing.T) {
+	dayId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15"
+	cases := []struct {
+		name     string
+		parentId string
+		expected string
+	}{
+		{"root sessions", "", emojiText(EmojiSessions)},
+		{"day sessions", dayId, dayId + emojiText(EmojiSessions)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			id := GetArtifactID("sessions", map[string]interface{}{"parentId": tc.parentId})
+			if id != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, id)
+			}
+		})
+	}
+}
+
+func TestGetArtifactID_Session(t *testing.T) {
+	dayId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15"
+	sessionsId := dayId + emojiText(EmojiSessions)
+	cases := []struct {
+		name     string
+		data     map[string]interface{}
+		expected string
+	}{
+		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with id fallback", map[string]interface{}{"id": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session no parent", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			id := GetArtifactID("session", tc.data)
+			if id != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, id)
+			}
+		})
+	}
+}
+
+func TestGetArtifactURI_Sessions(t *testing.T) {
+	uri := GetArtifactURI("sessions", map[string]interface{}{})
+	expected := "semiorepo://s"
+	if uri != expected {
+		t.Errorf("sessions uri: expected %q, got %q", expected, uri)
+	}
+}
+
+func TestGetArtifactURI_Session(t *testing.T) {
+	cases := []struct {
+		name     string
+		data     map[string]interface{}
+		expected string
+	}{
+		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"},
+		{"session with id fallback", map[string]interface{}{"id": "abc123"}, "semiorepo://s/abc123"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			uri := GetArtifactURI("session", tc.data)
+			if uri != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, uri)
+			}
+		})
+	}
+}
+
+func TestSessionIdToUri(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{"session collection", emojiText(EmojiSession), "semiorepo://s"},
+		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "semiorepo://s/e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IdToUri(tt.id)
+			if got != tt.want {
+				t.Errorf("IdToUri(%q) = %q, want %q", tt.id, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSessionUriToId(t *testing.T) {
+	tests := []struct {
+		name string
+		uri  string
+		want string
+	}{
+		{"sessions collection", "semiorepo://s", emojiText(EmojiSessions)},
+		{"session", "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := UriToId(tt.uri)
+			if got != tt.want {
+				t.Errorf("UriToId(%q) = %q, want %q", tt.uri, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSessionKindEmoji(t *testing.T) {
+	tests := []struct {
+		kind SessionKind
+		want string
+	}{
+		{SessionKindRunning, EmojiSessionRunning},
+		{SessionKindCompleted, EmojiSessionCompleted},
+		{SessionKindInterrupted, EmojiSessionInterrupted},
+	}
+	for _, tt := range tests {
+		t.Run(string(tt.kind), func(t *testing.T) {
+			got := SessionKindEmoji(tt.kind)
+			if got != tt.want {
+				t.Errorf("SessionKindEmoji(%q) = %q, want %q", tt.kind, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSessionGetID(t *testing.T) {
+	s := Session{
+		UUID:  "e753ed61-e8cc-49b7-88f7-dda53b8d5a15",
+		Year:  26,
+		Month: 2,
+		Day:   15,
+		Kind:  SessionKindCompleted,
+	}
+	id := s.GetID()
+	expected := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"
+	if id != expected {
+		t.Errorf("Session.GetID() = %q, want %q", id, expected)
+	}
+}
+
+func TestSessionGetURI(t *testing.T) {
+	s := Session{
+		UUID:  "e753ed61-e8cc-49b7-88f7-dda53b8d5a15",
+		Year:  26,
+		Month: 2,
+		Day:   15,
+		Kind:  SessionKindCompleted,
+	}
+	uri := s.GetURI()
+	expected := "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+	if uri != expected {
+		t.Errorf("Session.GetURI() = %q, want %q", uri, expected)
+	}
+}
+
 func TestGetArtifactID_Breach(t *testing.T) {
 	policyId := emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"
 	affected := emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "designstorets"
@@ -6237,6 +6596,8 @@ func TestSpecExactIDs(t *testing.T) {
 			"entityId":      "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism",
 			"kind":          "finished",
 		}, "🎆26🌙02☀️14⏰19⌚07⏱️12🧑‍💻usalu🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism✅"},
+		{"sessions", "sessions", map[string]interface{}{"parentId": "🎆26🌙02☀️15"}, "🎆26🌙02☀️15⚪"},
+		{"session", "session", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": "🎆26🌙02☀️15"}, "🎆26🌙02☀️15⚪e753ed61e8cc49b788f7dda53b8d5a15"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7109,7 +7470,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 			"entityId":      emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism",
 			"kind":          "deleted",
 		}, emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "14" + emojiText(EmojiHour) + "19" + emojiText(EmojiMinute) + "07" + emojiText(EmojiSecond) + "12" + emojiText(EmojiContributor) + "usalu" + emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism" + emojiText(EmojiInteractionDeleted)},
-		{"file test kind", "file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "kind": "test", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileTest) + "sketchpadtestts"},
+		{"file test kind", "file", map[string]interface{}{"path": "semio/js/sketchpad.test.ts", "kind": "lab", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileLab) + "sketchpadtestts"},
 		{"file script kind", "file", map[string]interface{}{"path": "semio/engine/build.ts", "kind": "script", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine" + emojiText(EmojiFileScript) + "buildts"},
 		{"file docs kind", "file", map[string]interface{}{"path": "semio/js/README.md", "kind": "docs", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFileDocs) + "readmemd"},
 		{"file asset kind", "file", map[string]interface{}{"path": "semio/js/sketchpad/pages/showcases/metabolism.mdx", "kind": "resource", "parentId": emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases"}, emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFolderOrg) + "pages" + emojiText(EmojiFolderOrg) + "showcases" + emojiText(EmojiFileResource) + "metabolismmdx"},
@@ -7126,9 +7487,9 @@ func TestAllSpecIDExamples(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Entity ID Tests
+// #endregion 🔖Entity ID
 
-// #region 🔖GraphQL Tests
+// #region 🔖GraphQL
 
 func TestGraphQLRepoQuery(t *testing.T) {
 	result, err := executor.ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
@@ -7203,9 +7564,9 @@ func TestGraphQLFixMutation(t *testing.T) {
 	}
 }
 
-// #endregion 🔖GraphQL Tests
+// #endregion 🔖GraphQL
 
-// #region 🔖Tree Tests
+// #region 🔖Tree
 
 func executeTreeCommand(args ...string) (string, error) {
 	buf := new(bytes.Buffer)
@@ -7491,7 +7852,7 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	}
 }
 
-// #region 🔖Wrong Argument Tests
+// #region 🔖Wrong Argument
 
 func TestCliWrongArgs_TicketOpen(t *testing.T) {
 	tests := []struct {
@@ -7991,9 +8352,9 @@ func TestCliJsonErrorsToStderr(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Wrong Argument Tests
+// #endregion 🔖Wrong Argument
 
-// #region 🔖Consolidated Tests
+// #region 🔖Consolidated
 
 func TestFormatResult_Section(t *testing.T) {
 	payload := map[string]interface{}{
@@ -9508,6 +9869,37 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	}
 }
 
+func TestExtractSessionIDFromInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"empty", ``, ""},
+		{"invalid json", `{invalid}`, ""},
+		{"trajectory_id", `{"trajectory_id": "test-1"}`, "test-1"},
+		{"trajectoryId", `{"trajectoryId": "test-2"}`, "test-2"},
+		{"sessionId", `{"sessionId": "test-3"}`, "test-3"},
+		{"session_id", `{"session_id": "test-4"}`, "test-4"},
+		{"conversationId", `{"conversationId": "test-5"}`, "test-5"},
+		{"conversation_id", `{"conversation_id": "test-6"}`, "test-6"},
+		{"agent_id", `{"agent_id": "test-7"}`, "test-7"},
+		{"agentId", `{"agentId": "test-8"}`, "test-8"},
+		{"whitespace", `{"sessionId": " test-9 "}`, "test-9"},
+		{"missing", `{"other": "value"}`, ""},
+		{"wrong type", `{"sessionId": 123}`, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSessionIDFromInput(json.RawMessage(tt.input))
+			if result != tt.expected {
+				t.Errorf("expected %q, got %q", tt.expected, result)
+			}
+		})
+	}
+}
+
 func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	tmpDir := t.TempDir()
 	run := func(name string, field ...string) {
@@ -9709,9 +10101,9 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "file test",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
-			wantID:  emojiText(EmojiFileTest) + "indextestts",
-			wantURI: GetArtifactURI("file", map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"}),
+			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"},
+			wantID:  emojiText(EmojiFileLab) + "indextestts",
+			wantURI: GetArtifactURI("file", map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"}),
 		},
 		{
 			name:    "file config",
@@ -10002,6 +10394,8 @@ func TestIdToUri(t *testing.T) {
 		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://cms/abc123"},
 		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "semiorepo://is/on/" + url.PathEscape("semiorepo://tks/testticket") + "/started"},
 		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/finished"},
+		{"session collection", emojiText(EmojiSession), "semiorepo://s"},
+		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "semiorepo://s/e753ed61e8cc49b788f7dda53b8d5a15"},
 		{"empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -10056,6 +10450,8 @@ func TestUriToId(t *testing.T) {
 		{"interactions", "semiorepo://is", ""},
 		{"interaction ticket", "semiorepo://is/on/" + url.PathEscape("semiorepo://tks/testticket") + "/started", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
 		{"interaction goal", "semiorepo://is/on/" + url.PathEscape("semiorepo://g/r2602") + "/started", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
+		{"sessions", "semiorepo://s", emojiText(EmojiSessions)},
+		{"session", "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -10337,7 +10733,7 @@ func TestIdUriRoundTrip(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Consolidated Tests
+// #endregion 🔖Consolidated
 func TestMcpToolsSchemas(t *testing.T) {
 	s := createMcpServer()
 	tools := s.ListTools()
@@ -10385,9 +10781,9 @@ func TestMcpToolsSchemas(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Tree Tests
+// #endregion 🔖Tree
 
-// #region 🔖Query Tests
+// #region 🔖Query
 
 func TestQueryFlag(t *testing.T) {
 	if testing.Short() {
@@ -10886,7 +11282,7 @@ func TestCommitCommands(t *testing.T) {
 	})
 }
 
-// #endregion 🔖Query Tests
+// #endregion 🔖Query
 
 func setupToolTest(t *testing.T) {
 	t.Helper()
@@ -11182,7 +11578,7 @@ func TestToolGoalUri(t *testing.T) {
 	}
 }
 
-// #region 🔖Output Parity Tests
+// #region 🔖Output Parity
 
 func TestParityGoalList(t *testing.T) {
 	if testing.Short() {
@@ -11441,11 +11837,11 @@ func TestParityPolicyList(t *testing.T) {
 	})
 }
 
-// #endregion 🔖Output Parity Tests
+// #endregion 🔖Output Parity
 
-// #endregion 🔖MCP Tool Tests
+// #endregion 🔖MCP Tool
 
-// #region 🔖Monorepo Tree Tests
+// #region 🔖Monorepo Tree
 
 func TestTreeNodeKindConstants(t *testing.T) {
 	t.Run("all kinds are distinct", func(t *testing.T) {
@@ -12442,7 +12838,7 @@ func TestTreeCommandFlags(t *testing.T) {
 	})
 }
 
-// #region 🔖Unified Rendering Identity Tests
+// #region 🔖Unified Rendering Identity
 
 func TestTreeNodeKindToEntityKindCoversAll(t *testing.T) {
 	kinds := []struct {
@@ -13447,9 +13843,9 @@ func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
 	})
 }
 
-// #endregion 🔖Unified Rendering Identity Tests
+// #endregion 🔖Unified Rendering Identity
 
-// #endregion 🔖Monorepo Tree Tests
+// #endregion 🔖Monorepo Tree
 
 func TestMigrateAuthorFieldsToString(t *testing.T) {
 	if testing.Short() {
@@ -13843,7 +14239,7 @@ func TestFilePolicyRegistered(t *testing.T) {
 	}
 }
 
-// #region 🔖Hook Tests
+// #region 🔖Hook
 
 func TestValidateHookEvent(t *testing.T) {
 	cases := []struct {
@@ -13852,8 +14248,12 @@ func TestValidateHookEvent(t *testing.T) {
 		valid  bool
 		expect HookEvent
 	}{
-		{"git commit starting", "git.commit.starting", true, HookGitCommitStarting},
-		{"git commit ended", "git.commit.ended", true, HookGitCommitEnded},
+		{"version checkpoint starting", "version.checkpoint.starting", true, HookVersionCheckpointStarting},
+		{"version checkpoint ended", "version.checkpoint.ended", true, HookVersionCheckpointEnded},
+		{"version checkin starting", "version.checkin.starting", true, HookVersionCheckinStarting},
+		{"version checkin ended", "version.checkin.ended", true, HookVersionCheckinEnded},
+		{"version checkout starting", "version.checkout.starting", true, HookVersionCheckoutStarting},
+		{"version checkout ended", "version.checkout.ended", true, HookVersionCheckoutEnded},
 		{"agent starting", "agent.started", true, HookAgentStarted},
 		{"agent ended", "agent.ended", true, HookAgentEnded},
 		{"agent prompt submitting", "agent.prompt.submitting", true, HookAgentPromptSubmitting},
@@ -13895,8 +14295,12 @@ func TestHookEventKind(t *testing.T) {
 		event  HookEvent
 		expect HookKind
 	}{
-		{"git commit starting is git", HookGitCommitStarting, HookKindGit},
-		{"git commit ended is git", HookGitCommitEnded, HookKindGit},
+		{"version checkpoint starting is version", HookVersionCheckpointStarting, HookKindVersion},
+		{"version checkpoint ended is version", HookVersionCheckpointEnded, HookKindVersion},
+		{"version checkin starting is version", HookVersionCheckinStarting, HookKindVersion},
+		{"version checkin ended is version", HookVersionCheckinEnded, HookKindVersion},
+		{"version checkout starting is version", HookVersionCheckoutStarting, HookKindVersion},
+		{"version checkout ended is version", HookVersionCheckoutEnded, HookKindVersion},
 		{"agent starting is agent", HookAgentStarted, HookKindAgent},
 		{"agent ended is agent", HookAgentEnded, HookKindAgent},
 		{"agent prompt submitting is agent", HookAgentPromptSubmitting, HookKindAgent},
@@ -14034,7 +14438,11 @@ func TestRunHookAgentEvents(t *testing.T) {
 		{"agent tool plan updating", HookAgentToolPlanUpdating, true},
 		{"agent tool terminal starting", HookAgentToolTerminalStarting, true},
 		{"agent tool terminal ended", HookAgentToolTerminalEnded, true},
-		{"git commit ended", HookGitCommitEnded, true},
+		{"version checkpoint ended", HookVersionCheckpointEnded, true},
+		{"version checkin starting", HookVersionCheckinStarting, true},
+		{"version checkin ended", HookVersionCheckinEnded, true},
+		{"version checkout starting", HookVersionCheckoutStarting, true},
+		{"version checkout ended", HookVersionCheckoutEnded, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -14050,16 +14458,16 @@ func TestRunHookAgentEvents(t *testing.T) {
 			}
 		})
 	}
-	t.Run("git commit starting", func(t *testing.T) {
+	t.Run("version checkpoint starting", func(t *testing.T) {
 		hctx := HookContext{
-			Event:    HookGitCommitStarting,
+			Event:    HookVersionCheckpointStarting,
 			RepoRoot: t.TempDir(),
 		}
 		result := RunHook(hctx)
 		// We just check type, value depends on environment (task existence)
-		_, ok := result.(HookResultGitCommitStarting)
+		_, ok := result.(HookResultVersionCheckpointStarting)
 		if !ok {
-			t.Fatalf("expected HookResultGitCommitStarting, got %T", result)
+			t.Fatalf("expected HookResultVersionCheckpointStarting, got %T", result)
 		}
 	})
 }
@@ -14112,7 +14520,9 @@ func TestRunHookUnknownEvent(t *testing.T) {
 
 func TestAllHookEventsCompleteness(t *testing.T) {
 	expected := []HookEvent{
-		HookGitCommitStarting, HookGitCommitEnded,
+		HookVersionCheckpointStarting, HookVersionCheckpointEnded,
+		HookVersionCheckinStarting, HookVersionCheckinEnded,
+		HookVersionCheckoutStarting, HookVersionCheckoutEnded,
 		HookAgentStarted, HookAgentEnded,
 		HookAgentPromptSubmitting, HookAgentCompacting,
 		HookAgentToolStarting, HookAgentToolEnded,
@@ -14720,8 +15130,8 @@ func TestConfigureGitHooks(t *testing.T) {
 		if err != nil {
 			t.Fatal("post-commit hook not created")
 		}
-		if !strings.Contains(string(postCommit), "hook git.commit.ended") {
-			t.Error("post-commit hook does not call hook git.commit.ended")
+		if !strings.Contains(string(postCommit), "hook version.checkpoint.ended") {
+			t.Error("post-commit hook does not call hook version.checkpoint.ended")
 		}
 		info, err := os.Stat(preCommitPath)
 		if err != nil {
@@ -14791,7 +15201,12 @@ func TestBlockedToolPatterns(t *testing.T) {
 
 func TestHookLogging(t *testing.T) {
 	tmpDir := t.TempDir()
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "sess-log")
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"sess-log")
 	payload := json.RawMessage(`{"session_id":"sess-log","timestamp":"2026-02-20T10:00:00Z","transcript_path":"/tmp/transcript.jsonl"}`)
 	hctx := HookContext{
 		Event:     HookAgentStarted,
@@ -14815,7 +15230,7 @@ func TestHookLogging(t *testing.T) {
 	if !strings.HasSuffix(name, "_agent-started.json") {
 		t.Errorf("expected filename to end with _agent-started.json, got: %s", name)
 	}
-	if len(name) != len("260218230207_agent-started.json") {
+	if len(name) != len("HHMMSS_agent-started.json") {
 		t.Errorf("unexpected filename length for %q", name)
 	}
 	data, err := os.ReadFile(filepath.Join(logDir, name))
@@ -14848,14 +15263,19 @@ func TestHookLogging(t *testing.T) {
 	if entry.Response.Blocked != nil {
 		t.Error("expected response.blocked to be nil for allowed event")
 	}
-	if entry.Raw == nil {
-		t.Error("expected raw to be populated")
+	if entry.Native.Event == nil {
+		t.Error("expected native.event to be populated")
 	}
 }
 
 func TestHookLoggingToolBlocked(t *testing.T) {
 	tmpDir := t.TempDir()
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "unknown")
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"unknown")
 	hctx := HookContext{
 		Event:     HookAgentToolStarting,
 		Client:    "claude-code",
@@ -14897,7 +15317,12 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 
 func TestHookLoggingStdinInput(t *testing.T) {
 	tmpDir := t.TempDir()
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "abc123")
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"abc123")
 	payload := json.RawMessage(`{"session_id":"abc123","timestamp":"2026-02-20T12:00:00Z","tool_name":"Bash","tool_input":{"command":"ls"},"transcript_path":"/tmp/t.jsonl"}`)
 	hctx := HookContext{
 		Event:     HookAgentToolStarting,
@@ -14914,12 +15339,12 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	data, _ := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
 	var entry HookLogEntry
 	json.Unmarshal(data, &entry)
-	if len(entry.Raw) == 0 {
-		t.Error("expected raw from HookContext.Input")
+	if len(entry.Native.Event) == 0 {
+		t.Error("expected native.event from HookContext.Input")
 	}
 	var wantMap, gotMap map[string]interface{}
 	json.Unmarshal(payload, &wantMap)
-	json.Unmarshal(entry.Raw, &gotMap)
+	json.Unmarshal(entry.Native.Event, &gotMap)
 	wantBytes, _ := json.Marshal(wantMap)
 	gotBytes, _ := json.Marshal(gotMap)
 	if string(gotBytes) != string(wantBytes) {
@@ -14974,18 +15399,20 @@ func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
 	return result
 }
 
-func getTicketEvents(t *testing.T, ticketData map[string]interface{}) []interface{} {
+func getLogFiles(t *testing.T, tmpDir string) []string {
 	t.Helper()
-	agents, ok := ticketData["agents"].([]interface{})
-	if !ok || len(agents) == 0 {
-		t.Fatal("expected agents in ticket.json")
-	}
-	lastAgent := agents[len(agents)-1].(map[string]interface{})
-	events, ok := lastAgent["events"].([]interface{})
-	if !ok {
+	outBase := filepath.Join(tmpDir, ".semio-repo", "⚡")
+	var logFiles []string
+	filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if !d.IsDir() && strings.HasSuffix(d.Name(), ".json") {
+			logFiles = append(logFiles, path)
+		}
 		return nil
-	}
-	return events
+	})
+	return logFiles
 }
 
 func TestTrackHookAllEventsLogged(t *testing.T) {
@@ -15007,16 +15434,8 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 		t.Fatal("expected agents after prompt.submitting")
 	}
 	agent := agents[0].(map[string]interface{})
-	events, ok := agent["events"].([]interface{})
-	if !ok || len(events) == 0 {
-		t.Fatal("expected events after prompt.submitting")
-	}
-	promptEvent := events[0].(map[string]interface{})
-	if promptEvent["kind"] != "agent.prompt.submitting" {
-		t.Errorf("expected prompt event kind, got: %v", promptEvent["kind"])
-	}
-	if promptEvent["prompt"] != "Fix the bug" {
-		t.Errorf("expected prompt text, got: %v", promptEvent["prompt"])
+	if agent["session"] != "test-session-1" {
+		t.Errorf("expected agent session test-session-1, got: %v", agent["session"])
 	}
 	agentEvents := []struct {
 		name  string
@@ -15049,43 +15468,14 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 		}
 		RunHook(hctx)
 	}
+	// Verify all events logged to ⚡/🤖 directory
+	logFiles := getLogFiles(t, tmpDir)
+	// prompt.submitting + 15 other events = 16 total log files
+	if len(logFiles) < 16 {
+		t.Fatalf("expected at least 16 log files, got %d", len(logFiles))
+	}
+	// Verify agent metadata in ticket
 	ticket = readTicketJSON(t, ticketJSON)
-	events = getTicketEvents(t, ticket)
-	if len(events) < 15 {
-		t.Fatalf("expected at least 15 events (prompt.submitting + 14 others), got %d", len(events))
-	}
-	eventKinds := make([]string, len(events))
-	for i, e := range events {
-		eventKinds[i] = e.(map[string]interface{})["kind"].(string)
-	}
-	expectedKinds := []string{
-		"agent.prompt.submitting",
-		"agent.started",
-		"agent.tool.starting",
-		"agent.tool.search.starting",
-		"agent.tool.search.ended",
-		"agent.tool.code.edit.starting",
-		"agent.tool.code.edit.ended",
-		"agent.tool.terminal.starting",
-		"agent.tool.terminal.ended",
-		"agent.tool.test.starting",
-		"agent.tool.test.ended",
-		"agent.tool.build.starting",
-		"agent.tool.build.ended",
-		"agent.tool.ended",
-	}
-	for _, expected := range expectedKinds {
-		found := false
-		for _, got := range eventKinds {
-			if got == expected {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("expected event kind %q in ticket events, got: %v", expected, eventKinds)
-		}
-	}
 	agents = ticket["agents"].([]interface{})
 	agent = agents[0].(map[string]interface{})
 	if agent["llm"] != "opus-4-6" {
@@ -15093,6 +15483,13 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}
 	if agent["client"] != "copilot-chat" {
 		t.Errorf("expected agent client copilot-chat, got: %v", agent["client"])
+	}
+	if agent["transcript"] != "/tmp/transcript.jsonl" {
+		t.Errorf("expected agent transcript, got: %v", agent["transcript"])
+	}
+	// Events should NOT be stored in ticket
+	if _, hasEvents := agent["events"]; hasEvents {
+		t.Error("events should no longer be stored in ticket agents")
 	}
 	plan, ok := agent["plan"].(map[string]interface{})
 	if !ok {
@@ -15105,7 +15502,7 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 }
 
 func TestTrackHookSearchingPattern(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"search-session"}`)
 	RunHook(HookContext{
@@ -15123,23 +15520,33 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 		RepoRoot:  tmpDir,
 		Input:     json.RawMessage(`{"session_id":"search-session","tool_input":{"query":"findMe","includePattern":"src/**/*.ts"}}`),
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 2 {
-		t.Fatal("expected at least 2 events (prompt + searching)")
+	// Verify search event logged to ⚡/🤖
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) < 2 {
+		t.Fatal("expected at least 2 log files (prompt + searching)")
 	}
-	searchEvent := events[len(events)-1].(map[string]interface{})
-	query, _ := searchEvent["query"].(string)
-	if query == "" {
-		t.Error("expected non-empty query in search event")
+	// Find the search log file
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-tool-search-starting") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log file: %v", err)
+			}
+			if !strings.Contains(string(data), "findMe") {
+				t.Errorf("expected search query in log file, got: %s", string(data))
+			}
+			found = true
+			break
+		}
 	}
-	if !strings.Contains(query, "findMe") {
-		t.Errorf("expected query to contain search term, got: %s", query)
+	if !found {
+		t.Error("expected agent-tool-search-starting log file")
 	}
 }
 
 func TestTrackHookBlockedEvent(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"blocked-session"}`)
 	RunHook(HookContext{
@@ -15159,20 +15566,36 @@ func TestTrackHookBlockedEvent(t *testing.T) {
 		ToolName:  "run_in_terminal",
 		ToolArgs:  "git checkout main",
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 2 {
-		t.Fatal("expected at least 2 events (prompt + blocked tool)")
+	// Verify blocked event logged to ⚡/🤖 with blocked response
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) < 2 {
+		t.Fatal("expected at least 2 log files (prompt + blocked tool)")
 	}
-	blockedEvent := events[1].(map[string]interface{})
-	denied, _ := blockedEvent["denied"].(string)
-	if denied == "" {
-		t.Error("expected non-empty denied field for blocked event")
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-tool-starting") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log file: %v", err)
+			}
+			var entry HookLogEntry
+			if err := json.Unmarshal(data, &entry); err != nil {
+				t.Fatalf("invalid log JSON: %v", err)
+			}
+			if entry.Response.Blocked == nil || !*entry.Response.Blocked {
+				t.Error("expected response.blocked=true for blocked tool")
+			}
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected agent-tool-starting log file for blocked event")
 	}
 }
 
 func TestTrackHookTerminalEvents(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"terminal-session"}`)
 	RunHook(HookContext{
@@ -15197,21 +15620,27 @@ func TestTrackHookTerminalEvents(t *testing.T) {
 		RepoRoot:  tmpDir,
 		Input:     json.RawMessage(`{"session_id":"terminal-session","command":"npm test","pid":"999","stdout":"all passed"}`),
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	if len(events) < 3 {
-		t.Fatalf("expected at least 3 events (prompt + 2 terminal), got %d", len(events))
+	// Verify terminal events logged to ⚡/🤖
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) < 3 {
+		t.Fatalf("expected at least 3 log files (prompt + 2 terminal), got %d", len(logFiles))
 	}
-	startEvent := events[1].(map[string]interface{})
-	if startEvent["kind"] != "agent.tool.terminal.starting" {
-		t.Errorf("expected terminal.starting, got: %v", startEvent["kind"])
+	startFound := false
+	endFound := false
+	for _, lf := range logFiles {
+		base := filepath.Base(lf)
+		if strings.Contains(base, "agent-tool-terminal-starting") {
+			startFound = true
+		}
+		if strings.Contains(base, "agent-tool-terminal-ended") {
+			endFound = true
+		}
 	}
-	if startEvent["query"] == nil || startEvent["query"] == "" {
-		t.Error("expected command in query for terminal.starting")
+	if !startFound {
+		t.Error("expected agent-tool-terminal-starting log file")
 	}
-	endEvent := events[2].(map[string]interface{})
-	if endEvent["kind"] != "agent.tool.terminal.ended" {
-		t.Errorf("expected terminal.ended, got: %v", endEvent["kind"])
+	if !endFound {
+		t.Error("expected agent-tool-terminal-ended log file")
 	}
 }
 
@@ -15235,8 +15664,8 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 	}
 }
 
-func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
-	tmpDir, ticketJSON := setupTicketDir(t)
+func TestTrackHookCodeEditedLogsToFile(t *testing.T) {
+	tmpDir, _ := setupTicketDir(t)
 	SetRootDir(tmpDir)
 	tsContent := "// #region \U0001F516Functions\n\n// doWork MUST work.\nexport function doWork(): void {}\n\n// #endregion \U0001F516Functions\n"
 	tsFile := filepath.Join(tmpDir, "proj", "kit", "file.ts")
@@ -15262,39 +15691,32 @@ func TestTrackHookCodeEditedDefinitionIDsAreRepoRelative(t *testing.T) {
 		RepoRoot:  tmpDir,
 		Input:     json.RawMessage(payload),
 	})
-	ticket := readTicketJSON(t, ticketJSON)
-	events := getTicketEvents(t, ticket)
-	var codeEditedEvent map[string]interface{}
-	for _, e := range events {
-		ev := e.(map[string]interface{})
-		if ev["kind"] == "agent.tool.code.edit.ended" {
-			codeEditedEvent = ev
+	// Verify code edit event logged to ⚡/🤖
+	logFiles := getLogFiles(t, tmpDir)
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-tool-code-edit-ended") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log file: %v", err)
+			}
+			var entry HookLogEntry
+			if err := json.Unmarshal(data, &entry); err != nil {
+				t.Fatalf("invalid log JSON: %v", err)
+			}
+			var evt map[string]interface{}
+			if err := json.Unmarshal(entry.Event, &evt); err != nil {
+				t.Fatalf("cannot unmarshal event: %v", err)
+			}
+			if evt["kind"] != "agent.tool.code.edit.ended" {
+				t.Errorf("expected kind agent.tool.code.edit.ended, got: %v", evt["kind"])
+			}
+			found = true
 			break
 		}
 	}
-	if codeEditedEvent == nil {
-		t.Fatal("expected agent.tool.code.edit.ended event")
-	}
-	newBlock, ok := codeEditedEvent["new"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected 'new' code block in code.edit.ended event")
-	}
-	sections, ok := newBlock["sections"].([]interface{})
-	if !ok || len(sections) == 0 {
-		t.Fatal("expected sections in new code block")
-	}
-	for _, sec := range sections {
-		s := sec.(map[string]interface{})
-		defs, _ := s["definitions"].([]interface{})
-		for _, d := range defs {
-			defID, _ := d.(string)
-			if strings.Contains(defID, tmpDir) {
-				t.Errorf("definition ID contains absolute path %q: %s", tmpDir, defID)
-			}
-			if strings.Contains(defID, "🗃️tmp") || strings.Contains(defID, "🗃️workspaces") {
-				t.Errorf("definition ID contains absolute path components: %s", defID)
-			}
-		}
+	if !found {
+		t.Error("expected agent-tool-code-edit-ended log file")
 	}
 }
 
@@ -15308,7 +15730,12 @@ func TestHookCommandStdinPiped(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	_ = out
 	_ = err
-	logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", "sess1")
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"sess1")
 	entries, readErr := os.ReadDir(logDir)
 	if readErr != nil {
 		t.Skip("cli binary not available for subprocess test")
@@ -16290,30 +16717,30 @@ func TestPopulateEventDataTerminalEnded(t *testing.T) {
 	}
 }
 
-func TestPopulateEventDataGitCommitEnded(t *testing.T) {
+func TestPopulateEventDataVersionCheckpointEnded(t *testing.T) {
 	tmpDir := t.TempDir()
 	payload := json.RawMessage(`{"sha":"abc123def","message":"feat: add hooks"}`)
 	hctx := HookContext{
-		Event:     HookGitCommitEnded,
+		Event:     HookVersionCheckpointEnded,
 		Client:    "",
 		Timestamp: "2026-02-19T20:00:00Z",
 		RepoRoot:  tmpDir,
 		Input:     payload,
 	}
 	result := RunHook(hctx)
-	res, ok := result.(HookResultGitCommitEnded)
+	res, ok := result.(HookResultVersionCheckpointEnded)
 	if !ok {
-		t.Fatalf("expected HookResultGitCommitEnded, got %T", result)
+		t.Fatalf("expected HookResultVersionCheckpointEnded, got %T", result)
 	}
-	if res.SHA != "abc123def" {
-		t.Errorf("expected sha=abc123def, got %s", res.SHA)
+	if res.Checkpoint != "abc123def" {
+		t.Errorf("expected checkpoint=abc123def, got %s", res.Checkpoint)
 	}
-	if res.Message != "feat: add hooks" {
-		t.Errorf("expected message=feat: add hooks, got %s", res.Message)
+	if res.Description != "feat: add hooks" {
+		t.Errorf("expected description=feat: add hooks, got %s", res.Description)
 	}
 }
 
-func TestPopulateEventDataGitCommitStartingFromFile(t *testing.T) {
+func TestPopulateEventDataVersionCheckpointStartingFromFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	gitDir := filepath.Join(tmpDir, ".git")
 	if err := os.MkdirAll(gitDir, 0755); err != nil {
@@ -16323,17 +16750,17 @@ func TestPopulateEventDataGitCommitStartingFromFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	hctx := HookContext{
-		Event:    HookGitCommitStarting,
+		Event:    HookVersionCheckpointStarting,
 		Client:   "",
 		RepoRoot: tmpDir,
 	}
-	result := RunHook(hctx) // Changed to RunHook
-	res, ok := result.(HookResultGitCommitStarting)
+	result := RunHook(hctx)
+	res, ok := result.(HookResultVersionCheckpointStarting)
 	if !ok {
-		t.Fatalf("expected HookResultGitCommitStarting, got %T", result)
+		t.Fatalf("expected HookResultVersionCheckpointStarting, got %T", result)
 	}
-	if res.Message != "fix: resolve issue" {
-		t.Errorf("expected message=fix: resolve issue, got %s", res.Message)
+	if res.Description != "fix: resolve issue" {
+		t.Errorf("expected description=fix: resolve issue, got %s", res.Description)
 	}
 }
 
@@ -16903,7 +17330,12 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if sessionID == "" {
 				sessionID = "unknown"
 			}
-			logDir := filepath.Join(tmpDir, ".semio-repo", "📜", "🪝", "🤖", sessionID)
+			logNow := time.Now().UTC()
+			logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+				fmt.Sprintf("%02d", logNow.Year()%100),
+				fmt.Sprintf("%02d", int(logNow.Month())),
+				fmt.Sprintf("%02d", logNow.Day()),
+				sessionID)
 			entries, err := os.ReadDir(logDir)
 			if err != nil {
 				t.Fatalf("log dir: %v", err)
@@ -16929,8 +17361,8 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if evt["client"] != tc.client {
 				t.Errorf("log client: want %s, got %v", tc.client, evt["client"])
 			}
-			if entry.Raw == nil {
-				t.Error("log raw: want non-nil")
+			if entry.Native.Event == nil {
+				t.Error("log native.event: want non-nil")
 			}
 			wantSession := extractSessionIDFromInput(input)
 			if wantSession != "" && evt["session"] != wantSession {
@@ -16998,15 +17430,21 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 				Input:     old.Context.Input,
 			}
 			result := RunHook(hctx)
-			outDir := filepath.Join(tmpDir, ".semio-repo", "📜")
-			outEntries, err := os.ReadDir(outDir)
-			if err != nil {
-				t.Fatalf("log dir: %v", err)
+			outBase := filepath.Join(tmpDir, ".semio-repo", "⚡")
+			var logFiles []string
+			filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
+				if walkErr != nil {
+					return nil
+				}
+				if !d.IsDir() && strings.HasSuffix(d.Name(), ".json") {
+					logFiles = append(logFiles, path)
+				}
+				return nil
+			})
+			if len(logFiles) != 1 {
+				t.Fatalf("want 1 log file under ⚡, got %d", len(logFiles))
 			}
-			if len(outEntries) != 1 {
-				t.Fatalf("want 1 log file, got %d", len(outEntries))
-			}
-			outData, err := os.ReadFile(filepath.Join(outDir, outEntries[0].Name()))
+			outData, err := os.ReadFile(logFiles[0])
 			if err != nil {
 				t.Fatalf("read log: %v", err)
 			}
@@ -17024,8 +17462,8 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 			if evt["client"] != old.Context.Client {
 				t.Errorf("client: want %s, got %v", old.Context.Client, evt["client"])
 			}
-			if old.Context.Input != nil && entry.Raw == nil {
-				t.Error("raw not preserved")
+			if old.Context.Input != nil && entry.Native.Event == nil {
+				t.Error("native.event not preserved")
 			}
 			wantSession := extractSessionIDFromInput(old.Context.Input)
 			if wantSession != "" && evt["session"] != wantSession {
@@ -17042,9 +17480,198 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Hook Tests
+func TestCheckpointInAllAgentEvents(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+	// Get the actual HEAD commit SHA
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+	sessionInput := json.RawMessage(`{"session_id":"checkpoint-test","llm":"opus-4-6"}`)
+	agentEvents := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"agent.started", HookAgentStarted, sessionInput},
+		{"agent.ended", HookAgentEnded, sessionInput},
+		{"agent.prompt.submitting", HookAgentPromptSubmitting, sessionInput},
+		{"agent.compacting", HookAgentCompacting, sessionInput},
+		{"agent.tool.starting", HookAgentToolStarting, json.RawMessage(`{"session_id":"checkpoint-test","tool_name":"read_file"}`)},
+		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"checkpoint-test","tool_name":"read_file"}`)},
+		{"agent.tool.plan.updating", HookAgentToolPlanUpdating, sessionInput},
+		{"agent.tool.search.starting", HookAgentToolSearchStarting, sessionInput},
+		{"agent.tool.search.ended", HookAgentToolSearchEnded, sessionInput},
+		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, sessionInput},
+		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, sessionInput},
+		{"agent.tool.test.starting", HookAgentToolTestStarting, sessionInput},
+		{"agent.tool.test.ended", HookAgentToolTestEnded, sessionInput},
+		{"agent.tool.build.starting", HookAgentToolBuildStarting, sessionInput},
+		{"agent.tool.build.ended", HookAgentToolBuildEnded, sessionInput},
+		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, json.RawMessage(`{"session_id":"checkpoint-test","tool_input":{"command":"echo test"}}`)},
+		{"agent.tool.terminal.ended", HookAgentToolTerminalEnded, sessionInput},
+	}
+	for _, tc := range agentEvents {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:     tc.event,
+				Client:    "copilot-chat",
+				Timestamp: "2026-02-25T12:00:00Z",
+				RepoRoot:  tmpDir,
+				Input:     tc.input,
+			}
+			result := dispatchHook(hctx)
+			// Marshal and check checkpoint field
+			data, _ := json.Marshal(result)
+			var m map[string]interface{}
+			json.Unmarshal(data, &m)
+			checkpoint, ok := m["checkpoint"]
+			if !ok || checkpoint == "" {
+				t.Errorf("expected checkpoint field in %s result, got: %v", tc.name, m)
+			}
+			if checkpoint != expectedSHA {
+				t.Errorf("expected checkpoint=%s, got %v", expectedSHA, checkpoint)
+			}
+		})
+	}
+}
 
-// #region 🔖Mermaid Tests
+func TestCheckpointInAllVersionEvents(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+	versionEvents := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"checkpoint.starting", HookVersionCheckpointStarting, nil},
+		{"checkpoint.ended", HookVersionCheckpointEnded, json.RawMessage(`{"sha":"` + expectedSHA + `","message":"test commit"}`)},
+		{"checkin.starting", HookVersionCheckinStarting, nil},
+		{"checkin.ended", HookVersionCheckinEnded, nil},
+		{"checkout.starting", HookVersionCheckoutStarting, nil},
+		{"checkout.ended", HookVersionCheckoutEnded, nil},
+	}
+	for _, tc := range versionEvents {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:     tc.event,
+				Client:    "",
+				Timestamp: "2026-02-25T12:00:00Z",
+				RepoRoot:  tmpDir,
+				Input:     tc.input,
+			}
+			result := dispatchHook(hctx)
+			data, _ := json.Marshal(result)
+			var m map[string]interface{}
+			json.Unmarshal(data, &m)
+			checkpoint, ok := m["checkpoint"]
+			if !ok || checkpoint == "" {
+				t.Errorf("expected checkpoint field in %s result, got: %v", tc.name, m)
+			}
+			if checkpoint != expectedSHA {
+				t.Errorf("expected checkpoint=%s, got %v", expectedSHA, checkpoint)
+			}
+		})
+	}
+}
+
+func TestCheckpointInLoggedEventJSON(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+	sessionInput := json.RawMessage(`{"session_id":"checkpoint-log","llm":"opus-4-6","transcript_path":"/tmp/t.jsonl"}`)
+	hctx := HookContext{
+		Event:     HookAgentStarted,
+		Client:    "copilot-chat",
+		Timestamp: "2026-02-25T12:00:00Z",
+		RepoRoot:  tmpDir,
+		Input:     sessionInput,
+	}
+	RunHook(hctx)
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) == 0 {
+		t.Fatal("expected at least 1 log file")
+	}
+	found := false
+	for _, lf := range logFiles {
+		if strings.Contains(filepath.Base(lf), "agent-started") {
+			data, err := os.ReadFile(lf)
+			if err != nil {
+				t.Fatalf("cannot read log: %v", err)
+			}
+			var entry HookLogEntry
+			json.Unmarshal(data, &entry)
+			var evt map[string]interface{}
+			json.Unmarshal(entry.Event, &evt)
+			checkpoint, ok := evt["checkpoint"]
+			if !ok || checkpoint == "" {
+				t.Errorf("expected checkpoint in logged event, got: %v", evt)
+			}
+			if checkpoint != expectedSHA {
+				t.Errorf("expected logged checkpoint=%s, got %v", expectedSHA, checkpoint)
+			}
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected agent-started log file")
+	}
+}
+
+func TestEventIDsUseSemioRepoFormat(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+	// Create a file in the repo
+	os.MkdirAll(filepath.Join(tmpDir, "src"), 0755)
+	os.WriteFile(filepath.Join(tmpDir, "src", "main.go"), []byte("package main"), 0644)
+	// Test resolvePathToFileID returns semio-repo format
+	fileID := resolvePathToFileID(filepath.Join(tmpDir, "src", "main.go"))
+	// File IDs should use emoji format
+	if fileID == "" {
+		t.Error("expected non-empty file ID")
+	}
+	if strings.Contains(fileID, "/") {
+		t.Errorf("file ID should not contain path separators: %s", fileID)
+	}
+	// Test resolveRangeRef for line references
+	rangeRef := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10")
+	if rangeRef == "" {
+		t.Error("expected non-empty range ref")
+	}
+	if !strings.Contains(rangeRef, "📌") {
+		t.Errorf("expected 📌 in range ref, got: %s", rangeRef)
+	}
+	if !strings.Contains(rangeRef, "10") {
+		t.Errorf("expected line number 10 in range ref, got: %s", rangeRef)
+	}
+	// Test range reference
+	rangeRefFull := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10-L20")
+	if !strings.Contains(rangeRefFull, "📌10📌20") {
+		t.Errorf("expected 📌10📌20 in full range ref, got: %s", rangeRefFull)
+	}
+}
+
+// #endregion 🔖Hook
+
+// #region 🔖Mermaid
 
 func TestMermaidLocByProjectsBundlesFoldersFiles(t *testing.T) {
 	root := findTestRepoRoot(".")
@@ -17166,9 +17793,9 @@ func TestMermaidEscapeLabel(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Mermaid Tests
+// #endregion 🔖Mermaid
 
-// #region 🔖Provider Tests
+// #region 🔖Provider
 
 func TestProviderRegistry(t *testing.T) {
 	mp := DefaultManagementProvider()
@@ -17178,12 +17805,12 @@ func TestProviderRegistry(t *testing.T) {
 	if mp.Kind() != "github" {
 		t.Errorf("expected github, got %s", mp.Kind())
 	}
-	scp := DefaultSourceControlProvider()
-	if scp == nil {
-		t.Fatal("DefaultSourceControlProvider() returned nil")
+	vcp := DefaultVersionControlProvider()
+	if vcp == nil {
+		t.Fatal("DefaultVersionControlProvider() returned nil")
 	}
-	if scp.Kind() != "github" {
-		t.Errorf("expected github, got %s", scp.Kind())
+	if vcp.Kind() != "git" {
+		t.Errorf("expected git, got %s", vcp.Kind())
 	}
 	sp := DefaultSandboxProvider()
 	if sp == nil {
@@ -17367,8 +17994,269 @@ func TestManagementProviderInterface(t *testing.T) {
 	var _ ManagementProvider = &NullManagementProvider{}
 }
 
-func TestSourceControlProviderInterface(t *testing.T) {
-	var _ SourceControlProvider = &GitHubSourceControlProvider{}
+func TestVersionControlProviderInterface(t *testing.T) {
+	var _ VersionControlProvider = &GitVersionControlProvider{}
+}
+
+func TestGitVersionControlProviderKind(t *testing.T) {
+	p := &GitVersionControlProvider{}
+	if p.Kind() != "git" {
+		t.Errorf("expected git, got %s", p.Kind())
+	}
+}
+
+func TestGitVersionControlProviderConfigure(t *testing.T) {
+	p := &GitVersionControlProvider{}
+	if err := p.Configure("/tmp"); err != nil {
+		t.Errorf("Configure should not error: %v", err)
+	}
+}
+
+// initTestGitRepo creates a fresh git repo with signing disabled, an initial commit, and returns the path.
+func initTestGitRepo(t *testing.T, branch string) string {
+	t.Helper()
+	tmpDir := t.TempDir()
+	if branch == "" {
+		branch = "main"
+	}
+	run := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = tmpDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v failed: %s\n%s", args, err, string(out))
+		}
+	}
+	cmd := exec.Command("git", "init", "-b", branch, tmpDir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git init failed: %s\n%s", err, string(out))
+	}
+	run("config", "user.email", "test@test.com")
+	run("config", "user.name", "Test")
+	run("config", "commit.gpgsign", "false")
+	run("config", "tag.gpgsign", "false")
+	os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("hello"), 0644)
+	run("add", "-A")
+	run("commit", "-m", "initial")
+	return tmpDir
+}
+
+// initTestGitRepoWithRemote creates a git repo with a bare remote and returns (workDir, remoteDir).
+func initTestGitRepoWithRemote(t *testing.T) (string, string) {
+	t.Helper()
+	remoteDir := t.TempDir()
+	cmd := exec.Command("git", "init", "--bare", "-b", "main", remoteDir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git init --bare failed: %s\n%s", err, string(out))
+	}
+
+	mainDir := initTestGitRepo(t, "main")
+	run := func(dir string, args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v in %s failed: %s\n%s", args, dir, err, string(out))
+		}
+	}
+	run(mainDir, "remote", "add", "origin", remoteDir)
+	run(mainDir, "push", "-u", "origin", "main")
+
+	workDir := t.TempDir()
+	cmd = exec.Command("git", "clone", remoteDir, workDir)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git clone failed: %s\n%s", err, string(out))
+	}
+	run(workDir, "config", "user.email", "test@test.com")
+	run(workDir, "config", "user.name", "Test")
+	run(workDir, "config", "commit.gpgsign", "false")
+	run(workDir, "config", "tag.gpgsign", "false")
+	return workDir, remoteDir
+}
+
+func TestGitVersionControlProviderCurrentCheckpoint(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	p := &GitVersionControlProvider{}
+	sha, err := p.CurrentCheckpoint(tmpDir)
+	if err != nil {
+		t.Fatalf("CurrentCheckpoint failed: %v", err)
+	}
+	if len(sha) < 7 {
+		t.Errorf("expected a SHA hash, got %q", sha)
+	}
+}
+
+func TestGitVersionControlProviderCurrentBranch(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	p := &GitVersionControlProvider{}
+	branch, err := p.CurrentBranch(tmpDir)
+	if err != nil {
+		t.Fatalf("CurrentBranch failed: %v", err)
+	}
+	if branch != "main" {
+		t.Errorf("expected main, got %q", branch)
+	}
+}
+
+func TestGitVersionControlProviderCheckpoint(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	// Make a change and checkpoint
+	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world"), 0644)
+
+	p := &GitVersionControlProvider{}
+	sha, err := p.Checkpoint(tmpDir, "add file2")
+	if err != nil {
+		t.Fatalf("Checkpoint failed: %v", err)
+	}
+	if len(sha) < 7 {
+		t.Errorf("expected a SHA hash, got %q", sha)
+	}
+
+	// Verify the commit was made
+	currentSha, _ := p.CurrentCheckpoint(tmpDir)
+	if currentSha != sha {
+		t.Errorf("expected current checkpoint %q to match checkpoint result %q", currentSha, sha)
+	}
+}
+
+func TestGitVersionControlProviderStageAll(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	os.WriteFile(filepath.Join(tmpDir, "newfile.txt"), []byte("new"), 0644)
+
+	p := &GitVersionControlProvider{}
+	if err := p.StageAll(tmpDir); err != nil {
+		t.Fatalf("StageAll failed: %v", err)
+	}
+
+	files, err := p.StagedFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("StagedFiles failed: %v", err)
+	}
+	if len(files) == 0 {
+		t.Error("expected staged files after StageAll")
+	}
+}
+
+func TestGitVersionControlProviderStagedFiles(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+
+	// No staged files after commit
+	p := &GitVersionControlProvider{}
+	files, err := p.StagedFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("StagedFiles failed: %v", err)
+	}
+	if len(files) != 0 {
+		t.Errorf("expected no staged files, got %d", len(files))
+	}
+
+	// Stage a new file
+	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world"), 0644)
+	cmd := exec.Command("git", "add", "file2.txt")
+	cmd.Dir = tmpDir
+	cmd.Run()
+	files, err = p.StagedFiles(tmpDir)
+	if err != nil {
+		t.Fatalf("StagedFiles failed: %v", err)
+	}
+	if len(files) != 1 || files[0] != "file2.txt" {
+		t.Errorf("expected [file2.txt], got %v", files)
+	}
+}
+
+func TestGitVersionControlProviderCheckin(t *testing.T) {
+	workDir, _ := initTestGitRepoWithRemote(t)
+
+	p := &GitVersionControlProvider{}
+	err := p.Checkin(workDir, "testuser")
+	if err != nil {
+		t.Fatalf("Checkin failed: %v", err)
+	}
+
+	// Verify we're on contributor/latest branch
+	branch, err := p.CurrentBranch(workDir)
+	if err != nil {
+		t.Fatalf("CurrentBranch failed: %v", err)
+	}
+	if branch != "testuser/latest" {
+		t.Errorf("expected testuser/latest, got %q", branch)
+	}
+}
+
+func TestGitVersionControlProviderCheckout(t *testing.T) {
+	workDir, _ := initTestGitRepoWithRemote(t)
+
+	// Create contributor/latest with changes
+	run := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = workDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v failed: %s\n%s", args, err, string(out))
+		}
+	}
+	run("switch", "-c", "testuser/latest")
+	os.WriteFile(filepath.Join(workDir, "feature.txt"), []byte("feature"), 0644)
+	run("add", "-A")
+	run("commit", "-m", "add feature")
+
+	p := &GitVersionControlProvider{}
+	sha, err := p.Checkout(workDir, "testuser", "merge feature")
+	if err != nil {
+		t.Fatalf("Checkout failed: %v", err)
+	}
+	if len(sha) < 7 {
+		t.Errorf("expected a SHA hash, got %q", sha)
+	}
+
+	// Verify we're on main
+	branch, err := p.CurrentBranch(workDir)
+	if err != nil {
+		t.Fatalf("CurrentBranch failed: %v", err)
+	}
+	if branch != "main" {
+		t.Errorf("expected main after checkout, got %q", branch)
+	}
+
+	// Verify the feature file exists on main now
+	if _, err := os.Stat(filepath.Join(workDir, "feature.txt")); os.IsNotExist(err) {
+		t.Error("expected feature.txt to exist on main after checkout")
+	}
+}
+
+func TestVersionHookEventsDispatch(t *testing.T) {
+	cases := []struct {
+		name  string
+		event HookEvent
+	}{
+		{"checkin starting", HookVersionCheckinStarting},
+		{"checkin ended", HookVersionCheckinEnded},
+		{"checkout starting", HookVersionCheckoutStarting},
+		{"checkout ended", HookVersionCheckoutEnded},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			hctx := HookContext{
+				Event:     tc.event,
+				Client:    "",
+				Timestamp: "2026-02-24T12:00:00Z",
+				RepoRoot:  t.TempDir(),
+			}
+			result := RunHook(hctx)
+			if !result.IsAllowed() {
+				t.Errorf("expected allowed for %s, got denied: %s", tc.event, result.GetMessage())
+			}
+		})
+	}
 }
 
 func TestSandboxProviderInterface(t *testing.T) {
@@ -17385,9 +18273,9 @@ func TestEditorProviderInterface(t *testing.T) {
 	var _ EditorProvider = &AntigravityEditorProvider{}
 }
 
-// #endregion 🔖Provider Tests
+// #endregion 🔖Provider
 
-// #region 🔖Project Generate Tests
+// #region 🔖Project Generate
 
 func TestIsLicenseText(t *testing.T) {
 	if !isLicenseText("This program is free software: you can redistribute it and/or modify") {
@@ -17633,7 +18521,7 @@ func TestGenerateProjectRequirementsSemioRepo(t *testing.T) {
 	}
 }
 
-// #endregion 🔖Project Generate Tests
+// #endregion 🔖Project Generate
 func TestExtractSearchFromInputLineNumbers(t *testing.T) {
 	tests := []struct {
 		name     string

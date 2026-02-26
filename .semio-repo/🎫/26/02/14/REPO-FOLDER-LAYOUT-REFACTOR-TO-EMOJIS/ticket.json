@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Update the implementation and tests in semio-repo/cli/main.go and main_test.go to match the new emoji-based folder layout: ✍️ (drafts), 🎫 (tickets with YY date format), 🎯 (goals), 👤 (contributors), 💡 (ideas), 💬 (prompts with 👤 and 📋 subfolders). Remove all legacy text-based folder name references.",
   "summary": "Refactored all folder path references in the semio-repo codebase to use the new emoji-based layout:\n\n- `tickets` → `🎫` with 2-digit year format (YY/MM/DD/SLUG)\n- `drafts` → `✍️`\n- `goals` → `🎯`\n- `contributors` → `👤`\n- `prompt/templates` → `💬/📋`\n\nKey changes:\n1. Updated GetTicketsDir, GetDraftsPath, GetRepoGoalsDir, contributor path functions to use emoji folder names\n2. Changed FormatDate to return 2-digit year (year % 100)\n3. Updated GetTicketPath to use PadNumber(year, 2)\n4. Updated ListTickets/StreamTickets year filtering to use PadNumber\n5. Changed ticket URI format from %04d to %02d for year\n6. Updated ISO date formatting to use 2000+year for full year\n7. Removed legacy path fallback in delete ticket\n8. Updated prompt template path to use 💬/📋\n9. Updated vscode extension paths (tickets, goals, drafts) and removed legacy fallbacks\n10. Updated CLAUDE.md, AGENTS.md, README.md documentation\n11. Updated all test expectations in main_test.go\n\nAll relevant tests pass: ContributorDiscovery, TicketsNonEmpty, TicketTitleValidation, FilterTicketWorkspaceFiles, TicketListCommand, TicketOpenContinueKeyword, GoalCreate, GoalHierarchy, GoalList, GoalArtifactID, IdToUri, UriToId, LifecycleCommands, TicketLifecycle_NoGithub, CLI E2E Ticket/Goal Lifecycle, ToolTicketLifecycle, ToolDraftLifecycle.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-14 23:43:23",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
@@ -18,7 +18,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-14 23:56:49",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
@@ -97,7 +97,7 @@
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go",
+              "path": "📄🥼semio-repo/cli/main_test.go",
               "lines": {
                 "added": 605,
                 "removed": 47
@@ -216,49 +216,49 @@
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
+              "path": "📄🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Helpers",
+              "path": "📄🥼semio-repo/cli/main_test.go#Helpers",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Collection Tests",
+              "path": "📄🥼semio-repo/cli/main_test.go#Collection Tests",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Nodes and Edges Tests",
+              "path": "📄🥼semio-repo/cli/main_test.go#Nodes and Edges Tests",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Cli",
+              "path": "📄🥼semio-repo/cli/main_test.go#Cli",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Policy Tests",
+              "path": "📄🥼semio-repo/cli/main_test.go#Policy Tests",
               "lines": {
                 "added": 30,
                 "removed": 30
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests",
               "lines": {
                 "added": 557,
                 "removed": 0
@@ -630,301 +630,301 @@
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Helpers§parseTicketOpenResult",
+              "path": "📄🥼semio-repo/cli/main_test.go#Helpers§parseTicketOpenResult",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Helpers§TestContributorDiscovery",
+              "path": "📄🥼semio-repo/cli/main_test.go#Helpers§TestContributorDiscovery",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Collection Tests§TestFilterTicketWorkspaceFiles",
+              "path": "📄🥼semio-repo/cli/main_test.go#Collection Tests§TestFilterTicketWorkspaceFiles",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
+              "path": "📄🥼semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "📄🥼semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Cli§TestFixViaGraphQL",
+              "path": "📄🥼semio-repo/cli/main_test.go#Cli§TestFixViaGraphQL",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
+              "path": "📄🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
               "lines": {
                 "added": 30,
                 "removed": 30
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Root",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Root",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Project",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Project",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Bundle",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Bundle",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Folder",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Folder",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_File",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_File",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Line",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Line",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Range",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Range",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Section",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Section",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Definition",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Definition",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Goal",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Goal",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Ticket",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Ticket",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Draft",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Draft",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Todo",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Todo",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Policy",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Policy",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Contributor",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Contributor",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Commit",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Commit",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Interaction",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Interaction",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGoalArtifactID",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGoalArtifactID",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestPropagateParentIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestPropagateParentIDs",
               "lines": {
                 "added": 43,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestFlat",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestFlat",
               "lines": {
                 "added": 24,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestMonorepoTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestMonorepoTreeEntityIDs",
               "lines": {
                 "added": 110,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGoalTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGoalTreeEntityIDs",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestContributorTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestContributorTreeEntityIDs",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestCommitTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestCommitTreeEntityIDs",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestInferEntityKind",
+              "path": "📄🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestInferEntityKind",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestMarkdownOutput",
+              "path": "📄🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestMarkdownOutput",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestLifecycleCommands",
+              "path": "📄🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestLifecycleCommands",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
+              "path": "📄🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Helpers§parseTicketOpenResult",
+              "path": "📄🥼semio-repo/cli/main_test.go#Helpers§parseTicketOpenResult",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Helpers§TestContributorDiscovery",
+              "path": "📄🥼semio-repo/cli/main_test.go#Helpers§TestContributorDiscovery",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Collection Tests§TestFilterTicketWorkspaceFiles",
+              "path": "📄🥼semio-repo/cli/main_test.go#Collection Tests§TestFilterTicketWorkspaceFiles",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
+              "path": "📄🥼semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "📄🥼semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Cli§TestFixViaGraphQL",
+              "path": "📄🥼semio-repo/cli/main_test.go#Cli§TestFixViaGraphQL",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
+              "path": "📄🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
               "lines": {
                 "added": 0,
                 "removed": 30
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
+              "path": "📄🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
               "lines": {
                 "added": 0,
                 "removed": 3
@@ -954,168 +954,168 @@
           ],
           "added": [
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Definition",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Definition",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_File",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_File",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Bundle",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Bundle",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestFlat",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestFlat",
               "lines": {
                 "added": 24,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Goal",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Goal",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Interaction",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Interaction",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Ticket",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Ticket",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestPropagateParentIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestPropagateParentIDs",
               "lines": {
                 "added": 43,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestMonorepoTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestMonorepoTreeEntityIDs",
               "lines": {
                 "added": 110,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Root",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Root",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestCommitTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestCommitTreeEntityIDs",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGoalTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGoalTreeEntityIDs",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestContributorTreeEntityIDs",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestContributorTreeEntityIDs",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Project",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Project",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Todo",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Todo",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Section",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Section",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Policy",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Policy",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Folder",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Folder",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Contributor",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Contributor",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGoalArtifactID",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGoalArtifactID",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Range",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Range",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Commit",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Commit",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Line",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Line",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄🧪semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Draft",
+              "path": "📄🥼semio-repo/cli/main_test.go#Entity ID Tests§TestGetArtifactID_Draft",
               "lines": {
                 "added": 8,
                 "removed": 0

@@ -6,7 +6,7 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/656"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism",
   "sessions": [
     {
       "id": "e79acc30-8791-4198-a555-169a51a79a23",
@@ -43,7 +43,7 @@
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T11:52:15Z",
-              "pattern": "./semio-repo/cli/cli ticket close 26/02/23/FIX-WRONG-SECTION-IDENTIFICATION-I-DS-IN-CLI-MAIN \"Applied autofix to resolve all 1429 wrong identification ID breaches in semio-repo/cli/main.go. 0 breaches remaining.\" semio-repo/cli/main.go 2\u003e\u00261"
+              "pattern": "./semio-repo/cli/cli ticket close 26/02/23/FIX-WRONG-SECTION-IDENTIFICATION-I-DS-IN-CLI-MAIN \"Applied autofix to resolve all 1429 wrong identification ID breaches in semio-repo/cli/main.go. 0 breaches remaining.\" semio-repo/cli/main.go 2>&1"
             }
           ]
         }
@@ -87,12 +87,12 @@
             {
               "kind": "agent.tool.terminal.ended",
               "timestamp": "2026-02-23T11:52:08Z",
-              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestHook|TestTicket|TestNativeHook\" -v -timeout 180s 2\u003e\u00261 | grep -E \"^=== RUN|--- PASS|--- FAIL|FAIL|PASS|ok\" | head -40"
+              "pattern": "cd /workspaces/semio/semio-repo/cli && go test -run \"TestHook|TestTicket|TestNativeHook\" -v -timeout 180s 2>&1 | grep -E \"^=== RUN|--- PASS|--- FAIL|FAIL|PASS|ok\" | head -40"
             },
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T11:52:14Z",
-              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestTicketLifecycle_NoManagement\" -v -timeout 60s 2\u003e\u00261 | tail -30"
+              "pattern": "cd /workspaces/semio/semio-repo/cli && go test -run \"TestTicketLifecycle_NoManagement\" -v -timeout 60s 2>&1 | tail -30"
             }
           ]
         }

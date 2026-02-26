@@ -2,12 +2,12 @@
   "title": "Test Lifecycle Ticket",
   "status": "open",
   "prompt": "Test prompt",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 18:20:50",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",

@@ -2,12 +2,12 @@
   "title": "TICKET-DIFF-FILES-SCOPE",
   "status": "closed",
   "prompt": "Limit ticket line recomputation to ticket files only",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-03T02:54:13Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",

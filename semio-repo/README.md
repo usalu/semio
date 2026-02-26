@@ -115,17 +115,17 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ### 🕸️ Systems
 
-#### Projects, Bundles, Folders, Files, Sections, Definitions
+#### Repos, Projects, Bundles, Folders, Files, Sections, Definitions
 
-#### Goals, Tickets
+#### Goals, Tickets, Sessions
 
-#### Events, Hooks, Trackers
+#### Events, Commands, Hooks
 
-#### Policies, Breaches
-
-#### Docs, Requirements, Requirements
+#### Policies, Breaches, Requirements, Specs, Docs
 
 #### Contributors, Agents, Checkpoints
+
+#### Languages, Trackers
 
 ### 🛠️ Mechanisms
 
@@ -155,23 +155,28 @@ A `fixer` MUST only fix exactly one `problem`.
 
 ```mermaid
 sequenceDiagram
- Contributor->>+semio-repo: checkin
- semio-repo->>+git: fast foward `contributor/latest` to `main`
- git->>-semio-repo: ✅
- semio-repo->>-Contributor: ✅
- Contributor->>+semio-repo: checkpoint
- semio-repo->>+git: commit `contributor/latest`
- git->>-semio-repo: ✅
- semio-repo->>-Contributor: ✅
- Contributor->>+semio-repo: checkout
- semio-repo->>+git: create branch `contributor/backup`
- git->>-semio-repo: ✅
- semio-repo->>+git: squashmerge `contributor/latest` to `main`
- git->>-semio-repo: ✅
- semio-repo->>-Contributor: ✅
+Contributor->>+semio-repo: checkin
+semio-repo->>+git: fast foward `contributor/latest` to  `main`
+git->>-semio-repo: ✅
+semio-repo->>-Contributor: ✅
+Contributor->>+semio-repo: checkpoint
+semio-repo->>+git: commit to `contributor/latest`
+git->>-semio-repo: ✅
+semio-repo->>-Contributor: ✅
+Contributor->>+semio-repo: checkout
+semio-repo->>+git: create branch `contributor/backup`
+git->>-semio-repo: ✅
+semio-repo->>+git: squashmerge `contributor/latest` to  `main`
+git->>-semio-repo: ✅
+semio-repo->>+git: `contributor/backup` to `contributor/YY/MM/DD`
+git->>-semio-repo: ✅
+semio-repo->>-Contributor: ✅
 ```
 
 #### ⚡ Events
+
+`.semio-repo/🧑‍💻/⚡/🔀/{{YY}}/{{MM}}/{{DD}}/{{checkpoint-id}}/{{HHMMSS}}_{{version-event-kind}}.json`
+`.semio-repo/🧑‍💻/⚡/🤖/{{YY}}/{{MM}}/{{DD}}/{{session-id}}/{{HHMMSS}}_{{agent-event-kind}}.json`
 
 ```yaml
 version:
@@ -295,7 +300,7 @@ agent:
    client: "{{client}}"
    llm: "{{llm}}"
    transcript: "{{transcript-path}}"
-   tests: ["{{test-id}}"] # e.g. ["","🧰semiorepo⌨️cli�maintestgo🔖policytests�testpolicylistcommand",]
+   tests: ["{{test-id}}"] # e.g. ["","🧰semiorepo⌨️cli🥼maintestgo🔖policytests🥼testpolicylistcommand",]
    timeout: "{{timeout}}" # seconds e.g. 600
   ended:
    session: "{{session-id}}"
@@ -303,8 +308,8 @@ agent:
    client: "{{client}}"
    llm: "{{llm}}"
    transcript: "{{transcript-path}}"
-   succeeded: ["{{successful-test-id}}"] # e.g. ["🧰semiorepo⌨️cli�maintestgo🔖policytests�"]
-   failed: ["{{failed-test-id}}"] # e.g. ["🧰semiorepo⌨️cli�maintestgo🔖policytests�"]
+   succeeded: ["{{successful-test-id}}"] # e.g. ["🧰semiorepo⌨️cli🥼maintestgo🔖policytests🥼testpolicylistcommand"]
+   failed: ["{{failed-test-id}}"] # e.g. ["🧰semiorepo⌨️cli🥼maintestgo🔖policytests🥼testpolicylistcommand"]
  build:
   starting:
    session: "{{session-id}}"
@@ -375,7 +380,6 @@ repo:
  uri:
   scheme: "semiorepo://"
   examples: ["semiorepo://"]
-
 years:
  parent: repo
  id:
@@ -384,7 +388,6 @@ years:
  uri:
   scheme: "{{repo-uri}}y"
   examples: ["semiorepo://y"]
-
 year:
  parent: years
  id:
@@ -393,7 +396,6 @@ year:
  uri:
   scheme: "{{years-uri}}/{{YY}}"
   examples: ["semiorepo://y/26"]
-
 months:
  parent: year
  id:
@@ -402,7 +404,6 @@ months:
  uri:
   scheme: "{{year-uri}}/m"
   examples: ["semiorepo://y/26/m"]
-
 month:
  parent: months
  id:
@@ -411,7 +412,6 @@ month:
  uri:
   scheme: "{{months-uri}}/{{MM}}"
   examples: ["semiorepo://y/26/m/02"]
-
 days:
  parent: month
  id:
@@ -420,7 +420,6 @@ days:
  uri:
   scheme: "{{month-uri}}/d"
   examples: ["semiorepo://y/26/m/02/d"]
-
 day:
  parent: days
  id:
@@ -429,7 +428,6 @@ day:
  uri:
   scheme: "{{days-uri}}/{{DD}}"
   examples: ["semiorepo://y/26/m/02/d/15"]
-
 hours:
  parent: day
  id:
@@ -438,7 +436,6 @@ hours:
  uri:
   scheme: "{{day-uri}}/h"
   examples: ["semiorepo://y/26/m/02/d/15/h"]
-
 hour:
  parent: hours
  id:
@@ -447,7 +444,6 @@ hour:
  uri:
   scheme: "{{hours-uri}}/{{HH}}"
   examples: ["semiorepo://y/26/m/02/d/15/h/14"]
-
 minutes:
  parent: hour
  id:
@@ -456,7 +452,6 @@ minutes:
  uri:
   scheme: "{{hour-uri}}/min"
   examples: ["semiorepo://y/26/m/02/d/15/h/14/min"]
-
 minute:
  parent: minutes
  id:
@@ -465,7 +460,6 @@ minute:
  uri:
   scheme: "{{minutes-uri}}/{{mm}}"
   examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33"]
-
 seconds:
  parent: minute
  id:
@@ -474,7 +468,6 @@ seconds:
  uri:
   scheme: "{{minute-uri}}/s"
   examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33/s"]
-
 second:
  parent: seconds
  id:
@@ -751,7 +744,7 @@ definition:
     emoji: 🪨
     code: c
   - name: test
-    emoji: 🧪
+    emoji: 🥼
     code: t
  id:
   scheme: "{{section-id}}{{definition-kind-emoji}}{{flat-definition-name}}"
@@ -762,28 +755,45 @@ definition:
   examples:
    - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/d/i/createSketchpadStore"
 
+# TODO: requirement
 requirements:
- parent: testable | test
+  parent: requireable [project|bundle|folder|file|section|definition]
+  emoji: 💯
+  code: r
+  id:
+    scheme: "{{requireable-parent-id}}"
+    examples:
+      - "👤semio📚js🗃️sketchpad💻designtsx💯onlyonemachine"
+requirement:
+  parent: requirements
+   id:
+    scheme: "{{requirements-id}}"
+     examples:
+      - "👤semio📚js🗃️sketchpad💻designtsx💯onlyonemachine"
+
+specs:
+ parent: spec|project
+ emoji: 🔳
+ code: s
  id:
   scheme: "{{(testable-id|test-id)?}}�"
   examples:
-   - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store�"
+   - "👤semio🔳kit🔳design🔳"
  uri:
   scheme: "{{parent-uri}}/ts"
   examples:
    - "semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/design.tsx/s/State%20Management/s/Design%20Store/ts"
-
 spec:
- parent: testable
- code: t
+ parent: specs
  id:
-  scheme: "{{testable-id}}�{{flat-test-name}}"
+  scheme: "{{specs-id}}{{flat-spec-name}}"
   examples:
-   - "👤semio📚js💻semiots�flattendesign"
+   - "👤semio🔳kit🔳design🔳flat"
  uri:
   scheme: "{{testable-uri}}/t/{{uri-encoded-test-name}}"
   examples:
    - "semiorepo://p/u/semio/b/l/js/f/semio.ts/t/flattenDesign"
+
 
 goals:
  parent: goal | repo
@@ -972,30 +982,79 @@ contributor:
   examples:
    - "semiorepo://cs/usalu"
 
-commits:
+# TODO: agents
+agent:
+  parent: repo
+  emoji: 🤖
+  kinds:
+    - name: generalist
+      emoji: 🗺️
+
+# TODO: session
+sessions:
+  parent: repo
+  emoji: ⚪
+    kinds:
+    - name: running
+      emoji: 🟡
+    - name: completed
+      emoji: 🟢
+    - name: interrupted
+      emoji: 🔴
+ id:
+    scheme: "{{repo-id}}{{session-emoji}}"
+    examples:
+      - "⚪"
+  uri:
+    scheme: "{{repo-uri}}s"
+    examples:
+      - "semiorepo://s"
+session:
+  parent: sessions
+  id:
+    scheme: "{{sessions-id}}{{flat-session-id}}"
+    examples:
+      - "⚪e753ed61e8cc49b788f7dda53b8d5a15"
+  uri:
+    scheme: "{{sessions-uri}}/{{session-id}}"
+    examples:
+      - "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+
+checkpoint:
  parent: repo
  id:
   scheme: "{{repo-id}}🔀"
   examples:
    - "🔀"
  uri:
-  scheme: "{{repo-uri}}cms"
+  scheme: "{{repo-uri}}c"
   examples:
-   - "semiorepo://cms"
-
-commit:
- parent: commits
+   - "semiorepo://c"
+checkpoint: # e.g. for git provider a commit sha
+ parent: checkpoints
  id:
-  scheme: "{{day-id}}🔀{{sha}}{{contributors-ids}}"
+  scheme: "{{repo-id}}🔀{{checkpoint-id}}"
   examples:
-   - "🎆26🌙02☀️14🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a🧑‍💻usalu🧑‍💻kinansarak"
+   - "🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"
  uri:
-  scheme: "{{commits-uri}}/{{uri-encoded-commit-sha*}}"
+  scheme: "{{checkpoints-uri}}/{{checkpoint-id*}}"
   examples:
-   - "semiorepo://cms/cfb3b6084ff3fe883d5f39b08810a0b90997907a"
+   - "semiorepo://c/cfb3b6084ff3fe883d5f39b08810a0b90997907a"
+
+commands:
+  parent: [repo, command]
+  emoji: 🫡
+
+events:
+  parent: [repo, project, bundle, folder, file, definition, section]
+  emoji: ⚡
+
+hooks:
+  parent: event
+  emoji: 🪝
 
 interactions:
- parent: repo
+ parent: contributor
  id:
   scheme: "{{repo-id}}🤝"
   examples:
@@ -1004,7 +1063,6 @@ interactions:
   scheme: "{{repo-uri}}is"
   examples:
    - "semiorepo://is"
-
 interaction:
  parent: interactions
  kinds:
@@ -1080,90 +1138,63 @@ description: "{{ticket-description}}" # e.g. Fix renderTreeNodeText to temporari
 github:
  issue: "{{github-issue-url}}" # e.g. https://github.com/usalu/semio/issues/612
 goal: "{{goal-id}}" # e.g. 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters
-agents: # created by agent hooks after ticket was opened or reopened by the cli or the mcp tool.
- - session: "{{session-id}}" # native session id from client e.g. 38b90183-005d-45cf-879d-c16b27c099ce
-   contributor: "{{contributor-id}}" # find contributor with git config e.g. 🧑‍💻usalu
-   system: "{{system-id}}" # e.g. "linux"
-   client: "{{client-id}}" # e.g. copilot-chat # set with post mcp tool: derived from metadata from, cli: mandatory client flag
-   llm: "{{llm-id}}" # derive from agent hooks or if not available use the cli llm argument that was used on ticket open or ticket reopen e.g. "opus-4-6"
-   transcript: "{{transcript-path}}" # path to the transcript of the native ai chat e.g. /home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/2f1e87c2-af13-4067-9aa6-15f0af84010c.jsonl
-   plan:
-    steps:
-     - name: Inspect current ticket/hook schema and locate where ticket.json is built/updated
-       completed: { { timestamp } } # this means status completed
-     - name: Implement hook-to-ticket session integration for interactions, reads, and diffs
-       started: { { timestamp } } # this means status in progress
-     - name: Add/update tests and run relevant test suite # no completed or started means status pending
-     - name: Update ticket artifacts and summarize changes
-   events: # all events that are related to the ticket MUST be logged here.
-    - kind: agent.prompt.submitting
-      prompt: { { prompt } } # e.g. "The data should be directly on the event property. No extra data keyword.\nnot like currently:\n{\n  \"input\": {\n    \"timestamp\": \"2026-02-23T10:50:31.218Z\",\n    \"hookEventName\": \"SessionStart\",\n    \"sessionId\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"transcript_path\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\",\n    \"source\": \"new\",\n    \"cwd\": \"/workspaces/semio\"\n  },\n  \"event\": {\n    \"kind\": \"agent.started\",\n    \"session\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"timestamp\": \"2026-02-23T10:50:31.218Z\",\n    \"client\": \"copilot-chat\",\n    \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\"\n  },\n  \"response\": {},\n  \"data\": {\n    \"allowed\": true,\n    \"session\": \"7ff6f48c-24ba-41ee-bd06-531829800935\",\n    \"timestamp\": \"2026-02-23T10:50:31Z\",\n    \"client\": \"copilot-chat\",\n    \"transcript\": \"/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl\",\n    \"parent\": \"new\"\n  }\n}"
-    - kind: agent.tool.searching
-      timestamp: { { timestamp } }
-      query: { { query } } # e.g. `semio/js/**.tsx`,  `semio/js/sketchpad/Design.tsx`, `semio/js/sketchpad/Design.tsx#L532-L771`, `semio-repo/**`, `https://reactflow.dev/api-reference/react-flow`
-      denied: "{{denied-reason}}" # e.g. `.env files are private.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
-    - kind: agent.code.editing
-      file: { { file-id } }
-      denied: "{{denied-reason}}" # e.g. `.cursor/hooks.json is autogenerated by the semio repo cli and cant be edited manually.` Every denied hook MUST return a non-empty reason. When a hook is not not denied then the denied field SHOULD be omitted.
-    - kind: agent.code.edited
-      timestamp: { { timestamp } }
-      line: { { line-number } } # starting line number of old string
-      old:
-       sections: # all sections that appear in the old string
-        - section: { { ID } }
-          definitions: ["{{definition-id}}"] # all definitions that appear in the old string
-       loc: { { lines-of-code } } # lines of code of the old string
-      new:
-       sections: # all sections that appear in the new string
-        - section: { { ID } }
-          definitions: ["{{definition-id}}"] # all definitions that appear in the new string
-       loc: { { lines-of-code } } # lines of code of the new string
-    - kind: agent.code.testing
-      language: go
-      target: "{{target-pattern}}" # e.g.  TestTicketLifecycle_NoManagement
-   diff: # Derive diff at the end of a session using the agent.code.edited events and git diff (both staged and unstaged)
-    projects:
-     deleted: ["{{project-id}}"]
-     renamed:
-      - from: "{{project-id}}"
-        to: "{{project-id}}"
-     modified: ["{{project-id}}"]
-     created: ["{{project-id}}"]
-    bundles:
-     deleted: ["{{bundle-id}}"]
-     renamed:
-      - from: "{{bundle-id}}"
-        to: "{{bundle-id}}"
-     modified: ["{{bundle-id}}"]
-     created: ["{{bundle-id}}"]
-    folders:
-     deleted: ["{{folder-id}}"]
-     renamed:
-      - from: "{{folder-id}}"
-        to: "{{folder-id}}"
-     modified: ["{{folder-id}}"]
-     created: ["{{folder-id}}"]
-    files:
-     deleted: ["{{file-id}}"]
-     renamed:
-      - from: "{{file-id}}"
-        to: "{{file-id}}"
-     modified: ["{{file-id}}"]
-     created: ["{{file-id}}"]
-    sections:
-     deleted: ["{{section-id}}"]
-     renamed:
-      - from: "{{section-id}}"
-        to: "{{section-id}}"
-     modified: ["{{section-id}}"]
-     created: ["{{section-id}}"]
-    definitions:
-     deleted: ["{{definition-id}}"]
-     renamed:
-      - from: "{{definition-id}}"
-        to: "{{definition-id}}"
-     modified: ["{{definition-id}}"]
-     created: ["{{definition-id}}"]
+contributors: ["{{contributor-id}}"]
+session: ["{{agent-session-id}}"] # add session from within agent hooks after ticket was opened or reopened by the cli or the mcp tool. e.g. ""
+```
+
+`semio-repo/cli/cli ticket <ticket>`
+
+```yaml
+title: "{{ticket-title}}" # e.g. Tree Text Short IDs
+description: "{{ticket-description}}" # e.g. Fix renderTreeNodeText to temporarily clear parentId before calling renderEntityHuman so tree text output shows only the own ID segment instead of full hierarchical chains. Add tests for nested goal short IDs and parentId restoration.
+github:
+ issue: "{{github-issue-url}}" # e.g. https://github.com/usalu/semio/issues/612
+goal: "{{goal-id}}" # e.g. 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters
+searched:
+
+diff: # Derive diff at the end of a session using the agent.code.edited events and git diff (both staged and unstaged)
+ projects:
+  deleted: ["{{project-id}}"]
+  renamed:
+   - from: "{{project-id}}"
+     to: "{{project-id}}"
+  modified: ["{{project-id}}"]
+  created: ["{{project-id}}"]
+ bundles:
+  deleted: ["{{bundle-id}}"]
+  renamed:
+   - from: "{{bundle-id}}"
+     to: "{{bundle-id}}"
+  modified: ["{{bundle-id}}"]
+  created: ["{{bundle-id}}"]
+ folders:
+  deleted: ["{{folder-id}}"]
+  renamed:
+   - from: "{{folder-id}}"
+     to: "{{folder-id}}"
+  modified: ["{{folder-id}}"]
+  created: ["{{folder-id}}"]
+ files:
+  deleted: ["{{file-id}}"]
+  renamed:
+   - from: "{{file-id}}"
+     to: "{{file-id}}"
+  modified: ["{{file-id}}"]
+  created: ["{{file-id}}"]
+ sections:
+  deleted: ["{{section-id}}"]
+  renamed:
+   - from: "{{section-id}}"
+     to: "{{section-id}}"
+  modified: ["{{section-id}}"]
+  created: ["{{section-id}}"]
+ definitions:
+  deleted: ["{{definition-id}}"]
+  renamed:
+   - from: "{{definition-id}}"
+     to: "{{definition-id}}"
+  modified: ["{{definition-id}}"]
+  created: ["{{definition-id}}"]
 ```
 
 ## AI

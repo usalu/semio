@@ -1,0 +1,99 @@
+{
+  "title": "Refactor JSON Resource References to Semio Repo ID System",
+  "description": "All JSON files in .semio-repo should use the semio repo id system for resource references. Convert goal paths like AI-OPTIMIZED-REPO/REPO-CLIENT to emoji-prefixed flat format like 🎯aioptimizedrepo🎯repoclient. Also convert contributor references and parent goal references. Update CLI code to handle the new format.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/702"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-26 08:54:03",
+      "author": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+      "prompt": "All JSON files in .semio-repo should use the semio repo id system for resource references. Convert goal paths like AI-OPTIMIZED-REPO/REPO-CLIENT to emoji-prefixed flat format like 🎯aioptimizedrepo🎯repoclient. Also convert contributor references and parent goal references. Update CLI code to handle the new format.",
+      "llm": "opus-4-6"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-02-26 10:11:36",
+      "author": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+      "summary": "Refactored all .semio-repo JSON files to use semio repo ID system (emoji-prefixed flat IDs). Migration script converted 1498 references across all ticket.json and goal.json files. Updated Go CLI with MarshalJSON/UnmarshalJSON boundary conversion for Ticket and Goal structs, added goalPathToSemioID/semioIDToGoalPath/contributorGithubToSemioID/semioIDToContributorGithub conversion functions, fixed Goal.GetID() for hierarchical format. All 15 relevant tests pass including 7 new round-trip tests. Fixed pre-existing hhmmss compile error in logHook.",
+      "files": [
+        {
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
+        }
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
+      "plan": {
+        "steps": [
+          {
+            "name": "Research ID system and repo structure",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Discover JSON files and patterns",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Understand ID format mapping",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Open ticket for refactoring",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Write Python migration script",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Execute migration on JSON files",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Update CLI code for new ID format",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Update tests for new format",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Run tests and validate",
+            "completed": "2026-02-26T10:10:12Z"
+          },
+          {
+            "name": "Close ticket",
+            "started": "2026-02-26T10:10:12Z"
+          }
+        ]
+      }
+    },
+    {
+      "session": "bcb3d940-c16d-4263-8215-46b7005e8145",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "copilot-chat"
+    },
+    {
+      "session": "9b57ce56-af90-4029-a6e9-f3ff7d7669b9",
+      "contributor": "🧑‍💻usalu",
+      "system": "linux",
+      "client": "windsurf-chat"
+    }
+  ]
+}

@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/608"
   },
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-17 23:46:07",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-17 23:55:32",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "cdd1123d564e74b9e919599afb3942d31d0326ad",
@@ -33,14 +33,14 @@
           "path": "🧰semiorepo⌨️cli💻maingo"
         },
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     },
     {
       "kind": "ticket.reopen",
       "date": "2026-02-18 09:06:07",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -50,7 +50,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-18 09:10:03",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",

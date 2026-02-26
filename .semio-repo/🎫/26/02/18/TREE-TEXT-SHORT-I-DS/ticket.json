@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/612"
   },
-  "goal": "aioptimizedrepo/repoclient/repobinary/repocli/repoclifilters",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-18 08:55:15",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-18 09:02:56",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c"

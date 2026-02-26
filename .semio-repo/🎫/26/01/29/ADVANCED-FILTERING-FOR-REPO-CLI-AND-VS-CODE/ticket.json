@@ -1,21 +1,21 @@
 {
   "title": "Advanced Filtering for Repo CLI and VS Code",
   "status": "closed",
-  "prompt": "For every --no-\u003ckind\u003e flag, there should be a --only-\u003ckind\u003e flag to show only the kind. Add to every list and tree command --filter \u003cfilter-string\u003e, --regex, --match-case, --match-whole-word. The filter flags for file kinds (--no-\u003ckind\u003e, --only-\u003ckind\u003e) should work for every single list and tree command. Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles.",
-  "summary": "Refactored VS Code Codebase view into a Filter view with kind toggles. Updated repo CLI and VS Code analyze/fix commands to support --only-\u003ckind\u003e filtering. Removed legacy file tree logic from view.",
+  "prompt": "For every --no-<kind> flag, there should be a --only-<kind> flag to show only the kind. Add to every list and tree command --filter <filter-string>, --regex, --match-case, --match-whole-word. The filter flags for file kinds (--no-<kind>, --only-<kind>) should work for every single list and tree command. Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles.",
+  "summary": "Refactored VS Code Codebase view into a Filter view with kind toggles. Updated repo CLI and VS Code analyze/fix commands to support --only-<kind> filtering. Removed legacy file tree logic from view.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/265"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-29T10:24:25.979118739Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
-      "prompt": "For every --no-\u003ckind\u003e flag, there should be a --only-\u003ckind\u003e flag to show only the kind. Add to every list and tree command --filter \u003cfilter-string\u003e, --regex, --match-case, --match-whole-word. The filter flags for file kinds (--no-\u003ckind\u003e, --only-\u003ckind\u003e) should work for every single list and tree command. Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles.",
+      "prompt": "For every --no-<kind> flag, there should be a --only-<kind> flag to show only the kind. Add to every list and tree command --filter <filter-string>, --regex, --match-case, --match-whole-word. The filter flags for file kinds (--no-<kind>, --only-<kind>) should work for every single list and tree command. Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles.",
       "diff": {
         "bundles": {
           "deleted": null,

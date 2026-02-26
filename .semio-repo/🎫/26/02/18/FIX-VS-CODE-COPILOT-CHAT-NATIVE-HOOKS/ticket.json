@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/615"
   },
-  "goal": "HOOKS-VSCODE/FIX-HOOKS",
+  "goal": "🎯hooksvscode🎯fixhooks",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-18 09:21:18",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-18 09:25:48",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c"
@@ -29,7 +29,7 @@
     {
       "kind": "ticket.reopen",
       "date": "2026-02-18 13:29:38",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -39,7 +39,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-18 13:34:27",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -48,7 +48,7 @@
           "path": "🧰semiorepo⌨️cli💻maingo"
         },
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     }

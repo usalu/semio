@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/557"
   },
-  "goal": "unassigned",
+  "goal": "🎯unassigned",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 18:14:38",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
@@ -50,7 +50,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go",
+              "path": "🥼semio-repo/cli/main_test.go",
               "lines": {
                 "added": 118,
                 "removed": 6
@@ -183,28 +183,28 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests",
               "lines": {
                 "added": 9,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Nodes and Edges Tests",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests",
               "lines": {
                 "added": 5,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests",
               "lines": {
                 "added": 102,
                 "removed": 0
@@ -688,63 +688,63 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
               "lines": {
                 "added": 9,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "🥼semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "🥼semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsByLanguage",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsByLanguage",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestRequirementsBreach",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestRequirementsBreach",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestRequirementsBreach",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestRequirementsBreach",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
               "lines": {
                 "added": 95,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests§TestQueryFlag",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests§TestQueryFlag",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -865,7 +865,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
               "lines": {
                 "added": 95,
                 "removed": 0

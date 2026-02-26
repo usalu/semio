@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Refactor FilterProvider to use menus instead of tree items and fix tests",
   "summary": "Refactored FilterProvider to support policy and breach filters, added missing command registrations, and fixed tests. All 48 tests passed.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-29T19:46:19.428576563Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",

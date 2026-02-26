@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/634"
   },
-  "goal": "HOOKS/AGENT-EVENTS",
+  "goal": "🎯hooks🎯agentevents",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-19 12:19:51",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
@@ -21,13 +21,13 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-19 13:01:36",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f",
       "files": [
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     }

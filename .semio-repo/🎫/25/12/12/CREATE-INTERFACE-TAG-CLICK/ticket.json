@@ -2,12 +2,12 @@
   "title": "Fix create port/tag buttons doing nothing",
   "status": "closed",
   "prompt": "Fix create port/tag buttons doing nothing",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.905Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/406"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-05 12:42:15",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -886,7 +886,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field<T>e Type",
               "lines": {
                 "added": 46,
                 "removed": 0
@@ -956,35 +956,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -1054,35 +1054,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration",
               "lines": {
                 "added": 39,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#AppConfig",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Path Matching",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Route Segments",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -2867,7 +2867,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
               "lines": {
                 "added": 16,
                 "removed": 0

@@ -1,21 +1,21 @@
 {
   "title": "Universal Filtering System for Repo Commands",
   "status": "closed",
-  "prompt": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
-  "summary": "Implemented universal filtering system across repo CLI, GraphQL API, and VSCode extension. Added --only-\u003ckind\u003e flags to complement --no-\u003ckind\u003e flags. Added --filter, --regex, --match-case, --match-whole-word flags to all list and tree commands. Extended file kind filtering to non-file commands (bundles, tickets, goals, contributors, policies) by checking associated files. Updated GraphQL schema with FilterInput type and FileKind enum. Refactored VSCode extension filter UI with file kind toggles and show all/none/default actions.",
+  "prompt": "Add --only-<kind> flags for every --no-<kind> flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
+  "summary": "Implemented universal filtering system across repo CLI, GraphQL API, and VSCode extension. Added --only-<kind> flags to complement --no-<kind> flags. Added --filter, --regex, --match-case, --match-whole-word flags to all list and tree commands. Extended file kind filtering to non-file commands (bundles, tickets, goals, contributors, policies) by checking associated files. Updated GraphQL schema with FilterInput type and FileKind enum. Refactored VSCode extension filter UI with file kind toggles and show all/none/default actions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/272"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-29T11:40:11.004712157Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
-      "prompt": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
+      "prompt": "Add --only-<kind> flags for every --no-<kind> flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {

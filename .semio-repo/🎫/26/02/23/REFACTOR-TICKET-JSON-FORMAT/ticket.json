@@ -9,7 +9,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-23 18:38:24",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "",
       "commit": "90e432b355ad022d0ac8a326a426e293e60ed63f",
@@ -19,7 +19,7 @@
           "path": "🧰semiorepo⌨️cli💻maingo"
         },
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     }
@@ -27,14 +27,14 @@
   "agents": [
     {
       "session": "",
-      "contributor": "usalu",
+      "contributor": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "llm": "opus-4-6"
     },
     {
       "session": "",
-      "contributor": "usalu",
+      "contributor": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
@@ -122,7 +122,7 @@
     },
     {
       "session": "",
-      "contributor": "usalu",
+      "contributor": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat"
     }

@@ -2,7 +2,7 @@
   "title": "REPO-SIMPLIFY-ARCHITECTURE",
   "status": "closed",
   "prompt": "\"Refactor repo script architecture: simplify to non-interactive JSON-output commands, move interactivity to VSCode extension with QuickPick wizards\"",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",

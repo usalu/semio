@@ -642,8 +642,8 @@
         "title": "\u2699\ufe0f"
       },
       {
-        "command": "semio.filter.toggle.file.test",
-        "toggled": "semio.filter.file.test",
+        "command": "semio.filter.toggle.file.lab",
+        "toggled": "semio.filter.file.lab",
         "title": "\ud83e\uddea"
       },
       {
@@ -874,8 +874,8 @@
           "group": "inline@3"
         },
         {
-          "command": "semio.filter.toggle.file.test",
-          "toggled": "semio.filter.file.test",
+          "command": "semio.filter.toggle.file.lab",
+          "toggled": "semio.filter.file.lab",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@4"
         },

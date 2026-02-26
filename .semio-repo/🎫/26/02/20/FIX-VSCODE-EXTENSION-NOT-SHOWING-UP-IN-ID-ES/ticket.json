@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/639"
   },
-  "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
+  "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-20 20:21:24",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "00b7f35cbfa9da1b2714125ed6191b4a8bc8f762",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-20 20:22:48",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "00b7f35cbfa9da1b2714125ed6191b4a8bc8f762",

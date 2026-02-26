@@ -2,12 +2,12 @@
   "title": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
   "status": "closed",
   "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningtypeapp",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.794Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

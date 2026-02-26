@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Extend .semio-repo/files.json to allow for glob patterns.",
   "summary": "Added glob support for .semio-repo/files.json in file policy with exact+glob matcher and tests.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-16 01:23:46",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "codex",
       "commit": "fd5d919ef2e766ae252b8737756de119f1de6132",
@@ -18,7 +18,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-16 01:24:56",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "codex",
       "commit": "fd5d919ef2e766ae252b8737756de119f1de6132",
@@ -57,7 +57,7 @@
           ],
           "added": [
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo",
               "lines": {
                 "added": 13527,
                 "removed": 0
@@ -2380,7 +2380,7 @@
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo§TestFilePolicyGodfileSupportsGlobPatterns",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo§TestFilePolicyGodfileSupportsGlobPatterns",
               "lines": {
                 "added": 36,
                 "removed": 0
@@ -2396,7 +2396,7 @@
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo§TestFilePolicyGodfileSupportsGlobPatterns",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo§TestFilePolicyGodfileSupportsGlobPatterns",
               "lines": {
                 "added": 36,
                 "removed": 0

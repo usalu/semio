@@ -2,12 +2,12 @@
   "title": "Migrate sketchpad FSM to hierarchical states with proper constraints",
   "status": "closed",
   "prompt": "Migrate sketchpad FSM to hierarchical states with proper constraints",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.899Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

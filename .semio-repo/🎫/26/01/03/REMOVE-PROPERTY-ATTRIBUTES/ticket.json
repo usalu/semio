@@ -2,12 +2,12 @@
   "title": "REMOVE-PROPERTY-ATTRIBUTES",
   "status": "closed",
   "prompt": "All properties still have attributes. Stop only once all attributes are removed and no functionality such as validation is missing. Refactor/extend whatever is necessary.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-02T23:44:41Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",

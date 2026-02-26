@@ -10,7 +10,7 @@
     {
       "kind": "",
       "date": "",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "author": "🧑‍💻kinansarak",
       "system": "",
       "client": "",
       "commit": "86d699419815d98b01c413b9a7f515a727af586b",
@@ -184,7 +184,7 @@
               }
             },
             {
-              "path": "js/semio/sketchpad/kit-tutorial.md#🧠 The Brain of the Kit App: A Deep Dive into `KitStore`#6. 🛠️️ Commands \u0026 Mutations",
+              "path": "js/semio/sketchpad/kit-tutorial.md#🧠 The Brain of the Kit App: A Deep Dive into `KitStore`#6. 🛠️️ Commands & Mutations",
               "lines": {
                 "added": 12,
                 "removed": 0

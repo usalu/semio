@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Fix inconsistent/inaccurate CLI error messages across all commands. Add status guards for lifecycle operations (close on non-open, reopen on non-closed). Extend test suite to cover wrong arguments and wrong lifecycle state for every command.",
   "summary": "Fixed inconsistent CLI error messages: added status guards to FinishTicket, GoalClose, GoalReopen; extended wrong-args tests for all commands (todo, section delete/extract/integrate, goal change, top-level move/extract/integrate); added TestCliWrongArgs_ErrorMessages with 36 error message verification cases; added wrong-lifecycle checks to E2E ticket/goal lifecycle tests; extended TestCliJsonErrorsToStderr from 4 to 22 cases",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-11 09:05:43",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "81d694cc3df080b478d7aed9e8e74beba56b9eff",

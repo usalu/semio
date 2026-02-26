@@ -2,12 +2,12 @@
   "title": "Wrap global Sketchpad layout in base LevelProvider",
   "status": "closed",
   "prompt": "Make sure the global sketchpad has layout base context provider. Currently e.g. navbar and footer are transparent.",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "goal": "🎯r2602🎯runningsketchpad",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-18T16:15:40.759Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",

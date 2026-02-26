@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/578"
   },
-  "goal": "REFACTOR-URI-SYSTEM",
+  "goal": "🎯refactorurisystem",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-16 11:26:28",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "adfa491807cce231861ceec171ee87ab0cc15ef9",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-16 11:51:59",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "claude-code",
       "commit": "adfa491807cce231861ceec171ee87ab0cc15ef9",
@@ -58,7 +58,7 @@
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo",
               "lines": {
                 "added": 42,
                 "removed": 41
@@ -135,7 +135,7 @@
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests",
               "lines": {
                 "added": 42,
                 "removed": 41
@@ -331,140 +331,140 @@
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestIdToUri",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestIdToUri",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestIdToUri",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestIdToUri",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestParseSectionUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestParseSectionUriPath",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestParseSectionUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestParseSectionUriPath",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestPathFromUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestPathFromUriPath",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestPathFromUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestPathFromUriPath",
               "lines": {
                 "added": 3,
                 "removed": 2
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestPathToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestPathToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestPathToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestPathToUriPath",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestSectionIdValueToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestSectionIdValueToUriPath",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestSectionIdValueToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestSectionIdValueToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestStatuteIdToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestStatuteIdToUriPath",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestStatuteIdToUriPath",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestStatuteIdToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestStatuteUriPathToId",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestStatuteUriPathToId",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestStatuteUriPathToId",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestStatuteUriPathToId",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestUriToId",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestUriToId",
               "lines": {
                 "added": 0,
                 "removed": 7
               }
             },
             {
-              "path": "🧰semiorepo⌨️cli🧪maintestgo#Tree Tests#Consolidated Tests§TestUriToId",
+              "path": "🧰semiorepo⌨️cli🥼maintestgo#Tree Tests#Consolidated Tests§TestUriToId",
               "lines": {
                 "added": 7,
                 "removed": 7

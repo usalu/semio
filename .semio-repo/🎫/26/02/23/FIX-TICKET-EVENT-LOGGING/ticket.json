@@ -6,7 +6,7 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/648"
   },
-  "goal": "TEST-GOAL",
+  "goal": "🎯testgoal",
   "sessions": [
     {
       "id": "1771809206983263775-8444660674136616504",
@@ -75,7 +75,7 @@
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T01:21:16Z",
-              "pattern": "cd /workspaces/semio \u0026\u0026 ./semio-repo/cli/cli ticket close \"26/02/23/FIX-TICKET-EVENT-LOGGING\" \"Fixed event logging\" --files semio-repo/cli/main.go --files semio-repo/cli/main_test.go --no-management 2\u003e\u00261"
+              "pattern": "cd /workspaces/semio && ./semio-repo/cli/cli ticket close \"26/02/23/FIX-TICKET-EVENT-LOGGING\" \"Fixed event logging\" --files semio-repo/cli/main.go --files semio-repo/cli/main_test.go --no-management 2>&1"
             }
           ]
         }
@@ -153,27 +153,27 @@
             {
               "kind": "agent.tool.terminal.ended",
               "timestamp": "2026-02-23T01:30:16Z",
-              "pattern": "cd /workspaces/semio \u0026\u0026 printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/hook_err.txt; printf \"exit=%d\\n\" $?; cat /tmp/hook_err.txt"
+              "pattern": "cd /workspaces/semio && printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2>/tmp/hook_err.txt; printf \"exit=%d\\n\" $?; cat /tmp/hook_err.txt"
             },
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T01:30:25Z",
-              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; echo \"exit=$?\"; cat /tmp/err.txt"
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2>/tmp/err.txt; echo \"exit=$?\"; cat /tmp/err.txt"
             },
             {
               "kind": "agent.tool.terminal.ended",
               "timestamp": "2026-02-23T01:30:33Z",
-              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; echo \"exit=$?\"; cat /tmp/err.txt"
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2>/tmp/err.txt; echo \"exit=$?\"; cat /tmp/err.txt"
             },
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T01:30:44Z",
-              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; ECODE=$?; echo \"exit=$ECODE\"; cat /tmp/err.txt"
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2>/tmp/err.txt; ECODE=$?; echo \"exit=$ECODE\"; cat /tmp/err.txt"
             },
             {
               "kind": "agent.tool.terminal.ended",
               "timestamp": "2026-02-23T01:30:51Z",
-              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2\u003e/tmp/err.txt; ECODE=$?; echo \"exit=$ECODE\"; cat /tmp/err.txt"
+              "pattern": "printf '{\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"/tmp/test.go\"},\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code 2>/tmp/err.txt; ECODE=$?; echo \"exit=$ECODE\"; cat /tmp/err.txt"
             },
             {
               "kind": "agent.tool.terminal.starting",
@@ -198,27 +198,27 @@
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T01:31:54Z",
-              "pattern": "printf '{\"tool_name\":\"Read\",\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code \u0026\u0026 echo OK || echo FAIL"
+              "pattern": "printf '{\"tool_name\":\"Read\",\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code && echo OK || echo FAIL"
             },
             {
               "kind": "agent.tool.terminal.ended",
               "timestamp": "2026-02-23T01:32:09Z",
-              "pattern": "printf '{\"tool_name\":\"Read\",\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code \u0026\u0026 echo OK || echo FAIL"
+              "pattern": "printf '{\"tool_name\":\"Read\",\"session_id\":\"s1\"}' | ./semio-repo/cli/cli hook PostToolUse claude-code && echo OK || echo FAIL"
             },
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T01:32:20Z",
-              "pattern": "go test -run \"TestTrackHook|TestTicket|TestHook|TestDispatch\" -timeout 120s 2\u003e\u00261"
+              "pattern": "go test -run \"TestTrackHook|TestTicket|TestHook|TestDispatch\" -timeout 120s 2>&1"
             },
             {
               "kind": "agent.tool.terminal.ended",
               "timestamp": "2026-02-23T01:32:27Z",
-              "pattern": "go test -run \"TestTrackHook|TestTicket|TestHook|TestDispatch\" -timeout 120s 2\u003e\u00261"
+              "pattern": "go test -run \"TestTrackHook|TestTicket|TestHook|TestDispatch\" -timeout 120s 2>&1"
             },
             {
               "kind": "agent.tool.terminal.starting",
               "timestamp": "2026-02-23T01:32:37Z",
-              "pattern": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go test -run \"TestTrackHook|TestTicket|TestHookResult\" -timeout 120s 2\u003e\u00261"
+              "pattern": "cd /workspaces/semio/semio-repo/cli && go test -run \"TestTrackHook|TestTicket|TestHookResult\" -timeout 120s 2>&1"
             }
           ]
         }

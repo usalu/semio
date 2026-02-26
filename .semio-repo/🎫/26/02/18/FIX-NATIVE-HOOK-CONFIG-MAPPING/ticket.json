@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/628"
   },
-  "goal": "HOOK-MAPPING/FIX-NATIVE-HOOK-CONFIGS",
+  "goal": "🎯hookmapping🎯fixnativehookconfigs",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-18 19:04:58",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-18 19:17:32",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "044409fa5f761a9e69757ffbd0ae706d44bebf5f"

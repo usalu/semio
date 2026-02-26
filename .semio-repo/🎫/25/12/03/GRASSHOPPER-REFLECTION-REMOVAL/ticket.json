@@ -2,12 +2,12 @@
   "title": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
   "status": "closed",
   "prompt": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
-  "goal": "R26-03/RUNNING-NET/RUNNING-GRASSHOPPER",
+  "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.84Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

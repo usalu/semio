@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Testing section order",
   "summary": "This is a test summary to verify section ordering works.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-02T21:35:50.269763804Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",

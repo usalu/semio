@@ -3,7 +3,7 @@
   "status": "closed",
   "description": "Replace husky with a global pre-commit setup for the monorepo.",
   "summary": "Migrated monorepo pre-commit to pre-commit.com and validated install/run.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "sessions": [
     {
       "id": "1771718349268618323-1352189555785701832",

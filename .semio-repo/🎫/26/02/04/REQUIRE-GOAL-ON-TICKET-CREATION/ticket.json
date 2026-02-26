@@ -2,12 +2,12 @@
   "title": "Require Goal on Ticket Creation",
   "status": "open",
   "prompt": "Make goal a required field when creating a ticket. Update code and docs. This involves updating the CLI validation, the GraphQL schema, and the documentation in AGENTS.md and README.md.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-04 20:44:38",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",

@@ -2,12 +2,12 @@
   "title": "design-windows-layout",
   "status": "closed",
   "prompt": "Migration from old format",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "goal": "🎯r2602🎯runningsketchpad",
   "interactions": [
     {
       "kind": "",
       "date": "2025-11-25T00:00:00Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

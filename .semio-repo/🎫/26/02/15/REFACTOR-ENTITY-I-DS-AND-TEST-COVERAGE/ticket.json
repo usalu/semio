@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/575"
   },
-  "goal": "ENTITYIDS/TESTCOVERAGE",
+  "goal": "🎯entityids🎯testcoverage",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-15 20:13:01",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-15 20:35:44",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
@@ -58,7 +58,7 @@
               }
             },
             {
-              "path": "🧪maintestgo",
+              "path": "🥼maintestgo",
               "lines": {
                 "added": 316,
                 "removed": 6
@@ -86,28 +86,28 @@
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests",
+              "path": "🥼maintestgo#Entity ID Tests",
               "lines": {
                 "added": 310,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests",
+              "path": "🥼maintestgo#Monorepo Tree Tests",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests",
+              "path": "🥼maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests",
               "lines": {
                 "added": 3,
                 "removed": 3
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests",
+              "path": "🥼maintestgo#Policy Tests",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -219,168 +219,168 @@
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestAllSpecIDExamples",
+              "path": "🥼maintestgo#Entity ID Tests§TestAllSpecIDExamples",
               "lines": {
                 "added": 51,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestBundleListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestBundleListIDs",
               "lines": {
                 "added": 44,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestContributorListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestContributorListIDs",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestDiffableKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestDiffableKinds",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestDraftListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestDraftListIDs",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestEntityKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestEntityKinds",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestGoalListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestGoalListIDs",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestProjectListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestProjectListIDs",
               "lines": {
                 "added": 29,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestRelatedToFileKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestRelatedToFileKinds",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestResourceKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestResourceKinds",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestSectionListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestSectionListIDs",
               "lines": {
                 "added": 25,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestTicketListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestTicketListIDs",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestTreeNodeKindToEntityKindCoversAll",
+              "path": "🥼maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestTreeNodeKindToEntityKindCoversAll",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestTreeNodeKindToEntityKindCoversAll",
+              "path": "🥼maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestTreeNodeKindToEntityKindCoversAll",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestUnifiedRenderingAllKindIdentity",
+              "path": "🥼maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestUnifiedRenderingAllKindIdentity",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestUnifiedRenderingAllKindIdentity",
+              "path": "🥼maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestUnifiedRenderingAllKindIdentity",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestUnifiedRenderingGoalIdentity",
+              "path": "🥼maintestgo#Monorepo Tree Tests#Unified Rendering Identity Tests§TestUnifiedRenderingGoalIdentity",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "path": "🥼maintestgo#Monorepo Tree Tests§TestRenderMonorepoTree",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests§TestTreeNodeKindConstants",
+              "path": "🥼maintestgo#Monorepo Tree Tests§TestTreeNodeKindConstants",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Monorepo Tree Tests§TestTreeNodeKindConstants",
+              "path": "🥼maintestgo#Monorepo Tree Tests§TestTreeNodeKindConstants",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestBuildTerritoryTree",
+              "path": "🥼maintestgo#Policy Tests§TestBuildTerritoryTree",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo#Policy Tests§TestBuildTerritoryTree",
+              "path": "🥼maintestgo#Policy Tests§TestBuildTerritoryTree",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo§TestToolDraftLifecycle",
+              "path": "🥼maintestgo§TestToolDraftLifecycle",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "🧪maintestgo§TestToolTicketLifecycle",
+              "path": "🥼maintestgo§TestToolTicketLifecycle",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -417,84 +417,84 @@
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestAllSpecIDExamples",
+              "path": "🥼maintestgo#Entity ID Tests§TestAllSpecIDExamples",
               "lines": {
                 "added": 51,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestBundleListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestBundleListIDs",
               "lines": {
                 "added": 44,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestContributorListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestContributorListIDs",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestDiffableKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestDiffableKinds",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestDraftListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestDraftListIDs",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestEntityKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestEntityKinds",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestGoalListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestGoalListIDs",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestProjectListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestProjectListIDs",
               "lines": {
                 "added": 29,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestRelatedToFileKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestRelatedToFileKinds",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestResourceKinds",
+              "path": "🥼maintestgo#Entity ID Tests§TestResourceKinds",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestSectionListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestSectionListIDs",
               "lines": {
                 "added": 25,
                 "removed": 0
               }
             },
             {
-              "path": "🧪maintestgo#Entity ID Tests§TestTicketListIDs",
+              "path": "🥼maintestgo#Entity ID Tests§TestTicketListIDs",
               "lines": {
                 "added": 21,
                 "removed": 0

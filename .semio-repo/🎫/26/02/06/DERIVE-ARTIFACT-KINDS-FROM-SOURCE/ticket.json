@@ -5,12 +5,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/428"
   },
-  "goal": "R26-02",
+  "goal": "🎯r2602",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-06 17:59:05",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",

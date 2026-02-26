@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/562"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 20:57:17",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-13 21:27:54",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",

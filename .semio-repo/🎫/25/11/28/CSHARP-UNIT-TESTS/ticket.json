@@ -2,12 +2,12 @@
   "title": "Sync C# unit tests with JS semio.ts tests using same fixtures",
   "status": "closed",
   "prompt": "Sync C# unit tests with JS semio.ts tests using same fixtures",
-  "goal": "R26-03/RUNNING-NET",
+  "goal": "🎯r2603🎯runningnet",
   "interactions": [
     {
       "kind": "",
       "date": "2025-12-16T17:06:07.751Z",
-      "author": "uelisaluz",
+      "author": "🧑‍💻uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",

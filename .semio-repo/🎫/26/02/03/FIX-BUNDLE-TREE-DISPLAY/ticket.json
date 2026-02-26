@@ -1,8 +1,8 @@
 {
   "title": "Fix Bundle Tree Display",
   "status": "closed",
-  "prompt": "The bundle tree command is not showing properly as a tree of project-\u003eebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
-  "summary": "Fixed bundle tree command to properly display project-\u003eebundle hierarchy. The tree now groups bundles by their parent project and shows them nested underneath, with proper tree connectors for both projects and bundles.",
+  "prompt": "The bundle tree command is not showing properly as a tree of project->ebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
+  "summary": "Fixed bundle tree command to properly display project->ebundle hierarchy. The tree now groups bundles by their parent project and shows them nested underneath, with proper tree connectors for both projects and bundles.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/330"
   },
@@ -10,11 +10,11 @@
     {
       "kind": "",
       "date": "2026-02-03T19:11:51.693765705Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
-      "prompt": "The bundle tree command is not showing properly as a tree of project-\u003eebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
+      "prompt": "The bundle tree command is not showing properly as a tree of project->ebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
       "llm": "opus-4-5",
       "diff": {
         "bundles": {

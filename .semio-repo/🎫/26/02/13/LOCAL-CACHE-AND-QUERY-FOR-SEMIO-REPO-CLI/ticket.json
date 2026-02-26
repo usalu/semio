@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Extend the query mechanism with local caching under .semio-repo/cache. All content of all resources (projects, bundles, folders, files, sections, definitions, tickets, goals, policies, statutes, contributors, commits) should be cached and indexed. Querying should use keywords and return all matching resources. Use composite git fingerprint (superproject HEAD, submodule SHAs, dirty state) for cache invalidation. Support incremental updates via git diff. One Bleve index for whole monorepo. Key cache by absolute repo path.",
   "summary": "Extended tests for cache index (TestCacheIndexAndTreeQuery). Granular cache: when file changes, only file/folder/bundle/project docs updated via getChangedPathsFromGit+expandPathsWithAncestors. Parent docs include child names. Incremental update when index exists and dirty paths present.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 17:29:28",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "cursor-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
@@ -568,7 +568,7 @@
     {
       "kind": "",
       "date": "2026-02-13 17:52:46",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "cursor-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
@@ -600,7 +600,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "🧪semio-repo/cli/main_test.go",
+              "path": "🥼semio-repo/cli/main_test.go",
               "lines": {
                 "added": 113,
                 "removed": 4
@@ -748,21 +748,21 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests",
               "lines": {
                 "added": 9,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Nodes and Edges Tests",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests",
               "lines": {
                 "added": 102,
                 "removed": 0
@@ -1155,42 +1155,42 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
               "lines": {
                 "added": 9,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "🥼semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests§TestQueryFlag",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests§TestQueryFlag",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
               "lines": {
                 "added": 95,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests§TestTicketTitleValidation",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "path": "🥼semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -1255,7 +1255,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
+              "path": "🥼semio-repo/cli/main_test.go#Query Tests§TestCacheIndexAndTreeQuery",
               "lines": {
                 "added": 95,
                 "removed": 0

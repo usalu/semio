@@ -1,0 +1,18 @@
+{
+  "name": "Antigravity 1.18.3 Clean Test",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "test-app",
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "chmod +x /usr/local/bin/server-install.sh && /usr/local/bin/server-install.sh",
+  "customizations": {
+    "antigravity": {
+      "settings": {},
+      "extensions": []
+    },
+    "vscode": {
+      "remoteEnv": {
+        "VSCODE_AGENT_FOLDER": "/workspace/.antigravity-server-cache"
+      }
+    }
+  }
+}

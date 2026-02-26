@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/619"
   },
-  "goal": "HOOKS",
+  "goal": "🎯hooks",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-18 14:23:05",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-18 16:31:38",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "503dcda1bc1de15727d922200c8d579a230ddf0c",
@@ -30,7 +30,7 @@
           "path": "🧰semiorepo⌨️cli💻maingo"
         },
         {
-          "path": "🧰semiorepo⌨️cli🧪maintestgo"
+          "path": "🧰semiorepo⌨️cli🥼maintestgo"
         }
       ]
     }

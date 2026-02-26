@@ -2,12 +2,12 @@
   "title": "ADD-RUST-RUBY-LANGUAGES",
   "status": "closed",
   "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯aioptimizedrepo",
   "interactions": [
     {
       "kind": "",
       "date": "0001-01-01T00:00:00Z",
-      "author": "Ueli Saluz \u003cuelisemio.tech\u003e",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "",

@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/566"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-BINARY",
+  "goal": "🎯aioptimizedrepo🎯repobinary",
   "interactions": [
     {
       "kind": "ticket.open",
       "date": "2026-02-14 15:03:24",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
@@ -21,7 +21,7 @@
     {
       "kind": "ticket.close",
       "date": "2026-02-14 15:41:35",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "dabbd5aa9ce529eaba0177df03592ee99b42f50b",
@@ -43,7 +43,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄🧪semio-repo/vscode/extension.test.ts",
+              "path": "📄🥼semio-repo/vscode/extension.test.ts",
               "lines": {
                 "added": 5,
                 "removed": 5
@@ -57,7 +57,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄🧪semio-repo/vscode/extension.test.ts#CLI Tree Helper Tests",
+              "path": "📄🥼semio-repo/vscode/extension.test.ts#CLI Tree Helper Tests",
               "lines": {
                 "added": 5,
                 "removed": 5

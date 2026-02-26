@@ -1,0 +1,10 @@
+services:
+  test-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace:cached
+      - ./server-install.sh:/usr/local/bin/server-install.sh
+    command: sleep infinity
+    network_mode: bridge

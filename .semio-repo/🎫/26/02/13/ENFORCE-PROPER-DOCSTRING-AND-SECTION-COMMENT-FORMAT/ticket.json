@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/553"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 08:43:23",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "b79240dad10e36cf21c8176694dec40e310d622a",
@@ -225,7 +225,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go",
+              "path": "🥼semio-repo/cli/main_test.go",
               "lines": {
                 "added": 532,
                 "removed": 4
@@ -729,7 +729,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "path": "💻semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1289,7 +1289,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine",
               "lines": {
                 "added": 38,
                 "removed": 9
@@ -3823,14 +3823,14 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests",
               "lines": {
                 "added": 528,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -4138,7 +4138,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§analyzeFile",
+              "path": "💻semio-repo/vscode/extension.ts#File Analysis & Diagnostics§analyzeFile",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -6686,28 +6686,28 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -13385,112 +13385,112 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
               "lines": {
                 "added": 90,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -13527,77 +13527,77 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
               "lines": {
                 "added": 90,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
@@ -13610,7 +13610,7 @@
     {
       "kind": "",
       "date": "2026-02-13 09:54:47",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "fca8a9a0d53f7c789f1f214d7e769920fbe2cea2",
@@ -13726,7 +13726,7 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go",
+              "path": "🥼semio-repo/cli/main_test.go",
               "lines": {
                 "added": 672,
                 "removed": 6
@@ -14609,7 +14609,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine",
               "lines": {
                 "added": 38,
                 "removed": 9
@@ -15561,21 +15561,21 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests",
               "lines": {
                 "added": 666,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -19633,28 +19633,28 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
               "lines": {
                 "added": 7,
                 "removed": 0
@@ -25548,147 +25548,147 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestBreachsNonEmpty",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests§TestBreachsNonEmpty",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestBreachsNonEmpty",
+              "path": "🥼semio-repo/cli/main_test.go#Collection Tests§TestBreachsNonEmpty",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
               "lines": {
                 "added": 96,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringAutofix",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringExemptFromCommentBan",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringExemptFromCommentBan",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringMerge",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringMerge",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestDefinitionIdValueToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Analyze",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatMarkdownResult_Analyze",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
+              "path": "🥼semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -26054,98 +26054,98 @@
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionHeaderIdAndUri",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionJSDocExemptFromCommentBan",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstring",
               "lines": {
                 "added": 96,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionNativeDocstringAutofix",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestDefinitionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringAutofix",
               "lines": {
                 "added": 52,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringExemptFromCommentBan",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringExemptFromCommentBan",
               "lines": {
                 "added": 28,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringMerge",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestPythonTripleQuoteDocstringMerge",
               "lines": {
                 "added": 49,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionHeaderIdAndUri",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionIdentificationAutofix",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionMissingIdentification",
               "lines": {
                 "added": 62,
                 "removed": 0
               }
             },
             {
-              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
+              "path": "🥼semio-repo/cli/main_test.go#Policy Tests§TestSectionWithIdentification",
               "lines": {
                 "added": 57,
                 "removed": 0

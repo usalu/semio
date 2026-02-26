@@ -3,12 +3,12 @@
   "status": "closed",
   "prompt": "Add a `kind` field to the Interaction struct that matches EventKind values (e.g. \"ticket.open\", \"ticket.close\", \"ticket.reopen\", \"ticket.change\", \"goal.open\", \"goal.close\", \"goal.reopen\", \"goal.change\", \"contributor.add\", \"contributor.remove\", \"commit\", \"todo.create\", \"todo.change\", \"todo.delete\", etc.). Every changing interaction must record its event kind. Operations that currently don't create interactions (ticket.close, ticket.change, goal.close, goal.change) should create new interactions. Also add event kinds for draft/file/folder/section operations. Update GraphQL schema, SQLite schema, and all interaction creation points.",
   "summary": "Extended Interaction struct with Kind field mapping to EventKind constants. Set Kind on all 5 interaction creation points (ticket.open, ticket.close, ticket.reopen, goal.open, goal.close). Created new close interactions for FinishTicket and GoalClose. Updated GraphQL schema, SQLite schema, and SQLite export. Extended lifecycle test to verify Kind on all interaction types. All tests pass.",
-  "goal": "AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY",
+  "goal": "🎯aioptimizedrepo🎯consistentrepohistory",
   "interactions": [
     {
       "kind": "",
       "date": "2026-02-13 20:17:36",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",

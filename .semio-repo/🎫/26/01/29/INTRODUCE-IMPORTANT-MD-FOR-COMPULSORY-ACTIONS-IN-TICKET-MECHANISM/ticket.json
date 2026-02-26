@@ -6,12 +6,12 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/267"
   },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism",
   "interactions": [
     {
       "kind": "",
       "date": "2026-01-29T10:58:29.547846004Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
@@ -327,7 +327,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field<T> Type",
               "lines": {
                 "added": 46,
                 "removed": 0
@@ -397,35 +397,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -495,35 +495,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration",
               "lines": {
                 "added": 39,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#AppConfig",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Path Matching",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Route Segments",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -2252,7 +2252,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
               "lines": {
                 "added": 16,
                 "removed": 0
@@ -9448,7 +9448,7 @@
     {
       "kind": "",
       "date": "2026-01-29T11:02:28.290250908Z",
-      "author": "usalu",
+      "author": "🧑‍💻usalu",
       "system": "",
       "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
