@@ -31,6 +31,7 @@ import {
   AddIcon,
   AlertCircleIcon,
   AwardIcon,
+  ChatIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -55,6 +56,7 @@ import {
   PortIcon,
   RemoveIcon,
   SceneIcon,
+  SettingsIcon,
   SortAscendingIcon,
   SortDescendingIcon,
   SunIcon,
@@ -66,6 +68,7 @@ import { useSelector } from "@xstate/react";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
@@ -95,6 +98,7 @@ import {
   registerKitAppStoreFactory as registerKitStoreFactory,
   useAddFooterItem,
   useAddPanelSection,
+  useAddSidePanelTab,
   useAppType,
   useDesignScope,
   useDevice,
@@ -114,6 +118,7 @@ import {
   useOrigin,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useRemoveSidePanelTab,
   useSketchpadActor,
   useSketchpadCommands,
   useSketchpadStore,
@@ -126,6 +131,7 @@ import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Si
 import {
   Action,
   applyNodeChanges,
+  BasicChatPanel,
   BaseEdge,
   Button,
   Diagram,
@@ -161,6 +167,7 @@ import {
   Tree,
   TreeContent,
   TreeItem,
+  TreeRow,
   TreeStateProvider,
   useInternalNode,
   useReactFlow
@@ -382,8 +389,6 @@ export interface KitAppSelectionDiff {
 export enum KitAppWindowKind {
   Table = "table",
   Diagram = "diagram",
-  Settings = "settings",
-  Chat = "chat",
 }
 /**
  * Presence state for a Kit app user including cursor and camera.
@@ -730,13 +735,18 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
     if (!yPanelVisibility) {
       return {
-        toolbar: false,
-        details: false,
+        toolbar: true,
+        rightSidePanel: true,
+        details: true,
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? false,
-      details: yPanelVisibility.get("details") ?? false,
+      toolbar: yPanelVisibility.get("toolbar") ?? true,
+      leftSidePanel: yPanelVisibility.get("leftSidePanel") ?? false,
+      rightSidePanel: yPanelVisibility.get("rightSidePanel") ?? true,
+      details: yPanelVisibility.get("details") ?? true,
+      chat: yPanelVisibility.get("chat") ?? false,
+      settings: yPanelVisibility.get("settings") ?? false,
     };
   }
 
@@ -1152,10 +1162,10 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     if (result.diff) {
       this.change(result.diff);
     }
+    this.recordEdit(result);
     if (result.kitDiff) {
       kitData.change(result.kitDiff);
     }
-    this.recordEdit(result);
     return result as T;
   }
 
@@ -1182,7 +1192,7 @@ const kitAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: () => ({
-      panelVisibility: { toolbar: true, details: false },
+      panelVisibility: { toolbar: true, rightSidePanel: true, details: true },
       selection: undefined,
       hover: undefined,
       fullscreenWindow: KitAppFullscreenWindow.None,
@@ -1348,7 +1358,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   const kitGuid = kitScope?.guid ?? id?.kit;
 
   const defaultState: KitAppState = {
-    panelVisibility: { toolbar: true, details: false },
+    panelVisibility: { toolbar: true, rightSidePanel: true, details: true },
     selection: undefined,
     hover: undefined,
     activeTool: ToolKind.SELECTION_NORMAL,
@@ -5067,14 +5077,16 @@ const AppContent: FC = () => {
       return folderPath;
     };
 
+    const filteredKitFolders = (kitFolders || []).filter((folder) => importedFolderPaths.has(getFolderStoragePath(folder.guid)));
     const filteredKitFiles = (kitFiles || []).filter((file) => {
+      if (foldersByGuid.has(file.guid)) return false;
       const parentPath = getFolderStoragePath(file.folder?.guid);
       const storagePath = parentPath ? `${parentPath}/${file.name}` : file.name;
+      if (importedFolderPaths.has(storagePath)) return false;
       return importedFilePaths.has(storagePath);
     });
-
-    const filteredKitFolders = (kitFolders || []).filter((folder) => importedFolderPaths.has(getFolderStoragePath(folder.guid)));
     const foldersWithZipFileDescendants = new Set<string>();
+    const filteredKitFileGuids = new Set(filteredKitFiles.map((file) => file.guid));
 
     filteredKitFiles.forEach((file) => {
       let currentFolderGuid = file.folder?.guid;
@@ -5324,7 +5336,11 @@ const AppContent: FC = () => {
       });
     }
 
-    if (selectedKinds.size === 0 || selectedKinds.has("files")) {
+    const isFilesVisible = selectedKinds.size === 0 || selectedKinds.has("files");
+    const isFoldersVisible = selectedKinds.size === 0 || selectedKinds.has("folders");
+    const shouldRenderFileTree = isFilesVisible && !isFoldersVisible;
+
+    if (shouldRenderFileTree) {
       const fileTree = buildFileTree(filteredKitFolders, filteredKitFiles);
       const flatTree = flattenFileTree(fileTree, 0, expandedRows);
 
@@ -5347,7 +5363,26 @@ const AppContent: FC = () => {
       });
     }
 
-    if (selectedKinds.size === 0 || selectedKinds.has("folders")) {
+    if (isFoldersVisible) {
+      if (isFilesVisible) {
+        const rootFiles = filteredKitFiles.filter((file) => !file.folder?.guid);
+
+        rootFiles.forEach((file: SemioFile) => {
+          result.push({
+            id: `file-${file.guid}`,
+            kind: "files",
+            artifact: file.name,
+            authors: file.size ? `${(file.size / 1024).toFixed(1)} KB` : "",
+            updatedAt: formatDate(file.updatedAt),
+            createdAt: formatDate(file.createdAt),
+            level: 0,
+            hasChildren: false,
+            isExpanded: false,
+            data: file,
+          });
+        });
+      }
+
       const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentGuid = parentFolder?.guid;
         const childFolders = foldersByParent.get(parentGuid) || [];
@@ -5505,22 +5540,26 @@ const AppContent: FC = () => {
               });
             });
 
-            folderedFiles.forEach((file: SemioFile) => {
-              result.push({
-                id: `file-${file.guid}`,
-                kind: "files",
-                artifact: file.name,
-                authors: file.size ? `${(file.size / 1024).toFixed(1)} KB` : "",
-                updatedAt: formatDate(file.updatedAt),
-                createdAt: formatDate(file.createdAt),
-                level: level + 1,
-                hasChildren: false,
-                isExpanded: false,
-                data: file,
-                folderId: folder.guid,
-                parentId: folderId,
+            if (isFilesVisible) {
+              const importedFolderFiles = folderedFiles.filter((file: SemioFile) => filteredKitFileGuids.has(file.guid));
+
+              importedFolderFiles.forEach((file: SemioFile) => {
+                result.push({
+                  id: `file-${file.guid}`,
+                  kind: "files",
+                  artifact: file.name,
+                  authors: file.size ? `${(file.size / 1024).toFixed(1)} KB` : "",
+                  updatedAt: formatDate(file.updatedAt),
+                  createdAt: formatDate(file.createdAt),
+                  level: level + 1,
+                  hasChildren: false,
+                  isExpanded: false,
+                  data: file,
+                  folderId: folder.guid,
+                  parentId: folderId,
+                });
               });
-            });
+            }
 
             buildFolderHierarchy(folder, level + 1, folderId);
           }
@@ -6826,6 +6865,11 @@ function useKitAppYjsToXStateSync() {
 const App: FC = () => {
   useKitAppYjsToXStateSync();
   const transaction = useKitAppTransaction();
+  const { undo, redo, deleteSelected } = useKitAppCommands();
+  useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+y", () => redo?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+shift+z", () => redo?.(), { enableOnFormTags: true });
+  useHotkeys("delete,backspace", () => deleteSelected?.(), { enableOnFormTags: true });
 
   return (
     <ErrorBoundary
@@ -7950,6 +7994,8 @@ const MultiWindowApp: FC = () => {
     if (!kitGuid || !sketchpadStore?.hasKitApp?.({ kit: kitGuid })) return null;
     return sketchpadStore.kitApp(kitGuid);
   }, [sketchpadStore, kitGuid]);
+  const addSidePanelTab = useAddSidePanelTab();
+  const removeSidePanelTab = useRemoveSidePanelTab();
 
   const storedWindowLayout = useSyncDeep<any, any>(store, (s: KitAppState | null) => s?.windowLayout);
 
@@ -7966,18 +8012,6 @@ const MultiWindowApp: FC = () => {
                 type: "component",
                 componentName: KitAppWindowKind.Table,
                 title: "table",
-                componentState: {},
-              },
-              {
-                type: "component",
-                componentName: KitAppWindowKind.Settings,
-                title: "settings",
-                componentState: {},
-              },
-              {
-                type: "component",
-                componentName: KitAppWindowKind.Chat,
-                title: "chat",
                 componentState: {},
               },
             ],
@@ -7999,8 +8033,62 @@ const MultiWindowApp: FC = () => {
     }),
     [],
   );
+  const windowLayout = useMemo(() => {
+    if (!storedWindowLayout) return defaultLayout;
+    const removeLegacySideTabsFromWindowLayout = (layoutNode: any): any => {
+      if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
+      if (
+        layoutNode.type === "component" &&
+        (layoutNode.componentName === "settings" || layoutNode.componentName === "chat")
+      ) {
+        return null;
+      }
+      if (layoutNode.root && typeof layoutNode.root === "object") {
+        const root = removeLegacySideTabsFromWindowLayout(layoutNode.root);
+        if (!root) return undefined;
+        return { ...layoutNode, root };
+      }
+      if (Array.isArray(layoutNode.content)) {
+        const content = layoutNode.content.map((item: any) => removeLegacySideTabsFromWindowLayout(item)).filter(Boolean);
+        if (content.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
+        return { ...layoutNode, content };
+      }
+      if (Array.isArray(layoutNode.contentItems)) {
+        const contentItems = layoutNode.contentItems.map((item: any) => removeLegacySideTabsFromWindowLayout(item)).filter(Boolean);
+        if (contentItems.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
+        return { ...layoutNode, contentItems };
+      }
+      return layoutNode;
+    };
+    return removeLegacySideTabsFromWindowLayout(storedWindowLayout) || defaultLayout;
+  }, [storedWindowLayout, defaultLayout]);
 
-  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
+  useEffect(() => {
+    if (appType !== "kit") return;
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.kit.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <KitEditorSettingsContent />
+            <SketchpadSettingsContent />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.kit.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => <BasicChatPanel id="semio.sketchpad.app.kit.chat" title="Kit" />,
+    });
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.kit.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.kit.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const windowConfig: AppWindowConfig = useMemo(
     () => ({
@@ -8014,33 +8102,6 @@ const MultiWindowApp: FC = () => {
           id: KitAppWindowKind.Diagram,
           label: "diagram",
           component: () => <DiagramWindow />,
-        },
-        {
-          id: KitAppWindowKind.Settings,
-          label: "settings",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <KitEditorSettingsContent />
-                <SketchpadSettingsContent />
-              </Tree>
-            </TreeStateProvider>
-          ),
-        },
-        {
-          id: KitAppWindowKind.Chat,
-          label: "chat",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <TreeItem>
-                  <TreeContent>
-                    <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
-                  </TreeContent>
-                </TreeItem>
-              </Tree>
-            </TreeStateProvider>
-          ),
         },
       ],
       defaultLayout,
@@ -8242,23 +8303,18 @@ const KitSectionForm: FC = () => {
     const kit = useKit() as Kit;
     if (!kit) {
       return (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notAvailable")}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       );
     }
     const kitDataSource = useKitAppStore() as any;
     return (
       <>
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => kitDataSource.change({ name: value })} showLabel />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.version"
@@ -8267,10 +8323,8 @@ const KitSectionForm: FC = () => {
               onLazyChange={(value) => kitDataSource.change({ version: value })}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Textarea
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.description"
@@ -8279,10 +8333,8 @@ const KitSectionForm: FC = () => {
               onLazyChange={(value) => kitDataSource.change({ description: value })}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
@@ -8291,10 +8343,8 @@ const KitSectionForm: FC = () => {
               onLazyChange={(value) => kitDataSource.change({ icon: value })}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.image"
@@ -8303,10 +8353,8 @@ const KitSectionForm: FC = () => {
               onLazyChange={(value) => kitDataSource.change({ image: value })}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
@@ -8315,10 +8363,8 @@ const KitSectionForm: FC = () => {
               onLazyChange={(value) => kitDataSource.change({ homepage: value })}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.kit.license"
@@ -8327,17 +8373,14 @@ const KitSectionForm: FC = () => {
               onLazyChange={(value) => kitDataSource.change({ license: value })}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </>
     );
   } catch (error) {
     return (
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     );
   }
 };
@@ -8363,42 +8406,28 @@ const SingleTypeSection: FC<{ typeGuid: string }> = ({ typeGuid }) => {
   if (!type) return null;
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.type.panel.details.section.type.icon" value={type.icon || ""} placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.type.panel.details.section.type.image" value={type.image || ""} placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.type.panel.details.section.type.parent" value={type.parent?.guid || ""} placeholderId="semio.sketchpad.app.type.parentPlaceholder.label" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Toggle id="semio.sketchpad.app.type.panel.details.section.type.abstract" pressed={type.isAbstract || false} disabled showLabel icon={<CheckIcon />} />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {type.unit !== undefined && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input id="semio.sketchpad.app.type.panel.details.section.type.unit" value={type.unit} readOnly showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
     </>
   );
@@ -8410,17 +8439,13 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
   const types = typeGuids.map((guid) => kit?.types?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Type[];
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.types.multipleSelected")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {types.map((type) => (
-        <TreeItem key={type.guid}>
-          <TreeContent>
+        <TreeRow key={type.guid}>
             <p className="text-sm font-medium">{type.name}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ))}
     </>
   );
@@ -8450,26 +8475,20 @@ const SinglePortSection: FC<{ portGuid: string }> = ({ portGuid }) => {
   const compatibleCount = iface.compatiblePorts?.length || 0;
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.kit.panel.details.section.port.name" value={iface.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.kit.panel.details.section.port.description" value={iface.description || ""} placeholder={t("semio.sketchpad.app.kit.port.descriptionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.kit.panel.details.section.port.compatible"
             value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.port.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.port.compatiblePorts")}`}
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -8480,17 +8499,13 @@ const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   const ports = portGuids.map((guid) => kit?.ports?.find((i) => i.guid === guid)).filter((i) => i !== undefined) as Port[];
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.ports.multipleSelected")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {ports.map((iface) => (
-        <TreeItem key={iface.guid}>
-          <TreeContent>
+        <TreeRow key={iface.guid}>
             <p className="text-sm font-medium">{iface.name}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ))}
     </>
   );
@@ -8519,16 +8534,12 @@ const SingleTagSection: FC<{ tagGuid: string }> = ({ tagGuid }) => {
   if (!tag) return null;
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.kit.panel.details.section.tag.name" value={tag.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.kit.panel.details.section.tag.description" value={tag.description || ""} placeholder={t("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -8539,17 +8550,13 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   const tags = tagGuids.map((guid) => kit?.tags?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Tag[];
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.tags.multipleSelected")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {tags.map((tag) => (
-        <TreeItem key={tag.guid}>
-          <TreeContent>
+        <TreeRow key={tag.guid}>
             <p className="text-sm font-medium">{tag.name}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ))}
     </>
   );
@@ -8578,16 +8585,12 @@ const SingleConceptSection: FC<{ conceptGuid: string }> = ({ conceptGuid }) => {
   if (!concept) return null;
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.kit.panel.details.section.concept.name" value={concept.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.kit.panel.details.section.concept.description" value={concept.description || ""} placeholder={t("semio.sketchpad.app.kit.concept.descriptionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -8598,17 +8601,13 @@ const MultipleConceptsSection: FC<{ conceptGuids: string[] }> = ({ conceptGuids 
   const concepts = conceptGuids.map((guid) => kit?.concepts?.find((c) => c.guid === guid)).filter((c) => c !== undefined) as Concept[];
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.concepts.multipleSelected")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {concepts.map((concept) => (
-        <TreeItem key={concept.guid}>
-          <TreeContent>
+        <TreeRow key={concept.guid}>
             <p className="text-sm font-medium">{concept.name}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ))}
     </>
   );
@@ -8635,58 +8634,39 @@ const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
   if (!design) return null;
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.design.panel.details.section.design.description" value={design.description || ""} placeholderId="semio.sketchpad.app.design.descriptionPlaceholder" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.design.icon" value={design.icon || ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.design.image" value={design.image || ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.design.variant" value={(design as any).variant || ""} placeholderId="semio.sketchpad.app.design.variantPlaceholder" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.design.view" value={(design as any).view || ""} placeholderId="semio.sketchpad.app.design.viewPlaceholder" readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.design.unit" value={design.unit || ""} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {design.location && (
         <>
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Input id="semio.sketchpad.app.design.panel.details.section.location.longitude" value={String((design.location as any)?.longitude ?? 0)} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Input id="semio.sketchpad.app.design.panel.details.section.location.latitude" value={String((design.location as any)?.latitude ?? 0)} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         </>
       )}
       {design.createdAt && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input
               id="semio.sketchpad.app.design.panel.details.section.design.createdAt"
               value={(() => {
@@ -8698,12 +8678,10 @@ const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
               disabled
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {design.updatedAt && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input
               id="semio.sketchpad.app.design.panel.details.section.design.updatedAt"
               value={(() => {
@@ -8715,8 +8693,7 @@ const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
               disabled
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
     </>
   );
@@ -8728,17 +8705,13 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
   const designs = designGuids.map((guid) => kit?.designs?.find((d) => d.guid === guid)).filter((d) => d !== undefined) as Design[];
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.designs.multipleSelected")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {designs.map((design) => (
-        <TreeItem key={design.guid}>
-          <TreeContent>
+        <TreeRow key={design.guid}>
             <p className="text-sm font-medium">{design.name}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ))}
     </>
   );
@@ -8782,8 +8755,7 @@ export const FileSection: FC = () => {
   return (
     <>
       {files.map((file) => (
-        <TreeItem key={file!.guid}>
-          <TreeContent>
+        <TreeRow key={file!.guid}>
             <div className="space-y-2">
               <div>
                 <label className="text-xs text-muted-foreground">{useLabel("semio.file.name")}</label>
@@ -8806,8 +8778,7 @@ export const FileSection: FC = () => {
                 </div>
               )}
             </div>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ))}
     </>
   );
@@ -8849,8 +8820,7 @@ export const FolderSection: FC = () => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.kit.panel.details.section.folder.name"
@@ -8861,11 +8831,9 @@ export const FolderSection: FC = () => {
             }}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {folder.description && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Textarea
               lazy
               id="semio.sketchpad.app.kit.panel.details.section.folder.description"
@@ -8877,28 +8845,23 @@ export const FolderSection: FC = () => {
               }}
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {folder.createdAt && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <div>
               <label className="text-xs text-muted-foreground">{useLabel("semio.folder.created")}</label>
               <p className="text-sm">{formatDate(folder.createdAt)}</p>
             </div>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {folder.updatedAt && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <div>
               <label className="text-xs text-muted-foreground">{useLabel("semio.folder.updated")}</label>
               <p className="text-sm">{formatDate(folder.updatedAt)}</p>
             </div>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
     </>
   );
@@ -8933,11 +8896,9 @@ export const MultipleArtifactsSection: FC = () => {
   if (authorsCount > 0) kinds.push(t("semio.sketchpad.app.kit.authors.multipleTitle", { count: authorsCount }));
   if (kinds.length <= 1) return null;
   return (
-    <TreeItem>
-      <TreeContent>
+    <TreeRow>
         <p className="text-sm text-muted-foreground">{kinds.join(", ")}</p>
-      </TreeContent>
-    </TreeItem>
+      </TreeRow>
   );
 };
 
@@ -8952,8 +8913,7 @@ const KitEditorSettingsContent: FC = () => {
   const [diagramForce, setDiagramForce, canSetDiagramForce] = useKitAppDiagramForce();
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Slider
             id="semio.sketchpad.app.kit.settings.diagram.chargeStrength"
             showLabel
@@ -8964,10 +8924,8 @@ const KitEditorSettingsContent: FC = () => {
             onValueChange={(value: number[]) => setDiagramForce?.({ chargeStrength: value[0] })}
             disabled={!canSetDiagramForce}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Slider
             id="semio.sketchpad.app.kit.settings.diagram.linkDistance"
             showLabel
@@ -8978,10 +8936,8 @@ const KitEditorSettingsContent: FC = () => {
             onValueChange={(value: number[]) => setDiagramForce?.({ linkDistance: value[0] })}
             disabled={!canSetDiagramForce}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Slider
             id="semio.sketchpad.app.kit.settings.diagram.collideRadius"
             showLabel
@@ -8992,10 +8948,8 @@ const KitEditorSettingsContent: FC = () => {
             onValueChange={(value: number[]) => setDiagramForce?.({ collideRadius: value[0] })}
             disabled={!canSetDiagramForce}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Slider
             id="semio.sketchpad.app.kit.settings.diagram.centerStrength"
             showLabel
@@ -9006,8 +8960,7 @@ const KitEditorSettingsContent: FC = () => {
             onValueChange={(value: number[]) => setDiagramForce?.({ centerStrength: value[0] })}
             disabled={!canSetDiagramForce}
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -9023,8 +8976,7 @@ const SketchpadSettingsContent: FC = () => {
   const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.kit.settings.theme"
             value={theme}
@@ -9038,10 +8990,8 @@ const SketchpadSettingsContent: FC = () => {
               { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Select id="semio.sketchpad.app.kit.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
             <SelectTrigger>
               <SelectValue placeholder={languagePlaceholder} />
@@ -9051,10 +9001,8 @@ const SketchpadSettingsContent: FC = () => {
               <SelectItem value="de">{languageDeLabel}</SelectItem>
             </SelectContent>
           </Select>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.kit.settings.device"
             value={typeof device === "object" ? "desktop" : device}
@@ -9067,10 +9015,8 @@ const SketchpadSettingsContent: FC = () => {
               { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.kit.settings.expertise"
             value={expertise}
@@ -9084,10 +9030,8 @@ const SketchpadSettingsContent: FC = () => {
               { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.kit.settings.mode"
             value={mode}
@@ -9100,8 +9044,7 @@ const SketchpadSettingsContent: FC = () => {
               { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };

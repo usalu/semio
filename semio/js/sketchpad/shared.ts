@@ -258,7 +258,9 @@ export const EMPTY_STRING_ARRAY: readonly string[] = Object.freeze([]);
  **/
 export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
   toolbar: true,
-  details: false,
+  leftSidePanel: false,
+  rightSidePanel: true,
+  details: true,
   chat: false,
   settings: false,
 });
@@ -2234,6 +2236,7 @@ export class DerivedNode<T> {
   private subscribers = new Set<() => void>();
   private unsubscribers: Disposable[] = [];
   private initialized = false;
+  version: number = 0;
 
   constructor(deps: BaseDependency[], compute: () => T) {
     this.deps = deps;
@@ -2264,6 +2267,7 @@ export class DerivedNode<T> {
     if (nextJson !== this.valueJson) {
       this.value = next;
       this.valueJson = nextJson;
+      this.version++;
       this.subscribers.forEach((cb) => cb());
     }
   }
@@ -2285,6 +2289,7 @@ export class DerivedNode<T> {
         this.initialized = false;
         this.value = undefined;
         this.valueJson = undefined;
+        this.version = 0;
       }
     };
   }
@@ -2296,6 +2301,7 @@ export class DerivedNode<T> {
     this.initialized = false;
     this.value = undefined;
     this.valueJson = undefined;
+    this.version = 0;
   }
 }
 

@@ -32,6 +32,8 @@
     "types": ["react", "react-dom"],
     "baseUrl": ".",
     "paths": {
+      "@semio/js": ["."],
+      "@semio/js/*": ["./*"],
       "@semio/assets": ["../assets"],
       "@semio/assets/*": ["../assets/*"]
     }

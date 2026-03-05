@@ -49,7 +49,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeStateProvider } from "./elements";
+import { Action, BasicChatPanel, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { applySelectionComposition, createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, resolveSelectionCompositionKind, Theme, ToolKind } from "./shared";
 import {
@@ -308,40 +308,28 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   const kitShallow = kitShallows.find((k) => k.guid === kitId);
   if (!kitShallow) {
     return (
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     );
   }
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -365,13 +353,10 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : undefined} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.version"
             value={commonVersion || ""}
@@ -379,10 +364,8 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea
             id="semio.sketchpad.app.home.panel.details.kits.description"
             value={commonDescription || ""}
@@ -390,10 +373,8 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.icon"
             value={commonIcon || ""}
@@ -401,10 +382,8 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.image"
             value={commonImage || ""}
@@ -412,8 +391,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -426,13 +404,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 // Chat panel MUST show the chat placeholder content.
 
 const ChatPlaceholder: FC = () => {
-  return (
-    <TreeItem>
-      <TreeContent>
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
-      </TreeContent>
-    </TreeItem>
-  );
+  return <BasicChatPanel id="semio.sketchpad.app.home.chat" title="Home" />;
 };
 
 // #endregion Chat
@@ -455,8 +427,7 @@ const SettingsContent: FC = () => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.theme"
             value={theme}
@@ -470,10 +441,8 @@ const SettingsContent: FC = () => {
               { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
             <SelectTrigger>
               <SelectValue placeholder={languagePlaceholder} />
@@ -483,10 +452,8 @@ const SettingsContent: FC = () => {
               <SelectItem value="de">{languageDeLabel}</SelectItem>
             </SelectContent>
           </Select>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.device"
             value={typeof device === "object" ? "desktop" : device}
@@ -499,10 +466,8 @@ const SettingsContent: FC = () => {
               { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.expertise"
             value={expertise}
@@ -516,10 +481,8 @@ const SettingsContent: FC = () => {
               { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.mode"
             value={mode}
@@ -532,8 +495,7 @@ const SettingsContent: FC = () => {
               { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };

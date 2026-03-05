@@ -23,15 +23,15 @@
 
 // [👤semio📚js💻semiots🔖imports](semiorepo://section/SEMIO/JS/SEMIO.TS/IMPORTS)
 // External dependency imports MUST be declared here.
-import { default as adjectives } from "@semio/assets/lists/adjectives.json";
-import { default as animals } from "@semio/assets/lists/animals.json";
+import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
+import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
 import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
-import CONSTANTS from "./constants.json";
+import CONSTANTS from "./constants.json" with { type: "json" };
 
 // #endregion 🔖Imports
 

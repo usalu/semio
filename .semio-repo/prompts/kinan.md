@@ -1,3 +1,80 @@
+Sketchpad Design app seletion Create selection tests within the existing test structure. All new tests must pass without breaking any current functionality.
+
+Requirements
+
+Cross-scene synchronization
+Any element (Piece, Port, Connection, 3D Model, etc.) can be selected in either the Window scene or the Diagram scene, in any order. Selection state must remain perfectly synchronized between both scenes.
+
+Default selection behavior (no mode active)
+If no additive, subtractive, or intersect mode is enabled, selecting a new element replaces the current selection.
+
+Canvas click deselection
+If an element is selected and the user clicks on an empty canvas area (not on an element), the selection is cleared.
+
+Additive mode
+When additive mode is enabled, newly selected elements are added to the current selection without removing existing selections.
+
+Subtractive mode
+When subtractive mode is enabled, selecting an already-selected element removes it from the current selection.
+
+Rectangular (box) selection
+
+All elements within the selection box become selected.
+
+If no additive/subtractive/intersect mode is active, a new box selection replaces the existing selection.
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+Create a new ui element `Ring` for editing parameters t on a circle. Add stor
+
+
+
+```yaml
+Piece: # section,
+  Type: "{{piece-type-select}}" # input tree item, only show types that can replaced the type (e.g. all used connectors must exist)
+  Id: "{{piece-id-input}}" # input tree item
+  Description: "{{piece-description-text-area}}" # input tree item
+  Attributes:
+    - name: "{{attribute-name-input}}" # input tree item
+      value: "{{attribute-value-input}}" # input tree item
+  Plane: # collection tree item, only show section when
+    Origin: # collection tree item
+      X: "{{origin-x-stepper}}" # input tree item
+      Y: "{{origin-y-stepper}}" # input tree item
+      Z: "{{origin-z-stepper}}" # input tree item
+    X-Axis:
+      X: "{{x-axis-x-stepper}}"
+      Y: "{{x-axis-y-stepper}}"
+      Z: "{{x-axis-z-stepper}}"
+    Y-Axis:
+      X: "{{y-axis-x-stepper}}"
+      Y: "{{y-axis-y-stepper}}"
+      Z: "{{y-axis-z-stepper}}"
+Parent Connection:
+  Translation:
+    Gap: "{{gap-slider}}"
+    Shift: "{{shift-slider}}"
+    Rise: "{{rise-slider}}"
+  Orientation:
+    Rotation: "{{rotation-slider}}"
+    Inversion: "{{inversion-slider}}"
+```
+
+-----------------------------------------------------------------------------------------------
+
+Sketchpad Kit app
+Representations is being rendered twice on the kit app. once as a file and a folder. anaylze this mistake and fix. always make sure to match the zip metabolism folder-file structure. add this to the excising test structure when finished 
+-------------------------------------------------------------
+Sketchpad
+Correct in detail panel from slider to 
+
+    Translation:
+      Gap: "{{Gap-stepper}}" 
+      Shift: "{{Gap-stepper}}"
+      Rise: "{{Gap-stepper}}"
+
 
 ## Prompt: Duplicate Type Visibility Without App Switch
 

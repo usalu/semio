@@ -8146,8 +8146,10 @@ export const kitCommands = {
  *  * [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖machine🔖types🪨defaultpanelvisibility](semiorepo://definition/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MACHINE/TYPES/DEFAULT-PANEL-VISIBILITY)
  **/
 export const defaultPanelVisibility: PanelVisibility = {
-  toolbar: false,
-  details: false,
+  toolbar: true,
+  leftSidePanel: false,
+  rightSidePanel: true,
+  details: true,
 };
 
 // #region App State Types
@@ -11642,19 +11644,27 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
     },
     [derivedStore, key, depsKey],
   );
-  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
+  const lastResultRef = useRef<{ value: TSelected; json?: string; version: number }>({ value: undefined as any, version: -1 });
   const getSnapshot = useCallback(() => {
     if (!nodeRef.current) return undefined;
+    const ver = nodeRef.current.version;
+    if (ver === lastResultRef.current.version) return lastResultRef.current.value;
     const rawValue = nodeRef.current.snapshot();
     const newValue = selector(rawValue);
     if (newValue === null || typeof newValue !== "object") {
-      if (newValue === lastResultRef.current.value) return lastResultRef.current.value;
-      lastResultRef.current = { value: newValue };
+      if (newValue === lastResultRef.current.value) {
+        lastResultRef.current.version = ver;
+        return lastResultRef.current.value;
+      }
+      lastResultRef.current = { value: newValue, version: ver };
       return newValue;
     }
     const newJson = JSON.stringify(newValue, jsonReplacerMapSet);
-    if (newJson === lastResultRef.current.json) return lastResultRef.current.value;
-    lastResultRef.current = { value: newValue, json: newJson };
+    if (newJson === lastResultRef.current.json) {
+      lastResultRef.current.version = ver;
+      return lastResultRef.current.value;
+    }
+    lastResultRef.current = { value: newValue, json: newJson, version: ver };
     return newValue;
   }, [derivedStore, key, depsKey, selector]);
   return useSyncExternalStore(subscribe, getSnapshot);
@@ -11873,7 +11883,8 @@ export class SketchpadStore {
   private cache?: SketchpadState;
   private cacheHash?: string;
   private kitShallowsCache?: KitShallow[];
-  private kitShallowsCacheHash?: string;
+  private kitShallowsVersion: number = 0;
+  private kitShallowsCacheVersion: number = -1;
   private readonly kitCreatedSubscribers: Set<() => void>;
   private readonly kitDeletedSubscribers: Set<() => void>;
   private readonly kitAppCreatedSubscribers: Set<() => void>;
@@ -11885,7 +11896,7 @@ export class SketchpadStore {
   private readonly designAppCreatedSubscribers: Set<() => void>;
   private readonly designAppDeletedSubscribers: Set<() => void>;
   private readonly tutorialStoreInstance: any;
-  private actor?: SketchpadActorRef;
+  actor?: SketchpadActorRef;
   private actorUnsubscribe?: () => void;
 
   constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState) {
@@ -12118,6 +12129,7 @@ export class SketchpadStore {
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
     const kitStore = new KitStore(this, kit, local, remote, this.remote);
     this.kits.set(kit.guid, kitStore);
+    kitStore.onChanged((cb: () => void) => { cb(); this.kitShallowsVersion++; return () => {}; });
 
     this.yDoc.transact(() => {
       const kitMetadata = new Y.Map<string | boolean>();
@@ -12127,6 +12139,7 @@ export class SketchpadStore {
       this.yKits.push([kitMetadata as any]);
     });
 
+    this.kitShallowsVersion++;
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
@@ -12254,6 +12267,7 @@ export class SketchpadStore {
         }
       });
       this.kits.delete(guid);
+      this.kitShallowsVersion++;
       this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
     }
   };
@@ -12610,14 +12624,11 @@ export class SketchpadStore {
   }
 
   kitShallows(): KitShallow[] {
-    const currentKits = Array.from(this.kits.values()).map((k) => k.snapshot() as KitShallow);
-    const currentHash = JSON.stringify(currentKits);
-
-    if (!this.kitShallowsCache || this.kitShallowsCacheHash !== currentHash) {
-      this.kitShallowsCache = currentKits;
-      this.kitShallowsCacheHash = currentHash;
+    if (this.kitShallowsCache && this.kitShallowsCacheVersion === this.kitShallowsVersion) {
+      return this.kitShallowsCache;
     }
-
+    this.kitShallowsCache = Array.from(this.kits.values()).map((k) => k.snapshot() as KitShallow);
+    this.kitShallowsCacheVersion = this.kitShallowsVersion;
     return this.kitShallowsCache;
   }
 
@@ -12871,6 +12882,8 @@ export class SketchpadStore {
 
           const kitStore = new KitStore(this, kit, local, remote, this.remote);
           this.kits.set(kit.guid, kitStore);
+          kitStore.onChanged((cb: () => void) => { cb(); this.kitShallowsVersion++; return () => {}; });
+          this.kitShallowsVersion++;
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
         } catch (error) {}
       } else {
@@ -16354,7 +16367,7 @@ const PanelToggles: FC = ({}) => {
   const rightTabs = useSidePanelTabs("right");
 
   const hasLeftTabs = leftTabs.length > 0;
-  const hasRightTabs = rightTabs.length > 0;
+  const hasRightTabs = rightTabs.some((t) => !t.id.endsWith(".chat") && !t.id.endsWith(".settings"));
 
   const isLeftOpen = visiblePanels.leftSidePanel ?? false;
   const isRightOpen = visiblePanels.rightSidePanel ?? false;
@@ -16371,7 +16384,6 @@ const PanelToggles: FC = ({}) => {
   const handleRightToggle = useCallback(
     (pressed: boolean) => {
       if (pressed) {
-        // Close chat and settings when opening right panel
         if (isChatOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
         if (isSettingsOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
       }
@@ -16383,7 +16395,6 @@ const PanelToggles: FC = ({}) => {
   const handleChatToggle = useCallback(
     (pressed: boolean) => {
       if (pressed) {
-        // Close right panel and settings when opening chat
         if (isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
         if (isSettingsOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
       }
@@ -16395,7 +16406,6 @@ const PanelToggles: FC = ({}) => {
   const handleSettingsToggle = useCallback(
     (pressed: boolean) => {
       if (pressed) {
-        // Close right panel and chat when opening settings
         if (isRightOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
         if (isChatOpen) appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
       }
@@ -16406,8 +16416,6 @@ const PanelToggles: FC = ({}) => {
 
   const LeftIcon = leftTabs[0]?.icon;
   const RightIcon = rightTabs[0]?.icon;
-
-  if (!hasLeftTabs && !hasRightTabs) return null;
 
   return (
     <div className="flex items-stretch gap-single">
@@ -17412,7 +17420,7 @@ const LayoutWrapper: FC = () => {
     const isRightSidePanelVisible = !!panelVisibility.rightSidePanel && isRightSidePanelMode;
     const wasRightSidePanelVisible = wasRightSidePanelVisibleRef.current;
     if (isRightSidePanelVisible && !wasRightSidePanelVisible) {
-      const sortedRightTabs = [...rightSidePanelTabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const sortedRightTabs = [...rightSidePanelTabs].filter((t) => !t.id.endsWith(".chat") && !t.id.endsWith(".settings")).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       const detailsTab = sortedRightTabs.find((tab) => tab.id === "semio.sketchpad.navbar.panelToggle.details.show");
       const nextActiveTabId = detailsTab?.id ?? sortedRightTabs[0]?.id;
       if (nextActiveTabId && activeRightTabId !== nextActiveTabId) {
@@ -17425,7 +17433,7 @@ const LayoutWrapper: FC = () => {
   useEffect(() => {
     if (appType !== "design") return;
     if (panelVisibility.settings || panelVisibility.chat || !panelVisibility.rightSidePanel) return;
-    const sortedRightTabs = [...rightSidePanelTabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const sortedRightTabs = [...rightSidePanelTabs].filter((t) => !t.id.endsWith(".chat") && !t.id.endsWith(".settings")).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const detailsTab = sortedRightTabs.find((tab) => tab.id === "semio.sketchpad.navbar.panelToggle.details.show");
     if (!detailsTab) return;
     const activeTabIsUtility = !activeRightTabId || activeRightTabId.includes(".settings") || activeRightTabId.includes(".chat");
@@ -17718,7 +17726,6 @@ const LayoutWrapper: FC = () => {
     "[&_[data-slot='side-panel-tab-button']]:px-small",
     "[&_[data-slot='side-panel-tab-button']_svg]:size-small",
     "[&_[data-slot='side-panel-content']]:p-[10px]",
-    "[&_[data-slot='tree-content']]:!pl-0",
     "[&_[data-slot='tree-item-row']]:min-h-[24px]",
     "[&_[data-slot='tree-item-row']]:py-0",
     "[&_[data-slot='tree-item-row']]:items-center",
@@ -17727,10 +17734,8 @@ const LayoutWrapper: FC = () => {
     "[&_[data-slot='tree-section-row']]:mt-[12px]",
     "[&_[data-slot='tree-label']]:text-xs",
     "[&_[data-slot='tree-label']]:tracking-[0.04em]",
-    "[&_[data-slot='property-row']]:grid",
-    "[&_[data-slot='property-row']]:h-[24px]",
+    "[&_[data-slot='property-row']]:min-h-[24px]",
     "[&_[data-slot='property-row']]:grid-cols-[96px_minmax(0,1fr)]",
-    "[&_[data-slot='property-row']]:items-center",
     "[&_[data-slot='property-row']]:gap-x-[8px]",
     "[&_[data-slot='property-label']]:min-w-0",
     "[&_[data-slot='property-label']]:px-0",
@@ -17757,13 +17762,13 @@ const LayoutWrapper: FC = () => {
     "[&_[data-slot='stepper-group']_[data-slot='input']]:!w-[56px]",
     "[&_[data-slot='stepper-group']_[data-slot='input']]:!min-w-[56px]",
     "[&_[data-slot='stepper-group']_[data-slot='input']]:!px-0",
-    "[&_[data-slot='slider-row']]:h-[24px]",
-    "[&_[data-slot='slider-row']]:grid-cols-[minmax(0,130px)_28px]",
     "[&_[data-slot='slider-row']]:items-center",
     "[&_[data-slot='slider-row']]:gap-x-[8px]",
-    "[&_[data-slot='slider-track-cell']]:max-w-[130px]",
     "[&_[data-slot='slider-value']]:w-[28px]",
     "[&_[data-slot='slider-value']]:text-right",
+    "[&_[data-slot='slider-row']_[data-slot='input']]:!px-0",
+    "[&_[data-slot='slider-row']_[data-slot='input']]:!w-[28px]",
+    "[&_[data-slot='slider-row']_[data-slot='input']]:!min-w-[28px]",
     "[&_[data-slot='button-group-item']]:h-medium",
     "[&_[data-slot='textarea']]:text-xs",
     "[&_[data-slot='textarea']]:rounded-[3px]",
@@ -17994,13 +17999,13 @@ const LayoutWrapper: FC = () => {
                         maxSize: 500,
                         className: rightSidePanelElementSizingClassName,
                       }
-                    : rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
+                    : rightSidePanelTabs.filter((t) => !t.id.endsWith(".chat") && !t.id.endsWith(".settings")).length > 0 && panelVisibility.rightSidePanel
                       ? {
                           position: "right" as const,
                           visible: true,
                           size: panelSizes.rightSidePanelWidth,
                           onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                          tabs: rightSidePanelTabs,
+                          tabs: rightSidePanelTabs.filter((t) => !t.id.endsWith(".chat") && !t.id.endsWith(".settings")),
                           activeTabId: activeRightTabId,
                           onActiveTabChange: setActiveRightTabId,
                           minSize: 150,

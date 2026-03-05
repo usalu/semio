@@ -19,6 +19,7 @@
 
 // #region Imports
 
+import { ChatIcon, SettingsIcon } from "@semio/assets";
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
 import { FC, ReactNode, Suspense, createContext, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
@@ -31,14 +32,16 @@ import {
     registerDocsAppStoreFactory,
     useAddFooterItem,
     useAddPanelSection,
+    useAddSidePanelTab,
     useAppType,
     useFocus,
     useRemoveFooterItem,
     useRemovePanelSection,
+    useRemoveSidePanelTab,
     useSettings,
     useSketchpadCommands,
 } from "./Sketchpad";
-import { Aside, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, Tree, TreeContent, TreeItem, TreeStateProvider } from "./elements";
+import { Aside, BasicChatPanel, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "./elements";
 import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports
@@ -844,7 +847,7 @@ export interface DocsCommandResult {
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
     const defaultState: DocsAppState = {
-      panelVisibility: { toolbar: false, details: false },
+      panelVisibility: { leftSidePanel: true, rightSidePanel: true, details: true },
       selection: undefined,
       sectionStates: {},
     };
@@ -1011,7 +1014,7 @@ const docsAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): DocsAppState => ({
-      panelVisibility: { toolbar: false, details: false },
+      panelVisibility: { leftSidePanel: true, rightSidePanel: true, details: true },
       selection: undefined,
       sectionStates: {},
     }),
@@ -1355,8 +1358,6 @@ const Settings: FC = () => {
  **/
 export enum DocsAppWindowKind {
   Page = "page",
-  Settings = "settings",
-  Chat = "chat",
 }
 
 const App: FC = () => {
@@ -1364,7 +1365,9 @@ const App: FC = () => {
   const location = useLocation();
   const appType = useAppType();
   const addSection = useAddPanelSection();
+  const addSidePanelTab = useAddSidePanelTab();
   const removeSection = useRemovePanelSection();
+  const removeSidePanelTab = useRemoveSidePanelTab();
   useFocus();
   const settings = useSettings();
   const sketchpadCommands = useSketchpadCommands();
@@ -1378,6 +1381,32 @@ const App: FC = () => {
     const fromLocation = location.pathname.replace(/^\//, "").replace(/^docs\/?/, "");
     return fromLocation.trim() || "index";
   }, [routePath, location.pathname]);
+
+  useEffect(() => {
+    if (appType !== "docs") return;
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.docs.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <Settings />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.docs.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => <BasicChatPanel id="semio.sketchpad.app.docs.chat" title="Docs" />,
+    });
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.docs.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.docs.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(() => ({
     root: {
@@ -1393,18 +1422,6 @@ const App: FC = () => {
               title: "page",
               componentState: {},
             },
-            {
-              type: "component",
-              componentName: DocsAppWindowKind.Settings,
-              title: "settings",
-              componentState: {},
-            },
-            {
-              type: "component",
-              componentName: DocsAppWindowKind.Chat,
-              title: "chat",
-              componentState: {},
-            },
           ],
         },
       ],
@@ -1415,7 +1432,12 @@ const App: FC = () => {
     if (!storedWindowLayout) return defaultLayout;
     const removeWorkbenchWindowFromLayout = (layoutNode: any): any => {
       if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
-      if (layoutNode.type === "component" && layoutNode.componentName === "workbench") return null;
+      if (
+        layoutNode.type === "component" &&
+        (layoutNode.componentName === "workbench" || layoutNode.componentName === "settings" || layoutNode.componentName === "chat")
+      ) {
+        return null;
+      }
       if (layoutNode.root && typeof layoutNode.root === "object") {
         const root = removeWorkbenchWindowFromLayout(layoutNode.root);
         if (!root) return undefined;
@@ -1443,19 +1465,19 @@ const App: FC = () => {
       id: "semio.sketchpad.app.docs.docs",
       specificity: 20,
       order: 1,
-      content: Workbench,
+      content: () => <Workbench />,
     });
     addSection("workbench", {
       id: "semio.sketchpad.app.docs.overview",
       specificity: 20,
       order: 2,
-      content: Overview,
+      content: () => <Overview />,
     });
     addSection("details", {
       id: "semio.sketchpad.app.docs.page",
       specificity: 20,
       order: 1,
-      content: Details,
+      content: () => <Details />,
     });
 
     addSection("toolbar", {
@@ -1511,32 +1533,6 @@ const App: FC = () => {
             if (error || !mdxModule) return <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />;
             return <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />;
           },
-        },
-        {
-          id: DocsAppWindowKind.Settings,
-          label: "settings",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <Settings />
-              </Tree>
-            </TreeStateProvider>
-          ),
-        },
-        {
-          id: DocsAppWindowKind.Chat,
-          label: "chat",
-          component: () => (
-            <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden p-double">
-                <TreeItem>
-                  <TreeContent>
-                    <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
-                  </TreeContent>
-                </TreeItem>
-              </Tree>
-            </TreeStateProvider>
-          ),
         },
       ],
       defaultLayout,

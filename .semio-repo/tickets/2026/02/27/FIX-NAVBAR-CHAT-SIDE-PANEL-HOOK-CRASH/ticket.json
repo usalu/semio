@@ -1,0 +1,373 @@
+{
+  "title": "Fix Navbar Chat Side Panel Hook Crash",
+  "status": "open",
+  "prompt": "Fix the sketchpad crash after clicking the chat tab in the navbar by resolving the SidePanel hook-order violation and validate the affected path.",
+  "summary": "Render side panel tab callbacks as component boundaries to prevent the design chat hook-order crash, update the panel regression to cover the fixed path, and align the stale embedded utility-tab assertion with the current UI.",
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-27T12:58:29.653855927Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-27 12:58:29",
+        "finished": "2026-02-27 13:09:36"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Fix the sketchpad crash after clicking the chat tab in the navbar by resolving the SidePanel hook-order violation and validate the affected path.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 297,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx",
+              "lines": {
+                "added": 298,
+                "removed": 63
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts",
+              "lines": {
+                "added": 77,
+                "removed": 15
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Kit Zip Entry Filtering",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Multiple Connections Detail Panel",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Home Panel Combinations",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Kit Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Design Panel Combinations",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Type Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree",
+              "lines": {
+                "added": 233,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#SidePanel",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Diagram",
+              "lines": {
+                "added": 19,
+                "removed": 19
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Imports",
+              "lines": {
+                "added": 41,
+                "removed": 41
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Base Components",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree",
+              "lines": {
+                "added": 233,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx§FileTree",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§FileTree",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlDef",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeFolderSettings",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeClassNames",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeNode",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§buildControlTree",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§sortControlTreeNodes",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§defaultControlRenderer",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeFolderProps",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeFolder",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeProps",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTree",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Toolbar Components§ToolbarZoneProps",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Toolbar Components§ToolbarZone",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeClassNames",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeFolder",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§buildControlTree",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§defaultControlRenderer",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§FileTree",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeFolderSettings",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeFolderProps",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§sortControlTreeNodes",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlDef",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeNode",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTree",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree#ControlTree§ControlTreeProps",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-27 13:42:51"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Continue and validate the TreeStateProvider crash fix for TreeItem/TreeRow rendered outside TreeStateProvider.",
+      "llm": "gpt-5-3-codex"
+    }
+  ]
+}

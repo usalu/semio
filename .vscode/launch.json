@@ -373,7 +373,6 @@
     },
     {
       "name": "semio/js dev",
-      "preLaunchTask": "semio/js dev",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -392,7 +391,6 @@
     },
     {
       "name": "semio/js dev:storybook",
-      "preLaunchTask": "semio/js dev:storybook",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -411,7 +409,6 @@
     },
     {
       "name": "semio/js dev:sketchpad",
-      "preLaunchTask": "semio/js dev:sketchpad",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -449,7 +446,6 @@
     },
     {
       "name": "semio/play dev",
-      "preLaunchTask": "semio/play dev",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",

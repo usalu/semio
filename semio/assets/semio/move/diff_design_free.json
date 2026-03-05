@@ -1,0 +1,122 @@
+{
+  "pieces": [
+    {
+      "id_": "EmptyDaygecko48",
+      "type": {
+        "name": "Base"
+      },
+      "plane": {
+        "origin": {
+          "x": 7.500000000000001,
+          "y": 7.700000000000001,
+          "z": -7.500000000000001
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "center": {
+        "x": 4.82491,
+        "y": 0.18330000000000002
+      },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id_": "TinyDrever740",
+      "type": {
+        "name": "Capsule",
+        "variant": "\\"
+      },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id_": "PutridMynah16",
+      "type": {
+        "name": "Tambour",
+        "variant": "First Storey"
+      },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id_": "ApatheticWirehair974",
+      "type": {
+        "name": "Base"
+      },
+      "plane": {
+        "origin": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "center": {
+        "x": 12.745473939343363,
+        "y": 0.037757142777375796
+      },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id_": "TragicAlpinegoat158",
+      "type": {
+        "name": "Tambour",
+        "variant": "First Storey"
+      },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "id_": "UntriedSmew98",
+      "type": {
+        "name": "Tambour"
+      },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    }
+  ],
+  "connections": []
+}

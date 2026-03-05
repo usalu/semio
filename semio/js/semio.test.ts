@@ -19,6 +19,7 @@
 
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
 import { describe, expect, it } from "vitest";
+import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -295,5 +296,17 @@ describe("Sketchpad Panel Visibility", () => {
     const leftVisible = getNextPanelVisibilityFromToggle(settingsVisible, "leftSidePanel");
     expect(leftVisible.leftSidePanel).toBe(true);
     expect(leftVisible.settings).toBe(true);
+  });
+});
+
+describe("JS Dev Launcher", () => {
+  it("classifies storybook launches as start, reuse, or fail and parses the wrapper inputs", async () => {
+    await expect(detectStorybookLaunchKind(async () => true, async () => false)).resolves.toBe("start");
+    await expect(detectStorybookLaunchKind(async () => false, async () => true)).resolves.toBe("reuse");
+    await expect(detectStorybookLaunchKind(async () => false, async () => false)).resolves.toBe("fail");
+    expect(isStorybookIndexPayload("{\"v\":5,\"entries\":{}}")).toBe(true);
+    expect(isStorybookIndexPayload("{\"hello\":\"world\"}")).toBe(false);
+    expect(readLaunchKind(["storybook"])).toBe("storybook");
+    expect(readLaunchKind([])).toBe("workspace");
   });
 });

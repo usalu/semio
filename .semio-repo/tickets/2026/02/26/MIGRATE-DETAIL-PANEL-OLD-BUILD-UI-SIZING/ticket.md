@@ -6,38 +6,29 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Migrated old build detail panel UI sizing into new build. Added showLabel to piece Type and Variant Comboboxes. Added textarea and combobox button sizing overrides to rightSidePanelElementSizingClassName for consistent compact panel layout.
+Restored connection translation controls to steppers in the sketchpad detail panel and updated sketchpad Playwright coverage to validate the stepper UI with a default baseURL.
 ## Changes
-- Design.tsx: Added `showLabel` to Type Combobox (id=semio.sketchpad.app.design.piece.type)
-- Design.tsx: Added `showLabel` to Variant Combobox (id=semio.sketchpad.app.type.variant)
-- Sketchpad.tsx: Added textarea sizing overrides to rightSidePanelElementSizingClassName
-- Sketchpad.tsx: Added combobox button (role=combobox) sizing overrides to rightSidePanelElementSizingClassName
+- Design.tsx: Replace connection translation `Slider` controls with `Stepper` controls for `gap`, `shift`, and `rise` in single and multiple selection forms
+- sketchpad.test.ts: Add a default Playwright `baseURL`, update the existing detail-panel coverage to assert translation steppers, and edit the gap value through the stepper input
 
 ## Log
-- Systematically compared Design.Details.tsx.old (1352 lines) against new Design.tsx details section (lines 4149-6200)
-- Reviewed rightSidePanelElementSizingClassName overrides (52+ rules covering side-panel, tree, property, input, stepper, slider, button)
-- Reviewed elements.tsx Label, Stepper (always wraps Label), Slider (conditional showLabel), Combobox (conditional showLabel), Textarea, Button
-- Found Stepper always wraps in Label (no gap)
-- Found Slider already uses showLabel (no gap)
-- Found Input already uses showLabel (no gap)
-- Found Type/Variant Comboboxes missing showLabel (gap)
-- Found textarea and combobox button missing sizing overrides (gap)
-- Verified tsc --noEmit: only pre-existing FC type compat errors, no new errors
-- Verified dev server compiles cleanly
+- Reopened the existing detail-panel migration ticket for the connection translation control regression
+- Verified the current implementation in `semio/js/sketchpad/Design.tsx` still renders `gap`, `shift`, and `rise` with `Slider`
+- Verified the old implementation in `semio/js/sketchpad/Design.Details.tsx.old` renders `Gap`, `Shift`, and `Rise` with `Stepper`
+- Reviewed the current `Stepper` implementation in `semio/js/sketchpad/elements.tsx` to confirm it supports numeric editing and labels by id
+- Updated the existing Playwright sketchpad coverage to validate the translation controls as steppers instead of sliders
+- Added a default `baseURL` in `sketchpad.test.ts` because the repo does not have a tracked Playwright config and `page.goto("/")` otherwise fails locally
+- Started the sketchpad dev server and reran `npx playwright test sketchpad.test.ts --grep "Design" --timeout 240000 --workers=1 --max-failures=1 --reporter=list` with `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5175`
+- Verified the `Design` Playwright test passed and confirmed the gap batch edit still updates all selected connections to `5.5`
 
 ## Todos
-- [x] Read old file and new details code
-- [x] Read rightSidePanelElementSizingClassName overrides
-- [x] Read elements.tsx key components (Label, Stepper, Slider, Combobox, Textarea)
-- [x] Identify concrete gaps between old and new builds
-- [x] Implement missing showLabel on Type/Variant Comboboxes
-- [x] Add textarea/combobox sizing overrides
-- [x] Verify compilation
-- [x] Verify dev server
+- [x] Reopen the matching detail-panel migration ticket
+- [x] Compare the current and old connection translation controls
+- [x] Replace `gap`, `shift`, and `rise` sliders with steppers
+- [x] Update the existing sketchpad test to match the stepper UI
+- [x] Run the relevant test coverage
 
 ## Plan
-1. Deep comparison of old Design.Details.tsx.old vs new Design.tsx details section
-2. Check all component implementations for showLabel/label support
-3. Add missing showLabel props where old build had labels
-4. Add missing sizing overrides to rightSidePanelElementSizingClassName
-5. Verify compilation and dev server
+1. Restore the old-build control kind for connection translation inputs in `Design.tsx`
+2. Refactor the existing Playwright test to assert stepper rendering and stepper-based editing
+3. Run the relevant sketchpad test coverage and record the result

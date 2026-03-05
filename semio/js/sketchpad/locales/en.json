@@ -1324,6 +1324,12 @@
             "normal": "Kit",
             "beginner": "Kit"
           },
+          "properties": {
+            "label": {
+              "normal": "Kit Properties",
+              "beginner": "Kit properties"
+            }
+          },
           "notFound": {
             "label": {
               "normal": "Kit not found",
@@ -2166,6 +2172,12 @@
           "label": {
             "normal": "Design",
             "beginner": "Design"
+          },
+          "properties": {
+            "label": {
+              "normal": "Design Properties",
+              "beginner": "Design properties"
+            }
           },
           "console": {
             "label": {
@@ -3233,6 +3245,12 @@
             "normal": "Type",
             "beginner": "Type"
           },
+          "properties": {
+            "label": {
+              "normal": "Type Properties",
+              "beginner": "Type properties"
+            }
+          },
           "toolbar": {
             "label": {
               "normal": "",
@@ -3357,6 +3375,12 @@
             "label": {
               "normal": "Connector",
               "beginner": "Connector"
+            },
+            "properties": {
+              "label": {
+                "normal": "Connector Properties",
+                "beginner": "Connector properties"
+              }
             },
             "title": {
               "label": {

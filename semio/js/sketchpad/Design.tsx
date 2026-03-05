@@ -33,19 +33,16 @@ import {
     createField as createFieldValue,
     createKeyedTransactionHandlers,
     createPanelDefinition,
-    Expertise,
     fieldToHookResult,
     isSelectionToolKind,
-    Mode,
     PanelKind,
     readonlyHookResult,
     registerAppPlugin,
     registerEventHandler,
     registerKeyedAppEventHandlers,
     resolveSelectionCompositionKind,
-    Theme,
     ToolKind,
-    toSelectionToolKind,
+    toSelectionToolKind
 } from "./shared";
 import type { DesignStore as DesignEntityStore } from "./Sketchpad";
 import {
@@ -63,15 +60,10 @@ import {
     createDesignSelectionSelector,
     identitySelector,
     useDesignScope,
-    useDevice,
-    useExpertise,
     useKitScope,
-    useLanguage,
-    useMode,
     usePieceScope,
     useSketchpadActor,
     useSketchpadActorSafe,
-    useTheme,
 } from "./Sketchpad";
 
 // #endregion Internal State Management
@@ -82,7 +74,7 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, AwardIcon, ChatIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, PieceIcon, PortIcon, RemoveIcon, SceneIcon, SelectToolIcon, SettingsIcon, SunIcon, TableViewIcon, TutorialIcon, TypeIcon, UserIcon } from "@semio/assets";
+import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, PieceIcon, PortIcon, RemoveIcon, SceneIcon, SelectToolIcon, TableViewIcon, TypeIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -102,7 +94,6 @@ import {
     Design,
     DiffStatus,
     expandDesignPieces,
-    findConnectorInType,
     findDesignInKit,
     findPieceInDesign,
     findTypeInKit,
@@ -112,12 +103,11 @@ import {
     getIncludedDesigns,
     guid,
     ICON_WIDTH,
-    isPortInUse,
     Kit,
-    Model,
     Piece,
     Plane,
     planeToMatrix,
+    Port,
     replaceClusterWithDesign,
     selectBestModel,
     TOLERANCE,
@@ -141,11 +131,7 @@ import {
     Position,
     ReactFlowProvider,
     Scene,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    Select as SelectUI,
-    SelectValue,
+    sceneFrameControlRef,
     Slider,
     SortableTreeItems,
     Stepper,
@@ -154,12 +140,11 @@ import {
     ToggleGroup,
     ToolbarGroup,
     TransactionProvider,
-    Tree,
-    TreeContent,
     TreeItem,
+    TreeRow,
     TreeSection,
-    TreeStateProvider,
     useReactFlow,
+    useStoreApi,
     ViewportPortal
 } from "./elements";
 import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
@@ -177,7 +162,6 @@ import {
     SketchpadStore,
     useAddFooterItem,
     useAddPanelSection,
-    useAddSidePanelTab,
     useAppPanelVisibility,
     useAppType,
     useClusterableGroups,
@@ -200,6 +184,7 @@ import {
     useFlatPiecePlane,
     useFocusSafe,
     useIncludedDesigns,
+    useIsConnectedPiece,
     useIsConnectionHovered,
     useIsInDesignScope,
     useIsPieceHovered,
@@ -219,7 +204,6 @@ import {
     usePieceStatus,
     useRemoveFooterItem,
     useRemovePanelSection,
-    useRemoveSidePanelTab,
     useReplacableDesigns,
     useReplacableTypes,
     useSketchpad,
@@ -1200,7 +1184,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
   constructor(parent: SketchpadStore, id: DesignAppId, initialState?: DesignAppState) {
     const defaultState: DesignAppState = {
       fullscreenWindow: initialState?.fullscreenWindow || DesignAppFullscreenWindow.None,
-      panelVisibility: initialState?.panelVisibility || { toolbar: true, details: true, rightSidePanel: true },
+      panelVisibility: initialState?.panelVisibility || { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
       activeTool: initialState?.activeTool || ToolKind.SELECTION_NORMAL,
       selection: initialState?.selection,
       hover: initialState?.hover,
@@ -1355,8 +1339,18 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
 
     const designStore = this.design();
     const design = designStore.snapshot();
+    const actor = this.parentStore.actor;
+    let designAppState = state;
+    if (actor) {
+      const machineKey = `${this.kitGuid}:${this.designGuid}`;
+      const machineContext = actor.getSnapshot().context;
+      const machineDesignApp = machineContext.designApps?.[machineKey];
+      if (machineDesignApp) {
+        designAppState = { ...state, selection: machineDesignApp.selection };
+      }
+    }
     const context: DesignAppCommandContext = {
-      designApp: state,
+      designApp: designAppState,
       kit: kitState,
       Guid: design.guid,
       design,
@@ -1367,10 +1361,13 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (result.diff) {
       this.change(result.diff);
     }
+    this.recordEdit(result);
     if (result.kitDiff) {
       kitStore.change(result.kitDiff);
     }
-    this.recordEdit(result);
+    if (result.diff?.selection && actor) {
+      actor.send({ type: "DESIGN.SET_SELECTION", kitGuid: this.kitGuid, designGuid: this.designGuid, selection: this.state.selection || {} } as any);
+    }
     return result as T;
   }
 
@@ -1407,7 +1404,7 @@ const designAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): DesignAppState => ({
-      panelVisibility: { toolbar: true, details: true, rightSidePanel: true },
+      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
       selection: undefined,
       hover: undefined,
       presence: undefined,
@@ -1577,7 +1574,7 @@ function useDesignAppInitialize() {
       kitGuid,
       designGuid,
       state: {
-        panelVisibility: { toolbar: true, details: true, rightSidePanel: true },
+        panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
         selection: undefined,
         hover: undefined,
         focusedPiece: undefined,
@@ -1982,11 +1979,13 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (hover: DesignAppHover | undefined) => {
-      if (hover && (hover.pieces?.length || hover.connections?.length)) {
-        actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
-      } else {
-        actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid });
-      }
+      setTimeout(() => {
+        if (hover && (hover.pieces?.length || hover.connections?.length)) {
+          actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
+        } else {
+          actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid });
+        }
+      }, 0);
     };
   }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
@@ -2944,16 +2943,16 @@ export function useDesignAppCommands(id?: DesignAppId) {
       clearFocus: (_origin: string) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
       setDiagramCenter: (_origin: string, center: Coord) => actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } }),
       setDiagramScale: (_origin: string, scale: number) => actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale }),
-      hoverPiece: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: [guid] } }),
-      hoverPieces: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: guids } }),
-      hoverConnection: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: [guid] } }),
-      hoverConnections: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: guids } }),
-      hoverPort: (_origin: string, pieceGuid: Guid, connectorGuid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connectors: [{ piece: pieceGuid, connector: connectorGuid }] } }),
-      hoverType: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: [guid] } }),
-      hoverTypes: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: guids } }),
-      hoverDesign: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: [guid] } }),
-      hoverDesigns: (_origin: string, guids: Guid[]) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: guids } }),
-      clearHover: (_origin: string) => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }),
+      hoverPiece: (_origin: string, guid: Guid) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: [guid] } }), 0),
+      hoverPieces: (_origin: string, guids: Guid[]) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: guids } }), 0),
+      hoverConnection: (_origin: string, guid: Guid) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: [guid] } }), 0),
+      hoverConnections: (_origin: string, guids: Guid[]) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: guids } }), 0),
+      hoverPort: (_origin: string, pieceGuid: Guid, connectorGuid: Guid) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connectors: [{ piece: pieceGuid, connector: connectorGuid }] } }), 0),
+      hoverType: (_origin: string, guid: Guid) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: [guid] } }), 0),
+      hoverTypes: (_origin: string, guids: Guid[]) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: guids } }), 0),
+      hoverDesign: (_origin: string, guid: Guid) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: [guid] } }), 0),
+      hoverDesigns: (_origin: string, guids: Guid[]) => setTimeout(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: guids } }), 0),
+      clearHover: (_origin: string) => setTimeout(() => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }), 0),
       togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "DESIGN.TOGGLE_PANEL", kitGuid, designGuid, panel: panelKey }),
       setModelTagsForType: (_origin: string, typeGuid: Guid, tags: string[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
@@ -4099,14 +4098,12 @@ const DraggableWindowItem: FC<DraggableWindowItemProps> = ({ template }) => {
 
   return (
     <div ref={setNodeRef} {...listeners} {...attributes} className={`cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50" : ""}`}>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <div className="flex items-center gap-single">
             {template.icon}
             <span className="text-sm">{template.label}</span>
           </div>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </div>
   );
 };
@@ -4216,13 +4213,10 @@ const DesignSectionForm: FC = () => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.description"
@@ -4231,20 +4225,14 @@ const DesignSectionForm: FC = () => {
             onLazyChange={(value) => updateDesignField({ description: value })}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.icon" value={design.icon || ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" onLazyChange={(value) => updateDesignField({ icon: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.image" value={design.image || ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" onLazyChange={(value) => updateDesignField({ image: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.variant"
@@ -4253,10 +4241,8 @@ const DesignSectionForm: FC = () => {
             onLazyChange={(value) => updateDesignField({ variant: value })}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.design.panel.details.section.design.view"
@@ -4265,13 +4251,10 @@ const DesignSectionForm: FC = () => {
             onLazyChange={(value) => updateDesignField({ view: value })}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.unit" value={design.unit || ""} onLazyChange={(value) => updateDesignField({ unit: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {design.location ? (
         <TreeItem
           id="semio.sketchpad.app.design.location"
@@ -4283,8 +4266,7 @@ const DesignSectionForm: FC = () => {
             },
           ]}
         >
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.location.longitude"
                 value={(design.location as any)?.longitude ?? 0}
@@ -4295,10 +4277,8 @@ const DesignSectionForm: FC = () => {
                 }
                 step={0.000001}
               />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.location.latitude"
                 value={(design.location as any)?.latitude ?? 0}
@@ -4309,8 +4289,7 @@ const DesignSectionForm: FC = () => {
                 }
                 step={0.000001}
               />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         </TreeItem>
       ) : (
         <TreeItem
@@ -4376,8 +4355,7 @@ const DesignSectionForm: FC = () => {
                   },
                 ]}
               >
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.authors.name"
                       value={author.name}
@@ -4393,10 +4371,8 @@ const DesignSectionForm: FC = () => {
                       onBlur={() => transaction?.finalize()}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.authors.email"
                       value={author.email}
@@ -4412,8 +4388,7 @@ const DesignSectionForm: FC = () => {
                       onBlur={() => transaction?.finalize()}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
             )}
           </SortableTreeItems>
@@ -4471,8 +4446,7 @@ const DesignSectionForm: FC = () => {
                   },
                 ]}
               >
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.name"
                       value={attribute.key}
@@ -4488,10 +4462,8 @@ const DesignSectionForm: FC = () => {
                       onBlur={() => transaction?.finalize()}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.value"
                       value={attribute.value || ""}
@@ -4508,10 +4480,8 @@ const DesignSectionForm: FC = () => {
                       onBlur={() => transaction?.finalize()}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.unit"
                       value={attribute.unit || ""}
@@ -4528,10 +4498,8 @@ const DesignSectionForm: FC = () => {
                       onBlur={() => transaction?.finalize()}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.design.panel.details.section.attributes.definition"
                       value={attribute.definition || ""}
@@ -4548,16 +4516,14 @@ const DesignSectionForm: FC = () => {
                       onBlur={() => transaction?.finalize()}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
             )}
           </SortableTreeItems>
         )}
       </TreeItem>
       {design.createdAt && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input
               id="semio.sketchpad.app.design.panel.details.section.design.createdAt"
               value={(() => {
@@ -4569,12 +4535,10 @@ const DesignSectionForm: FC = () => {
               disabled
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {design.updatedAt && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input
               id="semio.sketchpad.app.design.panel.details.section.design.updatedAt"
               value={(() => {
@@ -4586,32 +4550,27 @@ const DesignSectionForm: FC = () => {
               disabled
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {design.pieces && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input
               id="semio.sketchpad.app.design.panel.details.section.design.pieceCount"
               value={`${(design.pieces || []).length}`}
               disabled
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {design.connections && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input
               id="semio.sketchpad.app.design.panel.details.section.design.connectionCount"
               value={`${(design.connections || []).length}`}
               disabled
               showLabel
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
     </>
   );
@@ -5320,24 +5279,19 @@ const PiecesSectionForm: FC = () => {
   return (
     <>
       {hasNoValidPieces ? (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <p className="text-sm text-muted-foreground">No valid pieces found in selection.</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ) : null}
       {!hasNoValidPieces && hasMixedTypes ? (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <p className="text-sm text-muted-foreground">{mixedSelectionMessageLabel}</p>
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       ) : !hasNoValidPieces ? (
         <TreeItem id="semio.sketchpad.app.design.panel.details.section.piece.pieceInfo" defaultOpen={true}>
           {isDesignPiece ? (
             <>
-              <TreeItem>
-                <TreeContent>
+              <TreeRow>
                   <Combobox
                     id="semio.sketchpad.app.design.name"
                     options={availableDesignNames.map((name) => ({
@@ -5349,11 +5303,9 @@ const PiecesSectionForm: FC = () => {
                     onValueChange={handleDesignNameChange}
                     showLabel
                   />
-                </TreeContent>
-              </TreeItem>
+                </TreeRow>
               {availableDesignVariants.length > 0 && (
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Combobox
                       id="semio.sketchpad.app.design.variant"
                       options={availableDesignVariants.map((variant) => ({
@@ -5366,12 +5318,10 @@ const PiecesSectionForm: FC = () => {
                       allowClear={true}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               )}
               {availableDesignViews.length > 0 && (
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Combobox
                       id="semio.sketchpad.app.design.view"
                       options={availableDesignViews.map((view) => ({
@@ -5384,14 +5334,12 @@ const PiecesSectionForm: FC = () => {
                       allowClear={true}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               )}
             </>
           ) : (
             <>
-              <TreeItem>
-                <TreeContent>
+              <TreeRow>
                   <Combobox
                     id="semio.sketchpad.app.design.piece.type"
                     options={availableTypeNames.map((name) => ({
@@ -5403,11 +5351,9 @@ const PiecesSectionForm: FC = () => {
                     onValueChange={handleTypeNameChange}
                     showLabel
                   />
-                </TreeContent>
-              </TreeItem>
+                </TreeRow>
               {(hasVariant || availableVariants.length > 0) && (
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Combobox
                       id="semio.sketchpad.app.type.variant"
                       options={availableVariants.map((variant) => ({
@@ -5420,20 +5366,16 @@ const PiecesSectionForm: FC = () => {
                       allowClear={true}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               )}
             </>
           )}
           {isSingle && piece && (
-            <TreeItem>
-              <TreeContent>
+            <TreeRow>
                 <Input id="semio.sketchpad.app.design.piece.id" value={getPieceId(piece)} disabled showLabel />
-              </TreeContent>
-            </TreeItem>
+              </TreeRow>
           )}
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Input
                 lazy
                 id="semio.sketchpad.app.design.panel.details.section.piece.name"
@@ -5442,10 +5384,8 @@ const PiecesSectionForm: FC = () => {
                 onLazyChange={handleNameChange}
                 showLabel
               />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Textarea
                 lazy
                 id="semio.sketchpad.app.design.panel.details.section.piece.description"
@@ -5454,8 +5394,7 @@ const PiecesSectionForm: FC = () => {
                 onLazyChange={handleDescriptionChange}
                 showLabel
               />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
           <TreeItem
             id="semio.sketchpad.app.design.panel.details.section.piece.attributes"
             actions={[
@@ -5490,8 +5429,7 @@ const PiecesSectionForm: FC = () => {
                       },
                     ]}
                   >
-                    <TreeItem>
-                      <TreeContent>
+                    <TreeRow>
                         <Input
                           lazy
                           id="semio.sketchpad.app.design.panel.details.section.piece.attributes.name"
@@ -5499,10 +5437,8 @@ const PiecesSectionForm: FC = () => {
                           onLazyChange={(value) => handleAttributeUpdate(attribute.guid, "key", value)}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                      </TreeRow>
+                    <TreeRow>
                         <Input
                           lazy
                           id="semio.sketchpad.app.design.panel.details.section.piece.attributes.value"
@@ -5510,10 +5446,8 @@ const PiecesSectionForm: FC = () => {
                           onLazyChange={(value) => handleAttributeUpdate(attribute.guid, "value", value)}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                      </TreeRow>
+                    <TreeRow>
                         <Input
                           lazy
                           id="semio.sketchpad.app.design.panel.details.section.piece.attributes.unit"
@@ -5521,10 +5455,8 @@ const PiecesSectionForm: FC = () => {
                           onLazyChange={(value) => handleAttributeUpdate(attribute.guid, "unit", value)}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                      </TreeRow>
+                    <TreeRow>
                         <Input
                           lazy
                           id="semio.sketchpad.app.design.panel.details.section.piece.attributes.definition"
@@ -5532,25 +5464,21 @@ const PiecesSectionForm: FC = () => {
                           onLazyChange={(value) => handleAttributeUpdate(attribute.guid, "definition", value)}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
+                      </TreeRow>
                   </TreeItem>
                 )}
               </SortableTreeItems>
             )}
           </TreeItem>
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Stepper
                 id="semio.sketchpad.app.design.panel.details.section.piece.scale"
                 value={isSingle && piece ? (piece as any).scale ?? 1 : commonScale ?? 1}
                 onChange={handleScaleChange}
                 step={0.01}
               />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Input
                 lazy
                 id="semio.sketchpad.app.design.panel.details.section.piece.color"
@@ -5559,25 +5487,19 @@ const PiecesSectionForm: FC = () => {
                 onLazyChange={handleColorChange}
                 showLabel
               />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
           {hasCenter && (
             <TreeItem id="semio.sketchpad.app.design.piece.center">
-              <TreeItem>
-                <TreeContent>
+              <TreeRow>
                   <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.center.x" value={isSingle && piece ? piece.center?.u : commonCenterX} onChange={handleCenterXChange} step={0.1} />
-                </TreeContent>
-              </TreeItem>
-              <TreeItem>
-                <TreeContent>
+                </TreeRow>
+              <TreeRow>
                   <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.center.y" value={isSingle && piece ? piece.center?.v : commonCenterY} onChange={handleCenterYChange} step={0.1} />
-                </TreeContent>
-              </TreeItem>
+                </TreeRow>
             </TreeItem>
           )}
           {isSingle && piece && !piece.plane && (
-            <TreeItem>
-              <TreeContent>
+            <TreeRow>
                 <div className="flex flex-col gap-single">
                   <p className="text-sm text-muted-foreground">{connectedPieceInfoLabel}</p>
                   <Button id="semio.sketchpad.app.design.piece.fixPiece" onClick={fixPieces}>
@@ -5585,61 +5507,42 @@ const PiecesSectionForm: FC = () => {
                     {fixPieceLabel}
                   </Button>
                 </div>
-              </TreeContent>
-            </TreeItem>
+              </TreeRow>
           )}
           {hasPlane && (
             <TreeItem id="semio.sketchpad.app.design.piece.plane">
               <TreeItem id="semio.sketchpad.app.design.piece.planeOrigin">
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.x" value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX} onChange={handlePlaneOriginXChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.y" value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY} onChange={handlePlaneOriginYChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.origin.z" value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ} onChange={handlePlaneOriginZChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
               <TreeItem id="semio.sketchpad.app.design.piece.planeXAxis">
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.x" value={isSingle && piece ? piece.plane?.xAxis.x : commonPlaneXAxisX} onChange={handlePlaneXAxisXChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.y" value={isSingle && piece ? piece.plane?.xAxis.y : commonPlaneXAxisY} onChange={handlePlaneXAxisYChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.xaxis.z" value={isSingle && piece ? piece.plane?.xAxis.z : commonPlaneXAxisZ} onChange={handlePlaneXAxisZChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
               <TreeItem id="semio.sketchpad.app.design.piece.planeYAxis">
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.x" value={isSingle && piece ? piece.plane?.yAxis.x : commonPlaneYAxisX} onChange={handlePlaneYAxisXChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.y" value={isSingle && piece ? piece.plane?.yAxis.y : commonPlaneYAxisY} onChange={handlePlaneYAxisYChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Stepper id="semio.sketchpad.app.design.panel.details.section.piece.plane.yaxis.z" value={isSingle && piece ? piece.plane?.yAxis.z : commonPlaneYAxisZ} onChange={handlePlaneYAxisZChange} step={0.1} />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
             </TreeItem>
           )}
@@ -5684,41 +5587,29 @@ const SingleConnectionInfo: FC = () => {
   return (
     <>
       <TreeItem id="semio.sketchpad.app.design.panel.details.section.connection.connecting">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId" value={connection.connecting.piece.guid} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingPortId" value={connection.connecting.connector?.guid ?? ""} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
         {connection.connecting.designPiece && (
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectingDesignPieceId" value={connection.connecting.designPiece?.guid ?? ""} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         )}
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.design.panel.details.section.connection.connected">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId" value={connection.connected.piece.guid} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedPortId" value={connection.connected.connector?.guid ?? ""} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
         {connection.connected.designPiece && (
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Input id="semio.sketchpad.app.design.panel.details.section.connection.connectedDesignPieceId" value={connection.connected.designPiece?.guid ?? ""} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         )}
       </TreeItem>
     </>
@@ -5737,8 +5628,7 @@ const SingleConnectionFields: FC = () => {
   const [description, setDescription] = useConnectionDescription();
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Textarea
             lazy
             id="semio.sketchpad.app.design.panel.details.section.connection.description"
@@ -5747,55 +5637,38 @@ const SingleConnectionFields: FC = () => {
             onLazyChange={setDescription!}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       <TreeItem id="semio.sketchpad.app.design.connection.plane">
         <TreeItem id="semio.sketchpad.app.design.connection.translation" defaultOpen={true}>
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.gap" value={[gap]} onValueChange={([value]) => setGap!(value)} min={-100} max={100} step={0.1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.shift" value={[shift]} onValueChange={([value]) => setShift!(value)} min={-100} max={100} step={0.1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.rise" value={[rise]} onValueChange={([value]) => setRise!(value)} min={-100} max={100} step={0.1} showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         </TreeItem>
         <TreeItem id="semio.sketchpad.app.design.connection.orientation">
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.rotation" value={[rotation]} onValueChange={([value]) => setRotation!(value)} min={-180} max={180} step={1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.turn" value={[turn]} onValueChange={([value]) => setTurn!(value)} min={-180} max={180} step={1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.tilt" value={[tilt]} onValueChange={([value]) => setTilt!(value)} min={-180} max={180} step={1} showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         </TreeItem>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.design.connection.diagram">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={u} onChange={setU!} step={0.1} />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.y" value={v} onChange={setV!} step={0.1} />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </TreeItem>
     </>
   );
@@ -5852,13 +5725,10 @@ const ConnectionsSectionForm: FC<{
   }
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{(multipleEditingLabel || "").replace("{{count}}", String(connections.length))}</p>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea
             lazy
             id="semio.sketchpad.app.design.panel.details.section.connection.description"
@@ -5867,55 +5737,38 @@ const ConnectionsSectionForm: FC<{
             onLazyChange={(value) => handleBulkUpdate(() => ({ description: value || undefined }))}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       <TreeItem id="semio.sketchpad.app.design.connection.plane">
         <TreeItem id="semio.sketchpad.app.design.connection.translation" defaultOpen={true}>
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.gap" value={[commonGap ?? 0]} onValueChange={([value]) => handleBulkUpdate(() => ({ gap: value }))} min={-100} max={100} step={0.1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.shift" value={[commonShift ?? 0]} onValueChange={([value]) => handleBulkUpdate(() => ({ shift: value }))} min={-100} max={100} step={0.1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.rise" value={[commonRise ?? 0]} onValueChange={([value]) => handleBulkUpdate(() => ({ rise: value }))} min={-100} max={100} step={0.1} showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         </TreeItem>
         <TreeItem id="semio.sketchpad.app.design.connection.orientation">
-          <TreeItem>
-            <TreeContent>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.rotation" value={[commonRotation ?? 0]} onValueChange={([value]) => handleBulkUpdate(() => ({ rotation: value }))} min={-180} max={180} step={1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.turn" value={[commonTurn ?? 0]} onValueChange={([value]) => handleBulkUpdate(() => ({ turn: value }))} min={-180} max={180} step={1} showLabel />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
+            </TreeRow>
+          <TreeRow>
               <Slider id="semio.sketchpad.app.design.panel.details.section.connection.tilt" value={[commonTilt ?? 0]} onValueChange={([value]) => handleBulkUpdate(() => ({ tilt: value }))} min={-180} max={180} step={1} showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         </TreeItem>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.design.connection.diagram">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={commonU ?? 0} onChange={(value) => handleBulkUpdate(() => ({ u: value }))} step={0.1} />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.y" value={commonV ?? 0} onChange={(value) => handleBulkUpdate(() => ({ v: value }))} step={0.1} />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </TreeItem>
     </>
   );
@@ -5955,79 +5808,57 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
   if (!piece || !type || !connector) {
     return (
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{connectorNotFoundLabel}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     );
   }
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.connector.id" value={connector.guid || "~default~"} disabled showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {connector.name && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connector.name" value={connector.name} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.connector.t" value={connector.t.toFixed(4)} disabled showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {connector.description && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Textarea id="semio.sketchpad.app.design.panel.details.section.connector.description" value={connector.description} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {connector.port && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connector.port" value={connector.port.guid} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
       {connector.mandatory !== undefined && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input id="semio.sketchpad.app.design.panel.details.section.connector.mandatory" value={connector.mandatory ? yesLabel : noLabel} disabled showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.connector.position" value={`(${connector.point.x.toFixed(2)}, ${connector.point.y.toFixed(2)}, ${connector.point.z.toFixed(2)})`} disabled showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.design.panel.details.section.connector.direction" value={`(${connector.direction.x.toFixed(2)}, ${connector.direction.y.toFixed(2)}, ${connector.direction.z.toFixed(2)})`} disabled showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {(connector as any).compatiblePorts &&
         (connector as any).compatiblePorts.map((port_: string, index: number) => (
-          <TreeItem key={`compatible-interface-${index}`}>
-            <TreeContent>
+          <TreeRow key={`compatible-interface-${index}`}>
               <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatiblePort" value={port_} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         ))}
       {connector.attributes &&
         connector.attributes.map((attribute: any, index: number) => (
-          <TreeItem key={`connector-attribute-${index}`}>
-            <TreeContent>
+          <TreeRow key={`connector-attribute-${index}`}>
               <Input id="semio.sketchpad.app.design.panel.details.section.connector.attribute" value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled showLabel />
-            </TreeContent>
-          </TreeItem>
+            </TreeRow>
         ))}
     </>
   );
@@ -6102,11 +5933,93 @@ const EMPTY_PIECE_RENDER_DATA: PieceRenderData = {
   diffStatus: DiffStatus.Unchanged,
 };
 
-const PieceRenderDataContext = createContext<Map<string, PieceRenderData>>(new Map());
+type PieceRenderDataStoreApi = {
+  data: Map<string, PieceRenderData>;
+  pieceVersions: Map<string, number>;
+  listeners: Set<() => void>;
+  subscribe: (cb: () => void) => () => void;
+  get: (guid: string) => PieceRenderData;
+  getVersion: (guid: string) => number;
+};
+function createPieceRenderDataStore(): PieceRenderDataStoreApi {
+  const s: PieceRenderDataStoreApi = {
+    data: new Map(),
+    pieceVersions: new Map(),
+    listeners: new Set(),
+    subscribe(cb) { s.listeners.add(cb); return () => { s.listeners.delete(cb); }; },
+    get(guid) { return s.data.get(guid) ?? EMPTY_PIECE_RENDER_DATA; },
+    getVersion(guid) { return s.pieceVersions.get(guid) ?? 0; },
+  };
+  return s;
+}
+function updatePieceRenderDataStore(store: PieceRenderDataStoreApi, newData: Map<string, PieceRenderData>) {
+  let anyChange = false;
+  for (const [guid, entry] of newData) {
+    const old = store.data.get(guid);
+    if (!old || old.isSelected !== entry.isSelected || old.isHovered !== entry.isHovered || old.fill !== entry.fill || old.stroke !== entry.stroke || old.opacity !== entry.opacity || old.isChangedInTransaction !== entry.isChangedInTransaction || old.diffStatus !== entry.diffStatus) {
+      store.pieceVersions.set(guid, (store.pieceVersions.get(guid) ?? 0) + 1);
+      anyChange = true;
+    }
+  }
+  for (const guid of store.data.keys()) {
+    if (!newData.has(guid)) {
+      store.pieceVersions.set(guid, (store.pieceVersions.get(guid) ?? 0) + 1);
+      anyChange = true;
+    }
+  }
+  store.data = newData;
+  if (anyChange) store.listeners.forEach(cb => cb());
+}
+const PieceRenderDataStoreContext = createContext<PieceRenderDataStoreApi>(createPieceRenderDataStore());
 
 function usePieceRenderData(pieceGuid: string): PieceRenderData {
-  const dataMap = useContext(PieceRenderDataContext);
-  return dataMap.get(pieceGuid) ?? EMPTY_PIECE_RENDER_DATA;
+  const store = useContext(PieceRenderDataStoreContext);
+  const subscribe = useCallback((cb: () => void) => store.subscribe(cb), [store]);
+  const lastRef = useRef<{ version: number; data: PieceRenderData }>({ version: -1, data: EMPTY_PIECE_RENDER_DATA });
+  const getSnapshot = useCallback(() => {
+    const ver = store.getVersion(pieceGuid);
+    if (ver === lastRef.current.version) return lastRef.current.data;
+    const data = store.get(pieceGuid);
+    lastRef.current = { version: ver, data };
+    return data;
+  }, [store, pieceGuid]);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+function syncPieceRenderData(store: PieceRenderDataStoreApi, designStore: DesignStore, hover: DesignAppHover | undefined, selection: DesignAppSelection | undefined) {
+  const design = designStore.design().snapshot() as Design | null;
+  const hoverData = computeHoverData(designStore, { hover } as DesignAppState);
+  const transactionData = getTransactionAffectedPieces(designStore);
+  const m = new Map<string, PieceRenderData>();
+  if (!design?.pieces) { updatePieceRenderDataStore(store, m); return; }
+  const selectedPieces = new Set(selection?.pieces ?? []);
+  for (const piece of design.pieces) {
+    const pieceGuid = piece.guid;
+    const isSelected = selectedPieces.has(pieceGuid);
+    const isHovered = hoverData.transitivelyHoveredPieces.has(pieceGuid);
+    const diffStatus: DiffStatus = transactionData.statusMap.get(pieceGuid) ?? DiffStatus.Unchanged;
+    const isChangedInTransaction = diffStatus !== DiffStatus.Unchanged;
+    let fill = "transparent";
+    let stroke = "var(--foreground)";
+    let opacity = 1;
+    if (diffStatus === DiffStatus.Added) { fill = "var(--color-success)"; stroke = "var(--color-success)"; }
+    else if (diffStatus === DiffStatus.Removed) { fill = "var(--color-danger)"; stroke = "var(--color-danger)"; opacity = 0.2; }
+    else if (diffStatus === DiffStatus.Modified) { fill = "var(--color-warning)"; stroke = "var(--color-warning)"; }
+    else if (isChangedInTransaction) { fill = "var(--color-changed-base)"; stroke = "var(--color-changed-base)"; }
+    if (isHovered && !isSelected) { fill = "var(--hover-base)"; stroke = "var(--foreground)"; opacity = 1; }
+    if (isSelected) {
+      const status = diffStatus as string;
+      if (isChangedInTransaction) { fill = "var(--color-selected-changed)"; }
+      else if (status === "added") { fill = "var(--color-selected-added)"; }
+      else if (status === "removed") { fill = "var(--color-selected-removed)"; }
+      else if (status === "modified") { fill = "var(--color-selected-changed)"; }
+      else { fill = "var(--active-base)"; }
+      stroke = "var(--foreground)";
+      opacity = 1;
+    }
+    m.set(pieceGuid, { isSelected, isHovered, fill, stroke, opacity, isChangedInTransaction, diffStatus });
+  }
+  updatePieceRenderDataStore(store, m);
 }
 
 // #region Diagram
@@ -6287,6 +6200,7 @@ type HelperLine = {
   distance?: number;
   referencePieceIds?: string[];
 };
+const EMPTY_HELPER_LINES: HelperLine[] = [];
 
 type PieceNodeProps = {
   piece: Piece;
@@ -7007,6 +6921,100 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
 };
 const edgeComponents = { SemioConnection: ConnectionEdgeComponent };
 
+//#region 🔖CustomDesignEdgeLayer
+const EMPTY_EDGES_ARRAY: DiagramEdge[] = [];
+const EDGE_HANDLE_HEIGHT = 5;
+const CustomDesignEdgeLayer: React.FC<{
+  edges: DiagramEdge[];
+  suppressRecomputeRef?: React.MutableRefObject<boolean>;
+  onEdgeClick?: (event: React.MouseEvent, edge: any) => void;
+  onEdgeMouseEnter?: (event: React.PointerEvent, edge: any) => void;
+  onEdgeMouseLeave?: (event: React.PointerEvent, edge: any) => void;
+}> = memo(({ edges, suppressRecomputeRef, onEdgeClick, onEdgeMouseEnter, onEdgeMouseLeave }) => {
+  const storeApi = useStoreApi();
+  const [tick, setTick] = useState(0);
+  const edgesRef = useRef(edges);
+  edgesRef.current = edges;
+  const pathCacheRef = useRef<Map<string, string>>(new Map());
+  const needsRecomputeRef = useRef(false);
+  useEffect(() => {
+    let rafId: number | null = null;
+    const recompute = () => {
+      const { nodeLookup } = storeApi.getState();
+      const cache = pathCacheRef.current;
+      let changed = false;
+      for (const edge of edgesRef.current) {
+        const src = nodeLookup.get(edge.source);
+        const tgt = nodeLookup.get(edge.target);
+        if (!src || !tgt) continue;
+        const sh = edge.sourceHandle ? src.internals.handleBounds?.source?.find((h: any) => h.id === edge.sourceHandle) : src.internals.handleBounds?.source?.[0];
+        const th = edge.targetHandle ? tgt.internals.handleBounds?.target?.find((h: any) => h.id === edge.targetHandle) ?? tgt.internals.handleBounds?.source?.find((h: any) => h.id === edge.targetHandle) : tgt.internals.handleBounds?.target?.[0] ?? tgt.internals.handleBounds?.source?.[0];
+        const sx = src.internals.positionAbsolute.x + (sh?.x ?? 0) + (sh?.width ?? 0) / 2;
+        const sy = src.internals.positionAbsolute.y + (sh?.y ?? 0) + (sh?.height ?? 0) / 2;
+        const tx = tgt.internals.positionAbsolute.x + (th?.x ?? 0) + (th?.width ?? 0) / 2;
+        const ty = tgt.internals.positionAbsolute.y + (th?.y ?? 0) + (th?.height ?? 0) / 2;
+        const d = `M ${sx} ${sy + EDGE_HANDLE_HEIGHT / 2} L ${tx} ${ty + EDGE_HANDLE_HEIGHT / 2}`;
+        if (cache.get(edge.id) !== d) { cache.set(edge.id, d); changed = true; }
+      }
+      if (changed) setTick(t => t + 1);
+    };
+    recompute();
+    const unsub = storeApi.subscribe(() => {
+      if (suppressRecomputeRef?.current) { needsRecomputeRef.current = true; return; }
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => { rafId = null; recompute(); });
+    });
+    return () => { unsub(); if (rafId !== null) cancelAnimationFrame(rafId); };
+  }, [storeApi, suppressRecomputeRef]);
+  useEffect(() => {
+    const { nodeLookup } = storeApi.getState();
+    const cache = pathCacheRef.current;
+    for (const edge of edges) {
+      const src = nodeLookup.get(edge.source);
+      const tgt = nodeLookup.get(edge.target);
+      if (!src || !tgt) continue;
+      const sh = edge.sourceHandle ? src.internals.handleBounds?.source?.find((h: any) => h.id === edge.sourceHandle) : src.internals.handleBounds?.source?.[0];
+      const th = edge.targetHandle ? tgt.internals.handleBounds?.target?.find((h: any) => h.id === edge.targetHandle) ?? tgt.internals.handleBounds?.source?.find((h: any) => h.id === edge.targetHandle) : tgt.internals.handleBounds?.target?.[0] ?? tgt.internals.handleBounds?.source?.[0];
+      const sx = src.internals.positionAbsolute.x + (sh?.x ?? 0) + (sh?.width ?? 0) / 2;
+      const sy = src.internals.positionAbsolute.y + (sh?.y ?? 0) + (sh?.height ?? 0) / 2;
+      const tx = tgt.internals.positionAbsolute.x + (th?.x ?? 0) + (th?.width ?? 0) / 2;
+      const ty = tgt.internals.positionAbsolute.y + (th?.y ?? 0) + (th?.height ?? 0) / 2;
+      cache.set(edge.id, `M ${sx} ${sy + EDGE_HANDLE_HEIGHT / 2} L ${tx} ${ty + EDGE_HANDLE_HEIGHT / 2}`);
+    }
+    setTick(t => t + 1);
+  }, [edges, storeApi]);
+  const edgeMap = useMemo(() => new Map(edges.map(e => [e.id, e])), [edges]);
+  void tick;
+  return (
+    <svg style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, overflow: "visible", zIndex: 0, pointerEvents: "none" }}>
+      {edges.map(edge => {
+        const d = pathCacheRef.current.get(edge.id);
+        if (!d) return null;
+        const data = edge.data;
+        const diff = (data?.SemioConnection?.attributes?.find((q: any) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+        const isParentConnection = data?.isParentConnection ?? false;
+        const isSelected = edge.selected ?? false;
+        let stroke = "var(--foreground)";
+        let strokeWidth = 2;
+        let dasharray: string | undefined;
+        let opacity = 1;
+        if (diff === DiffStatus.Added) { stroke = "var(--color-success)"; dasharray = "5 5"; }
+        else if (diff === DiffStatus.Removed) { stroke = "var(--color-danger)"; opacity = 0.25; }
+        else if (diff === DiffStatus.Modified) { stroke = "var(--color-warning)"; }
+        if (isParentConnection) { stroke = "var(--accent-secondary)"; strokeWidth = 3; }
+        if (isSelected) { stroke = "var(--active-base)"; strokeWidth = 3; dasharray = undefined; opacity = 1; }
+        return (
+          <g key={edge.id} className="react-flow__edge" data-testid={`rf__edge-${edge.id}`}>
+            <path d={d} fill="none" stroke={stroke} strokeWidth={strokeWidth} strokeDasharray={dasharray} opacity={opacity} className="transition-colors duration-200" style={{ pointerEvents: "none" }} />
+            <path d={d} fill="none" stroke="transparent" strokeWidth={Math.max(strokeWidth, 6)} style={{ pointerEvents: "stroke", cursor: "pointer" }} onClick={(e) => { const ed = edgeMap.get(edge.id); if (ed && onEdgeClick) onEdgeClick(e, ed); }} onPointerEnter={(e) => { const ed = edgeMap.get(edge.id); if (ed && onEdgeMouseEnter) onEdgeMouseEnter(e as any, ed); }} onPointerLeave={(e) => { const ed = edgeMap.get(edge.id); if (ed && onEdgeMouseLeave) onEdgeMouseLeave(e as any, ed); }} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+});
+//#endregion 🔖CustomDesignEdgeLayer
+
 const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
   const { fromX, fromY, toX, toY } = props;
   const HANDLE_HEIGHT = 5;
@@ -7435,6 +7443,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [hoverPiece] = useDesignAppHoverPiece();
   const [clearHover] = useDesignAppClearHover();
   const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
+  const suppressEdgeRecomputeRef = useRef(false);
+  const rfStoreApi = useStoreApi();
 
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
@@ -7455,88 +7465,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const design = useDesign(undefined, undefined, true) as Design | null;
   const metadata = usePiecesMetadataMap();
 
-  useEffect(() => {
-    const obj: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
-    for (const [guid, meta] of metadata) {
-      obj[guid] = { parentPieceId: meta.parentPieceId, center: meta.center };
-    }
-    (window as any).__SEMIO_PIECES_METADATA__ = obj;
-    return () => { delete (window as any).__SEMIO_PIECES_METADATA__; };
-  }, [metadata]);
-
   const commands = useDesignAppCommands();
   sharedCommandsRef = commands;
-
-  const { transitivelyHoveredPieces } = useContext(HoverPiecesContext);
-  const { statusMap: transactionStatusMap } = useContext(TransactionPiecesContext);
-
-  const pieceRenderDataMap = useMemo(() => {
-    const map = new Map<string, PieceRenderData>();
-    if (!design?.pieces) return map;
-
-    const selectedPieces = new Set(selection?.pieces ?? []);
-
-    for (const piece of design.pieces) {
-      const pieceGuid = piece.guid;
-      const isSelected = selectedPieces.has(pieceGuid);
-      const isHovered = transitivelyHoveredPieces.has(pieceGuid);
-      const diffStatus: DiffStatus = transactionStatusMap.get(pieceGuid) ?? DiffStatus.Unchanged;
-      const isChangedInTransaction = diffStatus !== DiffStatus.Unchanged;
-
-      let fill = "transparent";
-      let stroke = "var(--foreground)";
-      let opacity = 1;
-
-      if (diffStatus === DiffStatus.Added) {
-        fill = "var(--color-success)";
-        stroke = "var(--color-success)";
-      } else if (diffStatus === DiffStatus.Removed) {
-        fill = "var(--color-danger)";
-        stroke = "var(--color-danger)";
-        opacity = 0.2;
-      } else if (diffStatus === DiffStatus.Modified) {
-        fill = "var(--color-warning)";
-        stroke = "var(--color-warning)";
-      } else if (isChangedInTransaction) {
-        fill = "var(--color-changed-base)";
-        stroke = "var(--color-changed-base)";
-      }
-
-      if (isHovered && !isSelected) {
-        fill = "var(--hover-base)";
-        stroke = "var(--foreground)";
-        opacity = 1;
-      }
-
-      if (isSelected) {
-        const status = diffStatus as string;
-        if (isChangedInTransaction) {
-          fill = "var(--color-selected-changed)";
-        } else if (status === "added") {
-          fill = "var(--color-selected-added)";
-        } else if (status === "removed") {
-          fill = "var(--color-selected-removed)";
-        } else if (status === "modified") {
-          fill = "var(--color-selected-changed)";
-        } else {
-          fill = "var(--active-base)";
-        }
-        stroke = "var(--foreground)";
-        opacity = 1;
-      }
-
-      map.set(pieceGuid, {
-        isSelected,
-        isHovered,
-        fill,
-        stroke,
-        opacity,
-        isChangedInTransaction,
-        diffStatus,
-      });
-    }
-    return map;
-  }, [design?.pieces, selection?.pieces, transitivelyHoveredPieces, transactionStatusMap]);
 
   const selectedConnector = selection?.connector ?? selection?.connectors?.[0];
   const selectedConnectorPortGuid = useMemo(() => {
@@ -7562,40 +7492,57 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const [nodes, setNodes] = useState<typeof baseNodes>(baseNodes);
 
-  useEffect(() => {
-    setNodes(baseNodes);
-  }, [baseNodes]);
-
   const isSyncingSelectionRef = useRef(false);
+  const prevBaseNodesRef = useRef(baseNodes);
   useEffect(() => {
     const selectedPieces = new Set((selection?.pieces ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((entry): entry is Guid => typeof entry === "string" && entry.length > 0));
     const selectedConnections = new Set((selection?.connections ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((entry): entry is Guid => typeof entry === "string" && entry.length > 0));
+    const baseNodesChanged = baseNodes !== prevBaseNodesRef.current;
+    prevBaseNodesRef.current = baseNodes;
     isSyncingSelectionRef.current = true;
-    setNodes(nds => nds.map(n => {
-      const pieceId = getPieceIdFromNode(n as DiagramNode);
-      const shouldBeSelected = selectedPieces.has(pieceId) || selectedConnections.has(pieceId);
-      if (n.selected === shouldBeSelected) return n;
-      return { ...n, selected: shouldBeSelected };
-    }));
+    setNodes(oldNodes => {
+      if (!baseNodesChanged && oldNodes.length === baseNodes.length) {
+        let changed = false;
+        const result = oldNodes.map(node => {
+          const pieceId = getPieceIdFromNode(node as DiagramNode);
+          const shouldBeSelected = selectedPieces.has(pieceId) || selectedConnections.has(pieceId);
+          if (node.selected === shouldBeSelected) return node;
+          changed = true;
+          return { ...node, selected: shouldBeSelected };
+        });
+        return changed ? result : oldNodes;
+      }
+      const oldNodeMap = new Map(oldNodes.map(n => [n.id, n]));
+      return baseNodes.map(newNode => {
+        const pieceId = getPieceIdFromNode(newNode as DiagramNode);
+        const shouldBeSelected = selectedPieces.has(pieceId) || selectedConnections.has(pieceId);
+        const oldNode = oldNodeMap.get(newNode.id);
+        if (!oldNode) return { ...newNode, selected: shouldBeSelected };
+        const measured = oldNode.measured;
+        const positionSame = oldNode.position?.x === newNode.position?.x && oldNode.position?.y === newNode.position?.y;
+        const oldData = oldNode.data as PieceNodeProps | undefined;
+        const newData = newNode.data as PieceNodeProps | undefined;
+        const dataSame = oldData?.piece?.guid === newData?.piece?.guid && oldData?.type?.guid === newData?.type?.guid && oldData?.piece?.description === newData?.piece?.description && oldData?.piece?.isHidden === newData?.piece?.isHidden && oldData?.piece?.type?.guid === newData?.piece?.type?.guid && oldData?.piece?.design?.guid === newData?.piece?.design?.guid && oldData?.type?.name === newData?.type?.name;
+        if (positionSame && dataSame && oldNode.type === newNode.type && oldNode.selected === shouldBeSelected && oldNode.measured === measured) return oldNode;
+        return { ...newNode, measured, selected: shouldBeSelected };
+      });
+    });
     requestAnimationFrame(() => { isSyncingSelectionRef.current = false; });
-  }, [selection]);
+  }, [baseNodes, selection]);
 
-  const nodesChangeCountRef = useRef(0);
   const onNodesChangeReactFlow = useCallback(
     (changes: any[]) => {
-      nodesChangeCountRef.current++;
-      if (isDraggingNodeRef.current || isPanningRef.current) {
-        const positionChanges = changes.filter((c: any) => c.type === "position");
-        if (positionChanges.length > 0) setNodes((nds) => applyNodeChanges(positionChanges, nds) as typeof nds);
-        return;
-      }
       if (changes.length === 0) return;
-      if (isSyncingSelectionRef.current) {
-        const nonSelectChanges = changes.filter((c: any) => c.type !== "select");
-        if (nonSelectChanges.length > 0) setNodes((nds) => applyNodeChanges(nonSelectChanges, nds) as typeof nds);
+      const dimensionChanges = changes.filter((c: any) => c.type === "dimensions");
+      if (isDraggingNodeRef.current || isPanningRef.current) {
+        if (dimensionChanges.length > 0) {
+          setNodes((nds) => applyNodeChanges(dimensionChanges, nds) as typeof nds);
+        }
         return;
       }
-      setNodes((nds) => applyNodeChanges(changes, nds) as typeof nds);
+      const nonSelectChanges = changes.filter((c: any) => c.type !== "select");
+      if (nonSelectChanges.length === 0) return;
+      setNodes((nds) => applyNodeChanges(nonSelectChanges, nds) as typeof nds);
     },
     [isDraggingNodeRef, isPanningRef],
   );
@@ -7711,7 +7658,34 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const pendingPieceUpdatesRef = useRef<Array<{ id: string; diff: any }>>([]);
   const dragDescendantsRef = useRef<Set<string>>(new Set());
   const dragDescendantOffsetsRef = useRef<Map<string, { dx: number; dy: number }>>(new Map());
-  const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
+  const dragSelectedNodesRef = useRef<DiagramNode[]>([]);
+  const dragNonSelectedNodesRef = useRef<DiagramNode[]>([]);
+  const helperLinesDomRef = useRef<HTMLDivElement | null>(null);
+  const updateHelperLinesDom = useCallback((lines: HelperLine[]) => {
+    const container = helperLinesDomRef.current;
+    if (!container) return;
+    if (lines.length === 0) { container.innerHTML = ""; container.style.display = "none"; return; }
+    container.style.display = "block";
+    const viewport = reactFlowInstanceRef.current?.getViewport();
+    if (!viewport) { container.innerHTML = ""; return; }
+    let html = "";
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.kind === "horizontal" && line.position !== undefined) {
+        html += `<div style="position:absolute;left:0;width:100%;height:1px;top:${line.position * viewport.zoom + viewport.y}px;border-top:1px dashed var(--accent);opacity:0.6"></div>`;
+      } else if (line.kind === "vertical" && line.position !== undefined) {
+        html += `<div style="position:absolute;top:0;width:1px;height:100%;left:${line.position * viewport.zoom + viewport.x}px;border-left:1px dashed var(--accent);opacity:0.6"></div>`;
+      } else if (line.kind === "equalDistance" && line.x1 !== undefined && line.y1 !== undefined && line.x2 !== undefined && line.y2 !== undefined) {
+        const sx1 = line.x1 * viewport.zoom + viewport.x;
+        const sy1 = line.y1 * viewport.zoom + viewport.y;
+        const sx2 = line.x2 * viewport.zoom + viewport.x;
+        const sy2 = line.y2 * viewport.zoom + viewport.y;
+        const isMid = line.relatedPieceId.startsWith("mid-");
+        html += `<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"><line x1="${sx1}" y1="${sy1}" x2="${sx2}" y2="${sy2}" stroke="var(--accent)" stroke-width="${isMid ? 3 : 2}" stroke-dasharray="${isMid ? "4 4" : "8 4"}" opacity="${isMid ? 1 : 0.7}" /></svg>`;
+      }
+    }
+    container.innerHTML = html;
+  }, [reactFlowInstanceRef]);
   const fullscreen = fullscreenWindow === DesignAppFullscreenWindow.Diagram;
   const viewportRestoredRef = useRef(false);
   const isUpdatingViewportRef = useRef(false);
@@ -7842,7 +7816,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         pendingSelectionRef.current = null;
         dragDescendantsRef.current = new Set();
         dragDescendantOffsetsRef.current = new Map();
-        setHelperLines([]);
+        updateHelperLinesDom(EMPTY_HELPER_LINES);
         if (reactFlowInstanceRef.current) {
           reactFlowInstanceRef.current.setNodes((nodes) => nodes.map((node) => ({ ...node })));
         }
@@ -7870,15 +7844,26 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onMoveStart = useCallback(() => {
     isPanningRef.current = true;
+    suppressEdgeRecomputeRef.current = true;
+    (rfStoreApi as any).__suppressTransform = true;
+    sceneFrameControlRef.current?.pause();
     const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
     if (diagramElement) {
       diagramElement.setAttribute("data-panning", "true");
     }
-  }, [diagramId, isPanningRef]);
+  }, [diagramId, isPanningRef, rfStoreApi]);
 
   const pendingMoveEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onMoveEnd = useCallback(() => {
     isPanningRef.current = false;
+    suppressEdgeRecomputeRef.current = false;
+    (rfStoreApi as any).__suppressTransform = false;
+    sceneFrameControlRef.current?.resume();
+    const pending = (rfStoreApi as any).__pendingTransform;
+    if (pending) {
+      (rfStoreApi as any).__original?.({ transform: pending });
+      (rfStoreApi as any).__pendingTransform = null;
+    }
     const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
     if (diagramElement) {
       diagramElement.removeAttribute("data-panning");
@@ -7894,7 +7879,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (setDiagramCenter) setDiagramCenter({ u: viewport.x / ICON_WIDTH, v: -viewport.y / ICON_WIDTH });
       pendingMoveEndRef.current = null;
     }, 1000);
-  }, [reactFlowInstanceRef, setDiagramCenter, diagramId, isPanningRef]);
+  }, [reactFlowInstanceRef, setDiagramCenter, diagramId, isPanningRef, rfStoreApi]);
 
   const centerViewport = useCallback(() => {
     if (!reactFlowInstanceRef.current) return;
@@ -8077,6 +8062,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       pendingPieceUpdatesRef.current = [];
       isDraggingRef.current = true;
       isDraggingNodeRef.current = true;
+      suppressEdgeRecomputeRef.current = true;
       const dragRoots = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
       const descendants = getDownstreamDescendants(metadata, dragRoots);
       dragDescendantsRef.current = descendants;
@@ -8091,9 +8077,21 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         }
       }
       dragDescendantOffsetsRef.current = offsets;
-      transaction?.start();
+      const diagramEl = document.querySelector(`[data-diagram-id="${diagramId}"]`);
+      if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "true";
+      const selectedIds = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
+      const selected: DiagramNode[] = [];
+      const nonSelected: DiagramNode[] = [];
+      for (const n of nodes) {
+        if (selectedIds.has(getPieceIdFromNode(n))) selected.push(n);
+        else nonSelected.push(n);
+      }
+      dragSelectedNodesRef.current = selected;
+      dragNonSelectedNodesRef.current = nonSelected;
+      sceneFrameControlRef.current?.pause();
+      setTimeout(() => transaction?.start(), 0);
     },
-    [activeTool, isDraggingNodeRef, transaction, metadata, nodes],
+    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId],
   );
 
   const isDraggingRef = useRef(false);
@@ -8103,21 +8101,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeDrag = useCallback(
     (event: any, node: DiagramNode) => {
-      if (!isDraggingRef.current || !dragPositionRef.current || !reactFlowInstanceRef.current) {
-        dragPositionRef.current = { x: node.position.x, y: node.position.y };
-        return;
-      }
+      dragPositionRef.current = { x: node.position.x, y: node.position.y };
+      if (!isDraggingRef.current || !reactFlowInstanceRef.current) return;
 
       const now = Date.now();
       if (now - lastDragTimeRef.current < DRAG_THROTTLE_MS) {
-        if (node.type === "design") {
-          return;
-        }
+        return;
       }
       lastDragTimeRef.current = now;
 
       const piece = node.data.piece as Piece;
-      const MIN_DISTANCE = 150;
       const SNAP_THRESHOLD = 20;
       const lastPostition = dragPositionRef.current;
       if (!lastPostition || !reactFlowInstanceRef.current) return;
@@ -8125,17 +8118,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const altPressed = event.altKey;
 
       const currentHelperLines: HelperLine[] = [];
-      const nonSelectedNodes = nodes.filter((n) => !(selectionRef.current?.pieces ?? []).includes(getPieceIdFromNode(n)));
+      const nonSelectedNodes = dragNonSelectedNodesRef.current;
       const draggedCenterX = node.position.x + ICON_WIDTH / 2;
       const draggedCenterY = node.position.y + ICON_WIDTH / 2;
 
-      const addedConnections: SemioConnection[] = [];
       const updatedPieces: Array<{ id: string; diff: any }> = [];
 
       let draggedX = node.position.x;
       let draggedY = node.position.y;
 
-      const selectedNodes = nodes.filter((n) => selectionRef.current?.pieces?.includes(getPieceIdFromNode(n)));
+      const selectedNodes = dragSelectedNodesRef.current;
       for (const selectedNode of selectedNodes) {
         const piece = selectedNode.data.piece;
         const selectedInternalNode = reactFlowInstanceRef.current!.getInternalNode(selectedNode.id)!;
@@ -8162,8 +8154,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
         const type = (selectedNode as PieceNode).data.type;
         const fixedPieceId = metadata.get(piece.guid)?.fixedPieceId;
-        let closestConnection: SemioConnection | null = null;
-        let closestDistance = Number.MAX_VALUE;
 
         if (altPressed) {
           const EQUAL_DISTANCE_THRESHOLD = 15;
@@ -8561,9 +8551,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
           currentHelperLines.push(...equalDistanceHelperLines);
 
-          setHelperLines(currentHelperLines);
+          updateHelperLinesDom(currentHelperLines);
         } else {
-          setHelperLines([]);
+          updateHelperLinesDom(EMPTY_HELPER_LINES);
         }
 
         if (selectedNode.id === node.id) {
@@ -8573,94 +8563,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           node.position.y = draggedY;
         }
 
-        if (!altPressed) {
-          for (const otherNode of nodes.filter((n) => !(selection.pieces ?? []).includes(getPieceIdFromNode(n)))) {
-            if (otherNode.type !== "piece") continue;
-            const existingConnection = design?.connections?.find((c) =>
-              areSameConnection(c, {
-                guid: "",
-                connected: { guid: "", piece: { guid: selectedNode.data.piece.guid }, connector: { guid: "" } },
-                connecting: { guid: "", piece: { guid: otherNode.data.piece.guid }, connector: { guid: "" } },
-              } as SemioConnection),
-            );
-            if (existingConnection) continue;
-            if (!reactFlowInstanceRef.current) continue;
-            const otherInternalNode = reactFlowInstanceRef.current!.getInternalNode(otherNode.id)!;
-            for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
-              if (!handle.id) {
-                console.error("[ORIGIN] onNodeDrag: handle.id is undefined", { handle, selectedNode });
-                continue;
-              }
-              const connector = findConnectorInType(type, handle.id!);
-              if (!connector || !connector.guid) {
-                console.error("[ORIGIN] onNodeDrag: connector or connector.guid is undefined", { connector, handleId: handle.id, type });
-                continue;
-              }
-              for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
-                if (!otherHandle.id) {
-                  console.error("[ORIGIN] onNodeDrag: otherHandle.id is undefined", { otherHandle, otherNode });
-                  continue;
-                }
-                const otherPort = findConnectorInType((otherNode as PieceNode).data.type, otherHandle.id!);
-                if (!otherPort || !otherPort.guid) {
-                  console.error("[ORIGIN] onNodeDrag: otherPort or otherPort.guid is undefined", { otherPort, otherHandleId: otherHandle.id, otherNode });
-                  continue;
-                }
-                if (!selectedNode.data.piece.guid) {
-                  console.error("[ORIGIN] onNodeDrag: selectedNode.data.piece.guid is undefined", { selectedNode });
-                  continue;
-                }
-                if (!otherNode.data.piece.guid) {
-                  console.error("[ORIGIN] onNodeDrag: otherNode.data.piece.guid is undefined", { otherNode });
-                  continue;
-                }
-                const haveSameFixedPiece = fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId;
-                if (haveSameFixedPiece || !arePortsCompatible(connector.port ? (kit?.ports || []).find(p => p.guid === connector.port!.guid) : undefined, otherPort.port ? (kit?.ports || []).find(p => p.guid === otherPort.port!.guid) : undefined, kit?.ports || []) || (design && isPortInUse(design as Design, piece.guid, connector.guid)) || (design && isPortInUse(design as Design, otherNode.data.piece.guid, otherPort.guid)))
-                  continue;
-                const dx = selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x);
-                const dy = selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y);
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < closestDistance && distance < MIN_DISTANCE) {
-                  closestConnection = {
-                    guid: crypto.randomUUID(),
-                    connected: {
-                      piece: { guid: otherNode.data.piece.guid },
-                      connector: { guid: otherHandle.id! },
-                    },
-                    connecting: {
-                      piece: { guid: selectedNode.data.piece.guid },
-                      connector: { guid: handle.id! },
-                    },
-                    u: (selectedInternalNode.internals.positionAbsolute.x + handle.x - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
-                    v: -((selectedInternalNode.internals.positionAbsolute.y + handle.y - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH),
-                  };
-                  closestDistance = distance;
-                }
-              }
-            }
-          }
-        }
-
-        if (closestConnection) {
-          addedConnections.push(closestConnection!);
-          updatedPieces.push({
-            id: selectedNode.data.piece.guid,
-            diff: {
-              center: undefined,
-              plane: undefined,
+        updatedPieces.push({
+          id: piece.guid,
+          diff: {
+            center: {
+              u: selectedInternalNode.internals.positionAbsolute.x / ICON_WIDTH,
+              v: -selectedInternalNode.internals.positionAbsolute.y / ICON_WIDTH,
             },
-          });
-        } else {
-          updatedPieces.push({
-            id: piece.guid,
-            diff: {
-              center: {
-                u: selectedInternalNode.internals.positionAbsolute.x / ICON_WIDTH,
-                v: -selectedInternalNode.internals.positionAbsolute.y / ICON_WIDTH,
-              },
-            },
-          });
-        }
+          },
+        });
       }
 
       const draggedPieceGuid = (node.data.piece as Piece).guid;
@@ -8676,17 +8587,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         });
       }
 
-      if (addedConnections.length > 0) {
-        addedConnections.forEach((conn) => addConnection?.(conn));
-      }
       if (dragDescendantsRef.current.size > 0 && reactFlowInstanceRef.current) {
-        const descPositions = new Map<string, { x: number; y: number }>();
         for (const descGuid of dragDescendantsRef.current) {
           const offset = dragDescendantOffsetsRef.current.get(descGuid);
           if (!offset) continue;
           const newX = draggedX + offset.dx;
           const newY = draggedY + offset.dy;
-          descPositions.set(descGuid, { x: newX, y: newY });
           updatedPieces.push({
             id: descGuid,
             diff: {
@@ -8697,26 +8603,25 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             },
           });
         }
-        if (descPositions.size > 0) {
-          setNodes((nds) => nds.map((n) => {
-            const pos = descPositions.get(getPieceIdFromNode(n));
-            if (!pos) return n;
-            return { ...n, position: pos };
-          }));
-        }
       }
       dragPositionRef.current = { x: draggedX, y: draggedY };
       pendingPieceUpdatesRef.current = updatedPieces;
     },
-    [addConnection, design, reactFlowInstanceRef, nodes, metadata],
+    [design, reactFlowInstanceRef, metadata],
   );
 
   const onNodeDragStop = useCallback(
     (event: any, node: DiagramNode) => {
+      const diagramEl = document.querySelector(`[data-diagram-id="${diagramId}"]`);
+      if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "false";
+      isDraggingRef.current = false;
+      suppressEdgeRecomputeRef.current = false;
+      dragSelectedNodesRef.current = [];
+      dragNonSelectedNodesRef.current = [];
       const pendingSelection = pendingSelectionRef.current;
-      const pendingUpdates = pendingPieceUpdatesRef.current;
       const currentSelection = selectionRef.current;
       const descendants = dragDescendantsRef.current;
+      const descendantOffsets = dragDescendantOffsetsRef.current;
       pendingSelectionRef.current = null;
       pendingPieceUpdatesRef.current = [];
       dragPositionRef.current = null;
@@ -8724,52 +8629,137 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantOffsetsRef.current = new Map();
       if (pendingSelection) {
         const { pieceId, compositionKind } = pendingSelection;
-        if (setSelection) setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) });
+        if (setSelection) setTimeout(() => setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) }), 650);
       }
-      if (pendingUpdates && pendingUpdates.length > 0) {
-        const updateMap = new Map(pendingUpdates.map(u => [u.id, u.diff.center]));
-        setNodes((nds) => nds.map((n) => {
+      const finalX = node.position.x;
+      const finalY = node.position.y;
+      const draggedPieceId = getPieceIdFromNode(node);
+      const selectedPieceIds = currentSelection?.pieces ?? [];
+      const pieceIdsToUpdate = selectedPieceIds.length > 0 ? selectedPieceIds : [draggedPieceId];
+      const finalUpdates: Array<{ id: string; diff: any }> = [];
+      for (const pieceId of pieceIdsToUpdate) {
+        if (pieceId === draggedPieceId) {
+          finalUpdates.push({ id: pieceId, diff: { center: { u: finalX / ICON_WIDTH, v: -finalY / ICON_WIDTH } } });
+        } else if (reactFlowInstanceRef.current) {
+          const pieceNode = nodes.find((n) => getPieceIdFromNode(n) === pieceId);
+          const internalNode = pieceNode ? reactFlowInstanceRef.current.getInternalNode(pieceNode.id) : null;
+          if (internalNode) {
+            finalUpdates.push({ id: pieceId, diff: { center: { u: internalNode.internals.positionAbsolute.x / ICON_WIDTH, v: -internalNode.internals.positionAbsolute.y / ICON_WIDTH } } });
+          }
+        }
+      }
+      for (const descGuid of descendants) {
+        if (pieceIdsToUpdate.includes(descGuid)) continue;
+        const offset = descendantOffsets.get(descGuid);
+        if (offset) {
+          finalUpdates.push({ id: descGuid, diff: { center: { u: (finalX + offset.dx) / ICON_WIDTH, v: -(finalY + offset.dy) / ICON_WIDTH } } });
+        }
+      }
+      if (finalUpdates.length > 0) {
+        const updateMap = new Map(finalUpdates.map(u => [u.id, u.diff.center]));
+        for (const n of nodes) {
           const pieceGuid = (n as any).data?.piece?.guid;
-          if (!pieceGuid) return n;
+          if (!pieceGuid) continue;
           const center = updateMap.get(pieceGuid);
-          if (!center) return n;
-          return { ...n, position: { x: center.u * ICON_WIDTH, y: -center.v * ICON_WIDTH } };
-        }));
-        updatePieces?.(pendingUpdates);
-      } else {
-        const updatedPieces: Array<{ id: string; diff: any }> = [];
-        const selectedPieceIds = currentSelection?.pieces ?? [];
-        const draggedPieceId = getPieceIdFromNode(node);
-        const pieceIdsToUpdate = selectedPieceIds.length > 0 ? selectedPieceIds : [draggedPieceId];
-        for (const pieceId of pieceIdsToUpdate) {
-          const pieceNode = pieceId === draggedPieceId ? node : nodes.find((n) => getPieceIdFromNode(n) === pieceId);
-          if (pieceNode) {
-            updatedPieces.push({
-              id: pieceId,
-              diff: { center: { u: pieceNode.position.x / ICON_WIDTH, v: -pieceNode.position.y / ICON_WIDTH } },
-            });
-          }
+          if (!center) continue;
+          (n as any).position = { x: center.u * ICON_WIDTH, y: -center.v * ICON_WIDTH };
         }
-        for (const descGuid of descendants) {
-          if (pieceIdsToUpdate.includes(descGuid)) continue;
-          const descNode = nodes.find((n) => getPieceIdFromNode(n) === descGuid);
-          if (descNode) {
-            updatedPieces.push({
-              id: descGuid,
-              diff: { center: { u: descNode.position.x / ICON_WIDTH, v: -descNode.position.y / ICON_WIDTH } },
-            });
-          }
-        }
-        if (updatedPieces.length > 0) {
-          updatePieces?.(updatedPieces);
-        }
+        setTimeout(() => updatePieces?.(finalUpdates), 600);
       }
-      transaction?.finalize();
-      setHelperLines([]);
-      isDraggingRef.current = false;
-      isDraggingNodeRef.current = false;
+      if (reactFlowInstanceRef.current && !event.altKey) {
+        const rfInstance = reactFlowInstanceRef.current;
+        const selectedNodes = dragSelectedNodesRef.current;
+        const nonSelectedNodes = dragNonSelectedNodesRef.current;
+        setTimeout(() => {
+          if (!rfInstance) return;
+          const MIN_DISTANCE = 150;
+          const spatialThreshold = MIN_DISTANCE + ICON_WIDTH;
+          const connections = design?.connections ?? [];
+          const connectedPiecePairs = new Set<string>();
+          const usedPorts = new Set<string>();
+          for (const conn of connections) {
+            const p1 = conn.connected?.piece?.guid ?? "";
+            const p2 = conn.connecting?.piece?.guid ?? "";
+            if (p1 && p2) connectedPiecePairs.add(p1 < p2 ? `${p1}::${p2}` : `${p2}::${p1}`);
+            if (p1 && conn.connected?.connector?.guid) usedPorts.add(`${p1}::${conn.connected.connector.guid}`);
+            if (p2 && conn.connecting?.connector?.guid) usedPorts.add(`${p2}::${conn.connecting.connector.guid}`);
+          }
+          const portMap = new Map<string, Port>();
+          for (const port of kit?.ports ?? []) portMap.set(port.guid, port);
+          const connectorCache = new Map<string, Map<string, Connector>>();
+          const getConnector = (type: Type, connectorGuid: string): Connector | undefined => {
+            let map = connectorCache.get(type.guid);
+            if (!map) {
+              map = new Map<string, Connector>();
+              for (const c of type.connectors ?? []) { if (c.guid) map.set(c.guid, c); }
+              connectorCache.set(type.guid, map);
+            }
+            return map.get(connectorGuid);
+          };
+          for (const selectedNode of selectedNodes) {
+            if (selectedNode.type === "design") continue;
+            const piece = selectedNode.data.piece;
+            const type = (selectedNode as PieceNode).data.type;
+            const fixedPieceId = metadata.get(piece.guid)?.fixedPieceId;
+            const selectedInternalNode = rfInstance.getInternalNode(selectedNode.id);
+            if (!selectedInternalNode) continue;
+            const selX = selectedInternalNode.internals.positionAbsolute.x;
+            const selY = selectedInternalNode.internals.positionAbsolute.y;
+            let closestConnection: SemioConnection | null = null;
+            let closestDist = Number.MAX_VALUE;
+            for (const otherNode of nonSelectedNodes) {
+              if (otherNode.type !== "piece") continue;
+              const otherInternalNode = rfInstance.getInternalNode(otherNode.id);
+              if (!otherInternalNode) continue;
+              const otherX = otherInternalNode.internals.positionAbsolute.x;
+              const otherY = otherInternalNode.internals.positionAbsolute.y;
+              if (Math.abs(selX - otherX) > spatialThreshold || Math.abs(selY - otherY) > spatialThreshold) continue;
+              const pairKey = piece.guid < otherNode.data.piece.guid ? `${piece.guid}::${otherNode.data.piece.guid}` : `${otherNode.data.piece.guid}::${piece.guid}`;
+              if (connectedPiecePairs.has(pairKey)) continue;
+              for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
+                if (!handle.id) continue;
+                const connector = getConnector(type, handle.id);
+                if (!connector || !connector.guid) continue;
+                if (usedPorts.has(`${piece.guid}::${connector.guid}`)) continue;
+                const connectorPort = connector.port?.guid ? portMap.get(connector.port.guid) : undefined;
+                for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
+                  if (!otherHandle.id) continue;
+                  const otherConnector = getConnector((otherNode as PieceNode).data.type, otherHandle.id);
+                  if (!otherConnector || !otherConnector.guid) continue;
+                  if (usedPorts.has(`${otherNode.data.piece.guid}::${otherConnector.guid}`)) continue;
+                  if (!selectedNode.data.piece.guid || !otherNode.data.piece.guid) continue;
+                  if (fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.guid)?.fixedPieceId) continue;
+                  const otherPort = otherConnector.port?.guid ? portMap.get(otherConnector.port.guid) : undefined;
+                  if (!arePortsCompatible(connectorPort, otherPort, kit?.ports || [])) continue;
+                  const dx = selX + handle.x - (otherX + otherHandle.x);
+                  const dy = selY + handle.y - (otherY + otherHandle.y);
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  if (distance < closestDist && distance < MIN_DISTANCE) {
+                    closestConnection = {
+                      guid: crypto.randomUUID(),
+                      connected: { piece: { guid: otherNode.data.piece.guid }, connector: { guid: otherHandle.id! } },
+                      connecting: { piece: { guid: selectedNode.data.piece.guid }, connector: { guid: handle.id! } },
+                      u: dx / ICON_WIDTH,
+                      v: -(dy / ICON_WIDTH),
+                    };
+                    closestDist = distance;
+                  }
+                }
+              }
+            }
+            if (closestConnection) {
+              addConnection?.(closestConnection);
+              updatePieces?.([{ id: piece.guid, diff: { center: undefined, plane: undefined } }]);
+            }
+          }
+        }, 550);
+      }
+      setTimeout(() => { isDraggingNodeRef.current = false; }, 0);
+      setTimeout(() => transaction?.finalize(), 700);
+      updateHelperLinesDom(EMPTY_HELPER_LINES);
+      sceneFrameControlRef.current?.resume();
     },
-    [transaction, updatePieces, nodes, isDraggingNodeRef, setSelection],
+    [transaction, updatePieces, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId],
   );
 
   const onConnect = useCallback(
@@ -8825,20 +8815,45 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [addConnection, reactFlowInstanceRef, design],
   );
 
+  const pieceRenderDataStoreRef = useRef<PieceRenderDataStoreApi>(createPieceRenderDataStore());
+  const designStoreForSync = useDesignStore(identitySelector) as DesignStore | null;
+  const actorForSync = useSketchpadActorSafe();
+  const kitScopeForSync = useKitScope();
+  const designScopeForSync = useDesignScope();
+  const syncKeyRef = useRef("");
+  syncKeyRef.current = `${kitScopeForSync?.guid ?? ""}:${designScopeForSync?.guid ?? ""}`;
+  useEffect(() => {
+    if (!designStoreForSync || !actorForSync) return;
+    const getHoverAndSelection = () => {
+      const appState = actorForSync.getSnapshot().context.designApps[syncKeyRef.current];
+      return { hover: appState?.hover, selection: appState?.selection };
+    };
+    const sync = () => {
+      const { hover, selection } = getHoverAndSelection();
+      syncPieceRenderData(pieceRenderDataStoreRef.current, designStoreForSync, hover, selection);
+    };
+    sync();
+    const unsubStore = designStoreForSync.subscribe(sync);
+    const actorSub = actorForSync.subscribe(sync);
+    return () => { unsubStore(); actorSub.unsubscribe(); };
+  }, [designStoreForSync, actorForSync]);
+
   return (
-    <PieceRenderDataContext.Provider value={pieceRenderDataMap}>
+    <PieceRenderDataStoreContext.Provider value={pieceRenderDataStoreRef.current}>
       <SelectedConnectorContext.Provider value={selectedConnector}>
         <SelectedConnectorPortContext.Provider value={selectedConnectorPortGuid}>
           <div id="semio.sketchpad.app.design.canvas.diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
             <style>{`
             [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__node,
-            [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__edge {
+            [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__edge,
+            [data-diagram-id="${diagramId}"][data-dragging="true"] .react-flow__node,
+            [data-diagram-id="${diagramId}"][data-dragging="true"] .react-flow__edge {
               pointer-events: none !important;
             }
           `}</style>
             <Diagram
               nodes={nodes}
-              edges={edges}
+              edges={EMPTY_EDGES_ARRAY}
               onNodesChangeReactFlow={onNodesChangeReactFlow}
               nodeTypes={nodeComponents as NodeTypes}
               edgeTypes={edgeComponents as EdgeTypes}
@@ -8848,6 +8863,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               nodesFocusable={true}
               edgesFocusable={true}
               nodesDraggable={true}
+              autoPanOnNodeDrag={false}
+              selectNodesOnDrag={false}
               minZoom={0.1}
               defaultZoom={1}
               maxZoom={12}
@@ -8899,6 +8916,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               panels={
                 <>
                   <ViewportPortal>
+                    <CustomDesignEdgeLayer edges={edges} suppressRecomputeRef={suppressEdgeRecomputeRef} onEdgeClick={onEdgeClick as any} />
+                  </ViewportPortal>
+                  <ViewportPortal>
                     <div className="pointer-events-none">⌞</div>
                   </ViewportPortal>
                   {others.map((presence, idx) => (
@@ -8907,13 +8927,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                 </>
               }
             />
-            <HelperLines lines={helperLines} nodes={nodes} />
+            <div ref={helperLinesDomRef} className="absolute inset-0 w-full h-full pointer-events-none z-modal overflow-hidden" style={{ display: 'none' }} />
             <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} />
             <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} />
           </div>
         </SelectedConnectorPortContext.Provider>
       </SelectedConnectorContext.Provider>
-    </PieceRenderDataContext.Provider>
+    </PieceRenderDataStoreContext.Provider>
   );
 };
 
@@ -8971,7 +8991,14 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
   );
 };
 
-const GLTFMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
+interface DesignMeshEventProps {
+  onClick?: (e: ThreeEvent<MouseEvent>) => void;
+  onDoubleClick?: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerEnter?: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerLeave?: (e: ThreeEvent<PointerEvent>) => void;
+}
+
+const GLTFMesh: FC<{ url: string; highlightColor: string | null } & DesignMeshEventProps> = ({ url, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const gltf = useGLTF(url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
   const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
@@ -9005,10 +9032,10 @@ const GLTFMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, hig
   useEffect(() => {
     applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);
   }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);
-  return <primitive object={clonedScene} />;
+  return <primitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
 };
 
-const FBXMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
+const FBXMesh: FC<{ url: string; highlightColor: string | null } & DesignMeshEventProps> = ({ url, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const scene = useFBX(url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
   const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
@@ -9042,10 +9069,10 @@ const FBXMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, high
   useEffect(() => {
     applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);
   }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);
-  return <primitive object={clonedScene} />;
+  return <primitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
 };
 
-const OBJMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
+const OBJMesh: FC<{ url: string; highlightColor: string | null } & DesignMeshEventProps> = ({ url, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const obj = useLoader(OBJLoader, url);
   const plasterColor = useMemo(() => new THREE.Color(getComputedColor("--plaster")), []);
   const plasterEdgeColor = useMemo(() => new THREE.Color(getComputedColor("--plaster-edge")), []);
@@ -9079,23 +9106,23 @@ const OBJMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, high
   useEffect(() => {
     applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);
   }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);
-  return <primitive object={clonedScene} />;
+  return <primitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
 };
 
-const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: string | null }> = ({ url, fileExtension, highlightColor }) => {
+const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: string | null } & DesignMeshEventProps> = ({ url, fileExtension, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const ext = fileExtension.toLowerCase();
   if (ext === "glb" || ext === "gltf") {
-    return <GLTFMesh url={url} highlightColor={highlightColor} />;
+    return <GLTFMesh url={url} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
   } else if (ext === "fbx") {
-    return <FBXMesh url={url} highlightColor={highlightColor} />;
+    return <FBXMesh url={url} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
   } else if (ext === "obj") {
-    return <OBJMesh url={url} highlightColor={highlightColor} />;
+    return <OBJMesh url={url} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
   } else {
-    return <GLTFMesh url={url} highlightColor={highlightColor} />;
+    return <GLTFMesh url={url} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
   }
 };
 
-const PieceMesh: FC<{ highlightColor: string | null }> = ({ highlightColor }) => {
+const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = ({ highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const piece = usePiece() as Piece;
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.guid) as Type | undefined;
   const files = useKitFiles();
@@ -9159,7 +9186,7 @@ const PieceMesh: FC<{ highlightColor: string | null }> = ({ highlightColor }) =>
 
   return (
     <Suspense fallback={null}>
-      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} highlightColor={highlightColor} />
+      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
     </Suspense>
   );
 };
@@ -9189,8 +9216,9 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   const hoverBaseColor = useMemo(() => getComputedColor("--hover-base"), []);
   const highlightColor = useMemo(() => (isSelected ? activeBaseColor : isHovered ? hoverBaseColor : null), [isSelected, isHovered, activeBaseColor, hoverBaseColor]);
 
-  const originalPlane = piece.plane || flatPlane;
-  const diffedPlane = diffedPiece.plane || flatPlane;
+  const isConnectedChild = useIsConnectedPiece();
+  const originalPlane = isConnectedChild ? flatPlane : (piece.plane || flatPlane);
+  const diffedPlane = isConnectedChild ? flatPlane : (diffedPiece.plane || flatPlane);
 
   const hasDiff = useMemo(() => {
     if (status === DiffStatus.Unchanged) return false;
@@ -9332,8 +9360,8 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       userData={userData}
     />
   ) : (
-    <group userData={userData} onClick={onSelect} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
-      <PieceMesh highlightColor={highlightColor} />
+    <group userData={userData}>
+      <PieceMesh highlightColor={highlightColor} onClick={onSelect} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} />
     </group>
   );
 
@@ -9838,50 +9866,12 @@ const App: FC<AppProps> = () => {
     },
     { enableOnFormTags: true },
   );
-  useHotkeys("delete", () => deleteSelected?.(), { enableOnFormTags: true });
+  useHotkeys("delete,backspace", () => deleteSelected?.(), { enableOnFormTags: true });
   useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
   useHotkeys("ctrl+y", () => redo?.(), { enableOnFormTags: true });
   useHotkeys("ctrl+shift+z", () => redo?.(), { enableOnFormTags: true });
 
   const appType = useAppType();
-  const addSidePanelTab = useAddSidePanelTab();
-  const removeSidePanelTab = useRemoveSidePanelTab();
-
-  useEffect(() => {
-    if (appType !== "design") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <DesignSettingsContent />
-          </Tree>
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <TreeItem>
-              <TreeContent>
-                <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
-              </TreeContent>
-            </TreeItem>
-          </Tree>
-        </TreeStateProvider>
-      ),
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.design.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.design.chat");
-    };
-  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -10048,11 +10038,9 @@ const App: FC<AppProps> = () => {
           specificity: 30,
           order: 20,
           content: () => (
-            <TreeItem>
-              <TreeContent>
+            <TreeRow>
                 <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.selectOnlyPiecesOrConnections")}</p>
-              </TreeContent>
-            </TreeItem>
+              </TreeRow>
           ),
         });
       }
@@ -10104,13 +10092,13 @@ const App: FC<AppProps> = () => {
       id: "semio.sketchpad.app.kit.pieces",
       specificity: 20,
       order: 1,
-      content: PiecesWorkbenchContent,
+      content: () => <PiecesWorkbenchContent />,
     });
     addSection("workbench", {
       id: "semio.sketchpad.app.design.windows",
       specificity: 20,
       order: 2,
-      content: WindowLibrary,
+      content: () => <WindowLibrary />,
     });
     return () => {
       removeSection("workbench", "semio.sketchpad.app.kit.pieces");
@@ -10442,115 +10430,12 @@ const App: FC<AppProps> = () => {
 
 // #region Settings
 
-// [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖settings](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/SETTINGS)
-// Settings MUST render the Design app settings panel with theme, language, device, expertise, and mode toggles.
-
-const DesignSettingsContent: FC = () => {
-  const [theme, setTheme, canSetTheme] = useTheme();
-  const [language, setLanguage, canSetLanguage] = useLanguage();
-  const [device, setDevice, canSetDevice] = useDevice();
-  const [expertise, setExpertise, canSetExpertise] = useExpertise();
-  const [mode, setMode, canSetMode] = useMode();
-
-  const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
-  const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
-  const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
-
-  return (
-    <>
-      <TreeItem>
-        <TreeContent>
-          <ToggleGroup
-            id="semio.sketchpad.settings.theme"
-            value={theme}
-            onValueChange={(value: string) => setTheme?.(value as Theme)}
-            showLabel
-            kind="single"
-            disabled={!canSetTheme}
-            items={[
-              { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-              { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-              { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-            ]}
-          />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
-          <SelectUI id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
-            <SelectTrigger>
-              <SelectValue placeholder={languagePlaceholder} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">{languageEnLabel}</SelectItem>
-              <SelectItem value="de">{languageDeLabel}</SelectItem>
-            </SelectContent>
-          </SelectUI>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
-          <ToggleGroup
-            id="semio.sketchpad.settings.device"
-            value={typeof device === "object" ? "desktop" : device}
-            onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
-            showLabel
-            kind="single"
-            disabled={!canSetDevice}
-            items={[
-              { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
-              { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
-            ]}
-          />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
-          <ToggleGroup
-            id="semio.sketchpad.settings.expertise"
-            value={expertise}
-            onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-            showLabel
-            kind="single"
-            disabled={!canSetExpertise}
-            items={[
-              { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-              { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-              { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-            ]}
-          />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
-          <ToggleGroup
-            id="semio.sketchpad.settings.mode"
-            value={mode}
-            onValueChange={(value: string) => setMode?.(value as Mode)}
-            showLabel
-            kind="single"
-            disabled={!canSetMode}
-            items={[
-              { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-              { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-            ]}
-          />
-        </TreeContent>
-      </TreeItem>
-    </>
-  );
-};
-
-// #endregion Settings
-
 const DesignApp: FC = () => {
   initializeDesignStore();
 
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
-  const addSidePanelTab = useAddSidePanelTab();
-  const removeSidePanelTab = useRemoveSidePanelTab();
 
   useEffect(() => {
     if (appType !== "design") return;
@@ -10584,42 +10469,6 @@ const DesignApp: FC = () => {
       removeSection("toolbar", "semio.sketchpad.app.design.toolbar.filters");
     };
   }, [appType, addSection, removeSection]);
-
-  useEffect(() => {
-    if (appType !== "design") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <DesignSettingsContent />
-          </Tree>
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <TreeItem>
-              <TreeContent>
-                <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
-              </TreeContent>
-            </TreeItem>
-          </Tree>
-        </TreeStateProvider>
-      ),
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.design.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.design.chat");
-    };
-  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   return (
     <DesignFilterProvider>

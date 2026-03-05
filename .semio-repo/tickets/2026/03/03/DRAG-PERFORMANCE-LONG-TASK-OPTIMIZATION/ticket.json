@@ -1,0 +1,23 @@
+{
+  "title": "Drag Performance Long Task Optimization",
+  "status": "open",
+  "prompt": "Optimize Design.tsx and elements.tsx to ensure no single browser task exceeds 50ms during drag with 180 nodes. The PerformanceObserver longtask test requires maxLongTaskDuration \u003c= 50ms but currently sees ~4000ms max long tasks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/768"
+  },
+  "goal": "SKETCHPAD/PERFORMANCE",
+  "started": "2026-03-03T07:06:31.520868966Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-03 07:06:31"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Optimize Design.tsx and elements.tsx to ensure no single browser task exceeds 50ms during drag with 180 nodes. The PerformanceObserver longtask test requires maxLongTaskDuration \u003c= 50ms but currently sees ~4000ms max long tasks.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

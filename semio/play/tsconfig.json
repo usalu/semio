@@ -1,3 +1,6 @@
 {
-  "extends": "../js/tsconfig.json"
+  "extends": "../js/tsconfig.json",
+  "compilerOptions": {
+    "types": ["react", "react-dom", "vite/client"]
+  }
 }

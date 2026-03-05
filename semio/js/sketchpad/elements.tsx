@@ -38,52 +38,53 @@ import * as TogglePrimitive from "@radix-ui/react-toggle";
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
+import { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import {
-    AddIcon,
-    AlertCircleIcon,
-    BookIcon,
-    CameraIcon,
-    CheckIcon,
-    CheckIconAlt,
-    ChevronDownIcon,
-    ChevronDownIconAlt,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    ChevronsUpDownIcon,
-    CloseIcon,
-    CloseIconAlt,
-    DocumentIcon,
-    ExternalLinkIcon,
-    FolderIcon,
-    GripVerticalIcon,
-    InfoIcon,
-    LightbulbIcon,
-    LucideIcon,
-    Maximize2Icon,
-    Minimize2Icon,
-    RemoveIcon,
-    SearchIcon,
-    TriangleAlertIcon,
-    TutorialIcon,
+  AddIcon,
+  AlertCircleIcon,
+  BookIcon,
+  CameraIcon,
+  CheckIcon,
+  CheckIconAlt,
+  ChevronDownIcon,
+  ChevronDownIconAlt,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsUpDownIcon,
+  CloseIcon,
+  CloseIconAlt,
+  DocumentIcon,
+  ExternalLinkIcon,
+  FolderIcon,
+  GripVerticalIcon,
+  InfoIcon,
+  LightbulbIcon,
+  LucideIcon,
+  Maximize2Icon,
+  Minimize2Icon,
+  RemoveIcon,
+  SearchIcon,
+  TriangleAlertIcon,
+  TutorialIcon,
 } from "@semio/assets";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    ConnectionMode,
-    getBezierPath,
-    Handle,
-    MiniMap,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    SelectionMode,
-    useInternalNode,
-    useReactFlow,
-    ViewportPortal,
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -843,7 +844,7 @@ interface LabelProps {
 function Label({ id, children, className, labelElementId }: LabelProps) {
   const label = useLabel(id);
   return (
-    <div data-slot="property-row" className={cn("group grid min-w-0 w-full items-center", className)} style={{ gridTemplateColumns: "96px 1fr", gap: "8px", minHeight: "24px" }}>
+    <div data-slot="property-row" className={cn("group grid min-w-0 w-full items-center grid-cols-[96px_1fr] gap-x-[8px] min-h-[24px]", className)}>
       <Tooltip>
         <TooltipTrigger asChild>
           <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
@@ -3216,6 +3217,218 @@ export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
 // #endregion ToggleGroup
 
+// #region Orb
+
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖orb](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/ORB)
+// Circular position indicator on a Ring. t ∈ [0,1[ maps to an angle on the ring.
+
+interface OrbProps {
+  id: string;
+  t: number;
+  disabled?: boolean;
+  selected?: boolean;
+  hovered?: boolean;
+  dragging?: boolean;
+  radius?: number;
+  onPointerDown?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerMove?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerUp?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerEnter?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerLeave?: (e: React.PointerEvent<SVGCircleElement>) => void;
+}
+
+function Orb({ id, t, disabled = false, selected = false, hovered = false, radius = 40, dragging = false, onPointerDown, onPointerMove, onPointerUp, onPointerEnter, onPointerLeave }: OrbProps) {
+  const angle = t * 2 * Math.PI - Math.PI / 2;
+  const cx = Math.cos(angle) * radius;
+  const cy = Math.sin(angle) * radius;
+  const orbRadius = selected ? 7 : 5;
+  return (
+    <circle
+      data-slot="orb"
+      data-orb-id={id}
+      cx={cx}
+      cy={cy}
+      r={orbRadius}
+      className={cn(
+        dragging ? "" : "transition-all duration-150",
+        disabled ? "fill-muted-foreground/40 cursor-not-allowed" : "fill-foreground cursor-grab active:cursor-grabbing",
+        selected && !disabled && "fill-accent stroke-accent-foreground stroke-1",
+        hovered && !disabled && !selected && "fill-accent-foreground",
+      )}
+      style={{ pointerEvents: disabled ? "none" : "auto" }}
+      onPointerDown={disabled ? undefined : onPointerDown}
+      onPointerMove={disabled ? undefined : onPointerMove}
+      onPointerUp={disabled ? undefined : onPointerUp}
+      onPointerEnter={disabled ? undefined : onPointerEnter}
+      onPointerLeave={disabled ? undefined : onPointerLeave}
+    />
+  );
+}
+
+export { Orb };
+export type { OrbProps };
+
+// #endregion Orb
+
+// #region Ring
+
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖ring](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/RING)
+// SVG ring container with draggable Orbs. Fires onOrbChange(orbId, oldT, newT) on drag.
+
+interface RingOrbData {
+  id: string;
+  t: number;
+  disabled?: boolean;
+  selected?: boolean;
+  hovered?: boolean;
+}
+
+interface RingProps extends ElementProps {
+  orbs: RingOrbData[];
+  radius?: number;
+  size?: number;
+  onOrbChange?: (orbId: string, oldT: number, newT: number) => void;
+  onOrbSelect?: (orbId: string) => void;
+  onOrbHoverChange?: (orbId: string, hovered: boolean) => void;
+  showLabel?: boolean;
+  className?: string;
+}
+
+function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onOrbHoverChange, showLabel, className }: RingProps) {
+  const transaction = useTransaction();
+  const svgRef = React.useRef<SVGSVGElement>(null);
+  const [draggingOrbId, setDraggingOrbId] = React.useState<string | null>(null);
+  const [localT, setLocalT] = React.useState<number | null>(null);
+  const dragStartT = React.useRef<number>(0);
+  const rafId = React.useRef<number>(0);
+  const pendingT = React.useRef<number | null>(null);
+  const center = size / 2;
+  const angleFromEvent = React.useCallback(
+    (e: React.PointerEvent | PointerEvent): number => {
+      if (!svgRef.current) return 0;
+      const rect = svgRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left - center;
+      const y = e.clientY - rect.top - center;
+      let angle = Math.atan2(y, x) + Math.PI / 2;
+      if (angle < 0) angle += 2 * Math.PI;
+      return (angle / (2 * Math.PI)) % 1;
+    },
+    [center],
+  );
+  const handleOrbPointerDown = React.useCallback(
+    (orbId: string, t: number) => (e: React.PointerEvent<SVGCircleElement>) => {
+      e.preventDefault();
+      (e.target as SVGCircleElement).setPointerCapture(e.pointerId);
+      setDraggingOrbId(orbId);
+      setLocalT(t);
+      dragStartT.current = t;
+      pendingT.current = null;
+      transaction?.start?.();
+      onOrbSelect?.(orbId);
+    },
+    [transaction, onOrbSelect],
+  );
+  const flushPendingChange = React.useCallback(
+    (orbId: string) => {
+      if (pendingT.current !== null) {
+        onOrbChange?.(orbId, dragStartT.current, pendingT.current);
+        pendingT.current = null;
+      }
+    },
+    [onOrbChange],
+  );
+  const handlePointerMove = React.useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (!draggingOrbId) return;
+      const newT = angleFromEvent(e);
+      setLocalT(newT);
+      pendingT.current = newT;
+      if (!rafId.current) {
+        const orbId = draggingOrbId;
+        rafId.current = requestAnimationFrame(() => {
+          rafId.current = 0;
+          flushPendingChange(orbId);
+        });
+      }
+    },
+    [draggingOrbId, angleFromEvent, flushPendingChange],
+  );
+  const handlePointerUp = React.useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (!draggingOrbId) return;
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = 0;
+      }
+      const newT = angleFromEvent(e);
+      setLocalT(null);
+      onOrbChange?.(draggingOrbId, dragStartT.current, newT);
+      setDraggingOrbId(null);
+      transaction?.finalize?.();
+    },
+    [draggingOrbId, angleFromEvent, onOrbChange, transaction],
+  );
+  const handlePointerCancel = React.useCallback(() => {
+    if (!draggingOrbId) return;
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = 0;
+    }
+    setLocalT(null);
+    setDraggingOrbId(null);
+    transaction?.abort?.();
+  }, [draggingOrbId, transaction]);
+  React.useEffect(() => {
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, []);
+  const ringElement = (
+    <svg
+      ref={svgRef}
+      data-slot="ring"
+      id={id}
+      width={size}
+      height={size}
+      viewBox={`${-center} ${-center} ${size} ${size}`}
+      className={cn("touch-none select-none", className)}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+    >
+      <circle data-slot="ring-track" cx={0} cy={0} r={radius} className="fill-none stroke-muted-foreground/30 stroke-[2px]" />
+      {orbs.map((orb) => (
+        <Orb
+          key={orb.id}
+          id={orb.id}
+          t={draggingOrbId === orb.id && localT !== null ? localT : orb.t}
+          disabled={orb.disabled}
+          selected={orb.selected}
+          hovered={orb.hovered}
+          dragging={draggingOrbId === orb.id}
+          radius={radius}
+          onPointerDown={handleOrbPointerDown(orb.id, orb.t)}
+          onPointerEnter={onOrbHoverChange ? () => onOrbHoverChange(orb.id, true) : undefined}
+          onPointerLeave={onOrbHoverChange ? () => onOrbHoverChange(orb.id, false) : undefined}
+        />
+      ))}
+    </svg>
+  );
+  if (showLabel) {
+    return (
+      <Label id={id} labelElementId={`${id}-label`} className={className}>
+        {ringElement}
+      </Label>
+    );
+  }
+  return ringElement;
+}
+
+export { Ring };
+export type { RingProps, RingOrbData };
+
+// #endregion Ring
+
 // #endregion Input Components
 
 // #region Aggregation Components
@@ -3723,6 +3936,20 @@ export const useTreeState = () => {
   return context;
 };
 
+const useTreeOpenState = (itemId: string, defaultOpen: boolean) => {
+  const treeState = React.useContext(TreeStateContext);
+  const [fallbackOpen, setFallbackOpen] = React.useState(defaultOpen);
+  const open = treeState ? treeState.getOpenState(itemId, defaultOpen) : fallbackOpen;
+  const setOpen = React.useCallback((value: boolean) => {
+    if (treeState) {
+      treeState.setOpenState(itemId, value);
+      return;
+    }
+    setFallbackOpen(value);
+  }, [itemId, treeState]);
+  return { open, setOpen };
+};
+
 const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
   if (!children) return false;
   const childArray = React.Children.toArray(children);
@@ -3738,6 +3965,8 @@ const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
 };
 
 const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
+const detailPanelIndentPx = (level: number): number => level * 10;
+const indentationLinePx = (i: number): number => detailPanelIndentPx(i) + 7;
 
 const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }> = ({ level, isLastAtLevel, showLines }) => {
   if (!showLines || level === 0) return null;
@@ -3745,7 +3974,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
   return (
     <div className="absolute left-0 top-0 bottom-0 pointer-events-none">
       {Array.from({ length: level }, (_, i) => (
-        <div key={i} className="absolute top-0 bottom-0" style={{ left: `${i * 0.75 + 0.375}rem` }}>
+        <div key={i} className="absolute top-0 bottom-0" style={{ left: `${indentationLinePx(i) - 0.5}px` }}>
           {!isLastAtLevel[i] && <div className="w-px h-full bg-muted-foreground/40" />}
         </div>
       ))}
@@ -3761,7 +3990,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
   return (
-    <div data-slot="tree-content" className="relative" style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${level * 0.75}rem` }}>
+    <div data-slot="tree-content" className="relative" style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 20}px` }}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       {children}
     </div>
@@ -3840,13 +4069,11 @@ interface SortableTreeItemsProps {
  **/
 export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
-  const treeState = useTreeState();
   const { t } = useTranslation();
   const mode = useTooltipMode();
   const displayLabel = id ? useLabel(id) : label;
   const sectionId = `section-${displayLabel}`;
-  const open = treeState.getOpenState(sectionId, defaultOpen);
-  const setOpen = (value: boolean) => treeState.setOpenState(sectionId, value);
+  const { open, setOpen } = useTreeOpenState(sectionId, defaultOpen);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const childrenArray = React.Children.toArray(children);
@@ -3866,7 +4093,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
         data-slot="tree-section-row"
         id={id}
         className={`relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
-        style={{ paddingLeft: `${level * 0.75}rem`, height: "20px", marginBottom: "6px" }}
+        style={{ paddingLeft: `${detailPanelIndentPx(level)}px`, height: "20px", marginBottom: "6px" }}
         onPointerEnter={() => {
           setIsHovered(true);
           onSectionPointerEnter?.();
@@ -3924,7 +4151,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
           data-slot="tree-section-row"
           id={id}
           className={`relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
-          style={{ paddingLeft: `${level * 0.75}rem`, height: "20px", marginBottom: "6px" }}
+          style={{ paddingLeft: `${detailPanelIndentPx(level)}px`, height: "20px", marginBottom: "6px" }}
           role="button"
           onPointerEnter={() => {
             setIsHovered(true);
@@ -3975,7 +4202,9 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent className="min-w-0">
-        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines }}>{children}</TreeContext.Provider>
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines }}>
+          <div className="flex flex-col gap-y-[2px]">{children}</div>
+        </TreeContext.Provider>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -3997,12 +4226,10 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   onDoubleClick,
 }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
-  const treeState = useTreeState();
   const displayLabel = id ? useLabel(id) : label;
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
-  const open = treeState.getOpenState(itemId, defaultOpen);
-  const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
+  const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -4011,7 +4238,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    paddingLeft: `${level * 0.75}rem`,
+    paddingLeft: `${detailPanelIndentPx(level)}px`,
   };
 
   const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
@@ -4039,14 +4266,14 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           <button
-            className="flex-shrink-0 bg-transparent cursor-foldable"
+            className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setOpen(!open);
             }}
           >
-            {open ? <ChevronDownIcon className="size-3 flex-shrink-0" /> : <ChevronRightIcon className="size-3 flex-shrink-0" />}
+            {open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
           </button>
           {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} onClick={(e) => e.stopPropagation()} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
@@ -4079,7 +4306,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </div>
           )}
         </div>
-        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>}
+        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
       </>
     );
   }
@@ -4110,6 +4337,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
+      <div className="w-[14px] flex-shrink-0" />
       {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as React.ReactNode}</span>
@@ -4204,11 +4432,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
-  const treeState = useTreeState();
   const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
   const itemId = `item-${itemKey}`;
-  const open = treeState.getOpenState(itemId, defaultOpen);
-  const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
+  const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
@@ -4223,7 +4449,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           role="treeitem"
           id={id}
           className={itemClasses}
-          style={{ paddingLeft: `${level * 0.75}rem` }}
+          style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -4242,7 +4468,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               setOpen(!open);
             }}
           >
-            {open ? <ChevronDownIcon className="size-3 flex-shrink-0" /> : <ChevronRightIcon className="size-3 flex-shrink-0" />}
+            {open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
           </button>
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span
@@ -4274,7 +4500,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             </div>
           )}
         </div>
-        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}>{children}</TreeContext.Provider>}
+        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
       </>
     );
   }
@@ -4284,8 +4510,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
-    <div data-slot="tree-item-row" role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${level * 0.75}rem` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div data-slot="tree-item-row" role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
+      <div className="w-[14px] flex-shrink-0" />
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
       {actions.length > 0 && (
@@ -4318,6 +4545,30 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
 };
 
 /**
+ * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treerow](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ROW)
+ **/
+export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: (event: React.MouseEvent) => void; onDoubleClick?: (event: React.MouseEvent) => void; actions?: TreeSectionAction[] }> = ({ children, className, id, onClick, onDoubleClick, actions }) => (
+  <TreeItem className={className} id={id} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
+    <TreeContent>{children}</TreeContent>
+  </TreeItem>
+);
+
+/**
+ * Informational text row spanning the full control column width.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨helperrow](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/HELPER-ROW)
+ **/
+export const HelperRow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+  <TreeItem className={className}>
+    <TreeContent>
+      <div data-slot="helper-row" className="text-xs text-muted-foreground leading-tight py-[2px]">{children}</div>
+    </TreeContent>
+  </TreeItem>
+);
+
+/**
  * Data interface for a node in a file tree.
  *
  *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🛠️filetreenode](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/FILE-TREE-NODE)
@@ -4348,6 +4599,119 @@ export const Tree: React.FC<{ children: React.ReactNode; className?: string; sho
   );
 };
 
+// #region Basic Chat Panel
+
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖basicchatpanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/BASIC-CHAT-PANEL)
+// Shared side-panel chat UI with local-only message storage.
+// Consumers MUST provide a stable id and title per app tab.
+
+interface BasicChatPanelProps extends ElementProps {
+  title: string;
+}
+
+type BasicChatMessageRole = "assistant" | "user";
+
+interface BasicChatMessage {
+  id: string;
+  role: BasicChatMessageRole;
+  body: string;
+}
+
+const createBasicChatMessages = (id: string, title: string): BasicChatMessage[] => [
+  {
+    id: `${id}.assistant.0`,
+    role: "assistant",
+    body: `Chat is ready for ${title}.`,
+  },
+  {
+    id: `${id}.assistant.1`,
+    role: "assistant",
+    body: "Messages stay local in this panel until a connected assistant is added.",
+  },
+];
+
+export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => {
+  const level = useLevel();
+  const borderClass = getLevelBorderElementClass(level);
+  const [messages, setMessages] = React.useState<BasicChatMessage[]>(() => createBasicChatMessages(id, title));
+  const [draft, setDraft] = React.useState("");
+  const nextMessageIndexRef = React.useRef(2);
+  const appendMessage = (role: BasicChatMessageRole, body: string) => {
+    const nextMessageId = `${id}.${role}.${nextMessageIndexRef.current}`;
+    nextMessageIndexRef.current += 1;
+    setMessages((previousMessages) => [
+      ...previousMessages,
+      {
+        id: nextMessageId,
+        role,
+        body,
+      },
+    ]);
+  };
+  const clearMessages = () => {
+    nextMessageIndexRef.current = 2;
+    setMessages(createBasicChatMessages(id, title));
+    setDraft("");
+  };
+  const sendDraft = () => {
+    const trimmedDraft = draft.trim();
+    if (!trimmedDraft) {
+      return;
+    }
+    const responsePreview = trimmedDraft.length > 72 ? `${trimmedDraft.slice(0, 69)}...` : trimmedDraft;
+    setDraft("");
+    appendMessage("user", trimmedDraft);
+    appendMessage("assistant", `Saved locally: "${responsePreview}"`);
+  };
+
+  React.useEffect(() => {
+    nextMessageIndexRef.current = 2;
+    setMessages(createBasicChatMessages(id, title));
+    setDraft("");
+  }, [id, title]);
+
+  return (
+    <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
+      <HelperRow>{`Local chat for ${title}. Use Enter to send and Shift+Enter for a new line.`}</HelperRow>
+      <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-[3px] border", borderClass)}>
+        <Tree className="min-w-0 p-single">
+          {messages.map((message) => (
+            <TreeRow key={message.id}>
+              <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
+                <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
+              </div>
+            </TreeRow>
+          ))}
+        </Tree>
+      </div>
+      <div className="flex shrink-0 flex-col gap-single">
+        <Textarea
+          id={`${id}.draft`}
+          data-testid="basic-chat-draft"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey) {
+              return;
+            }
+            event.preventDefault();
+            sendDraft();
+          }}
+          rows={3}
+          placeholder={`Write a message for ${title.toLowerCase()}...`}
+        />
+        <div className="flex items-center justify-end gap-single">
+          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text="Clear" onClick={clearMessages} />
+          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text="Send" onClick={sendDraft} disabled={!draft.trim()} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// #endregion Basic Chat Panel
+
 interface FileTreeItemProps {
   node: FileTreeNode;
   currentPath?: string;
@@ -4358,10 +4722,8 @@ interface FileTreeItemProps {
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
   const { level } = React.useContext(TreeContext);
   const [isHovered, setIsHovered] = React.useState(false);
-  const treeState = useTreeState();
   const itemId = `file-${node.path}`;
-  const open = treeState.getOpenState(itemId, true);
-  const setOpen = (value: boolean) => treeState.setOpenState(itemId, value);
+  const { open, setOpen } = useTreeOpenState(itemId, true);
 
   const isActive = currentPath === node.path;
   const hasChildren = node.children && node.children.length > 0;
@@ -4390,7 +4752,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
 
   const sharedProps = {
     className: itemClasses,
-    style: { paddingLeft: `${level * 1 + 0.75}rem` },
+    style: { paddingLeft: `${detailPanelIndentPx(level) + 12}px` },
     onClick: handleClick,
     onMouseEnter: () => setIsHovered(true),
     onMouseLeave: () => setIsHovered(false),
@@ -4459,6 +4821,240 @@ Tree.Section = Tree.Files;
  *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨filetree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/FILE-TREE)
  **/
 export const FileTree = Tree.Files;
+
+// #region ControlTree
+
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE)
+// Leva-like nested folder+controls tree UI using existing design system components.
+// Consumers MUST provide ControlDef[] and optional ControlTreeFolderSettings.
+
+/**
+ * Leaf control definition for the ControlTree.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🛠️controldef](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/CONTROL-DEF)
+ **/
+export interface ControlDef {
+  path: string;
+  key?: string;
+  order?: number;
+  controlKind: string;
+  value: any;
+  onChange: (next: any) => void;
+  meta?: Record<string, any>;
+}
+
+/**
+ * Folder settings for the ControlTree.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🛠️controltreefoldersettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/CONTROL-TREE-FOLDER-SETTINGS)
+ **/
+export interface ControlTreeFolderSettings {
+  path: string;
+  order?: number;
+  collapsed?: boolean;
+  color?: string;
+}
+
+/**
+ * Styling classname overrides for ControlTree visual slots.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🛠️controltreeclassnames](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/CONTROL-TREE-CLASS-NAMES)
+ **/
+export interface ControlTreeClassNames {
+  panel?: string;
+  folderRow?: string;
+  folderTitle?: string;
+  folderChevron?: string;
+  folderChildren?: string;
+  controlRow?: string;
+  controlLabel?: string;
+  controlBody?: string;
+}
+
+interface ControlTreeNode {
+  kind: "folder" | "control";
+  key: string;
+  path: string;
+  order: number;
+  control?: ControlDef;
+  children?: Record<string, ControlTreeNode>;
+}
+
+/**
+ * Pure function converting flat ControlDef[] paths into a nested tree. Filtering matches leaf keys case-insensitively.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🪨buildcontroltree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/BUILD-CONTROL-TREE)
+ **/
+export function buildControlTree(
+  controls: ControlDef[],
+  filterText: string,
+  folderSettings?: Record<string, ControlTreeFolderSettings>,
+): Record<string, ControlTreeNode> {
+  const root: Record<string, ControlTreeNode> = {};
+  const lowerFilter = filterText.toLowerCase();
+  for (const control of controls) {
+    const leafKey = control.key ?? control.path.split("/").pop() ?? control.path;
+    if (lowerFilter && !leafKey.toLowerCase().includes(lowerFilter)) continue;
+    const segments = control.path.split("/");
+    let current = root;
+    let pathAccum = "";
+    for (let i = 0; i < segments.length - 1; i++) {
+      const seg = segments[i];
+      pathAccum = pathAccum ? `${pathAccum}/${seg}` : seg;
+      if (!current[seg]) {
+        current[seg] = {
+          kind: "folder",
+          key: seg,
+          path: pathAccum,
+          order: folderSettings?.[pathAccum]?.order ?? 0,
+          children: {},
+        };
+      }
+      current = current[seg].children!;
+    }
+    const lastSeg = segments[segments.length - 1];
+    current[lastSeg] = {
+      kind: "control",
+      key: leafKey,
+      path: control.path,
+      order: control.order ?? 0,
+      control,
+    };
+  }
+  return root;
+}
+
+function sortControlTreeNodes(nodes: Record<string, ControlTreeNode>): ControlTreeNode[] {
+  return Object.values(nodes).sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    return a.key.localeCompare(b.key);
+  });
+}
+
+/**
+ * Default control renderer mapping controlKind to built-in components.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🪨defaultcontrolrenderer](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/DEFAULT-CONTROL-RENDERER)
+ **/
+export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
+  const controlId = def.path.replace(/\//g, ".");
+  switch (def.controlKind) {
+    case "number":
+      return <Stepper id={controlId} value={def.value} onChange={def.onChange} min={def.meta?.min} max={def.meta?.max} step={def.meta?.step ?? 1} />;
+    case "slider":
+      return <Slider id={controlId} value={[def.value]} onValueChange={(v) => def.onChange(v[0])} min={def.meta?.min ?? 0} max={def.meta?.max ?? 100} showLabel />;
+    case "boolean":
+      return <Toggle id={controlId} pressed={def.value} onPressedChange={def.onChange} icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />} />;
+    case "string":
+      return <Input id={controlId} lazy value={def.value} onLazyChange={def.onChange} showLabel />;
+    case "color":
+      return <Input id={controlId} type="color" value={def.value} onChange={(e) => def.onChange(e.target.value)} showLabel />;
+    case "select":
+      return (
+        <Select id={controlId} showLabel value={def.value} onValueChange={def.onChange}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(def.meta?.options ?? []).map((opt: string | { value: string; label: string }) => {
+              const v = typeof opt === "string" ? opt : opt.value;
+              const l = typeof opt === "string" ? opt : opt.label;
+              return <SelectItem key={v} value={v}>{l}</SelectItem>;
+            })}
+          </SelectContent>
+        </Select>
+      );
+    case "text":
+      return <Textarea id={controlId} lazy value={def.value} onLazyChange={def.onChange} showLabel />;
+    default:
+      return <Input id={controlId} lazy value={String(def.value)} onLazyChange={def.onChange} showLabel />;
+  }
+};
+
+interface ControlTreeFolderProps {
+  node: ControlTreeNode;
+  folderSettings?: Record<string, ControlTreeFolderSettings>;
+  onToggleFolder?: (path: string, collapsed: boolean) => void;
+  renderControl: (def: ControlDef) => React.ReactNode;
+  classNames?: ControlTreeClassNames;
+}
+
+const ControlTreeFolder: React.FC<ControlTreeFolderProps> = ({ node, folderSettings, onToggleFolder, renderControl, classNames }) => {
+  const settings = folderSettings?.[node.path];
+  const defaultOpen = !(settings?.collapsed ?? false);
+  const sorted = sortControlTreeNodes(node.children ?? {});
+  return (
+    <TreeSection
+      label={node.key}
+      className={classNames?.folderRow}
+      defaultOpen={defaultOpen}
+    >
+      {sorted.map((child) =>
+        child.kind === "folder" ? (
+          <ControlTreeFolder key={child.path} node={child} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
+        ) : (
+          <TreeItem key={child.path}>
+            <TreeContent>
+              <div data-slot="control-tree-leaf" className={classNames?.controlRow}>{renderControl(child.control!)}</div>
+            </TreeContent>
+          </TreeItem>
+        ),
+      )}
+    </TreeSection>
+  );
+};
+
+/**
+ * Props interface for the ControlTree component.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🛠️controltreeprops](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/CONTROL-TREE-PROPS)
+ **/
+export interface ControlTreeProps {
+  controls: ControlDef[];
+  filterText?: string;
+  folderSettings?: Record<string, ControlTreeFolderSettings>;
+  onToggleFolder?: (path: string, collapsed: boolean) => void;
+  renderControl?: (def: ControlDef) => React.ReactNode;
+  classNames?: ControlTreeClassNames;
+  className?: string;
+}
+
+/**
+ * Leva-like nested folder+controls tree panel using existing design system components.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🪨controltree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/CONTROL-TREE)
+ **/
+export const ControlTree: React.FC<ControlTreeProps> = ({
+  controls,
+  filterText = "",
+  folderSettings,
+  onToggleFolder,
+  renderControl = defaultControlRenderer,
+  classNames,
+  className,
+}) => {
+  const tree = React.useMemo(() => buildControlTree(controls, filterText, folderSettings), [controls, filterText, folderSettings]);
+  const sorted = React.useMemo(() => sortControlTreeNodes(tree), [tree]);
+  return (
+    <div data-slot="control-tree" className={cn("w-full min-w-0", classNames?.panel, className)}>
+      <Tree>
+        {sorted.map((node) =>
+          node.kind === "folder" ? (
+            <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
+          ) : (
+            <TreeItem key={node.path}>
+              <TreeContent>
+                <div data-slot="control-tree-leaf" className={classNames?.controlRow}>{renderControl(node.control!)}</div>
+              </TreeContent>
+            </TreeItem>
+          ),
+        )}
+      </Tree>
+    </div>
+  );
+};
+
+// #endregion ControlTree
 
 // #endregion Tree
 
@@ -5048,6 +5644,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
   const currentActiveTab = activeTabId ?? internalActiveTab;
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
+  const ActiveTabContent = typeof activeTab?.content === "function" ? activeTab.content : null;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -5118,7 +5715,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
-          <div data-slot="side-panel-content" className="p-[10px]">{activeTab && (typeof activeTab.content === "function" ? activeTab.content() : activeTab.content)}</div>
+          <div data-slot="side-panel-content" className="p-[10px]">{activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}</div>
         </Scrollable>
         {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>
@@ -5366,25 +5963,26 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // Consumers MUST provide nodes and edges arrays.
 
 export {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    forceCenter,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    getBezierPath,
-    Handle,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    useInternalNode,
-    useReactFlow,
-    ViewportPortal
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  getBezierPath,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
@@ -5555,6 +6153,8 @@ export interface DiagramProps {
   onSelectionStart?: (event: React.MouseEvent) => void;
   onSelectionEnd?: (event: React.MouseEvent) => void;
   defaultViewport?: { x: number; y: number; zoom: number };
+  autoPanOnNodeDrag?: boolean;
+  selectNodesOnDrag?: boolean;
 }
 
 const DiagramInner: React.FC<DiagramProps> = ({
@@ -5615,11 +6215,37 @@ const DiagramInner: React.FC<DiagramProps> = ({
   onSelectionStart,
   onSelectionEnd,
   defaultViewport,
+  autoPanOnNodeDrag,
+  selectNodesOnDrag,
 }) => {
   const forceConfig = React.useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
   const simulationRef = React.useRef<Simulation<any, any> | null>(null);
   const draggingNodeRef = React.useRef<string | null>(null);
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
+  const rfStoreApi = useStoreApi();
+  React.useEffect(() => {
+    const original = rfStoreApi.setState;
+    const api = rfStoreApi as any;
+    api.__suppressTransform = false;
+    api.__pendingTransform = null;
+    api.__original = original;
+    rfStoreApi.setState = ((partial: any, replace: any) => {
+      if (typeof partial === 'object' && partial !== null && !replace) {
+        const state = rfStoreApi.getState();
+        const keys = Object.keys(partial);
+        if (keys.length > 0 && keys.every((k) => Object.is((state as any)[k], partial[k]))) return;
+        if (api.__suppressTransform && keys.length === 1 && keys[0] === 'transform') {
+          const t = partial.transform;
+          const el = document.querySelector('.react-flow__viewport') as HTMLElement;
+          if (el) el.style.transform = `translate(${t[0]}px, ${t[1]}px) scale(${t[2]})`;
+          api.__pendingTransform = t;
+          return;
+        }
+      }
+      return original(partial, replace);
+    }) as typeof original;
+    return () => { rfStoreApi.setState = original; };
+  }, [rfStoreApi]);
 
   const [internalNodes, setInternalNodes] = React.useState<Node[]>(initialNodes);
   const [internalEdges, setInternalEdges] = React.useState<Edge[]>(initialEdges);
@@ -5627,16 +6253,35 @@ const DiagramInner: React.FC<DiagramProps> = ({
   const finalNodes = isControlled ? controlledNodes : internalNodes;
   const finalEdges = isControlled ? controlledEdges : internalEdges;
 
+  const onNodesChangeReactFlowRef = React.useRef(onNodesChangeReactFlow);
+  onNodesChangeReactFlowRef.current = onNodesChangeReactFlow;
+  const onNodeDragStartPropRef = React.useRef(onNodeDragStartProp);
+  onNodeDragStartPropRef.current = onNodeDragStartProp;
+  const onNodeDragPropRef = React.useRef(onNodeDragProp);
+  onNodeDragPropRef.current = onNodeDragProp;
+  const onNodeDragStopPropRef = React.useRef(onNodeDragStopProp);
+  onNodeDragStopPropRef.current = onNodeDragStopProp;
+  const onInitPropRef = React.useRef(onInitProp);
+  onInitPropRef.current = onInitProp;
+  const onConnectRef = React.useRef(onConnect);
+  onConnectRef.current = onConnect;
+  const onMoveStartRef = React.useRef(onMoveStart);
+  onMoveStartRef.current = onMoveStart;
+  const onMoveEndRef = React.useRef(onMoveEnd);
+  onMoveEndRef.current = onMoveEnd;
+  const onSelectionChangeRef = React.useRef(onSelectionChange);
+  onSelectionChangeRef.current = onSelectionChange;
+  const finalNodesRef = React.useRef(finalNodes);
+  finalNodesRef.current = finalNodes;
+
   const handleNodesChange = React.useCallback(
     (changes: any[]) => {
-      if (onNodesChangeReactFlow) {
-        onNodesChangeReactFlow(changes);
-      }
+      onNodesChangeReactFlowRef.current?.(changes);
       if (!isControlled) {
         setInternalNodes((nds) => applyNodeChanges(changes, nds));
       }
     },
-    [onNodesChangeReactFlow, isControlled],
+    [isControlled],
   );
 
   const handleEdgesChange = React.useCallback(
@@ -5662,18 +6307,16 @@ const DiagramInner: React.FC<DiagramProps> = ({
       if (reactFlowInstanceRef) {
         (reactFlowInstanceRef as any).current = instance;
       }
-      if (onInitProp) {
-        onInitProp(instance);
-      }
+      onInitPropRef.current?.(instance);
     },
-    [reactFlowInstanceRef, onInitProp],
+    [reactFlowInstanceRef],
   );
 
   const handleNodeDragStart = React.useCallback(
     (event: React.MouseEvent, node: Node) => {
       draggingNodeRef.current = node.id;
       if (forceConfig.enabled && simulationRef.current) {
-        const currentPositions = new Map(finalNodes.map((n) => [n.id, n.position]));
+        const currentPositions = new Map(finalNodesRef.current.map((n) => [n.id, n.position]));
         for (const simNode of simulationRef.current.nodes()) {
           const pos = currentPositions.get(simNode.id);
           if (pos) {
@@ -5688,18 +6331,18 @@ const DiagramInner: React.FC<DiagramProps> = ({
           simulationRef.current.alphaTarget(0.3).restart();
         }
       }
-      onNodeDragStartProp?.(event, node);
+      onNodeDragStartPropRef.current?.(event, node);
     },
-    [forceConfig.enabled, finalNodes, onNodeDragStartProp],
+    [forceConfig.enabled],
   );
 
   const handleNodeDrag = React.useCallback(
     (event: React.MouseEvent, node: Node) => {
       if (draggingNodeRef.current !== node.id) return;
       if (forceConfig.enabled && simulationRef.current) {
-        const selectedNodes = finalNodes.filter((n) => n.selected);
+        const selectedNodes = finalNodesRef.current.filter((n) => n.selected);
         if (selectedNodes.length > 1 && node.selected) {
-          const currentPositions = new Map(finalNodes.map((n) => [n.id, n.position]));
+          const currentPositions = new Map(finalNodesRef.current.map((n) => [n.id, n.position]));
           for (const simNode of simulationRef.current.nodes()) {
             const pos = currentPositions.get(simNode.id);
             if (pos && selectedNodes.find((sn) => sn.id === simNode.id)) {
@@ -5715,9 +6358,9 @@ const DiagramInner: React.FC<DiagramProps> = ({
           }
         }
       }
-      onNodeDragProp?.(event, node);
+      onNodeDragPropRef.current?.(event, node);
     },
-    [forceConfig.enabled, finalNodes, onNodeDragProp],
+    [forceConfig.enabled],
   );
 
   const handleNodeDragStop = React.useCallback(
@@ -5730,10 +6373,15 @@ const DiagramInner: React.FC<DiagramProps> = ({
         }
       }
       draggingNodeRef.current = null;
-      onNodeDragStopProp?.(event, node);
+      onNodeDragStopPropRef.current?.(event, node);
     },
-    [forceConfig.enabled, onNodeDragStopProp],
+    [forceConfig.enabled],
   );
+
+  const stableOnConnect = React.useCallback((connection: any) => { onConnectRef.current?.(connection); }, []);
+  const stableOnMoveStart = React.useCallback(() => { onMoveStartRef.current?.(); }, []);
+  const stableOnMoveEnd = React.useCallback(() => { onMoveEndRef.current?.(); }, []);
+  const stableOnSelectionChange = React.useCallback((selection: OnSelectionChangeParams) => { onSelectionChangeRef.current?.(selection); }, []);
 
   React.useEffect(() => {
     if (!forceConfig.enabled || finalNodes.length === 0) {
@@ -5879,7 +6527,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         edges={finalEdges}
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
-        onConnect={onConnect}
+        onConnect={stableOnConnect}
         onInit={handleInit}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
@@ -5893,9 +6541,9 @@ const DiagramInner: React.FC<DiagramProps> = ({
         onEdgeMouseLeave={onEdgeMouseLeave}
         onPaneClick={onPaneClick}
         onDoubleClick={onPaneDoubleClick}
-        onMoveStart={onMoveStart}
-        onMoveEnd={onMoveEnd}
-        onSelectionChange={onSelectionChange}
+        onMoveStart={stableOnMoveStart}
+        onMoveEnd={stableOnMoveEnd}
+        onSelectionChange={stableOnSelectionChange}
         onSelectionStart={onSelectionStart}
         onSelectionEnd={onSelectionEnd}
         nodeTypes={nodeTypes}
@@ -5918,6 +6566,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
         nodesFocusable={nodesFocusable}
         edgesFocusable={edgesFocusable}
         nodesDraggable={nodesDraggable}
+        autoPanOnNodeDrag={autoPanOnNodeDrag}
+        selectNodesOnDrag={selectNodesOnDrag}
         proOptions={proOptions}
         className="bg-background"
       >
@@ -6013,6 +6663,21 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents🔖scene](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/WINDOW-COMPONENTS/SCENE)
 // 3D scene viewer built on React Three Fiber.
 // Consumers MUST provide SceneGeometry data.
+
+export const sceneFrameControlRef: { current: { pause: () => void; resume: () => void } | null } = { current: null };
+const SceneFrameControl: React.FC = () => {
+  const gl = useThree((s) => s.gl);
+  const setFrameloop = useThree((s) => s.setFrameloop);
+  const invalidate = useThree((s) => s.invalidate);
+  React.useEffect(() => {
+    sceneFrameControlRef.current = {
+      pause: () => setFrameloop("never"),
+      resume: () => { setFrameloop("demand"); invalidate(); },
+    };
+    return () => { sceneFrameControlRef.current = null; };
+  }, [gl, setFrameloop, invalidate]);
+  return null;
+};
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -6572,7 +7237,8 @@ export const Scene: React.FC<SceneProps> = ({
           <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} />
         </div>
       )}
-      <ThreeCanvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined} style={{ width: "100%", height: "100%" }}>
+      <ThreeCanvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} frameloop="demand" camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined} style={{ width: "100%", height: "100%" }}>
+        <SceneFrameControl />
         <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
           {children}
         </SceneInner>

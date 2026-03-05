@@ -6,48 +6,31 @@ goal: R26-02/RUNNING-SKETCHPAD
 
 ## Summary
 
-Fixed all TS compilation errors and runtime issues. All tests pass: 11 unit tests, 6 e2e tests (Home, Kit, Type, Design, Docs, Feedback). Key fixes: react-resizable-panels v4 API, arePortsCompatible Port resolution, React 19 JSX namespace, Design render loop, dispatchEvent freeze, KitStore dirty flag propagation.
+Reopened to fix the current sketchpad startup failure. The reproducible repo-level failure was the `@semio/js` sketchpad dev entrypoint aborting whenever port `5173` was already occupied because the script used Vite `--strictPort`. The updated script keeps `5173` as the preferred port and now falls back cleanly to the next free port.
 ## Changes
 
-- `semio/js/sketchpad/elements.tsx`: Updated react-resizable-panels v4 API: `PanelGroup`→`Group`, `PanelResizeHandle`→`Separator`, removed obsolete CSS selectors
-- `semio/js/sketchpad/Design.tsx`: Fixed `designPiece` property access on union type; Fixed `arePortsCompatible` calls (2 sites) to resolve `Port` from `Connector.port` field; Fixed render loop by removing `selection` from `baseNodes` useMemo; Added `skipBaseNodesSyncRef` and `isDraggingNodeRef` guards; Fixed `onNodeDragStop` handler transaction and sync timing
-- `semio/js/sketchpad/Feedback.tsx`: Added required `id` prop to two `<Select>` components
-- `semio/js/sketchpad/Home.tsx`: Added `?? ""` fallbacks for `string | undefined` values passed to `generateUniqueName`
-- `semio/js/sketchpad/Sketchpad.tsx`: Changed `JSX.Element` to `React.JSX.Element`; Changed `TypeAppState.camera` type to `any`; Fixed `PanelTabContent` hook order violation; Fixed `KitStore` dirty flag propagation
-- `semio/js/sketchpad.test.ts`: Replaced `dispatchEvent` click approach with Playwright native `page.mouse.click` to avoid React 19/React Flow sync event freeze
-- `vitest.config.ts`: Fixed corrupted syntax (`eport default` → `export default`)
+- `semio/js/package.json`: Remove `--strictPort` from `dev:sketchpad` so the dev server still starts when `5173` is occupied, while keeping `5173` as the preferred default port.
 
 ## Log
 
-- Fixed 13+ TS compilation errors across 6 files
-- Fixed `vitest.config.ts` corrupted syntax
-- Fixed Design e2e test freeze caused by:
-  1. `page.evaluate(() => node.click())` using `dispatchEvent` which freezes React 19 + React Flow
-  2. Render loop from `selection` being in `baseNodes` useMemo deps
-  3. `onNodeDragStop` missing proper `skipBaseNodesSyncRef` and `isDraggingNodeRef` guards
-  4. `KitStore` dirty flag not propagated causing stale snapshots
-  5. `PanelTabContent` hook order violation in `.map()` call
-- `npx tsc --noEmit` passes with 0 errors
-- Unit tests: 11/11 passed
-- E2e tests: 6/6 passed (Home, Kit, Type, Design, Docs, Feedback)
+- Reproduced the startup failure with `cd semio/js && npm run dev:sketchpad`.
+- In the sandbox, binding errors were permission-related and not useful for the repo diagnosis.
+- Re-ran the command unrestricted and observed the actual repo-level failure: `Error: Port 5173 is already in use`.
+- Root cause: `dev:sketchpad` used `vite --strictPort --port 5173 --host 0.0.0.0`, which aborts instead of choosing a free port.
+- Updated the script to `vite --port 5173 --host 0.0.0.0`.
+- Verified with an unrestricted runtime check: Vite reported `Port 5173 is in use, trying another one...` and started successfully on `http://localhost:5174/`.
+- Attempted `repo ticket close` multiple ways, but the CLI returned `graphql errors: [at least one file is required]` each time, so ticket closure is still blocked by the repo tool.
 
 ## Todos
 
-- [x] Analyze and fix all TS compilation errors
-- [x] Fix vitest.config.ts corruption
-- [x] Fix Design test selection click freeze
-- [x] Fix Design test drag-and-drop freeze
-- [x] Fix arePortsCompatible type error (both call sites)
-- [x] Verify TS compilation passes (0 errors)
-- [x] Run unit tests (11/11 passed)
-- [x] Run e2e tests (6/6 passed)
-- [x] Close ticket
+- [x] Reproduce the current sketchpad startup failure
+- [x] Identify the failing entrypoint and root cause
+- [x] Update the dev server startup script to allow port fallback
+- [x] Verify the sketchpad dev entrypoint starts successfully
+- [ ] Close the ticket
 
 ## Plan
 
-1. Run `npx tsc --noEmit` to identify all errors
-2. Fix each error without changing functionality
-3. Fix runtime issues (render loops, event handling, store propagation)
-4. Verify compilation passes
-5. Run all tests to ensure no regressions
-5. Close ticket
+1. Re-run the `@semio/js` sketchpad dev entrypoint after removing `--strictPort`
+2. Confirm Vite starts and reports a served URL on `5173` or the next available port
+3. Close the ticket with the verified file list

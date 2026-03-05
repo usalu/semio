@@ -1110,6 +1110,12 @@
             "normal": "Kit",
             "beginner": "Kit"
           },
+          "properties": {
+            "label": {
+              "normal": "Kit-Eigenschaften",
+              "beginner": "Kit-Eigenschaften"
+            }
+          },
           "noKitLoaded": {
             "label": {
               "normal": "Kein Kit geladen",
@@ -1932,6 +1938,12 @@
           "label": {
             "normal": "Entwurf",
             "beginner": "Entwurf"
+          },
+          "properties": {
+            "label": {
+              "normal": "Entwurfs-Eigenschaften",
+              "beginner": "Entwurfs-Eigenschaften"
+            }
           },
           "defaultName": {
             "label": {
@@ -3256,6 +3268,12 @@
             "normal": "Typ",
             "beginner": "Typ"
           },
+          "properties": {
+            "label": {
+              "normal": "Typ-Eigenschaften",
+              "beginner": "Typ-Eigenschaften"
+            }
+          },
           "toolbar": {
             "label": {
               "normal": "",
@@ -3368,6 +3386,12 @@
             "label": {
               "normal": "Connector",
               "beginner": "Connector"
+            },
+            "properties": {
+              "label": {
+                "normal": "Connector-Eigenschaften",
+                "beginner": "Connector-Eigenschaften"
+              }
             },
             "title": {
               "label": {
