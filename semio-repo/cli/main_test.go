@@ -7299,6 +7299,7 @@ func TestGetArtifactID_Interaction(t *testing.T) {
 
 func TestGetArtifactID_Sessions(t *testing.T) {
 	dayId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15"
+	checkpointId := GetArtifactID("checkpoint", map[string]interface{}{"sha": "abc123sha"})
 	cases := []struct {
 		name     string
 		parentId string
@@ -7306,6 +7307,7 @@ func TestGetArtifactID_Sessions(t *testing.T) {
 	}{
 		{"root sessions", "", emojiText(EmojiSessions)},
 		{"day sessions", dayId, dayId + emojiText(EmojiSessions)},
+		{"checkpoint sessions", checkpointId, checkpointId + emojiText(EmojiSessions)},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7320,14 +7322,18 @@ func TestGetArtifactID_Sessions(t *testing.T) {
 func TestGetArtifactID_Session(t *testing.T) {
 	dayId := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15"
 	sessionsId := dayId + emojiText(EmojiSessions)
+	checkpointId := GetArtifactID("checkpoint", map[string]interface{}{"sha": "abc123sha"})
+	checkpointSessionsId := checkpointId + emojiText(EmojiSessions)
 	cases := []struct {
 		name     string
 		data     map[string]interface{}
 		expected string
 	}{
-		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
-		{"session with id fallback", map[string]interface{}{"id": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with uuid under day", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with id fallback under day", map[string]interface{}{"id": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": sessionsId}, sessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 		{"session no parent", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with uuid under checkpoint", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": checkpointId}, checkpointId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with uuid under checkpoint sessions", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", "parentId": checkpointSessionsId}, checkpointSessionsId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7424,17 +7430,33 @@ func TestSessionKindEmoji(t *testing.T) {
 }
 
 func TestSessionGetID(t *testing.T) {
-	s := Session{
-		UUID:  "e753ed61-e8cc-49b7-88f7-dda53b8d5a15",
-		Year:  26,
-		Month: 2,
-		Day:   15,
-		Kind:  SessionKindCompleted,
+	uuid := "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+	uuidFlat := "e753ed61e8cc49b788f7dda53b8d5a15"
+	checkpointSHA := "abc123sha"
+	checkpointId := GetArtifactID("checkpoint", map[string]interface{}{"sha": checkpointSHA})
+	cases := []struct {
+		name     string
+		session  Session
+		expected string
+	}{
+		{
+			name:     "with checkpoint as parent",
+			session:  Session{UUID: uuid, Year: 26, Month: 2, Day: 15, Checkpoint: checkpointSHA, Kind: SessionKindCompleted},
+			expected: checkpointId + emojiText(EmojiSession) + uuidFlat,
+		},
+		{
+			name:     "without checkpoint falls back to date hierarchy",
+			session:  Session{UUID: uuid, Year: 26, Month: 2, Day: 15, Kind: SessionKindCompleted},
+			expected: emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15" + emojiText(EmojiSession) + uuidFlat,
+		},
 	}
-	id := s.GetID()
-	expected := emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"
-	if id != expected {
-		t.Errorf("Session.GetID() = %q, want %q", id, expected)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			id := tc.session.GetID()
+			if id != tc.expected {
+				t.Errorf("Session.GetID() = %q, want %q", id, tc.expected)
+			}
+		})
 	}
 }
 
@@ -7450,6 +7472,31 @@ func TestSessionGetURI(t *testing.T) {
 	expected := "semiorepo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
 	if uri != expected {
 		t.Errorf("Session.GetURI() = %q, want %q", uri, expected)
+	}
+}
+
+func TestNormalizeTicketSessionID(t *testing.T) {
+	checkpointId := GetArtifactID("checkpoint", map[string]interface{}{"sha": "abc123sha"})
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"empty", "", ""},
+		{"raw uuid", "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"already normalized", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"running prefix stripped", emojiText(EmojiSessionRunning) + "e753ed61e8cc49b788f7dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"completed prefix stripped", emojiText(EmojiSessionCompleted) + "e753ed61e8cc49b788f7dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"checkpoint prefixed", checkpointId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", checkpointId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"checkpoint prefixed raw uuid", checkpointId + emojiText(EmojiSession) + "e753ed61-e8cc-49b7-88f7-dda53b8d5a15", checkpointId + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeTicketSessionID(tc.input)
+			if got != tc.expected {
+				t.Errorf("normalizeTicketSessionID(%q) = %q, want %q", tc.input, got, tc.expected)
+			}
+		})
 	}
 }
 
@@ -11708,6 +11755,28 @@ func TestIdUriRoundTrip(t *testing.T) {
 func TestMcpToolsSchemas(t *testing.T) {
 	s := createMcpServer()
 	tools := s.ListTools()
+	forbiddenTools := []string{
+		"analyze",
+		"contributor_add",
+		"contributor_remove",
+		"export",
+		"file_create",
+		"file_delete",
+		"file_move",
+		"folder_create",
+		"folder_delete",
+		"folder_move",
+		"graphql",
+		"move",
+		"policy_check",
+		"ticket_read",
+	}
+
+	for _, forbidden := range forbiddenTools {
+		if _, exists := tools[forbidden]; exists {
+			t.Fatalf("forbidden MCP tool %q is still registered", forbidden)
+		}
+	}
 
 	var validateSchema func(path string, schema map[string]any) error
 	validateSchema = func(path string, schema map[string]any) error {
@@ -16291,37 +16360,44 @@ func TestHookLogging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected log dir to exist: %v", err)
 	}
-	if len(entries) != 2 {
-		t.Fatalf("expected 2 log files (event + session.json), got %d", len(entries))
+	if len(entries) != 1 {
+		t.Fatalf("expected only session.json for session events, got %d files", len(entries))
 	}
-
-	var eventName string
-	foundSessionMeta := false
-	for _, e := range entries {
-		switch {
-		case e.Name() == "session.json":
-			foundSessionMeta = true
-		case strings.HasSuffix(e.Name(), "_agent-started.json"):
-			eventName = e.Name()
-		}
+	if entries[0].Name() != "session.json" {
+		t.Fatalf("expected session.json to be the only file, got %s", entries[0].Name())
 	}
-	if !foundSessionMeta {
-		t.Fatalf("expected session.json to be written alongside agent events")
-	}
-	if eventName == "" {
-		t.Fatalf("expected an agent-started event file")
-	}
-	if len(eventName) != len("HHMMSS_agent-started.json") {
-		t.Errorf("unexpected filename length for %q", eventName)
-	}
-
-	data, err := os.ReadFile(filepath.Join(logDir, eventName))
+	metaBytes, err := os.ReadFile(filepath.Join(logDir, "session.json"))
 	if err != nil {
-		t.Fatalf("cannot read log file: %v", err)
+		t.Fatalf("expected session.json to exist, got error: %v", err)
 	}
-	var entry HookLogEntry
-	if err := json.Unmarshal(data, &entry); err != nil {
-		t.Fatalf("expected valid JSON log entry, got: %v", err)
+	var meta SessionMeta
+	if err := json.Unmarshal(metaBytes, &meta); err != nil {
+		t.Fatalf("expected valid JSON in session.json, got: %v", err)
+	}
+	if len(meta.Events) != 1 {
+		t.Fatalf("expected exactly 1 session event, got %d", len(meta.Events))
+	}
+	if meta.ID == "" {
+		t.Errorf("expected id in session.json, got: %v", meta.ID)
+	}
+	if meta.URI == "" {
+		t.Errorf("expected uri in session.json, got: %v", meta.URI)
+	}
+	if meta.Contributor == "" {
+		t.Errorf("expected contributor in session.json, got: %v", meta.Contributor)
+	}
+	if meta.Client != "claude-code" {
+		t.Errorf("expected client claude-code in session.json, got: %v", meta.Client)
+	}
+	if meta.Second == "" {
+		t.Errorf("expected second in session.json, got: %v", meta.Second)
+	}
+	if meta.Transcript != "/tmp/transcript.jsonl" {
+		t.Errorf("expected transcript in session.json, got: %v", meta.Transcript)
+	}
+	entry := meta.Events[0]
+	if entry.Native.Event == nil {
+		t.Error("expected native.event to be populated")
 	}
 	var evt map[string]interface{}
 	if err := json.Unmarshal(entry.Event, &evt); err != nil {
@@ -16350,37 +16426,29 @@ func TestHookLogging(t *testing.T) {
 	if entry.Response.Blocked != nil {
 		t.Error("expected response.blocked to be nil for allowed event")
 	}
-	if entry.Native.Event == nil {
-		t.Error("expected native.event to be populated")
+	if len(meta.Events) > 0 && len(meta.Events[0].Event) == 0 {
+		t.Error("expected non-empty serialized event payload in session event")
 	}
-
-	metaBytes, err := os.ReadFile(filepath.Join(logDir, "session.json"))
-	if err != nil {
-		t.Fatalf("expected session.json to exist, got error: %v", err)
-	}
-	var meta map[string]interface{}
-	if err := json.Unmarshal(metaBytes, &meta); err != nil {
-		t.Fatalf("expected valid JSON in session.json, got: %v", err)
-	}
-	if meta["id"] == "" {
-		t.Errorf("expected id in session.json, got: %v", meta["id"])
-	}
-	if meta["uri"] == "" {
-		t.Errorf("expected uri in session.json, got: %v", meta["uri"])
-	}
-	if meta["contributor"] == "" {
-		t.Errorf("expected contributor in session.json, got: %v", meta["contributor"])
-	}
-	if meta["client"] != "claude-code" {
-		t.Errorf("expected client claude-code in session.json, got: %v", meta["client"])
-	}
-	if meta["second"] == "" {
-		t.Errorf("expected second in session.json, got: %v", meta["second"])
-	}
-	for _, forbidden := range []string{"uuid", "started_at", "first_event", "native", "event", "response"} {
-		if _, ok := meta[forbidden]; ok {
-			t.Errorf("expected %s to be absent in session.json to avoid event duplication", forbidden)
+	for _, forbidden := range []string{"uuid", "started_at", "first_event"} {
+		metaMap := map[string]interface{}{}
+		if err := json.Unmarshal(metaBytes, &metaMap); err != nil {
+			t.Fatalf("expected valid JSON map in session.json, got: %v", err)
 		}
+		if _, ok := metaMap[forbidden]; ok {
+			t.Errorf("expected %s to be absent in session.json", forbidden)
+		}
+	}
+	for _, forbidden := range []string{"native", "event", "response"} {
+		metaMap := map[string]interface{}{}
+		if err := json.Unmarshal(metaBytes, &metaMap); err != nil {
+			t.Fatalf("expected valid JSON map in session.json, got: %v", err)
+		}
+		if _, ok := metaMap[forbidden]; ok {
+			t.Errorf("expected %s to be absent at root of session.json", forbidden)
+		}
+	}
+	if len(meta.Events) == 0 {
+		t.Fatalf("expected session.json to be written alongside agent events")
 	}
 }
 
@@ -16638,26 +16706,29 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 		t.Fatalf("expected log dir to exist: %v", err)
 	}
 	if len(entries) != 1 {
-		t.Fatalf("expected 1 log file, got %d", len(entries))
+		t.Fatalf("expected only session.json, got %d files", len(entries))
 	}
-	data, err := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
+	if entries[0].Name() != "session.json" {
+		t.Fatalf("expected session.json, got %s", entries[0].Name())
+	}
+	data, err := os.ReadFile(filepath.Join(logDir, "session.json"))
 	if err != nil {
-		t.Fatalf("cannot read log file: %v", err)
+		t.Fatalf("cannot read session.json: %v", err)
 	}
-	var entry HookLogEntry
-	if err := json.Unmarshal(data, &entry); err != nil {
-		t.Fatalf("expected valid JSON log entry: %v", err)
+	var meta SessionMeta
+	if err := json.Unmarshal(data, &meta); err != nil {
+		t.Fatalf("expected valid session.json: %v", err)
 	}
+	if len(meta.Events) != 1 {
+		t.Fatalf("expected 1 event in session.json, got %d", len(meta.Events))
+	}
+	entry := meta.Events[0]
 	if entry.Response.Blocked == nil || !*entry.Response.Blocked {
 		t.Error("expected response.blocked=true for blocked tool")
 	}
 	if !strings.Contains(entry.Response.Reason, "blocked") {
 		t.Errorf("expected blocked reason in log, got: %s", entry.Response.Reason)
 	}
-	if !strings.HasSuffix(entries[0].Name(), "_agent-tool-starting.json") {
-		t.Errorf("expected filename to end with _agent-tool-starting.json, got: %s", entries[0].Name())
-	}
-
 }
 
 func TestHookLoggingStdinInput(t *testing.T) {
@@ -16679,11 +16750,18 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	RunHook(hctx)
 	entries, _ := os.ReadDir(logDir)
 	if len(entries) != 1 {
-		t.Fatalf("expected 1 log file, got %d", len(entries))
+		t.Fatalf("expected only session.json, got %d files", len(entries))
 	}
-	data, _ := os.ReadFile(filepath.Join(logDir, entries[0].Name()))
-	var entry HookLogEntry
-	json.Unmarshal(data, &entry)
+	if entries[0].Name() != "session.json" {
+		t.Fatalf("expected session.json, got %s", entries[0].Name())
+	}
+	data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+	var meta SessionMeta
+	json.Unmarshal(data, &meta)
+	if len(meta.Events) != 1 {
+		t.Fatalf("expected 1 event in session.json, got %d", len(meta.Events))
+	}
+	entry := meta.Events[0]
 	if len(entry.Native.Event) == 0 {
 		t.Error("expected native.event from HookContext.Input")
 	}
@@ -16713,6 +16791,324 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	}
 }
 
+func TestDeriveRepoOpFromMCPTool(t *testing.T) {
+	cases := []struct {
+		name     string
+		tool     string
+		expected string
+	}{
+		{"ticket open", "mcp__semio-repo__ticket_open", "ticket.open"},
+		{"ticket close", "mcp__semio-repo__ticket_close", "ticket.close"},
+		{"ticket reopen", "mcp__semio-repo__ticket_reopen", "ticket.reopen"},
+		{"ticket read", "mcp__semio-repo__ticket_read", "ticket.read"},
+		{"goal open", "mcp__semio-repo__goal_open", "goal.open"},
+		{"goal close", "mcp__semio-repo__goal_close", "goal.close"},
+		{"goal reopen", "mcp__semio-repo__goal_reopen", "goal.reopen"},
+		{"contributor add", "mcp__semio-repo__contributor_add", "contributor.add"},
+		{"contributor remove", "mcp__semio-repo__contributor_remove", "contributor.remove"},
+		{"draft create", "mcp__semio-repo__draft_create", "draft.create"},
+		{"draft delete", "mcp__semio-repo__draft_delete", "draft.delete"},
+		{"file create", "mcp__semio-repo__file_create", "file.create"},
+		{"file move", "mcp__semio-repo__file_move", "file.move"},
+		{"file delete", "mcp__semio-repo__file_delete", "file.delete"},
+		{"folder create", "mcp__semio-repo__folder_create", "folder.create"},
+		{"folder move", "mcp__semio-repo__folder_move", "folder.move"},
+		{"folder delete", "mcp__semio-repo__folder_delete", "folder.delete"},
+		{"section create", "mcp__semio-repo__section_create", "section.create"},
+		{"section move", "mcp__semio-repo__section_move", "section.move"},
+		{"section delete", "mcp__semio-repo__section_delete", "section.delete"},
+		{"integrate", "mcp__semio-repo__integrate", "integrate"},
+		{"extract", "mcp__semio-repo__extract", "extract"},
+		{"export", "mcp__semio-repo__export", "export"},
+		{"analyze", "mcp__semio-repo__analyze", "analyze"},
+		{"fix", "mcp__semio-repo__fix", "fix"},
+		{"tree", "mcp__semio-repo__tree", "tree"},
+		{"graphql", "mcp__semio-repo__graphql", "graphql"},
+		{"move", "mcp__semio-repo__move", "move"},
+		{"policy check", "mcp__semio-repo__policy_check", "policy.check"},
+		{"non-semio tool", "mcp__other__thing", ""},
+		{"bash tool", "Bash", ""},
+		{"empty", "", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := deriveRepoOpFromMCPTool(tc.tool)
+			if got != tc.expected {
+				t.Errorf("deriveRepoOpFromMCPTool(%q) = %q, want %q", tc.tool, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestDeriveRepoOpFromCLICommand(t *testing.T) {
+	cases := []struct {
+		name     string
+		cmd      string
+		expected string
+	}{
+		{"ticket open full path", "./semio-repo/cli/cli ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
+		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' semio/go/semio.go", "ticket.close"},
+		{"ticket reopen", "/workspaces/semio/semio-repo/cli/cli ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"goal open", "./cli goal open 'Title' 'Desc' 'Prompt' claude-code sonnet-4-5", "goal.open"},
+		{"goal close", "./cli goal close MY-GOAL 'Summary'", "goal.close"},
+		{"contributor add", "./cli contributor add github-user", "contributor.add"},
+		{"single subcommand", "./cli analyze", "analyze"},
+		{"non-cli binary", "./other-tool ticket open", ""},
+		{"empty", "", ""},
+		{"just cli", "./cli", ""},
+		{"cli with flag first", "./cli -v ticket open", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := deriveRepoOpFromCLICommand(tc.cmd)
+			if got != tc.expected {
+				t.Errorf("deriveRepoOpFromCLICommand(%q) = %q, want %q", tc.cmd, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestLogRepoOperationHookMCPTool(t *testing.T) {
+	tmpDir := t.TempDir()
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"sess1")
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("starting event for mcp__semio-repo__tree", func(t *testing.T) {
+		input := json.RawMessage(`{"query":"contributors"}`)
+		result := HookResultAgentToolStarting{
+			HookResultAgentBase: HookResultAgentBase{
+				HookResultBase: HookResultBase{Allowed: true},
+				Session:        "sess1",
+			},
+			Name:  "mcp__semio-repo__tree",
+			Input: input,
+		}
+		hctx := HookContext{
+			Event:    HookAgentToolStarting,
+			Client:   "claude-code",
+			RepoRoot: tmpDir,
+			Input:    json.RawMessage(`{"session_id":"sess1"}`),
+		}
+		before, _ := os.ReadDir(logDir)
+		logRepoOperationHook(hctx, result, logDir, now, "sess1")
+		after, _ := os.ReadDir(logDir)
+		hasSessionJSON := false
+		for _, e := range after {
+			if e.Name() == "session.json" {
+				hasSessionJSON = true
+				break
+			}
+		}
+		if len(after) != len(before)+1 || !hasSessionJSON {
+			t.Fatalf("expected session.json to be created for derived repo op event")
+		}
+		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+		var meta SessionMeta
+		json.Unmarshal(data, &meta)
+		if len(meta.Events) != 1 {
+			t.Fatalf("expected 1 derived event, got %d", len(meta.Events))
+		}
+		entry := meta.Events[0]
+		var evt map[string]interface{}
+		json.Unmarshal(entry.Event, &evt)
+		if evt["kind"] != "repo.tree.starting" {
+			t.Errorf("expected kind repo.tree.starting, got: %v", evt["kind"])
+		}
+	})
+
+	t.Run("ended event for mcp__semio-repo__ticket_open", func(t *testing.T) {
+		result := HookResultAgentToolEnded{
+			HookResultAgentBase: HookResultAgentBase{
+				HookResultBase: HookResultBase{Allowed: true},
+				Session:        "sess1",
+			},
+			Name: "mcp__semio-repo__ticket_open",
+		}
+		hctx := HookContext{
+			Event:    HookAgentToolEnded,
+			Client:   "claude-code",
+			RepoRoot: tmpDir,
+		}
+		before, _ := os.ReadDir(logDir)
+		logRepoOperationHook(hctx, result, logDir, now, "sess1")
+		after, _ := os.ReadDir(logDir)
+		if len(after) != len(before) {
+			t.Fatalf("expected no extra files beyond session.json, got %d", len(after))
+		}
+		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+		var meta SessionMeta
+		json.Unmarshal(data, &meta)
+		if len(meta.Events) != 2 {
+			t.Fatalf("expected 2 derived events, got %d", len(meta.Events))
+		}
+		entry := meta.Events[1]
+		var evt map[string]interface{}
+		json.Unmarshal(entry.Event, &evt)
+		if evt["kind"] != "repo.ticket.open.ended" {
+			t.Errorf("expected kind repo.ticket.open.ended, got: %v", evt["kind"])
+		}
+	})
+
+	t.Run("no extra file for non-semio tool", func(t *testing.T) {
+		result := HookResultAgentToolStarting{
+			HookResultAgentBase: HookResultAgentBase{
+				HookResultBase: HookResultBase{Allowed: true},
+			},
+			Name: "Bash",
+		}
+		hctx := HookContext{
+			Event:    HookAgentToolStarting,
+			Client:   "claude-code",
+			RepoRoot: tmpDir,
+		}
+		before, _ := os.ReadDir(logDir)
+		logRepoOperationHook(hctx, result, logDir, now, "sess1")
+		after, _ := os.ReadDir(logDir)
+		if len(after) != len(before) {
+			t.Errorf("expected no new files for Bash tool, got %d new files", len(after)-len(before))
+		}
+	})
+}
+
+func TestLogRepoOperationHookCLI(t *testing.T) {
+	tmpDir := t.TempDir()
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		"sess2")
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("starting event for CLI ticket open", func(t *testing.T) {
+		result := HookResultAgentToolTerminalStarting{
+			HookResultAgentBase: HookResultAgentBase{
+				HookResultBase: HookResultBase{Allowed: true},
+				Session:        "sess2",
+			},
+			Command: "./semio-repo/cli/cli ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
+		}
+		hctx := HookContext{
+			Event:    HookAgentToolTerminalStarting,
+			Client:   "claude-code",
+			RepoRoot: tmpDir,
+		}
+		before, _ := os.ReadDir(logDir)
+		logRepoOperationHook(hctx, result, logDir, now, "sess2")
+		after, _ := os.ReadDir(logDir)
+		hasSessionJSON := false
+		for _, e := range after {
+			if e.Name() == "session.json" {
+				hasSessionJSON = true
+				break
+			}
+		}
+		if len(after) != len(before)+1 || !hasSessionJSON {
+			t.Fatalf("expected session.json creation for CLI repo op event")
+		}
+		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+		var meta SessionMeta
+		json.Unmarshal(data, &meta)
+		if len(meta.Events) != 1 {
+			t.Fatalf("expected 1 derived event, got %d", len(meta.Events))
+		}
+		entry := meta.Events[0]
+		var evt map[string]interface{}
+		json.Unmarshal(entry.Event, &evt)
+		if evt["kind"] != "repo.ticket.open.starting" {
+			t.Errorf("expected kind repo.ticket.open.starting, got: %v", evt["kind"])
+		}
+	})
+
+	t.Run("ended event for CLI goal close", func(t *testing.T) {
+		result := HookResultAgentToolTerminalEnded{
+			HookResultAgentBase: HookResultAgentBase{
+				HookResultBase: HookResultBase{Allowed: true},
+				Session:        "sess2",
+			},
+			Command: "/workspace/semio-repo/cli/cli goal close MY-GOAL 'Summary'",
+		}
+		hctx := HookContext{
+			Event:    HookAgentToolTerminalEnded,
+			Client:   "claude-code",
+			RepoRoot: tmpDir,
+		}
+		before, _ := os.ReadDir(logDir)
+		logRepoOperationHook(hctx, result, logDir, now, "sess2")
+		after, _ := os.ReadDir(logDir)
+		if len(after) != len(before) {
+			t.Fatalf("expected no extra file beyond session.json, got %d", len(after))
+		}
+		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+		var meta SessionMeta
+		json.Unmarshal(data, &meta)
+		if len(meta.Events) != 2 {
+			t.Fatalf("expected 2 derived events, got %d", len(meta.Events))
+		}
+		entry := meta.Events[1]
+		var evt map[string]interface{}
+		json.Unmarshal(entry.Event, &evt)
+		if evt["kind"] != "repo.goal.close.ended" {
+			t.Errorf("expected kind repo.goal.close.ended, got: %v", evt["kind"])
+		}
+	})
+}
+
+func TestRunHookAgentToolStartingDerivedRepoEvents(t *testing.T) {
+	tmpDir := t.TempDir()
+	sessionID := "test-repo-events-session"
+	payload := json.RawMessage(`{"session_id":"test-repo-events-session","tool_name":"mcp__semio-repo__ticket_open","tool_input":{"title":"My Ticket","prompt":"My Prompt","client":"claude-code","llm":"sonnet-4-5","goal":"MY-GOAL"}}`)
+	hctx := HookContext{
+		Event:    HookAgentToolStarting,
+		Client:   "claude-code",
+		Second:   "2026-03-05T12:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    payload,
+	}
+	RunHook(hctx)
+
+	now := time.Now().UTC()
+	logDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		sessionID)
+	entries, _ := os.ReadDir(logDir)
+	if len(entries) != 1 || entries[0].Name() != "session.json" {
+		names := make([]string, len(entries))
+		for i, e := range entries {
+			names[i] = e.Name()
+		}
+		t.Fatalf("expected only session.json, got %d: %v", len(entries), names)
+	}
+	data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
+	var meta SessionMeta
+	json.Unmarshal(data, &meta)
+	if len(meta.Events) != 2 {
+		t.Fatalf("expected 2 session events (agent + derived repo op), got %d", len(meta.Events))
+	}
+	found := false
+	for _, entry := range meta.Events {
+		var evt map[string]interface{}
+		json.Unmarshal(entry.Event, &evt)
+		if evt["kind"] == "repo.ticket.open.starting" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected derived repo.ticket.open.starting event in session.json events")
+	}
+}
 func setupTicketDir(t *testing.T) (string, string) {
 	t.Helper()
 	tmpDir := t.TempDir()
@@ -18272,8 +18668,31 @@ func TestPopulateEventDataAgentStartingSubagentParentFromContextUsesSession(t *t
 	if !ok {
 		t.Fatalf("expected HookResultAgentStarted, got %T", result)
 	}
-	if res.Parent != "" {
-		t.Errorf("expected empty parent, got %s", res.Parent)
+	if res.Parent != "sess-sub" {
+		t.Errorf("expected parent=sess-sub, got %s", res.Parent)
+	}
+}
+
+func TestPopulateEventDataAgentStartingSubagentUsesAgentIDAsSession(t *testing.T) {
+	payload := json.RawMessage(`{"session_id":"sess-parent","agent_id":"agent-child"}`)
+	hctx := HookContext{
+		Event:      HookAgentStarted,
+		Client:     "copilot-chat",
+		Second:     "2026-03-06T19:54:55.558Z",
+		RepoRoot:   t.TempDir(),
+		Input:      payload,
+		ParentInfo: "subagent",
+	}
+	result := RunHook(hctx)
+	res, ok := result.(HookResultAgentStarted)
+	if !ok {
+		t.Fatalf("expected HookResultAgentStarted, got %T", result)
+	}
+	if res.Session != "agent-child" {
+		t.Errorf("expected session=agent-child, got %s", res.Session)
+	}
+	if res.Parent != "sess-parent" {
+		t.Errorf("expected parent=sess-parent, got %s", res.Parent)
 	}
 }
 
@@ -19474,23 +19893,34 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if err != nil {
 				t.Fatalf("log dir: %v", err)
 			}
-			// Filter out session.json (written for HookAgentStarted events).
-			var eventEntries []os.DirEntry
-			for _, e := range entries {
-				if e.Name() != "session.json" {
-					eventEntries = append(eventEntries, e)
+			if len(entries) != 1 || entries[0].Name() != "session.json" {
+				names := make([]string, len(entries))
+				for i, e := range entries {
+					names[i] = e.Name()
+				}
+				t.Fatalf("want only session.json in session dir, got %v", names)
+			}
+			data, err := os.ReadFile(filepath.Join(logDir, "session.json"))
+			if err != nil {
+				t.Fatalf("read session.json: %v", err)
+			}
+			var meta SessionMeta
+			if err := json.Unmarshal(data, &meta); err != nil {
+				t.Fatalf("invalid session JSON: %v", err)
+			}
+			if len(meta.Events) == 0 {
+				t.Fatalf("expected at least one event in session.json")
+			}
+			var entry *HookLogEntry
+			for i := range meta.Events {
+				var probe map[string]interface{}
+				if err := json.Unmarshal(meta.Events[i].Event, &probe); err == nil && probe["kind"] == string(event) {
+					entry = &meta.Events[i]
+					break
 				}
 			}
-			if len(eventEntries) != 1 {
-				t.Fatalf("want 1 event log file, got %d (total entries: %d)", len(eventEntries), len(entries))
-			}
-			data, err := os.ReadFile(filepath.Join(logDir, eventEntries[0].Name()))
-			if err != nil {
-				t.Fatalf("read log: %v", err)
-			}
-			var entry HookLogEntry
-			if err := json.Unmarshal(data, &entry); err != nil {
-				t.Fatalf("invalid log JSON: %v", err)
+			if entry == nil {
+				t.Fatalf("could not find event kind %s in session.json events (%d total)", event, len(meta.Events))
 			}
 			var evt map[string]interface{}
 			if err := json.Unmarshal(entry.Event, &evt); err != nil {
@@ -19749,35 +20179,53 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 		Input:    sessionInput,
 	}
 	RunHook(hctx)
-	logFiles := getLogFiles(t, tmpDir)
-	if len(logFiles) == 0 {
-		t.Fatal("expected at least 1 log file")
+	// Agent events are stored in session.json under the events array (not as separate files).
+	agentEventsDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖")
+	var sessionJSONPath string
+	filepath.WalkDir(agentEventsDir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if !d.IsDir() && d.Name() == "session.json" {
+			sessionJSONPath = path
+		}
+		return nil
+	})
+	if sessionJSONPath == "" {
+		t.Fatal("expected session.json to be written for agent.started event")
 	}
+	data, err := os.ReadFile(sessionJSONPath)
+	if err != nil {
+		t.Fatalf("cannot read session.json: %v", err)
+	}
+	var meta SessionMeta
+	if err := json.Unmarshal(data, &meta); err != nil {
+		t.Fatalf("cannot unmarshal session.json: %v", err)
+	}
+	// The checkpoint SHA must be stored in session.json
+	if meta.Checkpoint != expectedSHA {
+		t.Errorf("expected session.json checkpoint=%s, got %q", expectedSHA, meta.Checkpoint)
+	}
+	// The agent.started event must be in the events array with the resolved checkpoint ID
+	expectedCheckpoint := resolveEventCheckpointID(expectedSHA)
 	found := false
-	for _, lf := range logFiles {
-		if strings.Contains(filepath.Base(lf), "agent-started") {
-			data, err := os.ReadFile(lf)
-			if err != nil {
-				t.Fatalf("cannot read log: %v", err)
-			}
-			var entry HookLogEntry
-			json.Unmarshal(data, &entry)
-			var evt map[string]interface{}
-			json.Unmarshal(entry.Event, &evt)
+	for _, entry := range meta.Events {
+		var evt map[string]interface{}
+		json.Unmarshal(entry.Event, &evt)
+		if kind, _ := evt["kind"].(string); kind == "agent.started" {
 			checkpoint, ok := evt["checkpoint"]
 			if !ok || checkpoint == "" {
-				t.Errorf("expected checkpoint in logged event, got: %v", evt)
+				t.Errorf("expected checkpoint in agent.started event, got: %v", evt)
 			}
-			expectedCheckpoint := resolveEventCheckpointID(expectedSHA)
 			if checkpoint != expectedCheckpoint {
-				t.Errorf("expected logged checkpoint=%s, got %v", expectedCheckpoint, checkpoint)
+				t.Errorf("expected agent.started checkpoint=%s, got %v", expectedCheckpoint, checkpoint)
 			}
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Error("expected agent-started log file")
+		t.Error("expected agent.started event in session.json events array")
 	}
 }
 

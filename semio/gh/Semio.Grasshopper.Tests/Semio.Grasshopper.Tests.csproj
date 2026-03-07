@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net48</TargetFrameworks>
+    <TargetFrameworks>net8.0;net48</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Semio.Grasshopper\Semio.Grasshopper.csproj" />
-    <ProjectReference Include="..\Semio\Semio.csproj" />
+    <ProjectReference Include="..\..\net\Semio\Semio.csproj" />
   </ItemGroup>
 
 </Project>

@@ -27,7 +27,7 @@ namespace Semio.Tests;
 
 public class Tests
 {
-    public static readonly string AssetsPath = "../../../../assets/semio";
+    public static readonly string AssetsPath = "../../../../../assets/semio";
     private const double Tolerance = 0.001;
 
     public static T LoadAsset<T>(string filename)
@@ -107,6 +107,58 @@ public class Tests
                 Assert.Equal(files.Count, files2.Count);
 
                 System.IO.File.Delete(tempPath);
+            }
+        }
+
+        public class Sqlite
+        {
+            [Fact]
+            public void Metabolism_Kit_Sqlite_Kit()
+            {
+                var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+
+                var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(tempDir);
+                try
+                {
+                    KitSqlite.SaveKit(tempDir, kit);
+                    var loadedKit = KitSqlite.LoadKit(tempDir);
+
+                    Assert.Equal(kit.Guid, loadedKit.Guid);
+                    Assert.Equal(kit.Name, loadedKit.Name);
+                    Assert.Equal(kit.Version, loadedKit.Version);
+                    Assert.Equal(kit.Description, loadedKit.Description);
+                    Assert.Equal(kit.Qualities?.Count ?? 0, loadedKit.Qualities?.Count ?? 0);
+                    Assert.Equal(kit.Ports?.Count ?? 0, loadedKit.Ports?.Count ?? 0);
+                    Assert.Equal(kit.Tags?.Count ?? 0, loadedKit.Tags?.Count ?? 0);
+                    Assert.Equal(kit.Concepts?.Count ?? 0, loadedKit.Concepts?.Count ?? 0);
+                    Assert.Equal(kit.Files?.Count ?? 0, loadedKit.Files?.Count ?? 0);
+                    Assert.Equal(kit.Folders?.Count ?? 0, loadedKit.Folders?.Count ?? 0);
+                    Assert.Equal(kit.Authors?.Count ?? 0, loadedKit.Authors?.Count ?? 0);
+                    Assert.Equal(kit.Types?.Count ?? 0, loadedKit.Types?.Count ?? 0);
+                    Assert.Equal(kit.Designs?.Count ?? 0, loadedKit.Designs?.Count ?? 0);
+
+                    foreach (var type in kit.Types ?? new List<Type>())
+                    {
+                        var loadedType = loadedKit.Types?.FirstOrDefault(t => t.Guid == type.Guid);
+                        Assert.NotNull(loadedType);
+                        Assert.Equal(type.Name, loadedType.Name);
+                        Assert.Equal(type.Connectors?.Count ?? 0, loadedType.Connectors?.Count ?? 0);
+                    }
+
+                    foreach (var design in kit.Designs ?? new List<Design>())
+                    {
+                        var loadedDesign = loadedKit.Designs?.FirstOrDefault(d => d.Guid == design.Guid);
+                        Assert.NotNull(loadedDesign);
+                        Assert.Equal(design.Name, loadedDesign.Name);
+                        Assert.Equal(design.Pieces?.Count ?? 0, loadedDesign.Pieces?.Count ?? 0);
+                        Assert.Equal(design.Connections?.Count ?? 0, loadedDesign.Connections?.Count ?? 0);
+                    }
+                }
+                finally
+                {
+                    Directory.Delete(tempDir, true);
+                }
             }
         }
     }

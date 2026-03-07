@@ -16,15 +16,40 @@
 
 #endregion 🔖Header
 
-using Newtonsoft.Json;
 using System.Drawing;
-using System.Numerics;
-using Semio;
 using Semio.Grasshopper;
 
 namespace Semio.Grasshopper.Tests;
 
-public class DesignTests
+#region 🔖IconResourceTests
+// Tests MUST verify icon resolution supports renamed keys and placeholder fallback.
+public class IconResourceTests
 {
+    [Fact]
+    public void ResolveOrPlaceholder_ShouldResolveExistingIcon()
+    {
+        var bitmap = IconResources.ResolveOrPlaceholder("semio_24x24");
+        Assert.NotNull(bitmap);
+        Assert.Equal(24, bitmap.Width);
+        Assert.Equal(24, bitmap.Height);
+    }
 
+    [Fact]
+    public void ResolveOrPlaceholder_ShouldResolveLegacyAliasWithoutUnderscore()
+    {
+        var bitmap = IconResources.ResolveOrPlaceholder("attributeid_24x24");
+        Assert.NotNull(bitmap);
+        Assert.Equal(24, bitmap.Width);
+        Assert.Equal(24, bitmap.Height);
+    }
+
+    [Fact]
+    public void ResolveOrPlaceholder_ShouldReturnPlaceholderWhenResourceIsMissing()
+    {
+        var bitmap = IconResources.ResolveOrPlaceholder("missing_resource_24x24");
+        Assert.NotNull(bitmap);
+        Assert.Equal(24, bitmap.Width);
+        Assert.Equal(24, bitmap.Height);
+    }
 }
+#endregion 🔖IconResourceTests

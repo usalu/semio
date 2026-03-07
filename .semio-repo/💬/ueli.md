@@ -71,19 +71,44 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 ## [👤semio](semiorepo://project/semio)
 
+TODO: Rename tilt to slope, Add rotation to piece node
+TODO: Rename scene to model
+TODO: Rename model to shape
+TODO: Update docs
+Node: Piece in a diagram
+Geometry: Piece in view
+TODO: Rename version to release
+TODO: Introduce activity to kit
+TODO: Introduce version to artifacts (design,type,shape)
+
 ## [👤semio📚js](semiorepo://project/semio/bundle/js)
 
 ## [👤semio📚js🗃️sketchpad](semiorepo://project/semio/bundle/js/folder/sketchpad)
 
 ## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)
 
+## 👤semio🖱️gh
+
+All params of all components MUST have native data type equivalence. E.g. all dates shouldnt be time stamps, or planes should native planes, etc
+
+The passthrough components MUST show all available information. A lot of params are missing.
+
+Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
+
 ## 🧰semiorepo
+
+TODO: Rename project to technology
+
+```diff
+- 🧰semiorepo⌨️cli💻main
++ 🧰semiorepo⌨️cli💻main
+! 🧰semiorepo⌨️cli💻main
+```
 
 ## 🧰semiorepo⌨️cli💻main
 
+Dont create new event.json files for the session events but add them directly to session.json as event array.
 
-
-semio repo cli and vscode:
 Currently there is a folder and projects tree item in the monorepo tree.
 Unify them to a single tree item called codebase. The codebase has all root files, root folders and projects.
 Previously there were root level project and root level bundle. Remove them.
@@ -92,32 +117,30 @@ projects are root level folders with a README with a frontmatter. Currently ther
 Not all projects have a frontmatter.
 
 semio-repo/cli/cli project list
+
 - [👤pycache](semiorepo://p/u/__pycache__)
 - [🔬coda](semiorepo://p/r/coda)
 - [👤semio](semiorepo://p/u/semio)
 - [🧰semiorepo](semiorepo://p/i/semio-repo)
 
-
 TODO: introduce proper events for semio repo specific tool calls.
-
-
 
 ```json
 {
-  "native": {
-    "event": null
-  },
-  "event": {
-    "allowed": true,
-    "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
-    "description": "fix(cli): correct version hook in post-commit",
-    "kind": "version.checkpoint.ended",
-    "message": "fix(cli): correct version hook in post-commit",
-    "second": "🎆26🌙02☀️27⏰13⌚13⏱️08"
-  },
-  "response": {
-    "allowed": true
-  }
+ "native": {
+  "event": null
+ },
+ "event": {
+  "allowed": true,
+  "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
+  "description": "fix(cli): correct version hook in post-commit",
+  "kind": "version.checkpoint.ended",
+  "message": "fix(cli): correct version hook in post-commit",
+  "second": "🎆26🌙02☀️27⏰13⌚13⏱️08"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
@@ -126,6 +149,7 @@ You MUST NOT call semio repo hooks manually.
 
 Test events are not correctly identified.
 All languages and all test frameworks MUST be supported.
+
 ```yml
 agent
     test:
@@ -139,10 +163,11 @@ agent
           failed: ["{{failed-test-id}}"] # e.g. ["🧰semiorepo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
 ```
 
-The test mechanism should be extended. Every entity should 
+The test mechanism should be extended. Every entity should
 
 Introduce a general `test [{{testable-id-or-uri}}]*` command that runs all tests for all given entities.
 E.g. for a project and a bundle from another project are all tests inside the projects are run, for a bundle all tests inside the bundle are run, etc
+
 ```bash
 semio-repo/cli/cli test # run all tests
 semio-repo/cli/cli test 🧰semiorepo # run all tests for the project
@@ -154,58 +179,58 @@ semio-repo/cli/cli test 🧰semiorepo⌨️cli🥼maintest🔖policytests🧪tes
 ```
 
 Add id and uri to ticket.json, goal.json, event.json, session.json, contributor.json
-e.g. 
+e.g.
+
 ```json
 {
-  "id": "{{ticket-id}}",
-  "uri": "{{ticket-uri}}",
-  "title": "Remove File Extension from File Ids",
-  "status": "open",
-  "description": "All file ids should not have the file extension part of the flat name.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/732"
-  },
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
-  "sessions": [
-    "⚪17722881541519940541784063889126907940"
-  ]
+ "id": "{{ticket-id}}",
+ "uri": "{{ticket-uri}}",
+ "title": "Remove File Extension from File Ids",
+ "status": "open",
+ "description": "All file ids should not have the file extension part of the flat name.",
+ "github": {
+  "issue": "https://github.com/usalu/semio/issues/732"
+ },
+ "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+ "sessions": ["⚪17722881541519940541784063889126907940"]
 }
 ```
 
 All events must have the contributor id as part of the event.
 
-e.g. 
+e.g.
+
 ```json
 {
-  "native": {
-    "event": {
-      "timestamp": "2026-02-28T14:14:02.511Z",
-      "hookEventName": "SessionStart",
-      "sessionId": "88373e1c-ff1b-4fcd-b80d-d00043bb6567",
-      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl",
-      "source": "new",
-      "cwd": "/workspaces/semio"
-    },
-    "response": {
-      "hookSpecificOutput": {
-        "additionalContext": "agent.started acknowledged",
-        "hookEventName": "SessionStart"
-      }
-    }
-  },
+ "native": {
   "event": {
-    "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
-    "contributor": "🧑‍💻usalu",
-    "client": "copilot-chat",
-    "kind": "agent.started",
-    "parent": "new",
-    "second": "🎆26🌙02☀️28⏰14⌚14⏱️03",
-    "session": "⚪88373e1cff1b4fcdb80dd00043bb6567",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl"
+   "timestamp": "2026-02-28T14:14:02.511Z",
+   "hookEventName": "SessionStart",
+   "sessionId": "88373e1c-ff1b-4fcd-b80d-d00043bb6567",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl",
+   "source": "new",
+   "cwd": "/workspaces/semio"
   },
   "response": {
-    "allowed": true
+   "hookSpecificOutput": {
+    "additionalContext": "agent.started acknowledged",
+    "hookEventName": "SessionStart"
+   }
   }
+ },
+ "event": {
+  "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
+  "contributor": "🧑‍💻usalu",
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "new",
+  "second": "🎆26🌙02☀️28⏰14⌚14⏱️03",
+  "session": "⚪88373e1cff1b4fcdb80dd00043bb6567",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
@@ -218,24 +243,27 @@ plan.updating should be started and ended with correct mapping. Currently the sa
 The `session.json`should keep track of the plan with the steps based on the events. Make sure to add new steps, mark them as inprogress, completed or abandoned. Merge and update them smartly based on the new complete structure.
 
 `session.json` is:
+
 ```json
 {
-  "uuid": "a881a3c5-b51c-42d0-8050-f25a054e9e8d",
-  "client": "copilot-chat",
-  "started_at": "2026-03-02T01:06:46Z",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/a881a3c5-b51c-42d0-8050-f25a054e9e8d.jsonl",
-  "first_event": "010646_agent-started.json"
+ "uuid": "a881a3c5-b51c-42d0-8050-f25a054e9e8d",
+ "client": "copilot-chat",
+ "started_at": "2026-03-02T01:06:46Z",
+ "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/a881a3c5-b51c-42d0-8050-f25a054e9e8d.jsonl",
+ "first_event": "010646_agent-started.json"
 }
 ```
+
 but should be:
+
 ```json
 {
-  "id": "{{session-id}}",
-  "uri": "{{session-uri}}",
-  "contributor": "{{contributor-id}}",
-  "client": "{{client-id}}",
-  "second": "{{second-id}}",
-  "transcript": "{{transcript-path}}",
+ "id": "{{session-id}}",
+ "uri": "{{session-uri}}",
+ "contributor": "{{contributor-id}}",
+ "client": "{{client-id}}",
+ "second": "{{second-id}}",
+ "transcript": "{{transcript-path}}"
 }
 ```
 
@@ -243,43 +271,46 @@ Create a `session.json` when a new session is started in the session folder that
 
 When running (auto)fix it should automatically add the missing ids for definitions ontop. You MUST implement this for all languages.
 e.g. this should not exist after the autofixes
+
 ```go
 func isLicenseText(text string) bool {
 ```
 
-You MUST execute all searches and then store the definition ids and how many lines read for each definition in the event. 
+You MUST execute all searches and then store the definition ids and how many lines read for each definition in the event.
 
 e.g.
 
 ```json
 {
-  "native": {
-    "event": {
-      "agent_action_name": "pre_run_command",
-      "trajectory_id": "42cbc8d3-6831-4809-916f-378c396b55a4",
-      "timestamp": "2026-02-27T02:14:53.466104322Z",
-      "execution_id": "46d443cd-a2c4-4421-89bc-1b4a96ee1947",
-      "tool_info": {
-        "command_line": "grep -n -C 5 \"Interactions\" semio-repo/cli/main.go | grep -v \"type Goal\" | grep ticket",
-        "cwd": "/workspaces/semio"
-      }
-    }
-  },
+ "native": {
   "event": {
-    "allowed": true,
-    "checkpoint": "🔀a0ced62dc1a25867a3852c582316851ee77016a0",
-    "client": "windsurf-chat",
-    "kind": "agent.tool.search.starting",
-    "second": "🎆26🌙02☀️27⏰02⌚14⏱️53",
-    "session": "⚪42cbc8d368314809916f378c396b55a4",
-    "definitions":[{
-      "id":"{{definition-id}}",
-      "loc":"{{total-lines-of-code-read}}"
-    }]
-  },
-  "response": {
-    "allowed": true
+   "agent_action_name": "pre_run_command",
+   "trajectory_id": "42cbc8d3-6831-4809-916f-378c396b55a4",
+   "timestamp": "2026-02-27T02:14:53.466104322Z",
+   "execution_id": "46d443cd-a2c4-4421-89bc-1b4a96ee1947",
+   "tool_info": {
+    "command_line": "grep -n -C 5 \"Interactions\" semio-repo/cli/main.go | grep -v \"type Goal\" | grep ticket",
+    "cwd": "/workspaces/semio"
+   }
   }
+ },
+ "event": {
+  "allowed": true,
+  "checkpoint": "🔀a0ced62dc1a25867a3852c582316851ee77016a0",
+  "client": "windsurf-chat",
+  "kind": "agent.tool.search.starting",
+  "second": "🎆26🌙02☀️27⏰02⌚14⏱️53",
+  "session": "⚪42cbc8d368314809916f378c396b55a4",
+  "definitions": [
+   {
+    "id": "{{definition-id}}",
+    "loc": "{{total-lines-of-code-read}}"
+   }
+  ]
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
@@ -359,12 +390,12 @@ grep -n -C 5 "Interactions" semio-repo/cli/main.go | grep -v "type Goal" | grep 
       "🧰semiorepo⌨️cli💻maingo📌28656📌28657",
       "🧰semiorepo⌨️cli💻maingo📌28663📌28664"
     ]
-  ```
+```
 
- Only to lines of code that contain only id and some wrapping but no other content. Optionally it can also include the uri. As soon as the id is used in the text then dont show the
+Only to lines of code that contain only id and some wrapping but no other content. Optionally it can also include the uri. As soon as the id is used in the text then dont show the
 
 semio repo vscode:
-Add 2 code lenses `Summarize` and `Open` for every id in source code files. such as e.g.: 
+Add 2 code lenses `Summarize` and `Open` for every id in source code files. such as e.g.:
 `## 🧰semiorepo⌨️cli💻maingo`
 `// 🧰semiorepo⌨️cli💻maingo`
 `// [🧰semiorepo⌨️cli💻maingo](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)`
@@ -374,14 +405,14 @@ Show semio icon gutter on the same line of the id.
 `Open` should navigate to the entity in the editor.
 Make sure that navigation to uris is working.
 
-
 e.g.
-```tpl
+
+````tpl
 
 # {{definition-kind-emoji}} {{uppercase-definition-kind-name}}
 ```{{file-extension}}
 {{definition-code}}
-```
+````
 
 The id system is not consistent. Every single entity should have the corresponng plural entity as parent and the plural collection should have the emoji and code information. The code must be unique among all entities. The uri should be refactored to only have {{repo-id}}{{code}}/{{uri-encoded-identifying-path}}.
 
@@ -452,7 +483,6 @@ session:
 
 ```
 
-
 All ids MUST use the semio repo id system e.g. through `events.json` or `ticket.json`
 
 ```yaml
@@ -488,6 +518,7 @@ session:
 
 All timestamps in semio repo events MUST use the semio repo id system. You MUST replace the name semantically adequate.
 
+```yaml
 years:
  parent: repo
  id:
@@ -584,115 +615,117 @@ second:
  uri:
   scheme: "{{seconds-uri}}/{{SS}}"
   examples: ["semiorepo://y/26/m/02/d/15/h/14/min/33/s/38"]
-
+```
 
 e.g.
+
 ```json
 {
-  "native": {
-    "event": {
-      "timestamp": "2026-02-26T08:41:38.377Z",
-      "hookEventName": "PreToolUse",
-      "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
-      "tool_name": "run_in_terminal",
-      "tool_input": {
-        "command": "find /workspaces/semio/.semio-repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
-        "explanation": "Find all non-event/non-cache JSON files in .semio-repo",
-        "goal": "Identify key JSON files to refactor",
-        "isBackground": false,
-        "timeout": 10000
-      },
-      "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
-      "cwd": "/workspaces/semio"
-    },
-    "response": {
-      "hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "allow"
-      }
-    }
-  },
+ "native": {
   "event": {
-    "allowed": true,
-    "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
-    "client": "copilot-chat",
-    "kind": "agent.tool.search.starting",
-    "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-    "timestamp": "2026-02-26T08:41:38Z",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
+   "timestamp": "2026-02-26T08:41:38.377Z",
+   "hookEventName": "PreToolUse",
+   "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
+   "tool_name": "run_in_terminal",
+   "tool_input": {
+    "command": "find /workspaces/semio/.semio-repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
+    "explanation": "Find all non-event/non-cache JSON files in .semio-repo",
+    "goal": "Identify key JSON files to refactor",
+    "isBackground": false,
+    "timeout": 10000
+   },
+   "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
+   "cwd": "/workspaces/semio"
   },
   "response": {
-    "allowed": true
+   "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow"
+   }
   }
-}
-```
-should be
-```json
-{
-  "native": {
-    "event": {
-      "timestamp": "2026-02-26T08:41:38.377Z",
-      "hookEventName": "PreToolUse",
-      "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
-      "tool_name": "run_in_terminal",
-      "tool_input": {
-        "command": "find /workspaces/semio/.semio-repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
-        "explanation": "Find all non-event/non-cache JSON files in .semio-repo",
-        "goal": "Identify key JSON files to refactor",
-        "isBackground": false,
-        "timeout": 10000
-      },
-      "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
-      "cwd": "/workspaces/semio"
-    },
-    "response": {
-      "hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "allow"
-      }
-    }
-  },
-  "event": {
-    "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
-    "client": "copilot-chat",
-    "kind": "agent.tool.search.starting",
-    "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-    "second": "🎆26🌙02☀️26⏰08⌚41⏱️38",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
-  },
-  "response": {
-    "allowed": true
-  }
+ },
+ "event": {
+  "allowed": true,
+  "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+  "client": "copilot-chat",
+  "kind": "agent.tool.search.starting",
+  "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+  "timestamp": "2026-02-26T08:41:38Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
+should be
+
+```json
+{
+ "native": {
+  "event": {
+   "timestamp": "2026-02-26T08:41:38.377Z",
+   "hookEventName": "PreToolUse",
+   "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
+   "tool_name": "run_in_terminal",
+   "tool_input": {
+    "command": "find /workspaces/semio/.semio-repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
+    "explanation": "Find all non-event/non-cache JSON files in .semio-repo",
+    "goal": "Identify key JSON files to refactor",
+    "isBackground": false,
+    "timeout": 10000
+   },
+   "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
+   "cwd": "/workspaces/semio"
+  },
+  "response": {
+   "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow"
+   }
+  }
+ },
+ "event": {
+  "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+  "client": "copilot-chat",
+  "kind": "agent.tool.search.starting",
+  "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+  "second": "🎆26🌙02☀️26⏰08⌚41⏱️38",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
 
 All semio repo event information should be semio repo related. Add checkpoint (from git provider it is commit sha) to all events.
 E.g. all ids (file, ranges, lines, …) should be semio repo ids.
 
 ```json
 {
-  "raw": {
-    "timestamp": "2026-02-24T14:02:29.550Z",
-    "hookEventName": "SubagentStart",
-    "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
-    "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-    "agent_type": "default",
-    "cwd": "/workspaces/semio"
-  },
-  "event": {
-    "allowed": true,
-    "client": "copilot-chat",
-    "kind": "agent.started",
-    "parent": "subagent",
-    "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
-    "timestamp": "2026-02-24T14:02:30Z"
-  },
-  "response": {
-    "allowed": true
-  }
+ "raw": {
+  "timestamp": "2026-02-24T14:02:29.550Z",
+  "hookEventName": "SubagentStart",
+  "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+  "agent_type": "default",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "subagent",
+  "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "timestamp": "2026-02-24T14:02:30Z"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
@@ -700,20 +733,20 @@ should be:
 
 ```json
 {
-  "native": {
-    "event": {
-      // native hook input
-    },
-    "response": {
-      // native hook output
-    }
-  },
+ "native": {
   "event": {
-      // semio repo event data
+   // native hook input
   },
   "response": {
-    // semio repo response data
+   // native hook output
   }
+ },
+ "event": {
+  // semio repo event data
+ },
+ "response": {
+  // semio repo response data
+ }
 }
 ```
 
@@ -721,67 +754,68 @@ sub agents have sometimes no session id but instead agent id. Make sure to map i
 
 ```json
 {
-  "native": {
-    "input": {
-      "timestamp": "2026-02-24T14:02:29.550Z",
-      "hookEventName": "SubagentStart",
-      "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
-      "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-      "agent_type": "default",
-      "cwd": "/workspaces/semio"
-    },
-    "output": {
-      // native hook output
-    }
+ "native": {
+  "input": {
+   "timestamp": "2026-02-24T14:02:29.550Z",
+   "hookEventName": "SubagentStart",
+   "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
+   "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+   "agent_type": "default",
+   "cwd": "/workspaces/semio"
   },
-  "event": {
-    "allowed": true,
-    "client": "copilot-chat",
-    "kind": "agent.started",
-    "parent": "subagent",
-    "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
-    "timestamp": "2026-02-24T14:02:30Z"
-  },
-  "response": {
-    "allowed": true
+  "output": {
+   // native hook output
   }
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "subagent",
+  "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "timestamp": "2026-02-24T14:02:30Z"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
 
 should be:
+
 ```json
 {
-  "native": {
-    "input": {
-      "timestamp": "2026-02-24T14:02:29.550Z",
-      "hookEventName": "SubagentStart",
-      "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
-      "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-      "agent_type": "default",
-      "cwd": "/workspaces/semio"
-    },
-    "output": {
-      // native hook output
-    }
+ "native": {
+  "input": {
+   "timestamp": "2026-02-24T14:02:29.550Z",
+   "hookEventName": "SubagentStart",
+   "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
+   "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+   "agent_type": "default",
+   "cwd": "/workspaces/semio"
   },
-  "event": {
-    "allowed": true,
-    "client": "copilot-chat",
-    "kind": "agent.started",
-    "parent": "293a5d87-0aa9-4250-9920-ddd573c33379",
-    "session": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-    "timestamp": "2026-02-24T14:02:30Z"
-  },
-  "response": {
-    "allowed": true
+  "output": {
+   // native hook output
   }
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "session": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+  "timestamp": "2026-02-24T14:02:30Z"
+ },
+ "response": {
+  "allowed": true
+ }
 }
 ```
-
 
 Remove tracking of `interactions` and `agents` from `ticket.json` and instead just leave a session ids. Add this automatically after a ticket was opened or reopened or closed over the cli or mcp.
 
 e.g.
+
 ```json
 {
   "title": "Refactor Event Structure",
@@ -805,7 +839,9 @@ e.g.
       "plan": {
         "steps": [
 ```
+
 should be:
+
 ```json
 {
   "title": "Refactor Event Structure",
@@ -831,6 +867,7 @@ You MUST refactor everything.
 Everything inside all `.json` files (e.g. events, goals, tickets, contributors, etc.) in `.semio-repo/*` that relates to resources should use the semio repo id system. You MUST refactor everything cleanly.
 
 e.g. The goals in `ticket.json` files
+
 ```json
 {
   "title": "Fix ID System and Emoji Prefixes",
@@ -840,7 +877,9 @@ e.g. The goals in `ticket.json` files
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
 ```
+
 should be:
+
 ```json
 {
   "title": "Fix ID System and Emoji Prefixes",
@@ -1330,6 +1369,7 @@ Dont stop until you have refactored and tested everything.
 Abstract version control system such as git and implement a git provider.
 
 Events:
+
 ```yaml
 version:
  checkpoint:
@@ -1356,7 +1396,9 @@ version:
    id: "{{checkpoint-id}}" # e.g. in new git commit sha of squash checkpoints between checkin and checkout
    description: "{{checkout-description}}" # e.g. in git commit message
 ```
+
 Lifecycle:
+
 ```mermaid
 sequenceDiagram
  Contributor->>+semio-repo: checkin
@@ -2005,6 +2047,8 @@ Remove tools from mcp:
 - analyze
 - contributor add
 - contributor delete
+- draft create
+- draft delete
 - export
 - file create
 - file delete
@@ -2014,7 +2058,11 @@ Remove tools from mcp:
 - move
 - policy check
 - ticket read
--
+
+Names and description are not consistent with cli:
+
+- fix
+- tree
 
 ##
 

@@ -6448,6 +6448,1539 @@ public class ServerException : Exception
 
 #endregion 🔖Api
 
+#region 🔖KitSqlite
+// [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite)
+// Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
+
+/// <summary>Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
+public static class KitSqlite
+{
+    private static string GetDbPath(string kitDirectory) => Path.Combine(kitDirectory, ".semio", "kit.db");
+
+    private static string GetSchemaSQL()
+    {
+        var possiblePaths = new[]
+        {
+            "../../../../../sqlite/schema.sql",
+            "../../../../sqlite/schema.sql",
+            "../../../sqlite/schema.sql",
+            "../../sqlite/schema.sql",
+            "../sqlite/schema.sql",
+            "sqlite/schema.sql",
+            "../../../../../sql/sqlite/semio/schema.sql",
+            "../../../../sql/sqlite/semio/schema.sql",
+            "../../../sql/sqlite/semio/schema.sql",
+            "../../sql/sqlite/semio/schema.sql",
+            "../sql/sqlite/semio/schema.sql",
+            "sql/sqlite/semio/schema.sql"
+        };
+
+        foreach (var path in possiblePaths)
+        {
+            if (System.IO.File.Exists(path))
+                return System.IO.File.ReadAllText(path);
+        }
+
+        var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+        var assemblyPaths = new[]
+        {
+            Path.Combine(assemblyDir, "schema.sql"),
+            Path.Combine(assemblyDir, "..", "sqlite", "schema.sql"),
+            Path.Combine(assemblyDir, "..", "..", "sqlite", "schema.sql"),
+            Path.Combine(assemblyDir, "..", "..", "..", "sqlite", "schema.sql"),
+            Path.Combine(assemblyDir, "..", "..", "..", "..", "sqlite", "schema.sql"),
+            Path.Combine(assemblyDir, "..", "..", "..", "..", "..", "sqlite", "schema.sql")
+        };
+
+        foreach (var path in assemblyPaths)
+        {
+            if (System.IO.File.Exists(path))
+                return System.IO.File.ReadAllText(path);
+        }
+
+        throw new FileNotFoundException("Could not find schema.sql for SQLite kit operations");
+    }
+
+    private static SqliteConnection OpenConnection(string dbPath)
+    {
+        var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+        using var pragma = connection.CreateCommand();
+        pragma.CommandText = "PRAGMA foreign_keys = ON;";
+        pragma.ExecuteNonQuery();
+        return connection;
+    }
+
+    #region 🔖KitSqliteLoad
+    // Load operations for reading a kit from a local SQLite database.
+
+    /// <summary>Load a kit from a local directory containing .semio/kit.db.</summary>
+    public static Kit LoadKit(string kitDirectory)
+    {
+        var dbPath = GetDbPath(kitDirectory);
+        if (!System.IO.File.Exists(dbPath))
+            throw new FileNotFoundException($"Kit database not found at {dbPath}");
+
+        using var connection = OpenConnection(dbPath);
+        return LoadKitFromConnection(connection);
+    }
+
+    private static Kit LoadKitFromConnection(SqliteConnection connection)
+    {
+        var kit = new Kit();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated FROM kit LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                kit.Guid = reader.GetString(0);
+                kit.Name = reader.GetString(1);
+                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
+                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
+                kit.CreatedAt = reader.IsDBNull(10) ? "" : reader.GetString(10);
+                kit.UpdatedAt = reader.IsDBNull(11) ? "" : reader.GetString(11);
+            }
+        }
+
+        kit.Qualities = LoadQualities(connection, kit.Guid);
+        kit.Ports = LoadPorts(connection, kit.Guid);
+        kit.Tags = LoadTags(connection, kit.Guid);
+        kit.Concepts = LoadConcepts(connection, kit.Guid);
+        kit.Files = LoadFiles(connection, kit.Guid);
+        kit.Folders = LoadFolders(connection, kit.Guid);
+        kit.Authors = LoadAuthors(connection, kit.Guid);
+        kit.Types = LoadTypes(connection, kit.Guid);
+        kit.Designs = LoadDesigns(connection, kit.Guid);
+        kit.Attributes = LoadAttributes(connection, "kit_guid", kit.Guid);
+
+        return kit;
+    }
+
+    private static List<Quality> LoadQualities(SqliteConnection connection, string kitGuid)
+    {
+        var qualities = new List<Quality>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, key, name, kind, default_value, formula, default_si_unit, default_imperial_unit, min_value, min_excluded, max_value, max_excluded, can_scale, definition FROM quality WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var q = new Quality
+            {
+                Guid = reader.GetString(0),
+                Key = reader.GetString(1),
+                Name = reader.GetString(2),
+                Kind = (QualityKind)reader.GetInt32(3),
+                Default = reader.IsDBNull(4) ? 0 : reader.GetFloat(4),
+                Formula = reader.IsDBNull(5) ? "" : reader.GetString(5),
+                SI = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                Imperial = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Min = reader.IsDBNull(8) ? 0 : reader.GetFloat(8),
+                MinExcluded = !reader.IsDBNull(9) && reader.GetBoolean(9),
+                Max = reader.IsDBNull(10) ? 0 : reader.GetFloat(10),
+                MaxExcluded = !reader.IsDBNull(11) && reader.GetBoolean(11),
+                Scalable = !reader.IsDBNull(12) && reader.GetBoolean(12)
+            };
+            q.Benchmarks = LoadBenchmarks(connection, q.Guid);
+            q.Attributes = LoadAttributes(connection, "quality_guid", q.Guid);
+            qualities.Add(q);
+        }
+        return qualities;
+    }
+
+    private static List<Benchmark> LoadBenchmarks(SqliteConnection connection, string qualityGuid)
+    {
+        var benchmarks = new List<Benchmark>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, icon, min_value, min_excluded, max_value, max_excluded, definition FROM benchmark WHERE quality_guid = @qualityGuid";
+        cmd.Parameters.AddWithValue("@qualityGuid", qualityGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            benchmarks.Add(new Benchmark
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Icon = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Min = reader.IsDBNull(3) ? null : reader.GetFloat(3),
+                MinExcluded = !reader.IsDBNull(4) && reader.GetBoolean(4),
+                Max = reader.IsDBNull(5) ? null : reader.GetFloat(5),
+                MaxExcluded = !reader.IsDBNull(6) && reader.GetBoolean(6)
+            });
+        }
+        return benchmarks;
+    }
+
+    private static List<Port> LoadPorts(SqliteConnection connection, string kitGuid)
+    {
+        var ports = new List<Port>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, description, icon FROM port WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var p = new Port
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Description = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Icon = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+            p.CompatiblePorts = LoadCompatiblePorts(connection, p.Guid);
+            p.Attributes = LoadAttributes(connection, "port_guid", p.Guid);
+            ports.Add(p);
+        }
+        return ports;
+    }
+
+    private static List<PortId> LoadCompatiblePorts(SqliteConnection connection, string portGuid)
+    {
+        var compatiblePorts = new List<PortId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT compatible_port_guid FROM port_compatibility WHERE port_guid = @portGuid";
+        cmd.Parameters.AddWithValue("@portGuid", portGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            compatiblePorts.Add(new PortId { Guid = reader.GetString(0) });
+        }
+        return compatiblePorts;
+    }
+
+    private static List<Tag> LoadTags(SqliteConnection connection, string kitGuid)
+    {
+        var tags = new List<Tag>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, description, icon FROM tag WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var t = new Tag
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Description = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Icon = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+            t.Attributes = LoadAttributes(connection, "tag_guid", t.Guid);
+            tags.Add(t);
+        }
+        return tags;
+    }
+
+    private static List<Concept> LoadConcepts(SqliteConnection connection, string kitGuid)
+    {
+        var concepts = new List<Concept>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, description, icon FROM concept WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var c = new Concept
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Description = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Icon = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+            c.Attributes = LoadAttributes(connection, "concept_guid", c.Guid);
+            concepts.Add(c);
+        }
+        return concepts;
+    }
+
+    private static List<File> LoadFiles(SqliteConnection connection, string kitGuid)
+    {
+        var files = new List<File>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, mime, folder_guid, size, hash, remote_url, created, updated FROM file WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var f = new File
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Mime = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Folder = reader.IsDBNull(3) ? null : new FolderId { Guid = reader.GetString(3) },
+                Size = reader.IsDBNull(4) ? null : (int?)reader.GetInt64(4),
+                Hash = reader.IsDBNull(5) ? null : reader.GetString(5),
+                Remote = reader.IsDBNull(6) ? null : reader.GetString(6),
+                CreatedAt = reader.IsDBNull(7) ? DateTime.MinValue : DateTime.Parse(reader.GetString(7)),
+                UpdatedAt = reader.IsDBNull(8) ? DateTime.MinValue : DateTime.Parse(reader.GetString(8))
+            };
+            files.Add(f);
+        }
+        return files;
+    }
+
+    private static List<Folder> LoadFolders(SqliteConnection connection, string kitGuid)
+    {
+        var folders = new List<Folder>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, created, updated FROM folder WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var f = new Folder
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : reader.GetString(2),
+                CreatedAt = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                UpdatedAt = reader.IsDBNull(4) ? "" : reader.GetString(4)
+            };
+            f.Attributes = LoadAttributes(connection, "folder_guid", f.Guid);
+            folders.Add(f);
+        }
+        return folders;
+    }
+
+    private static List<Author> LoadAuthors(SqliteConnection connection, string? kitGuid)
+    {
+        var authors = new List<Author>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, email FROM author WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", (object?)kitGuid ?? DBNull.Value);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var a = new Author
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Email = reader.IsDBNull(2) ? null : reader.GetString(2)
+            };
+            a.Attributes = LoadAttributes(connection, "author_guid", a.Guid);
+            authors.Add(a);
+        }
+        return authors;
+    }
+
+    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
+    {
+        var types = new List<Type>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, location_guid, description, icon, image, created, updated FROM type WHERE kit_guid = @kitGuid ORDER BY row_id";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var t = new Type
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
+                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Location = reader.IsDBNull(8) ? null : LoadLocation(connection, reader.GetString(8)),
+                Description = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Icon = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                Image = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                CreatedAt = reader.IsDBNull(12) ? DateTime.MinValue : DateTime.Parse(reader.GetString(12)),
+                UpdatedAt = reader.IsDBNull(13) ? DateTime.MinValue : DateTime.Parse(reader.GetString(13))
+            };
+            t.Connectors = LoadConnectors(connection, t.Guid);
+            t.Models = LoadModels(connection, t.Guid);
+            t.Props = LoadTypeProps(connection, t.Guid);
+            t.Concepts = LoadTypeConcepts(connection, t.Guid);
+            t.Authors = LoadTypeAuthors(connection, t.Guid);
+            t.Attributes = LoadAttributes(connection, "type_guid", t.Guid);
+            types.Add(t);
+        }
+        return types;
+    }
+
+    private static Location? LoadLocation(SqliteConnection connection, string locationGuid)
+    {
+        // Location is embedded inline in some entities; for now return null if not found
+        return null;
+    }
+
+    private static List<Connector> LoadConnectors(SqliteConnection connection, string typeGuid)
+    {
+        var connectors = new List<Connector>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description FROM connector WHERE type_guid = @typeGuid ORDER BY row_id";
+        cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var c = new Connector
+            {
+                Guid = reader.GetString(0),
+                Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                Point = new Point
+                {
+                    X = reader.GetFloat(2),
+                    Y = reader.GetFloat(3),
+                    Z = reader.GetFloat(4)
+                },
+                Direction = new Vector
+                {
+                    X = reader.GetFloat(5),
+                    Y = reader.GetFloat(6),
+                    Z = reader.GetFloat(7)
+                },
+                T = reader.GetFloat(8),
+                Mandatory = !reader.IsDBNull(9) && reader.GetBoolean(9),
+                Port = reader.IsDBNull(10) ? null : new PortId { Guid = reader.GetString(10) },
+                Description = reader.IsDBNull(11) ? null : reader.GetString(11)
+            };
+            c.Props = LoadConnectorProps(connection, c.Guid);
+            c.Attributes = LoadAttributes(connection, "connector_guid", c.Guid);
+            connectors.Add(c);
+        }
+        return connectors;
+    }
+
+    private static List<Prop> LoadConnectorProps(SqliteConnection connection, string connectorGuid)
+    {
+        var props = new List<Prop>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, key, value, unit, quality_guid FROM prop WHERE connector_guid = @connectorGuid";
+        cmd.Parameters.AddWithValue("@connectorGuid", connectorGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var p = new Prop
+            {
+                Guid = reader.GetString(0),
+                Quality = reader.IsDBNull(4) ? new QualityId() : new QualityId { Guid = reader.GetString(4) },
+                Value = reader.GetFloat(2).ToString(),
+                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3)
+            };
+            props.Add(p);
+        }
+        return props;
+    }
+
+    private static List<Prop> LoadTypeProps(SqliteConnection connection, string typeGuid)
+    {
+        // Type-level props are not stored via connector_guid but as direct references
+        return new List<Prop>();
+    }
+
+    private static List<Model> LoadModels(SqliteConnection connection, string typeGuid)
+    {
+        var models = new List<Model>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, file_guid, name, description FROM model WHERE type_guid = @typeGuid";
+        cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var m = new Model
+            {
+                Guid = reader.GetString(0),
+                File = new FileId { Guid = reader.GetString(1) },
+                Name = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Description = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+            m.Tags = LoadModelTags(connection, m.Guid);
+            m.Attributes = LoadAttributes(connection, "model_guid", m.Guid);
+            models.Add(m);
+        }
+        return models;
+    }
+
+    private static List<TagId> LoadModelTags(SqliteConnection connection, string modelGuid)
+    {
+        var tags = new List<TagId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT tag_guid FROM model_tag WHERE model_guid = @modelGuid";
+        cmd.Parameters.AddWithValue("@modelGuid", modelGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            tags.Add(new TagId { Guid = reader.GetString(0) });
+        }
+        return tags;
+    }
+
+    private static List<ConceptId> LoadTypeConcepts(SqliteConnection connection, string typeGuid)
+    {
+        var concepts = new List<ConceptId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT concept_guid FROM type_concept WHERE type_guid = @typeGuid";
+        cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            concepts.Add(new ConceptId { Guid = reader.GetString(0) });
+        }
+        return concepts;
+    }
+
+    private static List<AuthorId> LoadTypeAuthors(SqliteConnection connection, string typeGuid)
+    {
+        var authors = new List<AuthorId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT author_guid FROM type_author WHERE type_guid = @typeGuid ORDER BY rank";
+        cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            authors.Add(new AuthorId { Guid = reader.GetString(0) });
+        }
+        return authors;
+    }
+
+    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
+    {
+        var designs = new List<Design>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, variant, view_center_u, view_center_v, view_zoom, unit, location_guid, active_layer_guid, is_abstract, folder, can_scale, can_mirror, description, icon, image, created, updated FROM design WHERE kit_guid = @kitGuid ORDER BY row_id";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var d = new Design
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
+                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Location = reader.IsDBNull(8) ? null : LoadLocation(connection, reader.GetString(8)),
+                ActiveLayer = reader.IsDBNull(9) ? null : reader.GetString(9),
+                IsAbstract = !reader.IsDBNull(10) && reader.GetBoolean(10),
+                Folder = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                CanScale = reader.IsDBNull(12) || reader.GetBoolean(12),
+                CanMirror = reader.IsDBNull(13) || reader.GetBoolean(13),
+                Description = reader.IsDBNull(14) ? "" : reader.GetString(14),
+                Icon = reader.IsDBNull(15) ? "" : reader.GetString(15),
+                Image = reader.IsDBNull(16) ? "" : reader.GetString(16),
+                CreatedAt = reader.IsDBNull(17) ? DateTime.MinValue : DateTime.Parse(reader.GetString(17)),
+                UpdatedAt = reader.IsDBNull(18) ? DateTime.MinValue : DateTime.Parse(reader.GetString(18))
+            };
+            d.Pieces = LoadPieces(connection, d.Guid);
+            d.Connections = LoadConnections(connection, d.Guid);
+            d.Layers = LoadLayers(connection, d.Guid);
+            d.Groups = LoadGroups(connection, d.Guid);
+            d.Stats = LoadStats(connection, d.Guid);
+            d.Concepts = LoadDesignConcepts(connection, d.Guid);
+            d.Authors = LoadDesignAuthors(connection, d.Guid);
+            d.Attributes = LoadAttributes(connection, "design_guid", d.Guid);
+            designs.Add(d);
+        }
+        return designs;
+    }
+
+    private static List<Piece> LoadPieces(SqliteConnection connection, string designGuid)
+    {
+        var pieces = new List<Piece>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"SELECT guid, name, type_guid, design_guid_ref,
+            plane_origin_x, plane_origin_y, plane_origin_z,
+            plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
+            plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+            center_u, center_v, scale,
+            mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+            mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+            mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+            is_hidden, is_locked, color, description
+            FROM piece WHERE design_guid = @designGuid";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var p = new Piece
+            {
+                Guid = reader.GetString(0),
+                Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                Type = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
+                Design = reader.IsDBNull(3) ? null : new DesignId { Guid = reader.GetString(3) },
+                Plane = (reader.IsDBNull(4)) ? null : new Plane
+                {
+                    Origin = new Point { X = reader.GetFloat(4), Y = reader.GetFloat(5), Z = reader.GetFloat(6) },
+                    XAxis = new Vector { X = reader.GetFloat(7), Y = reader.GetFloat(8), Z = reader.GetFloat(9) },
+                    YAxis = new Vector { X = reader.GetFloat(10), Y = reader.GetFloat(11), Z = reader.GetFloat(12) }
+                },
+                Center = (reader.IsDBNull(13)) ? null : new Coord { U = reader.GetFloat(13), V = reader.GetFloat(14) },
+                Scale = reader.IsDBNull(15) ? null : reader.GetFloat(15),
+                MirrorPlane = (reader.IsDBNull(16)) ? null : new Plane
+                {
+                    Origin = new Point { X = reader.GetFloat(16), Y = reader.GetFloat(17), Z = reader.GetFloat(18) },
+                    XAxis = new Vector { X = reader.GetFloat(19), Y = reader.GetFloat(20), Z = reader.GetFloat(21) },
+                    YAxis = new Vector { X = reader.GetFloat(22), Y = reader.GetFloat(23), Z = reader.GetFloat(24) }
+                },
+                IsHidden = !reader.IsDBNull(25) && reader.GetBoolean(25),
+                IsLocked = !reader.IsDBNull(26) && reader.GetBoolean(26),
+                Color = reader.IsDBNull(27) ? null : reader.GetString(27),
+                Description = reader.IsDBNull(28) ? null : reader.GetString(28)
+            };
+            p.Props = LoadPieceProps(connection, p.Guid);
+            p.Attributes = LoadAttributes(connection, "piece_guid", p.Guid);
+            pieces.Add(p);
+        }
+        return pieces;
+    }
+
+    private static List<Prop> LoadPieceProps(SqliteConnection connection, string pieceGuid)
+    {
+        var props = new List<Prop>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT p.guid, p.key, p.value, p.unit, p.quality_guid FROM prop p INNER JOIN piece_prop pp ON p.guid = pp.prop_guid WHERE pp.piece_guid = @pieceGuid";
+        cmd.Parameters.AddWithValue("@pieceGuid", pieceGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var p = new Prop
+            {
+                Guid = reader.GetString(0),
+                Quality = reader.IsDBNull(4) ? new QualityId() : new QualityId { Guid = reader.GetString(4) },
+                Value = reader.GetFloat(2).ToString(),
+                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3)
+            };
+            props.Add(p);
+        }
+        return props;
+    }
+
+    private static List<Connection> LoadConnections(SqliteConnection connection, string designGuid)
+    {
+        var connections = new List<Connection>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"SELECT guid,
+            connected_piece_guid, connected_design_piece_guid, connected_connector_guid,
+            connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid,
+            gap, shift, rise, rotation, turn, tilt, u, v, description
+            FROM connection WHERE design_guid = @designGuid";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            connections.Add(new Connection
+            {
+                Guid = reader.GetString(0),
+                Connected = new Side
+                {
+                    Piece = new PieceId { Guid = reader.GetString(1) },
+                    DesignPiece = reader.IsDBNull(2) ? null : new PieceId { Guid = reader.GetString(2) },
+                    Connector = new ConnectorId { Guid = reader.GetString(3) }
+                },
+                Connecting = new Side
+                {
+                    Piece = new PieceId { Guid = reader.GetString(4) },
+                    DesignPiece = reader.IsDBNull(5) ? null : new PieceId { Guid = reader.GetString(5) },
+                    Connector = new ConnectorId { Guid = reader.GetString(6) }
+                },
+                Gap = reader.GetFloat(7),
+                Shift = reader.GetFloat(8),
+                Rise = reader.GetFloat(9),
+                Rotation = reader.GetFloat(10),
+                Turn = reader.GetFloat(11),
+                Tilt = reader.GetFloat(12),
+                U = reader.IsDBNull(13) ? null : reader.GetFloat(13),
+                V = reader.IsDBNull(14) ? null : reader.GetFloat(14),
+                Description = reader.IsDBNull(15) ? null : reader.GetString(15)
+            });
+        }
+        foreach (var conn in connections)
+        {
+            conn.Attributes = LoadAttributes(connection, "connection_guid", conn.Guid);
+        }
+        return connections;
+    }
+
+    private static List<Layer> LoadLayers(SqliteConnection connection, string designGuid)
+    {
+        var layers = new List<Layer>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, path, is_hidden, is_locked, color, description FROM layer WHERE design_guid = @designGuid";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var l = new Layer
+            {
+                Guid = reader.GetString(0),
+                Path = reader.GetString(1),
+                IsHidden = !reader.IsDBNull(2) && reader.GetBoolean(2),
+                IsLocked = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Color = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Description = reader.IsDBNull(5) ? null : reader.GetString(5)
+            };
+            l.Attributes = LoadAttributes(connection, "layer_guid", l.Guid);
+            layers.Add(l);
+        }
+        return layers;
+    }
+
+    private static List<Group> LoadGroups(SqliteConnection connection, string designGuid)
+    {
+        var groups = new List<Group>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, color, description FROM \"group\" WHERE design_guid = @designGuid";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var g = new Group
+            {
+                Guid = reader.GetString(0),
+                Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                Color = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Description = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+            g.Pieces = LoadGroupPieces(connection, g.Guid);
+            g.Attributes = LoadAttributes(connection, "group_guid", g.Guid);
+            groups.Add(g);
+        }
+        return groups;
+    }
+
+    private static List<PieceId> LoadGroupPieces(SqliteConnection connection, string groupGuid)
+    {
+        var pieces = new List<PieceId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT piece_guid FROM group_piece WHERE group_guid = @groupGuid";
+        cmd.Parameters.AddWithValue("@groupGuid", groupGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            pieces.Add(new PieceId { Guid = reader.GetString(0) });
+        }
+        return pieces;
+    }
+
+    private static List<Stat> LoadStats(SqliteConnection connection, string designGuid)
+    {
+        var stats = new List<Stat>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, quality_guid, min_value, min_excluded, max_value, max_excluded, unit FROM stat WHERE design_guid = @designGuid";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            stats.Add(new Stat
+            {
+                Guid = reader.GetString(0),
+                Quality = new QualityId { Guid = reader.GetString(1) },
+                Min = reader.IsDBNull(2) ? null : reader.GetFloat(2),
+                MinExcluded = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Max = reader.IsDBNull(4) ? null : reader.GetFloat(4),
+                MaxExcluded = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                Unit = reader.IsDBNull(6) ? null : reader.GetString(6)
+            });
+        }
+        return stats;
+    }
+
+    private static List<ConceptId> LoadDesignConcepts(SqliteConnection connection, string designGuid)
+    {
+        var concepts = new List<ConceptId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT concept_guid FROM design_concept WHERE design_guid = @designGuid";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            concepts.Add(new ConceptId { Guid = reader.GetString(0) });
+        }
+        return concepts;
+    }
+
+    private static List<AuthorId> LoadDesignAuthors(SqliteConnection connection, string designGuid)
+    {
+        var authors = new List<AuthorId>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT author_guid FROM design_author WHERE design_guid = @designGuid ORDER BY rank";
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            authors.Add(new AuthorId { Guid = reader.GetString(0) });
+        }
+        return authors;
+    }
+
+    private static List<Attribute> LoadAttributes(SqliteConnection connection, string foreignKeyColumn, string foreignKeyValue)
+    {
+        var attributes = new List<Attribute>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = $"SELECT guid, key, value, definition FROM attribute WHERE {foreignKeyColumn} = @fk";
+        cmd.Parameters.AddWithValue("@fk", foreignKeyValue);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            attributes.Add(new Attribute
+            {
+                Guid = reader.GetString(0),
+                Key = reader.GetString(1),
+                Value = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Definition = reader.IsDBNull(3) ? null : reader.GetString(3)
+            });
+        }
+        return attributes;
+    }
+
+    #endregion 🔖KitSqliteLoad
+
+    #region 🔖KitSqliteSave
+    // Save operations for writing a kit to a local SQLite database.
+
+    /// <summary>Save a kit to a local directory at .semio/kit.db. Creates the database if it doesn't exist.</summary>
+    public static void SaveKit(string kitDirectory, Kit kit)
+    {
+        var semioDir = Path.Combine(kitDirectory, ".semio");
+        Directory.CreateDirectory(semioDir);
+        var dbPath = GetDbPath(kitDirectory);
+
+        if (System.IO.File.Exists(dbPath))
+            System.IO.File.Delete(dbPath);
+
+        using var connection = OpenConnection(dbPath);
+        var schemaSQL = GetSchemaSQL();
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = schemaSQL;
+            cmd.ExecuteNonQuery();
+        }
+
+        SaveKitToConnection(connection, kit);
+    }
+
+    private static void SaveKitToConnection(SqliteConnection connection, Kit kit)
+    {
+        // Disable FK enforcement during save: the schema has an FK mismatch
+        // where attribute.connector_guid references connector(guid) but connector.guid
+        // only has a composite UNIQUE (guid, type_guid), not a standalone UNIQUE constraint.
+        using (var fkOff = connection.CreateCommand())
+        {
+            fkOff.CommandText = "PRAGMA foreign_keys = OFF;";
+            fkOff.ExecuteNonQuery();
+        }
+        using var transaction = connection.BeginTransaction();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "INSERT INTO semio (release, engine, created) VALUES (@release, @engine, datetime('now'))";
+            cmd.Parameters.AddWithValue("@release", Constants.Release);
+            cmd.Parameters.AddWithValue("@engine", "net");
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
+                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
+            cmd.Parameters.AddWithValue("@guid", kit.Guid);
+            cmd.Parameters.AddWithValue("@name", kit.Name);
+            cmd.Parameters.AddWithValue("@version", (object?)kit.Version ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@description", (object?)kit.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@icon", (object?)kit.Icon ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@image", (object?)kit.Image ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@preview", (object?)kit.Preview ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@remote", (object?)kit.Remote ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@homepage", (object?)kit.Homepage ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@license", (object?)kit.License ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+
+        SaveAttributes(connection, kit.Attributes, "kit_guid", kit.Guid);
+
+        foreach (var quality in kit.Qualities)
+            SaveQuality(connection, quality, kit.Guid);
+
+        foreach (var port in kit.Ports)
+            SavePort(connection, port, kit.Guid);
+
+        foreach (var port in kit.Ports)
+            SavePortCompatibility(connection, port);
+
+        foreach (var tag in kit.Tags)
+            SaveTag(connection, tag, kit.Guid);
+
+        foreach (var concept in kit.Concepts)
+            SaveConcept(connection, concept, kit.Guid);
+
+        foreach (var folder in TopologicalSort(kit.Folders, f => f.Guid, f => f.Parent))
+            SaveFolder(connection, folder, kit.Guid);
+
+        foreach (var file in kit.Files)
+            SaveFile(connection, file, kit.Guid);
+
+        foreach (var author in kit.Authors)
+            SaveAuthor(connection, author, kit.Guid, null, null);
+
+        foreach (var type in TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid))
+            SaveType(connection, type, kit.Guid);
+
+        foreach (var design in TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid))
+            SaveDesign(connection, design, kit.Guid);
+
+        transaction.Commit();
+
+        // Re-enable FK enforcement after save.
+        using (var fkOn = connection.CreateCommand())
+        {
+            fkOn.CommandText = "PRAGMA foreign_keys = ON;";
+            fkOn.ExecuteNonQuery();
+        }
+    }
+
+    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
+    {
+        var itemsByGuid = items.ToDictionary(getGuid);
+        var visited = new HashSet<string>();
+        var result = new List<T>();
+
+        void Visit(T item)
+        {
+            var guid = getGuid(item);
+            if (visited.Contains(guid)) return;
+            visited.Add(guid);
+            var parentGuid = getParentGuid(item);
+            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
+                Visit(parent);
+            result.Add(item);
+        }
+
+        foreach (var item in items)
+            Visit(item);
+
+        return result;
+    }
+
+    private static void SaveQuality(SqliteConnection connection, Quality quality, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO quality (guid, key, name, kind, default_value, formula, default_si_unit, default_imperial_unit, min_value, min_excluded, max_value, max_excluded, can_scale, definition, kit_guid)
+            VALUES (@guid, @key, @name, @kind, @defaultValue, @formula, @defaultSiUnit, @defaultImperialUnit, @minValue, @minExcluded, @maxValue, @maxExcluded, @canScale, @definition, @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", quality.Guid);
+        cmd.Parameters.AddWithValue("@key", quality.Key);
+        cmd.Parameters.AddWithValue("@name", quality.Name);
+        cmd.Parameters.AddWithValue("@kind", (int)quality.Kind);
+        cmd.Parameters.AddWithValue("@defaultValue", (object?)quality.Default ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@formula", (object?)quality.Formula ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@defaultSiUnit", (object?)quality.SI ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@defaultImperialUnit", (object?)quality.Imperial ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@minValue", (object?)quality.Min ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@minExcluded", quality.MinExcluded);
+        cmd.Parameters.AddWithValue("@maxValue", (object?)quality.Max ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@maxExcluded", quality.MaxExcluded);
+        cmd.Parameters.AddWithValue("@canScale", quality.Scalable);
+        cmd.Parameters.AddWithValue("@definition", (object?)quality.Formula ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var benchmark in quality.Benchmarks ?? new List<Benchmark>())
+            SaveBenchmark(connection, benchmark, quality.Guid);
+
+        SaveAttributes(connection, quality.Attributes, "quality_guid", quality.Guid);
+    }
+
+    private static void SaveBenchmark(SqliteConnection connection, Benchmark benchmark, string qualityGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO benchmark (guid, name, icon, min_value, min_excluded, max_value, max_excluded, definition, quality_guid)
+            VALUES (@guid, @name, @icon, @minValue, @minExcluded, @maxValue, @maxExcluded, @definition, @qualityGuid)";
+        cmd.Parameters.AddWithValue("@guid", benchmark.Guid);
+        cmd.Parameters.AddWithValue("@name", benchmark.Name);
+        cmd.Parameters.AddWithValue("@icon", (object?)benchmark.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@minValue", (object?)benchmark.Min ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@minExcluded", benchmark.MinExcluded);
+        cmd.Parameters.AddWithValue("@maxValue", (object?)benchmark.Max ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@maxExcluded", benchmark.MaxExcluded);
+        cmd.Parameters.AddWithValue("@definition", DBNull.Value);
+        cmd.Parameters.AddWithValue("@qualityGuid", qualityGuid);
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void SavePort(SqliteConnection connection, Port port, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO port (guid, name, description, icon, kit_guid) VALUES (@guid, @name, @description, @icon, @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", port.Guid);
+        cmd.Parameters.AddWithValue("@name", port.Name);
+        cmd.Parameters.AddWithValue("@description", (object?)port.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@icon", (object?)port.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+
+        SaveAttributes(connection, port.Attributes, "port_guid", port.Guid);
+    }
+
+    private static void SavePortCompatibility(SqliteConnection connection, Port port)
+    {
+        foreach (var compatible in port.CompatiblePorts ?? new List<PortId>())
+        {
+            using var compatCmd = connection.CreateCommand();
+            compatCmd.CommandText = "INSERT OR IGNORE INTO port_compatibility (port_guid, compatible_port_guid) VALUES (@portGuid, @compatiblePortGuid)";
+            compatCmd.Parameters.AddWithValue("@portGuid", port.Guid);
+            compatCmd.Parameters.AddWithValue("@compatiblePortGuid", compatible.Guid);
+            compatCmd.ExecuteNonQuery();
+        }
+    }
+
+    private static void SaveTag(SqliteConnection connection, Tag tag, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO tag (guid, name, description, icon, kit_guid) VALUES (@guid, @name, @description, @icon, @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", tag.Guid);
+        cmd.Parameters.AddWithValue("@name", tag.Name);
+        cmd.Parameters.AddWithValue("@description", (object?)tag.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@icon", (object?)tag.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+        SaveAttributes(connection, tag.Attributes, "tag_guid", tag.Guid);
+    }
+
+    private static void SaveConcept(SqliteConnection connection, Concept concept, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO concept (guid, name, description, icon, kit_guid) VALUES (@guid, @name, @description, @icon, @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", concept.Guid);
+        cmd.Parameters.AddWithValue("@name", concept.Name);
+        cmd.Parameters.AddWithValue("@description", (object?)concept.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@icon", (object?)concept.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+        SaveAttributes(connection, concept.Attributes, "concept_guid", concept.Guid);
+    }
+
+    private static void SaveFolder(SqliteConnection connection, Folder folder, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO folder (guid, name, parent_guid, created, updated, kit_guid) VALUES (@guid, @name, @parentGuid, datetime('now'), datetime('now'), @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", folder.Guid);
+        cmd.Parameters.AddWithValue("@name", folder.Name);
+        cmd.Parameters.AddWithValue("@parentGuid", (object?)folder.Parent ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+        SaveAttributes(connection, folder.Attributes, "folder_guid", folder.Guid);
+    }
+
+    private static void SaveFile(SqliteConnection connection, File file, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO file (guid, name, mime, folder_guid, size, hash, remote_url, created, updated, kit_guid)
+            VALUES (@guid, @name, @mime, @folderGuid, @size, @hash, @remoteUrl, datetime('now'), datetime('now'), @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", file.Guid);
+        cmd.Parameters.AddWithValue("@name", file.Name);
+        cmd.Parameters.AddWithValue("@mime", (object?)file.Mime ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@folderGuid", (object?)file.Folder?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@size", (object?)file.Size ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@hash", (object?)file.Hash ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@remoteUrl", (object?)file.Remote ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void SaveAuthor(SqliteConnection connection, Author author, string? kitGuid, string? typeGuid, string? designGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO author (guid, name, email, kit_guid, type_guid, design_guid) VALUES (@guid, @name, @email, @kitGuid, @typeGuid, @designGuid)";
+        cmd.Parameters.AddWithValue("@guid", author.Guid);
+        cmd.Parameters.AddWithValue("@name", author.Name);
+        cmd.Parameters.AddWithValue("@email", (object?)author.Email ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", (object?)kitGuid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@typeGuid", (object?)typeGuid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuid", (object?)designGuid ?? DBNull.Value);
+        cmd.ExecuteNonQuery();
+        SaveAttributes(connection, author.Attributes, "author_guid", author.Guid);
+    }
+
+    private static void SaveType(SqliteConnection connection, Type type, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
+            VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", type.Guid);
+        cmd.Parameters.AddWithValue("@name", type.Name);
+        cmd.Parameters.AddWithValue("@parent", (object?)type.Parent?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@isAbstract", type.IsAbstract ?? false);
+        cmd.Parameters.AddWithValue("@folder", (object?)type.Folder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@stock", type.Stock);
+        cmd.Parameters.AddWithValue("@virtual", type.Virtual);
+        cmd.Parameters.AddWithValue("@unit", (object?)type.Unit ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)type.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@icon", (object?)type.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@image", (object?)type.Image ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var connector in type.Connectors ?? new List<Connector>())
+            SaveConnector(connection, connector, type.Guid);
+
+        foreach (var model in type.Models ?? new List<Model>())
+            SaveModel(connection, model, type.Guid);
+
+        for (int i = 0; i < (type.Concepts?.Count ?? 0); i++)
+        {
+            using var conceptCmd = connection.CreateCommand();
+            conceptCmd.CommandText = "INSERT INTO type_concept (type_guid, concept_guid) VALUES (@typeGuid, @conceptGuid)";
+            conceptCmd.Parameters.AddWithValue("@typeGuid", type.Guid);
+            conceptCmd.Parameters.AddWithValue("@conceptGuid", type.Concepts![i].Guid);
+            conceptCmd.ExecuteNonQuery();
+        }
+
+        for (int i = 0; i < (type.Authors?.Count ?? 0); i++)
+        {
+            using var authorCmd = connection.CreateCommand();
+            authorCmd.CommandText = "INSERT INTO type_author (type_guid, author_guid, rank) VALUES (@typeGuid, @authorGuid, @rank)";
+            authorCmd.Parameters.AddWithValue("@typeGuid", type.Guid);
+            authorCmd.Parameters.AddWithValue("@authorGuid", type.Authors![i].Guid);
+            authorCmd.Parameters.AddWithValue("@rank", i);
+            authorCmd.ExecuteNonQuery();
+        }
+
+        SaveAttributes(connection, type.Attributes, "type_guid", type.Guid);
+    }
+
+    private static void SaveConnector(SqliteConnection connection, Connector connector, string typeGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description, type_guid)
+            VALUES (@guid, @name, @px, @py, @pz, @dx, @dy, @dz, @t, @mandatory, @portGuid, @description, @typeGuid)";
+        cmd.Parameters.AddWithValue("@guid", connector.Guid);
+        cmd.Parameters.AddWithValue("@name", (object?)connector.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@px", connector.Point?.X ?? 0f);
+        cmd.Parameters.AddWithValue("@py", connector.Point?.Y ?? 0f);
+        cmd.Parameters.AddWithValue("@pz", connector.Point?.Z ?? 0f);
+        cmd.Parameters.AddWithValue("@dx", connector.Direction?.X ?? 0f);
+        cmd.Parameters.AddWithValue("@dy", connector.Direction?.Y ?? 0f);
+        cmd.Parameters.AddWithValue("@dz", connector.Direction?.Z ?? 0f);
+        cmd.Parameters.AddWithValue("@t", connector.T);
+        cmd.Parameters.AddWithValue("@mandatory", connector.Mandatory);
+        cmd.Parameters.AddWithValue("@portGuid", (object?)connector.Port?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)connector.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var prop in connector.Props ?? new List<Prop>())
+            SaveProp(connection, prop, connector.Guid);
+
+        SaveAttributes(connection, connector.Attributes, "connector_guid", connector.Guid);
+    }
+
+    private static void SaveProp(SqliteConnection connection, Prop prop, string connectorGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO prop (guid, key, value, unit, quality_guid, connector_guid) VALUES (@guid, @key, @value, @unit, @qualityGuid, @connectorGuid)";
+        cmd.Parameters.AddWithValue("@guid", prop.Guid);
+        cmd.Parameters.AddWithValue("@key", prop.Quality?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@value", prop.Value);
+        cmd.Parameters.AddWithValue("@unit", (object?)prop.Unit ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@qualityGuid", (object?)prop.Quality?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@connectorGuid", connectorGuid);
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void SaveModel(SqliteConnection connection, Model model, string typeGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO model (guid, file_guid, name, description, type_guid) VALUES (@guid, @fileGuid, @name, @description, @typeGuid)";
+        cmd.Parameters.AddWithValue("@guid", model.Guid);
+        cmd.Parameters.AddWithValue("@fileGuid", model.File?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@name", (object?)model.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)model.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var tag in model.Tags ?? new List<TagId>())
+        {
+            using var tagCmd = connection.CreateCommand();
+            tagCmd.CommandText = "INSERT INTO model_tag (model_guid, tag_guid) VALUES (@modelGuid, @tagGuid)";
+            tagCmd.Parameters.AddWithValue("@modelGuid", model.Guid);
+            tagCmd.Parameters.AddWithValue("@tagGuid", tag.Guid);
+            tagCmd.ExecuteNonQuery();
+        }
+
+        SaveAttributes(connection, model.Attributes, "model_guid", model.Guid);
+    }
+
+    private static void SaveDesign(SqliteConnection connection, Design design, string kitGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, variant, view_center_u, view_center_v, view_zoom, unit, is_abstract, folder, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+            VALUES (@guid, @name, @parent, @variant, @viewCenterU, @viewCenterV, @viewZoom, @unit, @isAbstract, @folder, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+        cmd.Parameters.AddWithValue("@guid", design.Guid);
+        cmd.Parameters.AddWithValue("@name", design.Name);
+        cmd.Parameters.AddWithValue("@parent", (object?)design.Parent?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@variant", DBNull.Value);
+        cmd.Parameters.AddWithValue("@viewCenterU", DBNull.Value);
+        cmd.Parameters.AddWithValue("@viewCenterV", DBNull.Value);
+        cmd.Parameters.AddWithValue("@viewZoom", DBNull.Value);
+        cmd.Parameters.AddWithValue("@unit", (object?)design.Unit ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@isAbstract", (object?)design.IsAbstract ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@folder", (object?)design.Folder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@canScale", (object?)design.CanScale ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@canMirror", (object?)design.CanMirror ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)design.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@icon", (object?)design.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@image", (object?)design.Image ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var piece in design.Pieces ?? new List<Piece>())
+            SavePiece(connection, piece, design.Guid);
+
+        foreach (var conn in design.Connections ?? new List<Connection>())
+            SaveConnection(connection, conn, design.Guid);
+
+        foreach (var layer in design.Layers ?? new List<Layer>())
+            SaveLayer(connection, layer, design.Guid);
+
+        foreach (var group in design.Groups ?? new List<Group>())
+            SaveGroup(connection, group, design.Guid);
+
+        foreach (var stat in design.Stats ?? new List<Stat>())
+            SaveStat(connection, stat, design.Guid);
+
+        for (int i = 0; i < (design.Concepts?.Count ?? 0); i++)
+        {
+            using var conceptCmd = connection.CreateCommand();
+            conceptCmd.CommandText = "INSERT INTO design_concept (design_guid, concept_guid) VALUES (@designGuid, @conceptGuid)";
+            conceptCmd.Parameters.AddWithValue("@designGuid", design.Guid);
+            conceptCmd.Parameters.AddWithValue("@conceptGuid", design.Concepts![i].Guid);
+            conceptCmd.ExecuteNonQuery();
+        }
+
+        for (int i = 0; i < (design.Authors?.Count ?? 0); i++)
+        {
+            using var authorCmd = connection.CreateCommand();
+            authorCmd.CommandText = "INSERT INTO design_author (design_guid, author_guid, rank) VALUES (@designGuid, @authorGuid, @rank)";
+            authorCmd.Parameters.AddWithValue("@designGuid", design.Guid);
+            authorCmd.Parameters.AddWithValue("@authorGuid", design.Authors![i].Guid);
+            authorCmd.Parameters.AddWithValue("@rank", i);
+            authorCmd.ExecuteNonQuery();
+        }
+
+        SaveAttributes(connection, design.Attributes, "design_guid", design.Guid);
+    }
+
+    private static void SavePiece(SqliteConnection connection, Piece piece, string designGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO piece (guid, name, type_guid, design_guid_ref,
+            plane_origin_x, plane_origin_y, plane_origin_z,
+            plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
+            plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+            center_u, center_v, scale,
+            mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+            mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+            mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+            is_hidden, is_locked, color, description, design_guid)
+            VALUES (@guid, @name, @typeGuid, @designGuidRef,
+            @pox, @poy, @poz, @pxx, @pxy, @pxz, @pyx, @pyy, @pyz,
+            @cu, @cv, @scale,
+            @mpox, @mpoy, @mpoz, @mpxx, @mpxy, @mpxz, @mpyx, @mpyy, @mpyz,
+            @isHidden, @isLocked, @color, @description, @designGuid)";
+        cmd.Parameters.AddWithValue("@guid", piece.Guid);
+        cmd.Parameters.AddWithValue("@name", (object?)piece.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@typeGuid", (object?)piece.Type?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuidRef", (object?)piece.Design?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pox", (object?)piece.Plane?.Origin?.X ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@poy", (object?)piece.Plane?.Origin?.Y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@poz", (object?)piece.Plane?.Origin?.Z ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pxx", (object?)piece.Plane?.XAxis?.X ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pxy", (object?)piece.Plane?.XAxis?.Y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pxz", (object?)piece.Plane?.XAxis?.Z ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pyx", (object?)piece.Plane?.YAxis?.X ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pyy", (object?)piece.Plane?.YAxis?.Y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pyz", (object?)piece.Plane?.YAxis?.Z ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@cu", (object?)piece.Center?.U ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@cv", (object?)piece.Center?.V ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@scale", (object?)piece.Scale ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpox", (object?)piece.MirrorPlane?.Origin?.X ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpoy", (object?)piece.MirrorPlane?.Origin?.Y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpoz", (object?)piece.MirrorPlane?.Origin?.Z ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpxx", (object?)piece.MirrorPlane?.XAxis?.X ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpxy", (object?)piece.MirrorPlane?.XAxis?.Y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpxz", (object?)piece.MirrorPlane?.XAxis?.Z ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpyx", (object?)piece.MirrorPlane?.YAxis?.X ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpyy", (object?)piece.MirrorPlane?.YAxis?.Y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mpyz", (object?)piece.MirrorPlane?.YAxis?.Z ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@isHidden", piece.IsHidden ?? false);
+        cmd.Parameters.AddWithValue("@isLocked", piece.IsLocked ?? false);
+        cmd.Parameters.AddWithValue("@color", (object?)piece.Color ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)piece.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var prop in piece.Props ?? new List<Prop>())
+        {
+            SaveProp(connection, prop, "");
+            using var ppCmd = connection.CreateCommand();
+            ppCmd.CommandText = "INSERT INTO piece_prop (piece_guid, prop_guid) VALUES (@pieceGuid, @propGuid)";
+            ppCmd.Parameters.AddWithValue("@pieceGuid", piece.Guid);
+            ppCmd.Parameters.AddWithValue("@propGuid", prop.Guid);
+            ppCmd.ExecuteNonQuery();
+        }
+
+        SaveAttributes(connection, piece.Attributes, "piece_guid", piece.Guid);
+    }
+
+    private static void SaveConnection(SqliteConnection connection, Connection conn, string designGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO connection (guid,
+            connected_piece_guid, connected_design_piece_guid, connected_connector_guid,
+            connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid,
+            gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid)
+            VALUES (@guid, @connectedPiece, @connectedDesignPiece, @connectedConnector,
+            @connectingPiece, @connectingDesignPiece, @connectingConnector,
+            @gap, @shift, @rise, @rotation, @turn, @tilt, @u, @v, @description, @designGuid)";
+        cmd.Parameters.AddWithValue("@guid", conn.Guid);
+        cmd.Parameters.AddWithValue("@connectedPiece", conn.Connected?.Piece?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@connectedDesignPiece", (object?)conn.Connected?.DesignPiece?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@connectedConnector", conn.Connected?.Connector?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@connectingPiece", conn.Connecting?.Piece?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@connectingDesignPiece", (object?)conn.Connecting?.DesignPiece?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@connectingConnector", conn.Connecting?.Connector?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@gap", conn.Gap);
+        cmd.Parameters.AddWithValue("@shift", conn.Shift);
+        cmd.Parameters.AddWithValue("@rise", conn.Rise);
+        cmd.Parameters.AddWithValue("@rotation", conn.Rotation);
+        cmd.Parameters.AddWithValue("@turn", conn.Turn);
+        cmd.Parameters.AddWithValue("@tilt", conn.Tilt);
+        cmd.Parameters.AddWithValue("@u", (object?)conn.U ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@v", (object?)conn.V ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)conn.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        cmd.ExecuteNonQuery();
+        SaveAttributes(connection, conn.Attributes, "connection_guid", conn.Guid);
+    }
+
+    private static void SaveLayer(SqliteConnection connection, Layer layer, string designGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO layer (guid, path, is_hidden, is_locked, color, description, design_guid) VALUES (@guid, @path, @isHidden, @isLocked, @color, @description, @designGuid)";
+        cmd.Parameters.AddWithValue("@guid", layer.Guid);
+        cmd.Parameters.AddWithValue("@path", layer.Path);
+        cmd.Parameters.AddWithValue("@isHidden", layer.IsHidden);
+        cmd.Parameters.AddWithValue("@isLocked", layer.IsLocked);
+        cmd.Parameters.AddWithValue("@color", (object?)layer.Color ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)layer.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        cmd.ExecuteNonQuery();
+        SaveAttributes(connection, layer.Attributes, "layer_guid", layer.Guid);
+    }
+
+    private static void SaveGroup(SqliteConnection connection, Group group, string designGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO \"group\" (guid, name, color, description, design_guid) VALUES (@guid, @name, @color, @description, @designGuid)";
+        cmd.Parameters.AddWithValue("@guid", group.Guid);
+        cmd.Parameters.AddWithValue("@name", (object?)group.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@color", (object?)group.Color ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)group.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        cmd.ExecuteNonQuery();
+
+        foreach (var piece in group.Pieces ?? new List<PieceId>())
+        {
+            using var gpCmd = connection.CreateCommand();
+            gpCmd.CommandText = "INSERT INTO group_piece (group_guid, piece_guid) VALUES (@groupGuid, @pieceGuid)";
+            gpCmd.Parameters.AddWithValue("@groupGuid", group.Guid);
+            gpCmd.Parameters.AddWithValue("@pieceGuid", piece.Guid);
+            gpCmd.ExecuteNonQuery();
+        }
+
+        SaveAttributes(connection, group.Attributes, "group_guid", group.Guid);
+    }
+
+    private static void SaveStat(SqliteConnection connection, Stat stat, string designGuid)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO stat (guid, quality_guid, min_value, min_excluded, max_value, max_excluded, unit, design_guid) VALUES (@guid, @qualityGuid, @minValue, @minExcluded, @maxValue, @maxExcluded, @unit, @designGuid)";
+        cmd.Parameters.AddWithValue("@guid", stat.Guid);
+        cmd.Parameters.AddWithValue("@qualityGuid", stat.Quality?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@minValue", (object?)stat.Min ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@minExcluded", stat.MinExcluded);
+        cmd.Parameters.AddWithValue("@maxValue", (object?)stat.Max ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@maxExcluded", stat.MaxExcluded);
+        cmd.Parameters.AddWithValue("@unit", (object?)stat.Unit ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@designGuid", designGuid);
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void SaveAttributes(SqliteConnection connection, List<Attribute>? attributes, string foreignKeyColumn, string foreignKeyValue)
+    {
+        if (attributes == null) return;
+        foreach (var attr in attributes)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = $"INSERT INTO attribute (guid, key, value, definition, {foreignKeyColumn}) VALUES (@guid, @key, @value, @definition, @fk)";
+            cmd.Parameters.AddWithValue("@guid", attr.Guid);
+            cmd.Parameters.AddWithValue("@key", attr.Key);
+            cmd.Parameters.AddWithValue("@value", (object?)attr.Value ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@definition", (object?)attr.Definition ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@fk", foreignKeyValue);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    #endregion 🔖KitSqliteSave
+
+    #region 🔖KitSqliteDiff
+    // Diff-based CRUD commands matching semio.ts patterns.
+
+    /// <summary>Apply a KitDiff to a local SQLite kit. Loads, applies, and saves the full kit.</summary>
+    public static Kit ApplyKitDiff(string kitDirectory, KitDiff diff)
+    {
+        var kit = LoadKit(kitDirectory);
+        var updated = SemioDiff.ApplyKitDiff(kit, diff);
+        SaveKit(kitDirectory, updated);
+        return updated;
+    }
+
+    /// <summary>Add a type to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddTypeToKit(string kitDirectory, Type type)
+    {
+        var diff = new KitDiff { Types = new TypesDiff { Added = new List<Type> { type } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove a type from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemoveTypeFromKit(string kitDirectory, string typeGuid)
+    {
+        var diff = new KitDiff { Types = new TypesDiff { Removed = new List<TypeId> { new() { Guid = typeGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Update a type in a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit SetTypeInKit(string kitDirectory, Type type)
+    {
+        var diff = new KitDiff { Types = new TypesDiff { Added = new List<Type> { type } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Add a design to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddDesignToKit(string kitDirectory, Design design)
+    {
+        var diff = new KitDiff { Designs = new DesignsDiff { Added = new List<Design> { design } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove a design from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemoveDesignFromKit(string kitDirectory, string designGuid)
+    {
+        var diff = new KitDiff { Designs = new DesignsDiff { Removed = new List<DesignId> { new() { Guid = designGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Update a design in a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit SetDesignInKit(string kitDirectory, Design design)
+    {
+        var diff = new KitDiff { Designs = new DesignsDiff { Added = new List<Design> { design } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Add a port to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddPortToKit(string kitDirectory, Port port)
+    {
+        var diff = new KitDiff { Ports = new PortsDiff { Added = new List<Port> { port } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove a port from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemovePortFromKit(string kitDirectory, string portGuid)
+    {
+        var diff = new KitDiff { Ports = new PortsDiff { Removed = new List<PortId> { new() { Guid = portGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Add a tag to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddTagToKit(string kitDirectory, Tag tag)
+    {
+        var diff = new KitDiff { Tags = new TagsDiff { Added = new List<Tag> { tag } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove a tag from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemoveTagFromKit(string kitDirectory, string tagGuid)
+    {
+        var diff = new KitDiff { Tags = new TagsDiff { Removed = new List<TagId> { new() { Guid = tagGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Add a concept to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddConceptToKit(string kitDirectory, Concept concept)
+    {
+        var diff = new KitDiff { Concepts = new ConceptsDiff { Added = new List<Concept> { concept } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove a concept from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemoveConceptFromKit(string kitDirectory, string conceptGuid)
+    {
+        var diff = new KitDiff { Concepts = new ConceptsDiff { Removed = new List<ConceptId> { new() { Guid = conceptGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Add a file to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddFileToKit(string kitDirectory, File file)
+    {
+        var diff = new KitDiff { Files = new FilesDiff { Added = new List<File> { file } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove a file from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemoveFileFromKit(string kitDirectory, string fileGuid)
+    {
+        var diff = new KitDiff { Files = new FilesDiff { Removed = new List<FileId> { new() { Guid = fileGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Add an attribute to a local SQLite kit. Returns the updated kit.</summary>
+    public static Kit AddAttributeToKit(string kitDirectory, Attribute attribute)
+    {
+        var diff = new KitDiff { Attributes = new AttributesDiff { Added = new List<Attribute> { attribute } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Remove an attribute from a local SQLite kit by guid. Returns the updated kit.</summary>
+    public static Kit RemoveAttributeFromKit(string kitDirectory, string attributeGuid)
+    {
+        var diff = new KitDiff { Attributes = new AttributesDiff { Removed = new List<AttributeId> { new() { Guid = attributeGuid } } } };
+        return ApplyKitDiff(kitDirectory, diff);
+    }
+
+    /// <summary>Check if a kit database exists at the given directory.</summary>
+    public static bool KitExists(string kitDirectory)
+    {
+        return System.IO.File.Exists(GetDbPath(kitDirectory));
+    }
+
+    /// <summary>Create a new empty kit at the given directory.</summary>
+    public static void CreateKit(string kitDirectory, Kit kit)
+    {
+        SaveKit(kitDirectory, kit);
+    }
+
+    /// <summary>Delete a kit database from the given directory.</summary>
+    public static void DeleteKit(string kitDirectory)
+    {
+        var dbPath = GetDbPath(kitDirectory);
+        SqliteConnection.ClearAllPools();
+        if (System.IO.File.Exists(dbPath))
+            System.IO.File.Delete(dbPath);
+    }
+
+    #endregion 🔖KitSqliteDiff
+}
+
+#endregion 🔖KitSqlite
+
 #region 🔖ZipRoundtrip
 // [👤semio📚net🛅semio💻semio🔖entitying🔖ziproundtrip](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/ZipRoundtrip)
 // Callers MUST use these methods to import and export kits as ZIP archives.
@@ -6475,6 +8008,7 @@ public static class ZipRoundtrip
                 throw new FileNotFoundException("kit.db not found in zip");
 
             result.Kit = LoadKitFromSqlite(dbPath);
+            SqliteConnection.ClearAllPools();
 
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {
@@ -6485,6 +8019,7 @@ public static class ZipRoundtrip
         }
         finally
         {
+            SqliteConnection.ClearAllPools();
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
@@ -6504,6 +8039,7 @@ public static class ZipRoundtrip
             var dbPath = Path.Combine(semioDir, "kit.db");
 
             SaveKitToSqlite(kit, dbPath, schemaSQL);
+            SqliteConnection.ClearAllPools();
 
             foreach (var kvp in files)
             {
@@ -6520,6 +8056,7 @@ public static class ZipRoundtrip
         }
         finally
         {
+            SqliteConnection.ClearAllPools();
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
@@ -6744,6 +8281,12 @@ public static class KitExporter
     {
         var possiblePaths = new[]
         {
+            "../../../../../sqlite/schema.sql",
+            "../../../../sqlite/schema.sql",
+            "../../../sqlite/schema.sql",
+            "../../sqlite/schema.sql",
+            "../sqlite/schema.sql",
+            "sqlite/schema.sql",
             "../../../../../sql/sqlite/semio/schema.sql",
             "../../../../sql/sqlite/semio/schema.sql",
             "../../../sql/sqlite/semio/schema.sql",

@@ -27,9 +27,9 @@
 -- #region 🔖Tables
 CREATE TABLE IF NOT EXISTS contributor (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alias TEXT NOT NULL UNIQUE CHECK (length (trim(alias)) > 0) -- nn_text
     github TEXT NOT NULL UNIQUE CHECK (length (trim(github)) > 0), -- nn_text
     name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0), -- nn_text
-    alias TEXT NOT NULL UNIQUE CHECK (length (trim(alias)) > 0) -- nn_text
 );
 CREATE TABLE IF NOT EXISTS release (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -217,6 +217,7 @@ CREATE TABLE IF NOT EXISTS session (
     initial_second INTEGER NOT NULL CHECK (initial_second >= 0), -- unix_s
     agent_id INTEGER NOT NULL,
     session_id TEXT NOT NULL UNIQUE CHECK (length (trim(session_id)) > 0), -- nn_text
+    checkpoint_sha TEXT, -- sha of the current checkpoint when session started
     UNIQUE (contributor_id, initial_second),
     FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
     FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE

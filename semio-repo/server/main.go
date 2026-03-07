@@ -108,6 +108,7 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 			return parsed
 		}
 	}
+	return fallback
 }
 
 // #endregion 🔖Config
@@ -294,6 +295,7 @@ type PrecheckpointResponse struct {
 // [🧰semiorepo⌨️server💻main🔖models✂️indexfilerequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/IndexFileRequest)
 type IndexFileRequest struct {
 	FilePath string `json:"file_path"`
+	Content  string `json:"content"`
 }
 
 // #endregion 🔖Models
@@ -604,6 +606,7 @@ func (d *Database) listConflicts(ctx context.Context) ([]struct {
 func (d *Database) addContributorWork(ctx context.Context, github string, kind string, itemID string) error {
 	_, err := d.db.ExecContext(ctx, "INSERT OR REPLACE INTO contributor_work (github, kind, item_id) VALUES (?, ?, ?)", github, kind, itemID)
 	return err
+}
 
 // removeContributorWork MUST perform the removeContributorWork operation.
 // removeContributorWork holds the data fields for a removeContributorWork record.
@@ -701,6 +704,7 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 		Source:    source,
 		Payload:   string(payloadBytes),
 		CreatedAt: time.Now().UTC(),
+	}
 	if err := b.db.insertEvent(ctx, event); err != nil {
 		return err
 	}
@@ -1008,6 +1012,7 @@ func parseMarkdownHeading(line string) (int, string) {
 func assignSectionPaths(sections []Scope) []Scope {
 	for i := range sections {
 		sections[i].ID = fmt.Sprintf("section:%s#%s", sections[i].FilePath, sections[i].SectionPath)
+	}
 	return sections
 }
 
@@ -1594,12 +1599,13 @@ func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 		s.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
+	ctx, cancel := s.newRequestContext(r)
+	defer cancel()
+	files, err := s.walkRepoFiles()
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	ctx, cancel := s.newRequestContext(r)
-	defer cancel()
 	for _, file := range files {
 		content, err := os.ReadFile(filepath.Join(s.config.RepoRoot, file))
 		if err != nil {
@@ -1750,6 +1756,7 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 		scopes = append(scopes, s.cache.Definitions[file]...)
 	}
 	s.cacheLock.RUnlock()
+	now := time.Now().UTC()
 	claimedIDs, _ := mapClaims(scopes, diff)
 	for _, scopeID := range claimedIDs {
 		if err := s.db.upsertClaim(ctx, ticketID, scopeID, "touched", now); err != nil {
@@ -2092,6 +2099,7 @@ func extractActorLogin(payload map[string]interface{}) string {
 	if sender, ok := payload["sender"].(map[string]interface{}); ok {
 		if login, ok := sender["login"].(string); ok {
 			return login
+		}
 	}
 	return ""
 }
@@ -2134,17 +2142,17 @@ func (s *Server) registerNotifications() {
 		s.notifyDiscord("# Prompt", event.Payload)
 	})
 	for _, kind := range []repopkg.EventKind{
-		repopkg.EventTicketOpen, repopkg.EventTicketClose, repopkg.EventTicketReopen, repopkg.EventTicketChange,
-		repopkg.EventGoalOpen, repopkg.EventGoalClose, repopkg.EventGoalReopen, repopkg.EventGoalChange,
-		repopkg.EventContributorAdd, repopkg.EventContributorRemove,
-		repopkg.EventTodoCreate, repopkg.EventTodoChange, repopkg.EventTodoDelete,
+		repopkg.EventTicketOpenEnded, repopkg.EventTicketCloseEnded, repopkg.EventTicketReopenEnded, repopkg.EventTicketChangeEnded,
+		repopkg.EventGoalOpenEnded, repopkg.EventGoalCloseEnded, repopkg.EventGoalReopenEnded, repopkg.EventGoalChangeEnded,
+		repopkg.EventContributorAddEnded, repopkg.EventContributorRemoveEnded,
+		repopkg.EventTodoCreateEnded, repopkg.EventTodoChangeEnded, repopkg.EventTodoDeleteEnded,
 	} {
 		k := kind
 		s.bus.Subscribe(string(k), func(ctx context.Context, event Event) {
 			s.onCLIEvent(ctx, k, event)
 		})
 	}
-	s.bus.Subscribe(string(repopkg.EventCheckpoint), func(ctx context.Context, event Event) {
+	s.bus.Subscribe(string(repopkg.EventCheckpointEnded), func(ctx context.Context, event Event) {
 		s.onCheckpointEvent(ctx, event)
 	})
 }
@@ -2191,7 +2199,7 @@ func (s *Server) onCheckpointEvent(ctx context.Context, event Event) {
 // [🧰semiorepo⌨️server💻main🔖discord🛠️extractauthoranditems](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Discord/d/i/extractAuthorAndItems)
 func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON string) (author string, items []repopkg.WorkItem) {
 	switch kind {
-	case repopkg.EventTicketOpen, repopkg.EventTicketClose, repopkg.EventTicketReopen, repopkg.EventTicketChange:
+	case repopkg.EventTicketOpenEnded, repopkg.EventTicketCloseEnded, repopkg.EventTicketReopenEnded, repopkg.EventTicketChangeEnded:
 		var p repopkg.TicketPayload
 		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
 			return "", nil
@@ -2205,20 +2213,20 @@ func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON strin
 			id = fmt.Sprintf("%d/%02d/%02d/%s", p.Year, p.Month, p.Day, p.Slug)
 		}
 		return author, []repopkg.WorkItem{{Kind: "ticket", ID: id}}
-	case repopkg.EventGoalOpen, repopkg.EventGoalClose, repopkg.EventGoalReopen, repopkg.EventGoalChange:
+	case repopkg.EventGoalOpenEnded, repopkg.EventGoalCloseEnded, repopkg.EventGoalReopenEnded, repopkg.EventGoalChangeEnded:
 		var p repopkg.GoalPayload
 		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
 			return "", nil
 		}
 		author = getAuthorFromPayload(payloadJSON)
 		return author, []repopkg.WorkItem{{Kind: "goal", ID: p.ID}}
-	case repopkg.EventContributorAdd, repopkg.EventContributorRemove:
+	case repopkg.EventContributorAddEnded, repopkg.EventContributorRemoveEnded:
 		var p repopkg.ContributorPayload
 		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
 			return "", nil
 		}
 		return p.Author, []repopkg.WorkItem{{Kind: "contributor", ID: p.Github}}
-	case repopkg.EventTodoCreate, repopkg.EventTodoChange, repopkg.EventTodoDelete:
+	case repopkg.EventTodoCreateEnded, repopkg.EventTodoChangeEnded, repopkg.EventTodoDeleteEnded:
 		var p repopkg.TodoPayload
 		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
 			return "", nil

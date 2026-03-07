@@ -5958,19 +5958,19 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	root.Children = append(root.Children, policiesNode)
 
 	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "🧑‍💻Contributors", URI: "semiorepo://cs"}
-	sort.Slice(contributors, func(i, j int) bool { return contributors[i].Github < contributors[j].Github })
+	sort.Slice(contributors, func(i, j int) bool { return contributors[i].Alias < contributors[j].Alias })
 	for _, c := range contributors {
-		label := c.Github
+		label := c.Alias
 		if c.Name != "" {
-			label = c.Name + " (" + c.Github + ")"
+			label = c.Name + " (" + c.Alias + ")"
 		}
 		cNode := &TreeNode{
 			Kind:        TreeNodeContributor,
 			ID:          c.GetID(),
 			Label:       label,
 			URI:         c.GetURI(),
-			Contributor: c.Github,
-			Data:        map[string]interface{}{"github": c.Github, "name": c.Name},
+			Contributor: c.Alias,
+			Data:        map[string]interface{}{"alias": c.Alias, "github": c.Github, "name": c.Name},
 		}
 		contributorsNode.Children = append(contributorsNode.Children, cNode)
 	}
@@ -6018,13 +6018,14 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Day:     s.Day,
 			Status:  string(s.Kind),
 			Data: map[string]interface{}{
-				"uuid":      s.UUID,
-				"kind":      string(s.Kind),
-				"client":    s.Client,
-				"startedAt": s.StartedAt,
-				"year":      float64(s.Year),
-				"month":     float64(s.Month),
-				"day":       float64(s.Day),
+				"uuid":       s.UUID,
+				"kind":       string(s.Kind),
+				"client":     s.Client,
+				"startedAt":  s.StartedAt,
+				"year":       float64(s.Year),
+				"month":      float64(s.Month),
+				"day":        float64(s.Day),
+				"checkpoint": s.Checkpoint,
 			},
 		}
 		sessionsNode.Children = append(sessionsNode.Children, sNode)
@@ -9229,7 +9230,10 @@ func (d *Definition) GetURI() string {
 // Contributor holds the data fields for a contributor record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️contributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Contributor)
 type Contributor struct {
+	Alias         string                          `yaml:"alias" json:"alias"`
+	Aliases       []string                        `yaml:"aliases,omitempty" json:"aliases,omitempty"`
 	Github        string                          `yaml:"github" json:"github"`
+	Githubs       []string                        `yaml:"githubs,omitempty" json:"githubs,omitempty"`
 	Name          string                          `yaml:"name" json:"name"`
 	Names         []string                        `yaml:"names,omitempty" json:"names,omitempty"`
 	Email         string                          `yaml:"email" json:"email"`
@@ -9296,14 +9300,14 @@ func (c *Contributor) IsNode() {}
 // GetID returns the i d of the Contributor.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
 func (c *Contributor) GetID() string {
-	return emojiText(EmojiContributor) + Flat(c.Github)
+	return emojiText(EmojiContributor) + Flat(c.Alias)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Contributor.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (c *Contributor) GetURI() string {
-	return "semiorepo://cs/" + PathToUriPath(c.Github)
+	return "semiorepo://cs/" + PathToUriPath(c.Alias)
 }
 
 // Checkpoint holds the data fields for a checkpoint record.
@@ -9510,7 +9514,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 	if t.Summary == "" {
 		for i := len(t.Interactions) - 1; i >= 0; i-- {
-			if t.Interactions[i].Kind == string(repopkg.EventTicketClose) && t.Interactions[i].Summary != "" {
+			if t.Interactions[i].Kind == string(repopkg.EventTicketCloseEnded) && t.Interactions[i].Summary != "" {
 				t.Summary = t.Interactions[i].Summary
 				break
 			}
@@ -9518,7 +9522,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 	if t.Status == "" && len(t.Interactions) > 0 {
 		lastKind := t.Interactions[len(t.Interactions)-1].Kind
-		if lastKind == string(repopkg.EventTicketClose) {
+		if lastKind == string(repopkg.EventTicketCloseEnded) {
 			t.Status = TicketStatusClosed
 		} else {
 			t.Status = TicketStatusOpen
@@ -9691,7 +9695,7 @@ func (t *Ticket) GetSummary() string {
 		return t.Summary
 	}
 	for i := len(t.Interactions) - 1; i >= 0; i-- {
-		if t.Interactions[i].Kind == string(repopkg.EventTicketClose) && t.Interactions[i].Summary != "" {
+		if t.Interactions[i].Kind == string(repopkg.EventTicketCloseEnded) && t.Interactions[i].Summary != "" {
 			return t.Interactions[i].Summary
 		}
 	}
@@ -9703,7 +9707,7 @@ func (t *Ticket) GetSummary() string {
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatestarted](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateStarted)
 func (t *Ticket) GetDateStarted() time.Time {
 	for _, interaction := range t.Interactions {
-		if interaction.Kind == string(repopkg.EventTicketOpen) && interaction.Date != "" {
+		if interaction.Kind == string(repopkg.EventTicketOpenEnded) && interaction.Date != "" {
 			if parsed, err := time.Parse("2006-01-02 15:04:05", interaction.Date); err == nil {
 				return parsed
 			}
@@ -9728,7 +9732,7 @@ func (t *Ticket) GetDateStarted() time.Time {
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getdatefinished](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateFinished)
 func (t *Ticket) GetDateFinished() *time.Time {
 	for i := len(t.Interactions) - 1; i >= 0; i-- {
-		if t.Interactions[i].Kind == string(repopkg.EventTicketClose) && t.Interactions[i].Date != "" {
+		if t.Interactions[i].Kind == string(repopkg.EventTicketCloseEnded) && t.Interactions[i].Date != "" {
 			if parsed, err := time.Parse("2006-01-02 15:04:05", t.Interactions[i].Date); err == nil {
 				return &parsed
 			}
@@ -14132,7 +14136,7 @@ func FindAndUpdateContributor(authorStr string) string {
 	}
 
 	if found != nil {
-		return found.Github
+		return found.Alias
 	}
 
 	return authorStr
@@ -14291,24 +14295,24 @@ func (i *Interaction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func resolveAuthorToGithub(name, email string) string {
+func resolveAuthorToAlias(name, email string) string {
 	contributors, err := ListContributors()
 	if err == nil {
 		for _, c := range contributors {
 			if email != "" {
 				for _, e := range c.Emails {
 					if strings.EqualFold(e, email) {
-						return c.Github
+						return c.Alias
 					}
 				}
 			}
 			if name != "" {
 				if strings.EqualFold(c.Name, name) {
-					return c.Github
+					return c.Alias
 				}
 				for _, n := range c.Names {
 					if strings.EqualFold(n, name) {
-						return c.Github
+						return c.Alias
 					}
 				}
 			}
@@ -16193,10 +16197,10 @@ func GetGitAuthor() string {
 	return name
 }
 
-// GetGitAuthorGithub MUST return the stored value without modification.
-// GetGitAuthorGithub returns the git author github of the value.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitauthorgithub](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitAuthorGithub)
-func GetGitAuthorGithub() string {
+// GetGitAuthorAlias MUST return the stored value without modification.
+// GetGitAuthorAlias returns the git author alias of the value.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getgitauthoralias](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitAuthorAlias)
+func GetGitAuthorAlias() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -20063,8 +20067,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 	var result []CodebaseContributor
 	for _, c := range contributors {
-		avatarPath := GetContributorAvatarPath(c.Github)
-		avatarRoundPath := GetContributorAvatarRoundPath(c.Github)
+		avatarPath := GetContributorAvatarPath(c.Alias)
+		avatarRoundPath := GetContributorAvatarRoundPath(c.Alias)
 
 		var icons *ContributorIcons
 		if FileExists(avatarPath) || FileExists(avatarRoundPath) {
@@ -20109,9 +20113,9 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 		}
 
 		result = append(result, CodebaseContributor{
-			ID:            c.Github,
-			URI:           ctx.FileURI(".semio-repo/🧑‍💻/" + c.Github),
-			Path:          ".semio-repo/🧑‍💻/" + c.Github + "/contributor.json",
+			ID:            c.Alias,
+			URI:           ctx.FileURI(".semio-repo/🧑‍💻/" + c.Alias),
+			Path:          ".semio-repo/🧑‍💻/" + c.Alias + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
 			Emails:        c.Emails,
@@ -20926,7 +20930,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 		JsonPath:      jsonPath,
 		ImportantPath: importantFilePath,
 		Interactions: []Interaction{{
-			Kind:   string(repopkg.EventTicketOpen),
+			Kind:   string(repopkg.EventTicketOpenEnded),
 			Prompt: prompt,
 			LLM:    llmSlug,
 			System: GetSystem(),
@@ -20964,9 +20968,9 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 		return nil, err
 	}
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-	repopkg.Emit(repopkg.EventTicketOpen, "repo-cli", repopkg.TicketOpenPayload{
+	repopkg.Emit(repopkg.EventTicketOpenEnded, "repo-cli", repopkg.TicketOpenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorGithub(), Goal: goal, Parent: parent,
+		Title:         ticket.Title, Prompt: ticket.Description, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorAlias(), Goal: goal, Parent: parent,
 	})
 	return ticket, nil
 }
@@ -23275,8 +23279,8 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 	}
 	ticket.Interactions = append(ticket.Interactions, Interaction{
-		Kind:       string(repopkg.EventTicketClose),
-		Author:     GetGitAuthorGithub(),
+		Kind:       string(repopkg.EventTicketCloseEnded),
+		Author:     GetGitAuthorAlias(),
 		System:     GetSystem(),
 		Client:     closeClient,
 		Checkpoint: GetGitCheckpoint(),
@@ -23294,9 +23298,9 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 			fileList = append(fileList, f.Path)
 		}
 	}
-	repopkg.Emit(repopkg.EventTicketClose, "repo-cli", repopkg.TicketClosePayload{
+	repopkg.Emit(repopkg.EventTicketCloseEnded, "repo-cli", repopkg.TicketClosePayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Summary:       summary, Files: fileList, Author: GetGitAuthorGithub(),
+		Summary:       summary, Files: fileList, Author: GetGitAuthorAlias(),
 	})
 	return nil
 }
@@ -23333,7 +23337,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	}
 
 	interaction := Interaction{
-		Kind:   string(repopkg.EventTicketReopen),
+		Kind:   string(repopkg.EventTicketReopenEnded),
 		Prompt: prompt,
 		LLM:    llmSlug,
 		System: GetSystem(),
@@ -23391,9 +23395,9 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		return err
 	}
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-	repopkg.Emit(repopkg.EventTicketReopen, "repo-cli", repopkg.TicketReopenPayload{
+	repopkg.Emit(repopkg.EventTicketReopenEnded, "repo-cli", repopkg.TicketReopenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-		Prompt:        prompt, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorGithub(),
+		Prompt:        prompt, LLM: llmSlug, Client: uiSlug, Author: GetGitAuthorAlias(),
 	})
 	return nil
 }
@@ -23402,6 +23406,9 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 // ToolTicketOpen performs the tool ticket open operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketOpen)
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
+	repopkg.Emit(repopkg.EventTicketOpenStarting, "repo-cli", repopkg.TicketOpenPayload{
+		Title: title, Prompt: prompt, LLM: llm, Client: client, Goal: goal, Parent: parent,
+	})
 	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	if err != nil {
 		return toolErrorResult(err)
@@ -23499,6 +23506,10 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 // ToolTicketClose performs the tool ticket close operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketClose)
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noManagement bool) ToolResult {
+	repopkg.Emit(repopkg.EventTicketCloseStarting, "repo-cli", repopkg.TicketClosePayload{
+		TicketPayload: repopkg.TicketPayload{ID: fmt.Sprintf("%d/%02d/%02d/%s", year, month, day, slug), Year: year, Month: month, Day: day, Slug: slug},
+		Summary:       summary, Files: files,
+	})
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		return toolErrorResult(err)
@@ -23540,6 +23551,10 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 // ToolTicketReopen performs the tool ticket reopen operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketReopen)
 func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool) ToolResult {
+	repopkg.Emit(repopkg.EventTicketReopenStarting, "repo-cli", repopkg.TicketReopenPayload{
+		TicketPayload: repopkg.TicketPayload{ID: fmt.Sprintf("%d/%02d/%02d/%s", year, month, day, slug), Year: year, Month: month, Day: day, Slug: slug},
+		Prompt:        prompt, LLM: llm, Client: client,
+	})
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -23566,11 +23581,15 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 // ToolDraftCreate performs the tool draft create operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftCreate)
 func ToolDraftCreate(title string, files []string) ToolResult {
+	repopkg.Emit(repopkg.EventDraftCreateStarting, "repo-cli", repopkg.DraftPayload{
+		Title: title,
+	})
 	output := NewOutput()
 	draft, err := CreateDraft(title, files)
 	if err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventDraftCreateEnded, "repo-cli", repopkg.DraftPayload{Slug: draft.ID, Title: title})
 	output.Success(fmt.Sprintf("\n📝Created draft: %s", draft.ID))
 	return ToolResult{Output: *output, Data: draft}
 }
@@ -23595,9 +23614,11 @@ func ToolDraftList() ToolResult {
 // ToolDraftDelete performs the tool draft delete operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooldraftdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftDelete)
 func ToolDraftDelete(slug string) ToolResult {
+	repopkg.Emit(repopkg.EventDraftDeleteStarting, "repo-cli", repopkg.DraftPayload{Slug: slug})
 	if err := DeleteDraft(slug); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventDraftDeleteEnded, "repo-cli", repopkg.DraftPayload{Slug: slug})
 	return toolResultFromEvents(nil, nil)
 }
 
@@ -23712,6 +23733,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 // ToolContributorAdd performs the tool contributor add operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributoradd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorAdd)
 func ToolContributorAdd(github string) ToolResult {
+	repopkg.Emit(repopkg.EventContributorAddStarting, "repo-cli", repopkg.ContributorPayload{Github: github})
 	contributor, err := CreateContributor(github)
 	if err != nil {
 		return toolErrorResult(err)
@@ -23748,6 +23770,7 @@ func ToolContributorList() ToolResult {
 // ToolContributorRemove performs the tool contributor remove operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolcontributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorRemove)
 func ToolContributorRemove(github string) ToolResult {
+	repopkg.Emit(repopkg.EventContributorRemoveStarting, "repo-cli", repopkg.ContributorPayload{Github: github})
 	if err := RemoveContributor(github); err != nil {
 		return toolErrorResult(err)
 	}
@@ -23797,6 +23820,7 @@ func ToolProjectTree() ToolResult {
 // ToolFolderCreate performs the tool folder create operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldercreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderCreate)
 func ToolFolderCreate(path string) ToolResult {
+	repopkg.Emit(repopkg.EventFolderCreateStarting, "repo-cli", repopkg.FolderPayload{Path: path})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if FileExists(absPath) {
@@ -23805,6 +23829,7 @@ func ToolFolderCreate(path string) ToolResult {
 	if err := EnsureDir(absPath); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventFolderCreateEnded, "repo-cli", repopkg.FolderPayload{Path: path})
 	output.Success(fmt.Sprintf("\n📁Created folder: %s", path))
 	return ToolResult{Output: *output}
 }
@@ -23813,6 +23838,7 @@ func ToolFolderCreate(path string) ToolResult {
 // ToolFolderMove performs the tool folder move operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfoldermove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderMove)
 func ToolFolderMove(source, target string) ToolResult {
+	repopkg.Emit(repopkg.EventFolderMoveStarting, "repo-cli", repopkg.FolderPayload{Path: target, From: source})
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
 	absTarget := filepath.Join(rootDir, target)
@@ -23829,6 +23855,7 @@ func ToolFolderMove(source, target string) ToolResult {
 		return toolErrorResult(err)
 	}
 	UpdateAgentsDocsPath(source, target)
+	repopkg.Emit(repopkg.EventFolderMoveEnded, "repo-cli", repopkg.FolderPayload{Path: target, From: source})
 	output.Success(fmt.Sprintf("\n📁Moved folder: %s → %s", source, target))
 	return ToolResult{Output: *output}
 }
@@ -23837,6 +23864,7 @@ func ToolFolderMove(source, target string) ToolResult {
 // ToolFolderDelete performs the tool folder delete operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfolderdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderDelete)
 func ToolFolderDelete(path string) ToolResult {
+	repopkg.Emit(repopkg.EventFolderDeleteStarting, "repo-cli", repopkg.FolderPayload{Path: path})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if !FileExists(absPath) {
@@ -23845,6 +23873,7 @@ func ToolFolderDelete(path string) ToolResult {
 	if err := os.RemoveAll(absPath); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventFolderDeleteEnded, "repo-cli", repopkg.FolderPayload{Path: path})
 	output.Success(fmt.Sprintf("\n🗑 Deleted folder: %s", path))
 	return ToolResult{Output: *output}
 }
@@ -23943,6 +23972,7 @@ func printTree(output *CommandOutput, dir, prefix string) {
 // ToolFileCreate performs the tool file create operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileCreate)
 func ToolFileCreate(path string) ToolResult {
+	repopkg.Emit(repopkg.EventFileCreateStarting, "repo-cli", repopkg.FilePayload{Path: path})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if FileExists(absPath) {
@@ -23953,6 +23983,7 @@ func ToolFileCreate(path string) ToolResult {
 	if err := WriteTextFile(absPath, content); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventFileCreateEnded, "repo-cli", repopkg.FilePayload{Path: path})
 	output.Success(fmt.Sprintf("\n📄Created file: %s", path))
 	return ToolResult{Output: *output}
 }
@@ -24072,6 +24103,7 @@ func generateFileHeader(path string, language LanguagePlugin) string {
 // ToolFileMove performs the tool file move operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfilemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileMove)
 func ToolFileMove(source, target string) ToolResult {
+	repopkg.Emit(repopkg.EventFileMoveStarting, "repo-cli", repopkg.FilePayload{Path: target, From: source})
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
 	absTarget := filepath.Join(rootDir, target)
@@ -24088,6 +24120,7 @@ func ToolFileMove(source, target string) ToolResult {
 		return toolErrorResult(err)
 	}
 	UpdateAgentsDocsPath(source, target)
+	repopkg.Emit(repopkg.EventFileMoveEnded, "repo-cli", repopkg.FilePayload{Path: target, From: source})
 	output.Success(fmt.Sprintf("\n📄Moved file: %s → %s", source, target))
 	return ToolResult{Output: *output}
 }
@@ -24096,6 +24129,7 @@ func ToolFileMove(source, target string) ToolResult {
 // ToolFileDelete performs the tool file delete operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolfiledelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileDelete)
 func ToolFileDelete(path string) ToolResult {
+	repopkg.Emit(repopkg.EventFileDeleteStarting, "repo-cli", repopkg.FilePayload{Path: path})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if !FileExists(absPath) {
@@ -24104,6 +24138,7 @@ func ToolFileDelete(path string) ToolResult {
 	if err := os.Remove(absPath); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventFileDeleteEnded, "repo-cli", repopkg.FilePayload{Path: path})
 	output.Success(fmt.Sprintf("\n🗑 Deleted file: %s", path))
 	return ToolResult{Output: *output}
 }
@@ -24148,6 +24183,7 @@ func ToolFileTree(path string) ToolResult {
 // ToolSectionCreate performs the tool section create operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectioncreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionCreate)
 func ToolSectionCreate(filePath, sectionPath string) ToolResult {
+	repopkg.Emit(repopkg.EventSectionCreateStarting, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
@@ -24200,6 +24236,7 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	if err := WriteTextFile(absPath, content+newSection); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventSectionCreateEnded, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 	output.Success(fmt.Sprintf("\n🏷️Created section \"%s\" in %s", sectionName, filePath))
 	return ToolResult{Output: *output}
 }
@@ -24208,6 +24245,7 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 // ToolSectionMove performs the tool section move operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectionmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionMove)
 func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
+	repopkg.Emit(repopkg.EventSectionMoveStarting, "repo-cli", repopkg.SectionPayload{File: filePath, Name: newPath, OldName: oldPath})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
@@ -24280,6 +24318,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	if err := WriteTextFile(absPath, content); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventSectionMoveEnded, "repo-cli", repopkg.SectionPayload{File: filePath, Name: newPath, OldName: oldPath})
 	output.Success(fmt.Sprintf("\n🏷️Renamed section \"%s\" to \"%s\" in %s", oldName, newName, filePath))
 	return ToolResult{Output: *output}
 }
@@ -24288,6 +24327,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 // ToolIntegrate performs the tool integrate operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolintegrate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolIntegrate)
 func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSectionName string) ToolResult {
+	repopkg.Emit(repopkg.EventIntegrateStarting, "repo-cli", repopkg.IntegratePayload{Source: sourcePath, TargetFile: targetFilePath, TargetSection: targetSectionName})
 	output := NewOutput()
 
 	absSourcePath := filepath.Join(rootDir, sourcePath)
@@ -24390,6 +24430,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 		return toolErrorResult(err)
 	}
 
+	repopkg.Emit(repopkg.EventIntegrateEnded, "repo-cli", repopkg.IntegratePayload{Source: sourcePath, TargetFile: targetFilePath, TargetSection: targetSectionName})
 	output.Success(fmt.Sprintf("\n🧩Integrated %s into %s section of %s", sourcePath, targetSectionName, targetFilePath))
 	return ToolResult{Output: *output}
 }
@@ -24398,6 +24439,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 // ToolExtract performs the tool extract operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolextract](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolExtract)
 func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolResult {
+	repopkg.Emit(repopkg.EventExtractStarting, "repo-cli", repopkg.ExtractPayload{SourceFile: sourceFilePath, SourceSection: sourceSectionName, TargetFile: targetFilePath})
 	output := NewOutput()
 
 	absSourcePath := filepath.Join(rootDir, sourceFilePath)
@@ -24481,6 +24523,7 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 		return toolErrorResult(err)
 	}
 
+	repopkg.Emit(repopkg.EventExtractEnded, "repo-cli", repopkg.ExtractPayload{SourceFile: sourceFilePath, SourceSection: sourceSectionName, TargetFile: targetFilePath})
 	output.Success(fmt.Sprintf("\n🧩Extracted %s from %s to %s", sourceSectionName, sourceFilePath, targetFilePath))
 	return ToolResult{Output: *output}
 }
@@ -24663,6 +24706,7 @@ func UniqueStrings(input []string) []string {
 // ToolSectionDelete performs the tool section delete operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolsectiondelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionDelete)
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
+	repopkg.Emit(repopkg.EventSectionDeleteStarting, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
@@ -24695,6 +24739,7 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 		if err := WriteTextFile(absPath, updated); err != nil {
 			return toolErrorResult(err)
 		}
+		repopkg.Emit(repopkg.EventSectionDeleteEnded, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 		output.Success(fmt.Sprintf("\n🗑 Deleted section \"%s\" from %s", strings.Join(pathParts, "/"), filePath))
 		return ToolResult{Output: *output}
 	}
@@ -24712,6 +24757,7 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	if err := WriteTextFile(absPath, strings.Join(newLines, "\n")); err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventSectionDeleteEnded, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 	output.Success(fmt.Sprintf("\n🗑 Deleted section \"%s\" from %s", sectionName, filePath))
 	return ToolResult{Output: *output}
 }
@@ -25017,6 +25063,7 @@ CREATE TABLE IF NOT EXISTS session (
     initial_second INTEGER NOT NULL CHECK (initial_second >= 0),
     agent_id INTEGER NOT NULL,
     session_id TEXT NOT NULL UNIQUE CHECK (length (trim(session_id)) > 0),
+    checkpoint_sha TEXT,
     UNIQUE (contributor_id, initial_second),
     FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
     FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
@@ -25662,6 +25709,7 @@ func exportDefinitionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64,
 // ToolExport performs the tool export operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️toolexport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ToolExport)
 func ToolExport(outputPath string) ToolResult {
+	repopkg.Emit(repopkg.EventExportStarting, "repo-cli", repopkg.FilePayload{Path: outputPath})
 	output := NewOutput()
 	output.Info("\n📦Exporting repo to SQLite...")
 	ctx := NewRepoContext(rootDir)
@@ -25669,6 +25717,7 @@ func ToolExport(outputPath string) ToolResult {
 	if err != nil {
 		return toolErrorResult(err)
 	}
+	repopkg.Emit(repopkg.EventExportEnded, "repo-cli", repopkg.FilePayload{Path: outputPath})
 	output.Success(fmt.Sprintf("Exported to: %s", result.Path))
 	output.Plain(fmt.Sprintf("  Projects: %d", result.Projects))
 	output.Plain(fmt.Sprintf("  Bundles: %d", result.Bundles))
@@ -26143,9 +26192,9 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 	if err := SaveGoal(goal); err != nil {
 		return nil, err
 	}
-	repopkg.Emit(repopkg.EventGoalOpen, "repo-cli", repopkg.GoalOpenPayload{
+	repopkg.Emit(repopkg.EventGoalOpenEnded, "repo-cli", repopkg.GoalOpenPayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Title:       goal.Title, Description: goal.Description, Parent: goal.Parent, Author: GetGitAuthorGithub(),
+		Title:       goal.Title, Description: goal.Description, Parent: goal.Parent, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -26289,9 +26338,9 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	if err := SaveGoal(goal); err != nil {
 		return nil, err
 	}
-	repopkg.Emit(repopkg.EventGoalChange, "repo-cli", repopkg.GoalChangePayload{
+	repopkg.Emit(repopkg.EventGoalChangeEnded, "repo-cli", repopkg.GoalChangePayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Title:       input.Title, Description: input.Description, Parent: input.Parent, Author: GetGitAuthorGithub(),
+		Title:       input.Title, Description: input.Description, Parent: input.Parent, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -26337,9 +26386,9 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	if err := SaveGoal(goal); err != nil {
 		return nil, err
 	}
-	repopkg.Emit(repopkg.EventGoalClose, "repo-cli", repopkg.GoalClosePayload{
+	repopkg.Emit(repopkg.EventGoalCloseEnded, "repo-cli", repopkg.GoalClosePayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Summary:     goal.Summary, Author: GetGitAuthorGithub(),
+		Summary:     goal.Summary, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -26402,9 +26451,9 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	if err := SaveGoal(goal); err != nil {
 		return nil, err
 	}
-	repopkg.Emit(repopkg.EventGoalReopen, "repo-cli", repopkg.GoalReopenPayload{
+	repopkg.Emit(repopkg.EventGoalReopenEnded, "repo-cli", repopkg.GoalReopenPayload{
 		GoalPayload: repopkg.GoalPayload{ID: goal.ID},
-		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Author: GetGitAuthorGithub(),
+		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Author: GetGitAuthorAlias(),
 	})
 	return &goal, nil
 }
@@ -26471,9 +26520,9 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 			return nil, err
 		}
 		ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-		repopkg.Emit(repopkg.EventTicketChange, "repo-cli", repopkg.TicketChangePayload{
+		repopkg.Emit(repopkg.EventTicketChangeEnded, "repo-cli", repopkg.TicketChangePayload{
 			TicketPayload: repopkg.TicketPayload{ID: ticketID, Year: ticket.Year, Month: ticket.Month, Day: ticket.Day, Slug: ticket.Slug},
-			Title:         input.Title, Prompt: input.Prompt, Goal: input.Goal, Parent: input.Parent, Author: GetGitAuthorGithub(),
+			Title:         input.Title, Prompt: input.Prompt, Goal: input.Goal, Parent: input.Parent, Author: GetGitAuthorAlias(),
 		})
 	}
 
@@ -28589,8 +28638,8 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 		if err := SaveContributor(*contributor); err != nil {
 			return nil, err
 		}
-		repopkg.Emit(repopkg.EventContributorAdd, "repo-cli", repopkg.ContributorPayload{
-			Github: contributor.Github, Author: GetGitAuthorGithub(),
+		repopkg.Emit(repopkg.EventContributorAddEnded, "repo-cli", repopkg.ContributorPayload{
+			Github: contributor.Github, Author: GetGitAuthorAlias(),
 		})
 	}
 	return contributor, nil
@@ -28600,8 +28649,8 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 // ContributorRemove performs the contributor remove operation on the repo context.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️contributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorRemove)
 func (c *repoContext) ContributorRemove(github string) error {
-	repopkg.Emit(repopkg.EventContributorRemove, "repo-cli", repopkg.ContributorPayload{
-		Github: github, Author: GetGitAuthorGithub(),
+	repopkg.Emit(repopkg.EventContributorRemoveEnded, "repo-cli", repopkg.ContributorPayload{
+		Github: github, Author: GetGitAuthorAlias(),
 	})
 	return nil
 }
@@ -33210,13 +33259,6 @@ func createMcpServer() *server.MCPServer {
 		),
 		handleComplyPrompt,
 	)
-	s.AddTool(
-		mcp.NewTool("analyze",
-			mcp.WithDescription("Analyze codebase for policy breachs"),
-			mcp.WithString("scope", mcp.Description("Scope to analyze (e.g., semio, semio/js, path/to/file.ts)"), mcp.DefaultString("semio")),
-		),
-		analyze,
-	)
 	s.AddResource(
 		mcp.NewResource("semiorepo://", "Root", mcp.WithMIMEType("text/plain")),
 		handleRepoResource,
@@ -33317,14 +33359,6 @@ func createMcpServer() *server.MCPServer {
 		fix,
 	)
 	s.AddTool(
-		mcp.NewTool("policy_check",
-			mcp.WithDescription("Check a specific policy"),
-			mcp.WithString("id", mcp.Required(), mcp.Description("Policy ID to check")),
-			mcp.WithString("scope", mcp.Description("Scope to analyze"), mcp.DefaultString("semio")),
-		),
-		policyCheck,
-	)
-	s.AddTool(
 		mcp.NewTool("ticket_open",
 			mcp.WithDescription("Open a new development ticket"),
 			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
@@ -33338,16 +33372,6 @@ func createMcpServer() *server.MCPServer {
 			mcp.WithString("issue", mcp.Description("Link to existing GitHub issue URL instead of creating new one")),
 		),
 		ticketOpen,
-	)
-	s.AddTool(
-		mcp.NewTool("ticket_read",
-			mcp.WithDescription("Read a specific ticket"),
-			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-		),
-		ticketRead,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_close",
@@ -33431,71 +33455,6 @@ func createMcpServer() *server.MCPServer {
 		goalReopen,
 	)
 	s.AddTool(
-		mcp.NewTool("contributor_add",
-			mcp.WithDescription("Add a contributor by GitHub username"),
-			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
-		),
-		contributorAdd,
-	)
-	s.AddTool(
-		mcp.NewTool("contributor_remove",
-			mcp.WithDescription("Remove a contributor"),
-			mcp.WithString("github", mcp.Required(), mcp.Description("GitHub username")),
-		),
-		contributorRemove,
-	)
-	s.AddTool(
-		mcp.NewTool("export",
-			mcp.WithDescription("Export codebase state to a single SQLite file"),
-			mcp.WithString("output", mcp.Required(), mcp.Description("Output file path")),
-		),
-		export,
-	)
-	s.AddTool(
-		mcp.NewTool("folder_create",
-			mcp.WithDescription("Create a folder"),
-			mcp.WithString("path", mcp.Required(), mcp.Description("Folder path to create")),
-		),
-		folderCreate,
-	)
-	s.AddTool(
-		mcp.NewTool("folder_move",
-			mcp.WithDescription("Move a folder"),
-			mcp.WithString("source", mcp.Required(), mcp.Description("Source folder path")),
-			mcp.WithString("target", mcp.Required(), mcp.Description("Target folder path")),
-		),
-		folderMove,
-	)
-	s.AddTool(
-		mcp.NewTool("folder_delete",
-			mcp.WithDescription("Delete a folder"),
-			mcp.WithString("path", mcp.Required(), mcp.Description("Folder path to delete")),
-		),
-		folderDelete,
-	)
-	s.AddTool(
-		mcp.NewTool("file_create",
-			mcp.WithDescription("Create a file with appropriate header"),
-			mcp.WithString("path", mcp.Required(), mcp.Description("File path to create")),
-		),
-		fileCreate,
-	)
-	s.AddTool(
-		mcp.NewTool("file_move",
-			mcp.WithDescription("Move a file"),
-			mcp.WithString("source", mcp.Required(), mcp.Description("Source file path")),
-			mcp.WithString("target", mcp.Required(), mcp.Description("Target file path")),
-		),
-		fileMove,
-	)
-	s.AddTool(
-		mcp.NewTool("file_delete",
-			mcp.WithDescription("Delete a file"),
-			mcp.WithString("path", mcp.Required(), mcp.Description("File path to delete")),
-		),
-		fileDelete,
-	)
-	s.AddTool(
 		mcp.NewTool("section_create",
 			mcp.WithDescription("Create a section in a file"),
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
@@ -33540,27 +33499,11 @@ func createMcpServer() *server.MCPServer {
 		sectionExtract,
 	)
 	s.AddTool(
-		mcp.NewTool("move",
-			mcp.WithDescription("Move an artifact from source to target. Supports file→file, folder→folder, file→section (integrate), section→file (extract)."),
-			mcp.WithString("source", mcp.Required(), mcp.Description("Source artifact ID (e.g. 💻path, 📁path/, 🔖path#SECTION)")),
-			mcp.WithString("target", mcp.Required(), mcp.Description("Target artifact ID (e.g. 💻path, 📁path/, 🔖path#SECTION)")),
-		),
-		artifactMove,
-	)
-	s.AddTool(
 		mcp.NewTool("tree",
 			mcp.WithDescription("Show monorepo tree with optional query filter. Replaces all list and tree commands. Use query to filter by kind (e.g. 'goals', 'tickets', 'files', 'sections', 'definitions', 'policies', 'contributors', 'projects', 'bundles', 'folders', 'drafts', 'checkpoints') or search for specific items."),
 			mcp.WithString("query", mcp.Description("Optional query to filter the tree (e.g. 'goals', 'tickets 2026', 'files semio/js', 'policies')")),
 		),
 		mcpTree,
-	)
-	s.AddTool(
-		mcp.NewTool("graphql",
-			mcp.WithDescription("Execute a GraphQL query against the repo schema"),
-			mcp.WithString("query", mcp.Required(), mcp.Description("GraphQL query string")),
-			mcp.WithString("variables", mcp.Description("JSON object with query variables")),
-		),
-		graphqlQuery,
 	)
 	return s
 }
@@ -35858,7 +35801,7 @@ func ListContributors() ([]Contributor, error) {
 	var result []Contributor
 	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻")
 	if !FileExists(dir) {
-		return []Contributor{{Github: "unknown", Name: "Unknown"}}, nil
+		return []Contributor{{Alias: "unknown", Github: "unknown", Name: "Unknown"}}, nil
 	}
 	entries, _ := os.ReadDir(dir)
 	for _, e := range entries {
@@ -35872,6 +35815,9 @@ func ListContributors() ([]Contributor, error) {
 		content, _ := ReadTextFile(p)
 		var c Contributor
 		json.Unmarshal([]byte(content), &c)
+		if c.Alias == "" {
+			c.Alias = e.Name()
+		}
 		if c.Github == "" {
 			c.Github = e.Name()
 		}
@@ -35900,16 +35846,16 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			if !matchesFilter(c.Github, options) && !matchesFilter(c.Name, options) {
+			if !matchesFilter(c.Alias, options) && !matchesFilter(c.Name, options) {
 				continue
 			}
-			if !matchesQuery(c.Github+" "+c.Name, options) {
+			if !matchesQuery(c.Alias+" "+c.Name, options) {
 				continue
 			}
 			if len(options.IncludeContributors) > 0 {
 				found := false
 				for _, id := range options.IncludeContributors {
-					if c.Github == id || c.Name == id {
+					if c.Alias == id || c.Name == id {
 						found = true
 						break
 					}
@@ -35921,7 +35867,7 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 			if len(options.ExcludeContributors) > 0 {
 				excluded := false
 				for _, id := range options.ExcludeContributors {
-					if c.Github == id || c.Name == id {
+					if c.Alias == id || c.Name == id {
 						excluded = true
 						break
 					}
@@ -35939,34 +35885,34 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 // GetContributorAvatarPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarPath retrieves and returns the contributor avatar path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorAvatarPath)
-func GetContributorAvatarPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github, "avatar.png")
+func GetContributorAvatarPath(alias string) string {
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias, "avatar.png")
 }
 
 // GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributoravatarroundpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorAvatarRoundPath)
-func GetContributorAvatarRoundPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github, "avatar-round.png")
+func GetContributorAvatarRoundPath(alias string) string {
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias, "avatar-round.png")
 }
 
 // GetContributorPath MUST retrieve the requested value or return an error.
 // GetContributorPath retrieves and returns the contributor path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️getcontributorpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorPath)
-func GetContributorPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", github)
+func GetContributorPath(alias string) string {
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias)
 }
 
 // CreateContributor MUST create a new entry and return an error on conflict.
 // CreateContributor creates a new contributor entry.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️createcontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/CreateContributor)
-func CreateContributor(github string) (*Contributor, error) {
-	dir := GetContributorPath(github)
+func CreateContributor(alias string) (*Contributor, error) {
+	dir := GetContributorPath(alias)
 	if FileExists(dir) {
-		return nil, fmt.Errorf("contributor already exists: %s", github)
+		return nil, fmt.Errorf("contributor already exists: %s", alias)
 	}
 	EnsureDir(dir)
-	c := Contributor{Github: github}
+	c := Contributor{Alias: alias}
 	data, _ := json.MarshalIndent(c, "", "  ")
 	WriteTextFile(filepath.Join(dir, "contributor.json"), string(data))
 	return &c, nil
@@ -35975,10 +35921,10 @@ func CreateContributor(github string) (*Contributor, error) {
 // LoadContributor MUST return all matching contributor from the data source.
 // LoadContributor loads and returns contributor from the data source.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️loadcontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/LoadContributor)
-func LoadContributor(github string) (*Contributor, error) {
-	path := filepath.Join(GetContributorPath(github), "contributor.json")
+func LoadContributor(alias string) (*Contributor, error) {
+	path := filepath.Join(GetContributorPath(alias), "contributor.json")
 	if !FileExists(path) {
-		return nil, fmt.Errorf("contributor not found: %s", github)
+		return nil, fmt.Errorf("contributor not found: %s", alias)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -35988,6 +35934,9 @@ func LoadContributor(github string) (*Contributor, error) {
 	if err := json.Unmarshal(data, &c); err != nil {
 		return nil, err
 	}
+	if c.Alias == "" {
+		c.Alias = alias
+	}
 	return &c, nil
 }
 
@@ -35995,7 +35944,7 @@ func LoadContributor(github string) (*Contributor, error) {
 // SaveContributor persists contributor to the data store.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️savecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/SaveContributor)
 func SaveContributor(c Contributor) error {
-	dir := GetContributorPath(c.Github)
+	dir := GetContributorPath(c.Alias)
 	if !FileExists(dir) {
 		EnsureDir(dir)
 	}
@@ -36009,10 +35958,10 @@ func SaveContributor(c Contributor) error {
 // RemoveContributor MUST remove the target and return an error on failure.
 // RemoveContributor removes the specified contributor.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️removecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/RemoveContributor)
-func RemoveContributor(github string) error {
-	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻", github)
+func RemoveContributor(alias string) error {
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias)
 	if !FileExists(dir) {
-		return fmt.Errorf("contributor not found: %s", github)
+		return fmt.Errorf("contributor not found: %s", alias)
 	}
 	return os.RemoveAll(dir)
 }
@@ -36136,6 +36085,7 @@ func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*B
 // ToolAnalyze performs the tool analyze operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolanalyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolAnalyze)
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
+	repopkg.Emit(repopkg.EventAnalyzeStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	scope := ParseScope(scopeRaw)
 	bundles := GetProjects()
 	breachs, err := CheckPolicies(scope, bundles, policyIDs)
@@ -36159,6 +36109,7 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 		},
 	}
 	output := NewOutput()
+	repopkg.Emit(repopkg.EventAnalyzeEnded, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	bytes, _ := json.MarshalIndent(report, "", "  ")
 	output.Plain(string(bytes))
 	return ToolResult{Output: *output, Data: report}
@@ -36168,12 +36119,14 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 // ToolFix performs the tool fix operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingtoolfunctions🛠️toolfix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolFix)
 func ToolFix(scopeRaw string) ToolResult {
+	repopkg.Emit(repopkg.EventFixStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.Fix(&scopeRaw)
 	if err != nil {
 		return ToolResult{Error: err.Error()}
 	}
 	output := NewOutput()
+	repopkg.Emit(repopkg.EventFixEnded, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	bytes, _ := json.MarshalIndent(res, "", "  ")
 	output.Plain(string(bytes))
 	return ToolResult{Output: *output, Data: res}
@@ -37906,11 +37859,13 @@ func resolveEventSecondID(value string) string {
 type SessionMeta struct {
 	ID          string           `json:"id"`
 	URI         string           `json:"uri,omitempty"`
+	Checkpoint  string           `json:"checkpoint,omitempty"`
 	Contributor string           `json:"contributor,omitempty"`
 	Client      string           `json:"client,omitempty"`
 	Second      string           `json:"second,omitempty"`
 	Transcript  string           `json:"transcript,omitempty"`
 	Plan        *TicketAgentPlan `json:"plan,omitempty"`
+	Events      []HookLogEntry   `json:"events,omitempty"`
 }
 
 // writeSessionMeta MUST persist session metadata without overwriting existing data.
@@ -37934,6 +37889,54 @@ func writeSessionMeta(dir, sessionID string, meta SessionMeta) {
 	}
 	defer f.Close()
 	_, _ = f.Write(data)
+}
+
+// appendSessionEvent MUST append an event entry into session.json events for the session.
+// appendSessionEvent appends a hook log entry into session.json and initializes base metadata when missing.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️appendsessionevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/appendSessionEvent)
+func appendSessionEvent(dir, sessionID string, entry HookLogEntry, fallbackMeta SessionMeta) {
+	if dir == "" {
+		return
+	}
+	path := filepath.Join(dir, "session.json")
+	var meta SessionMeta
+	if data, err := os.ReadFile(path); err == nil {
+		_ = json.Unmarshal(data, &meta)
+	}
+	if meta.ID == "" {
+		meta.ID = sessionID
+		if meta.ID == "" {
+			meta.ID = fallbackMeta.ID
+		}
+	}
+	if meta.URI == "" {
+		if meta.ID != "" {
+			meta.URI = GetArtifactURI("session", map[string]interface{}{"uuid": meta.ID})
+		} else {
+			meta.URI = fallbackMeta.URI
+		}
+	}
+	if meta.Checkpoint == "" {
+		meta.Checkpoint = fallbackMeta.Checkpoint
+	}
+	if meta.Contributor == "" {
+		meta.Contributor = fallbackMeta.Contributor
+	}
+	if meta.Client == "" {
+		meta.Client = fallbackMeta.Client
+	}
+	if meta.Second == "" {
+		meta.Second = fallbackMeta.Second
+	}
+	if meta.Transcript == "" {
+		meta.Transcript = fallbackMeta.Transcript
+	}
+	meta.Events = append(meta.Events, entry)
+	data, err := json.MarshalIndent(meta, "", "  ")
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(path, data, 0644)
 }
 
 // mergeTicketAgentPlanSteps MUST merge incoming plan steps with existing ones, preserving timestamps and marking removed steps as abandoned.
@@ -38203,12 +38206,13 @@ func logHook(hctx HookContext, result HookResult) {
 	hhmmss := now.Format("150405")
 	hookKind := strings.ReplaceAll(string(hctx.Event), ".", "-")
 	var logDir string
+	sessionID := ""
 	kind := HookEventKind(hctx.Event)
 	if kind == HookKindVersion {
 		checkpointID := extractCheckpointIDFromResult(result, repoRoot)
 		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🔀", yy, mm, dd, checkpointID)
 	} else {
-		sessionID := extractSessionIDFromInput(hctx.Input)
+		sessionID = extractSessionIDFromInput(hctx.Input)
 		if sessionID == "" {
 			sessionID = "unknown"
 		}
@@ -38232,7 +38236,7 @@ func logHook(hctx HookContext, result HookResult) {
 	}
 	delete(eventMap, "allowed")
 	eventMap["kind"] = string(hctx.Event)
-	eventMap["contributor"] = contributorGithubToSemioID(GetGitAuthorGithub())
+	eventMap["contributor"] = contributorGithubToSemioID(GetGitAuthorAlias())
 	resolveEventIDs(eventMap)
 	resultData, _ = json.Marshal(eventMap)
 
@@ -38257,22 +38261,45 @@ func logHook(hctx HookContext, result HookResult) {
 		return
 	}
 	eventFileName := fmt.Sprintf("%s_%s.json", hhmmss, hookKind)
-	_ = os.WriteFile(filepath.Join(logDir, eventFileName), data, 0644)
+	if kind == HookKindVersion {
+		_ = os.WriteFile(filepath.Join(logDir, eventFileName), data, 0644)
+	}
+
+	// Also log derived repo-specific operation event if applicable
+	if kind == HookKindAgent {
+		logRepoOperationHook(hctx, result, logDir, now, sessionID)
+	}
 
 	if kind != HookKindVersion && hctx.Event == HookAgentStarted {
-		sessionID := extractSessionIDFromInput(hctx.Input)
-		if sessionID == "" {
-			sessionID = "unknown"
+		checkpointSHA := ""
+		if r, ok := result.(HookResultAgentStarted); ok {
+			checkpointSHA = r.Checkpoint
 		}
 		meta := SessionMeta{
 			ID:          sessionID,
 			URI:         GetArtifactURI("session", map[string]interface{}{"uuid": sessionID}),
-			Contributor: contributorGithubToSemioID(GetGitAuthorGithub()),
+			Checkpoint:  checkpointSHA,
+			Contributor: contributorGithubToSemioID(GetGitAuthorAlias()),
 			Client:      hctx.Client,
 			Second:      hctx.Second,
 			Transcript:  extractTranscriptFromInput(hctx.Input),
 		}
 		writeSessionMeta(logDir, sessionID, meta)
+	}
+	if kind != HookKindVersion {
+		checkpointSHA := ""
+		if r, ok := result.(HookResultAgentStarted); ok {
+			checkpointSHA = r.Checkpoint
+		}
+		appendSessionEvent(logDir, sessionID, entry, SessionMeta{
+			ID:          sessionID,
+			URI:         GetArtifactURI("session", map[string]interface{}{"uuid": sessionID}),
+			Checkpoint:  checkpointSHA,
+			Contributor: contributorGithubToSemioID(GetGitAuthorAlias()),
+			Client:      hctx.Client,
+			Second:      hctx.Second,
+			Transcript:  extractTranscriptFromInput(hctx.Input),
+		})
 	}
 	if kind != HookKindVersion && hctx.Event == HookAgentToolPlanUpdatingEnded {
 		if planResult, ok := result.(HookResultAgentToolPlanUpdating); ok && len(planResult.Steps) > 0 {
@@ -38283,6 +38310,128 @@ func logHook(hctx HookContext, result HookResult) {
 			updateSessionMetaPlan(logDir, planResult.Steps, second)
 		}
 	}
+}
+
+// deriveRepoOpFromMCPTool maps a mcp__semio-repo__* tool name to a repo operation name.
+// Returns empty string if the tool is not a semio-repo tool.
+// deriveRepoOpFromMCPTool MUST perform the deriveRepoOpFromMCPTool operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️deriveRepoOpFromMCPTool](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/deriveRepoOpFromMCPTool)
+func deriveRepoOpFromMCPTool(toolName string) string {
+	const prefix = "mcp__semio-repo__"
+	if !strings.HasPrefix(toolName, prefix) {
+		return ""
+	}
+	op := strings.TrimPrefix(toolName, prefix)
+	op = strings.ReplaceAll(op, "_", ".")
+	return op
+}
+
+// deriveRepoOpFromCLICommand maps a semio-repo CLI command to a repo operation name.
+// Returns empty string if the command is not a semio-repo CLI operation.
+// deriveRepoOpFromCLICommand MUST perform the deriveRepoOpFromCLICommand operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️deriveRepoOpFromCLICommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/deriveRepoOpFromCLICommand)
+func deriveRepoOpFromCLICommand(command string) string {
+	parts := strings.Fields(command)
+	// Find the "cli" binary segment and extract subcommands after it
+	cliIdx := -1
+	for i, p := range parts {
+		base := filepath.Base(p)
+		if base == "cli" || base == "cli.exe" {
+			cliIdx = i
+			break
+		}
+	}
+	if cliIdx < 0 {
+		return ""
+	}
+	subs := parts[cliIdx+1:]
+	// Filter out flags (starting with -)
+	var ops []string
+	for _, s := range subs {
+		if strings.HasPrefix(s, "-") {
+			break
+		}
+		ops = append(ops, s)
+		if len(ops) == 2 {
+			break
+		}
+	}
+	if len(ops) == 0 {
+		return ""
+	}
+	return strings.Join(ops, ".")
+}
+
+// logRepoOperationHook writes a derived repo-specific log entry when a semio-repo
+// MCP tool or CLI command is detected in the hook context.
+// logRepoOperationHook MUST perform the logRepoOperationHook operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️logRepoOperationHook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)
+func logRepoOperationHook(hctx HookContext, result HookResult, logDir string, now time.Time, sessionID string) {
+	var op string
+	var isStarting bool
+	var toolInput json.RawMessage
+
+	switch res := result.(type) {
+	case HookResultAgentToolStarting:
+		op = deriveRepoOpFromMCPTool(res.Name)
+		isStarting = true
+		toolInput = res.Input
+	case HookResultAgentToolEnded:
+		op = deriveRepoOpFromMCPTool(res.Name)
+		isStarting = false
+		toolInput = res.Input
+	case HookResultAgentToolTerminalStarting:
+		op = deriveRepoOpFromCLICommand(res.Command)
+		isStarting = true
+	case HookResultAgentToolTerminalEnded:
+		op = deriveRepoOpFromCLICommand(res.Command)
+		isStarting = false
+	}
+
+	if op == "" {
+		return
+	}
+
+	var suffix string
+	if isStarting {
+		suffix = ".starting"
+	} else {
+		suffix = ".ended"
+	}
+	kind := "repo." + op + suffix
+
+	resultData, _ := json.Marshal(result)
+	var eventMap map[string]interface{}
+	json.Unmarshal(resultData, &eventMap)
+	if eventMap == nil {
+		eventMap = map[string]interface{}{}
+	}
+	delete(eventMap, "allowed")
+	eventMap["kind"] = kind
+	if toolInput != nil {
+		eventMap["input"] = toolInput
+	}
+	eventMap["contributor"] = contributorGithubToSemioID(GetGitAuthorAlias())
+	resolveEventIDs(eventMap)
+	data, err := json.Marshal(eventMap)
+	if err != nil {
+		return
+	}
+
+	var logResponse HookLogResponse
+	logResponse.Allowed = result.IsAllowed()
+	native := HookLogNative{Event: hctx.Input}
+	entry := HookLogEntry{Native: native, Event: data, Response: logResponse}
+
+	_ = now
+	appendSessionEvent(logDir, sessionID, entry, SessionMeta{
+		ID:          sessionID,
+		URI:         GetArtifactURI("session", map[string]interface{}{"uuid": sessionID}),
+		Contributor: contributorGithubToSemioID(GetGitAuthorAlias()),
+		Client:      hctx.Client,
+		Second:      hctx.Second,
+		Transcript:  extractTranscriptFromInput(hctx.Input),
+	})
 }
 
 // dispatchHook routes the hook event to its handler and returns the specific result.
@@ -38368,6 +38517,14 @@ func dispatchHook(hctx HookContext) HookResult {
 	case HookAgentStarted:
 		parent := resolveParentSessionID(hctx.ParentInfo, hctx.Input)
 		ab := agentBase("agent.started acknowledged")
+		if strings.EqualFold(strings.TrimSpace(hctx.ParentInfo), "subagent") {
+			if subagentID := extractSubagentAgentIDFromInput(hctx.Input); subagentID != "" {
+				ab.Session = subagentID
+			}
+			if parent == "" {
+				parent = extractSubagentParentSessionIDFromInput(hctx.Input)
+			}
+		}
 		ab.Parent = parent
 		return HookResultAgentStarted{HookResultAgentBase: ab}
 	case HookAgentEnded:
@@ -38583,11 +38740,27 @@ func normalizeTicketSessionID(value string) string {
 	if normalized == "" {
 		return ""
 	}
+	// If the value contains a checkpoint emoji, it is already in the new format: <checkpointID>⚪<uuid>.
+	// Preserve the checkpoint prefix and only flatten the uuid part.
+	checkpointEmoji := emojiText(EmojiCheckpoint)
+	sessionEmoji := emojiText(EmojiSession)
+	if idx := strings.Index(normalized, checkpointEmoji); idx >= 0 {
+		sessionIdx := strings.LastIndex(normalized, sessionEmoji)
+		if sessionIdx > idx {
+			checkpointPart := normalized[:sessionIdx]
+			uuidPart := normalized[sessionIdx+len(sessionEmoji):]
+			uuidFlat := Flat(uuidPart)
+			if uuidFlat == "" {
+				return ""
+			}
+			return checkpointPart + sessionEmoji + uuidFlat
+		}
+	}
 	for _, prefix := range []string{
 		emojiText(EmojiSessionRunning),
 		emojiText(EmojiSessionCompleted),
 		emojiText(EmojiSessionInterrupted),
-		emojiText(EmojiSession),
+		sessionEmoji,
 	} {
 		if strings.HasPrefix(normalized, prefix) {
 			normalized = strings.TrimPrefix(normalized, prefix)
@@ -38598,7 +38771,7 @@ func normalizeTicketSessionID(value string) string {
 	if normalized == "" {
 		return ""
 	}
-	return emojiText(EmojiSession) + normalized
+	return sessionEmoji + normalized
 }
 
 func appendTicketSessionID(ticket *Ticket, sessionID string) {
@@ -38617,6 +38790,7 @@ func currentTicketSessionID() string {
 		return testSessionIDOverride
 	}
 	runtimeTicketSessionIDOnce.Do(func() {
+		var uuid string
 		candidates := []string{
 			os.Getenv("SEMIO_SESSION_ID"),
 			os.Getenv("SEMIOR_SESSION_ID"),
@@ -38629,13 +38803,19 @@ func currentTicketSessionID() string {
 		}
 		for _, candidate := range candidates {
 			if strings.TrimSpace(candidate) != "" {
-				runtimeTicketSessionID = candidate
+				uuid = candidate
 				break
 			}
 		}
-		if runtimeTicketSessionID == "" {
-			runtimeTicketSessionID = fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
+		if uuid == "" {
+			uuid = fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
 		}
+		checkpointPrefix := ""
+		vcp := DefaultVersionControlProvider()
+		if sha, err := vcp.CurrentCheckpoint(GetRootDir()); err == nil && sha != "" {
+			checkpointPrefix = GetArtifactID("checkpoint", map[string]interface{}{"sha": sha})
+		}
+		runtimeTicketSessionID = checkpointPrefix + emojiText(EmojiSession) + Flat(uuid)
 	})
 	return runtimeTicketSessionID
 }
@@ -38649,6 +38829,44 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 		return ""
 	}
 	for _, key := range []string{"trajectory_id", "trajectoryId", "sessionId", "session_id", "conversationId", "conversation_id", "agent_id", "agentId"} {
+		if value, ok := data[key].(string); ok {
+			value = strings.TrimSpace(value)
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func extractSubagentAgentIDFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"agent_id", "agentId"} {
+		if value, ok := data[key].(string); ok {
+			value = strings.TrimSpace(value)
+			if value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func extractSubagentParentSessionIDFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	for _, key := range []string{"session_id", "sessionId"} {
 		if value, ok := data[key].(string); ok {
 			value = strings.TrimSpace(value)
 			if value != "" {
@@ -40545,7 +40763,7 @@ func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	}
 	ticket.Agents = append(ticket.Agents, TicketAgent{
 		Session:     sessionID,
-		Contributor: GetGitAuthorGithub(),
+		Contributor: GetGitAuthorAlias(),
 		System:      GetSystem(),
 		Client:      client,
 	})
@@ -41861,23 +42079,27 @@ const (
 // Session holds the data fields for a session record.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions✂️session](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/Session)
 type Session struct {
-	UUID      string      `json:"uuid"`
-	Year      int         `json:"year"`
-	Month     int         `json:"month"`
-	Day       int         `json:"day"`
-	Kind      SessionKind `json:"kind"`
-	Client    string      `json:"client,omitempty"`
-	LLM       string      `json:"llm,omitempty"`
-	StartedAt string      `json:"startedAt,omitempty"`
-	EndedAt   string      `json:"endedAt,omitempty"`
+	UUID       string      `json:"uuid"`
+	Year       int         `json:"year"`
+	Month      int         `json:"month"`
+	Day        int         `json:"day"`
+	Checkpoint string      `json:"checkpoint,omitempty"`
+	Kind       SessionKind `json:"kind"`
+	Client     string      `json:"client,omitempty"`
+	LLM        string      `json:"llm,omitempty"`
+	StartedAt  string      `json:"startedAt,omitempty"`
+	EndedAt    string      `json:"endedAt,omitempty"`
 }
 
 // GetID returns the semio repo ID for a session.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/GetID)
-// GetID MUST perform the GetID operation.
+// GetID MUST use the checkpoint ID as parent for the session ID. Falls back to date hierarchy if checkpoint is unknown.
 func (s *Session) GetID() string {
-	return GetArtifactID("session", map[string]interface{}{
-		"parentId": GetArtifactID("day", map[string]interface{}{
+	var parentId string
+	if s.Checkpoint != "" {
+		parentId = GetArtifactID("checkpoint", map[string]interface{}{"sha": s.Checkpoint})
+	} else {
+		parentId = GetArtifactID("day", map[string]interface{}{
 			"parentId": GetArtifactID("month", map[string]interface{}{
 				"parentId": GetArtifactID("year", map[string]interface{}{
 					"parentId": "",
@@ -41886,8 +42108,11 @@ func (s *Session) GetID() string {
 				"mm": fmt.Sprintf("%02d", s.Month),
 			}),
 			"dd": fmt.Sprintf("%02d", s.Day),
-		}),
-		"uuid": s.UUID,
+		})
+	}
+	return GetArtifactID("session", map[string]interface{}{
+		"parentId": parentId,
+		"uuid":     s.UUID,
 	})
 }
 
@@ -41919,6 +42144,27 @@ func SessionKindEmoji(kind SessionKind) string {
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️derivesessionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/DeriveSessionKind)
 // DeriveSessionKind MUST perform the DeriveSessionKind operation.
 func DeriveSessionKind(sessionDir string) SessionKind {
+	metaPath := filepath.Join(sessionDir, "session.json")
+	if data, err := os.ReadFile(metaPath); err == nil {
+		var meta SessionMeta
+		if err := json.Unmarshal(data, &meta); err == nil {
+			for _, entry := range meta.Events {
+				var evt map[string]interface{}
+				if err := json.Unmarshal(entry.Event, &evt); err != nil {
+					continue
+				}
+				if kind, ok := evt["kind"].(string); ok && kind == string(HookAgentEnded) {
+					return SessionKindCompleted
+				}
+			}
+			if info, statErr := os.Stat(metaPath); statErr == nil && time.Since(info.ModTime()) < 30*time.Minute {
+				return SessionKindRunning
+			}
+			if len(meta.Events) > 0 {
+				return SessionKindInterrupted
+			}
+		}
+	}
 	entries, err := os.ReadDir(sessionDir)
 	if err != nil {
 		return SessionKindInterrupted
@@ -41961,6 +42207,16 @@ func ExtractSessionClient(sessionDir string) string {
 		if err := json.Unmarshal(data, &meta); err == nil && meta.Client != "" {
 			return meta.Client
 		}
+		if err := json.Unmarshal(data, &meta); err == nil {
+			for _, item := range meta.Events {
+				var evt map[string]interface{}
+				if err := json.Unmarshal(item.Event, &evt); err == nil {
+					if client, ok := evt["client"].(string); ok && client != "" {
+						return client
+					}
+				}
+			}
+		}
 	}
 	entries, err := os.ReadDir(sessionDir)
 	if err != nil || len(entries) == 0 {
@@ -41996,6 +42252,22 @@ func ExtractSessionSecond(sessionDir string) string {
 		if err := json.Unmarshal(data, &meta); err == nil && meta.Second != "" {
 			return meta.Second
 		}
+		if err := json.Unmarshal(data, &meta); err == nil {
+			var earliest string
+			for _, item := range meta.Events {
+				var evt map[string]interface{}
+				if err := json.Unmarshal(item.Event, &evt); err == nil {
+					if second, ok := evt["second"].(string); ok && second != "" {
+						if earliest == "" || second < earliest {
+							earliest = second
+						}
+					}
+				}
+			}
+			if earliest != "" {
+				return earliest
+			}
+		}
 	}
 	entries, err := os.ReadDir(sessionDir)
 	if err != nil || len(entries) == 0 {
@@ -42022,6 +42294,20 @@ func ExtractSessionSecond(sessionDir string) string {
 		}
 	}
 	return earliest
+}
+
+// ExtractSessionCheckpoint reads the checkpoint SHA from the session.json file.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖goals🔖sessions🛠️extractsessioncheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/ExtractSessionCheckpoint)
+// ExtractSessionCheckpoint MUST return the checkpoint SHA stored in session.json, or empty string if not present.
+func ExtractSessionCheckpoint(sessionDir string) string {
+	metaPath := filepath.Join(sessionDir, "session.json")
+	if data, err := os.ReadFile(metaPath); err == nil {
+		var meta SessionMeta
+		if err := json.Unmarshal(data, &meta); err == nil {
+			return meta.Checkpoint
+		}
+	}
+	return ""
 }
 
 // StreamSessions streams all sessions found in the events directory.
@@ -42083,14 +42369,16 @@ func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptio
 					kind := DeriveSessionKind(sessionDir)
 					client := ExtractSessionClient(sessionDir)
 					startedAt := ExtractSessionSecond(sessionDir)
+					checkpoint := ExtractSessionCheckpoint(sessionDir)
 					s := Session{
-						UUID:      sd.Name(),
-						Year:      yy,
-						Month:     mm,
-						Day:       dayNum,
-						Kind:      kind,
-						Client:    client,
-						StartedAt: startedAt,
+						UUID:       sd.Name(),
+						Year:       yy,
+						Month:      mm,
+						Day:        dayNum,
+						Checkpoint: checkpoint,
+						Kind:       kind,
+						Client:     client,
+						StartedAt:  startedAt,
 					}
 					if !matchesFilter(s.UUID, options) && !matchesFilter(string(s.Kind), options) && !matchesFilter(s.Client, options) {
 						continue
@@ -42711,8 +42999,8 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 			return nil, err
 		}
 		todo := &Todo{ID: Slugify(input.Name), Name: input.Name, Description: input.Description, ParentID: input.ParentID}
-		repopkg.Emit(repopkg.EventTodoCreate, "repo-cli", repopkg.TodoCreatePayload{
-			TodoPayload: repopkg.TodoPayload{ID: todo.ID, ParentID: input.ParentID, Name: input.Name, Author: GetGitAuthorGithub()},
+		repopkg.Emit(repopkg.EventTodoCreateEnded, "repo-cli", repopkg.TodoCreatePayload{
+			TodoPayload: repopkg.TodoPayload{ID: todo.ID, ParentID: input.ParentID, Name: input.Name, Author: GetGitAuthorAlias()},
 		})
 		return todo, nil
 	}
@@ -42735,8 +43023,8 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 			return nil, err
 		}
 		todo := &Todo{ID: Slugify(input.Name), Name: input.Name, Description: input.Description, ParentID: input.ParentID, Location: &Location{FilePath: input.ParentID}}
-		repopkg.Emit(repopkg.EventTodoCreate, "repo-cli", repopkg.TodoCreatePayload{
-			TodoPayload: repopkg.TodoPayload{ID: todo.ID, ParentID: input.ParentID, Name: input.Name, Author: GetGitAuthorGithub()},
+		repopkg.Emit(repopkg.EventTodoCreateEnded, "repo-cli", repopkg.TodoCreatePayload{
+			TodoPayload: repopkg.TodoPayload{ID: todo.ID, ParentID: input.ParentID, Name: input.Name, Author: GetGitAuthorAlias()},
 		})
 		return todo, nil
 	}
@@ -42762,15 +43050,15 @@ func (c *repoContext) TodoDelete(id string) (bool, error) {
 		if t.ID == id {
 			if strings.HasSuffix(t.Location.FilePath, ".todos.md") {
 				removeLineFromMarkdown(t.Location.FilePath, t.Name)
-				repopkg.Emit(repopkg.EventTodoDelete, "repo-cli", repopkg.TodoDeletePayload{
-					TodoPayload: repopkg.TodoPayload{ID: t.ID, ParentID: t.ParentID, Name: t.Name, Author: GetGitAuthorGithub()},
+				repopkg.Emit(repopkg.EventTodoDeleteEnded, "repo-cli", repopkg.TodoDeletePayload{
+					TodoPayload: repopkg.TodoPayload{ID: t.ID, ParentID: t.ParentID, Name: t.Name, Author: GetGitAuthorAlias()},
 				})
 				return true, nil
 			}
 			if t.Location.Line > 0 {
 				removeLineFromFile(t.Location.FilePath, t.Location.Line)
-				repopkg.Emit(repopkg.EventTodoDelete, "repo-cli", repopkg.TodoDeletePayload{
-					TodoPayload: repopkg.TodoPayload{ID: t.ID, ParentID: t.ParentID, Name: t.Name, Author: GetGitAuthorGithub()},
+				repopkg.Emit(repopkg.EventTodoDeleteEnded, "repo-cli", repopkg.TodoDeletePayload{
+					TodoPayload: repopkg.TodoPayload{ID: t.ID, ParentID: t.ParentID, Name: t.Name, Author: GetGitAuthorAlias()},
 				})
 				return true, nil
 			}
@@ -43026,19 +43314,19 @@ func semioIDToGoalPath(semioID string) string {
 	return strings.Join(pathParts, "/")
 }
 
-// contributorGithubToSemioID converts a github username to the semio contributor ID format.
-func contributorGithubToSemioID(github string) string {
-	if github == "" || github == "unknown" {
-		return github
+// contributorGithubToSemioID converts a contributor identifier (alias or github) to the semio contributor ID format.
+func contributorGithubToSemioID(identifier string) string {
+	if identifier == "" || identifier == "unknown" {
+		return identifier
 	}
 	prefix := emojiText(EmojiContributor)
-	if strings.HasPrefix(github, prefix) {
-		return github
+	if strings.HasPrefix(identifier, prefix) {
+		return identifier
 	}
-	return prefix + Flat(github)
+	return prefix + Flat(identifier)
 }
 
-// semioIDToContributorGithub converts a semio contributor ID back to a github username.
+// semioIDToContributorGithub converts a semio contributor ID back to a contributor alias.
 func semioIDToContributorGithub(semioID string) string {
 	if semioID == "" || semioID == "unknown" {
 		return semioID
@@ -43051,8 +43339,8 @@ func semioIDToContributorGithub(semioID string) string {
 	contributors, err := ListContributors()
 	if err == nil {
 		for _, c := range contributors {
-			if Flat(c.Github) == flat {
-				return c.Github
+			if Flat(c.Alias) == flat {
+				return c.Alias
 			}
 		}
 	}

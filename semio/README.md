@@ -1,208 +1,208 @@
 ---
 name: semio
 kind: user
-summary: Domain model library shared across all semio implementations.
+emoji: 🧩
+summary: ✏️ Design-Information-Modeling for Kit-of-Parts 🧩
 ---
 
-# Summary
+# 📑 Overview
 
-Domain model library shared across all semio implementations (Kit, Design, Type, Connection, Piece, Connector, Model, Attribute, Tag, Concept, Plane, Url, Quality, Benchmark, Port, Author, Layer, Group, Prop, Stat).
+1. [🛍 Products](#%EF%B8%8F-products-)
+   - [✏ sketchpad](#%EF%B8%8F-sketchpad-)
+   - [👥 studio](#-studio-)
+   - [☁ cloud](#%EF%B8%8F-cloud-)
+   - [🤖 assistant](#-assistant-)
+   - [🦗 semio.gh](#-semiogh-)
+   - [🦏 semio.3dm](#-semio3dm-)
+   - [🐝 semio.wasp](#-semiowasp-)
+   - [🦌 semio.monoceros](#-semiomonoceros-)
+   - [🐞 semio.ladybug](#-semioladybug-)
 
-# 💯Requirements
+# 🧾 Specification
 
-## Kit
+## 🕸️ Systems
 
-A kit is a collection of types, designs, authors, qualities, attributes, and concepts.
+### Kit, Design, Types, Ports
 
-A kit is either _static_ (a special .zip file) or _dynamic_ (bound to a runtime).
+### Types, Shapes, Connectors
 
-A _static_ kit contains a reserved .semio folder that contains a kit.db sqlite file.
+### Designs, Pieces, Connections, Layers, Groups
 
-The SQL-schema of kit.db MUST follow the schema definition.
+### Stats, Attributes,
 
-For Inter-Process-Communication (IPC) the JSON-schema MUST be used.
+## 🛠️ Mechanisms
 
-## Design
+## 📛 Concepts
 
-A design is an undirected graph of pieces (nodes) and connections (edges) with organizational layers, groups, stats, attributes, and concepts.
+### 📦 Kit [↑](#-concepts-)
 
-A design is _proto_ (a _protodesign_) when it has no _parent_ design.
+A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
 
-The _children_ of a _parent_ design are _subdesigns_.
+The SQL-schema of `kit.db` is found in [`./semio/sqlite/schema.sql`](./semio/sqlite/schema.sql) 📄
 
-A _flat_ design has no connections and all pieces are _fixed_.
+For Inter-Process-Communication (IPC) the JSON-schema in [`./semio/jsonschema/kit.json`](./semio/jsonschema/kit.json) is used 📄
 
-The pieces are _placed_ _hierarchically_ (breadth-first) for every _component_.
+####
 
-Additional connections which where not used in the _placement_ can be used to validate the computed planes.
+A [`kit`](#-kit-) is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
 
-## Type
+A _static_ [`kit`](#-kit-) contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
 
-A type is a reusable component with different models, connectors, attributes, concepts, and authors.
+### 🏘 Design [↑](#-concepts-)
 
-The type is _proto_ (a _prototype_) when it has no _parent_.
+A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
 
-The _children_ of a _parent_ type are _subtypes_.
+A [`design`](#-design-) is _proto_ (a _protodesign_) when it has no _parent_.
 
-A type can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location**.
+_Children_ of a _parent_ are \_subdesigns.
 
-## Connection
+A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
 
-A connection is a 3D-Link between two pieces with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis).
+The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _component_ 🌿
 
-The _translation_ is applied first, then the _rotation_.
+Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#-plane-) 🛂
 
-The two pieces are called **_connected_** and **_connecting_** but there is no difference between them.
+### 🏠 Type [↑](#-concepts-)
 
-The _direction_ of a connection goes from the lower _hierarchy_ to the higher _hierarchy_ of the pieces.
+A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
 
-A connection can have attributes and diagram positioning with **u** and **v** offsets.
+A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
 
-## Piece
+_Children_ of a _parent_ are \_subtypes.
 
-A piece is an instance of either a type or a design with **id**, optional **name**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and attributes.
+A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
 
-A piece is either _fixed_ (with a plane) or _linked_ (with a connection).
+### 🔗 Connection [↑](#-concepts-)
 
-A group of _connected_ pieces is called a _component_.
+A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
 
-The _hierarchy_ of a piece is the length of the shortest path to the next _fixed_ piece.
+The _translation_ is applied first, then the _rotation_ 🥈
 
-## Connector
+The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but there is no difference between them 🔄
 
-A connector is a conceptual connection **point** with an outwards **direction**, **id**, optional **name**, optional **description**, and **t** value for diagram ring positioning.
+The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡
 
-A connector can be marked as **mandatory** in which case it is required to be connected to a piece.
+A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
 
-A connector can reference a **port** for explicit compatibility control. The port defines which other ports it is compatible with.
+### ⭕ Piece [↑](#-concepts-)
 
-No **port** means the _default_ port which is compatible with all other connectors.
+A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
 
-Connector compatibility is determined by the port definitions at the kit level.
+A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
 
-A connector can have props that define measurable characteristics and attributes for additional metadata.
+A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
-## Model
+The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
-A model is a **guid**, optional **name**, **file** reference, optional **tags** references, optional **description**, and attributes.
+### ⚓ Connector [↑](#-concepts-)
 
-The **file** is a required reference to a kit-level file entity.
+A [`connector`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
 
-The **tags** are optional references to kit-level tag entities. No **tags** means the _default_ model.
+A [`connector`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
 
-The similarity of models is determined by the jaccard index of their tag guids.
+A [`connector`](#-port-) can have a connector **port** and a list of **compatible ports** for explicit compatibility control 👨‍👩‍👧‍👦
 
-### Supported 3D File Extensions
+No **port** means the _default_ port and no **compatible ports** means the connector is compatible with all other connectors 🔑
 
-Model files SHOULD use supported 3D formats including: gltf, glb, fbx, obj, dae, 3ds, stl, ply, usdz, vrm, ifc, 3mf, and more.
+It is enough for one [`connector`](#-port-) to be compatible with another [`connector`](#-port-) to be compatible with each other ↔
 
-### Model Tag Selection
+A [`connector`](#-port-) can have [`props`](#-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
-The footer displays all tag names from the type's/design's models. Clicking a tag toggles its selection. The model with the highest Jaccard index matching the selected tags is displayed in the scene.
+### 💾 Model [↑](#-concepts-)
 
-## Attribute
+A [`model`](#-model-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
 
-An attribute is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** (url or text).
+No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
 
-The **name** is kebab-cased and with .-separated string similar to toml keys.
+The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute.
+### 🏷️ Attribute [↑](#-concepts-)
 
-The **unit** is a unit identifier.
+A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
-- mm for millimeter, cm for centimeter, dm for decimeter, m for meter, km for kilometer
-- m² for square meter, m³ for cubic meter, m⁴ for quartic meter
-- ° for degree, rad for radian
-- N for newton, kN for kilonewton, MN for meganewton
-- °C for degree Celsius, °F for degree Fahrenheit
-- W for watt, kW for kilowatt, MW for megawatt, GW for gigawatt
-- Wh for watt-hour, kWh for kilowatt-hour, MWh for megawatt-hour, GWh for gigawatt-hour
-- J for joule, kJ for kilojoule, kcal for kilocalorie
-- kWh/m²a for kilowatt-hour per square meter per year
-- m/s for meter per second, m²/s for square meter per second, m³/s for cubic meter per second
-- Pa for pascal, kPa for kilopascal, MPa for megapascal
+The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
-A list of attributes is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value**.
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute 🔑
 
-## Tag
+The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
 
-A tag is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and attributes.
+- `mm` for millimeter, `cm` for centimeter, `dm` for decimeter, `m` for meter, `km` for kilometer
+- `m²` for square meter, `m³` for cubic meter, `m⁴` for quartic meter
+- `°` for degree, `rad` for radian
+- `N` for newton, `kN` for kilonewton, `MN` for meganewton
+- `°C` for degree Celsius, `°F` for degree Fahrenheit
+- `W` for watt, `kW` for kilowatt, `MW` for megawatt, `GW` for gigawatt
+- `Wh` for watt-hour, `kWh` for kilowatt-hour, `MWh` for megawatt-hour, `GWh` for gigawatt-hour
+- `J` for joule, `kJ` for kilojoule, `kcal` for kilocalorie
+- `kWh/m²a` for kilowatt-hour per square meter per year
+- `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
+- `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
+- …
 
-Tags are used to categorize and filter models within a type. A model references tags via guid reference.
+A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔
 
-## Concept
+### 🏷️ Tag [↑](#-concepts-)
 
-A concept is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and attributes.
+A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
 
-Concepts provide semantic grouping for types and designs. Types and designs reference concepts via guid reference.
+### ◳ Plane [↑](#-concepts-)
 
-## Plane
+A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈
 
-A plane is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space.
+The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
 
-The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis.
+### 🔗 Url [↑](#-concepts-)
 
-## Url
+A [`url`](#-url-) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
 
-A url is either _relative_ (to the root of the .zip file) or _remote_ (http, https, ftp, ...) string.
+A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
 
-A _relative_ url is a /-normalized path to a file in the .zip file and is not prefixed with ., ./, /, ....
+### 🔢 Quality [↑](#-concepts-)
 
-## Quality
+A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
 
-A quality is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula**.
+A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation 🎯
 
-A quality can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation.
+The **kind** determines which entities the quality can be applied to using a bitwise enum system 🔢
 
-The **kind** determines which entities the quality can be applied to using a bitwise enum system.
+### 📊 Benchmark [↑](#-concepts-)
 
-## Benchmark
+A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-quality-) with a **name**, optional **icon**, and **range** (min/max with exclusion flags) 🏆
 
-A benchmark is a performance standard within a quality with a **name**, optional **icon**, and **range** (min/max with exclusion flags).
+Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
 
-Benchmarks provide reference points for evaluating quality measurements against industry or design standards.
+### 🏷️ Concept [↑](#-concepts-)
 
-## Port
+A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
 
-A port is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible ports** references, and attributes.
+Concepts enable hierarchical organization and categorization of design elements beyond simple naming 📂
 
-The port is defined at the kit level and referenced by connectors.
+### 👤 Author [↑](#-concepts-)
 
-An empty **compatible ports** list means the port is compatible with all other ports.
+An [`author`](#-author-) has a **name** and **email** and can be associated with [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) with a **rank** indicating contribution level 👨‍💻
 
-Two connectors are compatible if:
+Authors provide attribution and contact information for design ownership and collaboration 🤝
 
-- Both have no port specified (default compatibility)
-- They reference the same port
-- One port's compatible list includes the other port's guid
-- Either port has an empty compatible list and the other explicitly allows it
+### 📋 Layer [↑](#-concepts-)
 
-## Author
+A [`layer`](#-layer-) is an organizational grouping within a [`design`](#%EF%B8%8F-design-) with a **name**, optional **description**, and **color** for visual organization 🎨
 
-An author has a **name** and **email** and can be associated with kits, types, or designs with a **rank** indicating contribution level.
+Layers provide a way to group and manage pieces logically within complex designs 📑
 
-Authors provide attribution and contact information for design ownership and collaboration.
+### 👥 Group [↑](#-concepts-)
 
-## Layer
+A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`](#%EF%B8%8F-design-) with optional **name**, **description**, **color**, and **attributes** 👥
 
-A layer is an organizational grouping within a design with a **name**, optional **description**, and **color** for visual organization.
+Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
 
-Layers provide a way to group and manage pieces logically within complex designs.
+### ⚙️️ Prop [↑](#-concepts-)
 
-## Group
+A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
 
-A group is a collection of pieces within a design with optional **name**, **description**, **color**, and attributes.
+Props define measurable characteristics of connectors using the quality system for standardized measurement 📐
 
-Groups enable semantic clustering of pieces that belong together functionally or conceptually.
+### 📈 Stat [↑](#-concepts-)
 
-## Prop
+A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
 
-A prop is a **key-value** pair on a connector that references a quality with a specific **value** and optional **unit**.
-
-Props define measurable characteristics of connectors using the quality system for standardized measurement.
-
-## Stat
-
-A stat is a statistical measurement on a design that references a quality with **range** (min/max) and optional **unit**.
-
-Stats provide computed or measured performance data for entire designs using the quality framework.
+Stats provide computed or measured performance data for entire designs using the quality framework 📈
