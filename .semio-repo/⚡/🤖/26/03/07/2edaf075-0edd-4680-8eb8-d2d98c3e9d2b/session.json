@@ -1,0 +1,220 @@
+{
+  "id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+  "uri": "semiorepo://s/2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-07T20:44:59Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-07T20:44:58.779Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 500,
+            "includePattern": "**/semio-repo/go/events.go",
+            "isRegexp": true,
+            "query": "Project|project"
+          },
+          "tool_use_id": "toolu_0138M2MwaLWJpxvxhTgXKaq1__vscode-1772913891262",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️07⏰20⌚44⏱️59",
+        "session": "⚪2edaf0750edd46808eb8d2d98c3e9d2b"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-07T20:45:05.919Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 500,
+            "includePattern": "**/semio-repo/cli/main.go",
+            "isRegexp": true,
+            "query": "Project|project"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01AX92XM99b6tDABxMj5KpHA__vscode-1772913891259",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️07⏰20⌚45⏱️06",
+        "session": "⚪2edaf0750edd46808eb8d2d98c3e9d2b"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-07T20:45:06.053Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 500,
+            "includePattern": "**/semio-repo/cli/main_test.go",
+            "isRegexp": true,
+            "query": "Project|project"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_015qQPWdh3npSTgNSWxQh7ww__vscode-1772913891261",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️07⏰20⌚45⏱️06",
+        "session": "⚪2edaf0750edd46808eb8d2d98c3e9d2b"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-07T20:45:06.646Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 500,
+            "includePattern": "**/semio-repo/sqlite/checkpoint.sql",
+            "isRegexp": true,
+            "query": "project"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01LaHYc5tT5bxyG3zVWmh2FR__vscode-1772913891260",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️07⏰20⌚45⏱️07",
+        "session": "⚪2edaf0750edd46808eb8d2d98c3e9d2b"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-07T20:45:06.692Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 500,
+            "includePattern": "**/semio-repo/go/events.go",
+            "isRegexp": true,
+            "query": "Project|project"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_0138M2MwaLWJpxvxhTgXKaq1__vscode-1772913891262",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️07⏰20⌚45⏱️07",
+        "session": "⚪2edaf0750edd46808eb8d2d98c3e9d2b"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-07T20:45:29.881Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "2edaf075-0edd-4680-8eb8-d2d98c3e9d2b",
+          "agent_id": "636c21c2-7ee6-4c46-b9ed-1ff6571f6911",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️07⏰20⌚45⏱️30",
+        "session": "⚪2edaf0750edd46808eb8d2d98c3e9d2b"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

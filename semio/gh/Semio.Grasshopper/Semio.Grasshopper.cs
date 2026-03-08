@@ -6621,7 +6621,7 @@ public class ApplyKitDiffComponent : PersistenceComponent
     public ApplyKitDiffComponent() : base("Apply Kit Diff", "Kit+Δ", "Apply a diff to a local kit.") { }
     protected override string RunDescription => "True to apply the diff.";
     protected override string SuccessDescription => "True if the diff was successfully applied. False otherwise.";
-    public override Guid ComponentGuid => new("B8F4C762-692F-4696-9EBD-243G21CE98GD");
+    public override Guid ComponentGuid => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");
     protected override Bitmap Icon => Resources.kit_diff_24x24;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)

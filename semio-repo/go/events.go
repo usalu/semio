@@ -219,7 +219,7 @@ type CheckpointPayload struct {
 	Sha          string   `json:"sha"`
 	Message      string   `json:"message"`
 	Files        []string `json:"files"`
-	Projects     []string `json:"projects,omitempty"`
+	Technologies []string `json:"technologies,omitempty"`
 	Bundles      []string `json:"bundles,omitempty"`
 	Folders      []string `json:"folders,omitempty"`
 	FilesChanged []string `json:"files_changed,omitempty"`
@@ -256,7 +256,7 @@ type TodoDeletePayload struct {
 	TodoPayload
 }
 
-// WorkItem represents a single item a contributor is working on (project, bundle, folder, file, section, definition, ticket, goal, todo).
+// WorkItem represents a single item a contributor is working on (technology, bundle, folder, file, section, definition, ticket, goal, todo).
 // [🧰semiorepo📚go💻events🔖payloads✂️workitem](semiorepo://p/i/semio-repo/b/l/go/f/events.go/s/Payloads/d/i/WorkItem)
 type WorkItem struct {
 	Kind string `json:"kind"`
@@ -270,7 +270,7 @@ type ContributorWork struct {
 	Tickets     []string `json:"tickets"`
 	Goals       []string `json:"goals"`
 	Todos       []string `json:"todos"`
-	Projects    []string `json:"projects"`
+	Technologies []string `json:"technologies"`
 	Bundles     []string `json:"bundles"`
 	Folders     []string `json:"folders"`
 	Files       []string `json:"files"`

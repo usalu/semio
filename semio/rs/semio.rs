@@ -500,6 +500,8 @@ pub struct File {
     pub size: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blob: Option<String>,
     #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
     pub created_at: Option<String>,
     #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
@@ -4320,7 +4322,7 @@ pub mod sqlite {
             message: e.to_string(),
         })?;
 
-        conn.execute_batch(include_str!("../../sql/sqlite/semio/schema.sql"))
+        conn.execute_batch(include_str!("../sqlite/schema.sql"))
             .map_err(|e| SemioError::Database {
                 message: format!("Schema creation failed: {}", e),
             })?;
@@ -4673,6 +4675,7 @@ pub mod sqlite {
                     size: row.get(4)?,
                     hash: row.get(5)?,
                     remote: row.get(6)?,
+                    blob: None,
                     created_at: None,
                     updated_at: None,
                 })
@@ -5119,74 +5122,92 @@ pub mod sqlite {
 /// [👤semio📚rs💻semio🔖zipimport🔖export🛠️ziproundtrip](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export/d/i/zip_roundtrip)
 pub mod zip_roundtrip {
     use super::*;
+    use base64::Engine;
     use std::collections::HashMap;
-    use std::fs;
-    use std::io::Write;
+    use std::io::{Read, Write};
 
     pub struct KitImportResult {
         pub kit: Kit,
         pub files: HashMap<String, Vec<u8>>,
     }
 
+    pub fn build_folder_path(kit: &Kit, folder_guid: &str) -> String {
+        if let Some(folders) = &kit.folders {
+            for f in folders {
+                if f.guid == folder_guid {
+                    if let Some(parent) = &f.parent {
+                        let parent_path = build_folder_path(kit, &parent.guid);
+                        if parent_path.is_empty() {
+                            return f.name.clone();
+                        }
+                        return format!("{}/{}", parent_path, f.name);
+                    }
+                    return f.name.clone();
+                }
+            }
+        }
+        String::new()
+    }
+
+    pub fn build_file_path(kit: &Kit, file: &File) -> String {
+        if let Some(folder) = &file.folder {
+            let folder_path = build_folder_path(kit, &folder.guid);
+            if folder_path.is_empty() {
+                return file.name.clone();
+            }
+            return format!("{}/{}", folder_path, file.name);
+        }
+        file.name.clone()
+    }
+
     pub fn import_kit_from_zip(zip_path: &str) -> Result<KitImportResult> {
-        let file = fs::File::open(zip_path).map_err(|e| SemioError::Database {
+        let file = std::fs::File::open(zip_path).map_err(|e| SemioError::Database {
             message: format!("Failed to open zip: {}", e),
         })?;
         let mut archive = zip::ZipArchive::new(file).map_err(|e| SemioError::Database {
             message: format!("Failed to read zip: {}", e),
         })?;
 
-        let temp_dir = tempfile::tempdir().map_err(|e| SemioError::Database {
-            message: format!("Failed to create temp dir: {}", e),
-        })?;
+        let mut kit_json: Option<Vec<u8>> = None;
+        let mut files = HashMap::new();
 
         for i in 0..archive.len() {
-            let mut file = archive.by_index(i).map_err(|e| SemioError::Database {
+            let mut entry = archive.by_index(i).map_err(|e| SemioError::Database {
                 message: format!("Failed to read zip entry: {}", e),
             })?;
-            let outpath = temp_dir.path().join(file.name());
+            if entry.is_dir() {
+                continue;
+            }
+            let name = entry.name().to_string();
+            let mut data = Vec::new();
+            entry.read_to_end(&mut data).map_err(|e| SemioError::Database {
+                message: format!("Failed to read zip entry data: {}", e),
+            })?;
 
-            if file.is_dir() {
-                fs::create_dir_all(&outpath).ok();
-            } else {
-                if let Some(p) = outpath.parent() {
-                    fs::create_dir_all(p).ok();
-                }
-                let mut outfile = fs::File::create(&outpath).map_err(|e| SemioError::Database {
-                    message: format!("Failed to create file: {}", e),
-                })?;
-                std::io::copy(&mut file, &mut outfile).map_err(|e| SemioError::Database {
-                    message: format!("Failed to write file: {}", e),
-                })?;
+            if name == "kit.json" {
+                kit_json = Some(data);
+            } else if !name.starts_with(".semio/") {
+                files.insert(name, data);
             }
         }
 
-        let db_path = temp_dir.path().join(".semio").join("kit.db");
-        if !db_path.exists() {
-            return Err(SemioError::Database {
-                message: "kit.db not found in zip".to_string(),
-            });
-        }
+        let kit_json = kit_json.ok_or(SemioError::Database {
+            message: "kit.json not found in zip".to_string(),
+        })?;
+        let kit_str = String::from_utf8(kit_json).map_err(|e| SemioError::Database {
+            message: format!("Invalid UTF-8 in kit.json: {}", e),
+        })?;
+        let mut kit = deserialize_kit(&kit_str)?;
 
-        let kit = sqlite::import_kit_from_sqlite(db_path.to_str().unwrap())?;
-
-        let mut files = HashMap::new();
-        for entry in walkdir::WalkDir::new(temp_dir.path())
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
-            if entry.file_type().is_file() {
-                let rel_path = entry
-                    .path()
-                    .strip_prefix(temp_dir.path())
-                    .unwrap()
-                    .to_string_lossy()
-                    .replace("\\", "/");
-                if !rel_path.starts_with(".semio/") {
-                    let data = fs::read(entry.path()).map_err(|e| SemioError::Database {
-                        message: format!("Failed to read file: {}", e),
-                    })?;
-                    files.insert(rel_path, data);
+        // Populate blob fields from actual files
+        // Pre-compute paths before mutable borrow
+        let file_paths: Vec<String> = kit.files.as_ref()
+            .map(|kit_files| kit_files.iter().map(|f| build_file_path(&kit, f)).collect())
+            .unwrap_or_default();
+        if let Some(ref mut kit_files) = kit.files {
+            for (i, f) in kit_files.iter_mut().enumerate() {
+                if let Some(data) = files.get(&file_paths[i]) {
+                    f.blob = Some(base64::engine::general_purpose::STANDARD.encode(data));
                 }
             }
         }
@@ -5199,67 +5220,47 @@ pub mod zip_roundtrip {
         files: &HashMap<String, Vec<u8>>,
         zip_path: &str,
     ) -> Result<()> {
-        let temp_dir = tempfile::tempdir().map_err(|e| SemioError::Database {
-            message: format!("Failed to create temp dir: {}", e),
-        })?;
-
-        let semio_dir = temp_dir.path().join(".semio");
-        fs::create_dir_all(&semio_dir).map_err(|e| SemioError::Database {
-            message: format!("Failed to create .semio dir: {}", e),
-        })?;
-
-        let db_path = semio_dir.join("kit.db");
-        sqlite::export_kit_to_sqlite(kit, db_path.to_str().unwrap())?;
-
-        for (rel_path, data) in files {
-            let full_path = temp_dir.path().join(rel_path);
-            if let Some(parent) = full_path.parent() {
-                fs::create_dir_all(parent).ok();
+        // Serialize kit without blob data
+        let mut kit_for_zip = kit.clone();
+        if let Some(ref mut kit_files) = kit_for_zip.files {
+            for f in kit_files.iter_mut() {
+                f.blob = None;
             }
-            fs::write(&full_path, data).map_err(|e| SemioError::Database {
-                message: format!("Failed to write file: {}", e),
-            })?;
         }
 
-        let zip_file = fs::File::create(zip_path).map_err(|e| SemioError::Database {
+        let kit_json = serialize_kit(&kit_for_zip)?;
+
+        let zip_file = std::fs::File::create(zip_path).map_err(|e| SemioError::Database {
             message: format!("Failed to create zip: {}", e),
         })?;
         let mut zip_writer = zip::ZipWriter::new(zip_file);
         let options = zip::write::SimpleFileOptions::default()
             .compression_method(zip::CompressionMethod::Deflated);
 
-        for entry in walkdir::WalkDir::new(temp_dir.path())
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
-            let path = entry.path();
-            let rel_path = path
-                .strip_prefix(temp_dir.path())
-                .unwrap()
-                .to_string_lossy()
-                .replace("\\", "/");
+        // Write kit.json
+        zip_writer
+            .start_file("kit.json", options)
+            .map_err(|e| SemioError::Database {
+                message: format!("Failed to start zip file: {}", e),
+            })?;
+        zip_writer
+            .write_all(kit_json.as_bytes())
+            .map_err(|e| SemioError::Database {
+                message: format!("Failed to write to zip: {}", e),
+            })?;
 
-            if path.is_file() {
-                zip_writer
-                    .start_file(&rel_path, options)
-                    .map_err(|e| SemioError::Database {
-                        message: format!("Failed to start zip file: {}", e),
-                    })?;
-                let data = fs::read(path).map_err(|e| SemioError::Database {
-                    message: format!("Failed to read file: {}", e),
+        // Write actual files
+        for (name, data) in files {
+            zip_writer
+                .start_file(name, options)
+                .map_err(|e| SemioError::Database {
+                    message: format!("Failed to start zip file: {}", e),
                 })?;
-                zip_writer
-                    .write_all(&data)
-                    .map_err(|e| SemioError::Database {
-                        message: format!("Failed to write to zip: {}", e),
-                    })?;
-            } else if !rel_path.is_empty() {
-                zip_writer
-                    .add_directory(&rel_path, options)
-                    .map_err(|e| SemioError::Database {
-                        message: format!("Failed to add directory: {}", e),
-                    })?;
-            }
+            zip_writer
+                .write_all(data)
+                .map_err(|e| SemioError::Database {
+                    message: format!("Failed to write to zip: {}", e),
+                })?;
         }
 
         zip_writer.finish().map_err(|e| SemioError::Database {
@@ -5605,44 +5606,36 @@ mod tests {
     mod roundtrip {
         use super::*;
 
-        mod json {
-            use super::*;
+        #[test]
+        fn metabolism() {
+            // JSON -> Memory -> JSON
+            let kit = load_kit("kit_metabolism.json");
+            let json = serialize_kit(&kit).unwrap();
+            let restored = deserialize_kit(&json).unwrap();
+            assert!(are_kits_equal(&kit, &restored), "JSON -> Memory -> JSON: serialized and deserialized kit should be equal");
 
-            #[test]
-            fn metabolism_kit_json_kit() {
-                let kit = load_kit("kit_metabolism.json");
-                let json = serialize_kit(&kit).unwrap();
-                let restored = deserialize_kit(&json).unwrap();
-                assert!(are_kits_equal(&kit, &restored));
+            // JSON -> ZIP
+            use base64::Engine;
+            let mut files = std::collections::HashMap::new();
+            if let Some(ref kit_files) = kit.files {
+                for f in kit_files {
+                    if let Some(ref blob) = f.blob {
+                        let decoded = base64::engine::general_purpose::STANDARD.decode(blob).unwrap();
+                        let file_path = crate::zip_roundtrip::build_file_path(&kit, f);
+                        files.insert(file_path, decoded);
+                    }
+                }
             }
-        }
 
-        mod zip {
-            use super::*;
-            use crate::zip_roundtrip::import_kit_from_zip;
+            let temp_dir = tempfile::tempdir().unwrap();
+            let roundtrip_path = temp_dir.path().join("metabolism_roundtrip.zip");
+            let roundtrip_path_str = roundtrip_path.to_str().unwrap();
+            crate::zip_roundtrip::export_kit_to_zip(&kit, &files, roundtrip_path_str).unwrap();
 
-            #[test]
-            fn metabolism_zip_kit_zip_kit() {
-                let zip_path = Path::new(ASSETS_DIR).join("metabolism.zip");
-                let zip_path_str = zip_path.to_str().expect("Invalid path");
-
-                let result = import_kit_from_zip(zip_path_str).expect("Failed to import kit");
-                let kit = result.kit;
-                let files = result.files;
-                assert!(!kit.guid.is_empty());
-                assert_eq!(kit.name, "Metabolism");
-                assert!(kit
-                    .types
-                    .as_ref()
-                    .map(|t: &Vec<Type>| !t.is_empty())
-                    .unwrap_or(false));
-                assert!(kit
-                    .designs
-                    .as_ref()
-                    .map(|d: &Vec<Design>| !d.is_empty())
-                    .unwrap_or(false));
-                assert!(!files.is_empty());
-            }
+            // ZIP -> JSON
+            let result = crate::zip_roundtrip::import_kit_from_zip(roundtrip_path_str).unwrap();
+            assert!(are_kits_equal(&kit, &result.kit), "ZIP -> JSON: roundtrip kit should be equal");
+            assert_eq!(files.len(), result.files.len(), "File count mismatch after ZIP roundtrip");
         }
     }
 

@@ -2341,6 +2341,7 @@ public class FileDiff : Entity<FileDiff>
     private FolderId? _folder;
     private int? _size;
     private string? _hash;
+    private string? _blob;
     private DateTime? _createdAt;
     private string? _createdBy;
     private DateTime? _updatedAt;
@@ -2352,6 +2353,7 @@ public class FileDiff : Entity<FileDiff>
     public FolderId? Folder { get => _folder; set { _folder = value; _setProperties.Add("Folder"); } }
     public int? Size { get => _size; set { _size = value; _setProperties.Add("Size"); } }
     public string? Hash { get => _hash; set { _hash = value; _setProperties.Add("Hash"); } }
+    public string? Blob { get => _blob; set { _blob = value; _setProperties.Add("Blob"); } }
     public DateTime? CreatedAt { get => _createdAt; set { _createdAt = value; _setProperties.Add("CreatedAt"); } }
     public string? CreatedBy { get => _createdBy; set { _createdBy = value; _setProperties.Add("CreatedBy"); } }
     public DateTime? UpdatedAt { get => _updatedAt; set { _updatedAt = value; _setProperties.Add("UpdatedAt"); } }
@@ -2363,6 +2365,7 @@ public class FileDiff : Entity<FileDiff>
     public bool ShouldSerializeFolder() => _setProperties.Contains("Folder");
     public bool ShouldSerializeSize() => _setProperties.Contains("Size");
     public bool ShouldSerializeHash() => _setProperties.Contains("Hash");
+    public bool ShouldSerializeBlob() => _setProperties.Contains("Blob");
     public bool ShouldSerializeCreatedAt() => _setProperties.Contains("CreatedAt");
     public bool ShouldSerializeCreatedBy() => _setProperties.Contains("CreatedBy");
     public bool ShouldSerializeUpdatedAt() => _setProperties.Contains("UpdatedAt");
@@ -2378,6 +2381,7 @@ public class FileDiff : Entity<FileDiff>
             Folder = other.Folder ?? Folder,
             Size = other.Size ?? Size,
             Hash = other.Hash ?? Hash,
+            Blob = other.Blob ?? Blob,
             CreatedAt = other.CreatedAt ?? CreatedAt,
             CreatedBy = other.CreatedBy ?? CreatedBy,
             UpdatedAt = other.UpdatedAt ?? UpdatedAt,
@@ -2404,6 +2408,7 @@ public class File : Entity<File>
     public FolderId? Folder { get; set; }
     public int? Size { get; set; }
     public string? Hash { get; set; }
+    public string? Blob { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -2415,8 +2420,8 @@ public class File : Entity<File>
     public override string ToString() => $"Fil({ToHumanIdString()})";
 
     public static implicit operator File(FileId id) => new() { Guid = id.Guid };
-    public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
-    public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
+    public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, Blob = diff.Blob, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
+    public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
 #endregion 🔖File
 
@@ -8004,16 +8009,25 @@ public static class ZipRoundtrip
             ZipFile.ExtractToDirectory(zipPath, tempDir);
 
             var dbPath = Path.Combine(tempDir, ".semio", "kit.db");
-            if (!System.IO.File.Exists(dbPath))
-                throw new FileNotFoundException("kit.db not found in zip");
+            if (System.IO.File.Exists(dbPath))
+            {
+                result.Kit = LoadKitFromSqlite(dbPath);
+                SqliteConnection.ClearAllPools();
+            }
+            else
+            {
+                var kitJsonPath = Path.Combine(tempDir, "kit.json");
+                if (!System.IO.File.Exists(kitJsonPath))
+                    throw new FileNotFoundException("kit.db or kit.json not found in zip");
 
-            result.Kit = LoadKitFromSqlite(dbPath);
-            SqliteConnection.ClearAllPools();
+                var json = System.IO.File.ReadAllText(kitJsonPath);
+                result.Kit = json.Deserialize<Kit>() ?? throw new InvalidOperationException("Failed to deserialize kit.json from zip");
+            }
 
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {
                 var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
-                if (!relativePath.StartsWith(".semio/"))
+                if (!relativePath.StartsWith(".semio/") && relativePath != "kit.json")
                     result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
             }
         }
@@ -8217,14 +8231,14 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@guid", t.Guid);
             cmd.Parameters.AddWithValue("@name", t.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
-            cmd.Parameters.AddWithValue("@folder", t.Folder);
-            cmd.Parameters.AddWithValue("@stock", t.Stock);
+            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract ?? false);
+            cmd.Parameters.AddWithValue("@folder", (object?)t.Folder ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@stock", (object?)t.Stock ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", t.Unit);
-            cmd.Parameters.AddWithValue("@description", t.Description);
-            cmd.Parameters.AddWithValue("@icon", t.Icon);
-            cmd.Parameters.AddWithValue("@image", t.Image);
+            cmd.Parameters.AddWithValue("@unit", (object?)t.Unit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@description", (object?)t.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@icon", (object?)t.Icon ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@image", (object?)t.Image ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
             cmd.ExecuteNonQuery();
         }
@@ -8238,14 +8252,14 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@guid", d.Guid);
             cmd.Parameters.AddWithValue("@name", d.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", d.Unit);
-            cmd.Parameters.AddWithValue("@folder", d.Folder);
-            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
-            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
-            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
-            cmd.Parameters.AddWithValue("@description", d.Description);
-            cmd.Parameters.AddWithValue("@icon", d.Icon);
-            cmd.Parameters.AddWithValue("@image", d.Image);
+            cmd.Parameters.AddWithValue("@unit", (object?)d.Unit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@folder", (object?)d.Folder ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@isAbstract", (object?)d.IsAbstract ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@canScale", (object?)d.CanScale ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@canMirror", (object?)d.CanMirror ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@description", (object?)d.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@icon", (object?)d.Icon ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@image", (object?)d.Image ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
             cmd.ExecuteNonQuery();
         }

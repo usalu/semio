@@ -27,10 +27,10 @@ package semio
 import (
 	"archive/zip"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -489,21 +489,17 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 }
 
 // KitFromZip extracts a Kit and its files from a zip archive
-// Callers MUST provide a valid path to an existing zip file containing kit.db
+// Callers MUST provide a valid path to an existing zip file containing kit.json
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kitfromzip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitFromZip)
 func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
-	tmpDir, err := os.MkdirTemp("", "semio-kit-*")
-	if err != nil {
-		return nil, nil, err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	files := make(map[string][]byte)
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer r.Close()
+
+	var kitJSON []byte
+	files := make(map[string][]byte)
 
 	for _, f := range r.File {
 		if f.FileInfo().IsDir() {
@@ -513,58 +509,94 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-
-		destPath := filepath.Join(tmpDir, f.Name)
-		os.MkdirAll(filepath.Dir(destPath), 0755)
-
-		outFile, err := os.Create(destPath)
-		if err != nil {
-			rc.Close()
-			return nil, nil, err
-		}
-
-		_, err = io.Copy(outFile, rc)
-		outFile.Close()
+		data, err := io.ReadAll(rc)
 		rc.Close()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if !strings.HasPrefix(f.Name, ".semio/") {
-			data, _ := os.ReadFile(destPath)
+		if f.Name == "kit.json" {
+			kitJSON = data
+		} else if !strings.HasPrefix(f.Name, ".semio/") {
 			files[f.Name] = data
 		}
 	}
 
-	dbPath := filepath.Join(tmpDir, ".semio", "kit.db")
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		return nil, nil, fmt.Errorf("kit.db not found in zip")
+	if kitJSON == nil {
+		return nil, nil, fmt.Errorf("kit.json not found in zip")
 	}
 
-	kit, err := KitFromSqlite(dbPath)
+	kit, err := DeserializeKit(kitJSON)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to deserialize kit.json: %w", err)
 	}
 
-	return kit, files, nil
+	// Populate blob fields from actual files
+	for i := range kit.Files {
+		filePath := buildFilePath(&kit, &kit.Files[i])
+		if data, ok := files[filePath]; ok {
+			encoded := base64Encode(data)
+			kit.Files[i].Blob = &encoded
+		}
+	}
+
+	return &kit, files, nil
+}
+
+// buildFilePath constructs the file path from the folder hierarchy and file name
+func buildFilePath(kit *Kit, file *File) string {
+	if file.Folder == nil {
+		return file.Name
+	}
+	folderPath := buildFolderPath(kit, file.Folder.Guid)
+	if folderPath == "" {
+		return file.Name
+	}
+	return folderPath + "/" + file.Name
+}
+
+// buildFolderPath constructs the folder path from the folder hierarchy
+func buildFolderPath(kit *Kit, folderGuid string) string {
+	for _, f := range kit.Folders {
+		if f.Guid == folderGuid {
+			if f.Parent == nil {
+				return f.Name
+			}
+			parentPath := buildFolderPath(kit, f.Parent.Guid)
+			if parentPath == "" {
+				return f.Name
+			}
+			return parentPath + "/" + f.Name
+		}
+	}
+	return ""
+}
+
+// base64Encode encodes bytes to base64 string
+func base64Encode(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+// base64Decode decodes base64 string to bytes
+func base64Decode(s string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(s)
 }
 
 // KitToZip packages a Kit and its files into a zip archive
-// Callers MUST provide a valid Kit, file map, writable zip path, and schema SQL
+// Callers MUST provide a valid Kit, writable zip path
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitToZip)
 func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL string) error {
-	tmpDir, err := os.MkdirTemp("", "semio-kit-*")
-	if err != nil {
-		return err
+	// Serialize kit to JSON without blob data
+	kitForZip := *kit
+	kitForZip.Files = make([]File, len(kit.Files))
+	copy(kitForZip.Files, kit.Files)
+	for i := range kitForZip.Files {
+		kitForZip.Files[i].Blob = nil
 	}
-	defer os.RemoveAll(tmpDir)
 
-	semioDir := filepath.Join(tmpDir, ".semio")
-	os.MkdirAll(semioDir, 0755)
-	dbPath := filepath.Join(semioDir, "kit.db")
-
-	if err := KitToSqlite(kit, dbPath, schemaSQL); err != nil {
-		return err
+	kitJSON, err := SerializeKit(kitForZip)
+	if err != nil {
+		return fmt.Errorf("failed to serialize kit: %w", err)
 	}
 
 	zipFile, err := os.Create(zipPath)
@@ -576,18 +608,16 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 	w := zip.NewWriter(zipFile)
 	defer w.Close()
 
-	dbData, err := os.ReadFile(dbPath)
+	// Write kit.json
+	kitWriter, err := w.Create("kit.json")
 	if err != nil {
 		return err
 	}
-	dbWriter, err := w.Create(".semio/kit.db")
-	if err != nil {
-		return err
-	}
-	if _, err := dbWriter.Write(dbData); err != nil {
+	if _, err := kitWriter.Write(kitJSON); err != nil {
 		return err
 	}
 
+	// Write actual files
 	for name, data := range files {
 		fw, err := w.Create(name)
 		if err != nil {

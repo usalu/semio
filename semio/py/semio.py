@@ -1722,6 +1722,13 @@ class FileHashField(RealField, abc.ABC):
     """
     hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
+class FileBlobField(RealField, abc.ABC):
+    """Field mixin for the blob of a file.
+    FileBlobField MUST declare exactly one field with appropriate constraints.
+    [👤semio📚py💻semio🔖domain🔖file🛠️fileblobfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileBlobField)
+    """
+    blob: typing.Optional[str] = sqlmodel.Field(default=None)
+
 class FileCreatedAtField(RealField, abc.ABC):
     """Field mixin for the created at of a file.
     FileCreatedAtField MUST declare exactly one field with appropriate constraints.
@@ -1762,6 +1769,7 @@ class FileProps(
     FileUpdatedAtField,
     FileCreatedByField,
     FileCreatedAtField,
+    FileBlobField,
     FileHashField,
     FileSizeField,
     FileFolderField,
@@ -1782,6 +1790,7 @@ class FileInput(
     FileUpdatedAtField,
     FileCreatedByField,
     FileCreatedAtField,
+    FileBlobField,
     FileHashField,
     FileSizeField,
     FileFolderField,
@@ -1809,6 +1818,7 @@ class FileOutput(
     FileUpdatedAtField,
     FileCreatedByField,
     FileCreatedAtField,
+    FileBlobField,
     FileHashField,
     FileSizeField,
     FileFolderField,
@@ -1829,6 +1839,7 @@ class File(
     FileUpdatedAtField,
     FileCreatedByField,
     FileCreatedAtField,
+    FileBlobField,
     FileHashField,
     FileSizeField,
     FileFolderField,
@@ -9440,86 +9451,62 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
         "connections": connections,
     }
 
+def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
+    """Build folder path from folder hierarchy."""
+    for f in kit_dict.get("folders", []):
+        if f.get("guid") == folder_guid:
+            parent = f.get("parent")
+            if parent:
+                parent_path = _build_folder_path(kit_dict, parent.get("guid", ""))
+                if parent_path:
+                    return parent_path + "/" + f.get("name", "")
+            return f.get("name", "")
+    return ""
+
+def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
+    """Build file path from folder hierarchy and file name."""
+    folder = file_dict.get("folder")
+    if folder:
+        folder_path = _build_folder_path(kit_dict, folder.get("guid", ""))
+        if folder_path:
+            return folder_path + "/" + file_dict.get("name", "")
+    return file_dict.get("name", "")
+
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
-    """📦Import a kit from a .zip file (containing a .semio/kit.db sqlite database).
-    import_kit MUST handle both local directories and remote zip archives.
+    """📦Import a kit from a .zip file (containing kit.json and actual files).
+    import_kit MUST read kit.json from zip and populate blob from actual files.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️importkit](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/import_kit)
     """
+    import base64
     if not os.path.exists(path):
         raise FileNotFoundError(f"File not found: {path}")
 
-    files = {}
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        with zipfile.ZipFile(path, "r") as zip_ref:
-            zip_ref.extractall(tmpdirname)
-            for file_info in zip_ref.infolist():
-                if not file_info.is_dir() and not file_info.filename.startswith(".semio/"):
-                    with zip_ref.open(file_info) as f:
-                        files[file_info.filename] = f.read()
+    kit_json_data = None
+    files: dict[str, bytes] = {}
+    with zipfile.ZipFile(path, "r") as zip_ref:
+        for file_info in zip_ref.infolist():
+            if file_info.is_dir():
+                continue
+            name = file_info.filename
+            with zip_ref.open(file_info) as f:
+                data = f.read()
+            if name == "kit.json":
+                kit_json_data = data
+            elif not name.startswith(".semio/"):
+                files[name] = data
 
-        db_path = os.path.join(tmpdirname, ".semio", "kit.db")
-        if not os.path.exists(db_path):
-            raise ValueError(f"Invalid kit: .semio/kit.db not found in {path}")
+    if kit_json_data is None:
+        raise ValueError(f"Invalid kit: kit.json not found in {path}")
 
-        import sqlite3
+    kit_dict = json.loads(kit_json_data)
 
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+    # Populate blob fields from actual files
+    for file_entry in kit_dict.get("files", []):
+        file_path = _build_file_path(kit_dict, file_entry)
+        if file_path in files:
+            file_entry["blob"] = base64.b64encode(files[file_path]).decode("ascii")
 
-        cursor.execute("SELECT * FROM kit LIMIT 1")
-        kit_row = cursor.fetchone()
-        if not kit_row:
-            conn.close()
-            raise ValueError("No Kit found in database")
-
-        kit_dict = dict(kit_row)
-        kit_guid = kit_dict.get("guid", str(uuid.uuid4()))
-        uri = f"memory://{kit_dict.get('name', 'unnamed')}"
-
-        cursor.execute("SELECT * FROM type WHERE kit_guid = ?", (kit_guid,))
-        type_rows = cursor.fetchall()
-        types_list = []
-        for t_row in type_rows:
-            t = dict(t_row)
-            type_guid = t["guid"]
-            cursor.execute("SELECT * FROM connector WHERE type_guid = ?", (type_guid,))
-            connectors = [_parse_connector_from_sqlite(dict(c)) for c in cursor.fetchall()]
-            cursor.execute("SELECT * FROM model WHERE type_guid = ?", (type_guid,))
-            models = [_parse_model_from_sqlite(dict(m)) for m in cursor.fetchall()]
-            types_list.append(_parse_type_from_sqlite(t, connectors, models))
-
-        cursor.execute("SELECT * FROM design WHERE kit_guid = ?", (kit_guid,))
-        design_rows = cursor.fetchall()
-        designs_list = []
-        for d_row in design_rows:
-            d = dict(d_row)
-            design_guid = d["guid"]
-            cursor.execute("SELECT * FROM piece WHERE design_guid = ?", (design_guid,))
-            pieces = [_parse_piece_from_sqlite(dict(p)) for p in cursor.fetchall()]
-            cursor.execute("SELECT * FROM connection WHERE design_guid = ?", (design_guid,))
-            connections = [_parse_connection_from_sqlite(dict(c)) for c in cursor.fetchall()]
-            designs_list.append(_parse_design_from_sqlite(d, pieces, connections))
-
-        conn.close()
-
-        kit_data_dict = {
-            "guid": kit_guid,
-            "uri": uri,
-            "name": kit_dict.get("name", ""),
-            "version": kit_dict.get("version", ""),
-            "description": kit_dict.get("description", ""),
-            "icon": kit_dict.get("icon", ""),
-            "image": kit_dict.get("image", ""),
-            "remote": kit_dict.get("remote", ""),
-            "homepage": kit_dict.get("homepage", ""),
-            "license": kit_dict.get("license", ""),
-            "preview": kit_dict.get("preview", ""),
-            "types": types_list,
-            "designs": designs_list,
-        }
-
-    return KitData(kit_data_dict), files
+    return KitData(kit_dict), files
 
 def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     """Write kit data to SQLite database using the TypeScript schema.
@@ -9894,21 +9881,24 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     conn.close()
 
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
-    """📦Export a kit to a .zip file (containing a .semio/kit.db sqlite database).
-    export_kit MUST write the kit database and files to the target path.
+    """📦Export a kit to a .zip file (containing kit.json and actual files).
+    export_kit MUST write kit.json (without blob) and actual files to the target path.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️exportkit](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/export_kit)
     """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        semio_dir = os.path.join(tmpdirname, ".semio")
-        os.makedirs(semio_dir, exist_ok=True)
-        db_path = os.path.join(semio_dir, "kit.db")
-        _write_kit_to_sqlite(kit, db_path)
+    import copy
+    data = kit.to_dict() if isinstance(kit, KitData) else kit
 
-        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
-            zip_ref.write(db_path, ".semio/kit.db")
+    # Strip blob from files for kit.json
+    kit_for_zip = copy.deepcopy(data)
+    for file_entry in kit_for_zip.get("files", []):
+        file_entry.pop("blob", None)
 
-            for filename, content in files.items():
-                zip_ref.writestr(filename, content)
+    kit_json = json.dumps(kit_for_zip, ensure_ascii=False)
+
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
+        zip_ref.writestr("kit.json", kit_json)
+        for filename, content in files.items():
+            zip_ref.writestr(filename, content)
 
 # endregion Kit Import/Export
 

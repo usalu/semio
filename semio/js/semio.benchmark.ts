@@ -78,9 +78,9 @@ bench("Roundtrip/Metabolism", async () => {
   const zipPath = path.resolve("../assets/semio/metabolism.zip");
   const zipBuffer = fs.readFileSync(zipPath);
 
-  const { kit, files } = await importKit(zipBuffer);
+  const { kit } = await importKit(zipBuffer);
 
-  const blob = await exportKit(kit, files);
+  const blob = await exportKit(kit);
 });
 
 bench("Diff/Metabolism", () => {

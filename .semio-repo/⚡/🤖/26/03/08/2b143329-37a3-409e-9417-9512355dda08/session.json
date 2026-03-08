@@ -1,0 +1,1095 @@
+{
+  "id": "2b143329-37a3-409e-9417-9512355dda08",
+  "uri": "semiorepo://s/2b143329-37a3-409e-9417-9512355dda08",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-08T00:51:28Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:27.212Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 8070,
+            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "startLine": 7980
+          },
+          "tool_use_id": "toolu_01PJoSVcy265najoC1CdojV2__vscode-1772913891705",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚net🛅semio💻semio📌7980📌8070"
+        ],
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️28",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:36.232Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/assets/semio"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01YD7Tq622P8qXPfM4iEM8Zk__vscode-1772913891706",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️36",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:36.284Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 9500,
+            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "startLine": 9440
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01GTJ16ugzBqxWxXU1dzdbRU__vscode-1772913891703",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️py💻semio🛠️importkit",
+            "loc": 58
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️py💻semio🛠️parsedesignfromsqlite",
+            "loc": 3
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚py💻semio📌9440📌9500"
+        ],
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️36",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:41.696Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 8070,
+            "filePath": "/workspaces/semio/semio/net/Semio/Semio.cs",
+            "startLine": 7980
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01PJoSVcy265najoC1CdojV2__vscode-1772913891705",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚net🛅semio💻semio📌7980📌8070"
+        ],
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️42",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:44.367Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/semio.ts",
+            "isRegexp": true,
+            "query": "export function serializeKit|export function deserializeKit|export function importKit|export function exportKit"
+          },
+          "tool_use_id": "toolu_01VdyJH5tciQ2XEZDtBAgmmn__vscode-1772913891707",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️44",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:55.491Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/semio.ts",
+            "isRegexp": true,
+            "query": "export function serializeKit|export function deserializeKit|export function importKit|export function exportKit"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01VdyJH5tciQ2XEZDtBAgmmn__vscode-1772913891707",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️56",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:51:57.201Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 30,
+            "isRegexp": true,
+            "query": "serializeKit|deserializeKit|importKit|exportKit",
+            "includeIgnoredFiles": true,
+            "includePattern": "**/semio/js/semio.ts"
+          },
+          "tool_use_id": "toolu_013bixx34PsSvg914SvsHKj5__vscode-1772913891708",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚51⏱️57",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:52:12.046Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 30,
+            "isRegexp": true,
+            "query": "serializeKit|deserializeKit|importKit|exportKit",
+            "includeIgnoredFiles": true,
+            "includePattern": "**/semio/js/semio.ts"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_013bixx34PsSvg914SvsHKj5__vscode-1772913891708",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚52⏱️12",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:52:14.844Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 8760,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 7260
+          },
+          "tool_use_id": "toolu_01AhdFT4nWE4NtCoBJoMDzYU__vscode-1772913891709",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️collectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️entityidtype",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️filetreenode",
+            "loc": 9
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kit",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitdiff",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitimportresult",
+            "loc": 4
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitshallow",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addconcepttokit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️adddesigntokit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addfiletokit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addporttokit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtagtokit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtypetokit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️applykitdiff",
+            "loc": 62
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aredesignsinsamefamily",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️arekitsequal",
+            "loc": 14
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aresamekit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aretypesinsamefamily",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️buildfiletree",
+            "loc": 53
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️canusedesignaspiece",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️colorportsfortypes",
+            "loc": 332
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️createfilefromdatauri",
+            "loc": 28
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekit",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekitshallow",
+            "loc": 6
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findattributevalue",
+            "loc": 6
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findchildrenpiecesindesign",
+            "loc": 11
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findconceptinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️finddesigninkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findfileinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentconnectionforpieceindesign",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentpieceindesign",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findpiecetypeindesign",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findportinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabledesignsfordesignpiece",
+            "loc": 12
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpieceindesign",
+            "loc": 28
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpiecesindesign",
+            "loc": 36
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findsamefamilydesignpieces",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtaginkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtypeinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findusedconnectorsbypieceindesign",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getcolorfortext",
+            "loc": 72
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignchildren",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignfamily",
+            "loc": 12
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignsiblings",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getkitdiff",
+            "loc": 33
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivedesign",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivetype",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypechildren",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypefamily",
+            "loc": 12
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypesiblings",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️hassamekit",
+            "loc": 9
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️inversekitdiff",
+            "loc": 23
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️mergekitdiff",
+            "loc": 17
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️parsedesignidfromvariant",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeconceptfromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removedesignfromkit",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removefilefromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeportfromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetagfromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetypefromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekit",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekitshallow",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setattributeinkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setconceptinkit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setdesigninkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setfileinkit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setportinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settaginkit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settypeinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updatedesigninkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updateportinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨applycollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨cachedsqljs",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨exportkit",
+            "loc": 21
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨flattenfiletree",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getcollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getsqljs",
+            "loc": 24
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨importkit",
+            "loc": 51
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨inversecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitshallowschema",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨mergecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨piecesmetadata",
+            "loc": 11
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌7260📌8760"
+        ],
+        "second": "🎆26🌙03☀️08⏰00⌚52⏱️15",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:52:24.932Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 8760,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 7260
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01AhdFT4nWE4NtCoBJoMDzYU__vscode-1772913891709",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️collectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️entityidtype",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️filetreenode",
+            "loc": 9
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kit",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitdiff",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitimportresult",
+            "loc": 4
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio✂️kitshallow",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addconcepttokit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️adddesigntokit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addfiletokit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addporttokit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtagtokit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️addtypetokit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️applykitdiff",
+            "loc": 62
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aredesignsinsamefamily",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️arekitsequal",
+            "loc": 14
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aresamekit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️aretypesinsamefamily",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️buildfiletree",
+            "loc": 53
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️canusedesignaspiece",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️colorportsfortypes",
+            "loc": 332
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️createfilefromdatauri",
+            "loc": 28
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekit",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️deserializekitshallow",
+            "loc": 6
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findattributevalue",
+            "loc": 6
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findchildrenpiecesindesign",
+            "loc": 11
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findconceptinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️finddesigninkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findfileinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentconnectionforpieceindesign",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findparentpieceindesign",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findpiecetypeindesign",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findportinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabledesignsfordesignpiece",
+            "loc": 12
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpieceindesign",
+            "loc": 28
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findreplacabletypesforpiecesindesign",
+            "loc": 36
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findsamefamilydesignpieces",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtaginkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findtypeinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️findusedconnectorsbypieceindesign",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getcolorfortext",
+            "loc": 72
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignchildren",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignfamily",
+            "loc": 12
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getdesignsiblings",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getkitdiff",
+            "loc": 33
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivedesign",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️getprimitivetype",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypechildren",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypefamily",
+            "loc": 12
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️gettypesiblings",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️hassamekit",
+            "loc": 9
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️inversekitdiff",
+            "loc": 23
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️mergekitdiff",
+            "loc": 17
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️parsedesignidfromvariant",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeconceptfromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removedesignfromkit",
+            "loc": 7
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removefilefromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removeportfromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetagfromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️removetypefromkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekit",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️serializekitshallow",
+            "loc": 8
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setattributeinkit",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setconceptinkit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setdesigninkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setfileinkit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️setportinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settaginkit",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️settypeinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updatedesigninkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🛠️updateportinkit",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨applycollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨cachedsqljs",
+            "loc": 3
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨exportkit",
+            "loc": 21
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨flattenfiletree",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getcollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨getsqljs",
+            "loc": 24
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨importkit",
+            "loc": 51
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨inversecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨kitshallowschema",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨mergecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "🛅🗃️workspaces🗃️semio🗃️semio🗃️js💻semio🪨piecesmetadata",
+            "loc": 11
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌7260📌8760"
+        ],
+        "second": "🎆26🌙03☀️08⏰00⌚52⏱️25",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-08T00:52:57.978Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "2b143329-37a3-409e-9417-9512355dda08",
+          "agent_id": "7c5164a6-6906-47b9-9580-a3cc48046d98",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚52⏱️58",
+        "session": "⚪2b14332937a3409e94179512355dda08"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

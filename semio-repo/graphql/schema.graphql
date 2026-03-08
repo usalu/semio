@@ -265,7 +265,7 @@ type Repo implements Node {
   id: ID!
   name: String!
   path: String!
-  projects(filter: FilterInput): [Project!]!
+  technologies(filter: FilterInput): [Technology!]!
   checkpoints(limit: Int): [Checkpoint!]!
   bundles(filter: FilterInput): [Bundle!]!
   folders(filter: FilterInput): [Folder!]!
@@ -281,15 +281,15 @@ type Repo implements Node {
   breachs(scope: String): [Breach!]!
 }
 
-type Project implements Node {
+type Technology implements Node {
   id: ID!
   name: String!
-  kind: ProjectKind!
+  kind: TechnologyKind!
   root: String!
   bundles(filter: FilterInput): [Bundle!]!
 }
 
-enum ProjectKind {
+enum TechnologyKind {
   USER
   INFRASTRUCTURE
   RESEARCH

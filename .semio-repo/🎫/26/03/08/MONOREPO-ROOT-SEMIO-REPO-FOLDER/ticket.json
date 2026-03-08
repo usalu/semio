@@ -1,0 +1,10 @@
+{
+  "title": "Monorepo Root Semio Repo Folder",
+  "status": "closed",
+  "description": "semio repo cli: The .semio-repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc",
+  "summary": "Fixed remaining root leak: findRepoRoot now prefers monorepo marker (semio-repo/cli/main.go) over local go.mod roots, ensuring cache/meta paths resolve to monorepo root. Added tests for monorepo marker resolution and cache dir anchoring.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1⚪019ccaeec3137ed18489b147486f681a"
+  ]
+}

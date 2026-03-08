@@ -146,41 +146,27 @@ describe("Flatten", () => {
 });
 
 describe("Roundtrip", () => {
-  describe("Json", () => {
-    describe("Metabolism", () => {
-      it("Kit -> Json -> Kit", async () => {
-        const kit = MetabolismKit as unknown as Kit;
-        const serializedKit = serializeKit(kit);
-        const deserializedKit = deserializeKit(serializedKit);
-        expect(areKitsEqual(kit, deserializedKit)).toBe(true);
-      });
-    });
-  });
+  describe("Metabolism", () => {
+    it("Json -> Memory -> Json, Json -> Zip, Zip -> Json", async () => {
+      const fs = await import("node:fs");
+      const path = await import("node:path");
 
-  describe("Zip", () => {
-    describe("Metabolism", () => {
-      it("Zip -> Kit -> Zip -> Kit", async () => {
-        const fs = await import("node:fs");
-        const path = await import("node:path");
-        const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
-        const zipBuffer = fs.readFileSync(zipPath);
+      // Json -> Memory -> Json
+      const kit = MetabolismKit as unknown as Kit;
+      const serializedKit = serializeKit(kit);
+      const deserializedKit = deserializeKit(serializedKit);
+      expect(areKitsEqual(kit, deserializedKit)).toBe(true);
 
-        const { kit, files } = await importKit(zipBuffer.buffer);
-        expect(kit.guid).toBeDefined();
-        expect(kit.name).toBe("Metabolism");
-        expect(kit.types?.length).toBeGreaterThan(0);
-        expect(kit.designs?.length).toBeGreaterThan(0);
-        expect(files.size).toBeGreaterThan(0);
+      // Json -> Zip
+      const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
+      const zipBuffer = fs.readFileSync(zipPath);
+      const { kit: zipKit } = await importKit(zipBuffer.buffer);
+      expect(areKitsEqual(kit, zipKit)).toBe(true);
 
-        const exportedZip = await exportKit(kit, files);
-        const { kit: kit2, files: files2 } = await importKit(exportedZip);
-
-        expect(kit2.guid).toBe(kit.guid);
-        expect(kit2.name).toBe(kit.name);
-        expect(kit2.types?.length).toBe(kit.types?.length);
-        expect(kit2.designs?.length).toBe(kit.designs?.length);
-        expect(files2.size).toBe(files.size);
-      });
+      // Zip -> Json
+      const exportedZip = await exportKit(kit);
+      const { kit: reKit } = await importKit(exportedZip);
+      expect(areKitsEqual(kit, reKit)).toBe(true);
     });
   });
 });

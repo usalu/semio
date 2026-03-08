@@ -381,8 +381,8 @@ func inferEntityKindFromStatute(statute Statute) string {
 		return "folder"
 	case strings.Contains(path, "/bundle/"):
 		return "bundle"
-	case strings.Contains(path, "/project/"):
-		return "project"
+	case strings.Contains(path, "/technology/"):
+		return "technology"
 	default:
 		return "repo"
 	}
@@ -700,7 +700,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(hookCommand(factory, &config))
 	root.AddCommand(configureCommand(factory, &config))
 	root.AddCommand(mermaidCommand(factory, &config))
-	root.AddCommand(projectCommand(factory, &config))
+	root.AddCommand(technologyCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(summarizeCommand(factory, &config))
 	root.AddCommand(entityEmojisCommand(&config))
@@ -992,10 +992,10 @@ func AllEntityEmojis() []string {
 		result = append(result, normalized)
 	}
 	// Singular entity emojis (appear in IDs as kind prefixes)
-	add(EmojiProjectUser)
-	add(EmojiProjectInfra)
-	add(EmojiProjectResearch)
-	add(EmojiProjectMono)
+	add(EmojiTechnologyUser)
+	add(EmojiTechnologyInfra)
+	add(EmojiTechnologyResearch)
+	add(EmojiTechnologyMono)
 	add(EmojiBundleLibrary)
 	add(EmojiBundleSchema)
 	add(EmojiBundleBinary)
@@ -1045,7 +1045,7 @@ func AllEntityEmojis() []string {
 	add(EmojiSessionInterrupted)
 	// Plural/collection entity emojis
 	add(EmojiCodebase)
-	add(EmojiProjects)
+	add(EmojiTechnologies)
 	add(EmojiBundles)
 	add(EmojiFolders)
 	add(EmojiFiles)
@@ -1228,8 +1228,8 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 func bindTreeFlags(cmd *cobra.Command) {
-	cmd.Flags().Bool("only-project", false, "Only show projects")
-	cmd.Flags().Bool("no-project", false, "Exclude projects")
+	cmd.Flags().Bool("only-technology", false, "Only show technologies")
+	cmd.Flags().Bool("no-technology", false, "Exclude technologies")
 	cmd.Flags().Bool("only-bundle", false, "Only show bundles")
 	cmd.Flags().Bool("no-bundle", false, "Exclude bundles")
 	cmd.Flags().Bool("only-folder", false, "Only show folders")
@@ -1358,7 +1358,7 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 		noFlag   string
 		kind     TreeNodeKind
 	}{
-		{"only-project", "no-project", TreeNodeProject},
+		{"only-technology", "no-technology", TreeNodeTechnology},
 		{"only-bundle", "no-bundle", TreeNodeBundle},
 		{"only-folder", "no-folder", TreeNodeFolder},
 		{"only-file", "no-file", TreeNodeFile},
@@ -1452,7 +1452,7 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export [output]",
 		Short: "Export repo data to SQLite database",
-		Long:  `Export repo data (projects, bundles, folders, files, sections, definitions) to a SQLite database file.`,
+		Long:  `Export repo data (technologies, bundles, folders, files, sections, definitions) to a SQLite database file.`,
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			outputPath := ""
@@ -1485,7 +1485,7 @@ type testScopeKind string
 
 const (
 	testScopeAll        testScopeKind = "all"
-	testScopeProject    testScopeKind = "project"
+	testScopeTechnology testScopeKind = "technology"
 	testScopeBundle     testScopeKind = "bundle"
 	testScopeFile       testScopeKind = "file"
 	testScopeSection    testScopeKind = "section"
@@ -1566,16 +1566,16 @@ func resolveTestScope(raw string) testScope {
 
 	p := strings.TrimPrefix(uri, "semiorepo://")
 
-	// Project: semiorepo://p/i/semio-repo
+	// Technology: semiorepo://p/i/semio-repo
 	if strings.HasPrefix(p, "p/") {
 		rest := strings.TrimPrefix(p, "p/")
 		parts := strings.SplitN(rest, "/", 3)
 		if len(parts) == 2 {
-			// project-only — find all bundles in project
+			// technology-only — find all bundles in technology
 			pkc := parts[0]
 			pName := PathFromUriPath(parts[1])
 			_ = pkc
-			return testScope{Kind: testScopeProject, BundleRoot: pName}
+			return testScope{Kind: testScopeTechnology, BundleRoot: pName}
 		}
 		if len(parts) >= 3 && strings.HasPrefix(parts[2], "b/") {
 			bRest := strings.TrimPrefix(parts[2], "b/")
@@ -1686,8 +1686,8 @@ func runTestScope(scope testScope, cmd *cobra.Command) error {
 	switch scope.Kind {
 	case testScopeAll:
 		return runAllTests(cmd)
-	case testScopeProject:
-		return runProjectTests(scope.BundleRoot, cmd)
+	case testScopeTechnology:
+		return runTechnologyTests(scope.BundleRoot, cmd)
 	case testScopeBundle:
 		return runBundleTests(scope.BundleRoot, scope.Language, "", "", cmd)
 	case testScopeFile:
@@ -1715,13 +1715,13 @@ func runAllTests(cmd *cobra.Command) error {
 	return firstErr
 }
 
-func runProjectTests(projectName string, cmd *cobra.Command) error {
+func runTechnologyTests(technologyName string, cmd *cobra.Command) error {
 	bundles := LoadBundles()
-	flatProject := Flat(projectName)
+	flatTechnology := Flat(technologyName)
 	var firstErr error
 	for _, b := range bundles {
 		parts := strings.SplitN(b.Name, "/", 2)
-		if Flat(parts[0]) != flatProject {
+		if Flat(parts[0]) != flatTechnology {
 			continue
 		}
 		lang := detectBundleLanguage(b.Root)
@@ -2064,11 +2064,11 @@ func testCommand(factory EngineFactory, config *Config) *cobra.Command {
 With no arguments, runs all tests in the repository.
 
 Supported entity scopes (narrowing order):
-  🧰project                       - all tests in the project
-  🧰project⌨️bundle               - all tests in the bundle
-  🧰project⌨️bundle🥼file         - all tests in the test file
-  🧰project⌨️bundle🥼file🔖sec    - all tests in the section
-  🧰project⌨️bundle🥼file🔖sec🧪fn - a single test function`,
+  🧰technology                       - all tests in the technology
+  🧰technology⌨️bundle               - all tests in the bundle
+  🧰technology⌨️bundle🥼file         - all tests in the test file
+  🧰technology⌨️bundle🥼file🔖sec    - all tests in the section
+  🧰technology⌨️bundle🥼file🔖sec🧪fn - a single test function`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			scopes := resolveTestScopes(args)
@@ -3358,23 +3358,23 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
+func technologyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                "project",
-		Short:              "Manage projects",
+		Use:                "technology",
+		Short:              "Manage technologies",
 		DisableFlagParsing: false,
 		Args:               cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 3 && args[1] == "generate" {
-				projectName := args[0]
+				technologyName := args[0]
 				kind := args[2]
 				switch kind {
 				case "requirements":
-					return GenerateProjectRequirements(projectName)
+					return GenerateTechnologyRequirements(technologyName)
 				case "docs":
-					return GenerateProjectDocs(projectName)
+					return GenerateTechnologyDocs(technologyName)
 				case "todos":
-					return GenerateProjectTodos(projectName)
+					return GenerateTechnologyTodos(technologyName)
 				default:
 					return fmt.Errorf("unknown generate kind %q (use requirements, docs, or todos)", kind)
 				}
@@ -3385,9 +3385,9 @@ func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List projects",
+		Short: "List technologies",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runProjectList(factory, *config, cmd, args)
+			return runTechnologyList(factory, *config, cmd, args)
 		},
 	}
 	bindStreamFlags(listCmd)
@@ -3395,9 +3395,9 @@ func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 	treeCmd := &cobra.Command{
 		Use:   "tree",
-		Short: "Show project tree Structure",
+		Short: "Show technology tree Structure",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runProjectTree(factory, *config, cmd, args)
+			return runTechnologyTree(factory, *config, cmd, args)
 		},
 	}
 	bindStreamFlags(treeCmd)
@@ -3673,19 +3673,19 @@ func ExtractDefinitionDocstring(content string, def Definition, prefix string) (
 	return strings.TrimSpace(requirements), strings.TrimSpace(summary)
 }
 
-func findProjectByName(name string) *Project {
-	projects := LoadProjects()
-	for i := range projects {
-		if projects[i].Name == name {
-			return &projects[i]
+func findTechnologyByName(name string) *Technology {
+	technologies := LoadTechnologies()
+	for i := range technologies {
+		if technologies[i].Name == name {
+			return &technologies[i]
 		}
 	}
 	return nil
 }
 
-func walkProjectFiles(project *Project) []File {
+func walkTechnologyFiles(technology *Technology) []File {
 	var files []File
-	for _, bundle := range project.Bundles {
+	for _, bundle := range technology.Bundles {
 		bundleRoot := filepath.Join(rootDir, bundle.Root)
 		err := filepath.WalkDir(bundleRoot, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -3729,24 +3729,24 @@ type EntityEntry struct {
 	Text string
 }
 
-// GenerateProjectRequirements MUST perform the GenerateProjectRequirements operation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generateprojectrequirements](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateProjectRequirements)
-// GenerateProjectRequirements performs the GenerateProjectRequirements operation.
-func GenerateProjectRequirements(projectName string) error {
-	project := findProjectByName(projectName)
-	if project == nil {
-		return fmt.Errorf("project %q not found", projectName)
+// GenerateTechnologyRequirements MUST perform the GenerateTechnologyRequirements operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generatetechnologyrequirements](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyRequirements)
+// GenerateTechnologyRequirements performs the GenerateTechnologyRequirements operation.
+func GenerateTechnologyRequirements(technologyName string) error {
+	technology := findTechnologyByName(technologyName)
+	if technology == nil {
+		return fmt.Errorf("technology %q not found", technologyName)
 	}
 	var entries []EntityEntry
-	projectReadmePath := filepath.Join(rootDir, project.Root, "README.md")
-	if content, err := ReadTextFile(projectReadmePath); err == nil {
+	technologyReadmePath := filepath.Join(rootDir, technology.Root, "README.md")
+	if content, err := ReadTextFile(technologyReadmePath); err == nil {
 		requirements := ExtractMarkdownSection(content, "Requirements")
 		if requirements != "" {
-			p := &Project{Name: project.Name, Root: project.Root, Kind: project.Kind}
+			p := &Technology{Name: technology.Name, Root: technology.Root, Kind: technology.Kind}
 			entries = append(entries, EntityEntry{ID: p.GetID(), URI: p.GetURI(), Text: requirements})
 		}
 	}
-	for _, bundle := range project.Bundles {
+	for _, bundle := range technology.Bundles {
 		readmePath := filepath.Join(rootDir, bundle.Root, "README.md")
 		if content, err := ReadTextFile(readmePath); err == nil {
 			requirements := ExtractMarkdownSection(content, "Requirements")
@@ -3766,7 +3766,7 @@ func GenerateProjectRequirements(projectName string) error {
 			}
 		}
 	}
-	files := walkProjectFiles(project)
+	files := walkTechnologyFiles(technology)
 	for _, file := range files {
 		if file.Kind != FileKindCode && file.Kind != FileKindScript {
 			continue
@@ -3826,28 +3826,28 @@ func GenerateProjectRequirements(projectName string) error {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
 		sb.WriteString(e.Text + "\n")
 	}
-	outputPath := filepath.Join(rootDir, project.Root, "SPECS.md")
+	outputPath := filepath.Join(rootDir, technology.Root, "SPECS.md")
 	return WriteTextFile(outputPath, sb.String())
 }
 
-// GenerateProjectDocs holds the data fields for a GenerateProjectDocs record.
-// GenerateProjectDocs MUST perform the GenerateProjectDocs operation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generateprojectdocs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateProjectDocs)
-func GenerateProjectDocs(projectName string) error {
-	project := findProjectByName(projectName)
-	if project == nil {
-		return fmt.Errorf("project %q not found", projectName)
+// GenerateTechnologyDocs holds the data fields for a GenerateTechnologyDocs record.
+// GenerateTechnologyDocs MUST perform the GenerateTechnologyDocs operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generatetechnologydocs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyDocs)
+func GenerateTechnologyDocs(technologyName string) error {
+	technology := findTechnologyByName(technologyName)
+	if technology == nil {
+		return fmt.Errorf("technology %q not found", technologyName)
 	}
 	var entries []EntityEntry
-	projectReadmePath := filepath.Join(rootDir, project.Root, "README.md")
-	if content, err := ReadTextFile(projectReadmePath); err == nil {
+	technologyReadmePath := filepath.Join(rootDir, technology.Root, "README.md")
+	if content, err := ReadTextFile(technologyReadmePath); err == nil {
 		docs := ExtractMarkdownSection(content, "Docs")
 		if docs != "" {
-			p := &Project{Name: project.Name, Root: project.Root, Kind: project.Kind}
+			p := &Technology{Name: technology.Name, Root: technology.Root, Kind: technology.Kind}
 			entries = append(entries, EntityEntry{ID: p.GetID(), URI: p.GetURI(), Text: docs})
 		}
 	}
-	for _, bundle := range project.Bundles {
+	for _, bundle := range technology.Bundles {
 		readmePath := filepath.Join(rootDir, bundle.Root, "README.md")
 		if content, err := ReadTextFile(readmePath); err == nil {
 			docs := ExtractMarkdownSection(content, "Docs")
@@ -3867,7 +3867,7 @@ func GenerateProjectDocs(projectName string) error {
 			}
 		}
 	}
-	files := walkProjectFiles(project)
+	files := walkTechnologyFiles(technology)
 	for _, file := range files {
 		if file.Kind != FileKindCode && file.Kind != FileKindScript {
 			continue
@@ -3927,20 +3927,20 @@ func GenerateProjectDocs(projectName string) error {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
 		sb.WriteString(e.Text + "\n")
 	}
-	outputPath := filepath.Join(rootDir, project.Root, "DOCS.md")
+	outputPath := filepath.Join(rootDir, technology.Root, "DOCS.md")
 	return WriteTextFile(outputPath, sb.String())
 }
 
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generateprojecttodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateProjectTodos)
-// GenerateProjectTodos holds the data fields for a GenerateProjectTodos record.
-// GenerateProjectTodos MUST perform the GenerateProjectTodos operation.
-func GenerateProjectTodos(projectName string) error {
-	project := findProjectByName(projectName)
-	if project == nil {
-		return fmt.Errorf("project %q not found", projectName)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🛠️generatetechnologytodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyTodos)
+// GenerateTechnologyTodos holds the data fields for a GenerateTechnologyTodos record.
+// GenerateTechnologyTodos MUST perform the GenerateTechnologyTodos operation.
+func GenerateTechnologyTodos(technologyName string) error {
+	technology := findTechnologyByName(technologyName)
+	if technology == nil {
+		return fmt.Errorf("technology %q not found", technologyName)
 	}
 	var entries []EntityEntry
-	for _, bundle := range project.Bundles {
+	for _, bundle := range technology.Bundles {
 		bundleRoot := filepath.Join(rootDir, bundle.Root)
 		todos, _ := ScanTodos(bundleRoot)
 		for _, todo := range todos {
@@ -3976,7 +3976,7 @@ func GenerateProjectTodos(projectName string) error {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
 		sb.WriteString(e.Text + "\n")
 	}
-	outputPath := filepath.Join(rootDir, project.Root, "TODOS.md")
+	outputPath := filepath.Join(rootDir, technology.Root, "TODOS.md")
 	return WriteTextFile(outputPath, sb.String())
 }
 
@@ -5029,7 +5029,7 @@ type GoalNode struct {
 // EntityKinds holds the data fields for a EntityKinds record.
 var EntityKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
-	"project", "bundle", "folder", "file", "line", "range",
+	"technology", "bundle", "folder", "file", "line", "range",
 	"section", "definition", "goal", "ticket", "draft", "todo",
 	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
@@ -5037,14 +5037,14 @@ var EntityKinds = []string{
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨resourcekinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/ResourceKinds)
 // ResourceKinds holds the data fields for a ResourceKinds record.
 var ResourceKinds = []string{
-	"repo", "project", "bundle", "folder", "file", "section", "definition",
+	"repo", "technology", "bundle", "folder", "file", "section", "definition",
 }
 
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖models🔖monorepotreetypes🪨diffablekinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/DiffableKinds)
 // DiffableKinds holds the data fields for a DiffableKinds record.
 var DiffableKinds = []string{
 	"root", "year", "month", "day", "hour",
-	"project", "bundle", "folder", "file", "section", "definition",
+	"technology", "bundle", "folder", "file", "section", "definition",
 	"goal", "ticket", "contributor", "checkpoint", "interaction", "session",
 }
 
@@ -5052,7 +5052,7 @@ var DiffableKinds = []string{
 // RelatedToFileKinds holds the data fields for a RelatedToFileKinds record.
 var RelatedToFileKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
-	"project", "bundle", "folder", "goal", "ticket", "draft", "todo",
+	"technology", "bundle", "folder", "goal", "ticket", "draft", "todo",
 	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
 
@@ -5061,7 +5061,7 @@ var RelatedToFileKinds = []string{
 type TreeNodeKind string
 
 const (
-	TreeNodeProject     TreeNodeKind = "project"
+	TreeNodeTechnology  TreeNodeKind = "technology"
 	TreeNodeBundle      TreeNodeKind = "bundle"
 	TreeNodeFolder      TreeNodeKind = "folder"
 	TreeNodeFile        TreeNodeKind = "file"
@@ -5637,7 +5637,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
 
-	var projects []Project
+	var technologies []Technology
 	var goals []*Goal
 	var drafts []*Draft
 	var policies []PolicyDef
@@ -5652,7 +5652,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 
 	go func() {
 		defer wg.Done()
-		projects = LoadProjects()
+		technologies = LoadTechnologies()
 	}()
 	go func() {
 		defer wg.Done()
@@ -5714,7 +5714,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	wg.Wait()
 
 	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: "�️Codebase", URI: "semiorepo://cb"}
-	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
+	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
 
 	type folderEntry struct {
 		folder *Folder
@@ -5768,10 +5768,10 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	attachFilesToFolders(codebaseNode, allFiles, globalFileNodes)
 
-	for pi := range projects {
-		p := &projects[pi]
+	for pi := range technologies {
+		p := &technologies[pi]
 		pNode := &TreeNode{
-			Kind:    TreeNodeProject,
+			Kind:    TreeNodeTechnology,
 			ID:      p.GetID(),
 			Label:   p.Name,
 			URI:     p.GetURI(),
@@ -6500,8 +6500,8 @@ func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 
 func treeNodeKindToEntityKind(k TreeNodeKind) string {
 	switch k {
-	case TreeNodeProject:
-		return "project"
+	case TreeNodeTechnology:
+		return "technology"
 	case TreeNodeBundle:
 		return "bundle"
 	case TreeNodeFolder:
@@ -6617,7 +6617,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #region 🔖Query Cache
 
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖treelogic🔖querycache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache)
-// Local Bleve index under .semio-repo/cache for keyword search. Uses composite git fingerprint (superproject HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
+// Local Bleve index under .semio-repo/cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
 
 const cacheSchemaVersion = 2
 
@@ -6648,7 +6648,7 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	}
 	stdout, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
 	meta.SuperHead = strings.TrimSpace(stdout)
-	statusOut, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z"}, repoRoot)
+	statusOut, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, repoRoot)
 	meta.SuperDirtyHash = hashString(statusOut)
 	subOut, _, _ := ExecCommand("git", []string{"submodule", "status", "--recursive"}, repoRoot)
 	lines := strings.Split(strings.TrimSpace(subOut), "\n")
@@ -6669,7 +6669,7 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 		subPath := filepath.Join(repoRoot, path)
 		subHead, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, subPath)
 		meta.SubmoduleHeads[path] = strings.TrimSpace(subHead)
-		subStatus, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z"}, subPath)
+		subStatus, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, subPath)
 		meta.SubmoduleDirty[path] = hashString(subStatus)
 	}
 	meta.PointersHash = hashString(subOut)
@@ -6701,9 +6701,9 @@ func treeNodeScopePath(node *TreeNode) string {
 		if r, ok := node.Data["root"].(string); ok {
 			return r
 		}
-	case TreeNodeProject:
+	case TreeNodeTechnology:
 		if n, ok := node.Data["name"].(string); ok {
-			return "project:" + n
+			return "technology:" + n
 		}
 	}
 	return ""
@@ -6773,17 +6773,17 @@ func getChangedPathsFromGit(repoRoot string) []string {
 }
 
 func expandPathsWithAncestors(paths []string) []string {
-	projects := LoadProjects()
+	technologies := LoadTechnologies()
 	bundleByPath := make(map[string]string)
-	projectByBundle := make(map[string]string)
-	for _, p := range projects {
+	technologyByBundle := make(map[string]string)
+	for _, p := range technologies {
 		for _, b := range p.Bundles {
 			root := b.Root
 			if b.SourceRoot != "" {
 				root = b.SourceRoot
 			}
 			bundleByPath[root] = root
-			projectByBundle[root] = "project:" + p.Name
+			technologyByBundle[root] = "technology:" + p.Name
 		}
 	}
 	expanded := make(map[string]bool)
@@ -6807,7 +6807,7 @@ func expandPathsWithAncestors(paths []string) []string {
 		}
 		if bundle != "" {
 			expanded[bundle] = true
-			if proj := projectByBundle[bundle]; proj != "" {
+			if proj := technologyByBundle[bundle]; proj != "" {
 				expanded[proj] = true
 			}
 		}
@@ -7376,7 +7376,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			{"tickets", "ticket"},
 			{"goals", "goal"},
 			{"bundles", "bundle"},
-			{"projects", "project"},
+			{"technologies", "technology"},
 			{"folders", "folder"},
 			{"files", "file"},
 			{"contributors", "contributor"},
@@ -7409,7 +7409,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 
 	singleKeys := []string{
 		"ticket", "goal", "bundle", "folder", "policy",
-		"contributor", "draft", "todo", "project", "definition",
+		"contributor", "draft", "todo", "technology", "definition",
 	}
 	for _, key := range singleKeys {
 		if entity, ok := payload[key].(map[string]interface{}); ok {
@@ -7595,7 +7595,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		{"repo", "tickets", "ticket"},
 		{"repo", "goals", "goal"},
 		{"repo", "bundles", "bundle"},
-		{"repo", "projects", "project"},
+		{"repo", "technologies", "technology"},
 		{"repo", "folders", "folder"},
 		{"repo", "files", "file"},
 		{"repo", "contributors", "contributor"},
@@ -7632,7 +7632,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 
 	singleKeys := []string{
 		"ticket", "goal", "bundle", "folder", "file", "definition",
-		"contributor", "policy", "project", "draft", "todo", "checkpoint",
+		"contributor", "policy", "technology", "draft", "todo", "checkpoint",
 	}
 	for _, key := range singleKeys {
 		if entity, ok := payload[key].(map[string]interface{}); ok {
@@ -7846,16 +7846,16 @@ func mermaidEscapeLabel(s string) string {
 	return strings.ReplaceAll(s, "\"", "'")
 }
 
-// mermaidProjectEmoji MUST return the correct emoji for the project kind.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidprojectemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidProjectEmoji)
-func mermaidProjectEmoji(kind ProjectKind) string {
+// mermaidTechnologyEmoji MUST return the correct emoji for the technology kind.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidtechnologyemoji](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidTechnologyEmoji)
+func mermaidTechnologyEmoji(kind TechnologyKind) string {
 	switch kind {
-	case ProjectKindInfrastructure:
-		return EmojiProjectInfra
-	case ProjectKindResearch:
-		return EmojiProjectResearch
+	case TechnologyKindInfrastructure:
+		return EmojiTechnologyInfra
+	case TechnologyKindResearch:
+		return EmojiTechnologyResearch
 	default:
-		return EmojiProjectUser
+		return EmojiTechnologyUser
 	}
 }
 
@@ -7901,11 +7901,11 @@ func mermaidFileEmoji(kind string) string {
 	}
 }
 
-// MermaidLocByProjectsBundlesFoldersFiles performs the MermaidLocByProjectsBundlesFoldersFiles operation.
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbyprojectsbundlesfoldersfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByProjectsBundlesFoldersFiles)
-// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbyprojectsbundlesfoldersfiles](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByProjectsBundlesFoldersFiles)
-func MermaidLocByProjectsBundlesFoldersFiles() string {
-	projects := LoadProjects()
+// MermaidLocByTechnologiesBundlesFoldersFiles performs the MermaidLocByTechnologiesBundlesFoldersFiles operation.
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbytechnologiesbundlesfoldersfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByTechnologiesBundlesFoldersFiles)
+// [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbytechnologiesbundlesfoldersfiles](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByTechnologiesBundlesFoldersFiles)
+func MermaidLocByTechnologiesBundlesFoldersFiles() string {
+	technologies := LoadTechnologies()
 	ctx := context.Background()
 	fileCh := make(chan File)
 	go func() { StreamFiles(ctx, "", fileCh) }()
@@ -7930,18 +7930,18 @@ func MermaidLocByProjectsBundlesFoldersFiles() string {
 		Kind    BundleKind
 		Folders map[string]*folderEntry
 	}
-	type projectEntry struct {
+	type technologyEntry struct {
 		Name    string
-		Kind    ProjectKind
+		Kind    TechnologyKind
 		Bundles map[string]*bundleEntry
 	}
-	projectMap := make(map[string]*projectEntry)
-	for _, p := range projects {
-		pe := &projectEntry{Name: p.Name, Kind: p.Kind, Bundles: make(map[string]*bundleEntry)}
+	technologyMap := make(map[string]*technologyEntry)
+	for _, p := range technologies {
+		pe := &technologyEntry{Name: p.Name, Kind: p.Kind, Bundles: make(map[string]*bundleEntry)}
 		for _, b := range p.Bundles {
 			pe.Bundles[b.Name] = &bundleEntry{Name: b.Name, Kind: b.Kind, Folders: make(map[string]*folderEntry)}
 		}
-		projectMap[p.Name] = pe
+		technologyMap[p.Name] = pe
 	}
 	for _, f := range allFiles {
 		bundle := GetBundleByPath(f.Path)
@@ -7960,8 +7960,8 @@ func MermaidLocByProjectsBundlesFoldersFiles() string {
 			folderName = ""
 		}
 		parts := strings.SplitN(bundle.Name, "/", 2)
-		projectName := parts[0]
-		pe, ok := projectMap[projectName]
+		technologyName := parts[0]
+		pe, ok := technologyMap[technologyName]
 		if !ok {
 			continue
 		}
@@ -7979,25 +7979,25 @@ func MermaidLocByProjectsBundlesFoldersFiles() string {
 	var sb strings.Builder
 	sb.WriteString("treemap-beta\n")
 	sb.WriteString("\"Lines of Code\"\n")
-	var projectNames []string
-	for name := range projectMap {
-		projectNames = append(projectNames, name)
+	var technologyNames []string
+	for name := range technologyMap {
+		technologyNames = append(technologyNames, name)
 	}
-	sort.Strings(projectNames)
-	for _, pName := range projectNames {
-		pe := projectMap[pName]
-		projectLOC := 0
+	sort.Strings(technologyNames)
+	for _, pName := range technologyNames {
+		pe := technologyMap[pName]
+		technologyLOC := 0
 		for _, be := range pe.Bundles {
 			for _, fe := range be.Folders {
 				for _, f := range fe.Files {
-					projectLOC += f.LOC
+					technologyLOC += f.LOC
 				}
 			}
 		}
-		if projectLOC == 0 {
+		if technologyLOC == 0 {
 			continue
 		}
-		emoji := mermaidProjectEmoji(pe.Kind)
+		emoji := mermaidTechnologyEmoji(pe.Kind)
 		sb.WriteString(fmt.Sprintf("    \"%s%s\"\n", emoji, mermaidEscapeLabel(Flat(pe.Name))))
 		var bundleNames []string
 		for name := range pe.Bundles {
@@ -8059,7 +8059,7 @@ func MermaidLocByProjectsBundlesFoldersFiles() string {
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbycontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByContributors)
 // [🧰semiorepo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbycontributors](semiorepo://definition/semio-repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByContributors)
 func MermaidLocByContributors() string {
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
 	authorLines := make(map[string]int)
 	for _, file := range files {
@@ -8142,11 +8142,11 @@ func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Short: "Generate mermaid diagram strings",
 	}
 	root.AddCommand(&cobra.Command{
-		Use:   "loc-by-projects-bundles-folders-files",
-		Short: "LOC treemap grouped by project, bundle, folder, file",
+		Use:   "loc-by-technologies-bundles-folders-files",
+		Short: "LOC treemap grouped by technology, bundle, folder, file",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByProjectsBundlesFoldersFiles())
+			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByTechnologiesBundlesFoldersFiles())
 			return nil
 		},
 	})
@@ -8308,9 +8308,10 @@ var AllowedLLMs = []string{
 	"gemini-3-flash",
 	"gpt-5-2",
 	"gpt-5-2-codex",
+	"gpt-5-3-codex",
+	"gpt-5-4",
 	"gpt-5-mini",
 	"swe-1-5",
-	"gpt-5-3-codex",
 }
 
 // AllowedClients holds the allowed clients values.
@@ -8467,11 +8468,11 @@ type PriorityCount struct {
 // Repo holds the data fields for a repo record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Repo)
 type Repo struct {
-	ID       string    `json:"id"`
-	Name     string    `json:"name"`
-	Path     string    `json:"path"`
-	Projects []Project `json:"projects"`
-	Bundles  []Bundle  `json:"bundles"`
+	ID           string       `json:"id"`
+	Name         string       `json:"name"`
+	Path         string       `json:"path"`
+	Technologies []Technology `json:"technologies"`
+	Bundles      []Bundle     `json:"bundles"`
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -8489,21 +8490,21 @@ func (r *Repo) GetID() string { return emojiText(EmojiRepo) }
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (r *Repo) GetURI() string { return "semiorepo://" }
 
-// ProjectKind represents a project kind value.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️projectkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ProjectKind)
-type ProjectKind string
+// TechnologyKind represents a technology kind value.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️technologykind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TechnologyKind)
+type TechnologyKind string
 
 const (
-	ProjectKindUser           ProjectKind = "👤"
-	ProjectKindInfrastructure ProjectKind = "🧰"
-	ProjectKindResearch       ProjectKind = "🔬"
-	ProjectKindMono           ProjectKind = "🌱"
+	TechnologyKindUser           TechnologyKind = "👤"
+	TechnologyKindInfrastructure TechnologyKind = "🧰"
+	TechnologyKindResearch       TechnologyKind = "🔬"
+	TechnologyKindMono           TechnologyKind = "🌱"
 )
 
 // String MUST return the canonical string value.
-// String returns the string representation of the ProjectKind.
+// String returns the string representation of the TechnologyKind.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
-func (e ProjectKind) String() string {
+func (e TechnologyKind) String() string {
 	return string(e)
 }
 
@@ -8539,22 +8540,22 @@ func (e BundleKind) String() string {
 	return string(e)
 }
 
-// DeriveProjectKind MUST return a valid value for any recognized input.
-// DeriveProjectKind infers and returns the project kind from the given input.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️deriveprojectkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveProjectKind)
-func DeriveProjectKind(name string) ProjectKind {
+// DeriveTechnologyKind MUST return a valid value for any recognized input.
+// DeriveTechnologyKind infers and returns the technology kind from the given input.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️derivetechnologykind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveTechnologyKind)
+func DeriveTechnologyKind(name string) TechnologyKind {
 	switch name {
 	case "semio":
-		return ProjectKindUser
+		return TechnologyKindUser
 	case "semio-repo":
-		return ProjectKindInfrastructure
+		return TechnologyKindInfrastructure
 	case "coda":
-		return ProjectKindResearch
+		return TechnologyKindResearch
 	}
 	if strings.HasPrefix(name, "@") {
-		return DeriveProjectKind(strings.TrimPrefix(name, "@"))
+		return DeriveTechnologyKind(strings.TrimPrefix(name, "@"))
 	}
-	return ProjectKindUser
+	return TechnologyKindUser
 }
 
 // DeriveBundleKind MUST return a valid value for any recognized input.
@@ -8585,60 +8586,60 @@ func DeriveBundleKind(name string, root string) BundleKind {
 	return BundleKindLibrary
 }
 
-// Project holds the data fields for a project record.
-// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️project](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Project)
-type Project struct {
-	Name    string      `json:"name"`
-	Root    string      `json:"root"`
-	Kind    ProjectKind `json:"kind"`
-	Bundles []Bundle    `json:"bundles"`
+// Technology holds the data fields for a technology record.
+// [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️technology](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Technology)
+type Technology struct {
+	Name    string         `json:"name"`
+	Root    string         `json:"root"`
+	Kind    TechnologyKind `json:"kind"`
+	Bundles []Bundle       `json:"bundles"`
 }
 
 // IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Project is node.
+// IsNode reports whether the Technology is node.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️isnode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
-func (p *Project) IsNode() {}
+func (p *Technology) IsNode() {}
 
 // GetID MUST return the stored value without modification.
-// GetID returns the i d of the Project.
+// GetID returns the i d of the Technology.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
-func (p *Project) GetID() string {
-	emoji := EmojiProjectUser
+func (p *Technology) GetID() string {
+	emoji := EmojiTechnologyUser
 	switch string(p.Kind) {
 	case "infrastructure":
-		emoji = EmojiProjectInfra
+		emoji = EmojiTechnologyInfra
 	case "research":
-		emoji = EmojiProjectResearch
+		emoji = EmojiTechnologyResearch
 	case "user":
-		emoji = EmojiProjectUser
+		emoji = EmojiTechnologyUser
 	default:
 		if strings.Contains(p.Name, "repo") {
-			emoji = EmojiProjectInfra
+			emoji = EmojiTechnologyInfra
 		} else if strings.HasPrefix(p.Name, "coda") {
-			emoji = EmojiProjectResearch
+			emoji = EmojiTechnologyResearch
 		}
 	}
 	return emojiText(emoji) + Flat(p.Name)
 }
 
 // GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Project.
+// GetURI returns the u r i of the Technology.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
-func (p *Project) GetURI() string {
-	pkc := ProjectKindToCode(p.Kind)
+func (p *Technology) GetURI() string {
+	pkc := TechnologyKindToCode(p.Kind)
 	return fmt.Sprintf("semiorepo://p/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(p.Name, "@")))
 }
 
 // Bundle holds the data fields for a bundle record.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes✂️bundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Bundle)
 type Bundle struct {
-	Name        string     `json:"name"`
-	Root        string     `json:"root"`
-	SourceRoot  string     `json:"sourceRoot,omitempty"`
-	ProjectName string     `json:"projectName"`
-	Tags        []string   `json:"tags,omitempty"`
-	Kind        BundleKind `json:"kind"`
-	Packages    []Package  `json:"packages,omitempty"`
+	Name           string     `json:"name"`
+	Root           string     `json:"root"`
+	SourceRoot     string     `json:"sourceRoot,omitempty"`
+	TechnologyName string     `json:"technologyName"`
+	Tags           []string   `json:"tags,omitempty"`
+	Kind           BundleKind `json:"kind"`
+	Packages       []Package  `json:"packages,omitempty"`
 }
 
 // Package holds the data fields for a package record.
@@ -8679,13 +8680,13 @@ func (b *Bundle) GetID() string {
 		emoji = EmojiBundleRepo
 	}
 	parts := strings.SplitN(b.Name, "/", 2)
-	projectCode := parts[0]
-	bundleCode := projectCode
+	technologyCode := parts[0]
+	bundleCode := technologyCode
 	if len(parts) > 1 {
 		bundleCode = parts[1]
 	}
-	pKind := DeriveProjectKind(projectCode)
-	return emojiText(string(pKind)) + Flat(projectCode) + emojiText(emoji) + Flat(bundleCode)
+	pKind := DeriveTechnologyKind(technologyCode)
+	return emojiText(string(pKind)) + Flat(technologyCode) + emojiText(emoji) + Flat(bundleCode)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -8693,14 +8694,14 @@ func (b *Bundle) GetID() string {
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (b *Bundle) GetURI() string {
 	parts := strings.SplitN(b.Name, "/", 2)
-	projectCode := parts[0]
-	bundleCode := projectCode
+	technologyCode := parts[0]
+	bundleCode := technologyCode
 	if len(parts) > 1 {
 		bundleCode = parts[1]
 	}
-	pkc := ProjectKindToCode(DeriveProjectKind(projectCode))
+	pkc := TechnologyKindToCode(DeriveTechnologyKind(technologyCode))
 	bkc := BundleKindToCode(b.Kind)
-	return fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(projectCode, "@")), bkc, PathToUriPath(bundleCode))
+	return fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(technologyCode, "@")), bkc, PathToUriPath(bundleCode))
 }
 
 func normalizeBundleLabel(name string) string {
@@ -8893,10 +8894,10 @@ const (
 )
 
 const (
-	EmojiProjectUser          = "👤"
-	EmojiProjectInfra         = "🧰"
-	EmojiProjectResearch      = "🔬"
-	EmojiProjectMono          = "🌱"
+	EmojiTechnologyUser       = "👤"
+	EmojiTechnologyInfra      = "🧰"
+	EmojiTechnologyResearch   = "🔬"
+	EmojiTechnologyMono       = "🌱"
 	EmojiBundleLibrary        = "📚"
 	EmojiBundleSchema         = "🛂"
 	EmojiBundleBinary         = "⌨️"
@@ -8951,7 +8952,7 @@ const (
 var (
 	EmojiRepo         = ""
 	EmojiCodebase     = "�️"
-	EmojiProjects     = "🏗️"
+	EmojiTechnologies = "🏗️"
 	EmojiBundles      = "📦"
 	EmojiFolders      = "📁"
 	EmojiFiles        = "📄"
@@ -9354,7 +9355,7 @@ func (d *Draft) GetURI() string {
 // GetDraftsPath returns the drafts path of the value.
 // [🧰semiorepo⌨️cli💻maingo🔖graphqltypes🔖drafts🛠️getdraftspath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetDraftsPath)
 func GetDraftsPath() string {
-	return filepath.Join(GetRootDir(), ".semio-repo", "✍️")
+	return GetRepoMetaPath("✍️")
 }
 
 // ListDrafts MUST return a consistent snapshot of available entries.
@@ -11921,7 +11922,7 @@ type ScopeKind string
 
 const (
 	ScopeRepo       ScopeKind = "repo"
-	ScopeProject    ScopeKind = "bundle"
+	ScopeTechnology ScopeKind = "bundle"
 	ScopeFolder     ScopeKind = "folder"
 	ScopeFile       ScopeKind = "file"
 	ScopeSection    ScopeKind = "section"
@@ -11933,7 +11934,7 @@ const (
 type Scope struct {
 	Raw            string    `json:"raw"`
 	Kind           ScopeKind `json:"kind"`
-	ProjectName    string    `json:"projectName,omitempty"`
+	TechnologyName string    `json:"technologyName,omitempty"`
 	FilePath       string    `json:"filePath,omitempty"`
 	SectionPath    []string  `json:"sectionPath,omitempty"`
 	DefinitionName string    `json:"definitionName,omitempty"`
@@ -14195,23 +14196,24 @@ type CheckpointDiffStats struct {
 	Created  []string               `json:"created,omitempty" yaml:"created,omitempty"`
 }
 
-// CheckpointDiff holds diff stats for projects, bundles, folders, files, sections, and definitions.
+// CheckpointDiff holds diff stats for technologies, bundles, folders, files, sections, and definitions.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️checkpointdiff](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiff)
 type CheckpointDiff struct {
-	Projects    CheckpointDiffStats `json:"projects,omitempty" yaml:"projects,omitempty"`
-	Bundles     CheckpointDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
-	Folders     CheckpointDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
-	Files       CheckpointDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
-	Sections    CheckpointDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
-	Definitions CheckpointDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
+	Technologies CheckpointDiffStats `json:"technologies,omitempty" yaml:"technologies,omitempty"`
+	Bundles      CheckpointDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
+	Folders      CheckpointDiffStats `json:"folders,omitempty" yaml:"folders,omitempty"`
+	Files        CheckpointDiffStats `json:"files,omitempty" yaml:"files,omitempty"`
+	Sections     CheckpointDiffStats `json:"sections,omitempty" yaml:"sections,omitempty"`
+	Definitions  CheckpointDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
 }
 
 // TicketAgentPlanStep holds a single step in an agent plan with optional timestamps.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖languages✂️ticketagentplanstep](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgentPlanStep)
 type TicketAgentPlanStep struct {
 	Name      string `json:"name" yaml:"name"`
-	Completed string `json:"completed,omitempty" yaml:"completed,omitempty"`
+	Ideated   string `json:"ideated,omitempty" yaml:"ideated,omitempty"`
 	Started   string `json:"started,omitempty" yaml:"started,omitempty"`
+	Completed string `json:"completed,omitempty" yaml:"completed,omitempty"`
 	Abandoned string `json:"abandoned,omitempty" yaml:"abandoned,omitempty"`
 }
 
@@ -15576,6 +15578,7 @@ func init() {
 	executor, e = NewExecutorWithContext(rootDir, NewRepoContext(rootDir))
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize GraphQL executor: %v\n", e)
+		executor = nil
 	}
 }
 
@@ -15590,19 +15593,19 @@ func GetRootDir() string {
 // SetRootDir sets the root dir on the value.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️setrootdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/SetRootDir)
 func SetRootDir(dir string) {
-	rootDir = dir
+	rootDir = findRepoRoot(dir)
 	gitignoreMutex.Lock()
 	cachedGitignore = nil
 	gitignoreLoaded = false
 	gitignoreMutex.Unlock()
-	InvalidateProjectCache()
+	InvalidateTechnologyCache()
 }
 
 // GetRepoMetaDir MUST return the stored value without modification.
 // GetRepoMetaDir returns the repo meta dir of the value.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️getrepometadir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRepoMetaDir)
 func GetRepoMetaDir() string {
-	return filepath.Join(rootDir, ".semio-repo")
+	return filepath.Join(GetRootDir(), ".semio-repo")
 }
 
 // GetRepoMetaPath MUST return the stored value without modification.
@@ -15613,12 +15616,31 @@ func GetRepoMetaPath(path string) string {
 }
 
 func findRepoRoot(startDir string) string {
+	if strings.TrimSpace(startDir) == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return "."
+		}
+		startDir = cwd
+	}
 	dir, err := filepath.Abs(startDir)
 	if err != nil {
 		return startDir
 	}
 
 	searchDir := dir
+	for {
+		if FileExists(filepath.Join(searchDir, "semio-repo", "cli", "main.go")) {
+			return searchDir
+		}
+		parent := filepath.Dir(searchDir)
+		if parent == searchDir {
+			break
+		}
+		searchDir = parent
+	}
+
+	searchDir = dir
 	for {
 		if _, err := os.Stat(filepath.Join(searchDir, ".git")); err == nil {
 			return searchDir
@@ -15637,7 +15659,7 @@ func findRepoRoot(startDir string) string {
 		}
 		parent := filepath.Dir(searchDir)
 		if parent == searchDir {
-			return startDir
+			return dir
 		}
 		searchDir = parent
 	}
@@ -15941,6 +15963,39 @@ func LoadGitignore(cwd string) ([]string, error) {
 	return patterns, nil
 }
 
+func matchesIgnorePattern(path string, isDir bool, pattern string) bool {
+	pattern = NormalizePath(strings.TrimSpace(pattern))
+	if pattern == "" {
+		return false
+	}
+	path = NormalizePath(strings.TrimSpace(path))
+	if path == "" {
+		return false
+	}
+	candidates := []string{path}
+	if isDir && !strings.HasSuffix(path, "/") {
+		candidates = append(candidates, path+"/")
+	}
+	patterns := []string{pattern}
+	if strings.HasSuffix(pattern, "/**") {
+		base := strings.TrimSuffix(pattern, "/**")
+		if base != "" {
+			patterns = append(patterns, base, base+"/")
+		}
+	}
+	for _, candidatePattern := range patterns {
+		if candidatePattern == "" {
+			continue
+		}
+		for _, candidatePath := range candidates {
+			if matched, _ := doublestar.Match(candidatePattern, candidatePath); matched {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // SimpleGlob MUST complete the operation and return consistent results.
 // SimpleGlob performs the simple glob operation.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖utils🛠️simpleglob](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/SimpleGlob)
@@ -15971,7 +16026,7 @@ func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGiti
 		relNorm := NormalizePath(rel)
 		ignored := false
 		for _, ig := range allIgnore {
-			if matched, _ := doublestar.Match(ig, relNorm); matched {
+			if matchesIgnorePattern(relNorm, false, ig) {
 				ignored = true
 				break
 			}
@@ -16023,7 +16078,7 @@ func globByExtension(root string, patternBase string, exts []string, ignorePatte
 			return nil
 		}
 		for _, ig := range allIgnore {
-			if matched, _ := doublestar.Match(ig, rel); matched {
+			if matchesIgnorePattern(rel, d.IsDir(), ig) {
 				if d.IsDir() {
 					return filepath.SkipDir
 				}
@@ -16366,7 +16421,7 @@ func ParseScope(raw string) Scope {
 		return Scope{Raw: raw, Kind: ScopeFile, FilePath: raw}
 	}
 	if strings.HasPrefix(raw, "semio/") {
-		return Scope{Raw: raw, Kind: ScopeProject, ProjectName: raw}
+		return Scope{Raw: raw, Kind: ScopeTechnology, TechnologyName: raw}
 	}
 	if strings.HasSuffix(raw, "/") {
 		return Scope{Raw: raw, Kind: ScopeFolder, FilePath: raw}
@@ -17992,7 +18047,7 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 			return true
 		}
 		if strings.HasPrefix(pattern, "semio") {
-			if targetScope.Kind == ScopeRepo || (targetScope.Kind == ScopeProject && strings.HasPrefix(targetScope.ProjectName, pattern)) {
+			if targetScope.Kind == ScopeRepo || (targetScope.Kind == ScopeTechnology && strings.HasPrefix(targetScope.TechnologyName, pattern)) {
 				return true
 			}
 		}
@@ -19591,7 +19646,7 @@ func NewCodebaseContext() *CodebaseContext {
 // LoadBundles loads the bundles from storage.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖codebase🛠️loadbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadBundles)
 func (ctx *CodebaseContext) LoadBundles() {
-	ctx.Bundles = GetProjects()
+	ctx.Bundles = GetTechnologies()
 }
 
 // LoadFiles MUST read from the configured storage path.
@@ -21004,7 +21059,7 @@ func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	return issueURL, nil
 }
 
-func buildProjectLinkArgs(issueURL string) []string {
+func buildTechnologyLinkArgs(issueURL string) []string {
 	return []string{"project", "item-add", "2", "--owner", "usalu", "--url", issueURL}
 }
 
@@ -21012,7 +21067,7 @@ func ghAddIssueToProject(issueURL string) {
 	if issueURL == "" {
 		return
 	}
-	ExecCommand("gh", buildProjectLinkArgs(issueURL), "")
+	ExecCommand("gh", buildTechnologyLinkArgs(issueURL), "")
 }
 
 func ghGetCurrentUser() string {
@@ -21085,7 +21140,7 @@ func ReadTextFileAtCheckpoint(checkpoint, filePath string) (string, error) {
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️listfilesatcheckpoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ListFilesAtCheckpoint)
 func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
 	if checkpoint == "" {
-		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetProjects())
+		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetTechnologies())
 		if err != nil {
 			return nil, err
 		}
@@ -21456,7 +21511,7 @@ func ghCreateRepoLabel(name string) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("label name is required")
 	}
-	args := []string{"label", "create", name, "--color", "1d76db", "--description", "Semio project or bundle"}
+	args := []string{"label", "create", name, "--color", "1d76db", "--description", "Semio technology or bundle"}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
 	if exitCode != 0 {
 		return fmt.Errorf("gh label create failed: %s", strings.TrimSpace(stderr))
@@ -21648,26 +21703,37 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 				if !FileExists(dayPath) {
 					continue
 				}
+				yearInt, _ := strconv.Atoi(y)
+				monthInt, _ := strconv.Atoi(m)
+				dayInt, _ := strconv.Atoi(d)
 				filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
 					if err != nil {
 						return nil
 					}
-					if !dEntry.IsDir() && dEntry.Name() == "ticket.json" {
-						dir := filepath.Dir(path)
-						rel, err := filepath.Rel(dayPath, dir)
-						if err != nil {
-							return nil
-						}
-						slug := filepath.ToSlash(rel)
-						yearInt, _ := strconv.Atoi(y)
-						monthInt, _ := strconv.Atoi(m)
-						dayInt, _ := strconv.Atoi(d)
-						ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
-						if err == nil {
-							tickets = append(tickets, *ticket)
-						}
+					if !dEntry.IsDir() {
+						return nil
 					}
-					return nil
+					name := dEntry.Name()
+					if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" || name == "build" || name == "target" || name == "__pycache__" {
+						return filepath.SkipDir
+					}
+					if path == dayPath {
+						return nil
+					}
+					ticketFilePath := filepath.Join(path, "ticket.json")
+					if !FileExists(ticketFilePath) {
+						return nil
+					}
+					rel, relErr := filepath.Rel(dayPath, path)
+					if relErr != nil {
+						return filepath.SkipDir
+					}
+					slug := filepath.ToSlash(rel)
+					ticket, readErr := ReadTicket(yearInt, monthInt, dayInt, slug)
+					if readErr == nil {
+						tickets = append(tickets, *ticket)
+					}
+					return filepath.SkipDir
 				})
 			}
 		}
@@ -21754,7 +21820,10 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 				if !FileExists(dayPath) {
 					continue
 				}
-				filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
+				yearInt, _ := strconv.Atoi(y)
+				monthInt, _ := strconv.Atoi(m)
+				dayInt, _ := strconv.Atoi(d)
+				walkErr := filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
 					if err != nil {
 						return nil
 					}
@@ -21763,36 +21832,44 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 						return ctx.Err()
 					default:
 					}
-
-					if !dEntry.IsDir() && dEntry.Name() == "ticket.json" {
-						dir := filepath.Dir(path)
-						rel, err := filepath.Rel(dayPath, dir)
-						if err != nil {
-							return nil
-						}
-						slug := filepath.ToSlash(rel)
-						yearInt, _ := strconv.Atoi(y)
-						monthInt, _ := strconv.Atoi(m)
-						dayInt, _ := strconv.Atoi(d)
-						ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
-						if err == nil {
-
-							if !matchesFilter(ticket.GetID(), options) && !matchesFilter(ticket.Slug, options) && !matchesFilter(ticket.Title, options) {
-								return nil
-							}
-							if !matchesQuery(ticket.GetID()+" "+ticket.Slug+" "+ticket.Title+" "+ticket.Description+" "+string(ticket.Status), options) {
-								return nil
-							}
-
-							if !ticketMatchesKinds(ticket, options) {
-								return nil
-							}
-
-							out <- *ticket
-						}
+					if !dEntry.IsDir() {
+						return nil
 					}
-					return nil
+					name := dEntry.Name()
+					if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" || name == "build" || name == "target" || name == "__pycache__" {
+						return filepath.SkipDir
+					}
+					if path == dayPath {
+						return nil
+					}
+					ticketFilePath := filepath.Join(path, "ticket.json")
+					if !FileExists(ticketFilePath) {
+						return nil
+					}
+					rel, relErr := filepath.Rel(dayPath, path)
+					if relErr != nil {
+						return filepath.SkipDir
+					}
+					slug := filepath.ToSlash(rel)
+					ticket, readErr := ReadTicket(yearInt, monthInt, dayInt, slug)
+					if readErr != nil {
+						return filepath.SkipDir
+					}
+					if !matchesFilter(ticket.GetID(), options) && !matchesFilter(ticket.Slug, options) && !matchesFilter(ticket.Title, options) {
+						return filepath.SkipDir
+					}
+					if !matchesQuery(ticket.GetID()+" "+ticket.Slug+" "+ticket.Title+" "+ticket.Description+" "+string(ticket.Status), options) {
+						return filepath.SkipDir
+					}
+					if !ticketMatchesKinds(ticket, options) {
+						return filepath.SkipDir
+					}
+					out <- *ticket
+					return filepath.SkipDir
 				})
+				if walkErr != nil {
+					return walkErr
+				}
 			}
 		}
 	}
@@ -21854,36 +21931,36 @@ func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
 }
 
 var (
-	projectCache       []Project
-	projectCacheLoaded bool
-	projectCacheMutex  sync.Mutex
+	technologyCache       []Technology
+	technologyCacheLoaded bool
+	technologyCacheMutex  sync.Mutex
 )
 
-// InvalidateProjectCache MUST clear the cached state to force a reload.
-// InvalidateProjectCache invalidates the cached project cache.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️invalidateprojectcache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/InvalidateProjectCache)
-func InvalidateProjectCache() {
-	projectCacheMutex.Lock()
-	defer projectCacheMutex.Unlock()
-	projectCacheLoaded = false
-	projectCache = nil
+// InvalidateTechnologyCache MUST clear the cached state to force a reload.
+// InvalidateTechnologyCache invalidates the cached technology cache.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️invalidatetechnologycache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/InvalidateTechnologyCache)
+func InvalidateTechnologyCache() {
+	technologyCacheMutex.Lock()
+	defer technologyCacheMutex.Unlock()
+	technologyCacheLoaded = false
+	technologyCache = nil
 }
 
-// LoadProjects MUST return all matching projects from the data source.
-// LoadProjects loads and returns projects from the data source.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadProjects)
-func LoadProjects() []Project {
-	projectCacheMutex.Lock()
-	defer projectCacheMutex.Unlock()
-	if projectCacheLoaded {
-		return projectCache
+// LoadTechnologies MUST return all matching technologies from the data source.
+// LoadTechnologies loads and returns technologies from the data source.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadtechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadTechnologies)
+func LoadTechnologies() []Technology {
+	technologyCacheMutex.Lock()
+	defer technologyCacheMutex.Unlock()
+	if technologyCacheLoaded {
+		return technologyCache
 	}
-	projectCache = loadProjectsInternal()
-	projectCacheLoaded = true
-	return projectCache
+	technologyCache = loadTechnologiesInternal()
+	technologyCacheLoaded = true
+	return technologyCache
 }
 
-func isProjectDir(name string) bool {
+func isTechnologyDir(name string) bool {
 	readmePath := filepath.Join(rootDir, name, "README.md")
 	content, err := ReadTextFile(readmePath)
 	if err != nil || !strings.HasPrefix(content, "---") {
@@ -21898,10 +21975,10 @@ func isProjectDir(name string) bool {
 	return true
 }
 
-func loadProjectsInternal() []Project {
-	var projects []Project
-	projectsDir := rootDir
-	entries, err := os.ReadDir(projectsDir)
+func loadTechnologiesInternal() []Technology {
+	var technologies []Technology
+	technologiesDir := rootDir
+	entries, err := os.ReadDir(technologiesDir)
 	if err != nil {
 		return nil
 	}
@@ -21911,20 +21988,51 @@ func loadProjectsInternal() []Project {
 			continue
 		}
 		name := d.Name()
-		if !isProjectDir(name) {
+		if !isTechnologyDir(name) {
 			continue
 		}
 
 		rawName := strings.TrimPrefix(name, "@")
-		project := Project{
-			Name:    rawName,
+
+		// Parse frontmatter from README.md to extract name and kind.
+		technologyName := rawName
+		technologyKind := DeriveTechnologyKind(rawName)
+		readmePath := filepath.Join(rootDir, name, "README.md")
+		if content, err := ReadTextFile(readmePath); err == nil && strings.HasPrefix(content, "---") {
+			endIdx := strings.Index(content[3:], "---")
+			if endIdx > 0 {
+				fmContent := content[3 : 3+endIdx]
+				var fm struct {
+					Name string `yaml:"name"`
+					Kind string `yaml:"kind"`
+				}
+				if yaml.Unmarshal([]byte(fmContent), &fm) == nil {
+					if fm.Name != "" {
+						technologyName = fm.Name
+					}
+					if fm.Kind != "" {
+						switch strings.ToLower(fm.Kind) {
+						case "user":
+							technologyKind = TechnologyKindUser
+						case "infrastructure":
+							technologyKind = TechnologyKindInfrastructure
+						case "research":
+							technologyKind = TechnologyKindResearch
+						}
+					}
+				}
+			}
+		}
+
+		technology := Technology{
+			Name:    technologyName,
 			Root:    name,
-			Kind:    DeriveProjectKind(rawName),
+			Kind:    technologyKind,
 			Bundles: []Bundle{},
 		}
 
-		projectPath := filepath.Join(projectsDir, name)
-		subEntries, _ := os.ReadDir(projectPath)
+		technologyPath := filepath.Join(technologiesDir, name)
+		subEntries, _ := os.ReadDir(technologyPath)
 		for _, sub := range subEntries {
 			if !sub.IsDir() {
 				continue
@@ -21936,23 +22044,23 @@ func loadProjectsInternal() []Project {
 				continue
 			}
 			bunName := sub.Name()
-			fullBundleName := name + "/" + bunName
+			fullBundleName := technologyName + "/" + bunName
 
 			bundlePath := filepath.Join(name, bunName)
 			kind := DeriveBundleKind(fullBundleName, bundlePath)
 
 			bundle := Bundle{
-				Name:        fullBundleName,
-				Root:        bundlePath,
-				ProjectName: rawName,
-				Kind:        kind,
+				Name:           fullBundleName,
+				Root:           bundlePath,
+				TechnologyName: technologyName,
+				Kind:           kind,
 			}
 
 			bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
 
-			configPath := filepath.Join(projectPath, bunName, "project.json")
+			configPath := filepath.Join(technologyPath, bunName, "project.json")
 			if !FileExists(configPath) {
-				configPath = filepath.Join(projectPath, bunName, "package.json")
+				configPath = filepath.Join(technologyPath, bunName, "package.json")
 			}
 			if FileExists(configPath) {
 				content, err := ReadTextFile(configPath)
@@ -21967,12 +22075,12 @@ func loadProjectsInternal() []Project {
 					}
 				}
 			}
-			project.Bundles = append(project.Bundles, bundle)
+			technology.Bundles = append(technology.Bundles, bundle)
 		}
-		projects = append(projects, project)
+		technologies = append(technologies, technology)
 	}
 
-	return projects
+	return technologies
 }
 
 // LoadCheckpoints MUST return all matching checkpoints from the data source.
@@ -22017,17 +22125,17 @@ func LoadCheckpoints(limit *int) []Checkpoint {
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️loadbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadBundles)
 func LoadBundles() []Bundle {
 	var bundles []Bundle
-	projects := LoadProjects()
-	for _, p := range projects {
+	technologies := LoadTechnologies()
+	for _, p := range technologies {
 		bundles = append(bundles, p.Bundles...)
 	}
 	return bundles
 }
 
-// GetProjects MUST retrieve the requested value or return an error.
-// GetProjects retrieves and returns the projects.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️getprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetProjects)
-func GetProjects() []Bundle {
+// GetTechnologies MUST retrieve the requested value or return an error.
+// GetTechnologies retrieves and returns the technologies.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️gettechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTechnologies)
+func GetTechnologies() []Bundle {
 	return LoadBundles()
 }
 
@@ -22206,18 +22314,18 @@ func loadPackages(bundleRoot string) []Package {
 	return packages
 }
 
-// StreamProjects MUST invoke the callback for each matching projects entry.
-// StreamProjects streams projects entries through the callback.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamProjects)
-func StreamProjects(ctx context.Context, out chan<- Project, opts ...StreamOptions) error {
+// StreamTechnologies MUST invoke the callback for each matching technologies entry.
+// StreamTechnologies streams technologies entries through the callback.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️streamtechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamTechnologies)
+func StreamTechnologies(ctx context.Context, out chan<- Technology, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
 	if len(opts) > 0 {
 		options = opts[0]
 	}
 
-	projects := LoadProjects()
-	for _, p := range projects {
+	technologies := LoadTechnologies()
+	for _, p := range technologies {
 		if !matchesFilter(p.Name, options) {
 			continue
 		}
@@ -22234,24 +22342,24 @@ func StreamProjects(ctx context.Context, out chan<- Project, opts ...StreamOptio
 	return nil
 }
 
-func runProjectList(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
+func runTechnologyList(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
 	opts := getStreamOptions(cmd)
 	stream := make(chan Event)
 	go func() {
 		defer close(stream)
-		stream <- Event{Kind: KindStart, Command: "project list"}
+		stream <- Event{Kind: KindStart, Command: "technology list"}
 
-		projChan := make(chan Project)
+		projChan := make(chan Technology)
 		go func() {
-			StreamProjects(context.Background(), projChan, opts)
+			StreamTechnologies(context.Background(), projChan, opts)
 		}()
 
 		for p := range projChan {
-			data, err := json.Marshal(map[string]interface{}{"project": p})
+			data, err := json.Marshal(map[string]interface{}{"technology": p})
 			if err != nil {
 				continue
 			}
-			stream <- Event{Kind: KindResult, Command: "project list", Data: data}
+			stream <- Event{Kind: KindResult, Command: "technology list", Data: data}
 		}
 		stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 	}()
@@ -22259,29 +22367,29 @@ func runProjectList(factory EngineFactory, config Config, cmd *cobra.Command, ar
 	return renderStream(cmd, &config, stream)
 }
 
-func runProjectTree(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
+func runTechnologyTree(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
 	opts := getStreamOptions(cmd)
 	stream := make(chan Event)
 	go func() {
 		defer close(stream)
-		stream <- Event{Kind: KindStart, Command: "project tree"}
+		stream <- Event{Kind: KindStart, Command: "technology tree"}
 
-		projChan := make(chan Project)
+		projChan := make(chan Technology)
 		go func() {
-			StreamProjects(context.Background(), projChan, opts)
+			StreamTechnologies(context.Background(), projChan, opts)
 		}()
 
-		var projects []Project
+		var technologies []Technology
 		for p := range projChan {
-			projects = append(projects, p)
+			technologies = append(technologies, p)
 		}
 		var events []Event
-		for _, p := range projects {
-			data, err := json.Marshal(map[string]interface{}{"project": p})
+		for _, p := range technologies {
+			data, err := json.Marshal(map[string]interface{}{"technology": p})
 			if err != nil {
 				continue
 			}
-			events = append(events, Event{Kind: KindResult, Command: "project tree", Data: data})
+			events = append(events, Event{Kind: KindResult, Command: "technology tree", Data: data})
 		}
 		sort.Slice(events, func(i, j int) bool {
 			return formatMarkdownResult(events[i].Command, events[i].Data) < formatMarkdownResult(events[j].Command, events[j].Data)
@@ -22539,7 +22647,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 
 	root := rootDir
 	if bundleName, found := strings.CutPrefix(scope, "semio/"); found {
-		bundles := GetProjects()
+		bundles := GetTechnologies()
 		for _, b := range bundles {
 			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
 				root = filepath.Join(rootDir, b.Root)
@@ -22648,7 +22756,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 
 	root := rootDir
 	if scope != "" && scope != "semio" {
-		bundles := GetProjects()
+		bundles := GetTechnologies()
 		matched := false
 		for _, b := range bundles {
 			if b.Name == scope || b.Root == scope || normalizeBundleLabel(b.Name) == scope {
@@ -23197,7 +23305,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 
 		if !bulk {
 
-			bundles := GetProjects()
+			bundles := GetTechnologies()
 			labels := make(map[string]struct{})
 			if tickFilesResult != nil {
 				addLabel := func(path string) {
@@ -23781,18 +23889,18 @@ func ToolContributorRemove(github string) ToolResult {
 	return toolResultFromEvents(events, nil)
 }
 
-// ToolProjectList MUST complete the operation successfully.
-// ToolProjectList performs the tool project list operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolprojectlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolProjectList)
-func ToolProjectList() ToolResult {
-	projects := LoadProjects()
-	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
+// ToolTechnologyList MUST complete the operation successfully.
+// ToolTechnologyList performs the tool technology list operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooltechnologylist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTechnologyList)
+func ToolTechnologyList() ToolResult {
+	technologies := LoadTechnologies()
+	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
 	var events []Event
-	for _, p := range projects {
-		data, _ := json.Marshal(map[string]interface{}{"project": p})
-		events = append(events, Event{Kind: KindResult, Command: "project list", Data: data})
+	for _, p := range technologies {
+		data, _ := json.Marshal(map[string]interface{}{"technology": p})
+		events = append(events, Event{Kind: KindResult, Command: "technology list", Data: data})
 	}
-	return toolResultFromEvents(events, projects)
+	return toolResultFromEvents(events, technologies)
 }
 
 // ToolBundleList MUST complete the operation successfully.
@@ -23809,11 +23917,11 @@ func ToolBundleList() ToolResult {
 	return toolResultFromEvents(events, bundles)
 }
 
-// ToolProjectTree MUST complete the operation successfully.
-// ToolProjectTree performs the tool project tree operation.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️toolprojecttree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolProjectTree)
-func ToolProjectTree() ToolResult {
-	return toolResultFromTreeRender(TreeNodeProject)
+// ToolTechnologyTree MUST complete the operation successfully.
+// ToolTechnologyTree performs the tool technology tree operation.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🛠️tooltechnologytree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTechnologyTree)
+func ToolTechnologyTree() ToolResult {
+	return toolResultFromTreeRender(TreeNodeTechnology)
 }
 
 // ToolFolderCreate MUST complete the operation successfully.
@@ -24149,7 +24257,7 @@ func ToolFileDelete(path string) ToolResult {
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	files, err := ScopeToFiles(scope, bundles)
 	if err != nil {
 		return toolErrorResult(err)
@@ -24951,24 +25059,24 @@ CREATE TABLE IF NOT EXISTS file (
     FOREIGN KEY (parent_folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (file_kind_id) REFERENCES file_kind (id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS project_kind (
+CREATE TABLE IF NOT EXISTS technology_kind (
     id INTEGER PRIMARY KEY,
     emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
     name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
     description TEXT NOT NULL CHECK (length (trim(description)) > 0)
 );
-CREATE TABLE IF NOT EXISTS project (
+CREATE TABLE IF NOT EXISTS technology (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     folder_id INTEGER NOT NULL,
-    project_kind_id INTEGER NOT NULL,
+    technology_kind_id INTEGER NOT NULL,
     name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
     summary TEXT,
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
-    FOREIGN KEY (project_kind_id) REFERENCES project_kind (id) ON DELETE CASCADE
+    FOREIGN KEY (technology_kind_id) REFERENCES technology_kind (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS concept (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER,
+    technology_id INTEGER,
     bundle_id INTEGER,
     folder_id INTEGER,
     file_id INTEGER,
@@ -24978,7 +25086,7 @@ CREATE TABLE IF NOT EXISTS concept (
     specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
     UNIQUE (name),
     UNIQUE (emoji),
-    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+    FOREIGN KEY (technology_id) REFERENCES technology (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS mechanism (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25009,13 +25117,13 @@ CREATE TABLE IF NOT EXISTS bundle_kind (
 );
 CREATE TABLE IF NOT EXISTS bundle (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER NOT NULL,
+    technology_id INTEGER NOT NULL,
     folder_id INTEGER NOT NULL,
     bundle_kind_id INTEGER NOT NULL,
     name TEXT NOT NULL CHECK (length (trim(name)) > 0),
     summary TEXT,
-    UNIQUE (project_id, bundle_kind_id, name),
-    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    UNIQUE (technology_id, bundle_kind_id, name),
+    FOREIGN KEY (technology_id) REFERENCES technology (id) ON DELETE CASCADE,
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (bundle_kind_id) REFERENCES bundle_kind (id) ON DELETE CASCADE
 );
@@ -25091,13 +25199,13 @@ CREATE TABLE IF NOT EXISTS event (
 // ExportResult holds the data fields for a export result record.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport✂️exportresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ExportResult)
 type ExportResult struct {
-	Path        string `json:"path"`
-	Projects    int    `json:"projects"`
-	Bundles     int    `json:"bundles"`
-	Folders     int    `json:"folders"`
-	Files       int    `json:"files"`
-	Sections    int    `json:"sections"`
-	Definitions int    `json:"definitions"`
+	Path         string `json:"path"`
+	Technologies int    `json:"technologies"`
+	Bundles      int    `json:"bundles"`
+	Folders      int    `json:"folders"`
+	Files        int    `json:"files"`
+	Sections     int    `json:"sections"`
+	Definitions  int    `json:"definitions"`
 }
 
 // folderKindToInt MUST map FolderKind to the integer enum value for folder_kind table (id 0=organizational, 1=required).
@@ -25111,15 +25219,15 @@ func folderKindToInt(k FolderKind) int {
 	}
 }
 
-// projectKindToInt MUST map ProjectKind to the integer enum value for project_kind table (id 0=user, 1=infrastructure, 2=research).
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️projectkindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/projectKindToInt)
-func projectKindToInt(k ProjectKind) int {
+// technologyKindToInt MUST map TechnologyKind to the integer enum value for technology_kind table (id 0=user, 1=infrastructure, 2=research).
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️technologykindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/technologyKindToInt)
+func technologyKindToInt(k TechnologyKind) int {
 	switch k {
-	case ProjectKindUser:
+	case TechnologyKindUser:
 		return 0
-	case ProjectKindInfrastructure:
+	case TechnologyKindInfrastructure:
 		return 1
-	case ProjectKindResearch:
+	case TechnologyKindResearch:
 		return 2
 	default:
 		return 0
@@ -25227,19 +25335,19 @@ func seedKindTables(tx *sql.Tx) error {
 			return fmt.Errorf("failed to seed file_kind %d: %w", fk.id, err)
 		}
 	}
-	projectKinds := []struct {
+	technologyKinds := []struct {
 		id          int
 		emoji       string
 		name        string
 		description string
 	}{
-		{0, "👤", "user", "User-facing project"},
-		{1, "🧰", "infrastructure", "Infrastructure project"},
-		{2, "🔬", "research", "Research project"},
+		{0, "👤", "user", "User-facing technology"},
+		{1, "🧰", "infrastructure", "Infrastructure technology"},
+		{2, "🔬", "research", "Research technology"},
 	}
-	for _, pk := range projectKinds {
-		if _, err := tx.Exec(`INSERT INTO project_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, pk.id, pk.emoji, pk.name, pk.description); err != nil {
-			return fmt.Errorf("failed to seed project_kind %d: %w", pk.id, err)
+	for _, pk := range technologyKinds {
+		if _, err := tx.Exec(`INSERT INTO technology_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, pk.id, pk.emoji, pk.name, pk.description); err != nil {
+			return fmt.Errorf("failed to seed technology_kind %d: %w", pk.id, err)
 		}
 	}
 	bundleKinds := []struct {
@@ -25334,12 +25442,12 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 		return nil, fmt.Errorf("failed to export folders: %w", err)
 	}
 
-	projectIDs := make(map[string]int64)
-	if result.Projects, err = exportProjectsNew(tx, ctx, folderIDs, projectIDs); err != nil {
-		return nil, fmt.Errorf("failed to export projects: %w", err)
+	technologyIDs := make(map[string]int64)
+	if result.Technologies, err = exportTechnologiesNew(tx, ctx, folderIDs, technologyIDs); err != nil {
+		return nil, fmt.Errorf("failed to export technologies: %w", err)
 	}
 
-	if result.Bundles, err = exportBundlesNew(tx, ctx, projectIDs, folderIDs); err != nil {
+	if result.Bundles, err = exportBundlesNew(tx, ctx, technologyIDs, folderIDs); err != nil {
 		return nil, fmt.Errorf("failed to export bundles: %w", err)
 	}
 
@@ -25446,21 +25554,21 @@ func extractReadmeSummary(content string) string {
 	return strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
 
-// exportProjectsNew MUST insert all projects using project_kind_id FK reference.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportprojectsnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportProjectsNew)
-func exportProjectsNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, projectIDs map[string]int64) (int, error) {
-	projects := ctx.GetProjects()
-	stmt, err := tx.Prepare(`INSERT INTO project (folder_id, project_kind_id, name, summary) VALUES (?, ?, ?, ?)`)
+// exportTechnologiesNew MUST insert all technologies using technology_kind_id FK reference.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exporttechnologiesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportTechnologiesNew)
+func exportTechnologiesNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, technologyIDs map[string]int64) (int, error) {
+	technologies := ctx.GetTechnologies()
+	stmt, err := tx.Prepare(`INSERT INTO technology (folder_id, technology_kind_id, name, summary) VALUES (?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	for _, p := range projects {
+	for _, p := range technologies {
 		folderID, ok := folderIDs[p.Root]
 		if !ok {
 			continue
 		}
-		kindID := projectKindToInt(p.Kind)
+		kindID := technologyKindToInt(p.Kind)
 		var summary interface{}
 		readmePath := filepath.Join(ctx.GetRootDir(), p.Root, "README.md")
 		if content, err := ReadTextFile(readmePath); err == nil {
@@ -25476,23 +25584,23 @@ func exportProjectsNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, 
 		if err != nil {
 			return 0, err
 		}
-		projectIDs[p.Name] = id
+		technologyIDs[p.Name] = id
 	}
-	return len(projects), nil
+	return len(technologies), nil
 }
 
 // exportBundlesNew MUST insert all bundles using bundle_kind_id FK reference.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportbundlesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportBundlesNew)
-func exportBundlesNew(tx *sql.Tx, ctx RepoContext, projectIDs map[string]int64, folderIDs map[string]int64) (int, error) {
+func exportBundlesNew(tx *sql.Tx, ctx RepoContext, technologyIDs map[string]int64, folderIDs map[string]int64) (int, error) {
 	bundles := ctx.GetBundles()
-	stmt, err := tx.Prepare(`INSERT INTO bundle (project_id, folder_id, bundle_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
+	stmt, err := tx.Prepare(`INSERT INTO bundle (technology_id, folder_id, bundle_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
 	count := 0
 	for _, b := range bundles {
-		projectID, ok := projectIDs[b.ProjectName]
+		technologyID, ok := technologyIDs[b.TechnologyName]
 		if !ok {
 			continue
 		}
@@ -25513,7 +25621,7 @@ func exportBundlesNew(tx *sql.Tx, ctx RepoContext, projectIDs map[string]int64, 
 				summary = s
 			}
 		}
-		if _, err := stmt.Exec(projectID, folderID, kindID, bundleName, summary); err != nil {
+		if _, err := stmt.Exec(technologyID, folderID, kindID, bundleName, summary); err != nil {
 			return 0, err
 		}
 		count++
@@ -25719,7 +25827,7 @@ func ToolExport(outputPath string) ToolResult {
 	}
 	repopkg.Emit(repopkg.EventExportEnded, "repo-cli", repopkg.FilePayload{Path: outputPath})
 	output.Success(fmt.Sprintf("Exported to: %s", result.Path))
-	output.Plain(fmt.Sprintf("  Projects: %d", result.Projects))
+	output.Plain(fmt.Sprintf("  Technologies: %d", result.Technologies))
 	output.Plain(fmt.Sprintf("  Bundles: %d", result.Bundles))
 	output.Plain(fmt.Sprintf("  Folders: %d", result.Folders))
 	output.Plain(fmt.Sprintf("  Files: %d", result.Files))
@@ -25742,7 +25850,7 @@ func ToolExport(outputPath string) ToolResult {
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
-	GetProjects() []*Project
+	GetTechnologies() []*Technology
 	GetCheckpoints(limit *int) ([]*Checkpoint, error)
 	GetFolders() []*Folder
 	GetFiles() []*File
@@ -25890,14 +25998,14 @@ func (c *repoContext) GetBundles() []*Bundle {
 	return result
 }
 
-// GetProjects MUST retrieve the requested value or return an error.
-// GetProjects retrieves and returns the projects.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetProjects)
-func (c *repoContext) GetProjects() []*Project {
-	projects := LoadProjects()
-	res := make([]*Project, len(projects))
-	for i := range projects {
-		res[i] = &projects[i]
+// GetTechnologies MUST retrieve the requested value or return an error.
+// GetTechnologies retrieves and returns the technologies.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTechnologies)
+func (c *repoContext) GetTechnologies() []*Technology {
+	technologies := LoadTechnologies()
+	res := make([]*Technology, len(technologies))
+	for i := range technologies {
+		res[i] = &technologies[i]
 	}
 	return res
 }
@@ -28723,11 +28831,11 @@ func ensureGoalMilestone(goal *Goal) (*ManagementMilestone, error) {
 func (c *repoContext) SyncManagement() (bool, error) {
 	fmt.Println("Syncing local tickets and goals with GitHub...")
 
-	projects := LoadProjects()
+	technologies := LoadTechnologies()
 	validLabels := make(map[string]bool)
-	for _, p := range projects {
-		projectLabel := "@" + strings.TrimPrefix(p.Name, "@")
-		validLabels[projectLabel] = true
+	for _, p := range technologies {
+		technologyLabel := "@" + strings.TrimPrefix(p.Name, "@")
+		validLabels[technologyLabel] = true
 		for _, b := range p.Bundles {
 			validLabels[normalizeBundleLabel(b.Name)] = true
 		}
@@ -28929,7 +29037,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 			}
 		}
 		if len(labelsToRemove) > 0 {
-			fmt.Printf("Removing invalid project labels from issue %s: %v\n", issueURL, labelsToRemove)
+			fmt.Printf("Removing invalid technology labels from issue %s: %v\n", issueURL, labelsToRemove)
 			if err := c.managementProvider.RemoveLabels(issueURL, labelsToRemove); err != nil {
 				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issueURL, err)
 			}
@@ -28950,7 +29058,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 			if len(labelsToRemove) == 0 {
 				continue
 			}
-			fmt.Printf("Removing invalid project labels from issue %s: %v\n", issue.URL, labelsToRemove)
+			fmt.Printf("Removing invalid technology labels from issue %s: %v\n", issue.URL, labelsToRemove)
 			if err := c.managementProvider.RemoveLabels(issue.URL, labelsToRemove); err != nil {
 				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issue.URL, err)
 			}
@@ -28973,10 +29081,10 @@ func (c *defaultContext) GetRootDir() string { return c.rootDir }
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getbundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetBundles)
 func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
 
-// GetProjects MUST retrieve the requested value or return an error.
-// GetProjects retrieves and returns the projects.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️getprojects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetProjects)
-func (c *defaultContext) GetProjects() []*Project { return []*Project{} }
+// GetTechnologies MUST retrieve the requested value or return an error.
+// GetTechnologies retrieves and returns the technologies.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖defaultcontext🛠️gettechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTechnologies)
+func (c *defaultContext) GetTechnologies() []*Technology { return []*Technology{} }
 
 // GetCheckpoints MUST retrieve the requested value or return an error.
 // GetCheckpoints retrieves and returns the checkpoints.
@@ -29506,13 +29614,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	})
 
 	projectType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "Project",
+		Name: "Technology",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"id": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.ID),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return p.Source.(*Project).GetID(), nil
+						return p.Source.(*Technology).GetID(), nil
 					},
 				},
 				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
@@ -29520,13 +29628,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"kind": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return string(p.Source.(*Project).Kind), nil
+						return string(p.Source.(*Technology).Kind), nil
 					},
 				},
 				"bundles": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						bun := p.Source.(*Project).Bundles
+						bun := p.Source.(*Technology).Bundles
 						res := make([]*Bundle, len(bun))
 						for i := range bun {
 							res[i] = &bun[i]
@@ -29537,7 +29645,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"uri": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return p.Source.(*Project).GetURI(), nil
+						return p.Source.(*Technology).GetURI(), nil
 					},
 				},
 			}
@@ -30735,13 +30843,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"id":   &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
 				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"path": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"projects": &graphql.Field{
+				"technologies": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(projectType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						projects := LoadProjects()
-						res := make([]*Project, len(projects))
-						for i := range projects {
-							res[i] = &projects[i]
+						technologies := LoadTechnologies()
+						res := make([]*Technology, len(technologies))
+						for i := range technologies {
+							res[i] = &technologies[i]
 						}
 						return res, nil
 					},
@@ -31014,14 +31122,14 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return queryResolverInstance.Repo(p.Context)
 				},
 			},
-			"projects": &graphql.Field{
+			"technologies": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(projectType))),
 				Args: graphql.FieldConfigArgument{
 					"filter": &graphql.ArgumentConfig{Type: filterInputType},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					filter := parseFilterInput(p.Args)
-					return queryResolverInstance.Projects(p.Context, filter)
+					return queryResolverInstance.Technologies(p.Context, filter)
 				},
 			},
 			"bundles": &graphql.Field{
@@ -32055,14 +32163,14 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		return s, "", false
 	}
 
-	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch, EmojiProjectMono}
+	technologyEmojis := []string{EmojiTechnologyUser, EmojiTechnologyInfra, EmojiTechnologyResearch, EmojiTechnologyMono}
 	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
-	for _, pe := range projectEmojis {
+	for _, pe := range technologyEmojis {
 		if rest, ok := stripPrefix(cleanID, pe); ok {
-			if projectVal, bundleVal, found := findEmoji(rest, bundleEmojis); found {
-				return r.Bundle(ctx, projectVal+"/"+bundleVal)
+			if technologyVal, bundleVal, found := findEmoji(rest, bundleEmojis); found {
+				return r.Bundle(ctx, technologyVal+"/"+bundleVal)
 			}
-			return &Project{Name: rest}, nil
+			return &Technology{Name: rest}, nil
 		}
 	}
 
@@ -32117,8 +32225,8 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	if strings.HasPrefix(id, "repo:") {
 		return r.Repo(ctx)
 	}
-	if strings.HasPrefix(id, "project:") {
-		return &Project{Name: strings.TrimPrefix(id, "project:")}, nil
+	if strings.HasPrefix(id, "technology:") {
+		return &Technology{Name: strings.TrimPrefix(id, "technology:")}, nil
 	}
 	if strings.HasPrefix(id, "bundle:") {
 		return r.Bundle(ctx, strings.TrimPrefix(id, "bundle:"))
@@ -32183,12 +32291,12 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 // Repo performs the repo operation on the query resolver.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Repo)
 func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
-	projects, _ := r.Projects(ctx, nil)
+	technologies, _ := r.Technologies(ctx, nil)
 	bundles, _ := r.Bundles(ctx, &FilterInput{})
 
-	var projectValues []Project
-	for _, p := range projects {
-		projectValues = append(projectValues, *p)
+	var technologyValues []Technology
+	for _, p := range technologies {
+		technologyValues = append(technologyValues, *p)
 	}
 	var bundleValues []Bundle
 	for _, b := range bundles {
@@ -32196,23 +32304,23 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	}
 
 	return &Repo{
-		ID:       "repo:semio",
-		Name:     "semio",
-		Path:     r.RootDir,
-		Projects: projectValues,
-		Bundles:  bundleValues,
+		ID:           "repo:semio",
+		Name:         "semio",
+		Path:         r.RootDir,
+		Technologies: technologyValues,
+		Bundles:      bundleValues,
 	}, nil
 }
 
-// Projects MUST return a non-nil error when the operation fails.
-// Projects performs the projects operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️projects](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Projects)
-func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*Project, error) {
+// Technologies MUST return a non-nil error when the operation fails.
+// Technologies performs the technologies operation on the query resolver.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️technologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Technologies)
+func (r *queryResolver) Technologies(ctx context.Context, filter *FilterInput) ([]*Technology, error) {
 	allBundles, err := r.Bundles(ctx, &FilterInput{})
 	if err != nil {
 		return nil, err
 	}
-	projectMap := make(map[string]*Project)
+	technologyMap := make(map[string]*Technology)
 	for _, b := range allBundles {
 		name := normalizeBundleLabel(b.Name)
 		parts := strings.Split(name, "/")
@@ -32228,23 +32336,23 @@ func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*P
 			}
 		}
 
-		if _, ok := projectMap[projName]; !ok {
-			kind := ProjectKindUser
+		if _, ok := technologyMap[projName]; !ok {
+			kind := TechnologyKindUser
 			if projName == "semio-repo" {
-				kind = ProjectKindInfrastructure
+				kind = TechnologyKindInfrastructure
 			}
-			projectMap[projName] = &Project{
+			technologyMap[projName] = &Technology{
 				Name:    projName,
 				Kind:    kind,
 				Root:    r.RootDir,
 				Bundles: []Bundle{},
 			}
 		}
-		projectMap[projName].Bundles = append(projectMap[projName].Bundles, *b)
+		technologyMap[projName].Bundles = append(technologyMap[projName].Bundles, *b)
 	}
 
-	var results []*Project
-	for _, p := range projectMap {
+	var results []*Technology
+	for _, p := range technologyMap {
 		if filter != nil {
 			opts := filter.ToStreamOptions()
 			if !matchesFilter(p.Name, opts) && !matchesFilter(p.GetID(), opts) {
@@ -32259,11 +32367,11 @@ func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*P
 	return results, nil
 }
 
-// Project MUST return a non-nil error when the operation fails.
-// Project performs the project operation on the query resolver.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️project](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Project)
-func (r *queryResolver) Project(ctx context.Context, name string) (*Project, error) {
-	all, err := r.Projects(ctx, nil)
+// Technology MUST return a non-nil error when the operation fails.
+// Technology performs the technology operation on the query resolver.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖queryresolvers🛠️technology](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Technology)
+func (r *queryResolver) Technology(ctx context.Context, name string) (*Technology, error) {
+	all, err := r.Technologies(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -32468,7 +32576,7 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	bundleName := ResolveBundleForPath(normalizedPath, bundles)
 	var bundleID *string
 	if bundleName != "" {
@@ -32492,7 +32600,7 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	name := filepath.Base(normalizedPath)
 	ext := filepath.Ext(name)
 	folderPath := filepath.Dir(normalizedPath)
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	bundleName := ResolveBundleForPath(normalizedPath, bundles)
 	var bundleID *string
 	if bundleName != "" {
@@ -33268,7 +33376,7 @@ func createMcpServer() *server.MCPServer {
 		handleBundlesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}", "Bundle"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}", "Bundle"),
 		handleBundleResource,
 	)
 	s.AddResource(
@@ -33276,7 +33384,7 @@ func createMcpServer() *server.MCPServer {
 		handleFoldersResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}/fd/{fkc}/{folder}", "Folder"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}/fd/{fkc}/{folder}", "Folder"),
 		handleFolderResource,
 	)
 	s.AddResource(
@@ -33284,23 +33392,23 @@ func createMcpServer() *server.MCPServer {
 		handleFilesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}/f/{name}", "File"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}", "File"),
 		handleFileResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}/f/{name}/ss", "Sections"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/ss", "Sections"),
 		handleSectionsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}/f/{name}/s/{section}", "Section"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/s/{section}", "Section"),
 		handleSectionResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}/f/{name}/ds", "Definitions"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/ds", "Definitions"),
 		handleDefinitionsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{project}/b/{bkc}/{bundle}/f/{name}/d/{dkc}/{defname}", "Definition"),
+		mcp.NewResourceTemplate("semiorepo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/d/{dkc}/{defname}", "Definition"),
 		handleDefinitionResource,
 	)
 	s.AddResource(
@@ -33360,97 +33468,96 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_open",
-			mcp.WithDescription("Open a new development ticket"),
-			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
-			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
-			mcp.WithString("client", mcp.Required(), mcp.Description("Client used for this ticket")),
-			mcp.WithBoolean("noIssue", mcp.Description("Skip GitHub issue creation")),
+			mcp.WithDescription("Open a new ticket"),
+			mcp.WithString("goal", mcp.Description("Goal ID")),
+			mcp.WithString("title", mcp.Description("Ticket title")),
+			mcp.WithString("prompt", mcp.Description("Ticket prompt/description")),
+			mcp.WithString("client", mcp.Description("Client used for this ticket")),
+			mcp.WithString("llm", mcp.Description("LLM used for this ticket")),
+			mcp.WithBoolean("no-issue", mcp.Description("Skip GitHub issue creation")),
 			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
-			mcp.WithString("goal", mcp.Description("Goal ID to associate with this ticket")),
 			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets")),
 			mcp.WithString("issue", mcp.Description("Link to existing GitHub issue URL instead of creating new one")),
+			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
 		),
 		ticketOpen,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_close",
-			mcp.WithDescription("Close a ticket with summary and affected file changes"),
-			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the ticket work")),
-			mcp.WithArray("files", mcp.Description("Files to include (at least one required)"), mcp.WithStringItems()),
+			mcp.WithDescription("Close a ticket"),
+			mcp.WithString("path", mcp.Description("Ticket path")),
+			mcp.WithString("summary", mcp.Description("Summary of the ticket work")),
+			mcp.WithArray("files", mcp.Description("Files to include"), mcp.WithStringItems()),
 			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
+			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
 		),
 		ticketClose,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_reopen",
 			mcp.WithDescription("Reopen a closed ticket"),
-			mcp.WithNumber("year", mcp.Required(), mcp.Description("Ticket year")),
-			mcp.WithNumber("month", mcp.Required(), mcp.Description("Ticket month")),
-			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("New prompt/description for the ticket")),
-			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
-			mcp.WithString("client", mcp.Required(), mcp.Description("Client used for this ticket")),
+			mcp.WithString("path", mcp.Description("Ticket path")),
+			mcp.WithString("prompt", mcp.Description("New prompt/description for the ticket")),
+			mcp.WithString("llm", mcp.Description("LLM used for this ticket")),
+			mcp.WithString("client", mcp.Description("Client used for this ticket")),
 			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
 			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
+			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
 		),
 		ticketReopen,
 	)
 	s.AddTool(
-		mcp.NewTool("draft_create",
-			mcp.WithDescription("Create a new draft working directory"),
-			mcp.WithString("title", mcp.Required(), mcp.Description("Draft title")),
-			mcp.WithArray("files", mcp.Description("Optional list of files to copy into the draft"), mcp.WithStringItems()),
+		mcp.NewTool("todo_create",
+			mcp.WithDescription("Create a new todo"),
+			mcp.WithString("parent", mcp.Description("Parent ID")),
+			mcp.WithString("name", mcp.Description("Todo name")),
+			mcp.WithString("description", mcp.Description("Todo description")),
 		),
-		draftCreate,
+		todoCreate,
 	)
 	s.AddTool(
-		mcp.NewTool("draft_delete",
-			mcp.WithDescription("Delete a draft"),
-			mcp.WithString("slug", mcp.Required(), mcp.Description("Draft slug to delete")),
+		mcp.NewTool("todo_delete",
+			mcp.WithDescription("Delete a todo"),
+			mcp.WithString("path", mcp.Description("Todo path to delete")),
 		),
-		draftDelete,
+		todoDelete,
 	)
 	s.AddTool(
 		mcp.NewTool("goal_open",
 			mcp.WithDescription("Open a new goal"),
-			mcp.WithString("title", mcp.Required(), mcp.Description("Goal title")),
-			mcp.WithString("description", mcp.Required(), mcp.Description("Goal description")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("Goal prompt")),
-			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM model")),
-			mcp.WithString("client", mcp.Required(), mcp.Description("Client client")),
+			mcp.WithString("title", mcp.Description("Goal title")),
+			mcp.WithString("description", mcp.Description("Goal description")),
+			mcp.WithString("prompt", mcp.Description("Goal prompt")),
+			mcp.WithString("client", mcp.Description("Client client")),
+			mcp.WithString("llm", mcp.Description("LLM model")),
 			mcp.WithString("due_date", mcp.Description("Due date (YYYY-MM-DD)")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub milestone creation")),
+			mcp.WithString("bundle", mcp.Description("Bundle name associated with this goal")),
 			mcp.WithString("parent", mcp.Description("Parent goal ID")),
 			mcp.WithString("milestone", mcp.Description("Link to existing GitHub milestone URL instead of creating new one")),
+			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
 		),
 		goalOpen,
 	)
 	s.AddTool(
 		mcp.NewTool("goal_close",
 			mcp.WithDescription("Close a goal"),
-			mcp.WithString("id", mcp.Required(), mcp.Description("Goal ID (SLUG/SUBGOAL...)")),
-			mcp.WithString("summary", mcp.Required(), mcp.Description("Closing summary")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub milestone closing")),
+			mcp.WithString("id", mcp.Description("Goal ID (SLUG/SUBGOAL...)")),
+			mcp.WithString("summary", mcp.Description("Closing summary")),
+			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
 		),
 		goalClose,
 	)
 	s.AddTool(
 		mcp.NewTool("goal_reopen",
 			mcp.WithDescription("Reopen a closed goal"),
-			mcp.WithString("id", mcp.Required(), mcp.Description("Goal ID (SLUG/SUBGOAL...)")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("Reopening prompt")),
-			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM model")),
-			mcp.WithString("client", mcp.Required(), mcp.Description("Client client")),
+			mcp.WithString("id", mcp.Description("Goal ID (SLUG/SUBGOAL...)")),
+			mcp.WithString("prompt", mcp.Description("Reopening prompt")),
+			mcp.WithString("llm", mcp.Description("LLM model")),
+			mcp.WithString("client", mcp.Description("Client client")),
 			mcp.WithString("title", mcp.Description("New title")),
 			mcp.WithString("description", mcp.Description("New description")),
 			mcp.WithString("due_date", mcp.Description("New due date (YYYY-MM-DD)")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub milestone reopening")),
+			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
 		),
 		goalReopen,
 	)
@@ -33500,7 +33607,7 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("tree",
-			mcp.WithDescription("Show monorepo tree with optional query filter. Replaces all list and tree commands. Use query to filter by kind (e.g. 'goals', 'tickets', 'files', 'sections', 'definitions', 'policies', 'contributors', 'projects', 'bundles', 'folders', 'drafts', 'checkpoints') or search for specific items."),
+			mcp.WithDescription("Show monorepo tree with optional query filter. Replaces all list and tree commands. Use query to filter by kind (e.g. 'goals', 'tickets', 'files', 'sections', 'definitions', 'policies', 'contributors', 'technologies', 'bundles', 'folders', 'drafts', 'checkpoints') or search for specific items."),
 			mcp.WithString("query", mcp.Description("Optional query to filter the tree (e.g. 'goals', 'tickets 2026', 'files semio/js', 'policies')")),
 		),
 		mcpTree,
@@ -33696,6 +33803,9 @@ func jsonToYaml(jsonStr string) (string, error) {
 }
 
 func gql(query string, variables map[string]interface{}) (string, error) {
+	if executor == nil {
+		return "", fmt.Errorf("GraphQL executor not initialized")
+	}
 	return executor.ExecuteJSON(context.Background(), query, variables)
 }
 
@@ -33707,7 +33817,7 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 // Request handler functions for CLI and MCP operations.
 
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
-	path := filepath.Join(".semio-repo", "💬", "📋", name+".tpl")
+	path := GetRepoMetaPath(filepath.Join("💬", "📋", name+".tpl"))
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -33824,25 +33934,16 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	title, err := requireStringArg(args, "title")
-	if err != nil {
-		return nil, err
-	}
-	prompt, err := requireStringArg(args, "prompt")
-	if err != nil {
-		return nil, err
-	}
-	client, err := requireStringArg(args, "client")
-	if err != nil {
-		return nil, err
-	}
-	llm, _, _ := getStringArg(args, "llm")
-	draft, _, _ := getStringArg(args, "draft")
-	noIssue, _, _ := getBoolArg(args, "noIssue")
 	goal, _, _ := getStringArg(args, "goal")
+	title, _, _ := getStringArg(args, "title")
+	prompt, _, _ := getStringArg(args, "prompt")
+	client, _, _ := getStringArg(args, "client")
+	llm, _, _ := getStringArg(args, "llm")
+	noIssue, _, _ := getBoolArg(args, "no-issue")
+	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
 	issue, _, _ := getStringArg(args, "issue")
+	noManagement, _, _ := getBoolArg(args, "noManagement")
 
 	result := ToolTicketOpen(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	return toolResultToMCP(result)
@@ -33873,71 +33974,43 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 
 func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year, err := requireIntArg(args, "year")
-	if err != nil {
-		return nil, err
-	}
-	month, err := requireIntArg(args, "month")
-	if err != nil {
-		return nil, err
-	}
-	day, err := requireIntArg(args, "day")
-	if err != nil {
-		return nil, err
-	}
-	slug, err := requireStringArg(args, "slug")
-	if err != nil {
-		return nil, err
-	}
-	summary, err := requireStringArg(args, "summary")
-	if err != nil {
-		return nil, err
-	}
-	files, _, err := getStringSliceArg(args, "files")
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		return nil, fmt.Errorf("at least one file is required")
-	}
-	for _, file := range files {
-		if err := requireFilePath(file); err != nil {
-			return nil, err
-		}
-	}
+	path, _, _ := getStringArg(args, "path")
+	summary, _, _ := getStringArg(args, "summary")
+	filesSlice, _, _ := getStringSliceArg(args, "files")
 	title, _, _ := getStringArg(args, "title")
 	noManagement, _, _ := getBoolArg(args, "noManagement")
 
-	result := ToolTicketClose(year, month, day, slug, summary, files, title, noManagement)
+	// Parse path into year/month/day/slug
+	year := 0
+	month := 0
+	day := 0
+	slug := ""
+
+	if path != "" {
+		parts := strings.Split(path, "/")
+		if len(parts) >= 4 {
+			if y, err := strconv.Atoi(parts[0]); err == nil {
+				year = y
+			}
+			if m, err := strconv.Atoi(parts[1]); err == nil {
+				month = m
+			}
+			if d, err := strconv.Atoi(parts[2]); err == nil {
+				day = d
+			}
+			slug = strings.Join(parts[3:], "/")
+		}
+	}
+
+	result := ToolTicketClose(year, month, day, slug, summary, filesSlice, title, noManagement)
 	return toolResultToMCP(result)
 }
 
 func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	year, err := requireIntArg(args, "year")
-	if err != nil {
-		return nil, err
-	}
-	month, err := requireIntArg(args, "month")
-	if err != nil {
-		return nil, err
-	}
-	day, err := requireIntArg(args, "day")
-	if err != nil {
-		return nil, err
-	}
-	slug, err := requireStringArg(args, "slug")
-	if err != nil {
-		return nil, err
-	}
-	prompt, err := requireStringArg(args, "prompt")
-	if err != nil {
-		return nil, err
-	}
-	client, err := requireStringArg(args, "client")
-	if err != nil {
-		return nil, err
-	}
+	path, _, _ := getStringArg(args, "path")
+	prompt, _, _ := getStringArg(args, "prompt")
+	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
 	title, _, _ := getStringArg(args, "title")
 	draft, _, _ := getStringArg(args, "draft")
@@ -33945,25 +34018,29 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	parent, _, _ := getStringArg(args, "parent")
 	noManagement, _, _ := getBoolArg(args, "noManagement")
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, goal, parent, noManagement)
-	return toolResultToMCP(result)
-}
+	// Parse path into year/month/day/slug
+	year := 0
+	month := 0
+	day := 0
+	slug := ""
 
-func draftCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	title, err := requireStringArg(args, "title")
-	if err != nil {
-		return nil, err
-	}
-	files := []string{}
-	if filesRaw, ok := args["files"].([]interface{}); ok {
-		for _, f := range filesRaw {
-			if s, ok := f.(string); ok {
-				files = append(files, s)
+	if path != "" {
+		parts := strings.Split(path, "/")
+		if len(parts) >= 4 {
+			if y, err := strconv.Atoi(parts[0]); err == nil {
+				year = y
 			}
+			if m, err := strconv.Atoi(parts[1]); err == nil {
+				month = m
+			}
+			if d, err := strconv.Atoi(parts[2]); err == nil {
+				day = d
+			}
+			slug = strings.Join(parts[3:], "/")
 		}
 	}
-	result := ToolDraftCreate(title, files)
+
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, goal, parent, noManagement)
 	return toolResultToMCP(result)
 }
 
@@ -33977,32 +34054,53 @@ func draftDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
+func todoCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	parent, _, _ := getStringArg(args, "parent")
+	name, _, _ := getStringArg(args, "name")
+	description, _, _ := getStringArg(args, "description")
+
+	variables := map[string]interface{}{
+		"input": map[string]interface{}{
+			"parentId":    parent,
+			"name":        name,
+			"description": description,
+		},
+	}
+	query := `mutation TodoCreate($input: TodoCreateInput!) { todoCreate(input: $input) { id name description } }`
+	payload, err := gql(query, variables)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(payload), nil
+}
+
+func todoDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	path, err := requireStringArg(args, "path")
+	if err != nil {
+		return nil, err
+	}
+	id := path
+	if strings.HasPrefix(path, "semiorepo://") {
+		id = UriToId(path)
+	}
+	query := `mutation TodoDelete($id: ID!) { todoDelete(id: $id) }`
+	payload, err := gql(query, map[string]interface{}{"id": id})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(payload), nil
+}
+
 func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	title, err := requireStringArg(args, "title")
-	if err != nil {
-		return nil, err
-	}
-	description, err := requireStringArg(args, "description")
-	if err != nil {
-		return nil, err
-	}
-	prompt, err := requireStringArg(args, "prompt")
-	if err != nil {
-		return nil, err
-	}
-	dueDate, err := requireStringArg(args, "due_date")
-	if err != nil {
-		return nil, err
-	}
-	llm, err := requireStringArg(args, "llm")
-	if err != nil {
-		return nil, err
-	}
-	client, err := requireStringArg(args, "client")
-	if err != nil {
-		return nil, err
-	}
+	title, _, _ := getStringArg(args, "title")
+	description, _, _ := getStringArg(args, "description")
+	prompt, _, _ := getStringArg(args, "prompt")
+	dueDate, _, _ := getStringArg(args, "due_date")
+	llm, _, _ := getStringArg(args, "llm")
+	client, _, _ := getStringArg(args, "client")
 	noManagement, _, _ := getBoolArg(args, "no_github")
 	parent, _, _ := getStringArg(args, "parent")
 	milestone, _, _ := getStringArg(args, "milestone")
@@ -34395,12 +34493,12 @@ func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	parts := strings.Split(uri, "/")
 	var id string
 	if len(parts) >= 6 && parts[0] == "p" && parts[3] == "b" {
-		projectName := PathFromUriPath(parts[2])
+		technologyName := PathFromUriPath(parts[2])
 		bundleName := PathFromUriPath(parts[5])
-		if projectName == bundleName {
-			id = projectName
+		if technologyName == bundleName {
+			id = technologyName
 		} else {
-			id = projectName + "/" + bundleName
+			id = technologyName + "/" + bundleName
 		}
 	} else {
 		id = PathFromUriPath(uri)
@@ -34977,9 +35075,9 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	switch scope.Kind {
 	case ScopeRepo:
 		files, err = globByExtension(rootDir, "**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
-	case ScopeProject:
+	case ScopeTechnology:
 		for _, proj := range bundles {
-			if proj.Name == scope.ProjectName {
+			if proj.Name == scope.TechnologyName {
 				files, err = globByExtension(rootDir, proj.Root+"/**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
 				break
 			}
@@ -35104,7 +35202,7 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 		baseFileList = append(baseFileList, file)
 	}
 
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	baseCodebase, err := BuildCodebaseSnapshot(baseFileList, bundles, baseRef)
 	if err != nil {
 		return nil, err
@@ -35200,7 +35298,7 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 // GetBundleByPath retrieves and returns the bundle by path.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖missingutilities🛠️getbundlebypath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetBundleByPath)
 func GetBundleByPath(path string) *Bundle {
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	normalizedPath := NormalizePath(path)
 	var bestMatch *Bundle
 	var matchedLen int
@@ -35218,7 +35316,7 @@ func GetBundleByPath(path string) *Bundle {
 }
 
 func findBundleInfo(path string) (name, root string, ok bool) {
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	normalizedPath := NormalizePath(path)
 	var matchedBundle string
 	var matchedRoot string
@@ -35944,6 +36042,9 @@ func LoadContributor(alias string) (*Contributor, error) {
 // SaveContributor persists contributor to the data store.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🛠️savecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/SaveContributor)
 func SaveContributor(c Contributor) error {
+	if c.Alias == "" {
+		c.Alias = c.Github
+	}
 	dir := GetContributorPath(c.Alias)
 	if !FileExists(dir) {
 		EnsureDir(dir)
@@ -36087,7 +36188,7 @@ func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*B
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	repopkg.Emit(repopkg.EventAnalyzeStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	scope := ParseScope(scopeRaw)
-	bundles := GetProjects()
+	bundles := GetTechnologies()
 	breachs, err := CheckPolicies(scope, bundles, policyIDs)
 	if err != nil {
 		return ToolResult{Error: err.Error()}
@@ -36239,7 +36340,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		{
 			Name:    "C#",
 			Cmd:     "dotnet",
-			Args:    []string{"run", "--project", "Semio.Benchmark/Semio.Benchmark.csproj", "--configuration", "Release"},
+			Args:    []string{"run", "--technology", "Semio.Benchmark/Semio.Benchmark.csproj", "--configuration", "Release"},
 			Dir:     filepath.Join(rootDir, "net"),
 			Enabled: true,
 		},
@@ -37939,7 +38040,9 @@ func appendSessionEvent(dir, sessionID string, entry HookLogEntry, fallbackMeta 
 	_ = os.WriteFile(path, data, 0644)
 }
 
-// mergeTicketAgentPlanSteps MUST merge incoming plan steps with existing ones, preserving timestamps and marking removed steps as abandoned.
+// mergeTicketAgentPlanSteps MUST merge incoming plan steps with lifecycle dates:
+// ideated on first appearance, started on first in-progress, completed on first completed after started,
+// abandoned only when never started and removed from incoming.
 // mergeTicketAgentPlanSteps merges incoming hook plan steps into existing tracked steps using name-based matching.
 // [🧰semiorepo⌨️cli💻maingo🔖types🔖cli🔖hooks🛠️mergeticketagentplansteps](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/mergeTicketAgentPlanSteps)
 func mergeTicketAgentPlanSteps(existing []TicketAgentPlanStep, incoming []HookPlanStep, second string) []TicketAgentPlanStep {
@@ -37953,12 +38056,16 @@ func mergeTicketAgentPlanSteps(existing []TicketAgentPlanStep, incoming []HookPl
 		incomingNames[s.Name] = true
 		step := TicketAgentPlanStep{Name: s.Name}
 		if old, ok := existingByName[s.Name]; ok {
+			step.Ideated = old.Ideated
 			step.Started = old.Started
 			step.Completed = old.Completed
 		}
+		if step.Ideated == "" {
+			step.Ideated = second
+		}
 		switch s.Status {
 		case "completed":
-			if step.Completed == "" {
+			if step.Started != "" && step.Completed == "" {
 				step.Completed = second
 			}
 		case "in-progress", "in_progress":
@@ -37969,9 +38076,33 @@ func mergeTicketAgentPlanSteps(existing []TicketAgentPlanStep, incoming []HookPl
 		merged = append(merged, step)
 	}
 	for _, s := range existing {
-		if !incomingNames[s.Name] && s.Abandoned == "" {
-			s.Abandoned = second
+		if incomingNames[s.Name] {
+			continue
+		}
+		if s.Abandoned != "" {
 			merged = append(merged, s)
+			continue
+		}
+		// A completed step is terminal and MUST never transition to abandoned.
+		if s.Completed != "" {
+			merged = append(merged, s)
+			continue
+		}
+		// A started step stays historical and MUST never transition to abandoned.
+		if s.Started != "" {
+			merged = append(merged, s)
+			continue
+		}
+		s.Abandoned = second
+		merged = append(merged, s)
+	}
+	for i := range merged {
+		// Backfill legacy name-only steps so plan invariants always hold.
+		if merged[i].Ideated == "" &&
+			merged[i].Started == "" &&
+			merged[i].Completed == "" &&
+			merged[i].Abandoned == "" {
+			merged[i].Ideated = second
 		}
 	}
 	return merged
@@ -38199,6 +38330,8 @@ func logHook(hctx HookContext, result HookResult) {
 		}
 		repoRoot = findRepoRoot(cwd)
 	}
+	repoRoot = findRepoRoot(repoRoot)
+	metaRoot := filepath.Join(repoRoot, ".semio-repo")
 	now := time.Now().UTC()
 	yy := fmt.Sprintf("%02d", now.Year()%100)
 	mm := fmt.Sprintf("%02d", int(now.Month()))
@@ -38210,13 +38343,13 @@ func logHook(hctx HookContext, result HookResult) {
 	kind := HookEventKind(hctx.Event)
 	if kind == HookKindVersion {
 		checkpointID := extractCheckpointIDFromResult(result, repoRoot)
-		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🔀", yy, mm, dd, checkpointID)
+		logDir = filepath.Join(metaRoot, "⚡", "🔀", yy, mm, dd, checkpointID)
 	} else {
 		sessionID = extractSessionIDFromInput(hctx.Input)
 		if sessionID == "" {
 			sessionID = "unknown"
 		}
-		logDir = filepath.Join(repoRoot, ".semio-repo", "⚡", "🤖", yy, mm, dd, sessionID)
+		logDir = filepath.Join(metaRoot, "⚡", "🤖", yy, mm, dd, sessionID)
 	}
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return
@@ -39460,11 +39593,27 @@ func appendLineRead(filesToLines map[string]map[int]struct{}, path string, line 
 func buildDefinitionReads(filesToLines map[string]map[int]struct{}) []HookSearchDefinition {
 	var result []HookSearchDefinition
 	for filePath, lineSet := range filesToLines {
-		content, err := os.ReadFile(filePath)
+		absPath := filePath
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(rootDir, filePath)
+		}
+		content, err := os.ReadFile(absPath)
 		if err != nil {
 			continue
 		}
-		definitions := ParseDefinitions(string(content), filePath)
+		totalLines := bytes.Count(content, []byte{'\n'})
+		if len(content) > 0 && content[len(content)-1] != '\n' {
+			totalLines++
+		}
+		if totalLines > 0 && len(lineSet) >= totalLines {
+			// Full file read: add only the file ID, not individual definitions.
+			if id := resolvePathToFileID(filePath); id != "" {
+				result = append(result, HookSearchDefinition{ID: id})
+			}
+			continue
+		}
+		normPath := normalizeHookPath(filePath)
+		definitions := ParseDefinitions(string(content), normPath)
 		for i := range definitions {
 			loc := countDefinitionReadLines(definitions[i], lineSet)
 			if loc <= 0 {
@@ -39775,7 +39924,7 @@ func resolveGoTestFiles(parts []string, cwd string) []string {
 	return result
 }
 
-// resolveCargoTestFiles resolves "cargo test" to Rust test files in the project.
+// resolveCargoTestFiles resolves "cargo test" to Rust test files in the technology.
 func resolveCargoTestFiles(parts []string, cwd string) []string {
 	if len(parts) < 2 || (parts[1] != "test" && parts[1] != "nextest") {
 		return nil
@@ -39788,18 +39937,18 @@ func resolveDotnetTestFiles(parts []string, cwd string) []string {
 	if len(parts) < 2 || parts[1] != "test" {
 		return nil
 	}
-	// Check if a specific project path is provided
-	projectDir := cwd
+	// Check if a specific technology path is provided
+	technologyDir := cwd
 	for i := 2; i < len(parts); i++ {
 		if !strings.HasPrefix(parts[i], "-") && !strings.HasPrefix(parts[i], "/") {
 			candidate := filepath.Join(cwd, parts[i])
 			if info, err := os.Stat(candidate); err == nil && info.IsDir() {
-				projectDir = candidate
+				technologyDir = candidate
 			}
 			break
 		}
 	}
-	return findTestFilesByPatterns(projectDir, nil, []string{".cs"}, true)
+	return findTestFilesByPatterns(technologyDir, nil, []string{".cs"}, true)
 }
 
 // resolvePythonTestFiles resolves "python -m pytest ..." to test files.
@@ -40419,7 +40568,7 @@ func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []stri
 		return nil
 	}
 	var bundles []string
-	for _, k := range []string{"bundles", "targets", "projects", "label"} {
+	for _, k := range []string{"bundles", "targets", "technologies", "label"} {
 		if arr, ok := toolInput[k].([]interface{}); ok {
 			for _, item := range arr {
 				if s, ok := item.(string); ok && s != "" {
@@ -40836,17 +40985,17 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 		if dir != "." && dir != "" {
 			folderID = buildFolderID(dir, nil)
 		}
-		var bundleID, projectID string
+		var bundleID, technologyID string
 		bundle := GetBundleByPath(filePath)
 		if bundle != nil {
 			bundleID = bundle.GetID()
-			projectName := bundle.ProjectName
-			if projectName == "" {
+			technologyName := bundle.TechnologyName
+			if technologyName == "" {
 				nameParts := strings.SplitN(bundle.Name, "/", 2)
-				projectName = nameParts[0]
+				technologyName = nameParts[0]
 			}
-			pKind := DeriveProjectKind(projectName)
-			projectID = emojiText(string(pKind)) + Flat(projectName)
+			pKind := DeriveTechnologyKind(technologyName)
+			technologyID = emojiText(string(pKind)) + Flat(technologyName)
 		}
 		switch {
 		case status == "A":
@@ -40857,8 +41006,8 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 			if bundleID != "" {
 				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
 			}
-			if projectID != "" {
-				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			if technologyID != "" {
+				diff.Technologies.Modified = appendUniqueString(diff.Technologies.Modified, technologyID)
 			}
 		case status == "D":
 			diff.Files.Deleted = appendUniqueString(diff.Files.Deleted, fileID)
@@ -40868,8 +41017,8 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 			if bundleID != "" {
 				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
 			}
-			if projectID != "" {
-				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			if technologyID != "" {
+				diff.Technologies.Modified = appendUniqueString(diff.Technologies.Modified, technologyID)
 			}
 		case strings.HasPrefix(status, "R"):
 			if len(parts) >= 3 {
@@ -40887,8 +41036,8 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 			if bundleID != "" {
 				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
 			}
-			if projectID != "" {
-				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			if technologyID != "" {
+				diff.Technologies.Modified = appendUniqueString(diff.Technologies.Modified, technologyID)
 			}
 		default:
 			diff.Files.Modified = appendUniqueString(diff.Files.Modified, fileID)
@@ -40898,8 +41047,8 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 			if bundleID != "" {
 				diff.Bundles.Modified = appendUniqueString(diff.Bundles.Modified, bundleID)
 			}
-			if projectID != "" {
-				diff.Projects.Modified = appendUniqueString(diff.Projects.Modified, projectID)
+			if technologyID != "" {
+				diff.Technologies.Modified = appendUniqueString(diff.Technologies.Modified, technologyID)
 			}
 		}
 	}
@@ -40917,6 +41066,7 @@ func storeCheckpointDiff(repoRoot string, checkpointID string) {
 	yy := fmt.Sprintf("%02d", now.Year()%100)
 	mm := fmt.Sprintf("%02d", int(now.Month()))
 	dd := fmt.Sprintf("%02d", now.Day())
+	repoRoot = findRepoRoot(repoRoot)
 	diffDir := filepath.Join(repoRoot, ".semio-repo", "🔀", yy, mm, dd)
 	if err := os.MkdirAll(diffDir, 0755); err != nil {
 		return
@@ -43161,27 +43311,27 @@ func (s SemanticId) String() string {
 	return fmt.Sprintf("%s%s", emojiText(s.Emoji), s.Value)
 }
 
-func projectKindEmoji(data map[string]interface{}) string {
+func technologyKindEmoji(data map[string]interface{}) string {
 	if val, ok := data["kind"].(string); ok {
 		switch val {
 		case "infrastructure":
-			return emojiText(EmojiProjectInfra)
+			return emojiText(EmojiTechnologyInfra)
 		case "research":
-			return emojiText(EmojiProjectResearch)
+			return emojiText(EmojiTechnologyResearch)
 		case "mono":
-			return emojiText(EmojiProjectMono)
+			return emojiText(EmojiTechnologyMono)
 		case "user":
-			return emojiText(EmojiProjectUser)
+			return emojiText(EmojiTechnologyUser)
 		}
 	}
 	name, _ := data["name"].(string)
 	if strings.Contains(name, "repo") {
-		return emojiText(EmojiProjectInfra)
+		return emojiText(EmojiTechnologyInfra)
 	}
 	if strings.HasPrefix(name, "coda") {
-		return emojiText(EmojiProjectResearch)
+		return emojiText(EmojiTechnologyResearch)
 	}
-	return emojiText(EmojiProjectUser)
+	return emojiText(EmojiTechnologyUser)
 }
 
 func bundleKindEmoji(data map[string]interface{}) string {
@@ -43376,14 +43526,14 @@ func interactionKindFromEmoji(emoji string) string {
 	return "started"
 }
 
-func projectKindCodeFromEmoji(emoji string) string {
+func technologyKindCodeFromEmoji(emoji string) string {
 	ne := emojiText(emoji)
 	switch ne {
-	case emojiText(EmojiProjectInfra):
+	case emojiText(EmojiTechnologyInfra):
 		return "i"
-	case emojiText(EmojiProjectResearch):
+	case emojiText(EmojiTechnologyResearch):
 		return "r"
-	case emojiText(EmojiProjectMono):
+	case emojiText(EmojiTechnologyMono):
 		return "m"
 	}
 	return "u"
@@ -43431,7 +43581,7 @@ func definitionKindCodeFromEmoji(emoji string) string {
 	return "i"
 }
 
-func projectKindCode(data map[string]interface{}) string {
+func technologyKindCode(data map[string]interface{}) string {
 	if val, ok := data["kind"].(string); ok {
 		switch val {
 		case "infrastructure":
@@ -43454,16 +43604,16 @@ func projectKindCode(data map[string]interface{}) string {
 	return "u"
 }
 
-// ProjectKindToCode MUST perform the ProjectKindToCode operation.
-// ProjectKindToCode holds the data fields for a ProjectKindToCode record.
-// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️projectkindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ProjectKindToCode)
-func ProjectKindToCode(k ProjectKind) string {
+// TechnologyKindToCode MUST perform the TechnologyKindToCode operation.
+// TechnologyKindToCode holds the data fields for a TechnologyKindToCode record.
+// [🧰semiorepo⌨️cli💻maingo🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/TechnologyKindToCode)
+func TechnologyKindToCode(k TechnologyKind) string {
 	switch k {
-	case ProjectKindInfrastructure:
+	case TechnologyKindInfrastructure:
 		return "i"
-	case ProjectKindResearch:
+	case TechnologyKindResearch:
 		return "r"
-	case ProjectKindMono:
+	case TechnologyKindMono:
 		return "m"
 	}
 	return "u"
@@ -43887,23 +44037,23 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		return parentId + emojiText(EmojiSecond) + ss
 	case "codebase":
 		return parentId + emojiText(EmojiCodebase)
-	case "projects":
-		return parentId + emojiText(EmojiProjects)
-	case "project":
+	case "technologies":
+		return parentId + emojiText(EmojiTechnologies)
+	case "technology":
 		name, _ := data["name"].(string)
-		return projectKindEmoji(data) + Flat(name)
+		return technologyKindEmoji(data) + Flat(name)
 	case "bundles":
 		return parentId + emojiText(EmojiBundles)
 	case "bundle":
 		name, _ := data["name"].(string)
 		parts := strings.SplitN(name, "/", 2)
-		projectCode := parts[0]
-		bundleCode := projectCode
+		technologyCode := parts[0]
+		bundleCode := technologyCode
 		if len(parts) > 1 {
 			bundleCode = parts[1]
 		}
-		pKind := DeriveProjectKind(projectCode)
-		return emojiText(string(pKind)) + Flat(projectCode) + bundleKindEmoji(data) + Flat(bundleCode)
+		pKind := DeriveTechnologyKind(technologyCode)
+		return emojiText(string(pKind)) + Flat(technologyCode) + bundleKindEmoji(data) + Flat(bundleCode)
 	case "folders":
 		return parentId + emojiText(EmojiFolders)
 	case "folder":
@@ -44065,8 +44215,11 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	case "contributors":
 		return parentId + emojiText(EmojiContributors)
 	case "contributor":
-		github, _ := data["github"].(string)
-		return emojiText(EmojiContributor) + Flat(github)
+		alias, _ := data["alias"].(string)
+		if alias == "" {
+			alias, _ = data["github"].(string)
+		}
+		return emojiText(EmojiContributor) + Flat(alias)
 	case "checkpoints":
 		return parentId + emojiText(EmojiCheckpoints)
 	case "checkpoint":
@@ -44192,11 +44345,11 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 		return fmt.Sprintf("semiorepo://y/%s/m/%s/d/%s/h/%s/min/%s/s/%s", yy, mm, dd, hh, min, ss)
 	case "codebase":
 		return "semiorepo://cb"
-	case "projects":
+	case "technologies":
 		return "semiorepo://p"
-	case "project":
+	case "technology":
 		name, _ := data["name"].(string)
-		kc := projectKindCode(data)
+		kc := technologyKindCode(data)
 		return fmt.Sprintf("semiorepo://p/%s/%s", kc, PathToUriPath(strings.TrimPrefix(name, "@")))
 	case "bundles":
 		if parentUri != "" {
@@ -44206,14 +44359,14 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	case "bundle":
 		name, _ := data["name"].(string)
 		parts := strings.SplitN(name, "/", 2)
-		projectCode := parts[0]
-		bundleCode := projectCode
+		technologyCode := parts[0]
+		bundleCode := technologyCode
 		if len(parts) > 1 {
 			bundleCode = parts[1]
 		}
-		pkc := projectKindCode(map[string]interface{}{"name": projectCode})
+		pkc := technologyKindCode(map[string]interface{}{"name": technologyCode})
 		bkc := bundleKindCode(data)
-		return fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(projectCode, "@")), bkc, PathToUriPath(bundleCode))
+		return fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(technologyCode, "@")), bkc, PathToUriPath(bundleCode))
 	case "folders":
 		if parentUri != "" {
 			return parentUri + "/fds"
@@ -44508,15 +44661,15 @@ func buildFolderUriFromPath(path string) string {
 	}
 	bundleRoot := NormalizePath(bundle.Root)
 	parts := strings.SplitN(bundle.Name, "/", 2)
-	projectCode := parts[0]
-	bundleCode := projectCode
+	technologyCode := parts[0]
+	bundleCode := technologyCode
 	if len(parts) > 1 {
 		bundleCode = parts[1]
 	}
-	pkc := ProjectKindToCode(DeriveProjectKind(projectCode))
+	pkc := TechnologyKindToCode(DeriveTechnologyKind(technologyCode))
 	bkc := BundleKindToCode(bundle.Kind)
-	projectName := strings.TrimPrefix(projectCode, "@")
-	bundleUri := fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(projectName), bkc, PathToUriPath(bundleCode))
+	technologyName := strings.TrimPrefix(technologyCode, "@")
+	bundleUri := fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(technologyName), bkc, PathToUriPath(bundleCode))
 	relPath := normalized
 	if strings.HasPrefix(normalized, bundleRoot+"/") {
 		relPath = strings.TrimPrefix(normalized, bundleRoot+"/")
@@ -44542,16 +44695,16 @@ func extractPathFromFolderUri(uri string) string {
 	if len(parts) < 6 || parts[0] != "p" || parts[3] != "b" {
 		return ""
 	}
-	projectName := PathFromUriPath(parts[2])
+	technologyName := PathFromUriPath(parts[2])
 	bundleName := PathFromUriPath(parts[5])
-	bundleId := projectName
-	if projectName != bundleName {
-		bundleId = projectName + "/" + bundleName
+	bundleId := technologyName
+	if technologyName != bundleName {
+		bundleId = technologyName + "/" + bundleName
 	}
 	var bundle *Bundle
-	for i, b := range GetProjects() {
+	for i, b := range GetTechnologies() {
 		if b.Name == bundleId {
-			bundle = &GetProjects()[i]
+			bundle = &GetTechnologies()[i]
 			break
 		}
 	}
@@ -44580,16 +44733,16 @@ func extractPathFromFileUri(uri string) string {
 	if len(parts) < 6 || parts[0] != "p" || parts[3] != "b" {
 		return ""
 	}
-	projectName := PathFromUriPath(parts[2])
+	technologyName := PathFromUriPath(parts[2])
 	bundleName := PathFromUriPath(parts[5])
-	bundleId := projectName
-	if projectName != bundleName {
-		bundleId = projectName + "/" + bundleName
+	bundleId := technologyName
+	if technologyName != bundleName {
+		bundleId = technologyName + "/" + bundleName
 	}
 	var bundle *Bundle
-	for i, b := range GetProjects() {
+	for i, b := range GetTechnologies() {
 		if b.Name == bundleId {
-			bundle = &GetProjects()[i]
+			bundle = &GetTechnologies()[i]
 			break
 		}
 	}
@@ -44624,15 +44777,15 @@ func buildFileUriFromPath(path string) string {
 	}
 	bundleRoot := NormalizePath(bundle.Root)
 	parts := strings.SplitN(bundle.Name, "/", 2)
-	projectCode := parts[0]
-	bundleCode := projectCode
+	technologyCode := parts[0]
+	bundleCode := technologyCode
 	if len(parts) > 1 {
 		bundleCode = parts[1]
 	}
-	pkc := ProjectKindToCode(DeriveProjectKind(projectCode))
+	pkc := TechnologyKindToCode(DeriveTechnologyKind(technologyCode))
 	bkc := BundleKindToCode(bundle.Kind)
-	projectName := strings.TrimPrefix(projectCode, "@")
-	bundleUri := fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(projectName), bkc, PathToUriPath(bundleCode))
+	technologyName := strings.TrimPrefix(technologyCode, "@")
+	bundleUri := fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(technologyName), bkc, PathToUriPath(bundleCode))
 	relPath := normalized
 	if strings.HasPrefix(normalized, bundleRoot+"/") {
 		relPath = strings.TrimPrefix(normalized, bundleRoot+"/")
@@ -44739,7 +44892,7 @@ func IdToUri(id string) string {
 		}
 		return s, "", "", false
 	}
-	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch, EmojiProjectMono}
+	technologyEmojis := []string{EmojiTechnologyUser, EmojiTechnologyInfra, EmojiTechnologyResearch, EmojiTechnologyMono}
 	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
 	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant, EmojiDefinitionTest}
 	interactionEmojis := []string{EmojiInteractionStarted, EmojiInteractionEdited, EmojiInteractionFinished, EmojiInteractionRestarted, EmojiInteractionDeleted}
@@ -44822,12 +44975,12 @@ skipSectionChain:
 			return result
 		}
 	}
-	for _, pe := range projectEmojis {
+	for _, pe := range technologyEmojis {
 		if rest, ok := hasPrefix(normalized, pe); ok {
-			pkc := projectKindCodeFromEmoji(pe)
-			if projectVal, be, bundleVal, found := findEmoji(rest, bundleEmojis); found {
+			pkc := technologyKindCodeFromEmoji(pe)
+			if technologyVal, be, bundleVal, found := findEmoji(rest, bundleEmojis); found {
 				bkc := bundleKindCodeFromEmoji(be)
-				return fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(projectVal), bkc, PathToUriPath(bundleVal))
+				return fmt.Sprintf("semiorepo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(technologyVal), bkc, PathToUriPath(bundleVal))
 			}
 			return fmt.Sprintf("semiorepo://p/%s/%s", pkc, PathToUriPath(rest))
 		}
@@ -44925,7 +45078,7 @@ func UriToId(uri string) string {
 	case p == "":
 		return ""
 	case p == "p":
-		return emojiText(EmojiProjects)
+		return emojiText(EmojiTechnologies)
 	case strings.HasPrefix(p, "p/"):
 		rest := strings.TrimPrefix(p, "p/")
 		parts := strings.SplitN(rest, "/", 3)
@@ -44934,7 +45087,7 @@ func UriToId(uri string) string {
 		}
 		pkc := parts[0]
 		pName := Flat(parts[1])
-		pEmoji := projectEmojiFromCode(pkc)
+		pEmoji := technologyEmojiFromCode(pkc)
 		if len(parts) == 2 {
 			return emojiText(pEmoji) + pName
 		}
@@ -45082,16 +45235,16 @@ func UriToId(uri string) string {
 	return ""
 }
 
-func projectEmojiFromCode(code string) string {
+func technologyEmojiFromCode(code string) string {
 	switch code {
 	case "i":
-		return EmojiProjectInfra
+		return EmojiTechnologyInfra
 	case "r":
-		return EmojiProjectResearch
+		return EmojiTechnologyResearch
 	case "m":
-		return EmojiProjectMono
+		return EmojiTechnologyMono
 	}
-	return EmojiProjectUser
+	return EmojiTechnologyUser
 }
 
 func bundleEmojiFromCode(code string) string {
@@ -45463,7 +45616,7 @@ func collectEntityProps(kind string, data map[string]interface{}, truncateDesc b
 	case "statute":
 		desc, _ := data["description"].(string)
 		appendNonEmpty(desc)
-	case "project":
+	case "technology":
 		desc, _ := data["description"].(string)
 		appendNonEmpty(desc)
 	case "checkpoint":
@@ -45506,7 +45659,7 @@ func inferEntityKind(key string) string {
 		{"policy", "policy"},
 		{"breachkind", "statute"},
 		{"bundle", "bundle"},
-		{"project", "project"},
+		{"technology", "technology"},
 		{"checkpoint", "checkpoint"},
 		{"repo", "root"},
 		{"syncgithub", "root"},

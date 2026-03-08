@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS folder (
     summary TEXT,
     UNIQUE (parent_folder_id, name)
 );
-CREATE TABLE IF NOT EXISTS project (
+CREATE TABLE IF NOT EXISTS technology (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     folder_id INTEGER NOT NULL REFERENCES folder(id) ON DELETE CASCADE,
     kind INTEGER NOT NULL DEFAULT 0,
@@ -49,12 +49,12 @@ CREATE TABLE IF NOT EXISTS project (
 );
 CREATE TABLE IF NOT EXISTS bundle (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    technology_id INTEGER NOT NULL REFERENCES technology(id) ON DELETE CASCADE,
     folder_id INTEGER NOT NULL REFERENCES folder(id) ON DELETE CASCADE,
     kind INTEGER NOT NULL DEFAULT 0,
     name TEXT NOT NULL,
     summary TEXT,
-    UNIQUE (project_id, kind, name)
+    UNIQUE (technology_id, kind, name)
 );
 CREATE TABLE IF NOT EXISTS file (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

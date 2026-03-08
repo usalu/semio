@@ -148,85 +148,55 @@ func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 }
 
 func TestRoundtrip(t *testing.T) {
-	t.Run("Json", func(t *testing.T) {
-		t.Run("Metabolism", func(t *testing.T) {
-			t.Run("Kit -> Json -> Kit", func(t *testing.T) {
-				var kit Kit
-				loadJSON(t, "kit_metabolism.json", &kit)
+	t.Run("Metabolism", func(t *testing.T) {
+		// JSON -> Memory -> JSON
+		var kit Kit
+		loadJSON(t, "kit_metabolism.json", &kit)
 
-				data, err := SerializeKit(kit)
+		data, err := SerializeKit(kit)
+		if err != nil {
+			t.Fatalf("SerializeKit failed: %v", err)
+		}
+
+		parsed, err := DeserializeKit(data)
+		if err != nil {
+			t.Fatalf("DeserializeKit failed: %v", err)
+		}
+
+		if !AreKitsEqual(kit, parsed) {
+			t.Error("JSON -> Memory -> JSON: serialized and deserialized kit should be equal")
+		}
+
+		// JSON -> ZIP
+		files := make(map[string][]byte)
+		for i := range kit.Files {
+			if kit.Files[i].Blob != nil {
+				decoded, err := base64Decode(*kit.Files[i].Blob)
 				if err != nil {
-					t.Fatalf("SerializeKit failed: %v", err)
+					t.Fatalf("Failed to decode blob for %s: %v", kit.Files[i].Name, err)
 				}
+				filePath := buildFilePath(&kit, &kit.Files[i])
+				files[filePath] = decoded
+			}
+		}
 
-				parsed, err := DeserializeKit(data)
-				if err != nil {
-					t.Fatalf("DeserializeKit failed: %v", err)
-				}
+		roundtripPath := filepath.Join(t.TempDir(), "metabolism_roundtrip.zip")
+		if err := KitToZip(&kit, files, roundtripPath, ""); err != nil {
+			t.Fatalf("KitToZip failed: %v", err)
+		}
 
-				if !AreKitsEqual(kit, parsed) {
-					t.Error("Serialized and deserialized kit should be equal")
-				}
-			})
-		})
-	})
+		// ZIP -> JSON
+		kit2, files2, err := KitFromZip(roundtripPath)
+		if err != nil {
+			t.Fatalf("KitFromZip failed: %v", err)
+		}
 
-	t.Run("Zip", func(t *testing.T) {
-		t.Run("Metabolism", func(t *testing.T) {
-			t.Run("Zip -> Kit -> Zip -> Kit", func(t *testing.T) {
-				zipPath := filepath.Join(AssetsPath, "metabolism.zip")
-				kit, files, err := KitFromZip(zipPath)
-				if err != nil {
-					t.Fatalf("KitFromZip failed: %v", err)
-				}
-				if kit.Guid == "" {
-					t.Error("Kit GUID should not be empty")
-				}
-				if kit.Name != "Metabolism" {
-					t.Errorf("Expected kit name Metabolism, got %s", kit.Name)
-				}
-				if len(kit.Types) == 0 {
-					t.Error("Kit should have types")
-				}
-				if len(kit.Designs) == 0 {
-					t.Error("Kit should have designs")
-				}
-				if len(files) == 0 {
-					t.Error("Kit should have files")
-				}
-
-				schemaPath := filepath.Join(AssetsPath, "..", "..", "sql", "sqlite", "semio", "schema.sql")
-				schemaData, err := os.ReadFile(schemaPath)
-				if err != nil {
-					t.Fatalf("Failed to read schema.sql: %v", err)
-				}
-
-				roundtripPath := filepath.Join(t.TempDir(), "metabolism_roundtrip.zip")
-				if err := KitToZip(kit, files, roundtripPath, string(schemaData)); err != nil {
-					t.Fatalf("KitToZip failed: %v", err)
-				}
-
-				kit2, files2, err := KitFromZip(roundtripPath)
-				if err != nil {
-					t.Fatalf("KitFromZip (roundtrip) failed: %v", err)
-				}
-				if kit2.Guid != kit.Guid {
-					t.Errorf("Expected kit GUID %s, got %s", kit.Guid, kit2.Guid)
-				}
-				if kit2.Name != kit.Name {
-					t.Errorf("Expected kit name %s, got %s", kit.Name, kit2.Name)
-				}
-				if len(kit2.Types) != len(kit.Types) {
-					t.Errorf("Expected %d types, got %d", len(kit.Types), len(kit2.Types))
-				}
-				if len(kit2.Designs) != len(kit.Designs) {
-					t.Errorf("Expected %d designs, got %d", len(kit.Designs), len(kit2.Designs))
-				}
-				if len(files2) != len(files) {
-					t.Errorf("Expected %d files, got %d", len(files), len(files2))
-				}
-			})
-		})
+		if !AreKitsEqual(kit, *kit2) {
+			t.Error("ZIP -> JSON: roundtrip kit should be equal")
+		}
+		if len(files2) != len(files) {
+			t.Errorf("Expected %d files, got %d", len(files), len(files2))
+		}
 	})
 }
 

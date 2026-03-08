@@ -1,204 +1,5 @@
 # 💯 Requirements
 
-## [👤semio](semiorepo://p/u/semio)
-
-## Kit
-
-A kit is a collection of types, designs, authors, qualities, attributes, and concepts.
-
-A kit is either _static_ (a special .zip file) or _dynamic_ (bound to a runtime).
-
-A _static_ kit contains a reserved .semio folder that contains a kit.db sqlite file.
-
-The SQL-schema of kit.db MUST follow the schema definition.
-
-For Inter-Process-Communication (IPC) the JSON-schema MUST be used.
-
-## Design
-
-A design is an undirected graph of pieces (nodes) and connections (edges) with organizational layers, groups, stats, attributes, and concepts.
-
-A design is _proto_ (a _protodesign_) when it has no _parent_ design.
-
-The _children_ of a _parent_ design are _subdesigns_.
-
-A _flat_ design has no connections and all pieces are _fixed_.
-
-The pieces are _placed_ _hierarchically_ (breadth-first) for every _component_.
-
-Additional connections which where not used in the _placement_ can be used to validate the computed planes.
-
-## Type
-
-A type is a reusable component with different models, connectors, attributes, concepts, and authors.
-
-The type is _proto_ (a _prototype_) when it has no _parent_.
-
-The _children_ of a _parent_ type are _subtypes_.
-
-A type can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location**.
-
-## Connection
-
-A connection is a 3D-Link between two pieces with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis).
-
-The _translation_ is applied first, then the _rotation_.
-
-The two pieces are called **_connected_** and **_connecting_** but there is no difference between them.
-
-The _direction_ of a connection goes from the lower _hierarchy_ to the higher _hierarchy_ of the pieces.
-
-A connection can have attributes and diagram positioning with **u** and **v** offsets.
-
-## Piece
-
-A piece is an instance of either a type or a design with **id**, optional **name**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and attributes.
-
-A piece is either _fixed_ (with a plane) or _linked_ (with a connection).
-
-A group of _connected_ pieces is called a _component_.
-
-The _hierarchy_ of a piece is the length of the shortest path to the next _fixed_ piece.
-
-## Connector
-
-A connector is a conceptual connection **point** with an outwards **direction**, **id**, optional **name**, optional **description**, and **t** value for diagram ring positioning.
-
-A connector can be marked as **mandatory** in which case it is required to be connected to a piece.
-
-A connector can reference a **port** for explicit compatibility control. The port defines which other ports it is compatible with.
-
-No **port** means the _default_ port which is compatible with all other connectors.
-
-Connector compatibility is determined by the port definitions at the kit level.
-
-A connector can have props that define measurable characteristics and attributes for additional metadata.
-
-## Model
-
-A model is a **guid**, optional **name**, **file** reference, optional **tags** references, optional **description**, and attributes.
-
-The **file** is a required reference to a kit-level file entity.
-
-The **tags** are optional references to kit-level tag entities. No **tags** means the _default_ model.
-
-The similarity of models is determined by the jaccard index of their tag guids.
-
-### Supported 3D File Extensions
-
-Model files SHOULD use supported 3D formats including: gltf, glb, fbx, obj, dae, 3ds, stl, ply, usdz, vrm, ifc, 3mf, and more.
-
-### Model Tag Selection
-
-The footer displays all tag names from the type's/design's models. Clicking a tag toggles its selection. The model with the highest Jaccard index matching the selected tags is displayed in the scene.
-
-## Attribute
-
-An attribute is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** (url or text).
-
-The **name** is kebab-cased and with .-separated string similar to toml keys.
-
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute.
-
-The **unit** is a unit identifier.
-
-- mm for millimeter, cm for centimeter, dm for decimeter, m for meter, km for kilometer
-- m² for square meter, m³ for cubic meter, m⁴ for quartic meter
-- ° for degree, rad for radian
-- N for newton, kN for kilonewton, MN for meganewton
-- °C for degree Celsius, °F for degree Fahrenheit
-- W for watt, kW for kilowatt, MW for megawatt, GW for gigawatt
-- Wh for watt-hour, kWh for kilowatt-hour, MWh for megawatt-hour, GWh for gigawatt-hour
-- J for joule, kJ for kilojoule, kcal for kilocalorie
-- kWh/m²a for kilowatt-hour per square meter per year
-- m/s for meter per second, m²/s for square meter per second, m³/s for cubic meter per second
-- Pa for pascal, kPa for kilopascal, MPa for megapascal
-
-A list of attributes is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value**.
-
-## Tag
-
-A tag is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and attributes.
-
-Tags are used to categorize and filter models within a type. A model references tags via guid reference.
-
-## Concept
-
-A concept is a kit-level entity with a unique **guid**, **name**, optional **description**, optional **icon**, and attributes.
-
-Concepts provide semantic grouping for types and designs. Types and designs reference concepts via guid reference.
-
-## Plane
-
-A plane is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space.
-
-The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis.
-
-## Url
-
-A url is either _relative_ (to the root of the .zip file) or _remote_ (http, https, ftp, ...) string.
-
-A _relative_ url is a /-normalized path to a file in the .zip file and is not prefixed with ., ./, /, ....
-
-## Quality
-
-A quality is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula**.
-
-A quality can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation.
-
-The **kind** determines which entities the quality can be applied to using a bitwise enum system.
-
-## Benchmark
-
-A benchmark is a performance standard within a quality with a **name**, optional **icon**, and **range** (min/max with exclusion flags).
-
-Benchmarks provide reference points for evaluating quality measurements against industry or design standards.
-
-## Port
-
-A port is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible ports** references, and attributes.
-
-The port is defined at the kit level and referenced by connectors.
-
-An empty **compatible ports** list means the port is compatible with all other ports.
-
-Two connectors are compatible if:
-
-- Both have no port specified (default compatibility)
-- They reference the same port
-- One port's compatible list includes the other port's guid
-- Either port has an empty compatible list and the other explicitly allows it
-
-## Author
-
-An author has a **name** and **email** and can be associated with kits, types, or designs with a **rank** indicating contribution level.
-
-Authors provide attribution and contact information for design ownership and collaboration.
-
-## Layer
-
-A layer is an organizational grouping within a design with a **name**, optional **description**, and **color** for visual organization.
-
-Layers provide a way to group and manage pieces logically within complex designs.
-
-## Group
-
-A group is a collection of pieces within a design with optional **name**, **description**, **color**, and attributes.
-
-Groups enable semantic clustering of pieces that belong together functionally or conceptually.
-
-## Prop
-
-A prop is a **key-value** pair on a connector that references a quality with a specific **value** and optional **unit**.
-
-Props define measurable characteristics of connectors using the quality system for standardized measurement.
-
-## Stat
-
-A stat is a statistical measurement on a design that references a quality with **range** (min/max) and optional **unit**.
-
-Stats provide computed or measured performance data for entire designs using the quality framework.
-
 ## [👤semio📚engine](semiorepo://p/u/semio/b/l/engine)
 
 ## Engine
@@ -336,2891 +137,3320 @@ Kit: # section,
  Name: "{{kit-name}}"
 ```
 
-## [👤semio🏪assets🗃️grasshopper💻buildpy🔖build](semiorepo://p/u/semio/b/a/assets/fd/org/grasshopper/f/build.py/s/Build)
+## [👤semio🏪assets🗃️grasshopper💻build🔖build](semiorepo://p/u/semio/b/a/assets/fd/org/grasshopper/f/build.py/s/Build)
 
 Grasshopper XML parsing and JSON export MUST extract components and groups.
 
-## [👤semio🏪assets💻iconsts🔖exports](semiorepo://p/u/semio/b/a/assets/f/icons.ts/s/Exports)
+## [👤semio🏪assets💻icons🔖exports](semiorepo://p/u/semio/b/a/assets/f/icons.ts/s/Exports)
 
 Exports MUST map each Lucide icon to a domain-specific alias name.
 
-## [👤semio🏪assets💻indexts🔖exports](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports)
+## [👤semio🏪assets💻index🔖exports](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports)
 
 Re-exports and data constants MUST come from the Metabolism kit assets.
 
-## [👤semio🏪assets💻indexts🛠️buildlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/d/i/buildLookup)
-
-Callers MUST provide an array of objects with optional guid and name fields
-
-## [👤semio🏪assets🛅logo💻logots🔖imports](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Imports)
+## [👤semio🏪assets🛅logo💻logo🔖imports](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Imports)
 
 MUST import Node.js file system, DOM parsing, and path resolution modules.
 
-## [👤semio🏪assets🛅logo💻logots🔖parsesvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Parse%20SVG)
+## [👤semio🏪assets🛅logo💻logo🔖types](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
+
+Types MUST provide the types functionality.
+
+## [👤semio🏪assets🛅logo💻logo🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
+
+Logo Generation MUST provide the logo generation functionality.
+
+## [👤semio🏪assets🛅logo💻logo🔖parsesvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Parse%20SVG)
 
 MUST read SVG content and extract all group transforms and path attributes.
 
-## [👤semio🏪assets🛅logo💻logots🔖generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Generate%20Keyframe%20Sequence)
+## [👤semio🏪assets🛅logo💻logo🔖generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Generate%20Keyframe%20Sequence)
 
 MUST produce forward and reverse sequence for smooth animation looping.
 
-## [👤semio🏪assets🛅logo💻logots🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Create%20Animated%20SVG)
+## [👤semio🏪assets🛅logo💻logo🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Create%20Animated%20SVG)
 
 MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/MissingEnd)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable🔖missingend](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/MissingEnd)
 
 MissingEnd MUST provide the missingend functionality.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixabletsx🔖alpha](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/Alpha)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable🔖alpha](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/Alpha)
 
 Alpha MUST provide the alpha functionality.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixableexpectedtsx🔖missingend](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable_expected.tsx/s/MissingEnd)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixableexpected🔖missingend](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable_expected.tsx/s/MissingEnd)
 
 MissingEnd MUST provide the missingend functionality.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixableexpectedtsx🔖alpha](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable_expected.tsx/s/Alpha)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixableexpected🔖alpha](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable_expected.tsx/s/Alpha)
 
 Alpha MUST provide the alpha functionality.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedcs🛠️fixedclass](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/d/i/FixedClass)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🛠️fixedclass](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/d/i/FixedClass)
 
 / FixedClass MUST have a Value property.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖package](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Package)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖package](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Package)
 
 Package MUST be named fixed.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions)
 
 Functions MUST return valid integers.
 FixedValue MUST return 2.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedgo🛠️fixedvalue](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/d/i/FixedValue)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🛠️fixedvalue](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/d/i/FixedValue)
 
 FixedValue MUST return 2.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedpy🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions)
 
 Functions MUST accept typed parameters.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖types](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Types)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖types](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Types)
 
 Types MUST be exported when used externally.
-FixedType MUST have a name and value.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx🔖components](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Components)
+## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖components](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/s/Components)
 
 Components MUST accept FixedType props.
 
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx✂️fixedtype](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/d/f/FixedType)
-
-FixedType MUST have a name and value.
-
-## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixedtsx✂️fixedkind](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.tsx/d/f/FixedKind)
-
-FixedKind MUST be one of alpha or beta.
-
-## [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://p/u/semio/b/u/desktop/f/forge.env.d.ts/s/Electron%20Fuses)
+## [👤semio🖱️desktop💻forgeenvd🔖electronfuses](semiorepo://p/u/semio/b/u/desktop/f/forge.env.d.ts/s/Electron%20Fuses)
 
 Consumers MUST use these enums for configuring fuse settings.
 
-## [👤semio🖱️desktop💻maints🔖mainprocess](semiorepo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process)
+## [👤semio🖱️desktop💻main🔖mainprocess](semiorepo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process)
 
 MUST quit on all windows closed except on macOS.
 
-## [👤semio🖱️desktop💻maints🛠️createwindow](semiorepo://p/u/semio/b/u/desktop/f/main.ts/d/i/createWindow)
-
-MUST load the vite dev server URL in development and the built file in production.
-
-## [👤semio🖱️desktop💻preloadts🔖preload](semiorepo://p/u/semio/b/u/desktop/f/preload.ts/s/Preload)
+## [👤semio🖱️desktop💻preload🔖preload](semiorepo://p/u/semio/b/u/desktop/f/preload.ts/s/Preload)
 
 Preload MUST use contextBridge to safely expose IPC methods.
 
-## [👤semio🖱️desktop💻renderertsx🔖renderer](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer)
+## [👤semio🖱️desktop💻renderer🔖renderer](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer)
 
 MUST resolve the user identity before rendering the sketchpad.
 
-## [👤semio🖱️desktop💻renderertsx🛠️invokewindowcontrol](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/i/invokeWindowControl)
-
-MUST fall back gracefully when window controls are unavailable.
-
-## [👤semio🖱️desktop💻renderertsx🪨windowevents](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/c/windowEvents)
-
-MUST delegate to invokeWindowControl for each action.
-
-## [👤semio🖱️desktop💻renderertsx🪨os](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/c/os)
-
-MUST use the preload-exposed getUserId API.
-
-## [👤semio🖱️desktop💻renderertsx🛠️app](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/d/i/App)
-
-MUST show a loading state until the user ID is resolved.
-
-## [👤semio🌐docs💻indextsx🔖entrypoint](semiorepo://p/u/semio/b/w/docs/f/index.tsx/s/Entrypoint)
+## [👤semio🌐docs💻index🔖entrypoint](semiorepo://p/u/semio/b/w/docs/f/index.tsx/s/Entrypoint)
 
 Entrypoint MUST render into the root element defined in the docs index.html.
 
-## [👤semio📚engine💻buildts🔖build](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build)
+## [👤semio📚engine💻build🔖build](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build)
 
 Build script for the engine binary. MUST bundle the engine via PyInstaller.
 
-## [👤semio📚engine💻buildts🪨cwd](semiorepo://p/u/semio/b/l/engine/f/build.ts/d/c/cwd)
-
-MUST resolve to the engine folder.
-
-## [👤semio📚engine💻buildts🪨args](semiorepo://p/u/semio/b/l/engine/f/build.ts/d/c/args)
-
-MUST include all required metadata and hidden imports.
-
-## [👤semio📚engine💻enginepy🔖imports](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Imports)
+## [👤semio📚engine💻engine🔖imports](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Imports)
 
 Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
 
-## [👤semio📚engine💻enginepy🔖store](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store)
+## [👤semio📚engine💻engine🔖store](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store)
 
 Store MUST provide the data access layer for kit operations via code-based routing.
 
-## [👤semio📚engine💻enginepy🔖assistant](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant)
+## [👤semio📚engine💻engine🔖assistant](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant)
 
 Assistant MUST provide AI-powered design prediction using OpenAI structured outputs.
 
-## [👤semio📚engine💻enginepy🔖graphql](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql)
+## [👤semio📚engine💻engine🔖graphql](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql)
 
 Graphql MUST map semio domain types to Graphene schema nodes for query and mutation.
 
-## [👤semio📚engine💻enginepy🔖rest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest)
+## [👤semio📚engine💻engine🔖rest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest)
 
 Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
-## [👤semio📚engine💻enginepy🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
+## [👤semio📚engine💻engine🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
 
 Mcp MUST expose kit, type, design, validation, and diff tools via Model Context Protocol.
 
-## [👤semio📚engine💻enginepy🔖engine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine)
+## [👤semio📚engine💻engine🔖engine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine)
 
 Engine MUST mount REST, GraphQL, and MCP sub-applications and manage the server lifecycle.
 
-## [👤semio📚engine💻generateschemasts🔖schemageneration](semiorepo://p/u/semio/b/l/engine/f/generate-schemas.ts/s/Schema%20Generation)
+## [👤semio📚engine💻generateschemas🔖schemageneration](semiorepo://p/u/semio/b/l/engine/f/generate-schemas.ts/s/Schema%20Generation)
 
 Schema generation script. MUST invoke the Python engine schema generator.
 
-## [👤semio📚engine💻postbuildts🔖postbuild](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build)
+## [👤semio📚engine💻postbuild🔖postbuild](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build)
 
 Post-build script. MUST relocate the PyInstaller output to the Grasshopper bin folder.
 
-## [👤semio📚engine💻postbuildts🪨cwd](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/cwd)
-
-MUST resolve to the engine folder.
-
-## [👤semio📚engine💻postbuildts🪨exepath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/exePath)
-
-MUST match the PyInstaller output name.
-
-## [👤semio📚engine💻postbuildts🪨internalpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/internalPath)
-
-MUST be co-located with the executable.
-
-## [👤semio📚engine💻postbuildts🪨grasshopperbinpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/grasshopperBinPath)
-
-MUST match the .NET build output path.
-
-## [👤semio📚engine💻postbuildts🪨grasshopperexepath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/grasshopperExePath)
-
-MUST use the same executable name as the PyInstaller output.
-
-## [👤semio📚engine💻postbuildts🪨grasshopperinternalpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/d/c/grasshopperInternalPath)
-
-MUST mirror the PyInstaller _internal directory structure.
-
-## [👤semio📚engine💻sqliteschemats🔖schemaexport](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/s/Schema%20Export)
+## [👤semio📚engine💻sqliteschema🔖schemaexport](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/s/Schema%20Export)
 
 SQLite schema export script. MUST dump the database schema to a SQL file.
 
-## [👤semio📚engine💻sqliteschemats🪨dbpath](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/d/c/dbPath)
-
-MUST point to the engine debug build output.
-
-## [👤semio📚engine💻sqliteschemats🪨outputpath](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/d/c/outputPath)
-
-MUST resolve to the monorepo sqlite schema location.
-
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️goo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Goo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️goo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Goo)
 
 / Implementations MUST override CastFrom and CastTo for type conversion.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️param](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Param)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️param](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Param)
 
 / Implementations MUST provide component exposure and icon metadata.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️enumgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EnumGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️enumgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EnumGoo)
 
 / Implementations MUST convert between string names and enum values.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️enumparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EnumParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️enumparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EnumParam)
 
 / Implementations MUST restrict input to valid enum members.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️passthroughcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/PassthroughComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️passthroughcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/PassthroughComponent)
 
 / Implementations MUST transform input data and output the result.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdGoo)
 
 / Implementations MUST wrap entity ID types for Grasshopper data flow.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdParam)
 
 / Implementations MUST provide type-safe parameter access for IDs.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️idcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/IdComponent)
 
 / Implementations MUST register input parameters matching ID fields.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffGoo)
 
 / Implementations MUST wrap entity diff types for Grasshopper data flow.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffParam)
 
 / Implementations MUST provide type-safe parameter access for diffs.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️diffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DiffComponent)
 
 / Implementations MUST register input parameters matching diff fields.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeComponent)
 
 / Implementations MUST convert entities to valid JSON strings.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeComponent)
 
 / Implementations MUST parse JSON strings into entity instances.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeDiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeDiffComponent)
 
 / Implementations MUST convert diffs to valid JSON strings.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeDiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializediffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeDiffComponent)
 
 / Implementations MUST parse JSON strings into diff instances.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️serializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeIdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeIdComponent)
 
 / Implementations MUST convert entity IDs to valid JSON strings.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️deserializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeIdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializeidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/DeserializeIdComponent)
 
 / Implementations MUST parse JSON strings into entity ID instances.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitygoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitygoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityGoo)
 
 / Implementations MUST validate entities before exposing them downstream.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityParam)
 
 / Implementations MUST enforce entity validation on parameter access.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitycomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitycomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityComponent)
 
 / Implementations MUST validate constructed entities before output.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdGoo)
 
 / Implementations MUST validate entity IDs before exposing them downstream.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdParam)
 
 / Implementations MUST enforce entity ID validation on parameter access.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entityidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityIdComponent)
 
 / Implementations MUST validate constructed entity IDs before output.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffGoo)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffgoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffGoo)
 
 / Implementations MUST validate entity diffs before exposing them downstream.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffParam)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffParam)
 
 / Implementations MUST enforce entity diff validation on parameter access.
 
-## [👤semio📚gh🛅semiograsshopper💻semiograsshoppercs🛠️entitydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffComponent)
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/EntityDiffComponent)
 
 / Implementations MUST validate constructed entity diffs before output.
 
-## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🔖valuelistgeneration](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/s/Value%20List%20Generation)
+## [👤semio📚gh🛅semiograsshopper💻buildvaluelists🔖valuelistgeneration](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/s/Value%20List%20Generation)
 
 Value list generation script. MUST convert CSV data into Grasshopper value list text files.
 
-## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🪨builddir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/d/c/buildDir)
-
-MUST be created if it does not exist.
-
-## [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🛠️convertcsvtovaluelist](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/d/i/convertCsvToValueList)
-
-MUST read the CSV, extract key-value pairs, and write the output file.
-
-## [👤semio📚gh🛅semiograsshopper💻buildts🔖build](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build)
+## [👤semio📚gh🛅semiograsshopper💻build🔖build](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build)
 
 Grasshopper build script. MUST compile the solution and copy artifacts to the Yak distribution folder.
 
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/cwd)
-
-MUST resolve to the Grasshopper project folder.
-
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨msbuild](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/msbuild)
-
-MUST point to the installed MSBuild binary.
-
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨yakdistfolder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/yakDistFolder)
-
-MUST be cleaned and recreated before copying build artifacts.
-
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨binfolder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/binFolder)
-
-MUST contain the .NET Framework 4.8 build output.
-
-## [👤semio📚gh🛅semiograsshopper💻buildts🪨files](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/d/c/files)
-
-MUST be copied to the Yak distribution folder.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🔖build](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build)
 
 Yak package build script. MUST prepare the distribution folder and build the .yak package.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/d/c/cwd)
-
-MUST resolve to the yak folder.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨distdir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/d/c/distDir)
-
-MUST be cleaned and prepared before building.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/d/c/yak)
-
-MUST point to the installed Yak binary.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🔖login](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/s/Login)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻login🔖login](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/s/Login)
 
 Yak login script. MUST authenticate with the Yak package manager.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/d/c/yak)
-
-MUST point to the installed Yak binary.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🔖publish](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish)
 
 Yak publish script. MUST push the built package to the Yak server.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/cwd)
-
-MUST contain the manifest.yml and built .yak file.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨manifestcontent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/manifestContent)
-
-MUST contain a version field.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨versionmatch](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/versionMatch)
-
-MUST successfully extract the version string.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/version)
-
-MUST be trimmed of whitespace.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨buildname](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/buildName)
-
-MUST match the built package name pattern.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/d/c/yak)
-
-MUST point to the installed Yak binary.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🔖testpush](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push)
 
 Yak test push script. MUST push the package to the test Yak server.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/d/c/yak)
-
-MUST point to the installed Yak binary.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🪨packagefile](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/d/c/packageFile)
-
-MUST resolve to a valid .yak package file.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🔖script](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/s/Script)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearch🔖script](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/s/Script)
 
 Script MUST execute yak search against the test.yak.rhino3d.com server.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearchts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/d/c/yak)
-
-Yak path MUST point to the Rhino 8 System directory.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🔖unyank](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/s/Unyank)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyank🔖unyank](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/s/Unyank)
 
 Yak unyank script. MUST restore a previously yanked package version.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/d/c/yak)
-
-MUST point to the installed Yak binary.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/unyank.ts/d/c/version)
-
-MUST be a valid semver version string.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🔖yank](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts/s/Yank)
+## [👤semio📚gh🛅semiograsshopper🗃️yak💻yank🔖yank](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts/s/Yank)
 
 Yak yank script. MUST remove a package version from the Yak server.
 
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts/d/c/yak)
-
-MUST point to the installed Yak binary.
-
-## [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/yank.ts/d/c/version)
-
-MUST be a valid semver version string.
-
-## [👤semio📚go💻kitsqlitego🔖sqlitekitoperations](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations)
+## [👤semio📚go💻kitsqlite🔖sqlitekitoperations](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations)
 
 SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
-## [👤semio📚go💻kitsqlitego🛠️kitfromsqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitFromSqlite)
+## [👤semio📚go💻kitsqlite🛠️kitfromsqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitFromSqlite)
 
 Callers MUST provide a valid path to an existing SQLite database
 
-## [👤semio📚go💻kitsqlitego🛠️loadtypes](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadTypes)
+## [👤semio📚go💻kitsqlite🛠️loadtypes](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadTypes)
 
 Callers MUST provide a valid open database connection and kit GUID
 
-## [👤semio📚go💻kitsqlitego🛠️loaddesigns](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadDesigns)
+## [👤semio📚go💻kitsqlite🛠️loaddesigns](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadDesigns)
 
 Callers MUST provide a valid open database connection and kit GUID
 
-## [👤semio📚go💻kitsqlitego🛠️loadpieces](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadPieces)
+## [👤semio📚go💻kitsqlite🛠️loadpieces](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadPieces)
 
 Callers MUST provide a valid open database connection and design GUID
 
-## [👤semio📚go💻kitsqlitego🛠️loadconnections](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadConnections)
+## [👤semio📚go💻kitsqlite🛠️loadconnections](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadConnections)
 
 Callers MUST provide a valid open database connection and design GUID
 
-## [👤semio📚go💻kitsqlitego🛠️loadconnectors](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadConnectors)
+## [👤semio📚go💻kitsqlite🛠️loadconnectors](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/loadConnectors)
 
 Callers MUST provide a valid open database connection and type GUID
 
-## [👤semio📚go💻kitsqlitego🛠️kittosqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToSqlite)
+## [👤semio📚go💻kitsqlite🛠️kittosqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToSqlite)
 
 Callers MUST provide a valid Kit, writable database path, and schema SQL
 
-## [👤semio📚go💻kitsqlitego🛠️kitfromzip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitFromZip)
+## [👤semio📚go💻kitsqlite🛠️kitfromzip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitFromZip)
 
 Callers MUST provide a valid path to an existing zip file containing kit.db
 
-## [👤semio📚go💻kitsqlitego🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToZip)
+## [👤semio📚go💻kitsqlite🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToZip)
 
 Callers MUST provide a valid Kit, file map, writable zip path, and schema SQL
 
-## [👤semio📚go💻semiogo🔖imports](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Imports)
+## [👤semio📚go💻semio🔖imports](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Imports)
 
 Imports MUST include all required packages for the semio domain library.
 
-## [👤semio📚go💻semiogo🔖constants](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Constants)
+## [👤semio📚go💻semio🔖constants](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Constants)
 
 Constants MUST define shared constant values for the semio domain.
 
-## [👤semio📚go💻semiogo🔖utils](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Utils)
+## [👤semio📚go💻semio🔖utils](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Utils)
 
 Utils MUST provide general-purpose utility functions for the semio domain.
 Guid MUST return a cryptographically random 128-bit hex string.
 
-## [👤semio📚go💻semiogo🔖entityids](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Entity%20IDs)
+## [👤semio📚go💻semio🔖entityids](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Entity%20IDs)
 
 Entity IDs MUST define identifier types for all semio domain entities.
 
-## [👤semio📚go💻semiogo🔖weakentities](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Weak%20Entities)
+## [👤semio📚go💻semio🔖weakentities](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Weak%20Entities)
 
 Weak Entities MUST define value types that exist only as part of parent entities.
 
-## [👤semio📚go💻semiogo🔖attribute](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Attribute)
+## [👤semio📚go💻semio🔖attribute](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Attribute)
 
 Attribute MUST define the key-value metadata entity and its diff types.
 
-## [👤semio📚go💻semiogo🔖location](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Location)
+## [👤semio📚go💻semio🔖location](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Location)
 
 Location MUST define geographic location entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖author](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Author)
+## [👤semio📚go💻semio🔖author](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Author)
 
 Author MUST define authorship entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖file](semiorepo://p/u/semio/b/l/go/f/semio.go/s/File)
+## [👤semio📚go💻semio🔖file](semiorepo://p/u/semio/b/l/go/f/semio.go/s/File)
 
 File MUST define file reference entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖folder](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Folder)
+## [👤semio📚go💻semio🔖folder](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Folder)
 
 Folder MUST define folder hierarchy entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖benchmark](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Benchmark)
+## [👤semio📚go💻semio🔖benchmark](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Benchmark)
 
 Benchmark MUST define benchmark threshold entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖quality](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Quality)
+## [👤semio📚go💻semio🔖quality](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Quality)
 
 Quality MUST define measurable quality entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖port](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Port)
+## [👤semio📚go💻semio🔖port](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Port)
 
 Port MUST define connector port entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖prop](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Prop)
+## [👤semio📚go💻semio🔖prop](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Prop)
 
 Prop MUST define property value entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖tag](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Tag)
+## [👤semio📚go💻semio🔖tag](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Tag)
 
 Tag MUST define tag classification entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖concept](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Concept)
+## [👤semio📚go💻semio🔖concept](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Concept)
 
 Concept MUST define concept categorization entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖model](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Model)
+## [👤semio📚go💻semio🔖model](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Model)
 
 Model MUST define 3D model reference entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖connector](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Connector)
+## [👤semio📚go💻semio🔖connector](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Connector)
 
 Connector MUST define spatial connector entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖type](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Type)
+## [👤semio📚go💻semio🔖type](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Type)
 
 Type MUST define component type entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖layer](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Layer)
+## [👤semio📚go💻semio🔖layer](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Layer)
 
 Layer MUST define layer hierarchy entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖piece](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Piece)
+## [👤semio📚go💻semio🔖piece](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Piece)
 
 Piece MUST define placed piece entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖group](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Group)
+## [👤semio📚go💻semio🔖group](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Group)
 
 Group MUST define piece grouping entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖side](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Side)
+## [👤semio📚go💻semio🔖side](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Side)
 
 Side MUST define connection side reference entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖connection](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Connection)
+## [👤semio📚go💻semio🔖connection](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Connection)
 
 Connection MUST define spatial connection entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖stat](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Stat)
+## [👤semio📚go💻semio🔖stat](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Stat)
 
 Stat MUST define statistical measure entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖design](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Design)
+## [👤semio📚go💻semio🔖design](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Design)
 
 Design MUST define assembly design entities and their diff types.
 
-## [👤semio📚go💻semiogo🔖kit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit)
+## [👤semio📚go💻semio🔖kit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit)
 
 Kit MUST define the root kit container entity and its diff types.
 
-## [👤semio📚go💻semiogo🔖serialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Serialization)
+## [👤semio📚go💻semio🔖serialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Serialization)
 
 Serialization MUST provide JSON marshaling and unmarshaling for kit data.
 SerializeKit MUST return valid JSON with two-space indentation.
 
-## [👤semio📚go💻semiogo🔖helpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Helpers)
+## [👤semio📚go💻semio🔖helpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Helpers)
 
 Helpers MUST provide lookup functions for finding entities within kits.
 FindTypeInKit MUST return nil when no type matches the GUID.
 
-## [👤semio📚go💻semiogo🔖factories](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Factories)
+## [👤semio📚go💻semio🔖factories](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Factories)
 
 Factories MUST provide constructor functions for creating new domain entities.
 NewKit MUST generate a unique GUID and set version to 0.0.1.
 
-## [👤semio📚go💻semiogo🔖kitoperations](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations)
+## [👤semio📚go💻semio🔖kitoperations](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations)
 
 Kit Operations MUST provide comparison, diffing, and application of kit changes.
 AreKitsEqual MUST compare all entities by GUID and structural fields.
 
-## [👤semio📚go💻semiogo🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)
+## [👤semio📚go💻semio🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)
 
 Kit Diff Helpers MUST provide convenience functions for single-entity kit diffs.
 AddTypeToKit MUST return a diff with exactly one added type.
 
-## [👤semio📚go💻semiogo🔖validation](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation)
+## [👤semio📚go💻semio🔖validation](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation)
 
 Validation MUST provide constraint-based validation of kit data integrity.
 
-## [👤semio📚go💻semiogo🔖validationserialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation%20Serialization)
+## [👤semio📚go💻semio🔖validationserialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation%20Serialization)
 
 Validation Serialization MUST provide serializable representations of validation results.
 
-## [👤semio📚go💻semiogo🔖flattendesign](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Flatten%20Design)
+## [👤semio📚go💻semio🔖flattendesign](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Flatten%20Design)
 
 Flatten Design MUST compute absolute piece planes from relative connections.
+planeToMatrix MUST perform the planeToMatrix operation.
 
-## [👤semio📚go💻semiogo🛠️guid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Guid)
+## [👤semio📚go💻semio🛠️guid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Guid)
 
 Guid MUST return a cryptographically random 128-bit hex string.
 
-## [👤semio📚go💻semiogo🛠️normalize](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Normalize)
+## [👤semio📚go💻semio🛠️normalize](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Normalize)
 
 Normalize MUST trim whitespace and convert to lowercase.
 
-## [👤semio📚go💻semiogo🛠️round](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Round)
+## [👤semio📚go💻semio🛠️round](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Round)
 
 Round MUST return the value rounded to exactly the given decimal places.
 
-## [👤semio📚go💻semiogo🛠️deepequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeepEqual)
+## [👤semio📚go💻semio🛠️deepequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeepEqual)
 
 DeepEqual MUST return true only when both values produce identical JSON.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
+## [👤semio📚go💻semio🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
+## [👤semio📚go💻semio🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField MUST return false when setFields is nil.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
+## [👤semio📚go💻semio🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
+## [👤semio📚go💻semio🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField MUST return false when setFields is nil.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
+## [👤semio📚go💻semio🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
+## [👤semio📚go💻semio🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField MUST return false when setFields is nil.
 
-## [👤semio📚go💻semiogo🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
+## [👤semio📚go💻semio🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 
-## [👤semio📚go💻semiogo🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
+## [👤semio📚go💻semio🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasField)
 
 HasField MUST return false when setFields is nil.
 
-## [👤semio📚go💻semiogo🛠️serializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKit)
+## [👤semio📚go💻semio🛠️serializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKit)
 
 SerializeKit MUST return valid JSON with two-space indentation.
 
-## [👤semio📚go💻semiogo🛠️deserializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeserializeKit)
+## [👤semio📚go💻semio🛠️deserializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeserializeKit)
 
 DeserializeKit MUST return an error if the data is not valid kit JSON.
 
-## [👤semio📚go💻semiogo🛠️serializekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKitDiff)
+## [👤semio📚go💻semio🛠️serializekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKitDiff)
 
 SerializeKitDiff MUST return valid JSON with two-space indentation.
 
-## [👤semio📚go💻semiogo🛠️deserializekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeserializeKitDiff)
+## [👤semio📚go💻semio🛠️deserializekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DeserializeKitDiff)
 
 DeserializeKitDiff MUST return an error if the data is not valid kit diff JSON.
 
-## [👤semio📚go💻semiogo🛠️findtypeinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindTypeInKit)
+## [👤semio📚go💻semio🛠️findtypeinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindTypeInKit)
 
 FindTypeInKit MUST return nil when no type matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️finddesigninkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindDesignInKit)
+## [👤semio📚go💻semio🛠️finddesigninkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindDesignInKit)
 
 FindDesignInKit MUST return nil when no design matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findpieceindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindPieceInDesign)
+## [👤semio📚go💻semio🛠️findpieceindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindPieceInDesign)
 
 FindPieceInDesign MUST return nil when no piece matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConnectionInDesign)
+## [👤semio📚go💻semio🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConnectionInDesign)
 
 FindConnectionInDesign MUST return nil when no connection matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findconnectorintype](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConnectorInType)
+## [👤semio📚go💻semio🛠️findconnectorintype](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConnectorInType)
 
 FindConnectorInType MUST return nil when no connector matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findfileinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindFileInKit)
+## [👤semio📚go💻semio🛠️findfileinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindFileInKit)
 
 FindFileInKit MUST return nil when no file matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findfolderinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindFolderInKit)
+## [👤semio📚go💻semio🛠️findfolderinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindFolderInKit)
 
 FindFolderInKit MUST return nil when no folder matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findqualityinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindQualityInKit)
+## [👤semio📚go💻semio🛠️findqualityinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindQualityInKit)
 
 FindQualityInKit MUST return nil when no quality matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findportinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindPortInKit)
+## [👤semio📚go💻semio🛠️findportinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindPortInKit)
 
 FindPortInKit MUST return nil when no port matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findtaginkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindTagInKit)
+## [👤semio📚go💻semio🛠️findtaginkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindTagInKit)
 
 FindTagInKit MUST return nil when no tag matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findconceptinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConceptInKit)
+## [👤semio📚go💻semio🛠️findconceptinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindConceptInKit)
 
 FindConceptInKit MUST return nil when no concept matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️findauthorinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindAuthorInKit)
+## [👤semio📚go💻semio🛠️findauthorinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindAuthorInKit)
 
 FindAuthorInKit MUST return nil when no author matches the GUID.
 
-## [👤semio📚go💻semiogo🛠️newkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewKit)
+## [👤semio📚go💻semio🛠️newkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewKit)
 
 NewKit MUST generate a unique GUID and set version to 0.0.1.
 
-## [👤semio📚go💻semiogo🛠️newtype](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewType)
+## [👤semio📚go💻semio🛠️newtype](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewType)
 
 NewType MUST generate a unique GUID for the new type.
 
-## [👤semio📚go💻semiogo🛠️newdesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewDesign)
+## [👤semio📚go💻semio🛠️newdesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewDesign)
 
 NewDesign MUST generate a unique GUID for the new design.
 
-## [👤semio📚go💻semiogo🛠️newpiece](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewPiece)
+## [👤semio📚go💻semio🛠️newpiece](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewPiece)
 
 NewPiece MUST generate a unique GUID for the new piece.
 
-## [👤semio📚go💻semiogo🛠️newconnection](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConnection)
+## [👤semio📚go💻semio🛠️newconnection](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConnection)
 
 NewConnection MUST generate a unique GUID and set both connected and connecting sides.
 
-## [👤semio📚go💻semiogo🛠️newconnector](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConnector)
+## [👤semio📚go💻semio🛠️newconnector](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConnector)
 
 NewConnector MUST generate a unique GUID for the new connector.
 
-## [👤semio📚go💻semiogo🛠️newfile](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewFile)
+## [👤semio📚go💻semio🛠️newfile](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewFile)
 
 NewFile MUST generate a unique GUID for the new file.
 
-## [👤semio📚go💻semiogo🛠️newfolder](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewFolder)
+## [👤semio📚go💻semio🛠️newfolder](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewFolder)
 
 NewFolder MUST generate a unique GUID for the new folder.
 
-## [👤semio📚go💻semiogo🛠️newquality](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewQuality)
+## [👤semio📚go💻semio🛠️newquality](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewQuality)
 
 NewQuality MUST generate a unique GUID for the new quality.
 
-## [👤semio📚go💻semiogo🛠️newport](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewPort)
+## [👤semio📚go💻semio🛠️newport](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewPort)
 
 NewPort MUST generate a unique GUID for the new port.
 
-## [👤semio📚go💻semiogo🛠️newtag](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewTag)
+## [👤semio📚go💻semio🛠️newtag](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewTag)
 
 NewTag MUST generate a unique GUID for the new tag.
 
-## [👤semio📚go💻semiogo🛠️newconcept](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConcept)
+## [👤semio📚go💻semio🛠️newconcept](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewConcept)
 
 NewConcept MUST generate a unique GUID for the new concept.
 
-## [👤semio📚go💻semiogo🛠️newauthor](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewAuthor)
+## [👤semio📚go💻semio🛠️newauthor](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewAuthor)
 
 NewAuthor MUST generate a unique GUID for the new author.
 
-## [👤semio📚go💻semiogo🛠️arekitsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreKitsEqual)
+## [👤semio📚go💻semio🛠️arekitsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreKitsEqual)
 
 AreKitsEqual MUST compare all entities by GUID and structural fields.
 
-## [👤semio📚go💻semiogo🛠️arekitdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreKitDiffsEqual)
+## [👤semio📚go💻semio🛠️arekitdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreKitDiffsEqual)
 
 AreKitDiffsEqual MUST compare all diff fields including nested entity diffs.
 
-## [👤semio📚go💻semiogo🛠️getkitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GetKitDiff)
+## [👤semio📚go💻semio🛠️aretypesdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areTypesDiffsEqual)
+
+areTypesDiffsEqual MUST perform the areTypesDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️aredesignsdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areDesignsDiffsEqual)
+
+areDesignsDiffsEqual MUST perform the areDesignsDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️aretagsdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areTagsDiffsEqual)
+
+areTagsDiffsEqual MUST perform the areTagsDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️areconceptsdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areConceptsDiffsEqual)
+
+areConceptsDiffsEqual MUST perform the areConceptsDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️areportsdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePortsDiffsEqual)
+
+arePortsDiffsEqual MUST perform the arePortsDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️arefilesdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areFilesDiffsEqual)
+
+areFilesDiffsEqual MUST perform the areFilesDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️arefoldersdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areFoldersDiffsEqual)
+
+areFoldersDiffsEqual MUST perform the areFoldersDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️areauthorsdiffsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areAuthorsDiffsEqual)
+
+areAuthorsDiffsEqual MUST perform the areAuthorsDiffsEqual operation.
+
+## [👤semio📚go💻semio🛠️getkitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GetKitDiff)
 
 GetKitDiff MUST return a diff that when applied to before produces after.
 
-## [👤semio📚go💻semiogo🛠️inversekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/InverseKitDiff)
+## [👤semio📚go💻semio🛠️gettypesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getTypesDiff)
+
+getTypesDiff MUST perform the getTypesDiff operation.
+
+## [👤semio📚go💻semio🛠️gettypediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getTypeDiff)
+
+getTypeDiff MUST perform the getTypeDiff operation.
+
+## [👤semio📚go💻semio🛠️istypediffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isTypeDiffEmpty)
+
+isTypeDiffEmpty MUST perform the isTypeDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getdesignsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getDesignsDiff)
+
+getDesignsDiff MUST perform the getDesignsDiff operation.
+
+## [👤semio📚go💻semio🛠️getdesigndiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getDesignDiff)
+
+getDesignDiff MUST perform the getDesignDiff operation.
+
+## [👤semio📚go💻semio🛠️isdesigndiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isDesignDiffEmpty)
+
+isDesignDiffEmpty MUST perform the isDesignDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️gettagsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getTagsDiff)
+
+getTagsDiff MUST perform the getTagsDiff operation.
+
+## [👤semio📚go💻semio🛠️gettagdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getTagDiff)
+
+getTagDiff MUST perform the getTagDiff operation.
+
+## [👤semio📚go💻semio🛠️istagdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isTagDiffEmpty)
+
+isTagDiffEmpty MUST perform the isTagDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getconceptsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConceptsDiff)
+
+getConceptsDiff MUST perform the getConceptsDiff operation.
+
+## [👤semio📚go💻semio🛠️getconceptdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConceptDiff)
+
+getConceptDiff MUST perform the getConceptDiff operation.
+
+## [👤semio📚go💻semio🛠️isconceptdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isConceptDiffEmpty)
+
+isConceptDiffEmpty MUST perform the isConceptDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getportsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getPortsDiff)
+
+getPortsDiff MUST perform the getPortsDiff operation.
+
+## [👤semio📚go💻semio🛠️getportdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getPortDiff)
+
+getPortDiff MUST perform the getPortDiff operation.
+
+## [👤semio📚go💻semio🛠️isportdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isPortDiffEmpty)
+
+isPortDiffEmpty MUST perform the isPortDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getfilesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getFilesDiff)
+
+getFilesDiff MUST perform the getFilesDiff operation.
+
+## [👤semio📚go💻semio🛠️getfilediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getFileDiff)
+
+getFileDiff MUST perform the getFileDiff operation.
+
+## [👤semio📚go💻semio🛠️isfilediffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isFileDiffEmpty)
+
+isFileDiffEmpty MUST perform the isFileDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getfoldersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getFoldersDiff)
+
+getFoldersDiff MUST perform the getFoldersDiff operation.
+
+## [👤semio📚go💻semio🛠️getfolderdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getFolderDiff)
+
+getFolderDiff MUST perform the getFolderDiff operation.
+
+## [👤semio📚go💻semio🛠️isfolderdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isFolderDiffEmpty)
+
+isFolderDiffEmpty MUST perform the isFolderDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getauthorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getAuthorsDiff)
+
+getAuthorsDiff MUST perform the getAuthorsDiff operation.
+
+## [👤semio📚go💻semio🛠️getauthordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getAuthorDiff)
+
+getAuthorDiff MUST perform the getAuthorDiff operation.
+
+## [👤semio📚go💻semio🛠️isauthordiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isAuthorDiffEmpty)
+
+isAuthorDiffEmpty MUST perform the isAuthorDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️inversekitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/InverseKitDiff)
 
 InverseKitDiff MUST return a diff that when applied restores the original state.
 
-## [👤semio📚go💻semiogo🛠️applykitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyKitDiff)
+## [👤semio📚go💻semio🛠️inversetypesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseTypesDiff)
+
+inverseTypesDiff MUST perform the inverseTypesDiff operation.
+
+## [👤semio📚go💻semio🛠️inversetypediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseTypeDiff)
+
+inverseTypeDiff MUST perform the inverseTypeDiff operation.
+
+## [👤semio📚go💻semio🛠️inversedesignsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseDesignsDiff)
+
+inverseDesignsDiff MUST perform the inverseDesignsDiff operation.
+
+## [👤semio📚go💻semio🛠️inversedesigndiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseDesignDiff)
+
+inverseDesignDiff MUST perform the inverseDesignDiff operation.
+
+## [👤semio📚go💻semio🛠️inversetagsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseTagsDiff)
+
+inverseTagsDiff MUST perform the inverseTagsDiff operation.
+
+## [👤semio📚go💻semio🛠️inversetagdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseTagDiff)
+
+inverseTagDiff MUST perform the inverseTagDiff operation.
+
+## [👤semio📚go💻semio🛠️inverseconceptsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseConceptsDiff)
+
+inverseConceptsDiff MUST perform the inverseConceptsDiff operation.
+
+## [👤semio📚go💻semio🛠️inverseconceptdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseConceptDiff)
+
+inverseConceptDiff MUST perform the inverseConceptDiff operation.
+
+## [👤semio📚go💻semio🛠️inverseportsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inversePortsDiff)
+
+inversePortsDiff MUST perform the inversePortsDiff operation.
+
+## [👤semio📚go💻semio🛠️inverseportdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inversePortDiff)
+
+inversePortDiff MUST perform the inversePortDiff operation.
+
+## [👤semio📚go💻semio🛠️inversefilesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseFilesDiff)
+
+inverseFilesDiff MUST perform the inverseFilesDiff operation.
+
+## [👤semio📚go💻semio🛠️inversefilediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseFileDiff)
+
+inverseFileDiff MUST perform the inverseFileDiff operation.
+
+## [👤semio📚go💻semio🛠️inversefoldersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseFoldersDiff)
+
+inverseFoldersDiff MUST perform the inverseFoldersDiff operation.
+
+## [👤semio📚go💻semio🛠️inversefolderdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseFolderDiff)
+
+inverseFolderDiff MUST perform the inverseFolderDiff operation.
+
+## [👤semio📚go💻semio🛠️inverseauthorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseAuthorsDiff)
+
+inverseAuthorsDiff MUST perform the inverseAuthorsDiff operation.
+
+## [👤semio📚go💻semio🛠️inverseauthordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseAuthorDiff)
+
+inverseAuthorDiff MUST perform the inverseAuthorDiff operation.
+
+## [👤semio📚go💻semio🛠️normalizestr](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/normalizeStr)
+
+normalizeStr MUST perform the normalizeStr operation.
+
+## [👤semio📚go💻semio🛠️aretypesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areTypesEqual)
+
+areTypesEqual MUST perform the areTypesEqual operation.
+
+## [👤semio📚go💻semio🛠️areconnectorsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areConnectorsEqual)
+
+areConnectorsEqual MUST perform the areConnectorsEqual operation.
+
+## [👤semio📚go💻semio🛠️aremodelsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areModelsEqual)
+
+areModelsEqual MUST perform the areModelsEqual operation.
+
+## [👤semio📚go💻semio🛠️aredesignsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areDesignsEqual)
+
+areDesignsEqual MUST perform the areDesignsEqual operation.
+
+## [👤semio📚go💻semio🛠️arepiecesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePiecesEqual)
+
+arePiecesEqual MUST perform the arePiecesEqual operation.
+
+## [👤semio📚go💻semio🛠️areconnectionsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areConnectionsEqual)
+
+areConnectionsEqual MUST perform the areConnectionsEqual operation.
+
+## [👤semio📚go💻semio🛠️aretagsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areTagsEqual)
+
+areTagsEqual MUST perform the areTagsEqual operation.
+
+## [👤semio📚go💻semio🛠️areconceptsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areConceptsEqual)
+
+areConceptsEqual MUST perform the areConceptsEqual operation.
+
+## [👤semio📚go💻semio🛠️areportsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePortsEqual)
+
+arePortsEqual MUST perform the arePortsEqual operation.
+
+## [👤semio📚go💻semio🛠️arefilesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areFilesEqual)
+
+areFilesEqual MUST perform the areFilesEqual operation.
+
+## [👤semio📚go💻semio🛠️arefoldersequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areFoldersEqual)
+
+areFoldersEqual MUST perform the areFoldersEqual operation.
+
+## [👤semio📚go💻semio🛠️areauthorsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areAuthorsEqual)
+
+areAuthorsEqual MUST perform the areAuthorsEqual operation.
+
+## [👤semio📚go💻semio🛠️applykitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyKitDiff)
 
 ApplyKitDiff MUST apply all additions, removals and updates from the diff.
 
-## [👤semio📚go💻semiogo🛠️filterdesignswithoutparent](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FilterDesignsWithoutParent)
+## [👤semio📚go💻semio🛠️applytypesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyTypesDiff)
+
+applyTypesDiff MUST perform the applyTypesDiff operation.
+
+## [👤semio📚go💻semio🛠️applytypediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyTypeDiff)
+
+applyTypeDiff MUST perform the applyTypeDiff operation.
+
+## [👤semio📚go💻semio🛠️applyconnectorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConnectorsDiff)
+
+applyConnectorsDiff MUST perform the applyConnectorsDiff operation.
+
+## [👤semio📚go💻semio🛠️applyconnectordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConnectorDiff)
+
+applyConnectorDiff MUST perform the applyConnectorDiff operation.
+
+## [👤semio📚go💻semio🛠️applymodelsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyModelsDiff)
+
+applyModelsDiff MUST perform the applyModelsDiff operation.
+
+## [👤semio📚go💻semio🛠️applymodeldiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyModelDiff)
+
+applyModelDiff MUST perform the applyModelDiff operation.
+
+## [👤semio📚go💻semio🛠️applydesignsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyDesignsDiff)
+
+applyDesignsDiff MUST perform the applyDesignsDiff operation.
+
+## [👤semio📚go💻semio🛠️applydesigndiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyDesignDiff)
+
+applyDesignDiff MUST perform the applyDesignDiff operation.
+
+## [👤semio📚go💻semio🛠️applypiecesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyPiecesDiff)
+
+applyPiecesDiff MUST perform the applyPiecesDiff operation.
+
+## [👤semio📚go💻semio🛠️applypiecediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyPieceDiff)
+
+applyPieceDiff MUST perform the applyPieceDiff operation.
+
+## [👤semio📚go💻semio🛠️applyconnectionsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConnectionsDiff)
+
+applyConnectionsDiff MUST perform the applyConnectionsDiff operation.
+
+## [👤semio📚go💻semio🛠️applyconnectiondiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConnectionDiff)
+
+applyConnectionDiff MUST perform the applyConnectionDiff operation.
+
+## [👤semio📚go💻semio🛠️applytagsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyTagsDiff)
+
+applyTagsDiff MUST perform the applyTagsDiff operation.
+
+## [👤semio📚go💻semio🛠️applytagdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyTagDiff)
+
+applyTagDiff MUST perform the applyTagDiff operation.
+
+## [👤semio📚go💻semio🛠️applyconceptsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConceptsDiff)
+
+applyConceptsDiff MUST perform the applyConceptsDiff operation.
+
+## [👤semio📚go💻semio🛠️applyconceptdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConceptDiff)
+
+applyConceptDiff MUST perform the applyConceptDiff operation.
+
+## [👤semio📚go💻semio🛠️applyportsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyPortsDiff)
+
+applyPortsDiff MUST perform the applyPortsDiff operation.
+
+## [👤semio📚go💻semio🛠️applyportdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyPortDiff)
+
+applyPortDiff MUST perform the applyPortDiff operation.
+
+## [👤semio📚go💻semio🛠️applyfilesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyFilesDiff)
+
+applyFilesDiff MUST perform the applyFilesDiff operation.
+
+## [👤semio📚go💻semio🛠️applyfilediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyFileDiff)
+
+applyFileDiff MUST perform the applyFileDiff operation.
+
+## [👤semio📚go💻semio🛠️applyfoldersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyFoldersDiff)
+
+applyFoldersDiff MUST perform the applyFoldersDiff operation.
+
+## [👤semio📚go💻semio🛠️applyfolderdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyFolderDiff)
+
+applyFolderDiff MUST perform the applyFolderDiff operation.
+
+## [👤semio📚go💻semio🛠️applyauthorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyAuthorsDiff)
+
+applyAuthorsDiff MUST perform the applyAuthorsDiff operation.
+
+## [👤semio📚go💻semio🛠️applyauthordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyAuthorDiff)
+
+applyAuthorDiff MUST perform the applyAuthorDiff operation.
+
+## [👤semio📚go💻semio🛠️filterdesignswithoutparent](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FilterDesignsWithoutParent)
 
 FilterDesignsWithoutParent MUST exclude all designs that have a non-nil parent.
 
-## [👤semio📚go💻semiogo🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTypeToKit)
+## [👤semio📚go💻semio🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTypeToKit)
 
 AddTypeToKit MUST return a diff with exactly one added type.
 
-## [👤semio📚go💻semiogo🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTypeFromKit)
+## [👤semio📚go💻semio🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTypeFromKit)
 
 RemoveTypeFromKit MUST return a diff with exactly one removed type ID.
 
-## [👤semio📚go💻semiogo🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddDesignToKit)
+## [👤semio📚go💻semio🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddDesignToKit)
 
 AddDesignToKit MUST return a diff with exactly one added design.
 
-## [👤semio📚go💻semiogo🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveDesignFromKit)
+## [👤semio📚go💻semio🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveDesignFromKit)
 
 RemoveDesignFromKit MUST return a diff with exactly one removed design ID.
 
-## [👤semio📚go💻semiogo🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddFileToKit)
+## [👤semio📚go💻semio🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddFileToKit)
 
 AddFileToKit MUST return a diff with exactly one added file.
 
-## [👤semio📚go💻semiogo🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveFileFromKit)
+## [👤semio📚go💻semio🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveFileFromKit)
 
 RemoveFileFromKit MUST return a diff with exactly one removed file ID.
 
-## [👤semio📚go💻semiogo🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddPortToKit)
+## [👤semio📚go💻semio🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddPortToKit)
 
 AddPortToKit MUST return a diff with exactly one added port.
 
-## [👤semio📚go💻semiogo🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemovePortFromKit)
+## [👤semio📚go💻semio🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemovePortFromKit)
 
 RemovePortFromKit MUST return a diff with exactly one removed port ID.
 
-## [👤semio📚go💻semiogo🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTagToKit)
+## [👤semio📚go💻semio🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTagToKit)
 
 AddTagToKit MUST return a diff with exactly one added tag.
 
-## [👤semio📚go💻semiogo🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTagFromKit)
+## [👤semio📚go💻semio🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTagFromKit)
 
 RemoveTagFromKit MUST return a diff with exactly one removed tag ID.
 
-## [👤semio📚go💻semiogo🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddConceptToKit)
+## [👤semio📚go💻semio🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddConceptToKit)
 
 AddConceptToKit MUST return a diff with exactly one added concept.
 
-## [👤semio📚go💻semiogo🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveConceptFromKit)
+## [👤semio📚go💻semio🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveConceptFromKit)
 
 RemoveConceptFromKit MUST return a diff with exactly one removed concept ID.
 
-## [👤semio📚go💻semiogo🛠️guiduniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GuidUniquenessConstraint)
+## [👤semio📚go💻semio🛠️buildvalidationcontext](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/buildValidationContext)
+
+buildValidationContext MUST perform the buildValidationContext operation.
+
+## [👤semio📚go💻semio🛠️generateuniquename](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/generateUniqueName)
+
+generateUniqueName MUST perform the generateUniqueName operation.
+
+## [👤semio📚go💻semio🛠️makefix](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/makeFix)
+
+makeFix MUST perform the makeFix operation.
+
+## [👤semio📚go💻semio🛠️guiduniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GuidUniquenessConstraint)
 
 GuidUniquenessConstraint MUST report each duplicate GUID as a separate problem.
 
-## [👤semio📚go💻semiogo🛠️typenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/TypeNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️updateguideverywhere](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/updateGuidEverywhere)
+
+updateGuidEverywhere MUST perform the updateGuidEverywhere operation.
+
+## [👤semio📚go💻semio🛠️typenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/TypeNameUniquenessConstraint)
 
 TypeNameUniquenessConstraint MUST report duplicate names among types with the same parent.
 
-## [👤semio📚go💻semiogo🛠️designnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DesignNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️designnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DesignNameUniquenessConstraint)
 
 DesignNameUniquenessConstraint MUST report duplicate names among designs with the same parent.
 
-## [👤semio📚go💻semiogo🛠️piecenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/PieceNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️piecenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/PieceNameUniquenessConstraint)
 
 PieceNameUniquenessConstraint MUST report duplicate piece names within each design.
 
-## [👤semio📚go💻semiogo🛠️qualitynameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/QualityNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️qualitynameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/QualityNameUniquenessConstraint)
 
 QualityNameUniquenessConstraint MUST report each duplicate quality name.
 
-## [👤semio📚go💻semiogo🛠️portnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/PortNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️portnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/PortNameUniquenessConstraint)
 
 PortNameUniquenessConstraint MUST report each duplicate port name.
 
-## [👤semio📚go💻semiogo🛠️filenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FileNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️filenameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FileNameUniquenessConstraint)
 
 FileNameUniquenessConstraint MUST report each duplicate file name.
 
-## [👤semio📚go💻semiogo🛠️foldernameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FolderNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️foldernameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FolderNameUniquenessConstraint)
 
 FolderNameUniquenessConstraint MUST report duplicate names among folders with the same parent.
 
-## [👤semio📚go💻semiogo🛠️connectornameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ConnectorNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️connectornameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ConnectorNameUniquenessConstraint)
 
 ConnectorNameUniquenessConstraint MUST report duplicate connector names within each type.
 
-## [👤semio📚go💻semiogo🛠️modelnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ModelNameUniquenessConstraint)
+## [👤semio📚go💻semio🛠️modelnameuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ModelNameUniquenessConstraint)
 
 ModelNameUniquenessConstraint MUST report duplicate model names within each type.
 
-## [👤semio📚go💻semiogo🛠️layerpathuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/LayerPathUniquenessConstraint)
+## [👤semio📚go💻semio🛠️layerpathuniquenessconstraint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/LayerPathUniquenessConstraint)
 
 LayerPathUniquenessConstraint MUST report duplicate layer paths within each design.
 
-## [👤semio📚go💻semiogo🛠️validatekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ValidateKit)
+## [👤semio📚go💻semio🛠️validatekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ValidateKit)
 
 ValidateKit MUST apply all default constraints and return all found problems.
 
-## [👤semio📚go💻semiogo🛠️validatekitwithconstraints](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ValidateKitWithConstraints)
+## [👤semio📚go💻semio🛠️validatekitwithconstraints](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ValidateKitWithConstraints)
 
 ValidateKitWithConstraints MUST apply each constraint and aggregate all problems.
 
-## [👤semio📚go💻semiogo🛠️haserrors](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasErrors)
+## [👤semio📚go💻semio🛠️haserrors](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/HasErrors)
 
 HasErrors MUST return true when any problem has error severity or empty severity.
 
-## [👤semio📚go💻semiogo🛠️tovalidationresult](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ToValidationResult)
+## [👤semio📚go💻semio🛠️tovalidationresult](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ToValidationResult)
 
 ToValidationResult MUST default empty severity to error.
 
-## [👤semio📚go💻semiogo🛠️arevalidationresultsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreValidationResultsEqual)
+## [👤semio📚go💻semio🛠️arevalidationresultsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AreValidationResultsEqual)
 
 AreValidationResultsEqual MUST compare problems regardless of their order.
 
-## [👤semio📚go💻semiogo🛠️flattendesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FlattenDesign)
+## [👤semio📚go💻semio🛠️planetomatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/planeToMatrix)
+
+planeToMatrix MUST perform the planeToMatrix operation.
+
+## [👤semio📚go💻semio🛠️matrixtoplane](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/matrixToPlane)
+
+matrixToPlane MUST perform the matrixToPlane operation.
+
+## [👤semio📚go💻semio🛠️cross](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/cross)
+
+cross MUST perform the cross operation.
+
+## [👤semio📚go💻semio🛠️normalize](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/normalize)
+
+normalize MUST perform the normalize operation.
+
+## [👤semio📚go💻semio🛠️dot](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/dot)
+
+dot MUST perform the dot operation.
+
+## [👤semio📚go💻semio🛠️veclength](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/vecLength)
+
+vecLength MUST perform the vecLength operation.
+
+## [👤semio📚go💻semio🛠️degtorad](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/degToRad)
+
+degToRad MUST perform the degToRad operation.
+
+## [👤semio📚go💻semio🛠️roundfloat](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/roundFloat)
+
+roundFloat MUST perform the roundFloat operation.
+
+## [👤semio📚go💻semio🛠️roundplane](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/roundPlane)
+
+roundPlane MUST perform the roundPlane operation.
+
+## [👤semio📚go💻semio🛠️makerotationaxis](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/makeRotationAxis)
+
+makeRotationAxis MUST perform the makeRotationAxis operation.
+
+## [👤semio📚go💻semio🛠️maketranslation](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/makeTranslation)
+
+makeTranslation MUST perform the makeTranslation operation.
+
+## [👤semio📚go💻semio🛠️quaternionfromaxisangle](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/quaternionFromAxisAngle)
+
+quaternionFromAxisAngle MUST perform the quaternionFromAxisAngle operation.
+
+## [👤semio📚go💻semio🛠️quaternionfromunitvectors](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/quaternionFromUnitVectors)
+
+quaternionFromUnitVectors MUST perform the quaternionFromUnitVectors operation.
+
+## [👤semio📚go💻semio🛠️quaterniontomatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/quaternionToMatrix)
+
+quaternionToMatrix MUST perform the quaternionToMatrix operation.
+
+## [👤semio📚go💻semio🛠️multiplymatrices](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/multiplyMatrices)
+
+multiplyMatrices MUST perform the multiplyMatrices operation.
+
+## [👤semio📚go💻semio🛠️applymatrix4tovec3](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyMatrix4ToVec3)
+
+applyMatrix4ToVec3 MUST perform the applyMatrix4ToVec3 operation.
+
+## [👤semio📚go💻semio🛠️computechildplane](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/computeChildPlane)
+
+computeChildPlane MUST perform the computeChildPlane operation.
+
+## [👤semio📚go💻semio🛠️getconnector](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConnector)
+
+getConnector MUST perform the getConnector operation.
+
+## [👤semio📚go💻semio🛠️flattendesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FlattenDesign)
 
 FlattenDesign MUST traverse the connection graph via BFS to compute piece transforms.
 
-## [👤semio📚go💻semiogo🛠️applydesigndiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyDesignDiff)
+## [👤semio📚go💻semio🛠️planesequalapprox](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/planesEqualApprox)
+
+planesEqualApprox MUST perform the planesEqualApprox operation.
+
+## [👤semio📚go💻semio🛠️applydesigndiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyDesignDiff)
 
 ApplyDesignDiff MUST apply all piece, connection and property changes from the diff.
 
-## [👤semio📚js💻devts🔖dev](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev)
+## [👤semio📚js💻dev🔖dev](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev)
 
 MUST kill both child processes on SIGINT and SIGTERM.
 
-## [👤semio📚js💻devts🪨iswindows](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/isWindows)
-
-MUST be checked before spawning npm commands.
-
-## [👤semio📚js💻devts🪨npmcmd](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/npmCmd)
-
-MUST use .cmd extension on Windows.
-
-## [👤semio📚js💻devts🪨vite](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/vite)
-
-MUST inherit stdio for live output.
-
-## [👤semio📚js💻devts🪨storybook](semiorepo://p/u/semio/b/l/js/f/dev.ts/d/c/storybook)
-
-MUST inherit stdio for live output.
-
-## [👤semio📚js💻i18nts🔖i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n)
+## [👤semio📚js💻i18n🔖i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n)
 
 MUST fall back to English when the detected language is unavailable.
 
-## [👤semio📚js💻i18nts🪨getexpertisefunction](semiorepo://p/u/semio/b/l/js/f/i18n.ts/d/c/getExpertiseFunction)
-
-MUST be set via setExpertiseProvider before expertise-dependent labels are resolved.
-
-## [👤semio📚js💻indexts🔖exports](semiorepo://p/u/semio/b/l/js/f/index.ts/s/Exports)
+## [👤semio📚js💻index🔖exports](semiorepo://p/u/semio/b/l/js/f/index.ts/s/Exports)
 
 MUST re-export all public types alongside their runtime counterparts.
 
-## [👤semio📚js💻semiots🔖imports](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
+## [👤semio📚js💻semio🔖imports](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
 
 External dependency imports MUST be declared here.
 
-## [👤semio📚js💻semiots🔖constants](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constants)
+## [👤semio📚js💻semio🔖constants](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constants)
 
 Global constants MUST define shared numeric parameters.
 
-## [👤semio📚js💻semiots🔖utilities](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities)
+## [👤semio📚js💻semio🔖utilities](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Utilities)
 
 General-purpose utility functions MUST be defined here.
 
-## [👤semio📚js💻semiots🔖entityids](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs)
+## [👤semio📚js💻semio🔖entityids](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Entity%20IDs)
 
 Entity identifier types and comparison functions MUST be defined here.
 
-## [👤semio📚js💻semiots🔖attribute](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute)
+## [👤semio📚js💻semio🔖attribute](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Attribute)
 
 Attribute entity types, schemas, and helper functions MUST be defined here.
 
-## [👤semio📚js💻semiots🔖coordweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity))
+## [👤semio📚js💻semio🔖coordweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity))
 
 Coord weak entity types and schemas MUST be defined here.
 
-## [👤semio📚js💻semiots🔖vecweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity))
+## [👤semio📚js💻semio🔖vecweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vec%20(weak%20entity))
 
 Vec weak entity types and schemas MUST be defined here.
 
-## [👤semio📚js💻semiots🔖pointweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity))
+## [👤semio📚js💻semio🔖pointweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity))
 
 Point weak entity types and schemas MUST be defined here.
 
-## [👤semio📚js💻semiots🔖vectorweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity))
+## [👤semio📚js💻semio🔖vectorweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Vector%20(weak%20entity))
 
 Vector weak entity types and schemas MUST be defined here.
 
-## [👤semio📚js💻semiots🔖planeweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity))
+## [👤semio📚js💻semio🔖planeweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity))
 
 Plane weak entity types and schemas MUST be defined here.
 
-## [👤semio📚js💻semiots🔖cameraweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity))
+## [👤semio📚js💻semio🔖cameraweakentity](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity))
 
 Camera weak entity types and schemas MUST be defined here.
 
-## [👤semio📚js💻semiots🔖location](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location)
+## [👤semio📚js💻semio🔖location](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location)
 
 Location entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖author](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author)
+## [👤semio📚js💻semio🔖author](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author)
 
 Author entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖file](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File)
+## [👤semio📚js💻semio🔖file](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File)
 
 File entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖folder](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder)
+## [👤semio📚js💻semio🔖folder](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder)
 
 Folder entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖benchmark](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark)
+## [👤semio📚js💻semio🔖benchmark](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark)
 
 Benchmark entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖quality](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality)
+## [👤semio📚js💻semio🔖quality](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality)
 
 Quality entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖port](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port)
+## [👤semio📚js💻semio🔖port](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port)
 
 Port entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖prop](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop)
+## [👤semio📚js💻semio🔖prop](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop)
 
 Prop entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖tag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag)
+## [👤semio📚js💻semio🔖tag](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag)
 
 Tag entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖concept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept)
+## [👤semio📚js💻semio🔖concept](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept)
 
 Concept entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖model](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model)
+## [👤semio📚js💻semio🔖model](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model)
 
 Model entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖connector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector)
+## [👤semio📚js💻semio🔖connector](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector)
 
 Connector entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖type](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type)
+## [👤semio📚js💻semio🔖type](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type)
 
 Type entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖layer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer)
+## [👤semio📚js💻semio🔖layer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer)
 
 Layer entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖piece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece)
+## [👤semio📚js💻semio🔖piece](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Piece)
 
 Piece entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖group](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group)
+## [👤semio📚js💻semio🔖group](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group)
 
 Group entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖side](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side)
+## [👤semio📚js💻semio🔖side](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Side)
 
 Side entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖connection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection)
+## [👤semio📚js💻semio🔖connection](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection)
 
 Connection entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖stat](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat)
+## [👤semio📚js💻semio🔖stat](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Stat)
 
 Stat entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖design](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design)
+## [👤semio📚js💻semio🔖design](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design)
 
 Design entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖kit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit)
+## [👤semio📚js💻semio🔖kit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit)
 
 Kit entity types, schemas, and helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design%20Family%20Helpers)
+## [👤semio📚js💻semio🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design%20Family%20Helpers)
 
 Design family traversal helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖typefamilyhelpers](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type%20Family%20Helpers)
+## [👤semio📚js💻semio🔖typefamilyhelpers](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Type%20Family%20Helpers)
 
 Type family traversal helpers MUST be defined here.
 
-## [👤semio📚js💻semiots🔖filetreeutilities](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File%20Tree%20Utilities)
+## [👤semio📚js💻semio🔖filetreeutilities](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/File%20Tree%20Utilities)
 
 File tree construction and traversal utilities MUST be defined here.
 
-## [👤semio📚js💻semiots🔖kitimportexport](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit%20Import/Export)
+## [👤semio📚js💻semio🔖kitimportexport](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit%20Import/Export)
 
 Kit serialization and deserialization functions MUST be defined here.
 
-## [👤semio📚js💻semiots🔖validation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation)
+## [👤semio📚js💻semio🔖validation](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation)
 
 Kit validation engine and constraints MUST be defined here.
 Core validation types and interfaces MUST be defined here.
 
-## [👤semio📚js💻semiots🔖validationcoretypes](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation%20core%20types)
+## [👤semio📚js💻semio🔖validationcoretypes](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation%20core%20types)
 
 Core validation types and interfaces MUST be defined here.
 
-## [👤semio📚js💻semiots🔖validationcontextengine](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation%20context%20&%20engine)
+## [👤semio📚js💻semio🔖validationcontextengine](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation%20context%20&%20engine)
 
 Validation context construction and engine MUST be defined here.
 
-## [👤semio📚js💻semiots🔖fixhelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Fix%20helper)
+## [👤semio📚js💻semio🔖fixhelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Fix%20helper)
 
 Validation fix helper functions MUST be defined here.
 
-## [👤semio📚js💻semiots🔖guidupdatehelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/GUID%20update%20helper)
+## [👤semio📚js💻semio🔖guidupdatehelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/GUID%20update%20helper)
 
 GUID regeneration helper functions MUST be defined here.
 
-## [👤semio📚js💻semiots🔖constraintguiduniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20GUID%20uniqueness)
+## [👤semio📚js💻semio🔖constraintguiduniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20GUID%20uniqueness)
 
 GUID uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constrainttypenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Type%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constrainttypenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Type%20name%20uniqueness)
 
 Type name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintdesignnameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Design%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constraintdesignnameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Design%20name%20uniqueness)
 
 Design name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintpiecenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Piece%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constraintpiecenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Piece%20name%20uniqueness)
 
 Piece name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintqualitynameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Quality%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constraintqualitynameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Quality%20name%20uniqueness)
 
 Quality name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintportnameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Port%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constraintportnameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Port%20name%20uniqueness)
 
 Port name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintfilenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20File%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constraintfilenameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20File%20name%20uniqueness)
 
 File name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintfoldernameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Folder%20name%20uniqueness)
+## [👤semio📚js💻semio🔖constraintfoldernameuniqueness](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Folder%20name%20uniqueness)
 
 Folder name uniqueness constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintconnectornameuniquenesswithintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Connector%20name%20uniqueness%20within%20type)
+## [👤semio📚js💻semio🔖constraintconnectornameuniquenesswithintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Connector%20name%20uniqueness%20within%20type)
 
 Connector name uniqueness within type constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintmodelnameuniquenesswithintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Model%20name%20uniqueness%20within%20type)
+## [👤semio📚js💻semio🔖constraintmodelnameuniquenesswithintype](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Model%20name%20uniqueness%20within%20type)
 
 Model name uniqueness within type constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintlayerpathuniquenesswithindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Layer%20path%20uniqueness%20within%20design)
+## [👤semio📚js💻semio🔖constraintlayerpathuniquenesswithindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Layer%20path%20uniqueness%20within%20design)
 
 Layer path uniqueness within design constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintdesignpiecesamefamilyconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Design%20piece%20same%20family%20constraint)
+## [👤semio📚js💻semio🔖constraintdesignpiecesamefamilyconstraint](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint:%20Design%20piece%20same%20family%20constraint)
 
 Design piece same family constraint MUST be enforced here.
 
-## [👤semio📚js💻semiots🔖constraintregistration](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint%20registration)
+## [👤semio📚js💻semio🔖constraintregistration](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Constraint%20registration)
 
 Constraint registration and default configurations MUST be defined here.
 
-## [👤semio📚js💻semiots🔖validationserialization](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation%20serialization)
+## [👤semio📚js💻semio🔖validationserialization](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Validation%20serialization)
 
 Validation result serialization and deserialization MUST be defined here.
 
-## [👤semio📚js💻sitetsx🔖entrypoint](semiorepo://p/u/semio/b/l/js/f/site.tsx/s/Entrypoint)
+## [👤semio📚js💻site🔖entrypoint](semiorepo://p/u/semio/b/l/js/f/site.tsx/s/Entrypoint)
 
 Entrypoint MUST render into the root element defined in index.html.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻design🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports)
 
 Imports for Design app MUST include all shared sketchpad, React, and UI dependencies.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/State%20Management)
+## [👤semio📚js🗃️sketchpad💻design🔖statemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/State%20Management)
 
 State management types and interfaces MUST define the Design app selection, presence, hover, diff, and state shape.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Commands)
+## [👤semio📚js🗃️sketchpad💻design🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Commands)
 
 Commands MUST define all executable Design app actions dispatched by keyboard shortcuts and UI interactions.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store)
+## [👤semio📚js🗃️sketchpad💻design🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store)
 
 Store MUST implement DesignStore extending PlainKitDiffAppStore with undo/redo, selection diff inversion, and state persistence.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖designapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Design%20App%20Plugin%20Registration)
+## [👤semio📚js🗃️sketchpad💻design🔖designapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Design%20App%20Plugin%20Registration)
 
 Design app plugin registration MUST register the Design app plugin with machine actions, guards, and default state.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖hooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Hooks)
+## [👤semio📚js🗃️sketchpad💻design🔖hooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Hooks)
 
 Hooks MUST provide the Design app initialization lifecycle within the React component tree.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Components)
+## [👤semio📚js🗃️sketchpad💻design🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Components)
 
 Components MUST provide Design app scope, actor context, and synchronization wrapper components.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Action%20Hooks)
+## [👤semio📚js🗃️sketchpad💻design🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Action%20Hooks)
 
 Action hooks MUST provide composable React hooks for Design app selection, hover, focus, panel, and transaction actions.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Footer)
+## [👤semio📚js🗃️sketchpad💻design🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Footer)
 
 Footer MUST render dynamic Design app footer items showing selection and transaction state.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Tools)
+## [👤semio📚js🗃️sketchpad💻design🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Tools)
 
 Tools MUST define all Design app tool configurations for selection, lasso, and hand modes.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels)
+## [👤semio📚js🗃️sketchpad💻design🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels)
 
 WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖windowlibrary](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/WindowLibrary)
+## [👤semio📚js🗃️sketchpad💻design🔖windowlibrary](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/WindowLibrary)
 
 WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Details)
+## [👤semio📚js🗃️sketchpad💻design🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Details)
 
 Details MUST render the Design app detail panels for design, pieces, connections, and connector sections.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas)
+## [👤semio📚js🗃️sketchpad💻design🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas)
 
 Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖hoverintentcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Hover%20Intent%20Context)
+## [👤semio📚js🗃️sketchpad💻design🔖hoverintentcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Hover%20Intent%20Context)
 
 Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Diagram)
+## [👤semio📚js🗃️sketchpad💻design🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Diagram)
 
 Diagram MUST render the interactive React Flow design diagram with nodes, edges, minimap, and controls.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Scene)
+## [👤semio📚js🗃️sketchpad💻design🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Scene)
 
 Scene MUST render the Three.js 3D scene view of design pieces with selection and hover highlighting.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Windows)
+## [👤semio📚js🗃️sketchpad💻design🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Windows)
 
 Window components MUST wrap diagram and scene views with hover and transaction providers.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App)
+## [👤semio📚js🗃️sketchpad💻design🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App)
 
 App MUST compose all Design app panels, canvas, toolbar, and footer into the main Design app layout.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Settings)
+## [👤semio📚js🗃️sketchpad💻design🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Settings)
 
 Settings MUST render the Design app settings panel with theme, language, device, expertise, and mode toggles.
 
-## [👤semio📚js🗃️sketchpad💻designtsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻design🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Config)
 
 Config MUST export the Design app configuration with route segments, panel definitions, and path matching.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻docs🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Imports)
 
 External and internal module imports MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖mdxloader](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader)
+## [👤semio📚js🗃️sketchpad💻docs🔖mdxloader](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader)
 
 MDX file loading and section discovery utilities MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider)
-
-MDX rendering context and heading components MUST be declared here.
-Section tree navigation component MUST render docs file hierarchy.
-
-## [👤semio📚js🗃️sketchpad💻docstsx🔖sectiontree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/SectionTree)
+## [👤semio📚js🗃️sketchpad💻docs🔖sectiontree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/SectionTree)
 
 Section tree navigation component MUST render docs file hierarchy.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖registry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Registry)
+## [👤semio📚js🗃️sketchpad💻docs🔖registry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Registry)
 
 Docs registry MUST provide page and section lookup for navigation.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Store)
+## [👤semio📚js🗃️sketchpad💻docs🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Store)
 
 Docs app section state MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Types)
+## [👤semio📚js🗃️sketchpad💻docs🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Types)
 
 Docs app state, selection, and diff type definitions MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖docsappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Docs%20App%20Store)
+## [👤semio📚js🗃️sketchpad💻docs🔖docsappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Docs%20App%20Store)
 
 Docs app store MUST extend PlainAppStore with docs-specific state management.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Commands)
+## [👤semio📚js🗃️sketchpad💻docs🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Commands)
 
 Docs app command handlers MUST modify state through diff objects.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖docsapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Docs%20App%20Plugin%20Registration)
-
-Plugin registration MUST initialize docs app context and registry.
-
-## [👤semio📚js🗃️sketchpad💻docstsx🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas)
+## [👤semio📚js🗃️sketchpad💻docs🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas)
 
 Canvas components MUST render the docs app visual content.
 Window components MUST provide windowed views within the canvas.
 Page window MUST render MDX content with navigation and heading extraction.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Windows)
+## [👤semio📚js🗃️sketchpad💻docs🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Windows)
 
 Window components MUST provide windowed views within the canvas.
 Page window MUST render MDX content with navigation and heading extraction.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Page)
+## [👤semio📚js🗃️sketchpad💻docs🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Page)
 
 Page window MUST render MDX content with navigation and heading extraction.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Footer)
+## [👤semio📚js🗃️sketchpad💻docs🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Footer)
 
 Footer component MUST manage docs app footer items.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels)
+## [👤semio📚js🗃️sketchpad💻docs🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels)
 
 Panel components MUST render sidebar content for the docs app.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App)
+## [👤semio📚js🗃️sketchpad💻docs🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App)
 
 Docs app root component MUST compose MDX routing, panel sections, and layout.
 
-## [👤semio📚js🗃️sketchpad💻docstsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻docs🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Config)
 
 Docs app route, panel, and path matching configuration MUST be exported.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻feedback🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Imports)
 
 MUST import external and internal modules for the Feedback app.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖feedbackapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Feedback%20App%20Plugin%20Registration)
+## [👤semio📚js🗃️sketchpad💻feedback🔖feedbackapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Feedback%20App%20Plugin%20Registration)
 
 MUST register the Feedback app plugin with default state and event handlers.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks)
+## [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks)
 
 MUST provide triadic hooks for accessing and mutating Feedback app state.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components)
+## [👤semio📚js🗃️sketchpad💻feedback🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components)
 
 MUST render feedback form for submitting bug reports and ideas.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖form](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Form)
+## [👤semio📚js🗃️sketchpad💻feedback🔖form](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Form)
 
 MUST render feedback form for submitting bug reports and ideas.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App)
+## [👤semio📚js🗃️sketchpad💻feedback🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App)
 
 MUST integrate feedback app with toolbar and layout canvas.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻feedback🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Config)
 
 MUST define app configuration for the Feedback app.
 
-## [👤semio📚js🗃️sketchpad💻feedbacktsx🔖globalfooteritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Global%20Footer%20Item)
+## [👤semio📚js🗃️sketchpad💻feedback🔖globalfooteritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Global%20Footer%20Item)
 
 MUST re-export the feedback icon for the footer item.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻home🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports)
 
 External and internal module imports MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Types)
+## [👤semio📚js🗃️sketchpad💻home🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Types)
 
 Home app type definitions MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖homeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Home%20App%20Plugin%20Registration)
+## [👤semio📚js🗃️sketchpad💻home🔖homeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Home%20App%20Plugin%20Registration)
 
 Home app plugin and event handler registration MUST initialize XState context.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖hooksxstatebased](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Hooks%20(XState-based))
+## [👤semio📚js🗃️sketchpad💻home🔖hooksxstatebased](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Hooks%20(XState-based))
 
 XState-based hooks MUST re-export state selectors for the Home app.
-
-## [👤semio📚js🗃️sketchpad💻hometsx🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas)
-
-Canvas components MUST render the Home app visual content.
-Window components MUST provide windowed views within the canvas.
 Table window MUST display kit entries in tabular form.
-
-## [👤semio📚js🗃️sketchpad💻hometsx🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Windows)
-
-Window components MUST provide windowed views within the canvas.
-Table window MUST display kit entries in tabular form.
-
-## [👤semio📚js🗃️sketchpad💻hometsx🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Table)
-
-Table window MUST display kit entries in tabular form.
-
-## [👤semio📚js🗃️sketchpad💻hometsx🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Panels)
-
-Panel components MUST render sidebar panel content.
-Right panel components MUST render details, chat, and settings.
 Details panel MUST show properties of selected kits.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖right](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Right)
+## [👤semio📚js🗃️sketchpad💻home🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Table)
 
-Right panel components MUST render details, chat, and settings.
+Table window MUST display kit entries in tabular form.
 Details panel MUST show properties of selected kits.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Details)
+## [👤semio📚js🗃️sketchpad💻home🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Details)
 
 Details panel MUST show properties of selected kits.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖chat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Chat)
+## [👤semio📚js🗃️sketchpad💻home🔖chat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Chat)
 
 Chat panel MUST show the chat placeholder content.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Settings)
+## [👤semio📚js🗃️sketchpad💻home🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Settings)
 
 Settings panel MUST expose theme, language, device, expertise, and mode toggles.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Footer)
+## [👤semio📚js🗃️sketchpad💻home🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Footer)
 
 Footer component MUST manage Home app footer items.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖dropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/DropZone)
+## [👤semio📚js🗃️sketchpad💻home🔖dropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/DropZone)
 
 DropZone component MUST handle drag-and-drop kit imports.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App)
+## [👤semio📚js🗃️sketchpad💻home🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App)
 
 App components MUST compose the Home app toolbar, table, and logic.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖multiwindowapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Multi-Window%20App)
+## [👤semio📚js🗃️sketchpad💻home🔖multiwindowapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Multi-Window%20App)
 
 Multi-window app MUST orchestrate the Home canvas and layout.
 
-## [👤semio📚js🗃️sketchpad💻hometsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻home🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Config)
 
 Config MUST define the Home app registration and panel setup.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻kit🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Imports)
 
 Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers)
+## [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers)
 
 Design family helper functions MUST traverse the design hierarchy to collect related design GUIDs.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management)
+## [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management)
 
 Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖constants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Constants)
+## [👤semio📚js🗃️sketchpad💻kit🔖constants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Constants)
 
 Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management)
+## [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management)
 
 Internal state management MUST define all Kit app types, interfaces, store, and Y.js synchronization.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖kitapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Kit%20App%20Plugin%20Registration)
+## [👤semio📚js🗃️sketchpad💻kit🔖kitapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Kit%20App%20Plugin%20Registration)
 
 Kit app plugin registration MUST register the Kit app plugin with machine actions, guards, and default state.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Action%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Action%20Hooks)
 
 Action hooks MUST provide composable React hooks for Kit app selection, hover, sort, filter, and transaction actions.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖selectionhelperhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Selection%20Helper%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖selectionhelperhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Selection%20Helper%20Hooks)
 
 Selection helper hooks MUST provide entity-specific add, remove, toggle, select-single, select-all, and clear operations.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖typesselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Types%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖typesselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Types%20Selection%20Hooks)
 
 Types selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for type selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖designsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Designs%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖designsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Designs%20Selection%20Hooks)
 
 Designs selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for design selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖qualitiesselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Qualities%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖qualitiesselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Qualities%20Selection%20Hooks)
 
 Qualities selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for quality selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖portsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Ports%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖portsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Ports%20Selection%20Hooks)
 
 Ports selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for port selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖tagsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Tags%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖tagsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Tags%20Selection%20Hooks)
 
 Tags selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for tag selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖conceptsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Concepts%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖conceptsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Concepts%20Selection%20Hooks)
 
 Concepts selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for concept selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖filesselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Files%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖filesselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Files%20Selection%20Hooks)
 
 Files selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for file selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖foldersselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Folders%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖foldersselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Folders%20Selection%20Hooks)
 
 Folders selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for folder selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖authorsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Authors%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖authorsselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Authors%20Selection%20Hooks)
 
 Authors selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for author selection.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖globalselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Global%20Selection%20Hooks)
+## [👤semio📚js🗃️sketchpad💻kit🔖globalselectionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Global%20Selection%20Hooks)
 
 Global selection hooks MUST provide select-all across all artifact kinds.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Types)
+## [👤semio📚js🗃️sketchpad💻kit🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Types)
 
 Types MUST provide hover status and color hooks for type visual indication in the Kit app.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖designs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Designs)
+## [👤semio📚js🗃️sketchpad💻kit🔖designs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Designs)
 
 Designs MUST provide hover status and color hooks for design visual indication in the Kit app.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Commands)
+## [👤semio📚js🗃️sketchpad💻kit🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Commands)
 
 Commands MUST define all executable Kit app actions for artifact CRUD, import, and export.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Canvas)
+## [👤semio📚js🗃️sketchpad💻kit🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Canvas)
 
 Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Windows)
+## [👤semio📚js🗃️sketchpad💻kit🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Windows)
 
 Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Table)
+## [👤semio📚js🗃️sketchpad💻kit🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Table)
 
 Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Diagram)
+## [👤semio📚js🗃️sketchpad💻kit🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Diagram)
 
 Diagram MUST render the interactive force-directed Kit diagram with type and design nodes.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Tools)
+## [👤semio📚js🗃️sketchpad💻kit🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Tools)
 
 Tools MUST define Kit app toolbar filter and selection tool components.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Panels)
+## [👤semio📚js🗃️sketchpad💻kit🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Panels)
 
 Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖right](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Right)
+## [👤semio📚js🗃️sketchpad💻kit🔖right](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Right)
 
 Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Details)
+## [👤semio📚js🗃️sketchpad💻kit🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Details)
 
 Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Settings)
+## [👤semio📚js🗃️sketchpad💻kit🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Settings)
 
 Settings MUST render the Kit app settings panel with theme, language, device, expertise, mode, and diagram force controls.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Footer)
+## [👤semio📚js🗃️sketchpad💻kit🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Footer)
 
 Footer MUST render the Kit app footer with selection count status.
 
-## [👤semio📚js🗃️sketchpad💻kittsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻kit🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Config)
 
 Config MUST export the Kit app configuration with route segments, panel definitions, and path matching.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻quality🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Imports)
 
 External and internal module imports MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Types)
+## [👤semio📚js🗃️sketchpad💻quality🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Types)
 
 Type definitions MUST declare quality app state, selections, and formula structures.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions)
+## [👤semio📚js🗃️sketchpad💻quality🔖functions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions)
 
 Formula function definitions, parsing, and LaTeX conversion utilities MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Commands)
+## [👤semio📚js🗃️sketchpad💻quality🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Commands)
 
 Quality app command handlers MUST modify state through diff objects.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store)
+## [👤semio📚js🗃️sketchpad💻quality🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store)
 
 Quality app store, hooks, and reactive state management MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖qualityapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Quality%20App%20Plugin%20Registration)
+## [👤semio📚js🗃️sketchpad💻quality🔖qualityapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Quality%20App%20Plugin%20Registration)
 
 Plugin registration and event handler wiring MUST initialize quality app context.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Action%20Hooks)
+## [👤semio📚js🗃️sketchpad💻quality🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Action%20Hooks)
 
 Memoized action hooks MUST provide formula node interaction callbacks.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components)
+## [👤semio📚js🗃️sketchpad💻quality🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components)
 
 React components MUST render the quality app formula diagram, details panel, and workbench.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App)
+## [👤semio📚js🗃️sketchpad💻quality🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App)
 
 Main quality app component MUST compose window layout, drag-drop, and hotkey handling.
 
-## [👤semio📚js🗃️sketchpad💻qualitytsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻quality🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Config)
 
 Quality app route, panel, and path matching configuration MUST be exported.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities)
+
+Utilities MUST provide the utilities functionality.
+
+## [👤semio📚js🗃️sketchpad💻tutorials🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Imports)
 
 External and internal module imports MUST be declared here.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components)
 
 Tutorial UI components MUST provide playback and recording controls.
 Tutorial playback controls MUST render in the footer during active tutorials.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖tutorialcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Tutorial%20Controls)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖tutorialcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Tutorial%20Controls)
 
 Tutorial playback controls MUST render in the footer during active tutorials.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖recordingcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Recording%20Controls)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖recordingcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Recording%20Controls)
 
 Recording controls MUST render in the footer during active recording in dev mode.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖recordbutton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Record%20Button)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖recordbutton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Record%20Button)
 
 Record button MUST toggle recording in the footer when in dev mode.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖tutorialoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Tutorial%20Overlay)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖tutorialoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Tutorial%20Overlay)
 
 Tutorial overlay MUST render focus highlights and cursor animations during playback.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖builtintutorials](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Built-in%20Tutorials)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖builtintutorials](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Built-in%20Tutorials)
 
 Built-in tutorials MUST define default tutorial content shipped with the app.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Commands)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Commands)
 
 Tutorial and recording command definitions MUST map command names to store actions.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖commandinterceptor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Command%20Interceptor)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖commandinterceptor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Command%20Interceptor)
 
 Command interceptor MUST record events and check milestone completion during playback.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖hooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Hooks)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖hooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Hooks)
 
 Tutorial hooks MUST provide reactive access to tutorial and recording state.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖context](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Context)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖context](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Context)
 
 Tutorial context MUST provide the store and state to descendant components.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Types)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Types)
 
 Tutorial type definitions MUST be declared here.
 Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖tutorialentities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Tutorial%20Entities)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖tutorialentities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Tutorial%20Entities)
 
 Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
-## [👤semio📚js🗃️sketchpad💻tutorialstsx🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Store)
+## [👤semio📚js🗃️sketchpad💻tutorials🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Store)
 
 Tutorial store MUST manage playback, recording, and milestone navigation state.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻type🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports)
 
 External and internal dependency imports. MUST group third-party and local imports.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management)
+## [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management)
 
 TypeApp state interfaces, enums, and diffing types. MUST define all shared state shapes.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖typeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Type%20App%20Plugin%20Registration)
+## [👤semio📚js🗃️sketchpad💻type🔖typeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Type%20App%20Plugin%20Registration)
 
 Plugin registration and XState event handlers for the TypeApp. MUST register all event handlers at module load.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks)
+## [👤semio📚js🗃️sketchpad💻type🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks)
 
 React hooks that read and write TypeApp XState machine state. MUST use memoized selectors for performance.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Action%20Hooks)
+## [👤semio📚js🗃️sketchpad💻type🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Action%20Hooks)
 
 Convenience React hooks wrapping state hooks into single-purpose actions. MUST return action-canAct tuples.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Commands)
+## [👤semio📚js🗃️sketchpad💻type🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Commands)
 
 Command definitions for the TypeApp producing diffs from context. MUST return TypeAppCommandResult.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene)
+## [👤semio📚js🗃️sketchpad💻type🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene)
 
 Three.js scene components for connectors, meshes, and the 3D viewport. MUST render inside a React Three Fiber canvas.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels)
+## [👤semio📚js🗃️sketchpad💻type🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels)
 
 Panel UI sections for the right sidebar including details and settings editors. MUST use the panel section registration API.
 Right sidebar panel containing details and settings sub-sections. MUST nest detail and settings regions.
 Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖right](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Right)
+## [👤semio📚js🗃️sketchpad💻type🔖right](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Right)
 
 Right sidebar panel containing details and settings sub-sections. MUST nest detail and settings regions.
 Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Details)
+## [👤semio📚js🗃️sketchpad💻type🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Details)
 
 Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Settings)
+## [👤semio📚js🗃️sketchpad💻type🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Settings)
 
 Settings panel for theme, language, device, expertise, and mode selection. MUST use toggle groups and select elements.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools)
+## [👤semio📚js🗃️sketchpad💻type🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools)
 
 Tool definitions for selection modes and connector creation. MUST export tool objects and settings components.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App)
+## [👤semio📚js🗃️sketchpad💻type🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App)
 
 Main TypeApp component orchestrating panels, scene, keyboard shortcuts, and drag-and-drop. MUST register sections on mount.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Footer)
+## [👤semio📚js🗃️sketchpad💻type🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Footer)
 
 Footer component displaying model tag toggles. MUST update footer items when tags change.
 
-## [👤semio📚js🗃️sketchpad💻typetsx🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Config)
+## [👤semio📚js🗃️sketchpad💻type🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Config)
 
 App configuration for the TypeApp including route segments, panels, and path matching. MUST define all route segments.
 
-## [👤semio📚js🗃️sketchpad🗃️apps💻indexts🔖exports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts/s/Exports)
+## [👤semio📚js🗃️sketchpad🗃️apps💻index🔖exports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts/s/Exports)
 
 Exports MUST expose only the public API surface of the shared module.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Imports)
+## [👤semio📚js🗃️sketchpad💻elements🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Imports)
 
 Consumers MUST NOT add non-tree-shakeable imports.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity)
+## [👤semio📚js🗃️sketchpad💻elements🔖sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity)
 
 Consumers MUST use these constants for section precedence.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context)
+## [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context)
 
 Consumers MUST wrap interactive elements with InteractionProvider.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context)
+## [👤semio📚js🗃️sketchpad💻elements🔖levelcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context)
 
 Consumers MUST wrap components with LevelProvider.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖element](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element)
+## [👤semio📚js🗃️sketchpad💻elements🔖element](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element)
 
 Consumers MUST use level functions for consistent styling.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command)
+## [👤semio📚js🗃️sketchpad💻elements🔖command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command)
 
 Consumers MUST use CommandInput for search functionality.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer)
+## [👤semio📚js🗃️sketchpad💻elements🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer)
 
 Consumers MUST provide FooterItem entries for each action.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout)
+## [👤semio📚js🗃️sketchpad💻elements🔖layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout)
 
 Consumers MUST provide a canvas element.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover)
-
-Consumers MUST wrap content in PopoverContent.
-
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)
+## [👤semio📚js🗃️sketchpad💻elements🔖tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)
 
 Consumers MUST configure the expertise mode provider.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖basecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components)
+## [👤semio📚js🗃️sketchpad💻elements🔖basecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components)
 
 Consumers MUST use these as building blocks for inputs.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components)
+## [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components)
 
 Consumers MUST pass valid config objects.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖aside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aside)
+## [👤semio📚js🗃️sketchpad💻elements🔖aside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aside)
 
 Consumers MUST specify a valid kind prop.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖avatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Avatar)
+## [👤semio📚js🗃️sketchpad💻elements🔖avatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Avatar)
 
 Consumers MUST provide content for the fallback.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖card](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Card)
+## [👤semio📚js🗃️sketchpad💻elements🔖card](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Card)
 
 Consumers MUST provide a title string.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Spinner)
+## [👤semio📚js🗃️sketchpad💻elements🔖spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Spinner)
 
 Consumers MUST choose an appropriate size for the context.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖notfound](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/NotFound)
+## [👤semio📚js🗃️sketchpad💻elements🔖notfound](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/NotFound)
 
 Consumers MUST provide a title for the error.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖loadingrow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LoadingRow)
+## [👤semio📚js🗃️sketchpad💻elements🔖loadingrow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LoadingRow)
 
 Consumers MUST provide a name for the placeholder.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/DiagramNode)
+## [👤semio📚js🗃️sketchpad💻elements🔖diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/DiagramNode)
 
 Consumers MUST provide content for the node.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖hovercard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HoverCard)
+## [👤semio📚js🗃️sketchpad💻elements🔖hovercard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HoverCard)
 
 Consumers MUST use HoverCardTrigger to activate.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖icons](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Icons)
-
-Consumers MUST provide position data for rendering.
-
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section)
+## [👤semio📚js🗃️sketchpad💻elements🔖section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section)
 
 Consumers MUST provide a heading string.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Steps)
+## [👤semio📚js🗃️sketchpad💻elements🔖steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Steps)
 
 Consumers MUST provide step children in order.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components)
+## [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components)
 
 Consumers MUST provide action items for the group.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ActionGroup)
+## [👤semio📚js🗃️sketchpad💻elements🔖actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ActionGroup)
 
 Consumers MUST provide action items for the group.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Combobox)
+## [👤semio📚js🗃️sketchpad💻elements🔖combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Combobox)
 
 Consumers MUST provide options and onValueChange handler.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input)
+## [👤semio📚js🗃️sketchpad💻elements🔖input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input)
 
 Consumers MUST provide an id for accessibility.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Select)
+## [👤semio📚js🗃️sketchpad💻elements🔖select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Select)
 
 Consumers MUST use SelectItem children for options.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖slider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Slider)
+## [👤semio📚js🗃️sketchpad💻elements🔖slider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Slider)
 
 Consumers MUST provide min and max values.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Stepper)
+## [👤semio📚js🗃️sketchpad💻elements🔖stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Stepper)
 
 Consumers MUST provide min and max bounds.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Textarea)
+## [👤semio📚js🗃️sketchpad💻elements🔖textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Textarea)
 
 Consumers MUST provide an id for the field.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖toggle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Toggle)
+## [👤semio📚js🗃️sketchpad💻elements🔖toggle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Toggle)
 
 Consumers MUST handle onPressedChange events.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ToggleGroup)
+## [👤semio📚js🗃️sketchpad💻elements🔖togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ToggleGroup)
 
 Consumers MUST provide items with distinct values.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components)
+## [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components)
 
 Consumers MUST use AccordionItem children.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖accordion](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Accordion)
+## [👤semio📚js🗃️sketchpad💻elements🔖accordion](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Accordion)
 
 Consumers MUST use AccordionItem children.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖collapsible](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Collapsible)
-
-Consumers MUST use CollapsibleTrigger.
-
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖dialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog)
+## [👤semio📚js🗃️sketchpad💻elements🔖dialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog)
 
 Consumers MUST use DialogTrigger to open.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖resizable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Resizable)
-
-Consumers MUST use ResizableHandle between panels.
-
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable)
+## [👤semio📚js🗃️sketchpad💻elements🔖scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable)
 
 Consumers MUST wrap content in Scrollable.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band)
+## [👤semio📚js🗃️sketchpad💻elements🔖band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band)
 
 Consumers MUST provide BandItem entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip)
+## [👤semio📚js🗃️sketchpad💻elements🔖strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip)
 
 Consumers MUST provide StripItem entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar)
+## [👤semio📚js🗃️sketchpad💻elements🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar)
 
 Consumers MUST provide NavbarItem entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs)
+## [👤semio📚js🗃️sketchpad💻elements🔖tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs)
 
 Consumers MUST use TabsTrigger and TabsContent.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)
+## [👤semio📚js🗃️sketchpad💻elements🔖tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)
 
 Consumers MUST wrap components in TreeStateProvider.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components)
+## [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components)
 
 Consumers MUST provide BreadcrumbItemData entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖breadcrumb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Breadcrumb)
+## [👤semio📚js🗃️sketchpad💻elements🔖breadcrumb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Breadcrumb)
 
 Consumers MUST provide BreadcrumbItemData entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖pagenavigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PageNavigation)
+## [👤semio📚js🗃️sketchpad💻elements🔖pagenavigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PageNavigation)
 
-Consumers MUST provide PageNavigationLink data.
+PageNavigation MUST provide the pagenavigation functionality.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components)
-
-Consumers MUST set resizeSide for the handle.
-
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel)
+## [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components)
 
 Consumers MUST set resizeSide for the handle.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PanelGroup)
+## [👤semio📚js🗃️sketchpad💻elements🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel)
+
+Consumers MUST set resizeSide for the handle.
+
+## [👤semio📚js🗃️sketchpad💻elements🔖panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PanelGroup)
 
 Consumers MUST provide panel children.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LeftPanel)
+## [👤semio📚js🗃️sketchpad💻elements🔖leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LeftPanel)
 
 Consumers MUST provide visible and children props.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/RightPanel)
+## [👤semio📚js🗃️sketchpad💻elements🔖rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/RightPanel)
 
 Consumers MUST provide visible and children props.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/MiddlePanel)
+## [👤semio📚js🗃️sketchpad💻elements🔖middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/MiddlePanel)
 
 Consumers MUST provide visible and children props.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/BottomPanel)
+## [👤semio📚js🗃️sketchpad💻elements🔖bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/BottomPanel)
 
 Consumers MUST provide visible and children props.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/SidePanel)
+## [👤semio📚js🗃️sketchpad💻elements🔖sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/SidePanel)
 
 Consumers MUST provide SidePanelTabConfig entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HudPanel)
+## [👤semio📚js🗃️sketchpad💻elements🔖hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HudPanel)
 
 Consumers MUST provide HudPanelTabConfig entries.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖windowcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components)
+## [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components)
 
 Consumers MUST provide a WindowConfig object.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window)
+## [👤semio📚js🗃️sketchpad💻elements🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window)
 
 Consumers MUST provide a WindowConfig object.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Page)
+## [👤semio📚js🗃️sketchpad💻elements🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Page)
 
 Consumers MUST provide frontmatter and children.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Diagram)
+## [👤semio📚js🗃️sketchpad💻elements🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Diagram)
 
 Consumers MUST provide nodes and edges arrays.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scene)
+## [👤semio📚js🗃️sketchpad💻elements🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scene)
 
 Consumers MUST provide SceneGeometry data.
 
-## [👤semio📚js🗃️sketchpad💻elementstsx🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Table)
+## [👤semio📚js🗃️sketchpad💻elements🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Table)
 
 Consumers MUST provide columns and data arrays.
 
-## [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Imports)
+## [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Imports)
 
 Imports MUST include icon width constant and kit selection types.
 
-## [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Types)
+## [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Types)
 
 Types MUST define selection value extraction for KitAppSelection dimensions.
 
-## [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖genericutilities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Generic%20Utilities)
+## [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖genericutilities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Generic%20Utilities)
 
 Generic Utilities MUST provide immutable selection manipulation functions.
 
-## [👤semio📚js🗃️sketchpad💻kitselectionhelperts🔖kitdiagramgeometry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry)
+## [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry)
 
 Kit Diagram Geometry MUST provide geometry primitives, shape strategies, and anchor resolution.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🔖portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
+## [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
 
 MUST use a union-find structure to group compatible ports under a single color.
 
-## [👤semio📚js🗃️sketchpad💻portcolorts🪨defaultportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/c/DEFAULT_PORT_GUID)
-
-MUST be used as the fallback key for tone generation.
-
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/normalizeGuid)
-
-MUST return undefined for null, undefined, or whitespace-only input.
-
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/normalizePortRef)
-
-MUST handle both direct string GUIDs and port reference objects.
-
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️hashstring](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/hashString)
-
-MUST return the absolute value of a 32-bit hash.
-
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️gettoneforkey](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/getToneForKey)
-
-MUST return a neutral grey tone for the default port GUID.
-
-## [👤semio📚js🗃️sketchpad💻portcolorts🛠️createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/d/i/createPortGroupMap)
-
-MUST union ports linked via compatiblePorts relationships.
-
-## [👤semio📚js🗃️sketchpad💻sharedts🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Imports)
+## [👤semio📚js🗃️sketchpad💻shared🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Imports)
 
 MUST import XState, Y.js, and semio core types for shared sketchpad infrastructure.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types)
+## [👤semio📚js🗃️sketchpad💻shared🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types)
 
 MUST define path segment and path types for navigating Y.js document structures.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖ypathtypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/YPath%20Types)
+## [👤semio📚js🗃️sketchpad💻shared🔖ypathtypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/YPath%20Types)
 
 MUST define path segment and path types for navigating Y.js document structures.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖granularhooktypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Granular%20Hook%20Types)
+## [👤semio📚js🗃️sketchpad💻shared🔖granularhooktypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Granular%20Hook%20Types)
 
 MUST define hook result tuples and field abstractions for granular reactive state access.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖standardemptyconstants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Standard%20Empty%20Constants)
+## [👤semio📚js🗃️sketchpad💻shared🔖standardemptyconstants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Standard%20Empty%20Constants)
 
 MUST provide frozen singleton constants for empty collections and default panel visibility.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖genericdifftypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Generic%20Diff%20Types)
+## [👤semio📚js🗃️sketchpad💻shared🔖genericdifftypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Generic%20Diff%20Types)
 
 MUST define generic array and selection diff types with apply and inverse operations.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖enums](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Enums)
+## [👤semio📚js🗃️sketchpad💻shared🔖enums](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Enums)
 
 MUST enumerate theme, expertise, mode, store status, tool, window, and panel kinds.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖ports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Ports)
+## [👤semio📚js🗃️sketchpad💻shared🔖ports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Ports)
 
 MUST define file storage provider interfaces for upload, download, and delete operations.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖fileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/File%20Provider)
+## [👤semio📚js🗃️sketchpad💻shared🔖fileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/File%20Provider)
 
 MUST define file storage provider interfaces for upload, download, and delete operations.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖appids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20IDs)
+## [👤semio📚js🗃️sketchpad💻shared🔖appids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20IDs)
 
 MUST define identifier interfaces for design, kit, type, and quality app scopes.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Panel)
+## [👤semio📚js🗃️sketchpad💻shared🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Panel)
 
 MUST define panel kind configurations, visibility, sizing, sections, and definition interfaces.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Registry)
+## [👤semio📚js🗃️sketchpad💻shared🔖appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Registry)
 
 MUST define route segment and app configuration interfaces for app registration.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖sketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Sketchpad%20State)
+## [👤semio📚js🗃️sketchpad💻shared🔖sketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Sketchpad%20State)
 
 MUST define mutable and immutable sketchpad state interfaces with diff types.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Commands)
+## [👤semio📚js🗃️sketchpad💻shared🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Commands)
 
 MUST define command context and result interfaces for kit and sketchpad operations.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Store)
+## [👤semio📚js🗃️sketchpad💻shared🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Store)
 
 MUST define store state, app step, edit, diff, and command result interfaces.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖completestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Complete%20State)
+## [👤semio📚js🗃️sketchpad💻shared🔖completestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Complete%20State)
 
 MUST define the complete aggregated state interface for the entire sketchpad.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Window)
+## [👤semio📚js🗃️sketchpad💻shared🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Window)
 
 MUST define window configuration, control, layout parsing, and default layout creation.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖tool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Tool)
+## [👤semio📚js🗃️sketchpad💻shared🔖tool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Tool)
 
 MUST define tool interfaces for selection, lasso, connector, and hand interactions.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖focus](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Focus)
+## [👤semio📚js🗃️sketchpad💻shared🔖focus](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Focus)
 
 MUST define the focus item interface for search and navigation targets.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Footer)
+## [👤semio📚js🗃️sketchpad💻shared🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Footer)
 
 MUST define the footer item interface for status bar entries.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖panelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Panel%20Props)
+## [👤semio📚js🗃️sketchpad💻shared🔖panelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Panel%20Props)
 
 MUST define resizable panel props interface for panel width management.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/XState%20Integration)
+## [👤semio📚js🗃️sketchpad💻shared🔖xstateintegration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/XState%20Integration)
 
 MUST define XState machine context and event type interfaces for sketchpad, kit, and app machines.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖xstatetypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/XState%20Types)
+## [👤semio📚js🗃️sketchpad💻shared🔖xstatetypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/XState%20Types)
 
 MUST define XState machine context and event type interfaces for sketchpad, kit, and app machines.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖yjsxstatebridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Y.js-XState%20Bridge)
+## [👤semio📚js🗃️sketchpad💻shared🔖yjsxstatebridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Y.js-XState%20Bridge)
 
 MUST bridge Y.js document observation to XState machine events.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖machinefactories](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Machine%20Factories)
+## [👤semio📚js🗃️sketchpad💻shared🔖machinefactories](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Machine%20Factories)
 
 MUST define machine input and transaction configuration interfaces for state machine creation.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/YPath%20Helpers)
+## [👤semio📚js🗃️sketchpad💻shared🔖ypathhelpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/YPath%20Helpers)
 
 MUST provide path segment constructors, value retrieval, and observation functions for Y.js paths.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖derivedstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Derived%20Store)
+## [👤semio📚js🗃️sketchpad💻shared🔖derivedstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Derived%20Store)
 
 MUST provide reactive derived computation nodes with dependency tracking and caching.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Store%20Factory%20Registry)
+## [👤semio📚js🗃️sketchpad💻shared🔖storefactoryregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Store%20Factory%20Registry)
 
 MUST manage registration and retrieval of app-specific store factory functions.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Plugin%20Registry)
+## [👤semio📚js🗃️sketchpad💻shared🔖apppluginregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Plugin%20Registry)
 
 MUST manage plugin registration, retrieval, and contribution composition for app extensions.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Dynamic%20Event%20Dispatch%20Registry)
+## [👤semio📚js🗃️sketchpad💻shared🔖dynamiceventdispatchregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Dynamic%20Event%20Dispatch%20Registry)
 
 MUST manage dynamic event handler and guard registration with namespace-based dispatch.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Event%20Handler%20Factories)
+## [👤semio📚js🗃️sketchpad💻shared🔖appeventhandlerfactories](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Event%20Handler%20Factories)
 
 MUST provide factory functions for creating standard app event handlers for panels, hover, selection, and windows.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Transaction%20Handler%20Factory)
+## [👤semio📚js🗃️sketchpad💻shared🔖transactionhandlerfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Transaction%20Handler%20Factory)
 
 MUST provide factory functions for creating undo/redo transaction event handlers.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Selector%20Factory%20Pattern)
+## [👤semio📚js🗃️sketchpad💻shared🔖selectorfactorypattern](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Selector%20Factory%20Pattern)
 
 MUST provide factory functions for creating property selectors with app key scoping.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Hooks%20Registry)
+## [👤semio📚js🗃️sketchpad💻shared🔖apphooksregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Hooks%20Registry)
 
 MUST manage registration and retrieval of design and kit app hook implementations.
 
-## [👤semio📚js🗃️sketchpad💻sharedts🔖appregistryexports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Registry%20Exports)
+## [👤semio📚js🗃️sketchpad💻shared🔖appregistryexports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Registry%20Exports)
 
 MUST provide docs registry port interface and registration for documentation section access.
 
-## [👤semio📚js💻viteenvdts🔖declarations](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts/s/Declarations)
+## [👤semio📚js💻viteenvd🔖declarations](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts/s/Declarations)
 
 Declarations MUST cover all custom asset import suffixes used in the project.
 
-## [👤semio🛂jsonschema💻buildts🔖schemaexport](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/s/Schema%20Export)
+## [👤semio🛂jsonschema💻build🔖schemaexport](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/s/Schema%20Export)
 
 JSON Schema export script. MUST unescape and write the kit schema file.
 
-## [👤semio🛂jsonschema💻buildts🪨inputfilepath](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/inputFilePath)
-
-MUST point to the kit.json schema file.
-
-## [👤semio🛂jsonschema💻buildts🪨outputfilepath](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/outputFilePath)
-
-MUST be written next to the input file.
-
-## [👤semio🛂jsonschema💻buildts🪨jsoncontent](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/jsonContent)
-
-MUST be read as UTF-8.
-
-## [👤semio🛂jsonschema💻buildts🪨unescapedcontent](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/d/c/unescapedContent)
-
-MUST replace all escaped characters.
-
-## [👤semio📚net🛅semio💻semiocs🛠️symbol](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Symbol)
+## [👤semio📚net🛅semio💻semio🛠️symbol](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Symbol)
 
 / Implementations MUST be immutable value types within expression trees.
 
-## [👤semio📚net🛅semio💻semiocs🛠️entity](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Entity)
+## [👤semio📚net🛅semio💻semio🛠️entity](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Entity)
 
 / Implementations MUST override equality based on serialized representation.
 
-## [👤semio📚net🛅semio💻semiocs🛠️entityvalidator](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/EntityValidator)
+## [👤semio📚net🛅semio💻semio🛠️entityvalidator](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/EntityValidator)
 
 / Implementations MUST define validation rules in the constructor.
 
-## [👤semio📚net🛅semio💻buildts🔖build](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build)
+## [👤semio📚net🛅semio💻build🔖build](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build)
 
 .NET build script. MUST compile the Semio C# project via MSBuild.
 
-## [👤semio📚net🛅semio💻buildts🪨msbuild](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/d/c/msbuild)
-
-MUST point to the installed MSBuild binary.
-
-## [👤semio🌐play💻indextsx🔖entrypoint](semiorepo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
+## [👤semio🌐play💻index🔖entrypoint](semiorepo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
 
 Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
-## [👤semio📚rs💻semiors🔖imports](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Imports)
+## [👤semio📚rs💻semio🔖imports](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Imports)
 
 Imports MUST include all required crates and modules for the semio domain library.
 
-## [👤semio📚rs💻semiors🔖errortypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types)
+## [👤semio📚rs💻semio🔖errortypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types)
 
 Error Types MUST provide the error types functionality.
 
-## [👤semio📚rs💻semiors🔖utilityfunctions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions)
+## [👤semio📚rs💻semio🔖utilityfunctions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions)
 
 Utility Functions MUST provide the utility functions functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypesattribute](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute)
+## [👤semio📚rs💻semio🔖modeltypesattribute](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute)
 
 Model Types - Attribute MUST provide the model types - attribute functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypescoord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord)
+## [👤semio📚rs💻semio🔖modeltypescoord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord)
 
 Model Types - Coord MUST provide the model types - coord functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypesvector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector)
+## [👤semio📚rs💻semio🔖modeltypesvector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector)
 
 Model Types - Vector MUST provide the model types - vector functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypesplane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane)
+## [👤semio📚rs💻semio🔖modeltypesplane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane)
 
 Model Types - Plane MUST provide the model types - plane functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypescamera](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera)
+## [👤semio📚rs💻semio🔖modeltypescamera](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera)
 
 Model Types - Camera MUST provide the model types - camera functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypeslocationauthorfilefolder](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder)
+## [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder)
 
 Model Types - Location, Author, File, Folder MUST provide the model types - location, author, file, folder functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypesqualityporttagconcept](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept)
+## [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept)
 
 Model Types - Quality, Port, Tag, Concept MUST provide the model types - quality, port, tag, concept functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypespropmodelconnector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector)
+## [👤semio📚rs💻semio🔖modeltypespropmodelconnector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector)
 
 Model Types - Prop, Model, Connector MUST provide the model types - prop, model, connector functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypestype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type)
+## [👤semio📚rs💻semio🔖modeltypestype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type)
 
 Model Types - Type MUST provide the model types - type functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypeslayerpiecegroupsideconnectionstat](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat)
+## [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat)
 
 Model Types - Layer, Piece, Group, Side, Connection, Stat MUST provide the model types - layer, piece, group, side, connection, stat functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypesdesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Design)
+## [👤semio📚rs💻semio🔖modeltypesdesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Design)
 
 Model Types - Design MUST provide the model types - design functionality.
 
-## [👤semio📚rs💻semiors🔖modeltypeskit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit)
+## [👤semio📚rs💻semio🔖modeltypeskit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit)
 
 Model Types - Kit MUST provide the model types - kit functionality.
 
-## [👤semio📚rs💻semiors🔖finderfunctions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions)
+## [👤semio📚rs💻semio🔖finderfunctions](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions)
 
 Finder Functions MUST provide the finder functions functionality.
 / find_type_in_kit MUST perform the find_type_in_kit operation.
 
-## [👤semio📚rs💻semiors🔖serialization](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization)
+## [👤semio📚rs💻semio🔖serialization](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization)
 
 Serialization MUST provide the serialization functionality.
 / serialize_kit MUST perform the serialize_kit operation.
 
-## [👤semio📚rs💻semiors🔖difftypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types)
+## [👤semio📚rs💻semio🔖difftypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types)
 
 Diff Types MUST provide the diff types functionality.
 
-## [👤semio📚rs💻semiors🔖hasguidtrait](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait)
+## [👤semio📚rs💻semio🔖hasguidtrait](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait)
 
 HasGuid Trait MUST provide the hasguid trait functionality.
 / HasGuid MUST perform the HasGuid operation.
 
-## [👤semio📚rs💻semiors🔖applydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff)
+## [👤semio📚rs💻semio🔖applydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff)
 
 ApplyDiff MUST provide the applydiff functionality.
 / apply_collection_diff MUST perform the apply_collection_diff operation.
 
-## [👤semio📚rs💻semiors🔖flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
+## [👤semio📚rs💻semio🔖flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
 
 FlattenDesign MUST provide the flattendesign functionality.
 / FlattenedPiece MUST perform the FlattenedPiece operation.
 
-## [👤semio📚rs💻semiors🔖validationtypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types)
+## [👤semio📚rs💻semio🔖validationtypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types)
 
 Validation Types MUST provide the validation types functionality.
 
-## [👤semio📚rs💻semiors🔖sqliteimportexport](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export)
+## [👤semio📚rs💻semio🔖sqliteimportexport](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export)
 
 SQLite Import/Export MUST provide the sqlite import/export functionality.
 
-## [👤semio📚rs💻semiors🔖zipimportexport](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export)
+## [👤semio📚rs💻semio🔖zipimportexport](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export)
 
 Zip Import/Export MUST provide the zip import/export functionality.
 
-## [👤semio📚rs💻semiors🔖wasmbindings](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings)
+## [👤semio📚rs💻semio🔖wasmbindings](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings)
 
 WASM Bindings MUST provide the wasm bindings functionality.
 
-## [👤semio📚rs💻semiors🔖tests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests)
+## [👤semio📚rs💻semio🔖tests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests)
 
 Tests MUST provide the tests functionality.
 
-## [👤semio📚rs💻semiors🔖roundtriptests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Roundtrip%20Tests)
+## [👤semio📚rs💻semio🔖roundtriptests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Roundtrip%20Tests)
 
 Roundtrip Tests MUST provide the roundtrip tests functionality.
 
-## [👤semio📚rs💻semiors🔖flattentests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Flatten%20Tests)
+## [👤semio📚rs💻semio🔖flattentests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Flatten%20Tests)
 
 Flatten Tests MUST provide the flatten tests functionality.
 
-## [👤semio📚rs💻semiors🔖difftests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Tests)
+## [👤semio📚rs💻semio🔖difftests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Tests)
 
 Diff Tests MUST provide the diff tests functionality.
 
-## [👤semio📚rs💻semiors🔖validationtests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Tests)
+## [👤semio📚rs💻semio🔖validationtests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Tests)
 
 Validation Tests MUST provide the validation tests functionality.
 
-## [👤semio📚rs💻semiors🛠️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/guid)
+## [👤semio📚rs💻semio🛠️guid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/guid)
 
 / guid MUST perform the guid operation.
 
-## [👤semio📚rs💻semiors🛠️normalize](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/normalize)
+## [👤semio📚rs💻semio🛠️normalize](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/normalize)
 
 / normalize MUST perform the normalize operation.
 
-## [👤semio📚rs💻semiors🛠️round](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/round)
+## [👤semio📚rs💻semio🛠️round](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/round)
 
 / round MUST perform the round operation.
 
-## [👤semio📚rs💻semiors🛠️jaccard](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/jaccard)
+## [👤semio📚rs💻semio🛠️jaccard](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/jaccard)
 
 / jaccard MUST perform the jaccard operation.
 
-## [👤semio📚rs💻semiors🛠️deepequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deep_equal)
+## [👤semio📚rs💻semio🛠️deepequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deep_equal)
 
 / deep_equal MUST perform the deep_equal operation.
 
-## [👤semio📚rs💻semiors🛠️generateuniquename](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/generate_unique_name)
+## [👤semio📚rs💻semio🛠️generateuniquename](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/generate_unique_name)
 
 / generate_unique_name MUST perform the generate_unique_name operation.
 
-## [👤semio📚rs💻semiors🛠️attribute](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Attribute)
+## [👤semio📚rs💻semio🛠️attribute](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Attribute)
 
 / Attribute MUST perform the Attribute operation.
 
-## [👤semio📚rs💻semiors🛠️attributeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AttributeId)
+## [👤semio📚rs💻semio🛠️attributeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AttributeId)
 
 / AttributeId MUST perform the AttributeId operation.
 
-## [👤semio📚rs💻semiors🛠️coord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Coord)
+## [👤semio📚rs💻semio🛠️coord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Coord)
 
 / Coord MUST perform the Coord operation.
 
-## [👤semio📚rs💻semiors🛠️vector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Vector)
+## [👤semio📚rs💻semio🛠️coord](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Coord)
+
+/ Coord MUST perform the Coord operation.
+
+## [👤semio📚rs💻semio🛠️vector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Vector)
 
 / Vector MUST perform the Vector operation.
 
-## [👤semio📚rs💻semiors🛠️plane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Plane)
+## [👤semio📚rs💻semio🛠️vector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Vector)
+
+/ Vector MUST perform the Vector operation.
+
+## [👤semio📚rs💻semio🛠️plane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Plane)
 
 / Plane MUST perform the Plane operation.
 
-## [👤semio📚rs💻semiors🛠️camera](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Camera)
+## [👤semio📚rs💻semio🛠️default](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Default)
+
+/ Default MUST perform the Default operation.
+
+## [👤semio📚rs💻semio🛠️plane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Plane)
+
+/ Plane MUST perform the Plane operation.
+
+## [👤semio📚rs💻semio🛠️camera](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Camera)
 
 / Camera MUST perform the Camera operation.
 
-## [👤semio📚rs💻semiors🛠️locationid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LocationId)
+## [👤semio📚rs💻semio🛠️default](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Default)
+
+/ Default MUST perform the Default operation.
+
+## [👤semio📚rs💻semio🛠️locationid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LocationId)
 
 / LocationId MUST perform the LocationId operation.
 
-## [👤semio📚rs💻semiors🛠️location](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Location)
+## [👤semio📚rs💻semio🛠️location](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Location)
 
 / Location MUST perform the Location operation.
 
-## [👤semio📚rs💻semiors🛠️authorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AuthorId)
+## [👤semio📚rs💻semio🛠️authorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AuthorId)
 
 / AuthorId MUST perform the AuthorId operation.
 
-## [👤semio📚rs💻semiors🛠️author](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Author)
+## [👤semio📚rs💻semio🛠️author](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Author)
 
 / Author MUST perform the Author operation.
 
-## [👤semio📚rs💻semiors🛠️folderid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FolderId)
+## [👤semio📚rs💻semio🛠️folderid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FolderId)
 
 / FolderId MUST perform the FolderId operation.
 
-## [👤semio📚rs💻semiors🛠️folder](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Folder)
+## [👤semio📚rs💻semio🛠️folder](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Folder)
 
 / Folder MUST perform the Folder operation.
 
-## [👤semio📚rs💻semiors🛠️fileid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FileId)
+## [👤semio📚rs💻semio🛠️fileid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FileId)
 
 / FileId MUST perform the FileId operation.
 
-## [👤semio📚rs💻semiors🛠️file](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/File)
+## [👤semio📚rs💻semio🛠️file](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/File)
 
 / File MUST perform the File operation.
 
-## [👤semio📚rs💻semiors🛠️qualityid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/QualityId)
+## [👤semio📚rs💻semio🛠️qualityid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/QualityId)
 
 / QualityId MUST perform the QualityId operation.
 
-## [👤semio📚rs💻semiors🛠️quality](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Quality)
+## [👤semio📚rs💻semio🛠️quality](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Quality)
 
 / Quality MUST perform the Quality operation.
 
-## [👤semio📚rs💻semiors🛠️portid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PortId)
+## [👤semio📚rs💻semio🛠️portid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PortId)
 
 / PortId MUST perform the PortId operation.
 
-## [👤semio📚rs💻semiors🛠️port](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Port)
+## [👤semio📚rs💻semio🛠️port](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Port)
 
 / Port MUST perform the Port operation.
 
-## [👤semio📚rs💻semiors🛠️tagid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TagId)
+## [👤semio📚rs💻semio🛠️tagid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TagId)
 
 / TagId MUST perform the TagId operation.
 
-## [👤semio📚rs💻semiors🛠️tag](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Tag)
+## [👤semio📚rs💻semio🛠️tag](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Tag)
 
 / Tag MUST perform the Tag operation.
 
-## [👤semio📚rs💻semiors🛠️conceptid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConceptId)
+## [👤semio📚rs💻semio🛠️conceptid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConceptId)
 
 / ConceptId MUST perform the ConceptId operation.
 
-## [👤semio📚rs💻semiors🛠️concept](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Concept)
+## [👤semio📚rs💻semio🛠️concept](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Concept)
 
 / Concept MUST perform the Concept operation.
 / Concept MUST perform the Concept operation.
 
-## [👤semio📚rs💻semiors🛠️propid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PropId)
+## [👤semio📚rs💻semio🛠️propid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PropId)
 
 / PropId MUST perform the PropId operation.
 
-## [👤semio📚rs💻semiors🛠️prop](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Prop)
+## [👤semio📚rs💻semio🛠️prop](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Prop)
 
 / Prop MUST perform the Prop operation.
 
-## [👤semio📚rs💻semiors🛠️modelid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ModelId)
+## [👤semio📚rs💻semio🛠️modelid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ModelId)
 
 / ModelId MUST perform the ModelId operation.
 
-## [👤semio📚rs💻semiors🛠️model](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Model)
+## [👤semio📚rs💻semio🛠️model](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Model)
 
 / Model MUST perform the Model operation.
 / Model MUST perform the Model operation.
 
-## [👤semio📚rs💻semiors🛠️connectorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectorId)
+## [👤semio📚rs💻semio🛠️connectorid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectorId)
 
 / ConnectorId MUST perform the ConnectorId operation.
 
-## [👤semio📚rs💻semiors🛠️connector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Connector)
+## [👤semio📚rs💻semio🛠️connector](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Connector)
 
 / Connector MUST perform the Connector operation.
 
-## [👤semio📚rs💻semiors🛠️typeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TypeId)
+## [👤semio📚rs💻semio🛠️typeid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TypeId)
 
 / TypeId MUST perform the TypeId operation.
 
-## [👤semio📚rs💻semiors🛠️type](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Type)
+## [👤semio📚rs💻semio🛠️type](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Type)
 
 / Type MUST perform the Type operation.
 
-## [👤semio📚rs💻semiors🛠️layerid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LayerId)
+## [👤semio📚rs💻semio🛠️layerid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LayerId)
 
 / LayerId MUST perform the LayerId operation.
 
-## [👤semio📚rs💻semiors🛠️layer](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Layer)
+## [👤semio📚rs💻semio🛠️layer](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Layer)
 
 / Layer MUST perform the Layer operation.
 
-## [👤semio📚rs💻semiors🛠️pieceid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PieceId)
+## [👤semio📚rs💻semio🛠️pieceid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PieceId)
 
 / PieceId MUST perform the PieceId operation.
 
-## [👤semio📚rs💻semiors🛠️designid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DesignId)
+## [👤semio📚rs💻semio🛠️designid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DesignId)
 
 / DesignId MUST perform the DesignId operation.
 
-## [👤semio📚rs💻semiors🛠️piece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Piece)
+## [👤semio📚rs💻semio🛠️piece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Piece)
 
 / Piece MUST perform the Piece operation.
 
-## [👤semio📚rs💻semiors🛠️groupid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/GroupId)
+## [👤semio📚rs💻semio🛠️groupid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/GroupId)
 
 / GroupId MUST perform the GroupId operation.
 
-## [👤semio📚rs💻semiors🛠️group](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Group)
+## [👤semio📚rs💻semio🛠️group](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Group)
 
 / Group MUST perform the Group operation.
 
-## [👤semio📚rs💻semiors🛠️side](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Side)
+## [👤semio📚rs💻semio🛠️side](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Side)
 
 / Side MUST perform the Side operation.
 
-## [👤semio📚rs💻semiors🛠️connectionid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectionId)
+## [👤semio📚rs💻semio🛠️connectionid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectionId)
 
 / ConnectionId MUST perform the ConnectionId operation.
 
-## [👤semio📚rs💻semiors🛠️connection](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Connection)
+## [👤semio📚rs💻semio🛠️connection](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Connection)
 
 / Connection MUST perform the Connection operation.
 
-## [👤semio📚rs💻semiors🛠️statid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/StatId)
+## [👤semio📚rs💻semio🛠️statid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/StatId)
 
 / StatId MUST perform the StatId operation.
 
-## [👤semio📚rs💻semiors🛠️stat](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Stat)
+## [👤semio📚rs💻semio🛠️stat](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Stat)
 
 / Stat MUST perform the Stat operation.
 / Stat MUST perform the Stat operation.
 
-## [👤semio📚rs💻semiors🛠️design](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Design)
+## [👤semio📚rs💻semio🛠️design](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Design)
 
 / Design MUST perform the Design operation.
 
-## [👤semio📚rs💻semiors🛠️kit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Kit)
+## [👤semio📚rs💻semio🛠️kit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Kit)
 
 / Kit MUST perform the Kit operation.
 
-## [👤semio📚rs💻semiors🛠️findtypeinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_type_in_kit)
+## [👤semio📚rs💻semio🛠️findtypeinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_type_in_kit)
 
 / find_type_in_kit MUST perform the find_type_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findtypeinkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_type_in_kit_mut)
+## [👤semio📚rs💻semio🛠️findtypeinkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_type_in_kit_mut)
 
 / find_type_in_kit_mut MUST perform the find_type_in_kit_mut operation.
 
-## [👤semio📚rs💻semiors🛠️finddesigninkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_design_in_kit)
+## [👤semio📚rs💻semio🛠️finddesigninkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_design_in_kit)
 
 / find_design_in_kit MUST perform the find_design_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️finddesigninkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_design_in_kit_mut)
+## [👤semio📚rs💻semio🛠️finddesigninkitmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_design_in_kit_mut)
 
 / find_design_in_kit_mut MUST perform the find_design_in_kit_mut operation.
 
-## [👤semio📚rs💻semiors🛠️findpieceindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_piece_in_design)
+## [👤semio📚rs💻semio🛠️findpieceindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_piece_in_design)
 
 / find_piece_in_design MUST perform the find_piece_in_design operation.
 
-## [👤semio📚rs💻semiors🛠️findpieceindesignmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_piece_in_design_mut)
+## [👤semio📚rs💻semio🛠️findpieceindesignmut](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_piece_in_design_mut)
 
 / find_piece_in_design_mut MUST perform the find_piece_in_design_mut operation.
 
-## [👤semio📚rs💻semiors🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_connection_in_design)
+## [👤semio📚rs💻semio🛠️findconnectionindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_connection_in_design)
 
 / find_connection_in_design MUST perform the find_connection_in_design operation.
 
-## [👤semio📚rs💻semiors🛠️findconnectorintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_connector_in_type)
+## [👤semio📚rs💻semio🛠️findconnectorintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_connector_in_type)
 
 / find_connector_in_type MUST perform the find_connector_in_type operation.
 
-## [👤semio📚rs💻semiors🛠️findmodelintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_model_in_type)
+## [👤semio📚rs💻semio🛠️findmodelintype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_model_in_type)
 
 / find_model_in_type MUST perform the find_model_in_type operation.
 
-## [👤semio📚rs💻semiors🛠️findfileinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_file_in_kit)
+## [👤semio📚rs💻semio🛠️findfileinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_file_in_kit)
 
 / find_file_in_kit MUST perform the find_file_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findfolderinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_folder_in_kit)
+## [👤semio📚rs💻semio🛠️findfolderinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_folder_in_kit)
 
 / find_folder_in_kit MUST perform the find_folder_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findauthorinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_author_in_kit)
+## [👤semio📚rs💻semio🛠️findauthorinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_author_in_kit)
 
 / find_author_in_kit MUST perform the find_author_in_kit operation.
 / find_author_in_kit MUST perform the find_author_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findtaginkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_tag_in_kit)
+## [👤semio📚rs💻semio🛠️findtaginkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_tag_in_kit)
 
 / find_tag_in_kit MUST perform the find_tag_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findconceptinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_concept_in_kit)
+## [👤semio📚rs💻semio🛠️findconceptinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_concept_in_kit)
 
 / find_concept_in_kit MUST perform the find_concept_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findqualityinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_quality_in_kit)
+## [👤semio📚rs💻semio🛠️findqualityinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_quality_in_kit)
 
 / find_quality_in_kit MUST perform the find_quality_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findinterfaceinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_interface_in_kit)
+## [👤semio📚rs💻semio🛠️findinterfaceinkit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_interface_in_kit)
 
 / find_interface_in_kit MUST perform the find_interface_in_kit operation.
 
-## [👤semio📚rs💻semiors🛠️findlayerindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_layer_in_design)
+## [👤semio📚rs💻semio🛠️findlayerindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_layer_in_design)
 
 / find_layer_in_design MUST perform the find_layer_in_design operation.
 
-## [👤semio📚rs💻semiors🛠️findgroupindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_group_in_design)
+## [👤semio📚rs💻semio🛠️findgroupindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_group_in_design)
 
 / find_group_in_design MUST perform the find_group_in_design operation.
 
-## [👤semio📚rs💻semiors🛠️findstatindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_stat_in_design)
+## [👤semio📚rs💻semio🛠️findstatindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/find_stat_in_design)
 
 / find_stat_in_design MUST perform the find_stat_in_design operation.
 
-## [👤semio📚rs💻semiors🛠️serializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_kit)
+## [👤semio📚rs💻semio🛠️serializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_kit)
 
 / serialize_kit MUST perform the serialize_kit operation.
 
-## [👤semio📚rs💻semiors🛠️deserializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_kit)
+## [👤semio📚rs💻semio🛠️deserializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_kit)
 
 / deserialize_kit MUST perform the deserialize_kit operation.
 
-## [👤semio📚rs💻semiors🛠️serializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_design)
+## [👤semio📚rs💻semio🛠️serializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_design)
 
 / serialize_design MUST perform the serialize_design operation.
 
-## [👤semio📚rs💻semiors🛠️deserializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_design)
+## [👤semio📚rs💻semio🛠️deserializedesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_design)
 
 / deserialize_design MUST perform the deserialize_design operation.
 
-## [👤semio📚rs💻semiors🛠️serializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_type)
+## [👤semio📚rs💻semio🛠️serializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_type)
 
 / serialize_type MUST perform the serialize_type operation.
 
-## [👤semio📚rs💻semiors🛠️deserializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_type)
+## [👤semio📚rs💻semio🛠️deserializetype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/deserialize_type)
 
 / deserialize_type MUST perform the deserialize_type operation.
 
-## [👤semio📚rs💻semiors🛠️arekitsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_kits_equal)
+## [👤semio📚rs💻semio🛠️arekitsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_kits_equal)
 
 / are_kits_equal MUST perform the are_kits_equal operation.
 / are_kits_equal MUST perform the are_kits_equal operation.
 
-## [👤semio📚rs💻semiors🛠️aredesignsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_designs_equal)
+## [👤semio📚rs💻semio🛠️aredesignsequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_designs_equal)
 
 / are_designs_equal MUST perform the are_designs_equal operation.
 
-## [👤semio📚rs💻semiors🛠️aretypesequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_types_equal)
+## [👤semio📚rs💻semio🛠️aretypesequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/are_types_equal)
 
 / are_types_equal MUST perform the are_types_equal operation.
 
-## [👤semio📚rs💻semiors🛠️issupportedmodelextension](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/is_supported_model_extension)
+## [👤semio📚rs💻semio🛠️issupportedmodelextension](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/is_supported_model_extension)
 
 / is_supported_model_extension MUST perform the is_supported_model_extension operation.
 / is_supported_model_extension MUST perform the is_supported_model_extension operation.
 
-## [👤semio📚rs💻semiors🛠️removeditem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/RemovedItem)
+## [👤semio📚rs💻semio🛠️removeditem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/RemovedItem)
 
 / RemovedItem MUST perform the RemovedItem operation.
 
-## [👤semio📚rs💻semiors🛠️diffupdate](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffUpdate)
+## [👤semio📚rs💻semio🛠️diffupdate](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffUpdate)
 
 / DiffUpdate MUST perform the DiffUpdate operation.
 
-## [👤semio📚rs💻semiors🛠️collectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/CollectionDiff)
+## [👤semio📚rs💻semio🛠️collectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/CollectionDiff)
 
 / CollectionDiff MUST perform the CollectionDiff operation.
 
-## [👤semio📚rs💻semiors🛠️attributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AttributeDiff)
+## [👤semio📚rs💻semio🛠️attributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AttributeDiff)
 
 / AttributeDiff MUST perform the AttributeDiff operation.
 
-## [👤semio📚rs💻semiors🛠️propdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PropDiff)
+## [👤semio📚rs💻semio🛠️propdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PropDiff)
 
 / PropDiff MUST perform the PropDiff operation.
 
-## [👤semio📚rs💻semiors🛠️connectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectorDiff)
+## [👤semio📚rs💻semio🛠️connectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectorDiff)
 
 / ConnectorDiff MUST perform the ConnectorDiff operation.
 
-## [👤semio📚rs💻semiors🛠️modeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ModelDiff)
+## [👤semio📚rs💻semio🛠️modeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ModelDiff)
 
 / ModelDiff MUST perform the ModelDiff operation.
 
-## [👤semio📚rs💻semiors🛠️typediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TypeDiff)
+## [👤semio📚rs💻semio🛠️typediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TypeDiff)
 
 / TypeDiff MUST perform the TypeDiff operation.
 
-## [👤semio📚rs💻semiors🛠️sidediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/SideDiff)
+## [👤semio📚rs💻semio🛠️sidediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/SideDiff)
 
 / SideDiff MUST perform the SideDiff operation.
 
-## [👤semio📚rs💻semiors🛠️connectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectionDiff)
+## [👤semio📚rs💻semio🛠️connectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConnectionDiff)
 
 / ConnectionDiff MUST perform the ConnectionDiff operation.
 
-## [👤semio📚rs💻semiors🛠️piecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PieceDiff)
+## [👤semio📚rs💻semio🛠️piecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PieceDiff)
 
 / PieceDiff MUST perform the PieceDiff operation.
 
-## [👤semio📚rs💻semiors🛠️layerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LayerDiff)
+## [👤semio📚rs💻semio🛠️layerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/LayerDiff)
 
 / LayerDiff MUST perform the LayerDiff operation.
 
-## [👤semio📚rs💻semiors🛠️groupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/GroupDiff)
+## [👤semio📚rs💻semio🛠️groupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/GroupDiff)
 
 / GroupDiff MUST perform the GroupDiff operation.
 
-## [👤semio📚rs💻semiors🛠️statdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/StatDiff)
+## [👤semio📚rs💻semio🛠️statdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/StatDiff)
 
 / StatDiff MUST perform the StatDiff operation.
 
-## [👤semio📚rs💻semiors🛠️designdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DesignDiff)
+## [👤semio📚rs💻semio🛠️designdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DesignDiff)
 
 / DesignDiff MUST perform the DesignDiff operation.
 
-## [👤semio📚rs💻semiors🛠️tagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TagDiff)
+## [👤semio📚rs💻semio🛠️tagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/TagDiff)
 
 / TagDiff MUST perform the TagDiff operation.
 
-## [👤semio📚rs💻semiors🛠️conceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConceptDiff)
+## [👤semio📚rs💻semio🛠️conceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ConceptDiff)
 
 / ConceptDiff MUST perform the ConceptDiff operation.
 
-## [👤semio📚rs💻semiors🛠️portdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PortDiff)
+## [👤semio📚rs💻semio🛠️portdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/PortDiff)
 
 / PortDiff MUST perform the PortDiff operation.
 
-## [👤semio📚rs💻semiors🛠️qualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/QualityDiff)
+## [👤semio📚rs💻semio🛠️qualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/QualityDiff)
 
 / QualityDiff MUST perform the QualityDiff operation.
 
-## [👤semio📚rs💻semiors🛠️filediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FileDiff)
+## [👤semio📚rs💻semio🛠️filediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FileDiff)
 
 / FileDiff MUST perform the FileDiff operation.
 
-## [👤semio📚rs💻semiors🛠️folderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FolderDiff)
+## [👤semio📚rs💻semio🛠️folderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FolderDiff)
 
 / FolderDiff MUST perform the FolderDiff operation.
 
-## [👤semio📚rs💻semiors🛠️authordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AuthorDiff)
+## [👤semio📚rs💻semio🛠️authordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/AuthorDiff)
 
 / AuthorDiff MUST perform the AuthorDiff operation.
 
-## [👤semio📚rs💻semiors🛠️kitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/KitDiff)
+## [👤semio📚rs💻semio🛠️kitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/KitDiff)
 
 / KitDiff MUST perform the KitDiff operation.
 
-## [👤semio📚rs💻semiors✂️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/HasGuid)
+## [👤semio📚rs💻semio✂️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/HasGuid)
 
 / HasGuid MUST perform the HasGuid operation.
 
-## [👤semio📚rs💻semiors✂️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/DiffHasGuid)
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio🛠️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/HasGuid)
+
+/ HasGuid MUST perform the HasGuid operation.
+
+## [👤semio📚rs💻semio✂️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/DiffHasGuid)
 
 / DiffHasGuid MUST perform the DiffHasGuid operation.
 
-## [👤semio📚rs💻semiors🛠️applycollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_collection_diff)
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️diffhasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/DiffHasGuid)
+
+/ DiffHasGuid MUST perform the DiffHasGuid operation.
+
+## [👤semio📚rs💻semio🛠️applycollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_collection_diff)
 
 / apply_collection_diff MUST perform the apply_collection_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyattributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_attribute_diff)
+## [👤semio📚rs💻semio🛠️applyattributediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_attribute_diff)
 
 / apply_attribute_diff MUST perform the apply_attribute_diff operation.
 / apply_attribute_diff MUST perform the apply_attribute_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applypropdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_prop_diff)
+## [👤semio📚rs💻semio🛠️applypropdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_prop_diff)
 
 / apply_prop_diff MUST perform the apply_prop_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyconnectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_connector_diff)
+## [👤semio📚rs💻semio🛠️applyconnectordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_connector_diff)
 
 / apply_connector_diff MUST perform the apply_connector_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applymodeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_model_diff)
+## [👤semio📚rs💻semio🛠️applymodeldiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_model_diff)
 
 / apply_model_diff MUST perform the apply_model_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applytypediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_type_diff)
+## [👤semio📚rs💻semio🛠️applytypediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_type_diff)
 
 / apply_type_diff MUST perform the apply_type_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applylayerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_layer_diff)
+## [👤semio📚rs💻semio🛠️applylayerdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_layer_diff)
 
 / apply_layer_diff MUST perform the apply_layer_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applygroupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_group_diff)
+## [👤semio📚rs💻semio🛠️applygroupdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_group_diff)
 
 / apply_group_diff MUST perform the apply_group_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applystatdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_stat_diff)
+## [👤semio📚rs💻semio🛠️applystatdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_stat_diff)
 
 / apply_stat_diff MUST perform the apply_stat_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applypiecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_piece_diff)
+## [👤semio📚rs💻semio🛠️applypiecediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_piece_diff)
 
 / apply_piece_diff MUST perform the apply_piece_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyconnectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_connection_diff)
+## [👤semio📚rs💻semio🛠️applyconnectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_connection_diff)
 
 / apply_connection_diff MUST perform the apply_connection_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applydesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_design_diff)
+## [👤semio📚rs💻semio🛠️applydesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_design_diff)
 
 / apply_design_diff MUST perform the apply_design_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applytagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_tag_diff)
+## [👤semio📚rs💻semio🛠️applytagdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_tag_diff)
 
 / apply_tag_diff MUST perform the apply_tag_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyconceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_concept_diff)
+## [👤semio📚rs💻semio🛠️applyconceptdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_concept_diff)
 
 / apply_concept_diff MUST perform the apply_concept_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyinterfacediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_interface_diff)
+## [👤semio📚rs💻semio🛠️applyinterfacediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_interface_diff)
 
 / apply_interface_diff MUST perform the apply_interface_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyqualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_quality_diff)
+## [👤semio📚rs💻semio🛠️applyqualitydiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_quality_diff)
 
 / apply_quality_diff MUST perform the apply_quality_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyfilediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_file_diff)
+## [👤semio📚rs💻semio🛠️applyfilediff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_file_diff)
 
 / apply_file_diff MUST perform the apply_file_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyfolderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_folder_diff)
+## [👤semio📚rs💻semio🛠️applyfolderdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_folder_diff)
 
 / apply_folder_diff MUST perform the apply_folder_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applyauthordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_author_diff)
+## [👤semio📚rs💻semio🛠️applyauthordiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_author_diff)
 
 / apply_author_diff MUST perform the apply_author_diff operation.
 
-## [👤semio📚rs💻semiors🛠️applykitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_kit_diff)
+## [👤semio📚rs💻semio🛠️applykitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_kit_diff)
 
 / apply_kit_diff MUST perform the apply_kit_diff operation.
 
-## [👤semio📚rs💻semiors🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FlattenedPiece)
+## [👤semio📚rs💻semio🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FlattenedPiece)
 
 / FlattenedPiece MUST perform the FlattenedPiece operation.
 
-## [👤semio📚rs💻semiors🛠️flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/flatten_design)
+## [👤semio📚rs💻semio🛠️flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/flatten_design)
 
 / flatten_design MUST perform the flatten_design operation.
 
-## [👤semio📚rs💻semiors🛠️validationproblem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationProblem)
+## [👤semio📚rs💻semio🛠️planesequalapprox](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/planes_equal_approx)
+
+/ planes_equal_approx MUST perform the planes_equal_approx operation.
+
+## [👤semio📚rs💻semio🛠️computeconnectionmatrixfast](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/compute_connection_matrix_fast)
+
+/ compute_connection_matrix_fast MUST perform the compute_connection_matrix_fast operation.
+
+## [👤semio📚rs💻semio🛠️computechildplanematrix](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/compute_child_plane_matrix)
+
+/ compute_child_plane_matrix MUST perform the compute_child_plane_matrix operation.
+
+## [👤semio📚rs💻semio🛠️quattomatrix4](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/quat_to_matrix4)
+
+/ quat_to_matrix4 MUST perform the quat_to_matrix4 operation.
+
+## [👤semio📚rs💻semio🛠️maketranslation](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/make_translation)
+
+/ make_translation MUST perform the make_translation operation.
+
+## [👤semio📚rs💻semio🛠️applymatrix4tovec3](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/apply_matrix4_to_vec3)
+
+/ apply_matrix4_to_vec3 MUST perform the apply_matrix4_to_vec3 operation.
+
+## [👤semio📚rs💻semio🛠️getconnectorforsidefast](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_connector_for_side_fast)
+
+/ get_connector_for_side_fast MUST perform the get_connector_for_side_fast operation.
+
+## [👤semio📚rs💻semio🛠️getconnectorfromtype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_connector_from_type)
+
+/ get_connector_from_type MUST perform the get_connector_from_type operation.
+
+## [👤semio📚rs💻semio🛠️connectortoplane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/connector_to_plane)
+
+/ connector_to_plane MUST perform the connector_to_plane operation.
+
+## [👤semio📚rs💻semio🛠️validationproblem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationProblem)
 
 / ValidationProblem MUST perform the ValidationProblem operation.
 / ValidationProblem MUST perform the ValidationProblem operation.
 
-## [👤semio📚rs💻semiors🛠️validationfix](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationFix)
+## [👤semio📚rs💻semio🛠️validationfix](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationFix)
 
 / ValidationFix MUST perform the ValidationFix operation.
 
-## [👤semio📚rs💻semiors🛠️validationresult](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationResult)
+## [👤semio📚rs💻semio🛠️validationresult](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationResult)
 
 / ValidationResult MUST perform the ValidationResult operation.
 
-## [👤semio📚rs💻semiors🛠️validatekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/validate_kit)
+## [👤semio📚rs💻semio🛠️validatekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/validate_kit)
 
 / validate_kit MUST perform the validate_kit operation.
 
-## [👤semio🖱️sketchpad💻indextsx🔖entrypoint](semiorepo://p/u/semio/b/u/sketchpad/f/index.tsx/s/Entrypoint)
+## [👤semio📚rs💻semio🛠️checkguiduniquenessconstraint](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_guid_uniqueness_constraint)
+
+/ check_guid_uniqueness_constraint MUST perform the check_guid_uniqueness_constraint operation.
+
+## [👤semio📚rs💻semio🛠️checkguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_guid)
+
+/ check_guid MUST perform the check_guid operation.
+
+## [👤semio📚rs💻semio🛠️checktypenameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_type_name_uniqueness)
+
+/ check_type_name_uniqueness MUST perform the check_type_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkdesignnameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_design_name_uniqueness)
+
+/ check_design_name_uniqueness MUST perform the check_design_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkpiecenameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_piece_name_uniqueness)
+
+/ check_piece_name_uniqueness MUST perform the check_piece_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkconnectionnameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_connection_name_uniqueness)
+
+/ check_connection_name_uniqueness MUST perform the check_connection_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkconnectornameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_connector_name_uniqueness)
+
+/ check_connector_name_uniqueness MUST perform the check_connector_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkmodelnameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_model_name_uniqueness)
+
+/ check_model_name_uniqueness MUST perform the check_model_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checklayerpathuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_layer_path_uniqueness)
+
+/ check_layer_path_uniqueness MUST perform the check_layer_path_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkqualitynameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_quality_name_uniqueness)
+
+/ check_quality_name_uniqueness MUST perform the check_quality_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkportnameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_port_name_uniqueness)
+
+/ check_port_name_uniqueness MUST perform the check_port_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkfilenameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_file_name_uniqueness)
+
+/ check_file_name_uniqueness MUST perform the check_file_name_uniqueness operation.
+
+## [👤semio📚rs💻semio🛠️checkfoldernameuniqueness](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/check_folder_name_uniqueness)
+
+/ check_folder_name_uniqueness MUST perform the check_folder_name_uniqueness operation.
+
+## [👤semio🖱️sketchpad💻index🔖entrypoint](semiorepo://p/u/semio/b/u/sketchpad/f/index.tsx/s/Entrypoint)
 
 Entrypoint MUST register all app configs before rendering the Sketchpad component.

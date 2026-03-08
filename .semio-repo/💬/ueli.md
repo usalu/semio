@@ -81,6 +81,21 @@ TODO: Rename version to release
 TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
 
+semio:
+Extend the semio diff test asset. It MUST include every single feature of a kit diff (currently, only a tiny subset is used). All diff tests for all programming languages MUST pass. You MUST fix everything and all implementations MUST be functionally equivalent.
+
+Extend file with `blob` data property that contains the basencoded datastring.
+This change is necessary to guarantee that `.json` kits can be equivalent to `.zip`.
+Simplify the `Roundtrip` test to a single test to assert for
+`JSON->Memory->JSON`
+`JSON->ZIP`
+`ZIP->JSON`
+Use in semio assets `metabolism.json` and `metabolism.zip`. They MUST be identical.
+The semio.db MUST not contain information about files and folders because it is derived from the root folder.
+You MUST implement and test for all programming languages.
+All test MUST pass.
+There MUST be only one schema, no migrations or legacy api support.
+
 ## [👤semio📚js](semiorepo://project/semio/bundle/js)
 
 ## [👤semio📚js🗃️sketchpad](semiorepo://project/semio/bundle/js/folder/sketchpad)
@@ -88,6 +103,8 @@ TODO: Introduce version to artifacts (design,type,shape)
 ## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)
 
 ## 👤semio🖱️gh
+
+Replace illegal guis with proper generated guids.
 
 All params of all components MUST have native data type equivalence. E.g. all dates shouldnt be time stamps, or planes should native planes, etc
 
@@ -106,6 +123,9 @@ TODO: Rename project to technology
 ```
 
 ## 🧰semiorepo⌨️cli💻main
+
+semio repo cli:
+The .semio-repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc
 
 Dont create new event.json files for the session events but add them directly to session.json as event array.
 
@@ -2041,6 +2061,8 @@ Remove all documentation about `list`. It is a hidden feature. Only leave it for
 Remove the `format` flag option from any documentation. It is a hidden feature. Only leave it for users that know it.
 
 ## 🧰semiorepo⌨️cli💻maingo🔖mcp
+
+The mcp toolnames and descriptions are out of date with the commands.
 
 Remove tools from mcp:
 

@@ -1,11 +1,6 @@
 {
   "name": "Metabolism Modified",
   "version": "r25.08-1",
-  "description": "Modified version for comprehensive diff testing",
-  "icon": "modified-icon.svg",
-  "image": "modified-image.png",
-  "homepage": "https://modified.example.com",
-  "license": "MIT-Modified",
   "types": {
     "removed": [
       {
@@ -49,9 +44,6 @@
         "name": "New Test Type",
         "virtual": true,
         "unit": "mm",
-        "description": "A new type added for testing",
-        "createdAt": "2025-12-23T13:40:58.750Z",
-        "updatedAt": "2025-12-23T13:40:58.750Z",
         "connectors": [
           {
             "guid": "019b4b71-0cfe-73a8-9259-29b68d1e2f53",
@@ -69,7 +61,10 @@
             "t": 0,
             "mandatory": false
           }
-        ]
+        ],
+        "description": "A new type added for testing",
+        "createdAt": "2025-12-23T13:40:58.750Z",
+        "updatedAt": "2025-12-23T13:40:58.750Z"
       }
     ]
   },
@@ -123,9 +118,6 @@
         "guid": "019b4b71-0cfe-73a8-9259-3277fafc1d5a",
         "name": "New Test Design",
         "unit": "mm",
-        "description": "A new design added for testing",
-        "createdAt": "2025-12-23T13:40:58.750Z",
-        "updatedAt": "2025-12-23T13:40:58.750Z",
         "pieces": [
           {
             "guid": "019b4b71-0cfe-73a8-9259-37054c71ea12",
@@ -151,7 +143,10 @@
             },
             "scale": 1
           }
-        ]
+        ],
+        "description": "A new design added for testing",
+        "createdAt": "2025-12-23T13:40:58.750Z",
+        "updatedAt": "2025-12-23T13:40:58.750Z"
       }
     ]
   },
@@ -167,8 +162,8 @@
           "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
         },
         "diff": {
-          "name": "model/vnd.3dm Modified",
-          "description": "Updated tag description"
+          "description": "Updated tag description",
+          "name": "model/vnd.3dm Modified"
         }
       }
     ],
@@ -193,8 +188,8 @@
           "guid": "019adc5e-9205-7364-a213-66fda12e5120"
         },
         "diff": {
-          "name": "organic-city Modified",
-          "description": "Updated concept description"
+          "description": "Updated concept description",
+          "name": "organic-city Modified"
         }
       }
     ],
@@ -219,8 +214,8 @@
           "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
         },
         "diff": {
-          "name": "core circular top Modified",
-          "description": "Updated port description"
+          "description": "Updated port description",
+          "name": "core circular top Modified"
         }
       }
     ],
@@ -274,6 +269,11 @@
       }
     ]
   },
+  "homepage": "https://modified.example.com",
+  "license": "MIT-Modified",
+  "icon": "modified-icon.svg",
+  "image": "modified-image.png",
+  "description": "Modified version for comprehensive diff testing",
   "attributes": {
     "added": [
       {

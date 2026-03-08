@@ -61,7 +61,7 @@ const EXPECTED_COMMANDS = [
   "semio.ticketClose",
   "semio.ticketRead",
   "semio.ticketOpen",
-  "semio.projectList",
+  "semio.technologyList",
   "semio.contributorAdd",
   "semio.contributorList",
   "semio.contributorRemove",
@@ -83,7 +83,7 @@ const EXPECTED_COMMANDS = [
   "semio.sectionIntegrate",
   "semio.sectionList",
   "semio.definitionTree",
-  "semio.projectTree",
+  "semio.technologyTree",
   "semio.policyCheck",
   "semio.refreshDiagnostics",
   "semio.autofixBreach",
@@ -493,9 +493,9 @@ suite("Sidebar View Test Suite", function () {
   test("New filter toggle commands are available", async function () {
     const commands = await vscode.commands.getCommands(true);
     const newFilterCommands = [
-      "semio.filter.toggle.project.user",
-      "semio.filter.toggle.project.infrastructure",
-      "semio.filter.toggle.project.research",
+      "semio.filter.toggle.technology.user",
+      "semio.filter.toggle.technology.infrastructure",
+      "semio.filter.toggle.technology.research",
       "semio.filter.toggle.file.code",
       "semio.filter.toggle.file.script",
       "semio.filter.toggle.file.config",
@@ -612,8 +612,8 @@ suite("Filter Provider Test Suite", () => {
       "Should have Search",
     );
     assert.ok(
-      labels.some((l) => l.startsWith("🏗️Projects")),
-      "Should have Projects",
+      labels.some((l) => l.startsWith("🏗️Technologies")),
+      "Should have Technologies",
     );
     assert.ok(
       labels.some((l) => l.startsWith("📦Bundles")),
@@ -708,10 +708,10 @@ suite("Filter Provider Test Suite", () => {
     provider.toggle("ticket", "open");
     assert.strictEqual(provider.filters.ticket.open, false);
 
-    provider.toggle("project", "user");
-    assert.strictEqual(provider.filters.project.user, false);
-    provider.toggle("project", "user");
-    assert.strictEqual(provider.filters.project.user, true);
+    provider.toggle("technology", "user");
+    assert.strictEqual(provider.filters.technology.user, false);
+    provider.toggle("technology", "user");
+    assert.strictEqual(provider.filters.technology.user, true);
 
     provider.toggle("file", "code");
     assert.strictEqual(provider.filters.file.code, false);
@@ -724,7 +724,7 @@ suite("Filter Provider Test Suite", () => {
     assert.strictEqual(provider.filters.goal.open, true);
   });
 
-  for (const kind of ["bundle", "folder", "definition", "ticket", "project", "file", "goal"]) {
+  for (const kind of ["bundle", "folder", "definition", "ticket", "technology", "file", "goal"]) {
     test(`${kind} none/all toggles set all ${kind} filters`, () => {
       const provider = new FilterTreeDataProvider();
       provider.toggle(kind, "none");
@@ -1149,17 +1149,17 @@ suite("parseUri Test Suite", () => {
     assert.strictEqual(result!.path, "");
   });
 
-  test("Parses projects collection URI (no path)", () => {
-    const result = parseUri("semiorepo://projects");
+  test("Parses technologies collection URI (no path)", () => {
+    const result = parseUri("semiorepo://technologies");
     assert.ok(result);
-    assert.strictEqual(result!.type, "projects");
+    assert.strictEqual(result!.type, "technologies");
     assert.strictEqual(result!.path, "");
   });
 
-  test("Parses project URI", () => {
-    const result = parseUri("semiorepo://project/semio");
+  test("Parses technology URI", () => {
+    const result = parseUri("semiorepo://technology/semio");
     assert.ok(result);
-    assert.strictEqual(result!.type, "project");
+    assert.strictEqual(result!.type, "technology");
     assert.strictEqual(result!.path, "semio");
   });
 
@@ -1395,7 +1395,7 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles collection URIs gracefully", async function () {
-    const collections = ["cb", "projects", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "statutes", "contributors", "checkpoints"];
+    const collections = ["cb", "technologies", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "statutes", "contributors", "checkpoints"];
     for (const collection of collections) {
       await vscode.commands.executeCommand("semio.navigate", `semiorepo://${collection}`);
     }
@@ -1472,9 +1472,9 @@ suite("Navigation Commands Test Suite", function () {
     assert.ok(true, "Should not throw on definition URI");
   });
 
-  test("semio.navigate handles project URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://project/semio");
-    assert.ok(true, "Should not throw on project URI");
+  test("semio.navigate handles technology URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://technology/semio");
+    assert.ok(true, "Should not throw on technology URI");
   });
 
   test("semio.navigate handles bundle URI gracefully", async function () {
@@ -1488,11 +1488,11 @@ suite("Navigation Commands Test Suite", function () {
 // #region 🔖Entity Emoji Registry Tests
 
 suite("Entity Emoji Registry Test Suite", () => {
-  test("ENTITY_EMOJIS contains all project kind emojis", () => {
-    assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user project emoji");
-    assert.ok(ENTITY_EMOJIS.has("🧰"), "should contain infra project emoji");
-    assert.ok(ENTITY_EMOJIS.has("🔬"), "should contain research project emoji");
-    assert.ok(ENTITY_EMOJIS.has("🌱"), "should contain mono project emoji");
+  test("ENTITY_EMOJIS contains all technology kind emojis", () => {
+    assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user technology emoji");
+    assert.ok(ENTITY_EMOJIS.has("🧰"), "should contain infra technology emoji");
+    assert.ok(ENTITY_EMOJIS.has("🔬"), "should contain research technology emoji");
+    assert.ok(ENTITY_EMOJIS.has("🌱"), "should contain mono technology emoji");
   });
 
   test("ENTITY_EMOJIS contains all bundle kind emojis", () => {
@@ -1558,7 +1558,7 @@ suite("Entity Emoji Registry Test Suite", () => {
 
   test("ENTITY_EMOJIS contains collection/plural emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("🖥️"), "should contain codebase emoji");
-    assert.ok(ENTITY_EMOJIS.has("🏗️"), "should contain projects emoji");
+    assert.ok(ENTITY_EMOJIS.has("🏗️"), "should contain technologies emoji");
     assert.ok(ENTITY_EMOJIS.has("📦"), "should contain bundles emoji");
     assert.ok(ENTITY_EMOJIS.has("📁"), "should contain folders emoji");
     assert.ok(ENTITY_EMOJIS.has("📄"), "should contain files emoji");
@@ -1566,8 +1566,8 @@ suite("Entity Emoji Registry Test Suite", () => {
   });
 
   test("ENTITY_EMOJIS maps to correct kind names", () => {
-    assert.strictEqual(ENTITY_EMOJIS.get("👤"), "project-user");
-    assert.strictEqual(ENTITY_EMOJIS.get("🧰"), "project-infrastructure");
+    assert.strictEqual(ENTITY_EMOJIS.get("👤"), "technology-user");
+    assert.strictEqual(ENTITY_EMOJIS.get("🧰"), "technology-infrastructure");
     assert.strictEqual(ENTITY_EMOJIS.get("💻"), "file-code");
     assert.strictEqual(ENTITY_EMOJIS.get("🔖"), "section");
     assert.strictEqual(ENTITY_EMOJIS.get("🛠️"), "definition-implementation");
@@ -1602,7 +1602,7 @@ suite("Entity Emoji Registry Test Suite", () => {
 // #region 🔖Entity ID Regex Matching Tests
 
 suite("Entity ID Regex Matching Test Suite", () => {
-  test("matches bare infrastructure project ID (🧰)", () => {
+  test("matches bare infrastructure technology ID (🧰)", () => {
     const regex = buildEntityIdRegex();
     const text = "See 🧰semiorepo⌨️cli for CLI details.";
     const matches = [...text.matchAll(regex)];
@@ -1610,15 +1610,15 @@ suite("Entity ID Regex Matching Test Suite", () => {
     assert.strictEqual(matches[0][3], "🧰semiorepo⌨️cli");
   });
 
-  test("matches bare user project ID (👤)", () => {
+  test("matches bare user technology ID (👤)", () => {
     const regex = buildEntityIdRegex();
-    const text = "Main project: 👤semio📚js";
+    const text = "Main technology: 👤semio📚js";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one ID");
     assert.strictEqual(matches[0][3], "👤semio📚js");
   });
 
-  test("matches markdown link with user project ID", () => {
+  test("matches markdown link with user technology ID", () => {
     const regex = buildEntityIdRegex();
     const text = "[👤semio📚js💻semiots](semiorepo://p/u/semio/b/l/js/f/semio.ts)";
     const matches = [...text.matchAll(regex)];
@@ -1710,11 +1710,11 @@ suite("Entity ID Regex Matching Test Suite", () => {
     assert.strictEqual(matches.length, 0, "should not match non-entity emojis");
   });
 
-  test("matches research project ID (🔬)", () => {
+  test("matches research technology ID (🔬)", () => {
     const regex = buildEntityIdRegex();
     const text = "Research: 🔬experiments";
     const matches = [...text.matchAll(regex)];
-    assert.strictEqual(matches.length, 1, "should match research project ID");
+    assert.strictEqual(matches.length, 1, "should match research technology ID");
   });
 
   test("matches checkpoint ID (🔀)", () => {

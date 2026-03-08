@@ -25,7 +25,7 @@
 import { graphql } from "./generated/gql";
 
 /**
- * GraphQL document for querying the full repo structure with projects and bundles.
+ * GraphQL document for querying the full repo structure with technologies and bundles.
  *
  *  * [🧰semiorepo🖱️vscode💻queries🔖queries🪨repostructuredocument](semiorepo://p/i/semio-repo/b/u/vscode/f/queries.ts/s/Queries/d/i/RepoStructureDocument)
  **/
@@ -35,7 +35,7 @@ export const RepoStructureDocument = graphql(`
       id
       name
       path
-      projects {
+      technologies {
         id
         name
         kind

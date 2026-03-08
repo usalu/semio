@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../node_modules/nx/schemas/technology-schema.json",
   "projectType": "application",
   "name": "semio-repo",
   "displayName": "semio-repo",
@@ -115,11 +115,11 @@
         "title": "semio-repo: Show Ticket Tree"
       },
       {
-        "command": "semio.projectList",
+        "command": "semio.technologyList",
         "title": "semio-repo: List Bundles"
       },
       {
-        "command": "semio.projectTree",
+        "command": "semio.technologyTree",
         "title": "semio-repo: Show Bundle Tree"
       },
       {
@@ -384,7 +384,7 @@
         "title": "semio-repo: Open Contributor"
       },
       {
-        "command": "semio.openProject",
+        "command": "semio.openTechnology",
         "title": "semio-repo: Open Bundle"
       },
       {
@@ -605,28 +605,28 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "semio.filter.toggle.project.user",
-        "toggled": "semio.filter.project.user",
+        "command": "semio.filter.toggle.technology.user",
+        "toggled": "semio.filter.technology.user",
         "title": "\ud83d\udc64"
       },
       {
-        "command": "semio.filter.toggle.project.infrastructure",
-        "toggled": "semio.filter.project.infrastructure",
+        "command": "semio.filter.toggle.technology.infrastructure",
+        "toggled": "semio.filter.technology.infrastructure",
         "title": "\ud83e\uddf0"
       },
       {
-        "command": "semio.filter.toggle.project.research",
-        "toggled": "semio.filter.project.research",
+        "command": "semio.filter.toggle.technology.research",
+        "toggled": "semio.filter.technology.research",
         "title": "\ud83d\udd2c"
       },
       {
-        "command": "semio.filter.toggle.project.none",
-        "toggled": "semio.filter.project.none",
+        "command": "semio.filter.toggle.technology.none",
+        "toggled": "semio.filter.technology.none",
         "title": "\ud83d\udeab"
       },
       {
-        "command": "semio.filter.toggle.project.all",
-        "toggled": "semio.filter.project.all",
+        "command": "semio.filter.toggle.technology.all",
+        "toggled": "semio.filter.technology.all",
         "title": "\u2705"
       },
       {
@@ -753,12 +753,12 @@
       "view/item/context": [
         {
           "command": "semio.refreshItem",
-          "when": "view == semio.monorepo && viewItem =~ /^(root_codebase|root_goals|root_tickets|root_policies|root_contributors|root_commits|project|bundle|folder|file|section)$/",
+          "when": "view == semio.monorepo && viewItem =~ /^(root_codebase|root_goals|root_tickets|root_policies|root_contributors|root_commits|technology|bundle|folder|file|section)$/",
           "group": "inline@98"
         },
         {
           "command": "semio.copyId",
-          "when": "view == semio.monorepo && viewItem =~ /^(project|bundle|folder|file|section|definition|goal|ticket|policy|breach|contributor|commit|ticket_year|ticket_month|ticket_day|contributor_email|contributor_link)$/",
+          "when": "view == semio.monorepo && viewItem =~ /^(technology|bundle|folder|file|section|definition|goal|ticket|policy|breach|contributor|commit|ticket_year|ticket_month|ticket_day|contributor_email|contributor_link)$/",
           "group": "inline@99"
         },
         {
@@ -792,21 +792,21 @@
           "group": "inline@1"
         },
         {
-          "command": "semio.filter.toggle.project.user",
-          "toggled": "semio.filter.project.user",
-          "when": "view == semio.filter && viewItem == filter_project",
+          "command": "semio.filter.toggle.technology.user",
+          "toggled": "semio.filter.technology.user",
+          "when": "view == semio.filter && viewItem == filter_technology",
           "group": "inline@1"
         },
         {
-          "command": "semio.filter.toggle.project.infrastructure",
-          "toggled": "semio.filter.project.infrastructure",
-          "when": "view == semio.filter && viewItem == filter_project",
+          "command": "semio.filter.toggle.technology.infrastructure",
+          "toggled": "semio.filter.technology.infrastructure",
+          "when": "view == semio.filter && viewItem == filter_technology",
           "group": "inline@2"
         },
         {
-          "command": "semio.filter.toggle.project.research",
-          "toggled": "semio.filter.project.research",
-          "when": "view == semio.filter && viewItem == filter_project",
+          "command": "semio.filter.toggle.technology.research",
+          "toggled": "semio.filter.technology.research",
+          "when": "view == semio.filter && viewItem == filter_technology",
           "group": "inline@3"
         },
         {

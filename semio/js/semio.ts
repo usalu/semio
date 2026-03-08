@@ -1242,6 +1242,7 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
   if (diff.added) {
     result.push(...diff.added);
   }
+  return result;
 };
 
 // #endregion 🔖Attribute
@@ -1346,6 +1347,7 @@ export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): Coord
  * [👤semio📚js💻semio🔖coordweakentity🪨mergecoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/mergeCoordDiff)
  **/
 export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
+  return {
     u: (diff1.u ?? 0) + (diff2.u ?? 0),
     v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
@@ -1878,6 +1880,7 @@ export const averagePlane = (planes: Plane[]): Plane | null => {
     xAxis: baseXAxis,
     yAxis: baseYAxis,
   };
+};
 // roundPlane holds the data fields for a roundPlane record.
 // [👤semio📚js💻semio🔖planeweakentity🪨roundplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Plane%20(weak%20entity)/d/i/roundPlane)
 const roundPlane = (plane: Plane): Plane => ({
@@ -2383,10 +2386,12 @@ export const FileSchema = z.object({
   folder: FolderIdSchema.optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
+  blob: z.string().optional(),
   createdAt: DateProperty(),
   createdBy: z.string().optional(),
   updatedAt: DateProperty(),
   updatedBy: z.string().optional(),
+});
 /**
  * Type alias for File.
  *
@@ -2537,6 +2542,7 @@ export const FolderSchema = z.object({
   attributes: z.array(AttributeSchema).optional(),
   createdAt: DateProperty(),
   createdBy: z.string().optional(),
+  updatedAt: DateProperty(),
   updatedBy: z.string().optional(),
 });
 /**
@@ -3200,6 +3206,7 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   const result: Port = {
     guid: base.guid,
     name: diff.name ?? base.name,
+  };
 
   if ("description" in diff) {
     if (diff.description !== null) result.description = diff.description;
@@ -3393,6 +3400,7 @@ export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).ex
  *
  *  * [👤semio📚js💻semio🔖prop🛠️propdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropDiff)
  **/
+export type PropDiff = z.infer<typeof PropDiffSchema>;
 /**
  * Retrieves the PropDiff value.
  *
@@ -3647,6 +3655,7 @@ export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
 export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
+  const result: Tag = {
     guid: base.guid,
     name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
   };
@@ -3901,6 +3910,7 @@ export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): Concep
 export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
+  const result: Concept = {
     guid: base.guid,
     name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
   };
@@ -4240,6 +4250,7 @@ export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string
     if (!r.tags || r.tags.length === 0) return false;
     const modelTagGuids = r.tags.map((t) => t.guid);
     return selectedTagGuids.every((guid) => modelTagGuids.includes(guid));
+  });
 };
 
 /**
@@ -5148,6 +5159,7 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
  **/
 export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
   let newPlane = base.plane;
+  if (diff.plane) {
     const diffPlane = diff.plane as any;
     if (diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis) {
       newPlane = diffPlane as Plane;
@@ -5283,6 +5295,14 @@ export const isFixedPiece = (piece: Piece): boolean => {
   return isPlaneSet;
 };
 
+/**
+ * Performs the mergeCoordDiff operation.
+ *
+ * MUST perform the operation correctly.
+ *
+ *  * [👤semio📚js💻semio🔖coordweakentity🪨mergecoorddiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Coord%20(weak%20entity)/d/i/mergeCoordDiff)
+ **/
+/**
  * Searches for matching Piece entry.
  *
  * MUST return the matching element or undefined.
@@ -5660,6 +5680,7 @@ export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Con
     guid: base.guid,
     connected: diff.connected ? applySideDiff(base.connected, diff.connected) : base.connected,
     connecting: diff.connecting ? applySideDiff(base.connecting, diff.connecting) : base.connecting,
+  };
 
   if (diff.gap !== undefined || base.gap !== undefined) result.gap = diff.gap ?? base.gap;
   if (diff.shift !== undefined || base.shift !== undefined) result.shift = diff.shift ?? base.shift;
@@ -5793,7 +5814,7 @@ export const findConnection = (connections: Connection[], connectionGuid: string
 export const findPieceConnections = (connections: Connection[], pieceGuid: string): Connection[] => {
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
-
+ 
 /**
  * Searches for matching ConnectorForPieceInConnection entry.
  *
@@ -8298,6 +8319,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
 export const piecesMetadata = (
   kit: Kit,
   designGuid: string,
+): Map<
   string,
   {
     plane: Plane;
@@ -8438,6 +8460,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
           guid: guid(),
           key: "semio.color",
           value: getColorForText(connector.port?.guid),
+        },
       ],
     }));
 
@@ -8685,25 +8708,29 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
   const zip = await JSZip.loadAsync(arrayBuffer);
 
   const dbFile = zip.file(".semio/kit.db");
-  if (!dbFile) {
-    throw new Error("Invalid kit archive: missing .semio/kit.db");
+  let kit: Kit;
+  if (dbFile) {
+    const dbArrayBuffer = await dbFile.async("arraybuffer");
+    const SQL = await getSqlJs();
+    const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
+    kit = await sqliteToKit(db);
+    db.close();
+  } else {
+    const kitJsonFile = zip.file("kit.json");
+    if (!kitJsonFile) {
+      throw new Error("Invalid kit archive: missing .semio/kit.db or kit.json");
+    }
+    const kitJson = await kitJsonFile.async("string");
+    kit = deserializeKit(kitJson);
   }
-
-  const dbArrayBuffer = await dbFile.async("arraybuffer");
-  const SQL = await getSqlJs();
-  const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
-
-  const kit = await sqliteToKit(db);
 
   const files = new Map<string, Blob>();
   for (const [path, zipEntry] of Object.entries(zip.files)) {
-    if (!zipEntry.dir && !path.startsWith(".semio/")) {
+    if (!zipEntry.dir && !path.startsWith(".semio/") && path !== "kit.json") {
       const blob = await zipEntry.async("blob");
       files.set(path, blob);
     }
   }
-
-  db.close();
 
   return { kit, files };
 };
@@ -10697,10 +10724,12 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         toArray(prop.attributes).forEach((attr) => {
           db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, prop.guid]);
         });
+      });
 
       toArray(connector.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, connector_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, connector.guid]);
       });
+    });
 
     toArray(type.attributes).forEach((attr) => {
       db.run("INSERT INTO attribute (guid, key, value, definition, type_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, type.guid]);
@@ -10766,6 +10795,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
           piece.plane?.origin.z !== undefined ? piece.plane.origin.z : null,
           piece.plane?.xAxis.x !== undefined ? piece.plane.xAxis.x : null,
           piece.plane?.xAxis.y !== undefined ? piece.plane.xAxis.y : null,
+          piece.plane?.xAxis.z !== undefined ? piece.plane.xAxis.z : null,
           piece.plane?.yAxis.x !== undefined ? piece.plane.yAxis.x : null,
           piece.plane?.yAxis.y !== undefined ? piece.plane.yAxis.y : null,
           piece.plane?.yAxis.z !== undefined ? piece.plane.yAxis.z : null,
@@ -10849,6 +10879,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       });
     });
 
+    toArray(design.stats).forEach((stat) => {
       db.run("INSERT INTO stat (guid, quality_guid, min_value, min_excluded, max_value, max_excluded, unit, design_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
         stat.guid,
         stat.quality.guid,
@@ -10859,7 +10890,6 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         stat.unit || null,
         design.guid,
       ]);
-
     });
 
     toArray(design.attributes).forEach((attr) => {
@@ -10955,6 +10985,7 @@ export interface ValidationContext {
   designsByGuid: Map<Guid, Design>;
   piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
   connectorsByTypeGuid: Map<Guid, Connector[]>;
+  modelsByTypeGuid: Map<Guid, Model[]>;
 }
 
 /**
@@ -11007,6 +11038,7 @@ export interface ValidationConfig {
  **/
 export let defaultConstraints: Constraint[] = [];
 
+/**
  * Validates Kit against constraints.
  *
  * MUST check all constraints and return problems.
@@ -11023,6 +11055,8 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
 
 // #region 🔖Fix helper
 
+// [👤semio📚js💻semio🔖kit🔖validation🔖fixhelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Fix%20helper)
+// Validation fix helper functions MUST be defined here.
 // [👤semio📚js💻semio🔖kit🔖validation🔖fixhelper](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Validation/s/Fix%20helper)
 // Validation fix helper functions MUST be defined here.
 
@@ -11109,6 +11143,7 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
         semioMakeFix(ctx, "Regenerate GUID", (clone) => {
           const newGuid = guid();
           updateGuidEverywhere(clone, entityGuid, newGuid);
+        }),
       ],
     };
     problems.push(problem);
@@ -11153,6 +11188,7 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   for (const [parentGuid, siblings] of byParent) {
     const names = new Map<string, Type[]>();
     siblings.forEach((t) => {
+      const name = t.name ?? "";
       if (!names.has(name)) names.set(name, []);
       names.get(name)!.push(t);
     });
@@ -11197,6 +11233,7 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
 export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const byParent = new Map<Guid | undefined, Design[]>();
+  toArray(ctx.kit.designs).forEach((d) => {
     const pid = d.parent?.guid as Guid | undefined;
     if (!byParent.has(pid)) byParent.set(pid, []);
     byParent.get(pid)!.push(d);
@@ -11343,6 +11380,7 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
 export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const ports = toArray(ctx.kit.ports);
+  const nameMap = new Map<string, Port[]>();
   ports.forEach((i) => {
     const name = i.name ?? "";
     if (!nameMap.has(name)) nameMap.set(name, []);
@@ -11393,6 +11431,7 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
     if (!nameMap.has(name)) nameMap.set(name, []);
     nameMap.get(name)!.push(f);
   });
+  for (const [name, list] of nameMap) {
     if (list.length <= 1) continue;
     const [first, ...rest] = list;
     const allNames = files.map((f) => f.name ?? "");
@@ -11442,6 +11481,7 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
     siblings.forEach((f) => {
       const name = f.name ?? "";
       if (!nameMap.has(name)) nameMap.set(name, []);
+      nameMap.get(name)!.push(f);
     });
     for (const [name, list] of nameMap) {
       if (list.length <= 1) continue;
@@ -11504,6 +11544,7 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
           if (!cp) return;
           cp.name = generateUniqueName(name, allNames);
         });
+        problems.push({
           constraintId: "connector-name-unique",
           message: `Duplicate connector name "${name}" inside type "${type?.name}".`,
           location: { entityKind: "Connector", entityGuid: connector.guid, field: "name" },
@@ -11753,8 +11794,8 @@ export const toValidationResult = (result: ValidationResult): SerializableValida
   problems: result.problems.map((problem) => ({
     constraintId: problem.constraintId,
     message: problem.message,
-    entityKind: problem.location.entityKind,
-    entityGuid: problem.location.entityGuid ?? "",
+    entityKind: problem.location?.entityKind ?? "",
+    entityGuid: problem.location?.entityGuid ?? "",
     fixes: problem.fixes.map((fix) => ({ title: fix.title, diff: fix.diff })),
   })),
 });

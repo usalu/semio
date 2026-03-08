@@ -18,12 +18,16 @@
 
 import json
 import os
+import sys
 import tempfile
 
 import pytest
 
+sys.path.insert(0, os.path.dirname(__file__))
+
 from semio import (
     _applyDesignDiff,
+    _build_file_path,
     applyKitDiffDict,
     areKitDiffsDictEqual,
     areKitsDictEqual,
@@ -33,6 +37,7 @@ from semio import (
     getKitDiffDict,
     import_kit,
     inverseKitDiffDict,
+    KitData,
     parseValidationResult,
     validateKitDict,
 )
@@ -125,34 +130,34 @@ def flatten_test(design_name, parent_name=None):
 
 
 class TestRoundtrip:
-    class TestJson:
-        class TestMetabolism:
-            def test_kit_json_kit(self):
-                kit_dict = load_json("kit_metabolism.json")
-                serialized = json.dumps(kit_dict)
-                deserialized = json.loads(serialized)
-                assert areKitsDictEqual(kit_dict, deserialized)
+    class TestMetabolism:
+        def test_roundtrip(self):
+            import base64
 
-    class TestZip:
-        class TestMetabolism:
-            def test_zip_kit_zip_kit(self):
-                zip_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, "metabolism.zip")
-                kit, files = import_kit(zip_path)
+            # JSON -> Memory -> JSON
+            kit_dict = load_json("kit_metabolism.json")
+            serialized = json.dumps(kit_dict)
+            deserialized = json.loads(serialized)
+            assert areKitsDictEqual(kit_dict, deserialized), "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
 
-                assert kit.name == "Metabolism"
-                assert len(kit.types or []) > 0
-                assert len(kit.designs or []) > 0
-                assert len(files) > 0
+            # JSON -> ZIP
+            files: dict[str, bytes] = {}
+            for file_entry in kit_dict.get("files", []):
+                blob = file_entry.get("blob")
+                if blob:
+                    decoded = base64.b64decode(blob)
+                    file_path = _build_file_path(kit_dict, file_entry)
+                    files[file_path] = decoded
 
-                with tempfile.TemporaryDirectory() as tmpdir:
-                    roundtrip_path = os.path.join(tmpdir, "metabolism_roundtrip.zip")
-                    export_kit(kit, files, roundtrip_path)
-                    kit2, files2 = import_kit(roundtrip_path)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                roundtrip_path = os.path.join(tmpdir, "metabolism_roundtrip.zip")
+                export_kit(KitData(kit_dict), files, roundtrip_path)
 
-                assert kit2.name == kit.name
-                assert len(kit2.types or []) == len(kit.types or [])
-                assert len(kit2.designs or []) == len(kit.designs or [])
-                assert len(files2) == len(files)
+                # ZIP -> JSON
+                kit2, files2 = import_kit(roundtrip_path)
+
+            assert areKitsDictEqual(kit_dict, kit2.to_dict()), "ZIP -> JSON: roundtrip kit should be equal"
+            assert len(files2) == len(files), f"Expected {len(files)} files, got {len(files2)}"
 
 
 class TestFlatten:

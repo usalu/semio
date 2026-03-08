@@ -8365,19 +8365,8 @@ export const kitCommands = {
     (async () => {
       try {
         const kit = context.kit;
-        const files = new Map<string, Blob>();
 
-        for (const [path, url] of context.fileUrls.entries()) {
-          try {
-            const response = await fetch(url);
-            if (response.ok) {
-              const blob = await response.blob();
-              files.set(path, blob);
-            }
-          } catch (error) { }
-        }
-
-        const zipBlob = await exportKit(kit, files);
+        const zipBlob = await exportKit(kit);
         const url = URL.createObjectURL(zipBlob);
         const a = document.createElement("a");
         a.href = url;

@@ -113,6 +113,17 @@ public class Tests
         public class Sqlite
         {
             [Fact]
+            public void Metabolism_Asset_Kit_Db_Kit()
+            {
+                // Verifies the canonical asset kit.db loads correctly with the current schema.
+                var assetDir = Path.Combine(Tests.AssetsPath, "metabolism");
+                var kit = KitSqlite.LoadKit(assetDir);
+                Assert.NotNull(kit);
+                Assert.Equal("Metabolism", kit.Name);
+                Assert.True(kit.Types?.Count > 0);
+            }
+
+            [Fact]
             public void Metabolism_Kit_Sqlite_Kit()
             {
                 var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");

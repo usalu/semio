@@ -105,24 +105,24 @@ CREATE TABLE IF NOT EXISTS file (
     FOREIGN KEY (parent_folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (kind_id) REFERENCES file_kind (id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS project_kind (
+CREATE TABLE IF NOT EXISTS technology_kind (
     id INTEGER PRIMARY KEY, -- enum[👤user🧰infrastructure🔬research]
     emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0), -- nn_text
     name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0), -- nn_text
     description TEXT NOT NULL CHECK (length (trim(description)) > 0) -- nn_text
 );
-CREATE TABLE IF NOT EXISTS project (
+CREATE TABLE IF NOT EXISTS technology (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     folder_id INTEGER NOT NULL,
     kind_id INTEGER NOT NULL,
     name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0), -- nn_text
     summary TEXT,
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
-    FOREIGN KEY (kind_id) REFERENCES project_kind (id) ON DELETE CASCADE
+    FOREIGN KEY (kind_id) REFERENCES technology_kind (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS concept (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER,
+    technology_id INTEGER,
     bundle_id INTEGER,
     folder_id INTEGER,
     file_id INTEGER,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS concept (
     specification TEXT NOT NULL CHECK (length (trim(specification)) > 0), -- nn_text
     UNIQUE (name),
     UNIQUE (emoji),
-    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+    FOREIGN KEY (technology_id) REFERENCES technology (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS mechanism (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -163,13 +163,13 @@ CREATE TABLE IF NOT EXISTS bundle_kind (
 );
 CREATE TABLE IF NOT EXISTS bundle (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER NOT NULL,
+    technology_id INTEGER NOT NULL,
     folder_id INTEGER NOT NULL,
     kind_id INTEGER NOT NULL,
     name TEXT NOT NULL CHECK (length (trim(name)) > 0), -- nn_text
     summary TEXT,
-    UNIQUE (project_id, kind_id, name),
-    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    UNIQUE (technology_id, kind_id, name),
+    FOREIGN KEY (technology_id) REFERENCES technology (id) ON DELETE CASCADE,
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (kind_id) REFERENCES bundle_kind (id) ON DELETE CASCADE
 );

@@ -1,0 +1,1283 @@
+{
+  "id": "unknown",
+  "uri": "semiorepo://s/unknown",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-08T17:53:36Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "tool_name": "read_file",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/go/semio.go",
+            "start_line": 620,
+            "end_line": 650
+          }
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️attribute",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributediff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributeid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️author",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authordiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmark",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarksdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️camera",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️cameradiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️concept",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connection",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectiondiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connector",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectordiff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️constraint",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coord",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coorddiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️design",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designdiff",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️domainlocation",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️file",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚go💻semio✂️filediff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fileid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️filesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fix",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folder",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️foldersdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️group",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kit",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitdiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layer",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layersdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️location",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️model",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modeldiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piece",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecediff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pieceid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecenode",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️plane",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️planediff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️point",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pointdiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️port",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️problem",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️problemserialized",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️prop",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitiesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️quality",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitydiff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualityid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitykind",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚go💻semio✂️semioentitykind",
+            "loc": 26
+          },
+          {
+            "id": "👤semio📚go💻semio✂️severity",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio✂️side",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sidediff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sideid",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️stat",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tag",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typediff",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typeid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationcontext",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationresult",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationresultserialized",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vec",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vector",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vectordiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️addconcepttokit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️adddesigntokit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️addfiletokit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️addporttokit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️addtagtokit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️addtypetokit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyattributesdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyauthordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyauthorsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyconceptdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyconceptsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyconnectiondiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyconnectionsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyconnectordiff",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyconnectorsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applydesigndiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applydesigndiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applydesignsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyfilediff",
+            "loc": 31
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyfilesdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyfolderdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyfoldersdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applykitdiff",
+            "loc": 58
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applymatrix4tovec3",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applymodeldiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applymodelsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applypiecediff",
+            "loc": 62
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applypiecesdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyportdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applyportsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applytagdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applytagsdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applytypediff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applytypesdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areauthorsdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areauthorsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areconceptsdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areconceptsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areconnectionsequal",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areconnectorsequal",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aredesignsdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aredesignsequal",
+            "loc": 45
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arefilesdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arefilesequal",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arefolderidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arefoldersdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arefoldersequal",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arekitdiffsequal",
+            "loc": 45
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arekitsequal",
+            "loc": 171
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aremodelsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arepiecesequal",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areportsdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areportsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aretagsdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aretagsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aretypesdiffsequal",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aretypesequal",
+            "loc": 45
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arevalidationresultsequal",
+            "loc": 28
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️buildvalidationcontext",
+            "loc": 31
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️computechildplane",
+            "loc": 74
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️connectornameuniquenessconstraint",
+            "loc": 64
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️cross",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️deepequal",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️degtorad",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️deserializekit",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️deserializekitdiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️designnameuniquenessconstraint",
+            "loc": 53
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️dot",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️filenameuniquenessconstraint",
+            "loc": 43
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️filterdesignswithoutparent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findauthorinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findconceptinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findconnectionindesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findconnectorintype",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️finddesigninkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findfileinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findfolderinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findpieceindesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findportinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findqualityinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findtaginkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️findtypeinkit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️flattendesign",
+            "loc": 190
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️foldernameuniquenessconstraint",
+            "loc": 53
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️generateuniquename",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getattributesdiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getauthordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getauthorsdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getconceptdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getconceptsdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getconnectionsdiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getconnector",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getconnectorsdiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getdesigndiff",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getdesignsdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getfilediff",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getfilesdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getfolderdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getfoldersdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getkitdiff",
+            "loc": 67
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getmodelsdiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getpiecesdiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getportdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️getportsdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️gettagdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️gettagsdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️gettypediff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️gettypesdiff",
+            "loc": 30
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️guid",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️guiduniquenessconstraint",
+            "loc": 53
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️haserrors",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️hasfield",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️hasfield",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️hasfield",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️hasfield",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseattributesdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseauthordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseauthorsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseconceptdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseconceptsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseconnectionsdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseconnectorsdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversedesigndiff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversedesignsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversefilediff",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversefilesdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversefolderdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversefoldersdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversekitdiff",
+            "loc": 67
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversemodelsdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversepiecesdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseportdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseportsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetagdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetagsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetypediff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetypesdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isattributesdiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isauthordiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isconceptdiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isdesigndiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isfilediffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isfolderdiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️isportdiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️istagdiffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️istypediffempty",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️layerpathuniquenessconstraint",
+            "loc": 49
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️makefix",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️makerotationaxis",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️maketranslation",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️matrixtoplane",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️modelnameuniquenessconstraint",
+            "loc": 65
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️multiplymatrices",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newauthor",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newconcept",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newconnection",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newconnector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newdesign",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newfile",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newfolder",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newkit",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newpiece",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newport",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newquality",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newtag",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️newtype",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalize",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalize",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalizeint64",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalizestr",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️piecenameuniquenessconstraint",
+            "loc": 60
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️planesequalapprox",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️planetomatrix",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️portnameuniquenessconstraint",
+            "loc": 43
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️qualitynameuniquenessconstraint",
+            "loc": 43
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️quaternionfromaxisangle",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️quaternionfromunitvectors",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️quaterniontomatrix",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️removeconceptfromkit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️removedesignfromkit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️removefilefromkit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️removeportfromkit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️removetagfromkit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️removetypefromkit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️round",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️roundfloat",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️roundplane",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️serializekit",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️serializekitdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️tovalidationresult",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️type",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️typenameuniquenessconstraint",
+            "loc": 53
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️unmarshaljson",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️updateguideverywhere",
+            "loc": 91
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️validatekit",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️validatekitwithconstraints",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️veclength",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🪨assetspath",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🪨defaultconstraints",
+            "loc": 13
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌1📌6182"
+        ],
+        "second": "🎆26🌙03☀️08⏰17⌚53⏱️36"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

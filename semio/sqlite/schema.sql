@@ -76,6 +76,19 @@ CREATE TABLE port_compatibility (
 	FOREIGN KEY(compatible_port_guid) REFERENCES port (guid)
 );
 
+
+
+CREATE TABLE author (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	email VARCHAR(256),
+	kit_guid VARCHAR(36),
+	type_guid VARCHAR(36),
+	design_guid VARCHAR(36),
+	PRIMARY KEY (guid),
+	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
 CREATE TABLE folder (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
@@ -91,27 +104,16 @@ CREATE TABLE folder (
 CREATE TABLE file (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
-	mime VARCHAR(128),
+	mime VARCHAR(256),
 	folder_guid VARCHAR(36),
 	size INTEGER,
-	hash VARCHAR(128),
+	hash VARCHAR(256),
 	remote_url TEXT,
 	created DATETIME NOT NULL,
 	updated DATETIME NOT NULL,
 	kit_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
 	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
-);
-
-CREATE TABLE author (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	email VARCHAR(256),
-	kit_guid VARCHAR(36),
-	type_guid VARCHAR(36),
-	design_guid VARCHAR(36),
-	PRIMARY KEY (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
@@ -154,7 +156,6 @@ CREATE TABLE model (
 	description TEXT,
 	type_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
-	FOREIGN KEY(file_guid) REFERENCES file (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
 );
 
@@ -424,8 +425,6 @@ CREATE TABLE attribute (
 	FOREIGN KEY(port_guid) REFERENCES port (guid),
 	FOREIGN KEY(tag_guid) REFERENCES tag (guid),
 	FOREIGN KEY(concept_guid) REFERENCES concept (guid),
-	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
-	FOREIGN KEY(file_guid) REFERENCES file (guid),
 	FOREIGN KEY(author_guid) REFERENCES author (guid),
 	FOREIGN KEY(model_guid) REFERENCES model (guid),
 	FOREIGN KEY(prop_guid) REFERENCES prop (guid),

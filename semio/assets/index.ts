@@ -102,10 +102,8 @@ export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filt
  * Builds guid and name lookup maps from an item array
  *
  * Callers MUST provide an array of objects with optional guid and name fields
- **/
-// [👤semio🏪assets💻index🔖exports🪨buildlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/buildLookup)
-// buildLookup holds the data fields for a buildLookup record.
  * [👤semio🏪assets💻index🔖exports🪨buildlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/buildLookup)
+ * buildLookup holds the data fields for a buildLookup record.
  **/
 const buildLookup = (items: any[] = []) => {
   const byGuid: Record<string, any> = {};
@@ -119,17 +117,17 @@ const buildLookup = (items: any[] = []) => {
 };
 
 /**
-// typeLookup holds the data fields for a typeLookup record.
+ * typeLookup holds the data fields for a typeLookup record.
  * [👤semio🏪assets💻index🔖exports🪨typelookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/typeLookup)
  **/
 const typeLookup = buildLookup(MetabolismKitTypes);
 /**
-// [👤semio🏪assets💻index🔖exports🪨designlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/designLookup)
+ * [👤semio🏪assets💻index🔖exports🪨designlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/designLookup)
  * Design lookup maps by guid and name
  **/
 const designLookup = buildLookup(MetabolismKitDesigns);
 /**
-// [👤semio🏪assets💻index🔖exports🪨portlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/portLookup)
+ * [👤semio🏪assets💻index🔖exports🪨portlookup](semiorepo://p/u/semio/b/a/assets/f/index.ts/s/Exports/d/i/portLookup)
  * Port lookup maps by guid and name
  **/
 const portLookup = buildLookup(MetabolismKitPorts);

@@ -112,11 +112,11 @@ const UI_STRINGS = {
  * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityemojis](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/c/ENTITY_EMOJIS)
  **/
 export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
-  // Project kinds
-  ["👤", "project-user"],
-  ["🧰", "project-infrastructure"],
-  ["🔬", "project-research"],
-  ["🌱", "project-mono"],
+  // Technology kinds
+  ["👤", "technology-user"],
+  ["🧰", "technology-infrastructure"],
+  ["🔬", "technology-research"],
+  ["🌱", "technology-mono"],
   // Bundle kinds
   ["📚", "bundle-library"],
   ["🛂", "bundle-schema"],
@@ -178,7 +178,7 @@ export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
   ["🔴", "session-interrupted"],
   // Collection emojis (plural)
   ["🖥️", "codebase"],
-  ["🏗️", "projects"],
+  ["🏗️", "technologies"],
   ["📦", "bundles"],
   ["📁", "folders"],
   ["📄", "files"],
@@ -256,11 +256,11 @@ export interface ToolResult<T = unknown> {
 }
 
 /**
- * NX project metadata for a workspace package.
+ * NX technology metadata for a workspace package.
  *
- *  * [🧰semiorepo🖱️vscode💻extension🔖types🛠️projectdata](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Types/d/i/ProjectData)
+ *  * [🧰semiorepo🖱️vscode💻extension🔖types🛠️technologydata](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Types/d/i/TechnologyData)
  **/
-export interface ProjectData {
+export interface TechnologyData {
   name: string;
   kind?: string;
   root: string;
@@ -973,8 +973,8 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   if (!fp.filters.policy.all) args.push("--no-policy");
   if (!fp.filters.contributor.all) args.push("--no-contributor");
   if (!fp.filters.checkpoint.all) args.push("--no-checkpoint");
-  const pf = fp.filters.project;
-  if (!pf.user && !pf.infrastructure && !pf.research) args.push("--no-project");
+  const pf = fp.filters.technology;
+  if (!pf.user && !pf.infrastructure && !pf.research) args.push("--no-technology");
   return args;
 }
 
@@ -1113,7 +1113,7 @@ async function navigateToUri(uri: string): Promise<void> {
       return vscode.commands.executeCommand("semio.monorepo.focus") as any;
     }
     case "cb":
-    case "projects":
+    case "technologies":
     case "bundles":
     case "tickets":
     case "goals":
@@ -1192,7 +1192,7 @@ async function navigateToUri(uri: string): Promise<void> {
       }
       break;
     }
-    case "project": {
+    case "technology": {
       const abs = path.join(wsRoot, parsed.path);
       if (fs.existsSync(abs)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
@@ -1679,7 +1679,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
   public useRegex: boolean = false;
 
   public filters: Record<string, Record<string, boolean>> = {
-    project: { user: true, infrastructure: true, research: true },
+    technology: { user: true, infrastructure: true, research: true },
     bundle: { library: true, binary: true, ui: true, site: true, assets: true, schema: true, default: true },
     folder: { organization: true, required: true },
     file: { code: true, script: true, config: true, lab: true, docs: true, resource: true, template: true, license: true },
@@ -1728,7 +1728,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     if (!element) {
       return [
         this.createSearchItem(),
-        this.createFilterItem("🏗️Projects", "filter_project", "Projects filter"),
+        this.createFilterItem("🏗️Technologies", "filter_technology", "Technologies filter"),
         this.createFilterItem("📦Bundles", "filter_bundle", "Bundles filter"),
         this.createFilterItem("📁Folders", "filter_folder", "Folders filter"),
         this.createFilterItem("📄Files", "filter_file", "Files filter"),
@@ -2206,7 +2206,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
 
   const filterToggleEntries: Record<string, string[]> = {
     bundle: ["library", "binary", "ui", "site", "assets", "schema", "default", "none", "all"],
-    project: ["user", "infrastructure", "research", "none", "all"],
+    technology: ["user", "infrastructure", "research", "none", "all"],
     folder: ["organization", "required", "none", "all"],
     file: ["code", "script", "config", "lab", "docs", "resource", "license", "none", "all"],
     section: ["none", "all"],
@@ -2441,7 +2441,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
   const contributedCommands: string[] = [
     "semio.analyze", "semio.analyzeFile", "semio.autofix", "semio.autofixFile",
     "semio.policyList", "semio.policyTree", "semio.ticketList", "semio.ticketRead", "semio.ticketTree",
-    "semio.projectList", "semio.projectTree",
+    "semio.technologyList", "semio.technologyTree",
     "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove",
     "semio.sectionTree", "semio.sectionList", "semio.sectionCreate", "semio.sectionMove",
     "semio.sectionDelete", "semio.sectionOpen", "semio.sectionRename",

@@ -34,7 +34,7 @@ Extension activation entrypoint that registers the two sidebar views (Monorepo a
 The Filter view exposes one item per filter kind with emoji + name labels, tooltip descriptions, and emoji-only menu actions for option toggles.
 The Monorepo view applies the shared filter state across all branches and uses GraphQL-backed data retrieval via the repo CLI executor.
 Section child rendering filters GraphQL section-interface children to section-typed nodes before building section rows so definitions are rendered only in definition rows.
-URI resolution uses the `semiorepo://` scheme. the `semio.navigate` command accepts either a `semiorepo://` uri or a plain artifact id and resolves it to the appropriate resource. ticket and goal uris resolve directly to filesystem paths. file, folder, bundle, project, section, and definition uris resolve via a tree node cache built from the cli `tree --json` output. the `semio.navigateto` command shows a quick pick of all cached tree nodes. a `vscode.urihandler` is registered for the `semiorepo` scheme to handle external uri navigation. all tree items (including goals) have click-to-navigate commands.
+URI resolution uses the `semiorepo://` scheme. the `semio.navigate` command accepts either a `semiorepo://` uri or a plain artifact id and resolves it to the appropriate resource. ticket and goal uris resolve directly to filesystem paths. file, folder, bundle, technology, section, and definition uris resolve via a tree node cache built from the cli `tree --json` output. the `semio.navigateto` command shows a quick pick of all cached tree nodes. a `vscode.urihandler` is registered for the `semiorepo` scheme to handle external uri navigation. all tree items (including goals) have click-to-navigate commands.
 
 ## package.json
 
@@ -140,7 +140,7 @@ TreeBuildOptions holds the data fields for a tree build options record.
 
 ## [🧰semiorepo⌨️cli💻maingo🔖querycache](semiorepo://section/Query%20Cache)
 
-Local Bleve index under .semio-repo/cache for keyword search. Uses composite git fingerprint (superproject HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
+Local Bleve index under .semio-repo/cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
 
 ## [🧰semiorepo⌨️cli💻maingo🔖treecache](semiorepo://section/Tree%20Cache)
 
@@ -807,13 +807,13 @@ GetID returns the i d of the Repo.
 
 GetURI returns the u r i of the Repo.
 
-## [🧰semiorepo⌨️cli💻maingo✂️projectkind](semiorepo://definition/semio-repo/cli/main.go/ProjectKind)
+## [🧰semiorepo⌨️cli💻maingo✂️technologykind](semiorepo://definition/semio-repo/cli/main.go/TechnologyKind)
 
-ProjectKind represents a project kind value.
+TechnologyKind represents a technology kind value.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️string](semiorepo://definition/semio-repo/cli/main.go/String)
 
-String returns the string representation of the ProjectKind.
+String returns the string representation of the TechnologyKind.
 
 ## [🧰semiorepo⌨️cli💻maingo✂️bundlekind](semiorepo://definition/semio-repo/cli/main.go/BundleKind)
 
@@ -827,29 +827,29 @@ IsValid reports whether the BundleKind is valid.
 
 String returns the string representation of the BundleKind.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️deriveprojectkind](semiorepo://definition/semio-repo/cli/main.go/DeriveProjectKind)
+## [🧰semiorepo⌨️cli💻maingo🛠️derivetechnologykind](semiorepo://definition/semio-repo/cli/main.go/DeriveTechnologyKind)
 
-DeriveProjectKind infers and returns the project kind from the given input.
+DeriveTechnologyKind infers and returns the technology kind from the given input.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️derivebundlekind](semiorepo://definition/semio-repo/cli/main.go/DeriveBundleKind)
 
 DeriveBundleKind infers and returns the bundle kind from the given input.
 
-## [🧰semiorepo⌨️cli💻maingo✂️project](semiorepo://definition/semio-repo/cli/main.go/Project)
+## [🧰semiorepo⌨️cli💻maingo✂️technology](semiorepo://definition/semio-repo/cli/main.go/Technology)
 
-Project holds the data fields for a project record.
+Technology holds the data fields for a technology record.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️isnode](semiorepo://definition/semio-repo/cli/main.go/IsNode)
 
-IsNode reports whether the Project is node.
+IsNode reports whether the Technology is node.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getid](semiorepo://definition/semio-repo/cli/main.go/GetID)
 
-GetID returns the i d of the Project.
+GetID returns the i d of the Technology.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️geturi](semiorepo://definition/semio-repo/cli/main.go/GetURI)
 
-GetURI returns the u r i of the Project.
+GetURI returns the u r i of the Technology.
 
 ## [🧰semiorepo⌨️cli💻maingo✂️bundle](semiorepo://definition/semio-repo/cli/main.go/Bundle)
 
@@ -2647,13 +2647,13 @@ ListTickets returns a list of tickets entries.
 
 StreamTickets streams tickets entries through the callback.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️invalidateprojectcache](semiorepo://definition/semio-repo/cli/main.go/InvalidateProjectCache)
+## [🧰semiorepo⌨️cli💻maingo🛠️invalidatetechnologycache](semiorepo://definition/semio-repo/cli/main.go/InvalidateTechnologyCache)
 
-InvalidateProjectCache invalidates the cached project cache.
+InvalidateTechnologyCache invalidates the cached technology cache.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️loadprojects](semiorepo://definition/semio-repo/cli/main.go/LoadProjects)
+## [🧰semiorepo⌨️cli💻maingo🛠️loadtechnologies](semiorepo://definition/semio-repo/cli/main.go/LoadTechnologies)
 
-LoadProjects loads and returns projects from the data source.
+LoadTechnologies loads and returns technologies from the data source.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️loadcommits](semiorepo://definition/semio-repo/cli/main.go/LoadCommits)
 
@@ -2663,17 +2663,17 @@ LoadCommits loads and returns commits from the data source.
 
 LoadBundles loads and returns bundles from the data source.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️getprojects](semiorepo://definition/semio-repo/cli/main.go/GetProjects)
+## [🧰semiorepo⌨️cli💻maingo🛠️gettechnologies](semiorepo://definition/semio-repo/cli/main.go/GetTechnologies)
 
-GetProjects retrieves and returns the projects.
+GetTechnologies retrieves and returns the technologies.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️streambundles](semiorepo://definition/semio-repo/cli/main.go/StreamBundles)
 
 StreamBundles streams bundles entries through the callback.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️streamprojects](semiorepo://definition/semio-repo/cli/main.go/StreamProjects)
+## [🧰semiorepo⌨️cli💻maingo🛠️streamtechnologies](semiorepo://definition/semio-repo/cli/main.go/StreamTechnologies)
 
-StreamProjects streams projects entries through the callback.
+StreamTechnologies streams technologies entries through the callback.
 
 ## [🧰semiorepo⌨️cli💻maingo✂️streamoptions](semiorepo://definition/semio-repo/cli/main.go/StreamOptions)
 
@@ -2771,17 +2771,17 @@ ToolContributorList performs the tool contributor list operation.
 
 ToolContributorRemove performs the tool contributor remove operation.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️toolprojectlist](semiorepo://definition/semio-repo/cli/main.go/ToolProjectList)
+## [🧰semiorepo⌨️cli💻maingo🛠️tooltechnologylist](semiorepo://definition/semio-repo/cli/main.go/ToolTechnologyList)
 
-ToolProjectList performs the tool project list operation.
+ToolTechnologyList performs the tool technology list operation.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️toolbundlelist](semiorepo://definition/semio-repo/cli/main.go/ToolBundleList)
 
 ToolBundleList performs the tool bundle list operation.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️toolprojecttree](semiorepo://definition/semio-repo/cli/main.go/ToolProjectTree)
+## [🧰semiorepo⌨️cli💻maingo🛠️tooltechnologytree](semiorepo://definition/semio-repo/cli/main.go/ToolTechnologyTree)
 
-ToolProjectTree performs the tool project tree operation.
+ToolTechnologyTree performs the tool technology tree operation.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️toolfoldercreate](semiorepo://definition/semio-repo/cli/main.go/ToolFolderCreate)
 
@@ -2963,9 +2963,9 @@ GetFolderID retrieves and returns the folder i d.
 
 GetBundles retrieves and returns the bundles.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️getprojects](semiorepo://definition/semio-repo/cli/main.go/GetProjects)
+## [🧰semiorepo⌨️cli💻maingo🛠️gettechnologies](semiorepo://definition/semio-repo/cli/main.go/GetTechnologies)
 
-GetProjects retrieves and returns the projects.
+GetTechnologies retrieves and returns the technologies.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getcommits](semiorepo://definition/semio-repo/cli/main.go/GetCommits)
 
@@ -3139,9 +3139,9 @@ GetRootDir retrieves and returns the root dir.
 
 GetBundles retrieves and returns the bundles.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️getprojects](semiorepo://definition/semio-repo/cli/main.go/GetProjects)
+## [🧰semiorepo⌨️cli💻maingo🛠️gettechnologies](semiorepo://definition/semio-repo/cli/main.go/GetTechnologies)
 
-GetProjects retrieves and returns the projects.
+GetTechnologies retrieves and returns the technologies.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️getcommits](semiorepo://definition/semio-repo/cli/main.go/GetCommits)
 
@@ -3363,13 +3363,13 @@ Node performs the node operation on the query resolver.
 
 Repo performs the repo operation on the query resolver.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️projects](semiorepo://definition/semio-repo/cli/main.go/Projects)
+## [🧰semiorepo⌨️cli💻maingo🛠️technologies](semiorepo://definition/semio-repo/cli/main.go/Technologies)
 
-Projects performs the projects operation on the query resolver.
+Technologies performs the technologies operation on the query resolver.
 
-## [🧰semiorepo⌨️cli💻maingo🛠️project](semiorepo://definition/semio-repo/cli/main.go/Project)
+## [🧰semiorepo⌨️cli💻maingo🛠️technology](semiorepo://definition/semio-repo/cli/main.go/Technology)
 
-Project performs the project operation on the query resolver.
+Technology performs the technology operation on the query resolver.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️bundles](semiorepo://definition/semio-repo/cli/main.go/Bundles)
 
@@ -4280,7 +4280,7 @@ TodoDeletePayload payload for todo.delete.
 
 ## [🧰semiorepo📚go💻eventsgo✂️workitem](semiorepo://definition/semio-repo/go/events.go/WorkItem)
 
-WorkItem represents a single item a contributor is working on (project, bundle, folder, file, section, definition, ticket, goal, todo).
+WorkItem represents a single item a contributor is working on (technology, bundle, folder, file, section, definition, ticket, goal, todo).
 
 ## [🧰semiorepo📚go💻eventsgo✂️contributorwork](semiorepo://definition/semio-repo/go/events.go/ContributorWork)
 
