@@ -1955,6 +1955,41 @@ public class KitDiffUpdate
     public KitDiff? Diff { get; set; }
 }
 
+// [👤semio📚net🛅semio💻semio🔖entitying🛠️change](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Change)
+/// <summary>Change holds the data fields for a Change record.</summary>
+/// Change MUST perform the Change operation.
+public class Change<TEntity, TDiff>
+{
+    public TDiff Forward { get; set; } = default!;
+    public TDiff Backward { get; set; } = default!;
+    public string? Author { get; set; }
+    public DateTime? Time { get; set; }
+    public TEntity? Before { get; set; }
+    public TEntity? After { get; set; }
+}
+
+public class AttributeChange : Change<Attribute, AttributeDiff> { }
+public class AuthorChange : Change<Author, AuthorDiff> { }
+public class FileChange : Change<File, FileDiff> { }
+public class FolderChange : Change<Folder, FolderDiff> { }
+public class BenchmarkChange : Change<Benchmark, BenchmarkDiff> { }
+public class QualityChange : Change<Quality, QualityDiff> { }
+public class PortChange : Change<Port, PortDiff> { }
+public class PropChange : Change<Prop, PropDiff> { }
+public class TagChange : Change<Tag, TagDiff> { }
+public class ConceptChange : Change<Concept, ConceptDiff> { }
+public class ModelChange : Change<Model, ModelDiff> { }
+public class ConnectorChange : Change<Connector, ConnectorDiff> { }
+public class TypeChange : Change<Type, TypeDiff> { }
+public class LayerChange : Change<Layer, LayerDiff> { }
+public class PieceChange : Change<Piece, PieceDiff> { }
+public class GroupChange : Change<Group, GroupDiff> { }
+public class SideChange : Change<Side, SideDiff> { }
+public class ConnectionChange : Change<Connection, ConnectionDiff> { }
+public class StatChange : Change<Stat, StatDiff> { }
+public class DesignChange : Change<Design, DesignDiff> { }
+public class KitChange : Change<Kit, KitDiff> { }
+
 #region 🔖Attribute
 // [👤semio📚net🛅semio💻semio🔖entitying🔖attribute](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Attribute)
 // Implementations MUST provide key-value metadata for annotating entities.
@@ -6454,7 +6489,6 @@ public class ServerException : Exception
 #endregion 🔖Api
 
 #region 🔖KitSqlite
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite)
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 
 /// <summary>Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
@@ -6517,9 +6551,9 @@ public static class KitSqlite
     }
 
     #region 🔖KitSqliteLoad
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqliteload](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteLoad)
     // Load operations for reading a kit from a local SQLite database.
 
-    /// <summary>Load a kit from a local directory containing .semio/kit.db.</summary>
     public static Kit LoadKit(string kitDirectory)
     {
         var dbPath = GetDbPath(kitDirectory);
@@ -6814,7 +6848,7 @@ public static class KitSqlite
 
     private static Location? LoadLocation(SqliteConnection connection, string locationGuid)
     {
-        // Location is embedded inline in some entities; for now return null if not found
+
         return null;
     }
 
@@ -6878,7 +6912,7 @@ public static class KitSqlite
 
     private static List<Prop> LoadTypeProps(SqliteConnection connection, string typeGuid)
     {
-        // Type-level props are not stored via connector_guid but as direct references
+
         return new List<Prop>();
     }
 
@@ -7239,9 +7273,9 @@ public static class KitSqlite
     #endregion 🔖KitSqliteLoad
 
     #region 🔖KitSqliteSave
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitesave](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteSave)
     // Save operations for writing a kit to a local SQLite database.
 
-    /// <summary>Save a kit to a local directory at .semio/kit.db. Creates the database if it doesn't exist.</summary>
     public static void SaveKit(string kitDirectory, Kit kit)
     {
         var semioDir = Path.Combine(kitDirectory, ".semio");
@@ -7333,7 +7367,6 @@ public static class KitSqlite
 
         transaction.Commit();
 
-        // Re-enable FK enforcement after save.
         using (var fkOn = connection.CreateCommand())
         {
             fkOn.CommandText = "PRAGMA foreign_keys = ON;";
@@ -7837,9 +7870,9 @@ public static class KitSqlite
     #endregion 🔖KitSqliteSave
 
     #region 🔖KitSqliteDiff
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitediff](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteDiff)
     // Diff-based CRUD commands matching semio.ts patterns.
 
-    /// <summary>Apply a KitDiff to a local SQLite kit. Loads, applies, and saves the full kit.</summary>
     public static Kit ApplyKitDiff(string kitDirectory, KitDiff diff)
     {
         var kit = LoadKit(kitDirectory);
@@ -7848,131 +7881,112 @@ public static class KitSqlite
         return updated;
     }
 
-    /// <summary>Add a type to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddTypeToKit(string kitDirectory, Type type)
     {
         var diff = new KitDiff { Types = new TypesDiff { Added = new List<Type> { type } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove a type from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemoveTypeFromKit(string kitDirectory, string typeGuid)
     {
         var diff = new KitDiff { Types = new TypesDiff { Removed = new List<TypeId> { new() { Guid = typeGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Update a type in a local SQLite kit. Returns the updated kit.</summary>
     public static Kit SetTypeInKit(string kitDirectory, Type type)
     {
         var diff = new KitDiff { Types = new TypesDiff { Added = new List<Type> { type } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Add a design to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddDesignToKit(string kitDirectory, Design design)
     {
         var diff = new KitDiff { Designs = new DesignsDiff { Added = new List<Design> { design } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove a design from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemoveDesignFromKit(string kitDirectory, string designGuid)
     {
         var diff = new KitDiff { Designs = new DesignsDiff { Removed = new List<DesignId> { new() { Guid = designGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Update a design in a local SQLite kit. Returns the updated kit.</summary>
     public static Kit SetDesignInKit(string kitDirectory, Design design)
     {
         var diff = new KitDiff { Designs = new DesignsDiff { Added = new List<Design> { design } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Add a port to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddPortToKit(string kitDirectory, Port port)
     {
         var diff = new KitDiff { Ports = new PortsDiff { Added = new List<Port> { port } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove a port from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemovePortFromKit(string kitDirectory, string portGuid)
     {
         var diff = new KitDiff { Ports = new PortsDiff { Removed = new List<PortId> { new() { Guid = portGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Add a tag to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddTagToKit(string kitDirectory, Tag tag)
     {
         var diff = new KitDiff { Tags = new TagsDiff { Added = new List<Tag> { tag } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove a tag from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemoveTagFromKit(string kitDirectory, string tagGuid)
     {
         var diff = new KitDiff { Tags = new TagsDiff { Removed = new List<TagId> { new() { Guid = tagGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Add a concept to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddConceptToKit(string kitDirectory, Concept concept)
     {
         var diff = new KitDiff { Concepts = new ConceptsDiff { Added = new List<Concept> { concept } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove a concept from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemoveConceptFromKit(string kitDirectory, string conceptGuid)
     {
         var diff = new KitDiff { Concepts = new ConceptsDiff { Removed = new List<ConceptId> { new() { Guid = conceptGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Add a file to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddFileToKit(string kitDirectory, File file)
     {
         var diff = new KitDiff { Files = new FilesDiff { Added = new List<File> { file } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove a file from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemoveFileFromKit(string kitDirectory, string fileGuid)
     {
         var diff = new KitDiff { Files = new FilesDiff { Removed = new List<FileId> { new() { Guid = fileGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Add an attribute to a local SQLite kit. Returns the updated kit.</summary>
     public static Kit AddAttributeToKit(string kitDirectory, Attribute attribute)
     {
         var diff = new KitDiff { Attributes = new AttributesDiff { Added = new List<Attribute> { attribute } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Remove an attribute from a local SQLite kit by guid. Returns the updated kit.</summary>
     public static Kit RemoveAttributeFromKit(string kitDirectory, string attributeGuid)
     {
         var diff = new KitDiff { Attributes = new AttributesDiff { Removed = new List<AttributeId> { new() { Guid = attributeGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    /// <summary>Check if a kit database exists at the given directory.</summary>
     public static bool KitExists(string kitDirectory)
     {
         return System.IO.File.Exists(GetDbPath(kitDirectory));
     }
 
-    /// <summary>Create a new empty kit at the given directory.</summary>
     public static void CreateKit(string kitDirectory, Kit kit)
     {
         SaveKit(kitDirectory, kit);
     }
 
-    /// <summary>Delete a kit database from the given directory.</summary>
     public static void DeleteKit(string kitDirectory)
     {
         var dbPath = GetDbPath(kitDirectory);
@@ -7998,42 +8012,75 @@ public class KitImportResult
 
 public static class ZipRoundtrip
 {
+    private static string BuildFolderPath(Kit kit, string folderGuid)
+    {
+        if (kit.Folders == null) return "";
+        foreach (var f in kit.Folders)
+        {
+            if (f.Guid == folderGuid)
+            {
+                if (!string.IsNullOrEmpty(f.Parent))
+                {
+                    var parentPath = BuildFolderPath(kit, f.Parent);
+                    if (!string.IsNullOrEmpty(parentPath))
+                        return $"{parentPath}/{f.Name}";
+                }
+                return f.Name;
+            }
+        }
+        return "";
+    }
+
+    private static string BuildFilePath(Kit kit, File file)
+    {
+        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
+        {
+            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
+            if (!string.IsNullOrEmpty(folderPath))
+                return $"{folderPath}/{file.Name}";
+        }
+        return file.Name;
+    }
+
     public static KitImportResult ImportKit(string zipPath)
     {
         var result = new KitImportResult();
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
         Directory.CreateDirectory(tempDir);
 
         try
         {
             ZipFile.ExtractToDirectory(zipPath, tempDir);
 
-            var dbPath = Path.Combine(tempDir, ".semio", "kit.db");
-            if (System.IO.File.Exists(dbPath))
-            {
-                result.Kit = LoadKitFromSqlite(dbPath);
-                SqliteConnection.ClearAllPools();
-            }
-            else
-            {
-                var kitJsonPath = Path.Combine(tempDir, "kit.json");
-                if (!System.IO.File.Exists(kitJsonPath))
-                    throw new FileNotFoundException("kit.db or kit.json not found in zip");
+            var kitJsonPath = Path.Combine(tempDir, "kit.json");
+            if (!System.IO.File.Exists(kitJsonPath))
+                throw new FileNotFoundException("kit.json not found in zip");
 
-                var json = System.IO.File.ReadAllText(kitJsonPath);
-                result.Kit = json.Deserialize<Kit>() ?? throw new InvalidOperationException("Failed to deserialize kit.json from zip");
-            }
+            var kitJson = System.IO.File.ReadAllText(kitJsonPath);
+            result.Kit = kitJson.Deserialize<Kit>()!;
 
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {
                 var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
-                if (!relativePath.StartsWith(".semio/") && relativePath != "kit.json")
+                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
                     result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
+            }
+
+            if (result.Kit.Files != null)
+            {
+                foreach (var kitFile in result.Kit.Files)
+                {
+                    var filePath = BuildFilePath(result.Kit, kitFile);
+                    if (result.Files.TryGetValue(filePath, out var bytes))
+                    {
+                        var mime = kitFile.Mime ?? "application/octet-stream";
+                        kitFile.Blob = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                    }
+                }
             }
         }
         finally
         {
-            SqliteConnection.ClearAllPools();
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
@@ -8041,27 +8088,35 @@ public static class ZipRoundtrip
         return result;
     }
 
-    public static void ExportKit(Kit kit, Dictionary<string, byte[]> files, string zipPath, string schemaSQL)
+    public static void ExportKit(Kit kit, string zipPath)
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
         Directory.CreateDirectory(tempDir);
 
         try
         {
-            var semioDir = Path.Combine(tempDir, ".semio");
-            Directory.CreateDirectory(semioDir);
-            var dbPath = Path.Combine(semioDir, "kit.db");
 
-            SaveKitToSqlite(kit, dbPath, schemaSQL);
-            SqliteConnection.ClearAllPools();
+            var kitForZip = kitJson_StripBlobs(kit);
+            var kitJsonStr = kitForZip.Serialize();
+            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
 
-            foreach (var kvp in files)
+            if (kit.Files != null)
             {
-                var fullPath = Path.Combine(tempDir, kvp.Key);
-                var dir = Path.GetDirectoryName(fullPath);
-                if (!string.IsNullOrEmpty(dir))
-                    Directory.CreateDirectory(dir);
-                System.IO.File.WriteAllBytes(fullPath, kvp.Value);
+                foreach (var file in kit.Files)
+                {
+                    if (!string.IsNullOrEmpty(file.Blob))
+                    {
+                        var filePath = BuildFilePath(kit, file);
+                        var fullPath = Path.Combine(tempDir, filePath);
+                        var dir = Path.GetDirectoryName(fullPath);
+                        if (!string.IsNullOrEmpty(dir))
+                            Directory.CreateDirectory(dir);
+                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
+                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
+                            : file.Blob;
+                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
+                    }
+                }
             }
 
             if (System.IO.File.Exists(zipPath))
@@ -8070,10 +8125,23 @@ public static class ZipRoundtrip
         }
         finally
         {
-            SqliteConnection.ClearAllPools();
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
+    }
+
+    private static Kit kitJson_StripBlobs(Kit kit)
+    {
+        var json = kit.Serialize();
+        var clone = json.Deserialize<Kit>()!;
+        if (clone.Files != null)
+        {
+            foreach (var file in clone.Files)
+            {
+                file.Blob = null;
+            }
+        }
+        return clone;
     }
 
     private static Kit LoadKitFromSqlite(string dbPath)
@@ -8231,14 +8299,14 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@guid", t.Guid);
             cmd.Parameters.AddWithValue("@name", t.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract ?? false);
-            cmd.Parameters.AddWithValue("@folder", (object?)t.Folder ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@stock", (object?)t.Stock ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
+            cmd.Parameters.AddWithValue("@folder", t.Folder);
+            cmd.Parameters.AddWithValue("@stock", t.Stock);
             cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", (object?)t.Unit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@description", (object?)t.Description ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@icon", (object?)t.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@image", (object?)t.Image ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", t.Unit);
+            cmd.Parameters.AddWithValue("@description", t.Description);
+            cmd.Parameters.AddWithValue("@icon", t.Icon);
+            cmd.Parameters.AddWithValue("@image", t.Image);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
             cmd.ExecuteNonQuery();
         }
@@ -8252,14 +8320,14 @@ public static class ZipRoundtrip
             cmd.Parameters.AddWithValue("@guid", d.Guid);
             cmd.Parameters.AddWithValue("@name", d.Name);
             cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", (object?)d.Unit ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@folder", (object?)d.Folder ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@isAbstract", (object?)d.IsAbstract ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@canScale", (object?)d.CanScale ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@canMirror", (object?)d.CanMirror ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@description", (object?)d.Description ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@icon", (object?)d.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@image", (object?)d.Image ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", d.Unit);
+            cmd.Parameters.AddWithValue("@folder", d.Folder);
+            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
+            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
+            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
+            cmd.Parameters.AddWithValue("@description", d.Description);
+            cmd.Parameters.AddWithValue("@icon", d.Icon);
+            cmd.Parameters.AddWithValue("@image", d.Image);
             cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
             cmd.ExecuteNonQuery();
         }
@@ -8274,10 +8342,9 @@ public static class ZipRoundtrip
 
 public static class KitImporter
 {
-    public static (Kit Kit, Dictionary<string, byte[]> Files) ImportFromZip(string zipPath)
+    public static KitImportResult ImportFromZip(string zipPath)
     {
-        var result = ZipRoundtrip.ImportKit(zipPath);
-        return (result.Kit, result.Files);
+        return ZipRoundtrip.ImportKit(zipPath);
     }
 }
 
@@ -8289,38 +8356,9 @@ public static class KitImporter
 
 public static class KitExporter
 {
-    private static readonly string DefaultSchemaSQL = GetEmbeddedSchema();
-
-    private static string GetEmbeddedSchema()
+    public static void ExportToZip(Kit kit, string zipPath)
     {
-        var possiblePaths = new[]
-        {
-            "../../../../../sqlite/schema.sql",
-            "../../../../sqlite/schema.sql",
-            "../../../sqlite/schema.sql",
-            "../../sqlite/schema.sql",
-            "../sqlite/schema.sql",
-            "sqlite/schema.sql",
-            "../../../../../sql/sqlite/semio/schema.sql",
-            "../../../../sql/sqlite/semio/schema.sql",
-            "../../../sql/sqlite/semio/schema.sql",
-            "../../sql/sqlite/semio/schema.sql",
-            "../sql/sqlite/semio/schema.sql",
-            "sql/sqlite/semio/schema.sql"
-        };
-
-        foreach (var path in possiblePaths)
-        {
-            if (System.IO.File.Exists(path))
-                return System.IO.File.ReadAllText(path);
-        }
-
-        throw new FileNotFoundException("Could not find schema.sql for SQLite kit export");
-    }
-
-    public static void ExportToZip(Kit kit, Dictionary<string, byte[]> files, string zipPath)
-    {
-        ZipRoundtrip.ExportKit(kit, files, zipPath, DefaultSchemaSQL);
+        ZipRoundtrip.ExportKit(kit, zipPath);
     }
 }
 
@@ -8332,6 +8370,20 @@ public static class KitExporter
 
 public static class SemioDiff
 {
+    public static KitChange GetKitChange(Kit before, Kit after, string? author = null, DateTime? time = null)
+    {
+        var forward = GetKitDiff(before, after);
+        var backward = InverseKitDiff(before, forward);
+        return new KitChange { Forward = forward, Backward = backward, Author = author, Time = time, Before = before, After = after };
+    }
+
+    public static DesignChange GetDesignChange(Design before, Design after, string? author = null, DateTime? time = null)
+    {
+        var forward = GetDesignDiff(before, after) ?? new DesignDiff();
+        var backward = GetDesignDiff(after, before) ?? new DesignDiff();
+        return new DesignChange { Forward = forward, Backward = backward, Author = author, Time = time, Before = before, After = after };
+    }
+
     public static KitDiff GetKitDiff(Kit before, Kit after)
     {
         var diff = new KitDiff();

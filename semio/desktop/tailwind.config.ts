@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️desktop⚙️tailwindconfigts](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts)
+// [👤semio🖱️desktop⚙️tailwindconfig](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🖱️desktop⚙️tailwindconfigts🔖configuration](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts/s/Configuration)
+// [👤semio🖱️desktop⚙️tailwindconfig🔖configuration](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts/s/Configuration)
 // Tailwind CSS configuration extending the shared semio preset for the desktop application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/js.
 
@@ -28,7 +28,7 @@ import type { Config } from "tailwindcss";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.
-// [👤semio🖱️desktop⚙️tailwindconfigts🔖configuration🪨config](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts/s/Configuration/d/i/config)
+// [👤semio🖱️desktop⚙️tailwindconfig🔖configuration🪨config](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts/s/Configuration/d/i/config)
  *
  * Config MUST include content glob patterns and the tailwindConfig preset.
  **/

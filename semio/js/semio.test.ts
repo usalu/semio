@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js🥼semiotestts](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)
+// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -29,6 +29,7 @@ import {
   exportKit,
   flattenDesign,
   getIncludedDesigns,
+  getKitChange,
   getKitDiff,
   hasErrors,
   importKit,
@@ -77,21 +78,24 @@ const findDesign = (kit: Kit, name: string, parentName?: string) => {
   return d;
 };
 
-describe("Diff", () => {
+describe("Change", () => {
   describe("Metabolism", () => {
     const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent) };
     const kitDiff = MetabolismKitDiff as any;
     const kitDiffInverted = MetabolismKitDiffInverted as any;
     const kitDiffed = MetabolismKitDiffed as any;
 
-    it("Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit", () => {
+    it("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", () => {
+      const change = getKitChange(kitOriginal, kitDiffed);
       const computedDiff = getKitDiff(kitOriginal, kitDiffed);
       expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);
-      const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
+      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);
       expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
-      const appliedForward = applyKitDiff(kitOriginal, kitDiff);
+      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);
+      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);
+      const appliedForward = applyKitDiff(kitOriginal, change.forward);
       expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
-      const appliedInverse = applyKitDiff(kitDiffed, kitDiffInverted);
+      const appliedInverse = applyKitDiff(kitDiffed, change.backward);
       expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
     });
   });
@@ -151,19 +155,16 @@ describe("Roundtrip", () => {
       const fs = await import("node:fs");
       const path = await import("node:path");
 
-      // Json -> Memory -> Json
       const kit = MetabolismKit as unknown as Kit;
       const serializedKit = serializeKit(kit);
       const deserializedKit = deserializeKit(serializedKit);
       expect(areKitsEqual(kit, deserializedKit)).toBe(true);
 
-      // Json -> Zip
       const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
       const zipBuffer = fs.readFileSync(zipPath);
       const { kit: zipKit } = await importKit(zipBuffer.buffer);
       expect(areKitsEqual(kit, zipKit)).toBe(true);
 
-      // Zip -> Json
       const exportedZip = await exportKit(kit);
       const { kit: reKit } = await importKit(exportedZip);
       expect(areKitsEqual(kit, reKit)).toBe(true);

@@ -3,6 +3,23 @@
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // GPL-3.0
 // Shared event kinds and payloads for CLI→server event-based communication.
+// #region 🔖License
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
 // #endregion 🔖Header
 
 package repo
@@ -266,16 +283,16 @@ type WorkItem struct {
 // ContributorWork holds all work items for one contributor.
 // [🧰semiorepo📚go💻events🔖payloads✂️contributorwork](semiorepo://p/i/semio-repo/b/l/go/f/events.go/s/Payloads/d/i/ContributorWork)
 type ContributorWork struct {
-	Github      string   `json:"github"`
-	Tickets     []string `json:"tickets"`
-	Goals       []string `json:"goals"`
-	Todos       []string `json:"todos"`
+	Github       string   `json:"github"`
+	Tickets      []string `json:"tickets"`
+	Goals        []string `json:"goals"`
+	Todos        []string `json:"todos"`
 	Technologies []string `json:"technologies"`
-	Bundles     []string `json:"bundles"`
-	Folders     []string `json:"folders"`
-	Files       []string `json:"files"`
-	Sections    []string `json:"sections"`
-	Definitions []string `json:"definitions"`
+	Bundles      []string `json:"bundles"`
+	Folders      []string `json:"folders"`
+	Files        []string `json:"files"`
+	Sections     []string `json:"sections"`
+	Definitions  []string `json:"definitions"`
 }
 
 // DraftPayload holds draft identifiers.

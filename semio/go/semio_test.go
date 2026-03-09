@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚go🥼semiotestgo](semiorepo://p/u/semio/b/l/go/f/semio_test.go)
+// [👤semio📚go🥼semiotest](semiorepo://p/u/semio/b/l/go/f/semio_test.go)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -59,13 +59,6 @@ func centersEqual(c1, c2 *Coord, tolerance float64) bool {
 		return false
 	}
 	return floatEqual(c1.U, c2.U, tolerance) && floatEqual(c1.V, c2.V, tolerance)
-}
-
-func floatEqual(a, b, tolerance float64) bool {
-	if a > b {
-		return a-b < tolerance
-	}
-	return b-a < tolerance
 }
 
 func findDesignByName(designs []Design, name string, parentGuid *string) *Design {
@@ -149,7 +142,7 @@ func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 
 func TestRoundtrip(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
-		// JSON -> Memory -> JSON
+
 		var kit Kit
 		loadJSON(t, "kit_metabolism.json", &kit)
 
@@ -167,11 +160,10 @@ func TestRoundtrip(t *testing.T) {
 			t.Error("JSON -> Memory -> JSON: serialized and deserialized kit should be equal")
 		}
 
-		// JSON -> ZIP
 		files := make(map[string][]byte)
 		for i := range kit.Files {
 			if kit.Files[i].Blob != nil {
-				decoded, err := base64Decode(*kit.Files[i].Blob)
+				decoded, err := blobDecode(*kit.Files[i].Blob)
 				if err != nil {
 					t.Fatalf("Failed to decode blob for %s: %v", kit.Files[i].Name, err)
 				}
@@ -185,7 +177,6 @@ func TestRoundtrip(t *testing.T) {
 			t.Fatalf("KitToZip failed: %v", err)
 		}
 
-		// ZIP -> JSON
 		kit2, files2, err := KitFromZip(roundtripPath)
 		if err != nil {
 			t.Fatalf("KitFromZip failed: %v", err)
@@ -232,9 +223,9 @@ func TestFlatten(t *testing.T) {
 	})
 }
 
-func TestDiff(t *testing.T) {
+func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
-		t.Run("Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit", func(t *testing.T) {
+		t.Run("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", func(t *testing.T) {
 			var kitOriginal Kit
 			loadJSON(t, "kit_metabolism.json", &kitOriginal)
 			kitOriginal.Designs = FilterDesignsWithoutParent(kitOriginal.Designs)
@@ -248,22 +239,74 @@ func TestDiff(t *testing.T) {
 			var kitDiffed Kit
 			loadJSON(t, "kit_metabolism_diffed.json", &kitDiffed)
 
-			computedDiff := GetKitDiff(kitOriginal, kitDiffed)
-			if !AreKitDiffsEqual(computedDiff, kitDiff) {
+			change := GetKitChange(kitOriginal, kitDiffed, nil, nil)
+
+			if !AreKitDiffsEqual(change.Forward, kitDiff) {
 				t.Error("Computed diff should equal expected diff")
 			}
 
-			computedInverseDiff := InverseKitDiff(kitOriginal, kitDiff)
-			if !AreKitDiffsEqual(computedInverseDiff, kitDiffInverted) {
+			if !AreKitDiffsEqual(change.Backward, kitDiffInverted) {
 				t.Error("Computed inverse diff should equal expected inverse diff")
 			}
 
-			appliedForward := ApplyKitDiff(kitOriginal, kitDiff)
+			appliedForward := ApplyKitDiff(kitOriginal, change.Forward)
 			if !AreKitsEqual(appliedForward, kitDiffed) {
 				t.Error("Original + Diff should equal DiffedKit")
+				// [DEBUG] Find differences
+				afJSON, _ := json.Marshal(appliedForward)
+				dkJSON, _ := json.Marshal(kitDiffed)
+				if len(afJSON) != len(dkJSON) {
+					t.Errorf("[DEBUG] JSON size: appliedForward=%d kitDiffed=%d", len(afJSON), len(dkJSON))
+				}
+
+				for _, ta := range appliedForward.Types {
+					for _, tb := range kitDiffed.Types {
+						if ta.Guid == tb.Guid {
+							if !areTypesEqual(ta, tb) {
+								t.Errorf("[DEBUG] Type %s %q differs", ta.Guid[:8], ta.Name)
+							}
+							break
+						}
+					}
+				}
+
+				for _, da := range appliedForward.Designs {
+					for _, db := range kitDiffed.Designs {
+						if da.Guid == db.Guid {
+							if !areDesignsEqual(da, db) {
+								t.Errorf("[DEBUG] Design %s %q differs", da.Guid[:8], da.Name)
+							}
+							break
+						}
+					}
+				}
+				for _, ta := range kitDiffed.Tags {
+					found := false
+					for _, tb := range appliedForward.Tags {
+						if ta.Guid == tb.Guid {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("[DEBUG] Missing tag %s", ta.Guid[:8])
+					}
+				}
+				for _, ca := range kitDiffed.Concepts {
+					found := false
+					for _, cb := range appliedForward.Concepts {
+						if ca.Guid == cb.Guid {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("[DEBUG] Missing concept %s", ca.Guid[:8])
+					}
+				}
 			}
 
-			appliedInverse := ApplyKitDiff(kitDiffed, kitDiffInverted)
+			appliedInverse := ApplyKitDiff(kitDiffed, change.Backward)
 			if !AreKitsEqual(appliedInverse, kitOriginal) {
 				t.Error("DiffedKit + InverseDiff should equal original Kit")
 			}

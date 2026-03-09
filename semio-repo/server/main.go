@@ -275,9 +275,9 @@ type DiffIngestResponse struct {
 // PrecheckpointRequest is the JSON payload for a pre-checkpoint check.
 // [🧰semiorepo⌨️server💻main🔖models✂️precheckpointrequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/PrecheckpointRequest)
 type PrecheckpointRequest struct {
-	TicketID      string `json:"ticket_id"`
-	Patch         string `json:"patch"`
-	Staged        bool   `json:"staged"`
+	TicketID          string `json:"ticket_id"`
+	Patch             string `json:"patch"`
+	Staged            bool   `json:"staged"`
 	CheckpointMessage string `json:"checkpoint_message"`
 }
 
@@ -1892,10 +1892,10 @@ func (s *Server) walkRepoFiles() ([]string, error) {
 // GitHubComment stores a cached GitHub issue comment for correlating close/reopen events.
 // [🧰semiorepo⌨️server💻main🔖webhooks✂️githubcomment](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/GitHubComment)
 type GitHubComment struct {
-	Body      string
-	Actor     string
-	Repo      string
-	Issue     int
+	Body   string
+	Actor  string
+	Repo   string
+	Issue  int
 	Second time.Time
 }
 
@@ -1958,6 +1958,7 @@ func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	computed := hex.EncodeToString(mac.Sum(nil))
 	return hmac.Equal([]byte(computed), []byte(parts[1]))
 }
+
 // cacheGitHubComment stores a GitHub comment for correlating subsequent events.
 // [🧰semiorepo⌨️server💻main🔖webhooks🛠️cachegithubcomment](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Webhooks/d/i/cacheGitHubComment)
 // cacheGitHubComment MUST perform the cacheGitHubComment operation.
@@ -1969,10 +1970,10 @@ func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 	key := fmt.Sprintf("%s#%d#%s", repo, issue, actor)
 	s.ghLock.Lock()
 	s.githubCache[key] = GitHubComment{
-		Body:      body,
-		Actor:     actor,
-		Repo:      repo,
-		Issue:     issue,
+		Body:   body,
+		Actor:  actor,
+		Repo:   repo,
+		Issue:  issue,
 		Second: time.Now().UTC(),
 	}
 	s.ghLock.Unlock()
@@ -2266,12 +2267,18 @@ func filterOut(list []string, exclude string) []string {
 
 // #endregion 🔖Discord
 
+// newID MUST perform the newID operation.
+// newID holds the data fields for a newID record.
+// [🧰semiorepo⌨️server💻main🛠️newid](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/newID)
 func newID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
 }
 
 // #endregion 🔖Utilities
 
+// main MUST perform the main operation.
+// main holds the data fields for a main record.
+// [🧰semiorepo⌨️server💻main🛠️main](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/main)
 func main() {
 	config := loadConfig()
 	db, err := openDatabase(config.DatabasePath)

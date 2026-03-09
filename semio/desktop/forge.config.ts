@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️desktop⚙️forgeconfigts](semiorepo://p/u/semio/b/u/desktop/f/forge.config.ts)
+// [👤semio🖱️desktop⚙️forgeconfig](semiorepo://p/u/semio/b/u/desktop/f/forge.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🖱️desktop⚙️forgeconfigts🔖configuration](semiorepo://p/u/semio/b/u/desktop/f/forge.config.ts/s/Configuration)
+// [👤semio🖱️desktop⚙️forgeconfig🔖configuration](semiorepo://p/u/semio/b/u/desktop/f/forge.config.ts/s/Configuration)
 // Electron Forge build configuration for the desktop application.
 // Configuration MUST define packager, makers, and plugins for Electron Forge.
 
@@ -34,7 +34,7 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 /**
  * Electron Forge configuration with Vite plugin and security fuses.
-// [👤semio🖱️desktop⚙️forgeconfigts🔖configuration🪨config](semiorepo://p/u/semio/b/u/desktop/f/forge.config.ts/s/Configuration/d/i/config)
+// [👤semio🖱️desktop⚙️forgeconfig🔖configuration🪨config](semiorepo://p/u/semio/b/u/desktop/f/forge.config.ts/s/Configuration/d/i/config)
  *
  * Config MUST include VitePlugin with main, preload, and renderer entries.
  **/

@@ -3863,7 +3863,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     <chunk name="Author">
                       <items count="4">
                         <item name="Copyright" type_name="gh_string" type_code="10">GNU Lesser General Public License Version 3</item>
-                        <item name="EMail" type_name="gh_string" type_code="10">ueli@semio-tech.org</item>
+                        <item name="EMail" type_name="gh_string" type_code="10">ueli@semio-tech.com</item>
                         <item name="Name" type_name="gh_string" type_code="10">Ueli Saluz</item>
                         <item name="Website" type_name="gh_string" type_code="10">https://github.com/usalu/semio</item>
                       </items>
@@ -4198,7 +4198,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     <chunk name="Author">
                       <items count="4">
                         <item name="Copyright" type_name="gh_string" type_code="10">GNU Lesser General Public License Version 3</item>
-                        <item name="EMail" type_name="gh_string" type_code="10">ueli@semio-tech.org</item>
+                        <item name="EMail" type_name="gh_string" type_code="10">ueli@semio-tech.com</item>
                         <item name="Name" type_name="gh_string" type_code="10">Ueli Saluz</item>
                         <item name="Website" type_name="gh_string" type_code="10">https://github.com/usalu/semio</item>
                       </items>

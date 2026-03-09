@@ -532,7 +532,7 @@ function parseTokens(tokens: string[], start: number): [any, number] {
  *
  * The AST MUST be produced by parseFormula.
  *
- *  * [👤semio📚js🗃️sketchpad💻quality🔖functions🛠️inversequalityappselectiondiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/inverseQualityAppSelectionDiff)
+ *  * [👤semio📚js🗃️sketchpad💻quality🔖functions🛠️formulatolatex](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/formulaToLatex)
  **/
 export function formulaToLatex(ast: any): string {
   if (typeof ast === "string") {
@@ -1641,7 +1641,7 @@ export const QualityDetails: FC = () => {
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻quality🔖components✂️functionnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNode)
+ * [👤semio📚js🗃️sketchpad💻quality🔖components✂️functionnodeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNodeProps)
  * FunctionNodeProps holds the data fields for a FunctionNodeProps record.
  **/
 interface FunctionNodeProps {
@@ -1818,7 +1818,7 @@ export const QualityWorkbench: FC = () => {
 
 /**
  * QualityTreeNode holds the data fields for a QualityTreeNode record.
- * [👤semio📚js🗃️sketchpad💻quality🔖components✂️buildqualitytree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/buildQualityTree)
+ * [👤semio📚js🗃️sketchpad💻quality🔖components✂️qualitytreenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityTreeNode)
  **/
 interface QualityTreeNode {
   key: string;
@@ -1944,7 +1944,7 @@ const FormulaWindow = memo(() => <Formula />);
 FormulaWindow.displayName = "FormulaWindow";
 
 /**
- * [👤semio📚js🗃️sketchpad💻quality🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App/d/i/App)
+ * [👤semio📚js🗃️sketchpad💻quality🔖app🪨diagramwindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App/d/i/DiagramWindow)
  * DiagramWindow holds the data fields for a DiagramWindow record.
  **/
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => <QualityDiagram reactFlowInstanceRef={reactFlowInstanceRef} />);

@@ -1,0 +1,16 @@
+{
+  "native": {
+    "event": null
+  },
+  "event": {
+    "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+    "contributor": "🧑‍💻ueli",
+    "description": "💾started adding files to json, diff stabilization, …🛠️",
+    "kind": "version.checkpoint.starting",
+    "message": "pre-checkpoint checks passed",
+    "second": "🎆26🌙03☀️08⏰22⌚31⏱️07"
+  },
+  "response": {
+    "allowed": true
+  }
+}

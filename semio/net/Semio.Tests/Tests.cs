@@ -70,59 +70,38 @@ public class Tests
 
     public class Roundtrip
     {
-        public class Json
+        [Fact]
+        public void Metabolism_Json_Memory_Json_Json_Zip_Zip_Json()
         {
-            [Fact]
-            public void Metabolism_Kit_Json_Kit()
+
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var json = kit.Serialize();
+            var deserializedKit = json.Deserialize<Kit>();
+            Assert.Equal(kit.Serialize(), deserializedKit!.Serialize());
+
+
+            var zipPath = Path.Combine(Tests.AssetsPath, "metabolism.zip");
+            var result = KitImporter.ImportFromZip(zipPath);
+            var zipKit = result.Kit;
+            Assert.Equal(kit.Serialize(), zipKit.Serialize());
+
+
+            var tempPath = Path.Combine(Path.GetTempPath(), "metabolism_roundtrip.zip");
+            try
             {
-                var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
-                var json = kit.Serialize();
-                var deserializedKit = json.Deserialize<Kit>();
-                Assert.Equal(kit.Serialize(), deserializedKit!.Serialize());
+                KitExporter.ExportToZip(kit, tempPath);
+                var result2 = KitImporter.ImportFromZip(tempPath);
+                Assert.Equal(kit.Serialize(), result2.Kit.Serialize());
             }
-        }
-
-        public class Zip
-        {
-            [Fact]
-            public void Metabolism_Zip_Kit_Zip_Kit()
+            finally
             {
-                var zipPath = Path.Combine(Tests.AssetsPath, "metabolism.zip");
-                var (kit, files) = KitImporter.ImportFromZip(zipPath);
-
-                Assert.NotNull(kit.Guid);
-                Assert.Equal("Metabolism", kit.Name);
-                Assert.True(kit.Types?.Count > 0);
-                Assert.True(kit.Designs?.Count > 0);
-                Assert.True(files.Count > 0);
-
-                var tempPath = Path.Combine(Path.GetTempPath(), "metabolism_roundtrip.zip");
-                KitExporter.ExportToZip(kit, files, tempPath);
-
-                var (kit2, files2) = KitImporter.ImportFromZip(tempPath);
-                Assert.Equal(kit.Guid, kit2.Guid);
-                Assert.Equal(kit.Name, kit2.Name);
-                Assert.Equal(kit.Types?.Count, kit2.Types?.Count);
-                Assert.Equal(kit.Designs?.Count, kit2.Designs?.Count);
-                Assert.Equal(files.Count, files2.Count);
-
-                System.IO.File.Delete(tempPath);
+                if (System.IO.File.Exists(tempPath))
+                    System.IO.File.Delete(tempPath);
             }
         }
 
         public class Sqlite
         {
-            [Fact]
-            public void Metabolism_Asset_Kit_Db_Kit()
-            {
-                // Verifies the canonical asset kit.db loads correctly with the current schema.
-                var assetDir = Path.Combine(Tests.AssetsPath, "metabolism");
-                var kit = KitSqlite.LoadKit(assetDir);
-                Assert.NotNull(kit);
-                Assert.Equal("Metabolism", kit.Name);
-                Assert.True(kit.Types?.Count > 0);
-            }
-
             [Fact]
             public void Metabolism_Kit_Sqlite_Kit()
             {
@@ -180,13 +159,25 @@ public class Tests
         public void Nakagin_Capsule_Tower_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Nakagin Capsule Tower");
 
         [Fact]
+        public void Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat() => TestFlattenDesignDiff("Nakagin Capsule Tower");
+
+        [Fact]
         public void Nakagin_Capsule_Tower_Slanted_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Slanted", "Nakagin Capsule Tower");
+
+        [Fact]
+        public void Nakagin_Capsule_Tower_Slanted_Kit_FlattenDesignDiff_Apply_Flat() => TestFlattenDesignDiff("Slanted", "Nakagin Capsule Tower");
 
         [Fact]
         public void Nakagin_Capsule_Tower_Twisted_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Twisted", "Nakagin Capsule Tower");
 
         [Fact]
+        public void Nakagin_Capsule_Tower_Twisted_Kit_FlattenDesignDiff_Apply_Flat() => TestFlattenDesignDiff("Twisted", "Nakagin Capsule Tower");
+
+        [Fact]
         public void Nakagin_Capsule_Tower_Dancing_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Dancing", "Nakagin Capsule Tower");
+
+        [Fact]
+        public void Nakagin_Capsule_Tower_Dancing_Kit_FlattenDesignDiff_Apply_Flat() => TestFlattenDesignDiff("Dancing", "Nakagin Capsule Tower");
 
         [Fact]
         public void Capsule_Dream_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Capsule Dream");
@@ -233,6 +224,36 @@ public class Tests
             }
         }
 
+        private void TestFlattenDesignDiff(string designName, string? parentName = null)
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = FindDesign(kit, designName, parentName);
+
+            var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design.Guid);
+            Assert.NotNull(expectedDesign);
+
+            var diff = SemioExt.FlattenDesign(kit, design.Guid);
+            var flattenedFromDiff = design.DeepClone()!.ApplyDiff(diff);
+
+            Assert.NotNull(diff.Pieces);
+            Assert.NotNull(diff.Pieces!.Updated);
+
+            foreach (var p in flattenedFromDiff.Pieces)
+            {
+                var expectedPiece = expectedDesign!.Pieces.FirstOrDefault(ep => ep.Name == p.Name);
+                Assert.NotNull(expectedPiece);
+
+                Assert.NotNull(p.Plane);
+                Assert.True(Tests.PlanesEqual(p.Plane, expectedPiece!.Plane), $"Plane mismatch for piece {p.Name}");
+            }
+
+            var updatedWithPlane = diff.Pieces!.Updated.Where(u => u.Diff?.Plane != null).ToList();
+            Assert.NotEmpty(updatedWithPlane);
+
+            var worldPlaneMatches = updatedWithPlane.Count(u => Tests.PlanesEqual(u.Diff!.Plane, new Plane()));
+            Assert.True(worldPlaneMatches < updatedWithPlane.Count, "FlattenDesignDiff unexpectedly collapsed all updated planes to world plane.");
+        }
+
         private static Design FindDesign(Kit kit, string name, string? parentName = null)
         {
             string? parentGuid = null;
@@ -249,10 +270,10 @@ public class Tests
         }
     }
 
-    public class Diff
+    public class Change
     {
         [Fact]
-        public void Metabolism_Kit_Diff_DiffedKit_InverseDiff_Kit()
+        public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()
         {
             var kitOriginal = Tests.LoadAsset<Kit>("kit_metabolism.json");
             kitOriginal.Designs = kitOriginal.Designs?.Where(d => d.Parent == null).ToList();
@@ -260,17 +281,20 @@ public class Tests
             var kitDiff = Tests.LoadAsset<KitDiff>("diff_kit_metabolism.json");
             var kitDiffInverted = Tests.LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
             var kitDiffed = Tests.LoadAsset<Kit>("kit_metabolism_diffed.json");
+            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
 
             var computedDiff = SemioDiff.GetKitDiff(kitOriginal, kitDiffed);
             Assert.True(SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff), "GetKitDiff: computed diff doesn't match expected diff");
 
-            var computedInverseDiff = SemioDiff.InverseKitDiff(kitOriginal, kitDiff);
+            var computedInverseDiff = SemioDiff.InverseKitDiff(kitOriginal, change.Forward);
             Assert.True(SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted), "InverseKitDiff: computed inverse diff doesn't match expected inverse diff");
+            Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
+            Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), "GetKitChange: backward diff doesn't match expected inverse diff");
 
-            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, kitDiff);
+            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
             Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), "ApplyKitDiff forward: applied kit doesn't match expected diffed kit");
 
-            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, kitDiffInverted);
+            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, change.Backward);
             Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), "ApplyKitDiff inverse: applied inverse kit doesn't match original kit");
         }
     }

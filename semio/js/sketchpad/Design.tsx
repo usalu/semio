@@ -1611,7 +1611,7 @@ function useDesignAppInitialize() {
  *
  * MUST wrap children with DesignAppScopeContext and DesignAppActorContext providers.
  *
- *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🪨designappscopeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/DesignAppScopeProvider)
+ *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🪨usedesignappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppScope)
  **/
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
@@ -1708,7 +1708,7 @@ const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: f
 type GranularSelectorFactory<T> = (kitGuid: Guid, designGuid: Guid) => (state: any) => T | undefined;
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components✂️usedesignappfieldoptions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/UseDesignAppFieldOptions)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components✂️usedesignappfield](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppField)
  * UseDesignAppFieldOptions holds the data fields for a UseDesignAppFieldOptions record.
  **/
 interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
@@ -3143,7 +3143,7 @@ function areMapsEqual<K, V>(a: Map<K, V>, b: Map<K, V>): boolean {
 }
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🛠️aretransactioncontextsequal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/areTransactionContextsEqual)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🛠️transactionpiecesproviderinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/TransactionPiecesProviderInner)
  * areTransactionContextsEqual holds the data fields for a areTransactionContextsEqual record.
  **/
 function areTransactionContextsEqual(a: TransactionPiecesContextValue, b: TransactionPiecesContextValue): boolean {
@@ -3280,7 +3280,7 @@ function computeHoverData(store: DesignStore | null, state: DesignAppState): Hov
 }
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🛠️arehovercontextsequal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/areHoverContextsEqual)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🛠️hoverpiecesproviderinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/HoverPiecesProviderInner)
  * areHoverContextsEqual holds the data fields for a areHoverContextsEqual record.
  **/
 function areHoverContextsEqual(a: HoverPiecesContextValue, b: HoverPiecesContextValue): boolean {
@@ -3973,7 +3973,7 @@ export const DesignLassoSettings: FC = () => {
 // [🔖semio/js/sketchpad/Design.tsx#Panels](semiorepo://section/semio/js/sketchpad/Design.tsx/PANELS)
 
 // #region 🔖WindowLibrary
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windowlibrary](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/WindowLibrary)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels)
 // WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
 /**
@@ -4136,7 +4136,7 @@ export const WindowLibrary: FC = () => {
  *
  * MUST render the design form fields within a detail panel section.
  *
- *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖details🪨designsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Details/d/i/DesignSectionForm)
+ *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖details🪨designsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Details/d/i/DesignSection)
  **/
 export const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
@@ -5259,7 +5259,7 @@ const PiecesSectionForm: FC = () => {
  *
  * MUST render each connection with its connected pieces and ports.
  *
- *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖details🪨connectionssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Details/d/i/ConnectionsSection)
+ *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖details🪨singleconnectionfields](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Details/d/i/SingleConnectionFields)
  **/
 export const ConnectionsSection: FC<{
   connections: any[];
@@ -5517,15 +5517,13 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 // #endregion 🔖Details
 
 // #region 🔖Canvas
-
 // [🔖semio/js/sketchpad/Design.tsx#Canvas](semiorepo://section/semio/js/sketchpad/Design.tsx/CANVAS)
 // #region 🔖Hover Intent Context
-
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖hoverintentcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Hover%20Intent%20Context)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas)
 // Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖hoverintentcontext✂️hoverintentcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentContextValue)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖hoverintentcontext✂️hoverintentcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentContextValue)
  * HoverIntentContextValue holds the data fields for a HoverIntentContextValue record.
  **/
 interface HoverIntentContextValue {
@@ -5537,7 +5535,7 @@ interface HoverIntentContextValue {
 
 /**
  * HoverIntentContext holds the data fields for a HoverIntentContext record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖hoverintentcontext🪨hoverintentprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentProvider)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖hoverintentcontext🪨hoverintentprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentProvider)
  **/
 const HoverIntentContext = createContext<HoverIntentContextValue | null>(null);
 
@@ -5563,7 +5561,7 @@ function HoverIntentProvider({ children }: { children: ReactNode }) {
 }
 
 /** useHoverIntent holds the data fields for a useHoverIntent record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖hoverintentcontext🛠️usehoverintent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Hover%20Intent%20Context/d/i/useHoverIntent)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖hoverintentcontext🛠️usehoverintent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Hover%20Intent%20Context/d/i/useHoverIntent)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖hoverintentcontext🪨usehoverintent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Hover%20Intent%20Context/d/i/useHoverIntent)
  **/
 function useHoverIntent(): HoverIntentContextValue {
@@ -5576,12 +5574,12 @@ function useHoverIntent(): HoverIntentContextValue {
 
 /**
  * SemioConnection holds the data fields for a SemioConnection record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas✂️semioconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/d/i/SemioConnection)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas✂️semioconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/d/i/SemioConnection)
  **/
 type SemioConnection = Connection;
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas✂️piecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/d/i/PieceRenderData)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas✂️piecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/d/i/PieceRenderData)
  * PieceRenderData holds the data fields for a PieceRenderData record.
  **/
 interface PieceRenderData {
@@ -5596,7 +5594,7 @@ interface PieceRenderData {
 
 /**
  * EMPTY_PIECE_RENDER_DATA holds the data fields for a EMPTY_PIECE_RENDER_DATA record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🪨emptypiecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/d/i/EMPTY_PIECE_RENDER_DATA)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🪨emptypiecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/d/i/EMPTY_PIECE_RENDER_DATA)
  **/
 const EMPTY_PIECE_RENDER_DATA: PieceRenderData = {
   isSelected: false,
@@ -5610,12 +5608,12 @@ const EMPTY_PIECE_RENDER_DATA: PieceRenderData = {
 
 /**
  * PieceRenderDataContext holds the data fields for a PieceRenderDataContext record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🪨piecerenderdatacontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/d/i/PieceRenderDataContext)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🪨piecerenderdatacontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/d/i/PieceRenderDataContext)
  **/
 const PieceRenderDataContext = createContext<Map<string, PieceRenderData>>(new Map());
 
 /** usePieceRenderData holds the data fields for a usePieceRenderData record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🛠️usepiecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/d/i/usePieceRenderData)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🛠️usepiecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/d/i/usePieceRenderData)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🪨usepiecerenderdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/d/i/usePieceRenderData)
  **/
 function usePieceRenderData(pieceGuid: string): PieceRenderData {
@@ -5623,13 +5621,12 @@ function usePieceRenderData(pieceGuid: string): PieceRenderData {
   return dataMap.get(pieceGuid) ?? EMPTY_PIECE_RENDER_DATA;
 }
 // #region 🔖Diagram
-
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram)
 // Diagram MUST render the interactive React Flow design diagram with nodes, edges, minimap, and controls.
 
 /**
  * ClusterMenuProps holds the data fields for a ClusterMenuProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️clustermenuprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ClusterMenuProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️clustermenuprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ClusterMenuProps)
  **/
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -5638,7 +5635,7 @@ type ClusterMenuProps = {
 };
 
 /** ClusterMenu holds the data fields for a ClusterMenu record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨clustermenu](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ClusterMenu)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨clustermenu](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ClusterMenu)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨clustermenu](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ClusterMenu)
  **/
 const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
@@ -5715,7 +5712,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
 
 /**
  * ExpandMenuProps holds the data fields for a ExpandMenuProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️expandmenuprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ExpandMenuProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️expandmenuprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ExpandMenuProps)
  **/
 type ExpandMenuProps = {
   nodes: DiagramNode[];
@@ -5724,7 +5721,7 @@ type ExpandMenuProps = {
 };
 
 /** ExpandMenu holds the data fields for a ExpandMenu record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨presencediagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/PresenceDiagram)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨expandmenu](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ExpandMenu)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨expandmenu](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ExpandMenu)
  **/
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
@@ -5810,7 +5807,7 @@ const PresenceDiagram: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) =
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️helperline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/HelperLine)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️helperline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/HelperLine)
  * HelperLine holds the data fields for a HelperLine record.
  **/
 type HelperLine = {
@@ -5827,7 +5824,7 @@ type HelperLine = {
 
 /**
  * PieceNodeProps holds the data fields for a PieceNodeProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️piecenodeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/PieceNodeProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️piecenodeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/PieceNodeProps)
  **/
 type PieceNodeProps = {
   piece: Piece;
@@ -5835,7 +5832,7 @@ type PieceNodeProps = {
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️designnodeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DesignNodeProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️designnodeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DesignNodeProps)
  * DesignNodeProps holds the data fields for a DesignNodeProps record.
  **/
 type DesignNodeProps = {
@@ -5844,35 +5841,35 @@ type DesignNodeProps = {
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️piecenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/PieceNode)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️piecenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/PieceNode)
  * PieceNode holds the data fields for a PieceNode record.
  **/
 type PieceNode = Node<PieceNodeProps, "piece">;
 /**
  * DesignNode holds the data fields for a DesignNode record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️designnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DesignNode)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️designnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DesignNode)
  **/
 type DesignNode = Node<DesignNodeProps, "design">;
 /**
  * DiagramNode holds the data fields for a DiagramNode record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DiagramNode)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DiagramNode)
  **/
 type DiagramNode = PieceNode | DesignNode;
 
 /**
  * ConnectionEdge holds the data fields for a ConnectionEdge record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️connectionedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ConnectionEdge)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️connectionedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ConnectionEdge)
  **/
 type ConnectionEdge = Edge<{ SemioConnection: SemioConnection; isParentConnection?: boolean }, "SemioConnection">;
 /**
  * DiagramEdge holds the data fields for a DiagramEdge record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️diagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DiagramEdge)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️diagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DiagramEdge)
  **/
 type DiagramEdge = ConnectionEdge;
 
 /**
  * ConnectorHandleProps holds the data fields for a ConnectorHandleProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️connectorhandleprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ConnectorHandleProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️connectorhandleprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ConnectorHandleProps)
  **/
 type ConnectorHandleProps = {
   connector: Connector;
@@ -5882,7 +5879,7 @@ type ConnectorHandleProps = {
 };
 
 /** getConnectorPositionStyle holds the data fields for a getConnectorPositionStyle record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨getconnectorpositionstyle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/getConnectorPositionStyle)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨getconnectorpositionstyle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/getConnectorPositionStyle)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨getconnectorpositionstyle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/getConnectorPositionStyle)
  **/
 const getConnectorPositionStyle = (connector: Connector): { x: number; y: number } => {
@@ -5959,12 +5956,12 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
 
 /**
  * sharedCommandsRef holds the data fields for a sharedCommandsRef record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨sharedcommandsref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/sharedCommandsRef)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨sharedcommandsref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/sharedCommandsRef)
  **/
 let sharedCommandsRef: ReturnType<typeof useDesignAppCommands> | null = null;
 
 /** pieceNodeAreEqual holds the data fields for a pieceNodeAreEqual record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨piecenodeareequal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/pieceNodeAreEqual)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨piecenodeareequal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/pieceNodeAreEqual)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨piecenodeareequal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/pieceNodeAreEqual)
  **/
 const pieceNodeAreEqual = (prevProps: NodeProps<PieceNode>, nextProps: NodeProps<PieceNode>) => {
@@ -5984,7 +5981,7 @@ const pieceNodeAreEqual = (prevProps: NodeProps<PieceNode>, nextProps: NodeProps
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨piecenodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/PieceNodeComponent)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨piecenodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/PieceNodeComponent)
  * PieceNodeComponent holds the data fields for a PieceNodeComponent record.
  **/
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data }) => {
@@ -6078,18 +6075,18 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 
 /**
  * SelectedConnectorContext holds the data fields for a SelectedConnectorContext record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨selectedconnectorcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/SelectedConnectorContext)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨selectedconnectorcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/SelectedConnectorContext)
  **/
 const SelectedConnectorContext = createContext<DesignAppSelection["connector"] | undefined>(undefined);
 /**
  * SelectedConnectorPortContext holds the data fields for a SelectedConnectorPortContext record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨selectedconnectorportcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/SelectedConnectorPortContext)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨selectedconnectorportcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/SelectedConnectorPortContext)
  **/
 const SelectedConnectorPortContext = createContext<string | undefined>(undefined);
 
 /**
  * PieceNodeInnerProps holds the data fields for a PieceNodeInnerProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️piecenodeinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/PieceNodeInnerProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️piecenodeinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/PieceNodeInnerProps)
  **/
 type PieceNodeInnerProps = {
   id: string;
@@ -6108,7 +6105,7 @@ type PieceNodeInnerProps = {
 };
 
 /** PieceNodeInner holds the data fields for a PieceNodeInner record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨piecenodeinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/PieceNodeInner)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨piecenodeinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/PieceNodeInner)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨piecenodeinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/PieceNodeInner)
  **/
 const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connectors, isSelected, diff, isDesignPiece, selectedConnector, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
@@ -6226,7 +6223,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connec
 
 /**
  * DesignNodeComponent holds the data fields for a DesignNodeComponent record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨designnodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DesignNodeComponent)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨designnodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DesignNodeComponent)
  **/
 const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data }) => {
   const {
@@ -6372,7 +6369,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
 
 /**
  * DesignNodeInnerProps holds the data fields for a DesignNodeInnerProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️designnodeinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DesignNodeInnerProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️designnodeinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DesignNodeInnerProps)
  **/
 type DesignNodeInnerProps = {
   id: string;
@@ -6389,7 +6386,7 @@ type DesignNodeInnerProps = {
 };
 
 /** DesignNodeInner holds the data fields for a DesignNodeInner record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨designnodeinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DesignNodeInner)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨designnodeinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DesignNodeInner)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨designnodeinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/DesignNodeInner)
  **/
 const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors, isSelected, diff, selectedConnector, selectPiecePort, deselectPiecePort, addConnection, onMouseEnter, onMouseLeave }) => {
@@ -6489,7 +6486,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors
 };
 /**
  * nodeComponents holds the data fields for a nodeComponents record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨nodecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/nodeComponents)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨nodecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/nodeComponents)
  **/
 const nodeComponents = { piece: PieceNodeComponent, design: DesignNodeComponent };
 
@@ -6559,7 +6556,7 @@ const ConnectionEdgeFallback: React.FC<EdgeProps<ConnectionEdge>> = ({ sourceX, 
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️connectionedgeinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ConnectionEdgeInnerProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️connectionedgeinnerprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ConnectionEdgeInnerProps)
  * ConnectionEdgeInnerProps holds the data fields for a ConnectionEdgeInnerProps record.
  **/
 type ConnectionEdgeInnerProps = EdgeProps<ConnectionEdge> & { connectionGuid: Guid };
@@ -6641,13 +6638,13 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
   );
 };
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨edgecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/edgeComponents)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨edgecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/edgeComponents)
  * edgeComponents holds the data fields for a edgeComponents record.
  **/
 const edgeComponents = { SemioConnection: ConnectionEdgeComponent };
 
 /** ConnectionConnectionLine holds the data fields for a ConnectionConnectionLine record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨connectionconnectionline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/ConnectionConnectionLine)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨connectionconnectionline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/ConnectionConnectionLine)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionconnectionline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionConnectionLine)
  **/
 const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
@@ -6662,14 +6659,14 @@ const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props:
  *
  * MUST render a circle at the given position with accent color when selected.
  *
- *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨minimapnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/MiniMapNode)
+ *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨minimapnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/MiniMapNode)
  **/
 export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }: MiniMapNodeProps) => {
   return <circle className={`${selected ? "fill-accent" : "fill-foreground"} transition-colors duration-200`} cx={x} cy={y} r="10" />;
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨helperlines](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/HelperLines)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨helperlines](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/HelperLines)
  * HelperLines holds the data fields for a HelperLines record.
  **/
 const HelperLines: React.FC<{
@@ -6733,7 +6730,7 @@ const pieceToNode = (piece: Piece, type: Type, center: Coord, index: number, sel
 });
 
 /** designToNode holds the data fields for a designToNode record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨designtonode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/designToNode)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨designtonode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/designToNode)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨designtonode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/designToNode)
  **/
 const designToNode = (piece: Piece, externalConnections: SemioConnection[], center: Coord, index: number, selected: boolean = false): DesignNode => ({
@@ -6750,7 +6747,7 @@ const designToNode = (piece: Piece, externalConnections: SemioConnection[], cent
 });
 
 /** extractPieceIdFromNodeId holds the data fields for a extractPieceIdFromNodeId record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨extractpieceidfromnodeid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/extractPieceIdFromNodeId)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨extractpieceidfromnodeid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/extractPieceIdFromNodeId)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨extractpieceidfromnodeid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/extractPieceIdFromNodeId)
  **/
 const extractPieceIdFromNodeId = (nodeId: string): { guid: string } => {
@@ -6758,7 +6755,7 @@ const extractPieceIdFromNodeId = (nodeId: string): { guid: string } => {
 };
 
 /** getPieceIdFromNode holds the data fields for a getPieceIdFromNode record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨getpieceidfromnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/getPieceIdFromNode)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨getpieceidfromnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/getPieceIdFromNode)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨getpieceidfromnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/getPieceIdFromNode)
  **/
 const getPieceIdFromNode = (node: DiagramNode): string => {
@@ -6767,7 +6764,7 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
 
 /**
  * connectionToEdge holds the data fields for a connectionToEdge record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨connectiontoedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/connectionToEdge)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨connectiontoedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/connectionToEdge)
  **/
 const connectionToEdge = (
   SemioConnection: SemioConnection,
@@ -6843,7 +6840,7 @@ const connectionToEdge = (
 };
 
 /** designToNodesAndEdges holds the data fields for a designToNodesAndEdges record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram🪨designtonodesandedges](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/designToNodesAndEdges)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨designtonodesandedges](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/designToNodesAndEdges)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨designtonodesandedges](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/designToNodesAndEdges)
  **/
 const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetadata>, kit: any, selection?: DesignAppSelection) => {
@@ -6999,7 +6996,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
 
 /**
  * DesignDiagramProps holds the data fields for a DesignDiagramProps record.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖diagram✂️designdiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Diagram/d/i/DesignDiagram)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram✂️designdiagramprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/DesignDiagramProps)
  **/
 interface DesignDiagramProps {
   reactFlowInstanceRef: React.MutableRefObject<ReactFlowInstance | null>;
@@ -8389,17 +8386,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
 // #endregion 🔖Diagram
 // #region 🔖Scene
-
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene)
 // Scene MUST render the Three.js 3D scene view of design pieces with selection and hover highlighting.
 
 /** getComputedColor holds the data fields for a getComputedColor record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨getcomputedcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/getComputedColor)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨getcomputedcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/getComputedColor)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨getcomputedcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/getComputedColor)
  **/
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 /** applyHighlightToLoadedScene holds the data fields for a applyHighlightToLoadedScene record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨applyhighlighttoloadedscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/applyHighlightToLoadedScene)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨applyhighlighttoloadedscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/applyHighlightToLoadedScene)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨applyhighlighttoloadedscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/applyHighlightToLoadedScene)
  **/
 const applyHighlightToLoadedScene = (scene: THREE.Object3D, highlightThreeColor: THREE.Color | null, plasterColor: THREE.Color, plasterEdgeColor: THREE.Color): void => {
@@ -8421,7 +8417,7 @@ const applyHighlightToLoadedScene = (scene: THREE.Object3D, highlightThreeColor:
 };
 
 /** PresenceThree holds the data fields for a PresenceThree record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨presencethree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/PresenceThree)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨presencethree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/PresenceThree)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨presencethree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/PresenceThree)
  **/
 const PresenceThree: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) => {
@@ -8439,7 +8435,7 @@ const PresenceThree: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) => 
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene✂️planethree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/PlaneThree)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene✂️planethreeprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/PlaneThreeProps)
  * PlaneThreeProps holds the data fields for a PlaneThreeProps record.
  **/
 interface PlaneThreeProps {
@@ -8461,7 +8457,7 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 };
 
 /** GLTFMesh holds the data fields for a GLTFMesh record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/GLTFMesh)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/GLTFMesh)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/GLTFMesh)
  **/
 const GLTFMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
@@ -8502,7 +8498,7 @@ const GLTFMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, hig
 };
 
 /** FBXMesh holds the data fields for a FBXMesh record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/OBJMesh)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/OBJMesh)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/FBXMesh)
  **/
 const FBXMesh: FC<{ url: string; highlightColor: string | null }> = ({ url, highlightColor }) => {
@@ -8685,7 +8681,7 @@ const PieceMesh: FC<{ highlightColor: string | null }> = ({ highlightColor }) =>
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene✂️modelpieceprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/ModelPieceProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene✂️modelpiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/ModelPiece)
  * ModelPieceProps holds the data fields for a ModelPieceProps record.
  **/
 interface ModelPieceProps { }
@@ -8876,7 +8872,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
 };
 
 /** ModelDesign holds the data fields for a ModelDesign record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨modeldesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/ModelDesign)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨modeldesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/ModelDesign)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨modeldesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/ModelDesign)
  **/
 const ModelDesign: FC = () => {
@@ -8953,7 +8949,7 @@ const ModelDesign: FC = () => {
 };
 
 /** DesignAppScene holds the data fields for a DesignAppScene record.
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖canvas🔖scene🪨designappscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Canvas/s/Scene/d/i/DesignAppScene)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖scene🪨designappscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Scene/d/i/DesignAppScene)
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨designappscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/DesignAppScene)
  **/
 const DesignAppScene: FC = () => {
@@ -9100,16 +9096,16 @@ const DesignAppScene: FC = () => {
 // #endregion 🔖Canvas
 
 // #region 🔖Windows
-// [👤semio📚js🗃️sketchpad💻design🔖imports🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Windows)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Windows)
 // Window components MUST wrap diagram and scene views with hover and transaction providers.
 
 /** Props interface for the Design app root component.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖windows🛠️appprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Windows/d/i/AppProps)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windows🛠️appprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Windows/d/i/AppProps)
 **/
 export interface AppProps { }
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖windows🪨diagramwindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Windows/d/i/DiagramWindow)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windows🪨diagramwindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Windows/d/i/DiagramWindow)
  * DiagramWindow holds the data fields for a DiagramWindow record.
  **/
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
@@ -9126,7 +9122,7 @@ const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInst
 DiagramWindow.displayName = "DiagramWindow";
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖windows🪨scenewindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Windows/d/i/SceneWindow)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windows🪨scenewindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Windows/d/i/SceneWindow)
  * SceneWindow holds the data fields for a SceneWindow record.
  **/
 const SceneWindow = memo(() => {
@@ -9144,20 +9140,19 @@ SceneWindow.displayName = "SceneWindow";
 
 // #endregion 🔖Windows
 
-// #endregion 🔖Imports
+// #endregion 🔖Panels
 // #region App
-
-// [👤semio📚js🗃️sketchpad💻design🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/App)
 // App MUST compose all Design app panels, canvas, toolbar, and footer into the main Design app layout.
 
 /**
- * [👤semio📚js🗃️sketchpad💻design🔖app🪨rendercountref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/d/i/renderCountRef)
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖app🪨rendercountref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/App/d/i/renderCountRef)
  * renderCountRef holds the data fields for a renderCountRef record.
  **/
 const renderCountRef = { current: 0 };
 
 /** App holds the data fields for a App record.
-// [👤semio📚js🗃️sketchpad💻design🔖app🪨designapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/d/i/DesignApp)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖app🪨designapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/App/d/i/DesignApp)
  * [👤semio📚js🗃️sketchpad💻design🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/d/i/App)
  **/
 const App: FC<AppProps> = () => {
@@ -9853,8 +9848,7 @@ const App: FC<AppProps> = () => {
   );
 };
 // #region 🔖Settings
-
-// [👤semio📚js🗃️sketchpad💻design🔖app🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/s/Settings)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖app🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/App/s/Settings)
 // Settings MUST render the Design app settings panel with theme, language, device, expertise, and mode toggles.
 
 // [👤semio📚js🗃️sketchpad💻design🔖app🔖settings🪨designsettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/s/Settings/d/i/DesignSettingsContent)
@@ -10019,14 +10013,13 @@ const DesignApp: FC = () => {
   );
 };
 // #region 🔖Config
-
-// [👤semio📚js🗃️sketchpad💻design🔖app🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/s/Config)
+// [👤semio📚js🗃️sketchpad💻design🔖imports🔖app🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/App/s/Config)
 // Config MUST export the Design app configuration with route segments, panel definitions, and path matching.
 
 /**
  * Exported Design app configuration including routes, panels, and path matching.
  *
- *  * [👤semio📚js🗃️sketchpad💻design🔖app🔖config🪨config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/App/s/Config/d/i/config)
+ *  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖app🔖config🪨config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/App/s/Config/d/i/config)
  **/
 export const config: AppConfig = {
   id: "design",

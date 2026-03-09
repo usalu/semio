@@ -242,7 +242,7 @@ export function useFeedbackError(): HookResult<string | undefined> {
  *
  * MUST return reset callback and availability flag.
  *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖app🛠️feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/App/d/i/Feedback)
+ *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖app🛠️feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/App/d/i/FeedbackToolbar)
  **/
 export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   const actor = useSketchpadActor();
@@ -259,7 +259,7 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
 // [🔖semio/js/sketchpad/Feedback.tsx#Components](semiorepo://section/semio/js/sketchpad/Feedback.tsx/COMPONENTS)
 
 // #region 🔖Form
-// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/Components)
+// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖components🔖form](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/Components/s/Form)
 // MUST render feedback form for submitting bug reports and ideas.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖components🔖form🪨feedbackform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components/s/Form/d/i/FeedbackForm)

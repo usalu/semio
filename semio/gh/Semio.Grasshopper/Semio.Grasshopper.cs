@@ -93,10 +93,14 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 public static class IconResources
 {
     //#region 🔖Private
+    // Private MUST provide the private functionality.
+    // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖iconresources🔖private](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/IconResources/s/Private)
     private static readonly Lazy<Dictionary<string, string>> canonicalResourceNames = new(BuildCanonicalResourceNames, true);
     //#endregion 🔖Private
 
     //#region 🔖Public
+    // Public MUST provide the public functionality.
+    // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖iconresources🔖public](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/IconResources/s/Public)
     public static Bitmap ResolveOrPlaceholder(params string[] resourceNames)
     {
         foreach (var resourceName in resourceNames.Where(name => !string.IsNullOrWhiteSpace(name)))
@@ -110,6 +114,8 @@ public static class IconResources
     //#endregion 🔖Public
 
     //#region 🔖PrivateHelpers
+    // PrivateHelpers MUST provide the privatehelpers functionality.
+    // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖iconresources🔖privatehelpers](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/IconResources/s/PrivateHelpers)
     private static Bitmap? ResolveResource(string resourceName)
     {
         var direct = Resources.ResourceManager.GetObject(resourceName, CultureInfo.InvariantCulture) as Bitmap;
@@ -164,6 +170,18 @@ public static class IconResources
 
 public static class Utility
 {
+    public sealed class RhinoModelObject
+    {
+        public RhinoModelObject(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject modelObject)
+        {
+            Model = model;
+            ModelObject = modelObject;
+        }
+
+        public Rhino.FileIO.File3dm Model { get; }
+        public Rhino.FileIO.File3dmObject ModelObject { get; }
+    }
+
     public static bool IsValidLengthUnitSystem(string unit) => new[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd" }.Contains(unit);
     public static string LengthUnitSystemToAbbreviation(UnitSystem unitSystem)
     {
@@ -277,6 +295,169 @@ public static class Utility
         childPlaneR.Transform(parentPlaneT);
 
         return childPlaneR.Convert();
+    }
+
+    public static byte[] DecodeFileBlobString(string fileBlob)
+    {
+        if (string.IsNullOrWhiteSpace(fileBlob))
+            throw new ArgumentException("File blob string cannot be empty.", nameof(fileBlob));
+
+        var encodedData = fileBlob.Trim();
+        if (encodedData.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            var payloadStart = encodedData.IndexOf(',');
+            if (payloadStart < 0 || payloadStart == encodedData.Length - 1)
+                throw new ArgumentException("Invalid data URI file blob string.", nameof(fileBlob));
+            encodedData = encodedData[(payloadStart + 1)..];
+        }
+
+        try
+        {
+            return Convert.FromBase64String(encodedData);
+        }
+        catch (FormatException formatException)
+        {
+            throw new ArgumentException("Invalid file blob string. Expected base64 payload or data URI.", nameof(fileBlob), formatException);
+        }
+    }
+
+    public static Rhino.FileIO.File3dmObject ImportRhinoModelObjectFromBlob(string fileBlob)
+    {
+        var fileBytes = DecodeFileBlobString(fileBlob);
+        var file3dm = Rhino.FileIO.File3dm.FromByteArray(fileBytes)
+            ?? throw new InvalidOperationException("Could not read Rhino model from file blob.");
+        if (file3dm.Objects.Count == 0)
+            throw new InvalidOperationException("Rhino model has no model objects.");
+        return file3dm.Objects.First();
+    }
+
+    public static RhinoModelObject ImportRhinoModelContextFromBlob(string fileBlob)
+    {
+        var fileBytes = DecodeFileBlobString(fileBlob);
+        var file3dm = Rhino.FileIO.File3dm.FromByteArray(fileBytes)
+            ?? throw new InvalidOperationException("Could not read Rhino model from file blob.");
+        var modelObject = file3dm.Objects.FirstOrDefault()
+            ?? throw new InvalidOperationException("Rhino model has no model objects.");
+        return new RhinoModelObject(file3dm, modelObject);
+    }
+
+    public static Group TranslateRhinoModelObjectToSingleGroup(RhinoModelObject rhinoModelObject)
+    {
+        if (rhinoModelObject is null)
+            throw new ArgumentNullException(nameof(rhinoModelObject));
+
+        var model = rhinoModelObject.Model;
+        var importedObject = rhinoModelObject.ModelObject;
+
+        var layersById = new Dictionary<Guid, Rhino.DocObjects.Layer>();
+        foreach (var layer in model.Layers)
+        {
+            if (layer is not null && !layer.IsDeleted)
+                layersById[layer.Id] = layer;
+        }
+
+        var layerChildren = new Dictionary<Guid, List<Rhino.DocObjects.Layer>>();
+        foreach (var layer in layersById.Values)
+        {
+            var parentLayerId = layer.ParentLayerId;
+            if (parentLayerId != Guid.Empty && !layersById.ContainsKey(parentLayerId))
+                parentLayerId = Guid.Empty;
+
+            if (!layerChildren.TryGetValue(parentLayerId, out var children))
+            {
+                children = new List<Rhino.DocObjects.Layer>();
+                layerChildren[parentLayerId] = children;
+            }
+            children.Add(layer);
+        }
+
+        foreach (var children in layerChildren.Values)
+            children.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+
+        var objectIdsByLayerId = new Dictionary<Guid, List<string>>();
+        var allPieceIds = new List<string>();
+        var objectCounter = 0;
+        foreach (var fileObject in model.Objects)
+        {
+            var objectId = ResolveRhinoObjectId(fileObject, objectCounter++);
+            allPieceIds.Add(objectId);
+            var layerId = ResolveRhinoLayerId(model, fileObject);
+            if (!objectIdsByLayerId.TryGetValue(layerId, out var objectIds))
+            {
+                objectIds = new List<string>();
+                objectIdsByLayerId[layerId] = objectIds;
+            }
+            objectIds.Add(objectId);
+        }
+
+        var attributes = new List<Attribute>();
+
+        List<string> BuildLayerGroupAttributes(Guid parentLayerId, string parentPath)
+        {
+            var recursiveIds = new List<string>();
+            if (!layerChildren.TryGetValue(parentLayerId, out var children))
+                return recursiveIds;
+
+            foreach (var layer in children)
+            {
+                var layerPath = string.IsNullOrWhiteSpace(parentPath) ? layer.Name : $"{parentPath}/{layer.Name}";
+                var layerIds = new List<string>();
+                if (objectIdsByLayerId.TryGetValue(layer.Id, out var directIds))
+                    layerIds.AddRange(directIds);
+
+                var nestedIds = BuildLayerGroupAttributes(layer.Id, layerPath);
+                layerIds.AddRange(nestedIds);
+                recursiveIds.AddRange(layerIds);
+
+                attributes.Add(new Attribute
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Key = $"LayerGroup/{layerPath}",
+                    Value = string.Join(",", layerIds.Distinct()),
+                    Definition = "Recursive named layer group from imported Rhino model."
+                });
+            }
+
+            return recursiveIds;
+        }
+
+        var rootLayerIds = BuildLayerGroupAttributes(Guid.Empty, "");
+        attributes.Add(new Attribute
+        {
+            Guid = Guid.NewGuid().ToString(),
+            Key = "LayerGroup",
+            Value = string.Join(",", rootLayerIds.Distinct()),
+            Definition = "Root named layer group containing all recursive layers."
+        });
+
+        return new Group
+        {
+            Guid = ResolveRhinoObjectId(importedObject, -1),
+            Name = "Imported Rhino Layer Group",
+            Description = "Single semio group translated from Rhino model object with recursive named layer groups.",
+            Pieces = allPieceIds.Distinct().Select(pieceId => new PieceId { Guid = pieceId }).ToList(),
+            Attributes = attributes
+        };
+    }
+
+    private static Guid ResolveRhinoLayerId(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject fileObject)
+    {
+        var layerIndex = fileObject.Attributes?.LayerIndex ?? -1;
+        if (layerIndex < 0 || layerIndex >= model.Layers.Count)
+            return Guid.Empty;
+        var layer = model.Layers[layerIndex];
+        return layer?.Id ?? Guid.Empty;
+    }
+
+    private static string ResolveRhinoObjectId(Rhino.FileIO.File3dmObject fileObject, int fallbackIndex)
+    {
+        var objectId = fileObject.Attributes?.ObjectId ?? Guid.Empty;
+        if (objectId != Guid.Empty)
+            return objectId.ToString();
+
+        return fallbackIndex >= 0
+            ? $"rhino-object-{fallbackIndex}"
+            : Guid.NewGuid().ToString();
     }
 }
 
@@ -586,6 +767,136 @@ public abstract class DiffComponent<TParam, TGoo, TModel> : PassthroughComponent
     protected DiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
+
+/// Abstract Grasshopper component for applying an entity diff to an entity.
+/// Implementations MUST apply diffs without performing persistence operations.
+/// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️applydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/ApplyDiffComponent)
+public abstract class ApplyDiffComponent<TEntityParam, TEntityGoo, TEntity, TDiffParam, TDiffGoo, TDiff> : ScriptingComponent
+    where TEntityParam : Param<TEntityGoo, TEntity>, new()
+    where TEntityGoo : Goo<TEntity>, new()
+    where TEntity : Entity<TEntity>, new()
+    where TDiffParam : DiffParam<TDiffGoo, TDiff>, new()
+    where TDiffGoo : DiffGoo<TDiff>, new()
+    where TDiff : Entity<TDiff>, new()
+{
+    protected ApplyDiffComponent() : base("", "", "") { }
+
+    protected abstract string EntityName { get; }
+    protected abstract string EntityNickname { get; }
+    protected abstract string DiffNickname { get; }
+    protected abstract string IconResourceName { get; }
+
+    public override string Name => $"Apply {EntityName} Diff";
+    public override string NickName => $"{EntityNickname}+Δ";
+    public override string Description => $"Apply a diff to a {EntityName.ToLower()}.";
+    protected override Bitmap Icon => IconResources.ResolveOrPlaceholder(IconResourceName);
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TEntityParam(), EntityName, EntityNickname, $"The {EntityName.ToLower()} to update.", GH_ParamAccess.item);
+        pManager.AddParameter(new TDiffParam(), $"{EntityName} Diff", DiffNickname, $"The diff to apply.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TEntityParam(), EntityName, EntityNickname, $"Updated {EntityName.ToLower()}.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var entityGoo = new TEntityGoo();
+        var diffGoo = new TDiffGoo();
+        if (!DA.GetData(0, ref entityGoo)) return;
+        if (!DA.GetData(1, ref diffGoo)) return;
+
+        var updatedEntity = (TEntity)((dynamic)entityGoo.Value).ApplyDiff((dynamic)diffGoo.Value);
+        var updatedGoo = new TEntityGoo { Value = updatedEntity };
+        DA.SetData(0, updatedGoo);
+    }
+}
+
+public class ApplyAttributeDiffComponent : ApplyDiffComponent<AttributeParam, AttributeGoo, Attribute, AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+{
+    public override Guid ComponentGuid => new("4A901F8D-53C5-4F36-B32E-5FE7D038B3C1");
+    protected override string EntityName => "Attribute";
+    protected override string EntityNickname => "At";
+    protected override string DiffNickname => "AtΔ";
+    protected override string IconResourceName => "attribute_modify_24x24";
+}
+
+public class ApplyFolderDiffComponent : ApplyDiffComponent<FolderParam, FolderGoo, Folder, FolderDiffParam, FolderDiffGoo, FolderDiff>
+{
+    public override Guid ComponentGuid => new("B9D5A6E1-C51E-4B7A-B433-E83A42D5A861");
+    protected override string EntityName => "Folder";
+    protected override string EntityNickname => "Fd";
+    protected override string DiffNickname => "FdΔ";
+    protected override string IconResourceName => "folder_modify_24x24";
+}
+
+public class ApplyModelDiffComponent : ApplyDiffComponent<ModelParam, ModelGoo, Model, ModelDiffParam, ModelDiffGoo, ModelDiff>
+{
+    public override Guid ComponentGuid => new("06D898D4-3CA6-4742-9C9F-E9BA1C5D7541");
+    protected override string EntityName => "Model";
+    protected override string EntityNickname => "Mo";
+    protected override string DiffNickname => "MoΔ";
+    protected override string IconResourceName => "model_modify_24x24";
+}
+
+public class ApplyConnectorDiffComponent : ApplyDiffComponent<ConnectorParam, ConnectorGoo, Connector, ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
+{
+    public override Guid ComponentGuid => new("E450E49A-5ECA-4A6C-95EE-9FCA3D2C6B4A");
+    protected override string EntityName => "Connector";
+    protected override string EntityNickname => "Cn";
+    protected override string DiffNickname => "CnΔ";
+    protected override string IconResourceName => "connector_modify_24x24";
+}
+
+public class ApplyTypeDiffComponent : ApplyDiffComponent<TypeParam, TypeGoo, Type, TypeDiffParam, TypeDiffGoo, TypeDiff>
+{
+    public override Guid ComponentGuid => new("A45F0A6C-1EB0-44A4-A5A7-81C4F248A873");
+    protected override string EntityName => "Type";
+    protected override string EntityNickname => "Tp";
+    protected override string DiffNickname => "TpΔ";
+    protected override string IconResourceName => "type_modify_24x24";
+}
+
+public class ApplyPieceDiffComponent : ApplyDiffComponent<PieceParam, PieceGoo, Piece, PieceDiffParam, PieceDiffGoo, PieceDiff>
+{
+    public override Guid ComponentGuid => new("1C29E52E-B2A7-4600-BAC2-996FF80A5015");
+    protected override string EntityName => "Piece";
+    protected override string EntityNickname => "Pc";
+    protected override string DiffNickname => "PcΔ";
+    protected override string IconResourceName => "piece_modify_24x24";
+}
+
+public class ApplySideDiffComponent : ApplyDiffComponent<SideParam, SideGoo, Side, SideDiffParam, SideDiffGoo, SideDiff>
+{
+    public override Guid ComponentGuid => new("4F2B5F8A-4AB4-4B58-B6CB-58231F8FF7BF");
+    protected override string EntityName => "Side";
+    protected override string EntityNickname => "Sd";
+    protected override string DiffNickname => "SdΔ";
+    protected override string IconResourceName => "side_modify_24x24";
+}
+
+public class ApplyConnectionDiffComponent : ApplyDiffComponent<ConnectionParam, ConnectionGoo, Connection, ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
+{
+    public override Guid ComponentGuid => new("9F954A31-E53D-4C9A-BB2E-4A17EB8C333D");
+    protected override string EntityName => "Connection";
+    protected override string EntityNickname => "Cnx";
+    protected override string DiffNickname => "CnxΔ";
+    protected override string IconResourceName => "connection_modify_24x24";
+}
+
+public class ApplyDesignDiffComponent : ApplyDiffComponent<DesignParam, DesignGoo, Design, DesignDiffParam, DesignDiffGoo, DesignDiff>
+{
+    public override Guid ComponentGuid => new("31BE87E8-045F-4F12-9651-C4C1A130D7A7");
+    protected override string EntityName => "Design";
+    protected override string EntityNickname => "De";
+    protected override string DiffNickname => "DeΔ";
+    protected override string IconResourceName => "design_modify_24x24";
+}
+
 /// Abstract Grasshopper component for serializing entities to JSON.
 /// Implementations MUST convert entities to valid JSON strings.
 /// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/SerializeComponent)
@@ -607,7 +918,7 @@ public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingCompon
     {
         pManager.AddParameter(new TParam(), ModelName, ModelNickname, $"The {ModelName.ToLower()} to serialize.", GH_ParamAccess.item);
         pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {ModelName.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
-        pManager[1].Optional = true;
+
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1093,23 +1404,23 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
     protected override void RegisterModelInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd?", "The optional guid of the attribute.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Ke?", "The optional key of the attribute.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke?", "The optional key.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Va?", "The optional value.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition.", GH_ParamAccess.item);
     }
 
     protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd?", "The optional guid of the attribute.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Ke?", "The optional key of the attribute.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke?", "The optional key.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Va?", "The optional value.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition.", GH_ParamAccess.item);
     }
 
     protected override void GetModelData(IGH_DataAccess DA, AttributeDiff model)
     {
-        string guid = null, key = "", value = "", definition = "";
+        string guid = null, key = null, value = null, definition = null;
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref key)) model.Key = key;
         if (DA.GetData(4, ref value)) model.Value = value;
@@ -1118,10 +1429,10 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
     protected override void SetModelData(IGH_DataAccess DA, AttributeDiff model)
     {
-        DA.SetData(2, model.Guid);
-        DA.SetData(3, model.Key);
-        DA.SetData(4, model.Value);
-        DA.SetData(5, model.Definition);
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeKey()) DA.SetData(3, model.Key);
+        if (model.ShouldSerializeValue()) DA.SetData(4, model.Value);
+        if (model.ShouldSerializeDefinition()) DA.SetData(5, model.Definition);
     }
 }
 
@@ -1472,6 +1783,11 @@ public class FileGoo : Goo<File>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(FileIdGoo)))
+        {
+            target = (Q)(object)new FileIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Guid);
@@ -1516,7 +1832,7 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
         pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Mime", "Mi?", "The optional MIME type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Folder", "Fo?", "The optional folder guid.", GH_ParamAccess.item);
+        pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Size", "Sz?", "The optional file size in bytes.", GH_ParamAccess.item);
         pManager.AddTextParameter("Hash", "Hs?", "The optional file hash.", GH_ParamAccess.item);
         pManager.AddTimeParameter("CreatedAt", "CA?", "The optional creation timestamp.", GH_ParamAccess.item);
@@ -1531,7 +1847,7 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
         pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Mime", "Mi?", "The optional MIME type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Folder", "Fo?", "The optional folder guid.", GH_ParamAccess.item);
+        pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Size", "Sz?", "The optional file size in bytes.", GH_ParamAccess.item);
         pManager.AddTextParameter("Hash", "Hs?", "The optional file hash.", GH_ParamAccess.item);
         pManager.AddTimeParameter("CreatedAt", "CA?", "The optional creation timestamp.", GH_ParamAccess.item);
@@ -1542,14 +1858,15 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 
     protected override void GetModelData(IGH_DataAccess DA, File model)
     {
-        string guid = "", name = "", mime = "", remote = "", folderGuid = "", hash = "", createdBy = "", updatedBy = "";
+        string guid = "", name = "", mime = "", remote = "", hash = "", createdBy = "", updatedBy = "";
+        var folderIdGoo = new FolderIdGoo();
         int size = 0;
         DateTime createdAt = default, updatedAt = default;
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
         if (DA.GetData(4, ref mime)) model.Mime = mime;
         if (DA.GetData(5, ref remote)) model.Remote = remote;
-        if (DA.GetData(6, ref folderGuid)) model.Folder = new FolderId { Guid = folderGuid };
+        if (DA.GetData(6, ref folderIdGoo)) model.Folder = folderIdGoo.Value;
         if (DA.GetData(7, ref size)) model.Size = size;
         if (DA.GetData(8, ref hash)) model.Hash = hash;
         if (DA.GetData(9, ref createdAt)) model.CreatedAt = createdAt;
@@ -1564,7 +1881,7 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
         DA.SetData(3, model.Name);
         DA.SetData(4, model.Mime);
         DA.SetData(5, model.Remote);
-        DA.SetData(6, model.Folder?.Guid ?? "");
+        DA.SetData(6, model.Folder is not null ? new FolderIdGoo(model.Folder) : null);
         DA.SetData(7, model.Size);
         DA.SetData(8, model.Hash);
         DA.SetData(9, model.CreatedAt);
@@ -1604,6 +1921,11 @@ public class FileIdGoo : IdGoo<FileId>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
+        if (source is FileGoo fileGoo)
+        {
+            Value = fileGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new FileId { Guid = str };
@@ -1672,6 +1994,70 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
     protected override string ModelNickname => "FD";
     protected override string ModelDescription => "Construct, deconstruct or modify a file diff.";
     protected override string IconResourceName => "filediff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote.", GH_ParamAccess.item);
+        pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder id.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Size", "Sz?", "The optional size.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Hash", "Hs?", "The optional hash.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Blob", "Bl?", "The optional blob.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CreatedBy", "CB?", "The optional created-by.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedBy", "UB?", "The optional updated-by.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote.", GH_ParamAccess.item);
+        pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder id.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Size", "Sz?", "The optional size.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Hash", "Hs?", "The optional hash.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Blob", "Bl?", "The optional blob.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CreatedBy", "CB?", "The optional created-by.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedBy", "UB?", "The optional updated-by.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, FileDiff model)
+    {
+        string guid = null, name = null, remote = null, hash = null, blob = null, createdBy = null, updatedBy = null;
+        int size = 0;
+        DateTime createdAt = default, updatedAt = default;
+        var folder = new FolderIdGoo();
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref remote)) model.Remote = remote;
+        if (DA.GetData(5, ref folder)) model.Folder = folder.Value.DeepClone();
+        if (DA.GetData(6, ref size)) model.Size = size;
+        if (DA.GetData(7, ref hash)) model.Hash = hash;
+        if (DA.GetData(8, ref blob)) model.Blob = blob;
+        if (DA.GetData(9, ref createdAt)) model.CreatedAt = createdAt;
+        if (DA.GetData(10, ref createdBy)) model.CreatedBy = createdBy;
+        if (DA.GetData(11, ref updatedAt)) model.UpdatedAt = updatedAt;
+        if (DA.GetData(12, ref updatedBy)) model.UpdatedBy = updatedBy;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, FileDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeRemote()) DA.SetData(4, model.Remote);
+        if (model.ShouldSerializeFolder()) DA.SetData(5, model.Folder is not null ? new FolderIdGoo(model.Folder.DeepClone()) : null);
+        if (model.ShouldSerializeSize()) DA.SetData(6, model.Size);
+        if (model.ShouldSerializeHash()) DA.SetData(7, model.Hash);
+        if (model.ShouldSerializeBlob()) DA.SetData(8, model.Blob);
+        if (model.ShouldSerializeCreatedAt()) DA.SetData(9, model.CreatedAt);
+        if (model.ShouldSerializeCreatedBy()) DA.SetData(10, model.CreatedBy);
+        if (model.ShouldSerializeUpdatedAt()) DA.SetData(11, model.UpdatedAt);
+        if (model.ShouldSerializeUpdatedBy()) DA.SetData(12, model.UpdatedBy);
+    }
 }
 
 public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
@@ -1735,6 +2121,39 @@ public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, Fi
     protected override string ModelNickname => "FDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of file diffs.";
     protected override string IconResourceName => "filesdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new FileIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed file ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new FileDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated file diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new FileParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added files.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new FileIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed file ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new FileDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated file diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new FileParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added files.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, FilesDiff model)
+    {
+        var removed = new List<FileIdGoo>();
+        var updated = new List<FileDiffGoo>();
+        var added = new List<FileGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new FileDiffUpdate { File = new FileId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, FilesDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new FileIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new FileDiffGoo((u.Diff ?? new FileDiff { Guid = u.File.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new FileGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
@@ -1824,7 +2243,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
     {
         pManager.AddTextParameter("Guid", "Gd", "The guid of the folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the folder.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Parent", "Pa?", "The optional parent folder guid.", GH_ParamAccess.item);
+        pManager.AddParameter(new FolderIdParam(), "Parent", "Pa?", "The optional parent folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
         pManager.AddTimeParameter("CreatedAt", "CA?", "The optional creation timestamp.", GH_ParamAccess.item);
@@ -1837,7 +2256,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
     {
         pManager.AddTextParameter("Guid", "Gd", "The guid of the folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the folder.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Parent", "Pa?", "The optional parent folder guid.", GH_ParamAccess.item);
+        pManager.AddParameter(new FolderIdParam(), "Parent", "Pa?", "The optional parent folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
         pManager.AddTimeParameter("CreatedAt", "CA?", "The optional creation timestamp.", GH_ParamAccess.item);
@@ -1848,12 +2267,13 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
 
     protected override void GetModelData(IGH_DataAccess DA, Folder model)
     {
-        string guid = "", name = "", parent = "", description = "", createdBy = "", updatedBy = "";
+        string guid = "", name = "", description = "", createdBy = "", updatedBy = "";
+        var parentIdGoo = new FolderIdGoo();
         DateTime createdAt = default, updatedAt = default;
         var attributes = new List<AttributeGoo>();
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
-        if (DA.GetData(4, ref parent)) model.Parent = parent;
+        if (DA.GetData(4, ref parentIdGoo)) model.Parent = parentIdGoo.Value.Guid;
         if (DA.GetData(5, ref description)) model.Description = description;
         if (DA.GetDataList(6, attributes)) model.Attributes = attributes.Select(a => a.Value).ToList();
         if (DA.GetData(7, ref createdAt)) model.CreatedAt = createdAt.ToString("o");
@@ -1866,7 +2286,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
     {
         DA.SetData(2, model.Guid);
         DA.SetData(3, model.Name);
-        DA.SetData(4, model.Parent ?? "");
+        DA.SetData(4, !string.IsNullOrEmpty(model.Parent) ? new FolderIdGoo(new FolderId { Guid = model.Parent }) : null);
         DA.SetData(5, model.Description);
         DA.SetDataList(6, model.Attributes.Select(a => new AttributeGoo(a)).ToList());
         DA.SetData(7, !string.IsNullOrEmpty(model.CreatedAt) && DateTime.TryParse(model.CreatedAt, null, System.Globalization.DateTimeStyles.RoundtripKind, out var ca) ? ca : (DateTime?)null);
@@ -1906,6 +2326,11 @@ public class FolderIdGoo : IdGoo<FolderId>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
+        if (source is FolderGoo folderGoo)
+        {
+            Value = folderGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new FolderId { Guid = str };
@@ -1974,6 +2399,60 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
     protected override string ModelNickname => "FD";
     protected override string ModelDescription => "Construct, deconstruct or modify a folder diff.";
     protected override string IconResourceName => "folderdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Parent", "Pa?", "The optional parent.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddTextParameter("CreatedAt", "CA?", "The optional created-at.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CreatedBy", "CB?", "The optional created-by.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedAt", "UA?", "The optional updated-at.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedBy", "UB?", "The optional updated-by.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Parent", "Pa?", "The optional parent.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddTextParameter("CreatedAt", "CA?", "The optional created-at.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CreatedBy", "CB?", "The optional created-by.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedAt", "UA?", "The optional updated-at.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedBy", "UB?", "The optional updated-by.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, FolderDiff model)
+    {
+        string guid = null, name = null, parent = null, description = null, createdAt = null, createdBy = null, updatedAt = null, updatedBy = null;
+        var attributes = new List<AttributeGoo>();
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref parent)) model.Parent = parent;
+        if (DA.GetData(5, ref description)) model.Description = description;
+        if (DA.GetDataList(6, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetData(7, ref createdAt)) model.CreatedAt = createdAt;
+        if (DA.GetData(8, ref createdBy)) model.CreatedBy = createdBy;
+        if (DA.GetData(9, ref updatedAt)) model.UpdatedAt = updatedAt;
+        if (DA.GetData(10, ref updatedBy)) model.UpdatedBy = updatedBy;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, FolderDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeParent()) DA.SetData(4, model.Parent);
+        if (model.ShouldSerializeDescription()) DA.SetData(5, model.Description);
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(6, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeCreatedAt()) DA.SetData(7, model.CreatedAt);
+        if (model.ShouldSerializeCreatedBy()) DA.SetData(8, model.CreatedBy);
+        if (model.ShouldSerializeUpdatedAt()) DA.SetData(9, model.UpdatedAt);
+        if (model.ShouldSerializeUpdatedBy()) DA.SetData(10, model.UpdatedBy);
+    }
 }
 
 public class SerializeFolderDiffComponent : SerializeComponent<FolderDiffParam, FolderDiffGoo, FolderDiff>
@@ -2037,6 +2516,39 @@ public class FoldersDiffComponent : DiffComponent<FoldersDiffParam, FoldersDiffG
     protected override string ModelNickname => "FDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of folder diffs.";
     protected override string IconResourceName => "foldersdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new FolderIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed folder ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new FolderDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated folder diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new FolderParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added folders.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new FolderIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed folder ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new FolderDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated folder diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new FolderParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added folders.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, FoldersDiff model)
+    {
+        var removed = new List<FolderIdGoo>();
+        var updated = new List<FolderDiffGoo>();
+        var added = new List<FolderGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new FolderDiffUpdate { Folder = new FolderId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, FoldersDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new FolderIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new FolderDiffGoo((u.Diff ?? new FolderDiff { Guid = u.Folder.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new FolderGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeFoldersDiffComponent : SerializeComponent<FoldersDiffParam, FoldersDiffGoo, FoldersDiff>
@@ -2535,6 +3047,98 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
     protected override string ModelNickname => "QD";
     protected override string ModelDescription => "Construct, deconstruct or modify a quality diff.";
     protected override string IconResourceName => "qualitydiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "Ur", "The uri.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "Sc", "Whether scalable.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Kind", "Kd", "The quality kind enum value.", GH_ParamAccess.item);
+        pManager.AddTextParameter("SI", "SI", "The SI unit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Imperial", "Im", "The imperial unit.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi", "The minimum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE", "Whether min is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx", "The maximum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE", "Whether max is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Default", "Df", "The default value.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Formula", "Fm", "The formula.", GH_ParamAccess.item);
+        pManager.AddParameter(new BenchmarkParam() { Access = GH_ParamAccess.list }, "Benchmarks", "Bm*", "The optional benchmarks.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "Ur", "The uri.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "Sc", "Whether scalable.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Kind", "Kd", "The quality kind enum value.", GH_ParamAccess.item);
+        pManager.AddTextParameter("SI", "SI", "The SI unit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Imperial", "Im", "The imperial unit.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi", "The minimum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE", "Whether min is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx", "The maximum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE", "Whether max is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Default", "Df", "The default value.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Formula", "Fm", "The formula.", GH_ParamAccess.item);
+        pManager.AddParameter(new BenchmarkParam() { Access = GH_ParamAccess.list }, "Benchmarks", "Bm*", "The optional benchmarks.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, QualityDiff model)
+    {
+        string guid = null, key = null, name = null, description = null, uri = null, si = null, imperial = null, formula = null;
+        bool scalable = false, minExcluded = false, maxExcluded = false;
+        int kind = 0;
+        double min = 0, max = 0, @default = 0;
+        var benchmarks = new List<BenchmarkGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref key)) model.Key = key;
+        if (DA.GetData(4, ref name)) model.Name = name;
+        if (DA.GetData(5, ref description)) model.Description = description;
+        if (DA.GetData(6, ref uri)) model.Uri = uri;
+        if (DA.GetData(7, ref scalable)) model.Scalable = scalable;
+        if (DA.GetData(8, ref kind)) model.Kind = (QualityKind)kind;
+        if (DA.GetData(9, ref si)) model.SI = si;
+        if (DA.GetData(10, ref imperial)) model.Imperial = imperial;
+        if (DA.GetData(11, ref min)) model.Min = (float)min;
+        if (DA.GetData(12, ref minExcluded)) model.MinExcluded = minExcluded;
+        if (DA.GetData(13, ref max)) model.Max = (float)max;
+        if (DA.GetData(14, ref maxExcluded)) model.MaxExcluded = maxExcluded;
+        if (DA.GetData(15, ref @default)) model.Default = (float)@default;
+        if (DA.GetData(16, ref formula)) model.Formula = formula;
+        if (DA.GetDataList(17, benchmarks)) model.Benchmarks = benchmarks.Select(b => b.Value.DeepClone()).ToList();
+        if (DA.GetDataList(18, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, QualityDiff model)
+    {
+        DA.SetData(2, model.Guid);
+        DA.SetData(3, model.Key);
+        DA.SetData(4, model.Name);
+        DA.SetData(5, model.Description);
+        DA.SetData(6, model.Uri);
+        DA.SetData(7, model.Scalable);
+        DA.SetData(8, (int)model.Kind);
+        DA.SetData(9, model.SI);
+        DA.SetData(10, model.Imperial);
+        DA.SetData(11, model.Min);
+        DA.SetData(12, model.MinExcluded);
+        DA.SetData(13, model.Max);
+        DA.SetData(14, model.MaxExcluded);
+        DA.SetData(15, model.Default);
+        DA.SetData(16, model.Formula);
+        DA.SetDataList(17, model.Benchmarks?.Select(b => new BenchmarkGoo(b.DeepClone())).ToList());
+        DA.SetDataList(18, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeQualityDiffComponent : SerializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
@@ -2679,6 +3283,11 @@ public class TagIdGoo : IdGoo<TagId>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
+        if (source is TagGoo tagGoo)
+        {
+            Value = tagGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new TagId { Guid = str };
@@ -2860,9 +3469,9 @@ public class ModelComponent : PassthroughComponent<ModelParam, ModelGoo, Model>
     {
         pManager.AddTextParameter("Guid", "Gd", "The guid of the model.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the model.", GH_ParamAccess.item);
-        pManager.AddTextParameter("FileGuid", "Fl", "The file guid of the model.", GH_ParamAccess.item);
+        pManager.AddParameter(new FileIdParam(), "File", "Fl", "The file of the model.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
-        pManager.AddTextParameter("TagGuids", "Tg*", "The optional tag guids.", GH_ParamAccess.list);
+        pManager.AddParameter(new TagIdParam(), "Tags", "Tg*", "The optional tags.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
@@ -2870,23 +3479,24 @@ public class ModelComponent : PassthroughComponent<ModelParam, ModelGoo, Model>
     {
         pManager.AddTextParameter("Guid", "Gd", "The guid of the model.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the model.", GH_ParamAccess.item);
-        pManager.AddTextParameter("FileGuid", "Fl", "The file guid of the model.", GH_ParamAccess.item);
+        pManager.AddParameter(new FileIdParam(), "File", "Fl", "The file of the model.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
-        pManager.AddTextParameter("TagGuids", "Tg*", "The optional tag guids.", GH_ParamAccess.list);
+        pManager.AddParameter(new TagIdParam(), "Tags", "Tg*", "The optional tags.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
     protected override void GetModelData(IGH_DataAccess DA, Model model)
     {
-        string guid = "", name = "", fileGuid = "", description = "";
-        var tagGuids = new List<string>();
+        string guid = "", name = "", description = "";
+        var fileIdGoo = new FileIdGoo();
+        var tagIdGoos = new List<TagIdGoo>();
         var attributes = new List<AttributeGoo>();
 
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
-        if (DA.GetData(4, ref fileGuid)) model.File = new FileId { Guid = fileGuid };
+        if (DA.GetData(4, ref fileIdGoo)) model.File = fileIdGoo.Value;
         if (DA.GetData(5, ref description)) model.Description = description;
-        if (DA.GetDataList(6, tagGuids)) model.Tags = tagGuids.Select(t => new TagId { Guid = t }).ToList();
+        if (DA.GetDataList(6, tagIdGoos)) model.Tags = tagIdGoos.Select(t => t.Value).ToList();
         if (DA.GetDataList(7, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
     }
 
@@ -2894,9 +3504,9 @@ public class ModelComponent : PassthroughComponent<ModelParam, ModelGoo, Model>
     {
         DA.SetData(2, model.Guid);
         DA.SetData(3, model.Name);
-        DA.SetData(4, model.File.Guid);
+        DA.SetData(4, model.File is not null ? new FileIdGoo(model.File) : null);
         DA.SetData(5, model.Description);
-        DA.SetDataList(6, model.Tags.Select(t => t.Guid).ToList());
+        DA.SetDataList(6, model.Tags?.Select(t => new TagIdGoo(t)).ToList());
         DA.SetDataList(7, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
     }
 
@@ -3024,6 +3634,50 @@ public class ModelDiffComponent : DiffComponent<ModelDiffParam, ModelDiffGoo, Mo
     protected override string ModelNickname => "MD";
     protected override string ModelDescription => "Construct, deconstruct or modify a model diff.";
     protected override string IconResourceName => "modeldiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddParameter(new FileIdParam(), "File", "Fi?", "The optional file id.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new TagIdParam() { Access = GH_ParamAccess.list }, "Tags", "Tg*", "The optional tag ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddParameter(new FileIdParam(), "File", "Fi?", "The optional file id.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new TagIdParam() { Access = GH_ParamAccess.list }, "Tags", "Tg*", "The optional tag ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, ModelDiff model)
+    {
+        string guid = null, name = null, description = null;
+        var file = new FileIdGoo();
+        var tags = new List<TagIdGoo>();
+        var attributes = new List<AttributeGoo>();
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref file)) model.File = file.Value.DeepClone();
+        if (DA.GetData(5, ref description)) model.Description = description;
+        if (DA.GetDataList(6, tags)) model.Tags = tags.Select(t => t.Value.DeepClone()).ToList();
+        if (DA.GetDataList(7, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, ModelDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeFile()) DA.SetData(4, model.File is not null ? new FileIdGoo(model.File.DeepClone()) : null);
+        if (model.ShouldSerializeDescription()) DA.SetData(5, model.Description);
+        if (model.ShouldSerializeTags()) DA.SetDataList(6, model.Tags?.Select(t => new TagIdGoo(t.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(7, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializeModelDiffComponent : SerializeComponent<ModelDiffParam, ModelDiffGoo, ModelDiff>
@@ -3087,6 +3741,39 @@ public class ModelsDiffComponent : DiffComponent<ModelsDiffParam, ModelsDiffGoo,
     protected override string ModelNickname => "MDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of model diffs.";
     protected override string IconResourceName => "modelsdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ModelIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed model ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ModelDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated model diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new ModelParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added models.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ModelIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed model ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ModelDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated model diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new ModelParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added models.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, ModelsDiff model)
+    {
+        var removed = new List<ModelIdGoo>();
+        var updated = new List<ModelDiffGoo>();
+        var added = new List<ModelGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new ModelDiffUpdate { Model = new ModelId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, ModelsDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new ModelIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new ModelDiffGoo((u.Diff ?? new ModelDiff { Guid = u.Model.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new ModelGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeModelsDiffComponent : SerializeComponent<ModelsDiffParam, ModelsDiffGoo, ModelsDiff>
@@ -3391,6 +4078,70 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
     protected override string ModelNickname => "CD";
     protected override string ModelDescription => "Construct, deconstruct or modify a connector diff.";
     protected override string IconResourceName => "connectordiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new PortIdParam(), "Port", "Po?", "The optional port id.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether mandatory.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("T", "T?", "The optional t value.", GH_ParamAccess.item);
+        pManager.AddPointParameter("Point", "Pt?", "The optional point.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Di?", "The optional direction.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam() { Access = GH_ParamAccess.list }, "Props", "Pr*", "The optional props.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new PortIdParam(), "Port", "Po?", "The optional port id.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether mandatory.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("T", "T?", "The optional t value.", GH_ParamAccess.item);
+        pManager.AddPointParameter("Point", "Pt?", "The optional point.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Di?", "The optional direction.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam() { Access = GH_ParamAccess.list }, "Props", "Pr*", "The optional props.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, ConnectorDiff model)
+    {
+        string guid = null, name = null, description = null;
+        bool mandatory = false;
+        double t = 0;
+        Point3d point = Point3d.Origin;
+        Vector3d direction = Vector3d.YAxis;
+        var port = new PortIdGoo();
+        var props = new List<PropGoo>();
+        var attributes = new List<AttributeGoo>();
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref port)) model.Port = port.Value.DeepClone();
+        if (DA.GetData(6, ref mandatory)) model.Mandatory = mandatory;
+        if (DA.GetData(7, ref t)) model.T = (float)t;
+        if (DA.GetData(8, ref point)) model.Point = point.Convert();
+        if (DA.GetData(9, ref direction)) model.Direction = direction.Convert();
+        if (DA.GetDataList(10, props)) model.Props = props.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(11, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, ConnectorDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeDescription()) DA.SetData(4, model.Description);
+        if (model.ShouldSerializePort()) DA.SetData(5, model.Port is not null ? new PortIdGoo(model.Port.DeepClone()) : null);
+        if (model.ShouldSerializeMandatory()) DA.SetData(6, model.Mandatory);
+        if (model.ShouldSerializeT()) DA.SetData(7, model.T);
+        if (model.ShouldSerializePoint()) DA.SetData(8, model.Point is not null ? model.Point.Convert() : Point3d.Origin);
+        if (model.ShouldSerializeDirection()) DA.SetData(9, model.Direction is not null ? model.Direction.Convert() : Vector3d.YAxis);
+        if (model.ShouldSerializeProps()) DA.SetDataList(10, model.Props?.Select(p => new PropGoo(p.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(11, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializePortDiffComponent : SerializeComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
@@ -3454,6 +4205,39 @@ public class ConnectorsDiffComponent : DiffComponent<ConnectorsDiffParam, Connec
     protected override string ModelNickname => "CDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of connector diffs.";
     protected override string IconResourceName => "connectorsdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed connector ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectorDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated connector diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectorParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added connectors.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed connector ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectorDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated connector diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectorParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added connectors.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, ConnectorsDiff model)
+    {
+        var removed = new List<ConnectorIdGoo>();
+        var updated = new List<ConnectorDiffGoo>();
+        var added = new List<ConnectorGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new ConnectorDiffUpdate { Connector = new ConnectorId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, ConnectorsDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new ConnectorIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new ConnectorDiffGoo((u.Diff ?? new ConnectorDiff { Guid = u.Connector.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new ConnectorGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializePortsDiffComponent : SerializeComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
@@ -4115,6 +4899,114 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
     protected override string ModelNickname => "TD";
     protected override string ModelDescription => "Construct, deconstruct or modify a type diff.";
     protected override string IconResourceName => "typediff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Parent", "Pa?", "The optional parent type.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether abstract.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stock", "Sk?", "The optional stock.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Virtual", "Vr?", "Whether virtual.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "Ur?", "The optional uri.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Un?", "The optional unit.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location.", GH_ParamAccess.item);
+        pManager.AddParameter(new ModelsDiffParam(), "Models", "Md?", "The optional models diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectorsDiffParam(), "Connectors", "Cn?", "The optional connectors diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new AuthorIdParam() { Access = GH_ParamAccess.list }, "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConceptIdParam() { Access = GH_ParamAccess.list }, "Concepts", "Cp*", "The optional concepts.", GH_ParamAccess.list);
+        pManager.AddTimeParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Parent", "Pa?", "The optional parent type.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether abstract.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stock", "Sk?", "The optional stock.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Virtual", "Vr?", "Whether virtual.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "Ur?", "The optional uri.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Un?", "The optional unit.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location.", GH_ParamAccess.item);
+        pManager.AddParameter(new ModelsDiffParam(), "Models", "Md?", "The optional models diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectorsDiffParam(), "Connectors", "Cn?", "The optional connectors diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new AuthorIdParam() { Access = GH_ParamAccess.list }, "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConceptIdParam() { Access = GH_ParamAccess.list }, "Concepts", "Cp*", "The optional concepts.", GH_ParamAccess.list);
+        pManager.AddTimeParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, TypeDiff model)
+    {
+        string guid = null, name = null, folder = null, description = null, icon = null, image = null, uri = null, unit = null;
+        int stock = 0;
+        bool isAbstract = false, virtualValue = false;
+        DateTime createdAt = default, updatedAt = default;
+        var parent = new TypeIdGoo();
+        var location = new LocationGoo();
+        var models = new ModelsDiffGoo();
+        var connectors = new ConnectorsDiffGoo();
+        var authors = new List<AuthorIdGoo>();
+        var attributes = new List<AttributeGoo>();
+        var concepts = new List<ConceptIdGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref parent)) model.Parent = parent.Value.DeepClone();
+        if (DA.GetData(5, ref isAbstract)) model.IsAbstract = isAbstract;
+        if (DA.GetData(6, ref folder)) model.Folder = folder;
+        if (DA.GetData(7, ref description)) model.Description = description;
+        if (DA.GetData(8, ref icon)) model.Icon = icon;
+        if (DA.GetData(9, ref image)) model.Image = image;
+        if (DA.GetData(10, ref stock)) model.Stock = stock;
+        if (DA.GetData(11, ref virtualValue)) model.Virtual = virtualValue;
+        if (DA.GetData(12, ref uri)) model.Uri = uri;
+        if (DA.GetData(13, ref unit)) model.Unit = unit;
+        if (DA.GetData(14, ref location)) model.Location = location.Value.DeepClone();
+        if (DA.GetData(15, ref models)) model.Models = models.Value.DeepClone();
+        if (DA.GetData(16, ref connectors)) model.Connectors = connectors.Value.DeepClone();
+        if (DA.GetDataList(17, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(18, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(19, concepts)) model.Concepts = concepts.Select(c => c.Value.DeepClone()).ToList();
+        if (DA.GetData(20, ref createdAt)) model.CreatedAt = createdAt;
+        if (DA.GetData(21, ref updatedAt)) model.UpdatedAt = updatedAt;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, TypeDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeParent()) DA.SetData(4, model.Parent is not null ? new TypeIdGoo(model.Parent.DeepClone()) : null);
+        if (model.ShouldSerializeIsAbstract()) DA.SetData(5, model.IsAbstract);
+        if (model.ShouldSerializeFolder()) DA.SetData(6, model.Folder);
+        if (model.ShouldSerializeDescription()) DA.SetData(7, model.Description);
+        if (model.ShouldSerializeIcon()) DA.SetData(8, model.Icon);
+        if (model.ShouldSerializeImage()) DA.SetData(9, model.Image);
+        if (model.ShouldSerializeStock()) DA.SetData(10, model.Stock);
+        if (model.ShouldSerializeVirtual()) DA.SetData(11, model.Virtual);
+        if (model.ShouldSerializeUri()) DA.SetData(12, model.Uri);
+        if (model.ShouldSerializeUnit()) DA.SetData(13, model.Unit);
+        if (model.ShouldSerializeLocation()) DA.SetData(14, model.Location is not null ? new LocationGoo(model.Location.DeepClone()) : null);
+        if (model.ShouldSerializeModels()) DA.SetData(15, model.Models is not null ? new ModelsDiffGoo(model.Models.DeepClone()) : null);
+        if (model.ShouldSerializeConnectors()) DA.SetData(16, model.Connectors is not null ? new ConnectorsDiffGoo(model.Connectors.DeepClone()) : null);
+        if (model.ShouldSerializeAuthors()) DA.SetDataList(17, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(18, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeConcepts()) DA.SetDataList(19, model.Concepts?.Select(c => new ConceptIdGoo(c.DeepClone())).ToList());
+        if (model.ShouldSerializeCreatedAt()) DA.SetData(20, model.CreatedAt);
+        if (model.ShouldSerializeUpdatedAt()) DA.SetData(21, model.UpdatedAt);
+    }
 }
 
 public class SerializeTypeDiffComponent : SerializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
@@ -4178,6 +5070,39 @@ public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, Ty
     protected override string ModelNickname => "TDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of type diffs.";
     protected override string IconResourceName => "typesdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed type ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated type diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added types.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed type ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated type diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added types.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, TypesDiff model)
+    {
+        var removed = new List<TypeIdGoo>();
+        var updated = new List<TypeDiffGoo>();
+        var added = new List<TypeGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new TypeDiffUpdate { Type = new TypeId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, TypesDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new TypeIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new TypeDiffGoo((u.Diff ?? new TypeDiff { Guid = u.Type.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new TypeGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeTypesDiffComponent : SerializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
@@ -4734,6 +5659,88 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
     protected override string ModelNickname => "PD";
     protected override string ModelDescription => "Construct, deconstruct or modify a piece diff.";
     protected override string IconResourceName => "piecediff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignIdParam(), "Design", "Dn?", "The optional design.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Scale", "Sc?", "The optional scale.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("MirrorPlane", "MP?", "The optional mirror plane.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether hidden.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsLocked", "Lk?", "Whether locked.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Color", "Cl?", "The optional color.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam() { Access = GH_ParamAccess.list }, "Props", "Pr*", "The optional props.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignIdParam(), "Design", "Dn?", "The optional design.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Scale", "Sc?", "The optional scale.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("MirrorPlane", "MP?", "The optional mirror plane.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether hidden.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsLocked", "Lk?", "Whether locked.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Color", "Cl?", "The optional color.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam() { Access = GH_ParamAccess.list }, "Props", "Pr*", "The optional props.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, PieceDiff model)
+    {
+        string guid = null, name = null, description = null, color = null;
+        var type = new TypeIdGoo();
+        var design = new DesignIdGoo();
+        Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY, mirrorPlane = Rhino.Geometry.Plane.WorldXY;
+        var center = new CoordGoo();
+        double scale = 0;
+        bool isHidden = false, isLocked = false;
+        var props = new List<PropGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref type)) model.Type = type.Value.DeepClone();
+        if (DA.GetData(6, ref design)) model.Design = design.Value.DeepClone();
+        if (DA.GetData(7, ref plane)) model.Plane = RhinoConverter.Convert(plane);
+        if (DA.GetData(8, ref center)) model.Center = center.Value.DeepClone();
+        if (DA.GetData(9, ref scale)) model.Scale = (float)scale;
+        if (DA.GetData(10, ref mirrorPlane)) model.MirrorPlane = RhinoConverter.Convert(mirrorPlane);
+        if (DA.GetData(11, ref isHidden)) model.IsHidden = isHidden;
+        if (DA.GetData(12, ref isLocked)) model.IsLocked = isLocked;
+        if (DA.GetData(13, ref color)) model.Color = color;
+        if (DA.GetDataList(14, props)) model.Props = props.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(15, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, PieceDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeDescription()) DA.SetData(4, model.Description);
+        if (model.ShouldSerializeType()) DA.SetData(5, model.Type is not null ? new TypeIdGoo(model.Type.DeepClone()) : null);
+        if (model.ShouldSerializeDesign()) DA.SetData(6, model.Design is not null ? new DesignIdGoo(model.Design.DeepClone()) : null);
+        if (model.ShouldSerializePlane()) DA.SetData(7, model.Plane is not null ? RhinoConverter.Convert(model.Plane) : Rhino.Geometry.Plane.Unset);
+        if (model.ShouldSerializeCenter()) DA.SetData(8, model.Center is not null ? new CoordGoo(model.Center.DeepClone()) : null);
+        if (model.ShouldSerializeScale()) DA.SetData(9, model.Scale);
+        if (model.ShouldSerializeMirrorPlane()) DA.SetData(10, model.MirrorPlane is not null ? RhinoConverter.Convert(model.MirrorPlane) : Rhino.Geometry.Plane.Unset);
+        if (model.ShouldSerializeIsHidden()) DA.SetData(11, model.IsHidden);
+        if (model.ShouldSerializeIsLocked()) DA.SetData(12, model.IsLocked);
+        if (model.ShouldSerializeColor()) DA.SetData(13, model.Color);
+        if (model.ShouldSerializeProps()) DA.SetDataList(14, model.Props?.Select(p => new PropGoo(p.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(15, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializePieceDiffComponent : SerializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
@@ -4797,6 +5804,39 @@ public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo,
     protected override string ModelNickname => "PDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of piece diffs.";
     protected override string IconResourceName => "piecesdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed piece ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated piece diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added pieces.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed piece ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated piece diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added pieces.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, PiecesDiff model)
+    {
+        var removed = new List<PieceIdGoo>();
+        var updated = new List<PieceDiffGoo>();
+        var added = new List<PieceGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new PieceDiffUpdate { Piece = new PieceId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, PiecesDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new PieceIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new PieceDiffGoo((u.Diff ?? new PieceDiff { Guid = u.Piece.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new PieceGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializePiecesDiffComponent : SerializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
@@ -4956,6 +5996,42 @@ public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideD
     protected override string ModelNickname => "SD";
     protected override string ModelDescription => "Construct, deconstruct or modify a side diff.";
     protected override string IconResourceName => "sidediff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceIdParam(), "Piece", "Pi?", "The optional piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP?", "The optional design piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectorIdParam(), "Connector", "Co?", "The optional connector.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceIdParam(), "Piece", "Pi?", "The optional piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP?", "The optional design piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectorIdParam(), "Connector", "Co?", "The optional connector.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, SideDiff model)
+    {
+        var piece = new PieceIdGoo();
+        var designPiece = new PieceIdGoo();
+        var connector = new ConnectorIdGoo();
+        string description = null;
+        if (DA.GetData(2, ref piece)) model.Piece = piece.Value?.DeepClone();
+        if (DA.GetData(3, ref designPiece)) model.DesignPiece = designPiece.Value?.DeepClone();
+        if (DA.GetData(4, ref connector)) model.Connector = connector.Value?.DeepClone();
+        if (DA.GetData(5, ref description)) model.Description = description;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, SideDiff model)
+    {
+        if (model.ShouldSerializePiece() && model.Piece is not null) DA.SetData(2, new PieceIdGoo(model.Piece.DeepClone()));
+        if (model.ShouldSerializeDesignPiece()) DA.SetData(3, model.DesignPiece is not null ? new PieceIdGoo(model.DesignPiece.DeepClone()) : null);
+        if (model.ShouldSerializeConnector()) DA.SetData(4, model.Connector is not null ? new ConnectorIdGoo(model.Connector.DeepClone()) : null);
+        if (model.ShouldSerializeDescription()) DA.SetData(5, model.Description);
+    }
 }
 
 public class SerializeSideDiffComponent : SerializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
@@ -5276,6 +6352,75 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
     protected override string ModelNickname => "CD";
     protected override string ModelDescription => "Construct, deconstruct or modify a connection diff.";
     protected override string IconResourceName => "connectiondiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new SideDiffParam(), "Connected", "Co?", "The optional connected.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideDiffParam(), "Connecting", "Cg?", "The optional connecting.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?", "The optional gap.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?", "The optional shift.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs?", "The optional rise.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "The optional rotation.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tn?", "The optional turn.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?", "The optional tilt.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("U", "U?", "The optional u parameter.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("V", "V?", "The optional v parameter.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new SideDiffParam(), "Connected", "Co?", "The optional connected.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideDiffParam(), "Connecting", "Cg?", "The optional connecting.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?", "The optional gap.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?", "The optional shift.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs?", "The optional rise.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "The optional rotation.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tn?", "The optional turn.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?", "The optional tilt.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("U", "U?", "The optional u parameter.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("V", "V?", "The optional v parameter.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, ConnectionDiff model)
+    {
+        var connected = new SideDiffGoo();
+        var connecting = new SideDiffGoo();
+        string description = null;
+        double gap = 0, shift = 0, rise = 0, rotation = 0, turn = 0, tilt = 0, u = 0, v = 0;
+        var attributes = new List<AttributeGoo>();
+        if (DA.GetData(2, ref connected)) model.Connected = connected.Value?.DeepClone();
+        if (DA.GetData(3, ref connecting)) model.Connecting = connecting.Value?.DeepClone();
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref gap)) model.Gap = (float)gap;
+        if (DA.GetData(6, ref shift)) model.Shift = (float)shift;
+        if (DA.GetData(7, ref rise)) model.Rise = (float)rise;
+        if (DA.GetData(8, ref rotation)) model.Rotation = (float)rotation;
+        if (DA.GetData(9, ref turn)) model.Turn = (float)turn;
+        if (DA.GetData(10, ref tilt)) model.Tilt = (float)tilt;
+        if (DA.GetData(11, ref u)) model.U = (float)u;
+        if (DA.GetData(12, ref v)) model.V = (float)v;
+        if (DA.GetDataList(13, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, ConnectionDiff model)
+    {
+        if (model.ShouldSerializeConnected() && model.Connected is not null) DA.SetData(2, new SideDiffGoo(model.Connected.DeepClone()));
+        if (model.ShouldSerializeConnecting() && model.Connecting is not null) DA.SetData(3, new SideDiffGoo(model.Connecting.DeepClone()));
+        if (model.ShouldSerializeDescription()) DA.SetData(4, model.Description);
+        if (model.ShouldSerializeGap()) DA.SetData(5, model.Gap);
+        if (model.ShouldSerializeShift()) DA.SetData(6, model.Shift);
+        if (model.ShouldSerializeRise()) DA.SetData(7, model.Rise);
+        if (model.ShouldSerializeRotation()) DA.SetData(8, model.Rotation);
+        if (model.ShouldSerializeTurn()) DA.SetData(9, model.Turn);
+        if (model.ShouldSerializeTilt()) DA.SetData(10, model.Tilt);
+        if (model.ShouldSerializeU()) DA.SetData(11, model.U);
+        if (model.ShouldSerializeV()) DA.SetData(12, model.V);
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(13, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+    }
 }
 
 public class SerializeConnectionDiffComponent : SerializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
@@ -5339,6 +6484,75 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
     protected override string ModelNickname => "CDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of connection diffs.";
     protected override string IconResourceName => "connectionsdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed connection ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated connection diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added connections.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed connection ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated connection diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added connections.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, ConnectionsDiff model)
+    {
+        var removed = new List<ConnectionIdGoo>();
+        var updated = new List<ConnectionDiffGoo>();
+        var added = new List<ConnectionGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated))
+        {
+            model.Updated = updated.Select(u =>
+            {
+                var connection = new ConnectionId();
+                if (u.Value.Connected is not null)
+                {
+                    connection.Connected = new Side { Piece = u.Value.Connected.Piece, Connector = u.Value.Connected.Connector };
+                }
+                if (u.Value.Connecting is not null)
+                {
+                    connection.Connecting = new Side { Piece = u.Value.Connecting.Piece, Connector = u.Value.Connecting.Connector };
+                }
+
+                return new ConnectionDiffUpdate { Connection = connection, Diff = u.Value.DeepClone() };
+            }).ToList();
+        }
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, ConnectionsDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new ConnectionIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u =>
+        {
+            if (u.Diff is not null)
+            {
+                return new ConnectionDiffGoo(u.Diff.DeepClone());
+            }
+
+            return new ConnectionDiffGoo(new ConnectionDiff
+            {
+                Connected = new SideDiff
+                {
+                    Piece = u.Connection.Connected.Piece,
+                    Connector = u.Connection.Connected.Connector,
+                },
+                Connecting = new SideDiff
+                {
+                    Piece = u.Connection.Connecting.Piece,
+                    Connector = u.Connection.Connecting.Connector,
+                },
+            });
+        }).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new ConnectionGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeConnectionsDiffComponent : SerializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
@@ -5820,6 +7034,133 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
     protected override string ModelNickname => "DD";
     protected override string ModelDescription => "Construct, deconstruct or modify a design diff.";
     protected override string IconResourceName => "designdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignIdParam(), "Parent", "Pa?", "The optional parent design.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the design is abstract.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Un?", "The optional unit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("CanScale", "Sc?", "Whether scaling is enabled.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("CanMirror", "Mi?", "Whether mirroring is enabled.", GH_ParamAccess.item);
+        pManager.AddTextParameter("ActiveLayer", "Ly?", "The optional active layer.", GH_ParamAccess.item);
+        pManager.AddParameter(new PiecesDiffParam(), "Pieces", "Pc?", "The optional piece diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectionsDiffParam(), "Connections", "Cn?", "The optional connection diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam() { Access = GH_ParamAccess.list }, "Props", "Pr*", "The optional props.", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam() { Access = GH_ParamAccess.list }, "Stats", "St*", "The optional stats.", GH_ParamAccess.list);
+        pManager.AddParameter(new LayerParam() { Access = GH_ParamAccess.list }, "Layers", "Ly*", "The optional layers.", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam() { Access = GH_ParamAccess.list }, "Groups", "Gp*", "The optional groups.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam() { Access = GH_ParamAccess.list }, "Authors", "Au*", "The optional author ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConceptIdParam() { Access = GH_ParamAccess.list }, "Concepts", "Cp*", "The optional concept ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddTimeParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignIdParam(), "Parent", "Pa?", "The optional parent design.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the design is abstract.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Un?", "The optional unit.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("CanScale", "Sc?", "Whether scaling is enabled.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("CanMirror", "Mi?", "Whether mirroring is enabled.", GH_ParamAccess.item);
+        pManager.AddTextParameter("ActiveLayer", "Ly?", "The optional active layer.", GH_ParamAccess.item);
+        pManager.AddParameter(new PiecesDiffParam(), "Pieces", "Pc?", "The optional piece diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectionsDiffParam(), "Connections", "Cn?", "The optional connection diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam() { Access = GH_ParamAccess.list }, "Props", "Pr*", "The optional props.", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam() { Access = GH_ParamAccess.list }, "Stats", "St*", "The optional stats.", GH_ParamAccess.list);
+        pManager.AddParameter(new LayerParam() { Access = GH_ParamAccess.list }, "Layers", "Ly*", "The optional layers.", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam() { Access = GH_ParamAccess.list }, "Groups", "Gp*", "The optional groups.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam() { Access = GH_ParamAccess.list }, "Authors", "Au*", "The optional author ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConceptIdParam() { Access = GH_ParamAccess.list }, "Concepts", "Cp*", "The optional concept ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddTimeParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, DesignDiff model)
+    {
+        string guid = null, name = null, folder = null, description = null, icon = null, image = null, unit = null, activeLayer = null;
+        bool isAbstract = false, canScale = false, canMirror = false;
+        DateTime createdAt = default, updatedAt = default;
+        var parent = new DesignIdGoo();
+        var location = new LocationGoo();
+        var pieces = new PiecesDiffGoo();
+        var connections = new ConnectionsDiffGoo();
+        var props = new List<PropGoo>();
+        var stats = new List<StatGoo>();
+        var layers = new List<LayerGoo>();
+        var groups = new List<GroupGoo>();
+        var authors = new List<AuthorIdGoo>();
+        var concepts = new List<ConceptIdGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref parent)) model.Parent = parent.Value.DeepClone();
+        if (DA.GetData(5, ref isAbstract)) model.IsAbstract = isAbstract;
+        if (DA.GetData(6, ref folder)) model.Folder = folder;
+        if (DA.GetData(7, ref description)) model.Description = description;
+        if (DA.GetData(8, ref icon)) model.Icon = icon;
+        if (DA.GetData(9, ref image)) model.Image = image;
+        if (DA.GetData(10, ref location)) model.Location = location.Value.DeepClone();
+        if (DA.GetData(11, ref unit)) model.Unit = unit;
+        if (DA.GetData(12, ref canScale)) model.CanScale = canScale;
+        if (DA.GetData(13, ref canMirror)) model.CanMirror = canMirror;
+        if (DA.GetData(14, ref activeLayer)) model.ActiveLayer = activeLayer;
+        if (DA.GetData(15, ref pieces)) model.Pieces = pieces.Value.DeepClone();
+        if (DA.GetData(16, ref connections)) model.Connections = connections.Value.DeepClone();
+        if (DA.GetDataList(17, props)) model.Props = props.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(18, stats)) model.Stats = stats.Select(s => s.Value.DeepClone()).ToList();
+        if (DA.GetDataList(19, layers)) model.Layers = layers.Select(l => l.Value.DeepClone()).ToList();
+        if (DA.GetDataList(20, groups)) model.Groups = groups.Select(g => g.Value.DeepClone()).ToList();
+        if (DA.GetDataList(21, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(22, concepts)) model.Concepts = concepts.Select(c => c.Value.DeepClone()).ToList();
+        if (DA.GetDataList(23, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetData(24, ref createdAt)) model.CreatedAt = createdAt;
+        if (DA.GetData(25, ref updatedAt)) model.UpdatedAt = updatedAt;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, DesignDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeParent()) DA.SetData(4, model.Parent is not null ? new DesignIdGoo(model.Parent.DeepClone()) : null);
+        if (model.ShouldSerializeIsAbstract()) DA.SetData(5, model.IsAbstract);
+        if (model.ShouldSerializeFolder()) DA.SetData(6, model.Folder);
+        if (model.ShouldSerializeDescription()) DA.SetData(7, model.Description);
+        if (model.ShouldSerializeIcon()) DA.SetData(8, model.Icon);
+        if (model.ShouldSerializeImage()) DA.SetData(9, model.Image);
+        if (model.ShouldSerializeLocation()) DA.SetData(10, model.Location is not null ? new LocationGoo(model.Location.DeepClone()) : null);
+        if (model.ShouldSerializeUnit()) DA.SetData(11, model.Unit);
+        if (model.ShouldSerializeCanScale()) DA.SetData(12, model.CanScale);
+        if (model.ShouldSerializeCanMirror()) DA.SetData(13, model.CanMirror);
+        if (model.ShouldSerializeActiveLayer()) DA.SetData(14, model.ActiveLayer);
+        if (model.ShouldSerializePieces()) DA.SetData(15, model.Pieces is not null ? new PiecesDiffGoo(model.Pieces.DeepClone()) : null);
+        if (model.ShouldSerializeConnections()) DA.SetData(16, model.Connections is not null ? new ConnectionsDiffGoo(model.Connections.DeepClone()) : null);
+        if (model.ShouldSerializeProps()) DA.SetDataList(17, model.Props?.Select(p => new PropGoo(p.DeepClone())).ToList());
+        if (model.ShouldSerializeStats()) DA.SetDataList(18, model.Stats?.Select(s => new StatGoo(s.DeepClone())).ToList());
+        if (model.ShouldSerializeLayers()) DA.SetDataList(19, model.Layers?.Select(l => new LayerGoo(l.DeepClone())).ToList());
+        if (model.ShouldSerializeGroups()) DA.SetDataList(20, model.Groups?.Select(g => new GroupGoo(g.DeepClone())).ToList());
+        if (model.ShouldSerializeAuthors()) DA.SetDataList(21, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeConcepts()) DA.SetDataList(22, model.Concepts?.Select(c => new ConceptIdGoo(c.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(23, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeCreatedAt()) DA.SetData(24, model.CreatedAt);
+        if (model.ShouldSerializeUpdatedAt()) DA.SetData(25, model.UpdatedAt);
+    }
 }
 
 public class SerializeDesignDiffComponent : SerializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
@@ -5883,6 +7224,39 @@ public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffG
     protected override string ModelNickname => "DDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of design diffs.";
     protected override string IconResourceName => "designsdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed design ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated design diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added designs.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed design ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated design diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added designs.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, DesignsDiff model)
+    {
+        var removed = new List<DesignIdGoo>();
+        var updated = new List<DesignDiffGoo>();
+        var added = new List<DesignGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new DesignDiffUpdate { Design = new DesignId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, DesignsDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new DesignIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new DesignDiffGoo((u.Diff ?? new DesignDiff { Guid = u.Design.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new DesignGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeDesignsDiffComponent : SerializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
@@ -6202,6 +7576,243 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
     protected override string ModelNickname => "KD";
     protected override string ModelDescription => "Construct, deconstruct or modify a kit diff.";
     protected override string IconResourceName => "kitdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Preview", "Pv?", "The optional preview.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "Vr?", "The optional version.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "The optional homepage url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "Li?", "The optional license.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypesDiffParam(), "Types", "Ty?", "The optional types diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignsDiffParam(), "Designs", "Dn?", "The optional designs diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new TagParam() { Access = GH_ParamAccess.list }, "Tags", "Tg*", "The optional tags.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConceptParam() { Access = GH_ParamAccess.list }, "Concepts", "Cn*", "The optional concepts.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam() { Access = GH_ParamAccess.list }, "Ports", "Pt*", "The optional ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorParam() { Access = GH_ParamAccess.list }, "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddParameter(new FilesDiffParam(), "Files", "Fl?", "The optional files diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new FoldersDiffParam(), "Folders", "Fo?", "The optional folders diff.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Preview", "Pv?", "The optional preview.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "Vr?", "The optional version.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "The optional homepage url.", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "Li?", "The optional license.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypesDiffParam(), "Types", "Ty?", "The optional types diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignsDiffParam(), "Designs", "Dn?", "The optional designs diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new TagParam() { Access = GH_ParamAccess.list }, "Tags", "Tg*", "The optional tags.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConceptParam() { Access = GH_ParamAccess.list }, "Concepts", "Cn*", "The optional concepts.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam() { Access = GH_ParamAccess.list }, "Ports", "Pt*", "The optional ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorParam() { Access = GH_ParamAccess.list }, "Authors", "Au*", "The optional authors.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager.AddParameter(new FilesDiffParam(), "Files", "Fl?", "The optional files diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new FoldersDiffParam(), "Folders", "Fo?", "The optional folders diff.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CreatedAt", "CA?", "The optional created-at timestamp.", GH_ParamAccess.item);
+        pManager.AddTextParameter("UpdatedAt", "UA?", "The optional updated-at timestamp.", GH_ParamAccess.item);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, KitDiff model)
+    {
+        string guid = null, name = null, description = null, icon = null, image = null, preview = null, version = null, remote = null, homepage = null, license = null, createdAt = null, updatedAt = null;
+        var types = new TypesDiffGoo();
+        var designs = new DesignsDiffGoo();
+        var files = new FilesDiffGoo();
+        var folders = new FoldersDiffGoo();
+        var tags = new List<TagGoo>();
+        var concepts = new List<ConceptGoo>();
+        var ports = new List<PortGoo>();
+        var authors = new List<AuthorGoo>();
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref guid)) model.Guid = guid;
+        if (DA.GetData(3, ref name)) model.Name = name;
+        if (DA.GetData(4, ref description)) model.Description = description;
+        if (DA.GetData(5, ref icon)) model.Icon = icon;
+        if (DA.GetData(6, ref image)) model.Image = image;
+        if (DA.GetData(7, ref preview)) model.Preview = preview;
+        if (DA.GetData(8, ref version)) model.Version = version;
+        if (DA.GetData(9, ref remote)) model.Remote = remote;
+        if (DA.GetData(10, ref homepage)) model.Homepage = homepage;
+        if (DA.GetData(11, ref license)) model.License = license;
+        if (DA.GetData(12, ref types)) model.Types = types.Value.DeepClone();
+        if (DA.GetData(13, ref designs)) model.Designs = designs.Value.DeepClone();
+        if (DA.GetDataList(14, tags))
+        {
+            model.Tags = new TagsDiff
+            {
+                Updated = tags.Select(t => new TagDiffUpdate
+                {
+                    Tag = t.Value.DeepClone(),
+                    Diff = new TagDiff
+                    {
+                        Guid = t.Value.Guid,
+                        Name = t.Value.Name,
+                        Description = t.Value.Description,
+                        Icon = t.Value.Icon,
+                        Attributes = t.Value.Attributes,
+                    },
+                }).ToList(),
+            };
+        }
+        if (DA.GetDataList(15, concepts))
+        {
+            model.Concepts = new ConceptsDiff
+            {
+                Updated = concepts.Select(c => new ConceptDiffUpdate
+                {
+                    Concept = c.Value.DeepClone(),
+                    Diff = new ConceptDiff
+                    {
+                        Guid = c.Value.Guid,
+                        Name = c.Value.Name,
+                        Description = c.Value.Description,
+                        Icon = c.Value.Icon,
+                        Attributes = c.Value.Attributes,
+                    },
+                }).ToList(),
+            };
+        }
+        if (DA.GetDataList(16, ports)) model.Ports = ports.Select(p => p.Value.DeepClone()).ToList();
+        if (DA.GetDataList(17, authors)) model.Authors = authors.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetDataList(18, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
+        if (DA.GetData(19, ref files)) model.Files = files.Value.DeepClone();
+        if (DA.GetData(20, ref folders)) model.Folders = folders.Value.DeepClone();
+        if (DA.GetData(21, ref createdAt)) model.CreatedAt = createdAt;
+        if (DA.GetData(22, ref updatedAt)) model.UpdatedAt = updatedAt;
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, KitDiff model)
+    {
+        if (model.ShouldSerializeGuid()) DA.SetData(2, model.Guid);
+        if (model.ShouldSerializeName()) DA.SetData(3, model.Name);
+        if (model.ShouldSerializeDescription()) DA.SetData(4, model.Description);
+        if (model.ShouldSerializeIcon()) DA.SetData(5, model.Icon);
+        if (model.ShouldSerializeImage()) DA.SetData(6, model.Image);
+        if (model.ShouldSerializePreview()) DA.SetData(7, model.Preview);
+        if (model.ShouldSerializeVersion()) DA.SetData(8, model.Version);
+        if (model.ShouldSerializeRemote()) DA.SetData(9, model.Remote);
+        if (model.ShouldSerializeHomepage()) DA.SetData(10, model.Homepage);
+        if (model.ShouldSerializeLicense()) DA.SetData(11, model.License);
+        if (model.ShouldSerializeTypes()) DA.SetData(12, model.Types is not null ? new TypesDiffGoo(model.Types.DeepClone()) : null);
+        if (model.ShouldSerializeDesigns()) DA.SetData(13, model.Designs is not null ? new DesignsDiffGoo(model.Designs.DeepClone()) : null);
+
+        if (model.ShouldSerializeTags())
+        {
+            var resolvedTags = (model.Tags?.Added ?? new List<Tag>())
+                .Concat((model.Tags?.Updated ?? new List<TagDiffUpdate>())
+                    .Select(update =>
+                    {
+                        if (update.Diff is null)
+                        {
+                            return ((Tag)update.Tag).DeepClone();
+                        }
+
+                        return new Tag
+                        {
+                            Guid = update.Diff.Guid ?? update.Tag.Guid,
+                            Name = update.Diff.Name ?? string.Empty,
+                            Description = update.Diff.Description,
+                            Icon = update.Diff.Icon,
+                            Attributes = update.Diff.Attributes?.Added ?? new List<Attribute>(),
+                        };
+                    }))
+                .Select(tag => new TagGoo(tag.DeepClone()))
+                .ToList();
+            DA.SetDataList(14, resolvedTags);
+        }
+
+        if (model.ShouldSerializeConcepts())
+        {
+            var resolvedConcepts = (model.Concepts?.Added ?? new List<Concept>())
+                .Concat((model.Concepts?.Updated ?? new List<ConceptDiffUpdate>())
+                    .Select(update =>
+                    {
+                        if (update.Diff is null)
+                        {
+                            return ((Concept)update.Concept).DeepClone();
+                        }
+
+                        return new Concept
+                        {
+                            Guid = update.Diff.Guid ?? update.Concept.Guid,
+                            Name = update.Diff.Name ?? string.Empty,
+                            Description = update.Diff.Description,
+                            Icon = update.Diff.Icon,
+                            Attributes = update.Diff.Attributes?.Added ?? new List<Attribute>(),
+                        };
+                    }))
+                .Select(concept => new ConceptGoo(concept.DeepClone()))
+                .ToList();
+            DA.SetDataList(15, resolvedConcepts);
+        }
+
+        if (model.ShouldSerializePorts())
+        {
+            var resolvedPorts = (model.Ports?.Added ?? new List<Port>())
+                .Concat((model.Ports?.Updated ?? new List<PortDiffUpdate>())
+                    .Where(update => update.Diff is not null)
+                    .Select(update => ((Port)update.Diff!).DeepClone()))
+                .Select(port => new PortGoo(port.DeepClone()))
+                .ToList();
+            DA.SetDataList(16, resolvedPorts);
+        }
+
+        if (model.ShouldSerializeAuthors())
+        {
+            var resolvedAuthors = (model.Authors?.Added ?? new List<Author>())
+                .Concat((model.Authors?.Updated ?? new List<AuthorDiffUpdate>())
+                    .Select(update =>
+                    {
+                        if (update.Diff is null)
+                        {
+                            return ((Author)update.Author).DeepClone();
+                        }
+
+                        return new Author
+                        {
+                            Guid = update.Diff.Guid ?? update.Author.Guid,
+                            Name = update.Diff.Name ?? string.Empty,
+                            Email = update.Diff.Email ?? string.Empty,
+                            Attributes = update.Diff.Attributes ?? new List<Attribute>(),
+                        };
+                    }))
+                .Select(author => new AuthorGoo(author.DeepClone()))
+                .ToList();
+            DA.SetDataList(17, resolvedAuthors);
+        }
+
+        if (model.ShouldSerializeAttributes())
+        {
+            var resolvedAttributes = (model.Attributes?.Added ?? new List<Attribute>())
+                .Concat((model.Attributes?.Updated ?? new List<AttributeDiffUpdate>())
+                    .Where(update => update.Diff is not null)
+                    .Select(update => ((Attribute)update.Diff!).DeepClone()))
+                .Select(attribute => new AttributeGoo(attribute.DeepClone()))
+                .ToList();
+            DA.SetDataList(18, resolvedAttributes);
+        }
+
+        if (model.ShouldSerializeFiles()) DA.SetData(19, model.Files is not null ? new FilesDiffGoo(model.Files.DeepClone()) : null);
+        if (model.ShouldSerializeFolders()) DA.SetData(20, model.Folders is not null ? new FoldersDiffGoo(model.Folders.DeepClone()) : null);
+        if (model.ShouldSerializeCreatedAt()) DA.SetData(21, model.CreatedAt);
+        if (model.ShouldSerializeUpdatedAt()) DA.SetData(22, model.UpdatedAt);
+    }
 }
 
 public class SerializeKitDiffComponent : SerializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
@@ -6265,6 +7876,39 @@ public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsD
     protected override string ModelNickname => "KDs";
     protected override string ModelDescription => "Construct, deconstruct or modify a collection of kit diffs.";
     protected override string IconResourceName => "kitsdiff_24x24";
+
+    protected override void RegisterModelInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed kit ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new KitDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated kit diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new KitParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added kits.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterModelOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new KitIdParam() { Access = GH_ParamAccess.list }, "Removed", "Rm*", "The optional removed kit ids.", GH_ParamAccess.list);
+        pManager.AddParameter(new KitDiffParam() { Access = GH_ParamAccess.list }, "Updated", "Up*", "The optional updated kit diffs.", GH_ParamAccess.list);
+        pManager.AddParameter(new KitParam() { Access = GH_ParamAccess.list }, "Added", "Ad*", "The optional added kits.", GH_ParamAccess.list);
+    }
+
+    protected override void GetModelData(IGH_DataAccess DA, KitsDiff model)
+    {
+        var removed = new List<KitIdGoo>();
+        var updated = new List<KitDiffGoo>();
+        var added = new List<KitGoo>();
+
+        if (DA.GetDataList(2, removed)) model.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
+        if (DA.GetDataList(3, updated)) model.Updated = updated.Select(u => new KitDiffUpdate { Kit = new KitId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(4, added)) model.Added = added.Select(a => a.Value.DeepClone()).ToList();
+    }
+
+    protected override void SetModelData(IGH_DataAccess DA, KitsDiff model)
+    {
+        DA.SetDataList(2, model.Removed.Select(r => new KitIdGoo(r.DeepClone())).ToList());
+        DA.SetDataList(3, model.Updated.Select(u => new KitDiffGoo((u.Diff ?? new KitDiff { Guid = u.Kit.Guid }).DeepClone())).ToList());
+        DA.SetDataList(4, model.Added.Select(a => new KitGoo(a.DeepClone())).ToList());
+    }
+
 }
 
 public class SerializeKitsDiffComponent : SerializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
@@ -6305,11 +7949,11 @@ public class EncodeTextComponent : ScriptingComponent
     {
         pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only", GH_ParamAccess.item, 0);
-        pManager[1].Optional = true;
+
         pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.", GH_ParamAccess.list);
-        pManager[2].Optional = true;
+
         pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.", GH_ParamAccess.list);
-        pManager[3].Optional = true;
+
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -6341,11 +7985,11 @@ public class DecodeTextComponent : ScriptingComponent
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only", GH_ParamAccess.item, 0);
-        pManager[1].Optional = true;
+
         pManager.AddTextParameter("Replace", "Re", "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
-        pManager[2].Optional = true;
+
         pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that gets restored before decoding.", GH_ParamAccess.list);
-        pManager[3].Optional = true;
+
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -6364,6 +8008,78 @@ public class DecodeTextComponent : ScriptingComponent
         DA.GetDataList(2, replace);
         DA.GetDataList(3, forbidden);
         DA.SetData(0, Semio.Utility.Decode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, forbidden)));
+    }
+}
+
+public class ImportModelComponent : ScriptingComponent
+{
+    public ImportModelComponent() : base("Import Model", "ImpModel", "Imports a Rhino model object from a file blob string.") { }
+    public override Guid ComponentGuid => new("0E2A82A4-494E-4D38-9E32-FD26A1B6EC6D");
+    protected override Bitmap Icon => Resources.model_24x24;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("File Blob", "Bl", "Rhino file blob string (base64 or data URI).", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddGenericParameter("Rhino ModelObject", "Mo", "Imported Rhino model object.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var fileBlob = "";
+        if (!DA.GetData(0, ref fileBlob)) return;
+
+        try
+        {
+            DA.SetData(0, Utility.ImportRhinoModelContextFromBlob(fileBlob));
+        }
+        catch (Exception exception)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, exception.Message);
+        }
+    }
+}
+
+public class ModelObjectToGroupComponent : ScriptingComponent
+{
+    public ModelObjectToGroupComponent() : base("ModelObject To Group", "Mo→Gr", "Translates an imported Rhino model object into a single semio group with recursive named layer groups.") { }
+    public override Guid ComponentGuid => new("9C74A31E-3B07-48EC-A6C9-B16A3F1EA9DD");
+    protected override Bitmap Icon => Resources.group_24x24;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddGenericParameter("Rhino ModelObject", "Mo", "Imported Rhino model object context.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new GroupParam(), "Group", "Gr", "Single translated semio group.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        object modelObjectInput = null;
+        if (!DA.GetData(0, ref modelObjectInput)) return;
+
+        if (modelObjectInput is not Utility.RhinoModelObject rhinoModelObject)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Input must be the Rhino ModelObject output of Import Model.");
+            return;
+        }
+
+        try
+        {
+            DA.SetData(0, new GroupGoo(Utility.TranslateRhinoModelObjectToSingleGroup(rhinoModelObject)));
+        }
+        catch (Exception exception)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, exception.Message);
+        }
     }
 }
 
@@ -6435,7 +8151,7 @@ public class TruncateTextComponent : ScriptingComponent
         pManager.AddTextParameter("Text", "Tx", "Text to truncate.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Length", "Le", "Maximum length of the text.", GH_ParamAccess.item);
         pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.", GH_ParamAccess.item, "…");
-        pManager[2].Optional = true;
+
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -6511,6 +8227,12 @@ public abstract class KitOperationComponent : Component
 #region 🔖Persistence
 // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖engine🔖persistence](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Engine/s/Persistence)
 // Implementations MUST use KitSqlite for local kit persistence.
+
+public static class KitRuntimeState
+{
+    public static Kit? StaticKit { get; set; }
+    public static string StaticKitDirectory { get; set; } = "";
+}
 
 public abstract class PersistenceComponent : KitOperationComponent
 {
@@ -6616,44 +8338,1049 @@ public class SaveKitComponent : PersistenceComponent
     }
 }
 
-public class ApplyKitDiffComponent : PersistenceComponent
+public class UpdateKitComponent : KitOperationComponent
 {
-    public ApplyKitDiffComponent() : base("Apply Kit Diff", "Kit+Δ", "Apply a diff to a local kit.") { }
-    protected override string RunDescription => "True to apply the diff.";
-    protected override string SuccessDescription => "True if the diff was successfully applied. False otherwise.";
+    public UpdateKitComponent() : base("Update Kit", "Kit↻", "Update a static kit with a kit diff and persist it to SQLite.") { }
+    protected override string RunDescription => "True to update the kit.";
+    protected override string SuccessDescription => "True if the kit was successfully updated. False otherwise.";
     public override Guid ComponentGuid => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");
     protected override Bitmap Icon => Resources.kit_diff_24x24;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
-    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
+    protected override void RegisterKitInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitDiffParam(), "Kit Diff", "KtΔ", "The diff to apply.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Directory", "Di?",
+            "Optional directory path of the local kit.\n" +
+            "If none is provided, it will use the directory of the current Grasshopper file.",
+            GH_ParamAccess.item);
+        pManager[1].Optional = true;
     }
 
-    protected override void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
+    protected override void RegisterKitOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new KitParam());
+        pManager.AddTextParameter("Local Directory", "Di", "The local directory of the kit.", GH_ParamAccess.item);
     }
 
-    protected override dynamic? GetPersistentInput(IGH_DataAccess DA)
+    protected override dynamic? GetInput(IGH_DataAccess DA)
     {
         KitDiffGoo? diffGoo = null;
-        DA.GetData(0, ref diffGoo);
-        return diffGoo?.Value;
+        if (!DA.GetData(0, ref diffGoo) || diffGoo is null) return null;
+        var directory = "";
+        if (!DA.GetData(1, ref directory) || string.IsNullOrWhiteSpace(directory))
+        {
+            directory = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
+        }
+        return new { Directory = directory, Diff = diffGoo.Value };
     }
 
-    protected override dynamic? RunOnKit(string directory, dynamic? input)
+    protected override dynamic? Run(dynamic? input = null)
     {
-        if (input is KitDiff diff)
-            return KitSqlite.ApplyKitDiff(directory, diff);
-        return null;
+        if (input is null) return null;
+        var directory = (string)input.Directory;
+        var diff = (KitDiff)input.Diff;
+
+        var baseKit = KitRuntimeState.StaticKit is not null && KitRuntimeState.StaticKitDirectory == directory
+            ? KitRuntimeState.StaticKit
+            : KitSqlite.LoadKit(directory);
+        var updatedKit = baseKit.ApplyDiff(diff);
+        KitSqlite.SaveKit(directory, updatedKit);
+        KitRuntimeState.StaticKit = updatedKit;
+        KitRuntimeState.StaticKitDirectory = directory;
+        return new { Directory = directory, Kit = updatedKit };
     }
 
     protected override void SetOutput(IGH_DataAccess DA, dynamic response)
     {
-        DA.SetData(1, new KitGoo(response));
+        DA.SetData(1, new KitGoo(response.Kit));
+        DA.SetData(2, response.Directory);
     }
 }
 
 #endregion 🔖Persistence
 
 #endregion 🔖Engine
+
+public class FlattenDesignComponent : ScriptingComponent
+{
+    public FlattenDesignComponent() : base("Flatten Design", "Flat", "Flattens a design.") { }
+    public override Guid ComponentGuid => new("4A6F1D2C-8B3E-49A1-B72F-1D9C8B5F6C3E");
+    protected override Bitmap Icon => Resources.design_flatten_24x24;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "Id", "Design Id", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignDiffParam(), "DesignDiff", "Df", "Flattened Design Diff", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo kitGoo = null;
+        if (!DA.GetData(0, ref kitGoo)) return;
+        string designId = "";
+        if (!DA.GetData(1, ref designId)) return;
+
+        var result = SemioExt.FlattenDesign(kitGoo.Value, designId);
+        DA.SetData(0, new DesignDiffGoo(result));
+    }
+}
+
+public class ReplaceClusterWithDesignComponent : ScriptingComponent
+{
+    public ReplaceClusterWithDesignComponent() : base("Replace Cluster", "RepCl", "Replaces a cluster with a design.") { }
+    public override Guid ComponentGuid => new("7D8E2F9A-4B1C-46A3-9F1E-3C8B5A7D2C1E");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "OriginalDesign", "OD", "Original Design", GH_ParamAccess.item);
+        pManager.AddTextParameter("ClusterPieceIds", "Ids", "Cluster Piece Ids", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "ClusteredDesign", "CD", "Clustered Design", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectionParam(), "ExternalConnections", "EC", "External Connections", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignDiffParam(), "DesignDiff", "Df", "Design Diff", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo originalDesignGoo = null;
+        if (!DA.GetData(0, ref originalDesignGoo)) return;
+        List<string> clusterPieceIds = new List<string>();
+        if (!DA.GetDataList(1, clusterPieceIds)) return;
+        DesignGoo clusteredDesignGoo = null;
+        if (!DA.GetData(2, ref clusteredDesignGoo)) return;
+        List<ConnectionGoo> externalConnectionsGoo = new List<ConnectionGoo>();
+        if (!DA.GetDataList(3, externalConnectionsGoo)) return;
+
+        var result = SemioExt.ReplaceClusterWithDesign(originalDesignGoo.Value, clusterPieceIds, clusteredDesignGoo.Value, externalConnectionsGoo.Select(c => c.Value).ToList());
+        DA.SetData(0, new DesignDiffGoo(result));
+    }
+}
+
+public class FindPieceInDesignComponent : ScriptingComponent
+{
+    public FindPieceInDesignComponent() : base("Find Piece In Design", "FPiD", "Finds a piece in a design by its GUID.") { }
+    public override Guid ComponentGuid => new("8E9D0F1C-2A3B-45A9-8F7E-6C5B4A3D2E1F");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "G", "Piece GUID", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Piece", "P", "Found Piece", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo designGoo = null;
+        if (!DA.GetData(0, ref designGoo)) return;
+        string pieceGuid = "";
+        if (!DA.GetData(1, ref pieceGuid)) return;
+
+        var result = SemioExt.FindPieceInDesign(designGoo.Value, pieceGuid);
+        DA.SetData(0, new PieceGoo(result));
+    }
+}
+
+public class FindReplacableTypesForPieceInDesignComponent : ScriptingComponent
+{
+    public FindReplacableTypesForPieceInDesignComponent() : base("Find Replacable Types (Piece)", "FRepTP", "Finds replacable types for a piece in a design.") { }
+    public override Guid ComponentGuid => new("9A0B1C2D-3E4F-56A7-B8C9-D0E1F2A3B4C5");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "DG", "Design GUID", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "PG", "Piece GUID", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variants", "V", "Variants", GH_ParamAccess.list);
+
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Types", "T", "Replacable Types", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo kitGoo = null;
+        if (!DA.GetData(0, ref kitGoo)) return;
+        string designGuid = "";
+        if (!DA.GetData(1, ref designGuid)) return;
+        string pieceGuid = "";
+        if (!DA.GetData(2, ref pieceGuid)) return;
+        List<string> variants = new List<string>();
+        DA.GetDataList(3, variants);
+
+        var result = SemioExt.FindReplacableTypesForPieceInDesign(kitGoo.Value, designGuid, pieceGuid, variants.Count > 0 ? variants.ToArray() : null);
+        DA.SetDataList(0, result.Select(r => new TypeGoo(r)));
+    }
+}
+
+
+public class FindTagComponent : ScriptingComponent
+{
+    public FindTagComponent() : base("FindTag", "FTag", "Finds a tag by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234560");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TagParam(), "Tags", "T", "Tags", GH_ParamAccess.list);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TagParam(), "Tag", "T", "Tag", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<TagGoo> in0 = new List<TagGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindTag(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetData(0, result != null ? new TagGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConceptComponent : ScriptingComponent
+{
+    public FindConceptComponent() : base("FindConcept", "FConcept", "Finds a concept by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234561");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConceptParam(), "Concepts", "C", "Concepts", GH_ParamAccess.list);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConceptParam(), "Concept", "C", "Concept", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<ConceptGoo> in0 = new List<ConceptGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConcept(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetData(0, result != null ? new ConceptGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindModelComponent : ScriptingComponent
+{
+    public FindModelComponent() : base("FindModel", "FModel", "Finds a model by tag GUIDs.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234562");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ModelParam(), "Models", "M", "Models", GH_ParamAccess.list);
+        pManager.AddTextParameter("TagGuids", "G", "TagGuids", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ModelParam(), "Model", "M", "Model", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<ModelGoo> in0 = new List<ModelGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        List<string> in1 = new List<string>();
+        if (!DA.GetDataList(1, in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindModel(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetData(0, result != null ? new ModelGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectorComponent : ScriptingComponent
+{
+    public FindConnectorComponent() : base("FindConnector", "FConnector", "Finds a connector by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234563");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorParam(), "Connectors", "C", "Connectors", GH_ParamAccess.list);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorParam(), "Connector", "C", "Connector", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<ConnectorGoo> in0 = new List<ConnectorGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConnector(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetData(0, result != null ? new ConnectorGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectorInTypeComponent : ScriptingComponent
+{
+    public FindConnectorInTypeComponent() : base("FindConnectorInType", "FCInType", "Finds a connector in a type by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234564");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Type", "T", "Type", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorParam(), "Connector", "C", "Connector", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        TypeGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConnectorInType(in0.Value, in1);
+            DA.SetData(0, result != null ? new ConnectorGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindPieceComponent : ScriptingComponent
+{
+    public FindPieceComponent() : base("FindPiece", "FPiece", "Finds a piece by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234565");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Piece", "P", "Piece", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<PieceGoo> in0 = new List<PieceGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindPiece(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetData(0, result != null ? new PieceGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectionComponent : ScriptingComponent
+{
+    public FindConnectionComponent() : base("FindConnection", "FConn", "Finds a connection by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234566");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connection", "C", "Connection", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<ConnectionGoo> in0 = new List<ConnectionGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConnection(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetData(0, result != null ? new ConnectionGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindPieceConnectionsComponent : ScriptingComponent
+{
+    public FindPieceConnectionsComponent() : base("FindPieceConnections", "FPConn", "Finds connections for a piece.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234567");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
+        pManager.AddTextParameter("PieceGuid", "G", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        List<ConnectionGoo> in0 = new List<ConnectionGoo>();
+        if (!DA.GetDataList(0, in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindPieceConnections(in0.Select(x => x.Value).ToList(), in1);
+            DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectorForPieceInConnectionComponent : ScriptingComponent
+{
+    public FindConnectorForPieceInConnectionComponent() : base("FindConnectorForPieceInConnection", "FCFPIC", "Finds a connector for a piece in a connection.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234568");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Type", "T", "Type", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectionParam(), "Connection", "C", "Connection", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "G", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorParam(), "Connector", "C", "Connector", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        TypeGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        ConnectionGoo in1 = null;
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConnectorForPieceInConnection(in0.Value, in1.Value, in2);
+            DA.SetData(0, result != null ? new ConnectorGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectionInDesignComponent : ScriptingComponent
+{
+    public FindConnectionInDesignComponent() : base("FindConnectionInDesign", "FCID", "Finds a connection in a design by GUID.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234569");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connection", "C", "Connection", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConnectionInDesign(in0.Value, in1);
+            DA.SetData(0, result != null ? new ConnectionGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectionsInDesignComponent : ScriptingComponent
+{
+    public FindConnectionsInDesignComponent() : base("FindConnectionsInDesign", "FCsID", "Finds connections in a design by GUIDs.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456A");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guids", "G", "Guids", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        List<string> in1 = new List<string>();
+        if (!DA.GetDataList(1, in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConnectionsInDesign(in0.Value, in1);
+            DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindPieceConnectionsInDesignComponent : ScriptingComponent
+{
+    public FindPieceConnectionsInDesignComponent() : base("FindPieceConnectionsInDesign", "FPCID", "Finds connections for a piece in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456B");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "G", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindPieceConnectionsInDesign(in0.Value, in1);
+            DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindStaleConnectionsInDesignComponent : ScriptingComponent
+{
+    public FindStaleConnectionsInDesignComponent() : base("FindStaleConnectionsInDesign", "FSCID", "Finds stale connections in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456C");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindStaleConnectionsInDesign(in0.Value);
+            DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindFileInKitComponent : ScriptingComponent
+{
+    public FindFileInKitComponent() : base("FindFileInKit", "FFIK", "Finds a file in a kit.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456D");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new FileParam(), "File", "F", "File", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindFileInKit(in0.Value, in1);
+            DA.SetData(0, result != null ? new FileGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindTagInKitComponent : ScriptingComponent
+{
+    public FindTagInKitComponent() : base("FindTagInKit", "FTIK", "Finds a tag in a kit.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456E");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TagParam(), "Tag", "T", "Tag", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindTagInKit(in0.Value, in1);
+            DA.SetData(0, result != null ? new TagGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConceptInKitComponent : ScriptingComponent
+{
+    public FindConceptInKitComponent() : base("FindConceptInKit", "FCIK", "Finds a concept in a kit.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456F");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConceptParam(), "Concept", "C", "Concept", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindConceptInKit(in0.Value, in1);
+            DA.SetData(0, result != null ? new ConceptGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindTypeInKitComponent : ScriptingComponent
+{
+    public FindTypeInKitComponent() : base("FindTypeInKit", "FTyIK", "Finds a type in a kit.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234570");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Type", "T", "Type", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindTypeInKit(in0.Value, in1);
+            DA.SetData(0, result != null ? new TypeGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindDesignInKitComponent : ScriptingComponent
+{
+    public FindDesignInKitComponent() : base("FindDesignInKit", "FDIK", "Finds a design in a kit.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234571");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindDesignInKit(in0.Value, in1);
+            DA.SetData(0, result != null ? new DesignGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindPortInKitComponent : ScriptingComponent
+{
+    public FindPortInKitComponent() : base("FindPortInKit", "FPIK", "Finds a port in a kit.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234572");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PortParam(), "Port", "P", "Port", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindPortInKit(in0.Value, in1);
+            DA.SetData(0, result != null ? new PortGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindPieceTypeInDesignComponent : ScriptingComponent
+{
+    public FindPieceTypeInDesignComponent() : base("FindPieceTypeInDesign", "FPTID", "Finds the type of a piece in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234573");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Type", "T", "Type", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindPieceTypeInDesign(in0.Value, in1, in2);
+            DA.SetData(0, result != null ? new TypeGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindParentPieceInDesignComponent : ScriptingComponent
+{
+    public FindParentPieceInDesignComponent() : base("FindParentPieceInDesign", "FPPID", "Finds the parent piece of a piece in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234574");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Piece", "P", "Piece", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindParentPieceInDesign(in0.Value, in1, in2);
+            DA.SetData(0, result != null ? new PieceGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindParentConnectionForPieceInDesignComponent : ScriptingComponent
+{
+    public FindParentConnectionForPieceInDesignComponent() : base("FindParentConnectionForPieceInDesign", "FPCFPI", "Finds the parent connection for a piece in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234575");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connection", "C", "Connection", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindParentConnectionForPieceInDesign(in0.Value, in1, in2);
+            DA.SetData(0, result != null ? new ConnectionGoo(result) : null);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindChildrenPiecesInDesignComponent : ScriptingComponent
+{
+    public FindChildrenPiecesInDesignComponent() : base("FindChildrenPiecesInDesign", "FCPID", "Finds the children pieces of a piece in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234576");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindChildrenPiecesInDesign(in0.Value, in1, in2);
+            DA.SetDataList(0, result?.Select(r => new PieceGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindUsedConnectorsByPieceInDesignComponent : ScriptingComponent
+{
+    public FindUsedConnectorsByPieceInDesignComponent() : base("FindUsedConnectorsByPieceInDesign", "FUCBPID", "Finds used connectors by a piece in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234577");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectorParam(), "Connectors", "C", "Connectors", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindUsedConnectorsByPieceInDesign(in0.Value, in1, in2);
+            DA.SetDataList(0, result?.Select(r => new ConnectorGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindReplacableTypesForPiecesInDesignComponent : ScriptingComponent
+{
+    public FindReplacableTypesForPiecesInDesignComponent() : base("FindReplacableTypesForPiecesInDesign", "FRepTPs", "Finds replacable types for pieces in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234578");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "DG", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceGuids", "PG", "PieceGuids", GH_ParamAccess.list);
+        pManager.AddTextParameter("Variants", "V", "Variants", GH_ParamAccess.list);
+
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Types", "T", "Types", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        List<string> in2 = new List<string>();
+        if (!DA.GetDataList(2, in2) && !Params.Input[2].Optional) return;
+        List<string> in3 = new List<string>();
+        if (!DA.GetDataList(3, in3) && !Params.Input[3].Optional) return;
+
+        try
+        {
+            var result = SemioExt.FindReplacableTypesForPiecesInDesign(in0.Value, in1, in2.ToArray(), in3.Count > 0 ? in3.ToArray() : null);
+            DA.SetDataList(0, result?.Select(r => new TypeGoo(r)));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+public class FindConnectionPiecesInDesignComponent : ScriptingComponent
+{
+    public FindConnectionPiecesInDesignComponent() : base("Find Connection Pieces In Design", "FCPsID", "Finds the connected and connecting pieces of a connection in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123457A");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
+        pManager.AddParameter(new ConnectionParam(), "Connection", "C", "Connection", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Connecting", "Cg", "Connecting Piece", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceParam(), "Connected", "Cd", "Connected Piece", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        DesignGoo in0 = null;
+        if (!DA.GetData(0, ref in0)) return;
+        ConnectionGoo in1 = null;
+        if (!DA.GetData(1, ref in1)) return;
+
+        try
+        {
+            var result = SemioExt.FindConnectionPiecesInDesign(in0.Value, in1.Value);
+            DA.SetData(0, new PieceGoo(result.connecting));
+            DA.SetData(1, new PieceGoo(result.connected));
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}

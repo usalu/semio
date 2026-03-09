@@ -1,5 +1,5 @@
 # region Header
-# [👤semio📚py🥼semiotestpy](semiorepo://p/u/semio/b/l/py/f/semio.test.py)
+# [👤semio📚py🥼semiotest](semiorepo://p/u/semio/b/l/py/f/semio.test.py)
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -34,6 +34,7 @@ from semio import (
     areValidationResultsEqual,
     export_kit,
     flattenDesignDict,
+    getKitChange,
     getKitDiffDict,
     import_kit,
     inverseKitDiffDict,
@@ -134,18 +135,17 @@ class TestRoundtrip:
         def test_roundtrip(self):
             import base64
 
-            # JSON -> Memory -> JSON
             kit_dict = load_json("kit_metabolism.json")
             serialized = json.dumps(kit_dict)
             deserialized = json.loads(serialized)
             assert areKitsDictEqual(kit_dict, deserialized), "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
 
-            # JSON -> ZIP
             files: dict[str, bytes] = {}
             for file_entry in kit_dict.get("files", []):
                 blob = file_entry.get("blob")
                 if blob:
-                    decoded = base64.b64decode(blob)
+                    b64 = blob.split(",", 1)[1] if blob.startswith("data:") else blob
+                    decoded = base64.b64decode(b64)
                     file_path = _build_file_path(kit_dict, file_entry)
                     files[file_path] = decoded
 
@@ -153,7 +153,6 @@ class TestRoundtrip:
                 roundtrip_path = os.path.join(tmpdir, "metabolism_roundtrip.zip")
                 export_kit(KitData(kit_dict), files, roundtrip_path)
 
-                # ZIP -> JSON
                 kit2, files2 = import_kit(roundtrip_path)
 
             assert areKitsDictEqual(kit_dict, kit2.to_dict()), "ZIP -> JSON: roundtrip kit should be equal"
@@ -182,22 +181,25 @@ class TestFlatten:
             flatten_test("Capsule Dream")
 
 
-class TestDiff:
+class TestChange:
     class TestMetabolism:
-        def test_kit_diff_diffedkit_diffedkit_inversediff_kit(self):
+        def test_kit_change_forward_backward_inverse_behavior(self):
             kit_original = load_json("kit_metabolism.json")
             kit_original["designs"] = [d for d in kit_original.get("designs", []) if not d.get("parent")]
             kit_diff = load_json("diff_kit_metabolism.json")
             kit_diff_inverted = load_json("diff_kit_metabolism_inverted.json")
             kit_diffed = load_json("kit_metabolism_diffed.json")
 
+            change = getKitChange(kit_original, kit_diffed)
             computed_diff = getKitDiffDict(kit_original, kit_diffed)
             assert areKitDiffsDictEqual(computed_diff, kit_diff)
-            computed_inverse_diff = inverseKitDiffDict(kit_original, kit_diff)
+            computed_inverse_diff = inverseKitDiffDict(kit_original, change.forward)
             assert areKitDiffsDictEqual(computed_inverse_diff, kit_diff_inverted)
-            applied_forward = applyKitDiffDict(kit_original, kit_diff)
+            assert areKitDiffsDictEqual(change.forward, kit_diff)
+            assert areKitDiffsDictEqual(change.backward, kit_diff_inverted)
+            applied_forward = applyKitDiffDict(kit_original, change.forward)
             assert areKitsDictEqual(applied_forward, kit_diffed)
-            applied_inverse = applyKitDiffDict(kit_diffed, kit_diff_inverted)
+            applied_inverse = applyKitDiffDict(kit_diffed, change.backward)
             assert areKitsDictEqual(applied_inverse, kit_original)
 
 

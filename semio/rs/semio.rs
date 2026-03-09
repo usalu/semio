@@ -2156,6 +2156,84 @@ pub struct KitDiff {
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+// [👤semio📚rs💻semio🔖difftypes🛠️change](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/Change)
+/// <summary>Change holds the data fields for a Change record.</summary>
+/// Change MUST perform the Change operation.
+pub struct Change<TEntity, TDiff> {
+    pub forward: TDiff,
+    pub backward: TDiff,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub before: Option<TEntity>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub after: Option<TEntity>,
+}
+
+// [👤semio📚rs💻semio🔖difftypes🛠️attributechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeChange)
+/// <summary>AttributeChange holds the data fields for a AttributeChange record.</summary>
+pub type AttributeChange = Change<Attribute, AttributeDiff>;
+/// <summary>AuthorChange holds the data fields for a AuthorChange record.</summary>
+// [👤semio📚rs💻semio🔖difftypes🛠️authorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorChange)
+pub type AuthorChange = Change<Author, AuthorDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️filechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileChange)
+/// <summary>FileChange holds the data fields for a FileChange record.</summary>
+pub type FileChange = Change<File, FileDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️folderchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderChange)
+/// <summary>FolderChange holds the data fields for a FolderChange record.</summary>
+pub type FolderChange = Change<Folder, FolderDiff>;
+/// <summary>QualityChange holds the data fields for a QualityChange record.</summary>
+// [👤semio📚rs💻semio🔖difftypes🛠️qualitychange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityChange)
+pub type QualityChange = Change<Quality, QualityDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️portchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortChange)
+/// <summary>PortChange holds the data fields for a PortChange record.</summary>
+pub type PortChange = Change<Port, PortDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️propchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropChange)
+/// <summary>PropChange holds the data fields for a PropChange record.</summary>
+pub type PropChange = Change<Prop, PropDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️tagchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagChange)
+/// <summary>TagChange holds the data fields for a TagChange record.</summary>
+pub type TagChange = Change<Tag, TagDiff>;
+/// <summary>ConceptChange holds the data fields for a ConceptChange record.</summary>
+// [👤semio📚rs💻semio🔖difftypes🛠️conceptchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptChange)
+pub type ConceptChange = Change<Concept, ConceptDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️modelchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelChange)
+/// <summary>ModelChange holds the data fields for a ModelChange record.</summary>
+pub type ModelChange = Change<Model, ModelDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️connectorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorChange)
+/// <summary>ConnectorChange holds the data fields for a ConnectorChange record.</summary>
+pub type ConnectorChange = Change<Connector, ConnectorDiff>;
+/// <summary>TypeChange holds the data fields for a TypeChange record.</summary>
+// [👤semio📚rs💻semio🔖difftypes🛠️typechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeChange)
+pub type TypeChange = Change<Type, TypeDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️layerchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerChange)
+/// <summary>LayerChange holds the data fields for a LayerChange record.</summary>
+pub type LayerChange = Change<Layer, LayerDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️piecechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceChange)
+/// <summary>PieceChange holds the data fields for a PieceChange record.</summary>
+pub type PieceChange = Change<Piece, PieceDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️groupchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupChange)
+/// <summary>GroupChange holds the data fields for a GroupChange record.</summary>
+pub type GroupChange = Change<Group, GroupDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️sidechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideChange)
+/// <summary>SideChange holds the data fields for a SideChange record.</summary>
+pub type SideChange = Change<Side, SideDiff>;
+/// <summary>ConnectionChange holds the data fields for a ConnectionChange record.</summary>
+// [👤semio📚rs💻semio🔖difftypes🛠️connectionchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionChange)
+pub type ConnectionChange = Change<Connection, ConnectionDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️statchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatChange)
+/// <summary>StatChange holds the data fields for a StatChange record.</summary>
+pub type StatChange = Change<Stat, StatDiff>;
+// [👤semio📚rs💻semio🔖difftypes🛠️designchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignChange)
+/// <summary>DesignChange holds the data fields for a DesignChange record.</summary>
+pub type DesignChange = Change<Design, DesignDiff>;
+/// <summary>KitChange holds the data fields for a KitChange record.</summary>
+// [👤semio📚rs💻semio🔖difftypes🛠️kitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitChange)
+pub type KitChange = Change<Kit, KitDiff>;
+
 // #endregion 🔖Diff Types
 
 // #region 🔖HasGuid Trait
@@ -5157,7 +5235,6 @@ pub mod zip_roundtrip {
             }
             return format!("{}/{}", folder_path, file.name);
         }
-        file.name.clone()
     }
 
     pub fn import_kit_from_zip(zip_path: &str) -> Result<KitImportResult> {
@@ -5180,9 +5257,11 @@ pub mod zip_roundtrip {
             }
             let name = entry.name().to_string();
             let mut data = Vec::new();
-            entry.read_to_end(&mut data).map_err(|e| SemioError::Database {
-                message: format!("Failed to read zip entry data: {}", e),
-            })?;
+            entry
+                .read_to_end(&mut data)
+                .map_err(|e| SemioError::Database {
+                    message: format!("Failed to read zip entry data: {}", e),
+                })?;
 
             if name == "kit.json" {
                 kit_json = Some(data);
@@ -5199,9 +5278,10 @@ pub mod zip_roundtrip {
         })?;
         let mut kit = deserialize_kit(&kit_str)?;
 
-        // Populate blob fields from actual files
         // Pre-compute paths before mutable borrow
-        let file_paths: Vec<String> = kit.files.as_ref()
+        let file_paths: Vec<String> = kit
+            .files
+            .as_ref()
             .map(|kit_files| kit_files.iter().map(|f| build_file_path(&kit, f)).collect())
             .unwrap_or_default();
         if let Some(ref mut kit_files) = kit.files {
@@ -5220,7 +5300,6 @@ pub mod zip_roundtrip {
         files: &HashMap<String, Vec<u8>>,
         zip_path: &str,
     ) -> Result<()> {
-        // Serialize kit without blob data
         let mut kit_for_zip = kit.clone();
         if let Some(ref mut kit_files) = kit_for_zip.files {
             for f in kit_files.iter_mut() {
@@ -5237,7 +5316,6 @@ pub mod zip_roundtrip {
         let options = zip::write::SimpleFileOptions::default()
             .compression_method(zip::CompressionMethod::Deflated);
 
-        // Write kit.json
         zip_writer
             .start_file("kit.json", options)
             .map_err(|e| SemioError::Database {
@@ -5249,7 +5327,6 @@ pub mod zip_roundtrip {
                 message: format!("Failed to write to zip: {}", e),
             })?;
 
-        // Write actual files
         for (name, data) in files {
             zip_writer
                 .start_file(name, options)
@@ -5608,19 +5685,22 @@ mod tests {
 
         #[test]
         fn metabolism() {
-            // JSON -> Memory -> JSON
             let kit = load_kit("kit_metabolism.json");
             let json = serialize_kit(&kit).unwrap();
             let restored = deserialize_kit(&json).unwrap();
-            assert!(are_kits_equal(&kit, &restored), "JSON -> Memory -> JSON: serialized and deserialized kit should be equal");
+            assert!(
+                are_kits_equal(&kit, &restored),
+                "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
+            );
 
-            // JSON -> ZIP
             use base64::Engine;
             let mut files = std::collections::HashMap::new();
             if let Some(ref kit_files) = kit.files {
                 for f in kit_files {
                     if let Some(ref blob) = f.blob {
-                        let decoded = base64::engine::general_purpose::STANDARD.decode(blob).unwrap();
+                        let decoded = base64::engine::general_purpose::STANDARD
+                            .decode(blob)
+                            .unwrap();
                         let file_path = crate::zip_roundtrip::build_file_path(&kit, f);
                         files.insert(file_path, decoded);
                     }
@@ -5632,10 +5712,16 @@ mod tests {
             let roundtrip_path_str = roundtrip_path.to_str().unwrap();
             crate::zip_roundtrip::export_kit_to_zip(&kit, &files, roundtrip_path_str).unwrap();
 
-            // ZIP -> JSON
             let result = crate::zip_roundtrip::import_kit_from_zip(roundtrip_path_str).unwrap();
-            assert!(are_kits_equal(&kit, &result.kit), "ZIP -> JSON: roundtrip kit should be equal");
-            assert_eq!(files.len(), result.files.len(), "File count mismatch after ZIP roundtrip");
+            assert!(
+                are_kits_equal(&kit, &result.kit),
+                "ZIP -> JSON: roundtrip kit should be equal"
+            );
+            assert_eq!(
+                files.len(),
+                result.files.len(),
+                "File count mismatch after ZIP roundtrip"
+            );
         }
     }
 
@@ -5701,28 +5787,57 @@ mod tests {
 
     // #endregion 🔖Flatten Tests
 
-    // #region 🔖Diff Tests
-    // [👤semio📚rs💻semio🔖tests🔖difftests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Diff%20Tests)
-    // Diff Tests MUST provide the diff tests functionality.
+    // #region 🔖Change Tests
+    // [👤semio📚rs💻semio🔖tests🔖changetests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Change%20Tests)
+    // Change Tests MUST provide the change tests functionality.
 
-    mod diff {
+    mod change {
         use super::*;
 
         mod metabolism {
             use super::*;
 
             #[test]
-            fn kit_diff_diffedkit_inversediff_kit() {
-                // TODO: Implement when get_kit_diff, inverse_kit_diff, are_kit_diffs_equal are available
-                let kit_original = load_kit("kit_metabolism.json");
-                let _kit_diff = load_kit_diff("diff_kit_metabolism.json");
-                let _kit_diffed = load_kit("kit_metabolism_diffed.json");
-                assert!(!kit_original.guid.is_empty());
+            fn kit_change_forward_backward_inverse_behavior() {
+                let mut kit_original = load_kit("kit_metabolism.json");
+                if let Some(designs) = kit_original.designs.take() {
+                    kit_original.designs =
+                        Some(designs.into_iter().filter(|d| d.parent.is_none()).collect());
+                }
+                let kit_diff = load_kit_diff("diff_kit_metabolism.json");
+                let kit_diff_inverted = load_kit_diff("diff_kit_metabolism_inverted.json");
+                let kit_diffed = load_kit("kit_metabolism_diffed.json");
+
+                let change = KitChange {
+                    forward: kit_diff.clone(),
+                    backward: kit_diff_inverted.clone(),
+                    author: None,
+                    time: None,
+                    before: Some(kit_original.clone()),
+                    after: Some(kit_diffed.clone()),
+                };
+
+                assert_eq!(change.forward, kit_diff);
+                assert_eq!(change.backward, kit_diff_inverted);
+
+                let mut applied_forward = kit_original.clone();
+                apply_kit_diff(&mut applied_forward, &change.forward);
+                assert!(
+                    are_kits_equal(&applied_forward, &kit_diffed),
+                    "ApplyKitDiff forward: applied kit doesn't match expected diffed kit"
+                );
+
+                let mut applied_inverse = kit_diffed.clone();
+                apply_kit_diff(&mut applied_inverse, &change.backward);
+                assert!(
+                    are_kits_equal(&applied_inverse, &kit_original),
+                    "ApplyKitDiff inverse: applied inverse kit doesn't match original kit"
+                );
             }
         }
     }
 
-    // #endregion 🔖Diff Tests
+    // #endregion 🔖Change Tests
 
     // #region 🔖Validation Tests
     // [👤semio📚rs💻semio🔖tests🔖validationtests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Validation%20Tests)

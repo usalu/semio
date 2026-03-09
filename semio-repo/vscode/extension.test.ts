@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [🧰semiorepo🖱️vscode🥼extensiontestts](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.test.ts)
+// [🧰semiorepo🖱️vscode🥼extensiontest](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -1486,7 +1486,6 @@ suite("Navigation Commands Test Suite", function () {
 // #endregion 🔖URI Resolution Tests
 
 // #region 🔖Entity Emoji Registry Tests
-
 suite("Entity Emoji Registry Test Suite", () => {
   test("ENTITY_EMOJIS contains all technology kind emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user technology emoji");
@@ -1579,7 +1578,7 @@ suite("Entity Emoji Registry Test Suite", () => {
   test("buildEntityEmojiPattern returns non-empty pattern", () => {
     const pattern = buildEntityEmojiPattern();
     assert.ok(pattern.length > 0, "pattern should be non-empty");
-    // Pattern should contain all emojis as alternations
+
     assert.ok(pattern.includes("👤"), "should contain user emoji");
     assert.ok(pattern.includes("🧰"), "should contain infra emoji");
     assert.ok(pattern.includes("💻"), "should contain code file emoji");
@@ -1600,7 +1599,6 @@ suite("Entity Emoji Registry Test Suite", () => {
 // #endregion 🔖Entity Emoji Registry Tests
 
 // #region 🔖Entity ID Regex Matching Tests
-
 suite("Entity ID Regex Matching Test Suite", () => {
   test("matches bare infrastructure technology ID (🧰)", () => {
     const regex = buildEntityIdRegex();
@@ -1735,7 +1733,6 @@ suite("Entity ID Regex Matching Test Suite", () => {
 // #endregion 🔖Entity ID Regex Matching Tests
 
 // #region 🔖CodeLens Behavior Tests
-
 suite("CodeLens Behavior Test Suite", () => {
   test("semio.summarize command is registered", async function () {
     const commands = await vscode.commands.getCommands(true);

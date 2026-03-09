@@ -36,7 +36,7 @@ import { Mode } from "./shared";
 // Tutorial UI components MUST provide playback and recording controls.
 
 // #region 🔖Tutorial Controls
-// [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls)
+// [👤semio📚js🗃️sketchpad💻tutorials🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components)
 // Tutorial playback controls MUST render in the footer during active tutorials.
 
 /**
@@ -287,7 +287,7 @@ export const TutorialOverlay: FC = () => {
 
 /**
  * FocusOverlayProps holds the data fields for a FocusOverlayProps record.
- * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖tutorialoverlay✂️focusoverlayprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Tutorial%20Overlay/d/i/FocusOverlayProps)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖tutorialoverlay✂️focusoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Tutorial%20Overlay/d/i/FocusOverlay)
  **/
 interface FocusOverlayProps {
   focusElement: {
@@ -836,7 +836,7 @@ const useTutorialContext = () => {
 // Tutorial type definitions MUST be declared here.
 
 // #region 🔖Tutorial Entities
-// [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types)
+// [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities)
 // Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
 /**

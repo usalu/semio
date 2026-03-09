@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🌐play⚙️viteconfigts](semiorepo://p/u/semio/b/w/play/f/vite.config.ts)
+// [👤semio🌐play⚙️viteconfig](semiorepo://p/u/semio/b/w/play/f/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🌐play⚙️viteconfigts🔖configuration](semiorepo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration)
+// [👤semio🌐play⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration)
 // Vite build configuration for the play application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
@@ -38,14 +38,14 @@ import wasm from "vite-plugin-wasm";
 
 /**
  * Absolute file path of the current module.
-// [👤semio🌐play⚙️viteconfigts🔖configuration🪨filename](semiorepo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration/d/i/__filename)
+// [👤semio🌐play⚙️viteconfig🔖configuration🪨filename](semiorepo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration/d/i/__filename)
  *
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
-// [👤semio🌐play⚙️viteconfigts🔖configuration🪨dirname](semiorepo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration/d/i/__dirname)
+// [👤semio🌐play⚙️viteconfig🔖configuration🪨dirname](semiorepo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration/d/i/__dirname)
  *
  * Path MUST be derived from __filename.
  **/

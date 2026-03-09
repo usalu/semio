@@ -508,7 +508,7 @@ const rankSnapPointsByVector = (points: KitDiagramSnapPoint[], frame: Partial<Ki
 /**
  * Selects the snap point best aligned with a target vector direction.
  *
- *  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createstrategy](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createStrategy)
+ *  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨resolvenearestkitdiagramsnappoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/resolveNearestKitDiagramSnapPoint)
  **/
 export const resolveNearestKitDiagramSnapPoint = (points: KitDiagramSnapPoint[], frame: Partial<KitDiagramFrame>, targetVector: KitDiagramPoint, fallback: KitDiagramFrame): KitDiagramSnapPoint => {
   if (points.length === 0) {

@@ -1,5 +1,5 @@
 # region Header
-# [🥼conftestpy](semiorepo://f/conftest.py)
+# [🥼conftest](semiorepo://f/conftest.py)
 
 # 2026 Ueli Saluz <ueli@semio-tech.de>
 

@@ -360,7 +360,7 @@ export const useHeadings = () => {
 };
 
 /** HeadingsContextValue holds the data fields for a HeadingsContextValue record.
-// [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️headingscontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/HeadingsContextValue)
+// [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/HeadingsContext)
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️headingscontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsContextValue)
  **/
 interface HeadingsContextValue {
@@ -616,7 +616,6 @@ export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
 
 // #endregion 🔖MDX Loader
 // #region 🔖Registry
-
 // [👤semio📚js🗃️sketchpad💻docs🔖registry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Registry)
 // Docs registry MUST provide page and section lookup for navigation.
 
@@ -783,7 +782,6 @@ export const docsRegistry = new DocsRegistry();
 
 // #endregion 🔖Registry
 // #region 🔖Store
-
 // [👤semio📚js🗃️sketchpad💻docs🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Store)
 // Docs app section state MUST be declared here.
 
@@ -800,7 +798,6 @@ export interface DocsSectionState {
 
 // #endregion 🔖Store
 // #region 🔖Types
-
 // [👤semio📚js🗃️sketchpad💻docs🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Types)
 // Docs app state, selection, and diff type definitions MUST be declared here.
 
@@ -883,7 +880,6 @@ export interface DocsCommandResult {
 
 // #endregion 🔖Types
 // #region 🔖Docs App Store
-
 // [👤semio📚js🗃️sketchpad💻docs🔖docsappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Docs%20App%20Store)
 // Docs app store MUST extend PlainAppStore with docs-specific state management.
 
@@ -982,7 +978,6 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
 
 // #endregion 🔖Docs App Store
 // #region 🔖Commands
-
 // [👤semio📚js🗃️sketchpad💻docs🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Commands)
 // Docs app command handlers MUST modify state through diff objects.
 
@@ -1044,8 +1039,6 @@ if (typeof window !== "undefined") {
     return store;
   });
 
-// [👤semio📚js🗃️sketchpad💻docs🔖commands🔖docsapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Commands/s/Docs%20App%20Plugin%20Registration)
-
 /**
  * docsAppPlugin holds the data fields for a docsAppPlugin record.
  *
@@ -1073,16 +1066,13 @@ if (typeof window !== "undefined") {
 // #endregion 🔖Commands
 
 // #region 🔖Canvas
-
 // Canvas components MUST render the docs app visual content.
 
 // #region 🔖Windows
-
 // Window components MUST provide windowed views within the canvas.
 
 // #region 🔖Page
-
-// [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows)
+// [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page)
 // Page window MUST render MDX content with navigation and heading extraction.
 
 /**
@@ -1096,7 +1086,7 @@ interface PageCanvasProps {
 
 /**
  * TreeNode holds the data fields for a TreeNode record.
- * [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page✂️pagecanvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page/d/i/PageCanvas)
+ * [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page✂️treenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page/d/i/TreeNode)
  **/
 interface TreeNode {
   name: string;
@@ -1310,7 +1300,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 // #endregion 🔖Canvas
 
 // #region 🔖Footer
-
 // [👤semio📚js🗃️sketchpad💻docs🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Footer)
 // Footer component MUST manage docs app footer items.
 
@@ -1337,12 +1326,11 @@ export const DocsAppFooter: FC = () => {
 // #endregion 🔖Footer
 
 // #region 🔖Panels
-
 // [👤semio📚js🗃️sketchpad💻docs🔖panels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels)
 // Panel components MUST render sidebar content for the docs app.
 
 /** Workbench holds the data fields for a Workbench record.
-// [👤semio📚js🗃️sketchpad💻docs🔖panels🪨settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Settings)
+// [👤semio📚js🗃️sketchpad💻docs🔖panels🪨workbench](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Workbench)
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨workbench](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Workbench)
  **/
 const Workbench: FC = () => {
@@ -1410,14 +1398,13 @@ const Settings: FC = () => {
 // #endregion 🔖Panels
 
 // #region 🔖App
-
 // [👤semio📚js🗃️sketchpad💻docs🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App)
 // Docs app root component MUST compose MDX routing, panel sections, and layout.
 
 /**
  * Window kind identifiers for docs app layout.
  *
- *  * [👤semio📚js🗃️sketchpad💻docs🔖app🛠️docsappwindowkind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App/d/i/DocsAppWindowKind)
+ *  * [👤semio📚js🗃️sketchpad💻docs🔖app🛠️app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App/d/i/App)
  **/
 export enum DocsAppWindowKind {
   Page = "page",
@@ -1580,7 +1567,6 @@ export default App;
 // #endregion 🔖App
 
 // #region 🔖Config
-
 // [👤semio📚js🗃️sketchpad💻docs🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Config)
 // Docs app route, panel, and path matching configuration MUST be exported.
 

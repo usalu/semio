@@ -274,13 +274,15 @@ if (typeof window !== "undefined") {
 // Table window MUST display kit entries in tabular form.
 
 // #region 🔖Details
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based))
+// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details)
 // Details panel MUST show properties of selected kits.
 
 /**
  * Kit section component displaying selected kit properties.
  *
  *  * [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details🪨kitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details/d/i/KitSection)
+ *
+ * [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details🪨kitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details/d/i/KitSection)
  **/
 export const KitSection: FC = () => {
   const home = useHome() as HomeState;
@@ -291,7 +293,7 @@ export const KitSection: FC = () => {
   return <MultipleKitsSection kitIds={selectedKits} />;
 };
 
-// [👤semio📚js🗃️sketchpad💻home🔖details🪨singlekitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Details/d/i/SingleKitSection)
+// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details🪨singlekitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details/d/i/SingleKitSection)
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖details🪨singlekitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleKitSection)
  * SingleKitSection holds the data fields for a SingleKitSection record.
  **/
@@ -676,7 +678,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 // App components MUST compose the Home app toolbar, table, and logic.
 
 /**
- * [👤semio📚js🗃️sketchpad💻home🔖imports🔖app✂️hometoolbarfilters](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/d/i/HomeToolbarFilters)
+ * [👤semio📚js🗃️sketchpad💻home🔖imports🔖app✂️hometoolbarcreate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/d/i/HomeToolbarCreate)
  * KitKind holds the data fields for a KitKind record.
  **/
 type KitKind = "temporary" | "local" | "remote";
@@ -759,7 +761,7 @@ const HomeToolbarCreate: FC = () => {
 
 /**
  * TableRow holds the data fields for a TableRow record.
- * [👤semio📚js🗃️sketchpad💻home🔖imports🔖app✂️hometablecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/d/i/HomeTableContent)
+ * [👤semio📚js🗃️sketchpad💻home🔖imports🔖app✂️tablerow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/d/i/TableRow)
  **/
 type TableRow = {
   id: string;
@@ -1658,7 +1660,7 @@ const HomeTableContent: FC = () => {
 // Multi-window app MUST orchestrate the Home canvas and layout.
 
 /**
- * [👤semio📚js🗃️sketchpad💻home🔖imports🔖app🔖multiwindowapp🪨tablewindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/s/Multi-Window%20App/d/i/TableWindow)
+ * [👤semio📚js🗃️sketchpad💻home🔖imports🔖app🔖multiwindowapp🪨home](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/s/Multi-Window%20App/d/i/Home)
  * TableWindow holds the data fields for a TableWindow record.
  **/
 const TableWindow = memo(() => {

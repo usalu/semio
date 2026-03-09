@@ -1566,6 +1566,7 @@ export type PointDiff = z.infer<typeof PointDiffSchema>;
  *  * [👤semio📚js💻semio🔖pointweakentity🪨getpointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/getPointDiff)
  *
  * [👤semio📚js💻semio🔖pointweakentity🪨getpointdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Point%20(weak%20entity)/d/i/getPointDiff)
+ **/
 export const getPointDiff = (before: Point, after: Point): PointDiff => {
   return {
     x: after.x - before.x,
@@ -1587,9 +1588,9 @@ export const inversePointDiff = (original: Point, appliedDiff: PointDiff): Point
   const y = appliedDiff.y ?? 0;
   const z = appliedDiff.z ?? 0;
   return {
-    x: original.x - x,
-    y: original.y - y,
-    z: original.z - z,
+    x: -x,
+    y: -y,
+    z: -z,
   };
 };
 /**
@@ -1721,9 +1722,9 @@ export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): Ve
   const y = appliedDiff.y ?? 0;
   const z = appliedDiff.z ?? 0;
   return {
-    x: original.x - x,
-    y: original.y - y,
-    z: original.z - z,
+    x: -x,
+    y: -y,
+    z: -z,
   };
 };
 /**
@@ -2501,6 +2502,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
   if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
   if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
   if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
+  if (base.blob !== undefined) result.blob = base.blob;
 
   return result;
 };
@@ -4471,6 +4473,7 @@ export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
 export const getConnectorDiff = (before: Connector, after: Connector): ConnectorDiff => {
   const diff: ConnectorDiff = {};
   if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
   if (before.port?.guid !== after.port?.guid) diff.port = after.port;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
   if (before.t !== after.t) diff.t = after.t;
@@ -5682,14 +5685,14 @@ export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Con
     connecting: diff.connecting ? applySideDiff(base.connecting, diff.connecting) : base.connecting,
   };
 
-  if (diff.gap !== undefined || base.gap !== undefined) result.gap = diff.gap ?? base.gap;
-  if (diff.shift !== undefined || base.shift !== undefined) result.shift = diff.shift ?? base.shift;
-  if (diff.rise !== undefined || base.rise !== undefined) result.rise = diff.rise ?? base.rise;
-  if (diff.rotation !== undefined || base.rotation !== undefined) result.rotation = diff.rotation ?? base.rotation;
-  if (diff.turn !== undefined || base.turn !== undefined) result.turn = diff.turn ?? base.turn;
-  if (diff.tilt !== undefined || base.tilt !== undefined) result.tilt = diff.tilt ?? base.tilt;
-  if (diff.u !== undefined || base.u !== undefined) result.u = diff.u ?? base.u;
-  if (diff.v !== undefined || base.v !== undefined) result.v = diff.v ?? base.v;
+  if (diff.gap !== undefined || base.gap !== undefined) result.gap = diff.gap !== undefined && base.gap !== undefined ? base.gap + diff.gap : diff.gap ?? base.gap;
+  if (diff.shift !== undefined || base.shift !== undefined) result.shift = diff.shift !== undefined && base.shift !== undefined ? base.shift + diff.shift : diff.shift ?? base.shift;
+  if (diff.rise !== undefined || base.rise !== undefined) result.rise = diff.rise !== undefined && base.rise !== undefined ? base.rise + diff.rise : diff.rise ?? base.rise;
+  if (diff.rotation !== undefined || base.rotation !== undefined) result.rotation = diff.rotation !== undefined && base.rotation !== undefined ? base.rotation + diff.rotation : diff.rotation ?? base.rotation;
+  if (diff.turn !== undefined || base.turn !== undefined) result.turn = diff.turn !== undefined && base.turn !== undefined ? base.turn + diff.turn : diff.turn ?? base.turn;
+  if (diff.tilt !== undefined || base.tilt !== undefined) result.tilt = diff.tilt !== undefined && base.tilt !== undefined ? base.tilt + diff.tilt : diff.tilt ?? base.tilt;
+  if (diff.u !== undefined || base.u !== undefined) result.u = diff.u !== undefined && base.u !== undefined ? base.u + diff.u : diff.u ?? base.u;
+  if (diff.v !== undefined || base.v !== undefined) result.v = diff.v !== undefined && base.v !== undefined ? base.v + diff.v : diff.v ?? base.v;
   if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -5811,6 +5814,7 @@ export const findConnection = (connections: Connection[], connectionGuid: string
  * MUST return the matching element or undefined.
  *
  *  * [👤semio📚js💻semio🔖connection🪨findpiececonnections](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/findPieceConnections)
+ **/
 export const findPieceConnections = (connections: Connection[], pieceGuid: string): Connection[] => {
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
@@ -7622,6 +7626,30 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 };
 
 /**
+ * Represents a bidirectional change between two Kit states.
+ *
+ * MUST contain both forward and backward diffs.
+ *
+ *  * [👤semio📚js💻semio🔖kit🛠️kitchange](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitChange)
+ **/
+export interface KitChange {
+  forward: KitDiff;
+  backward: KitDiff;
+}
+/**
+ * Computes the forward and backward diffs between two kit states.
+ *
+ * MUST return both the forward diff and its inverse.
+ *
+ *  * [👤semio📚js💻semio🔖kit🪨getkitchange](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/getKitChange)
+ **/
+export const getKitChange = (before: Kit, after: Kit): KitChange => {
+  const forward = getKitDiff(before, after);
+  const backward = inverseKitDiff(before, forward);
+  return { forward, backward };
+};
+
+/**
  * Zod schema for Kits diff validation.
  *
  *  * [👤semio📚js💻semio🔖kit🪨kitsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitsDiffSchema)
@@ -8639,7 +8667,6 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
  **/
 export interface KitImportResult {
   kit: Kit;
-  files: Map<string, Blob>;
 }
 
 // [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨cachedsqljs](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/cachedSqlJs)
@@ -8670,6 +8697,31 @@ const getSqlJs = async () => {
     }
   }
   return cachedSqlJs;
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨buildfolderpath](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/buildFolderPath)
+// buildFolderPath builds a slash-separated folder path from root to the given folder guid.
+// Always uses application/octet-stream to avoid spurious diffs when mime field changes.
+const buildFolderPath = (kit: Kit, folderGuid: string): string => {
+  const findFolder = (guid: string): Folder | undefined => (kit.folders || []).find((f) => f.guid === guid);
+  const parts: string[] = [];
+  let current = findFolder(folderGuid);
+  while (current) {
+    parts.unshift(current.name);
+    current = current.parent?.guid ? findFolder(current.parent.guid) : undefined;
+  }
+  return parts.join("/");
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨buildfilepath](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/buildFilePath)
+// buildFilePath builds the full path of a kit file including its folder hierarchy.
+// Always uses application/octet-stream to avoid spurious diffs when mime field changes.
+const buildFilePath = (kit: Kit, file: File): string => {
+  if (file.folder?.guid) {
+    const folderPath = buildFolderPath(kit, file.folder.guid);
+    if (folderPath) return `${folderPath}/${file.name}`;
+  }
+  return file.name;
 };
 
 /**
@@ -8724,15 +8776,28 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
     kit = deserializeKit(kitJson);
   }
 
-  const files = new Map<string, Blob>();
+  const zipEntries = new Map<string, any>();
   for (const [path, zipEntry] of Object.entries(zip.files)) {
-    if (!zipEntry.dir && !path.startsWith(".semio/") && path !== "kit.json") {
-      const blob = await zipEntry.async("blob");
-      files.set(path, blob);
+    if (!(zipEntry as any).dir && !path.startsWith(".semio/") && path !== "kit.json") {
+      zipEntries.set(path, zipEntry);
     }
   }
 
-  return { kit, files };
+  if (kit.files) {
+    for (const file of kit.files) {
+      const filePath = buildFilePath(kit, file);
+      const zipEntry = zipEntries.get(filePath);
+      if (zipEntry) {
+        const arrayBuf = await (zipEntry as any).async("arraybuffer");
+        const bytes = new Uint8Array(arrayBuf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        file.blob = `data:application/octet-stream;base64,${btoa(binary)}`;
+      }
+    }
+  }
+
+  return { kit };
 };
 
 /**
@@ -8742,7 +8807,7 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
  *
  *  * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨exportkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/exportKit)
  **/
-export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blob> => {
+export const exportKit = async (kit: Kit): Promise<Blob> => {
   const JSZip = (await import("jszip")).default;
 
   const SQL = await getSqlJs();
@@ -8756,9 +8821,17 @@ export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blo
   const zip = new JSZip();
   zip.file(".semio/kit.db", dbData);
 
-  for (const [path, blob] of files.entries()) {
-    const arrayBuffer = await blob.arrayBuffer();
-    zip.file(path, new Uint8Array(arrayBuffer));
+  if (kit.files) {
+    for (const file of kit.files) {
+      if (file.blob) {
+        const filePath = buildFilePath(kit, file);
+        const base64 = file.blob.startsWith("data:") ? file.blob.slice(file.blob.indexOf(",") + 1) : file.blob;
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        zip.file(filePath, bytes);
+      }
+    }
   }
 
   return await zip.generateAsync({ type: "blob" });
@@ -8779,6 +8852,11 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   };
   const normalizeValue = (value: any): any => (value === null || value === "" || value === undefined ? undefined : value);
   const normalizeBoolean = (value: boolean | undefined): boolean | undefined => (value ? true : undefined);
+  const floatEq = (a: number | undefined, b: number | undefined): boolean => {
+    if (a === undefined && b === undefined) return true;
+    if (a === undefined || b === undefined) return false;
+    return Math.abs(a - b) < TOLERANCE;
+  };
 
   const areAttributesEqual = (a?: Attribute[], b?: Attribute[]): boolean => {
     const arrA = normalizeArray(a);
@@ -8817,13 +8895,13 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       const connectorB = arrB.find((x) => x.guid === connectorA.guid);
       if (!connectorB) return false;
       if (normalizeValue(connectorA.name) !== normalizeValue(connectorB.name)) return false;
-      if (connectorA.point.x !== connectorB.point.x) return false;
-      if (connectorA.point.y !== connectorB.point.y) return false;
-      if (connectorA.point.z !== connectorB.point.z) return false;
-      if (connectorA.direction.x !== connectorB.direction.x) return false;
-      if (connectorA.direction.y !== connectorB.direction.y) return false;
-      if (connectorA.direction.z !== connectorB.direction.z) return false;
-      if (connectorA.t !== connectorB.t) return false;
+      if (!floatEq(connectorA.point.x, connectorB.point.x)) return false;
+      if (!floatEq(connectorA.point.y, connectorB.point.y)) return false;
+      if (!floatEq(connectorA.point.z, connectorB.point.z)) return false;
+      if (!floatEq(connectorA.direction.x, connectorB.direction.x)) return false;
+      if (!floatEq(connectorA.direction.y, connectorB.direction.y)) return false;
+      if (!floatEq(connectorA.direction.z, connectorB.direction.z)) return false;
+      if (!floatEq(connectorA.t, connectorB.t)) return false;
       if (normalizeBoolean(connectorA.mandatory) !== normalizeBoolean(connectorB.mandatory)) return false;
       if (normalizeValue(connectorA.port?.guid) !== normalizeValue(connectorB.port?.guid)) return false;
       if (!arePropsEqual(connectorA.props, connectorB.props)) return false;
@@ -8893,35 +8971,35 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (pieceA.type?.guid !== pieceB.type?.guid) return false;
       if (pieceA.design?.guid !== pieceB.design?.guid) return false;
       if (pieceA.plane && pieceB.plane) {
-        if (pieceA.plane.origin.x !== pieceB.plane.origin.x) return false;
-        if (pieceA.plane.origin.y !== pieceB.plane.origin.y) return false;
-        if (pieceA.plane.origin.z !== pieceB.plane.origin.z) return false;
-        if (pieceA.plane.xAxis.x !== pieceB.plane.xAxis.x) return false;
-        if (pieceA.plane.xAxis.y !== pieceB.plane.xAxis.y) return false;
-        if (pieceA.plane.xAxis.z !== pieceB.plane.xAxis.z) return false;
-        if (pieceA.plane.yAxis.x !== pieceB.plane.yAxis.x) return false;
-        if (pieceA.plane.yAxis.y !== pieceB.plane.yAxis.y) return false;
-        if (pieceA.plane.yAxis.z !== pieceB.plane.yAxis.z) return false;
+        if (!floatEq(pieceA.plane.origin.x, pieceB.plane.origin.x)) return false;
+        if (!floatEq(pieceA.plane.origin.y, pieceB.plane.origin.y)) return false;
+        if (!floatEq(pieceA.plane.origin.z, pieceB.plane.origin.z)) return false;
+        if (!floatEq(pieceA.plane.xAxis.x, pieceB.plane.xAxis.x)) return false;
+        if (!floatEq(pieceA.plane.xAxis.y, pieceB.plane.xAxis.y)) return false;
+        if (!floatEq(pieceA.plane.xAxis.z, pieceB.plane.xAxis.z)) return false;
+        if (!floatEq(pieceA.plane.yAxis.x, pieceB.plane.yAxis.x)) return false;
+        if (!floatEq(pieceA.plane.yAxis.y, pieceB.plane.yAxis.y)) return false;
+        if (!floatEq(pieceA.plane.yAxis.z, pieceB.plane.yAxis.z)) return false;
       } else if (pieceA.plane || pieceB.plane) {
         return false;
       }
       if (pieceA.center && pieceB.center) {
-        if (pieceA.center.u !== pieceB.center.u) return false;
-        if (pieceA.center.v !== pieceB.center.v) return false;
+        if (!floatEq(pieceA.center.u, pieceB.center.u)) return false;
+        if (!floatEq(pieceA.center.v, pieceB.center.v)) return false;
       } else if (pieceA.center || pieceB.center) {
         return false;
       }
-      if (pieceA.scale !== pieceB.scale) return false;
+      if (!floatEq(pieceA.scale, pieceB.scale)) return false;
       if (pieceA.mirrorPlane && pieceB.mirrorPlane) {
-        if (pieceA.mirrorPlane.origin.x !== pieceB.mirrorPlane.origin.x) return false;
-        if (pieceA.mirrorPlane.origin.y !== pieceB.mirrorPlane.origin.y) return false;
-        if (pieceA.mirrorPlane.origin.z !== pieceB.mirrorPlane.origin.z) return false;
-        if (pieceA.mirrorPlane.xAxis.x !== pieceB.mirrorPlane.xAxis.x) return false;
-        if (pieceA.mirrorPlane.xAxis.y !== pieceB.mirrorPlane.xAxis.y) return false;
-        if (pieceA.mirrorPlane.xAxis.z !== pieceB.mirrorPlane.xAxis.z) return false;
-        if (pieceA.mirrorPlane.yAxis.x !== pieceB.mirrorPlane.yAxis.x) return false;
-        if (pieceA.mirrorPlane.yAxis.y !== pieceB.mirrorPlane.yAxis.y) return false;
-        if (pieceA.mirrorPlane.yAxis.z !== pieceB.mirrorPlane.yAxis.z) return false;
+        if (!floatEq(pieceA.mirrorPlane.origin.x, pieceB.mirrorPlane.origin.x)) return false;
+        if (!floatEq(pieceA.mirrorPlane.origin.y, pieceB.mirrorPlane.origin.y)) return false;
+        if (!floatEq(pieceA.mirrorPlane.origin.z, pieceB.mirrorPlane.origin.z)) return false;
+        if (!floatEq(pieceA.mirrorPlane.xAxis.x, pieceB.mirrorPlane.xAxis.x)) return false;
+        if (!floatEq(pieceA.mirrorPlane.xAxis.y, pieceB.mirrorPlane.xAxis.y)) return false;
+        if (!floatEq(pieceA.mirrorPlane.xAxis.z, pieceB.mirrorPlane.xAxis.z)) return false;
+        if (!floatEq(pieceA.mirrorPlane.yAxis.x, pieceB.mirrorPlane.yAxis.x)) return false;
+        if (!floatEq(pieceA.mirrorPlane.yAxis.y, pieceB.mirrorPlane.yAxis.y)) return false;
+        if (!floatEq(pieceA.mirrorPlane.yAxis.z, pieceB.mirrorPlane.yAxis.z)) return false;
       } else if (pieceA.mirrorPlane || pieceB.mirrorPlane) {
         return false;
       }
@@ -8948,14 +9026,14 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (connA.connecting.piece.guid !== connB.connecting.piece.guid) return false;
       if (normalizeValue(connA.connecting.designPiece?.guid) !== normalizeValue(connB.connecting.designPiece?.guid)) return false;
       if (normalizeValue(connA.connecting.connector?.guid) !== normalizeValue(connB.connecting.connector?.guid)) return false;
-      if (connA.gap !== connB.gap) return false;
-      if (connA.shift !== connB.shift) return false;
-      if (connA.rise !== connB.rise) return false;
-      if (connA.rotation !== connB.rotation) return false;
-      if (connA.turn !== connB.turn) return false;
-      if (connA.tilt !== connB.tilt) return false;
-      if (connA.u !== connB.u) return false;
-      if (connA.v !== connB.v) return false;
+      if (!floatEq(connA.gap, connB.gap)) return false;
+      if (!floatEq(connA.shift, connB.shift)) return false;
+      if (!floatEq(connA.rise, connB.rise)) return false;
+      if (!floatEq(connA.rotation, connB.rotation)) return false;
+      if (!floatEq(connA.turn, connB.turn)) return false;
+      if (!floatEq(connA.tilt, connB.tilt)) return false;
+      if (!floatEq(connA.u, connB.u)) return false;
+      if (!floatEq(connA.v, connB.v)) return false;
       if (normalizeValue(connA.description) !== normalizeValue(connB.description)) return false;
       if (!areAttributesEqual(connA.attributes, connB.attributes)) return false;
     }
@@ -9220,6 +9298,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
       const ab = addedB.find((x) => x.guid === aa.guid);
       if (!ab) return false;
       if (normalizeValue(aa.name) !== normalizeValue(ab.name)) return false;
+      if (normalizeValue(aa.description) !== normalizeValue(ab.description)) return false;
       if (aa.point.x !== ab.point.x) return false;
       if (aa.point.y !== ab.point.y) return false;
       if (aa.point.z !== ab.point.z) return false;
@@ -9236,6 +9315,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
     if (a.point && b.point) {
       if (normalizeValue(a.point.x) !== normalizeValue(b.point.x)) return false;
       if (normalizeValue(a.point.y) !== normalizeValue(b.point.y)) return false;
@@ -9277,7 +9357,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
       const ab = addedB.find((x) => x.guid === aa.guid);
       if (!ab) return false;
       if (normalizeValue(aa.name) !== normalizeValue(ab.name)) return false;
-      if (aa.file !== ab.file) return false;
+      if (normalizeValue(aa.file?.guid) !== normalizeValue(ab.file?.guid)) return false;
       if (!arraysEqual(normalizeArray(aa.tags), normalizeArray(ab.tags))) return false;
     }
     return true;
@@ -9287,7 +9367,8 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
-    if (normalizeValue(a.file) !== normalizeValue(b.file)) return false;
+    if (normalizeValue(a.file?.guid) !== normalizeValue(b.file?.guid)) return false;
+    if (normalizeValue(a.description) !== normalizeValue(b.description)) return false;
     if (a.tags && b.tags) {
       if (!arraysEqual(normalizeArray(a.tags), normalizeArray(b.tags))) return false;
     } else if (a.tags || b.tags) {

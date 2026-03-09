@@ -3,7 +3,7 @@ You are a senior developer.
 There are many inconsistencies that you MUST refactor. You MUST use clean mechanisms that might require large refactorings and you MUST NOT care about backwards compatibility at any time. You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST work simultaneously with others on the same files.
-  - You MUST NOT use `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
+  - You MUST NOT use modifying git commands (`git add`, `git restore`, `git clean`, `git rm`, `git mv`, `git commit`, `git reset`, `git revert`, `git rebase`, `git cherry-pick`, `git merge`, `git branch`, `git switch`, `git checkout`, `git tag`, `git push`, `git pull`, `git fetch`, `git remote`, `git init`, `git clone`, `git config`, `git stash`) because others may be editing the same files concurrently.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
 

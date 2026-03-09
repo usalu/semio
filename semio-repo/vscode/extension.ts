@@ -40,12 +40,18 @@ const execAsync = promisify(exec);
  **/
 const execFileAsync = promisify(execFile);
 
+// [🧰semiorepo🖱️vscode💻extension🔖imports✂️problem](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Imports/d/i/Problem)
+// Problem holds the data fields for a Problem record.
 type Problem = { message: string };
 
+// [🧰semiorepo🖱️vscode💻extension🔖imports🛠️deserializekit](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Imports/d/i/deserializeKit)
+// deserializeKit holds the data fields for a deserializeKit record.
 function deserializeKit(text: string): unknown {
   return JSON.parse(text);
 }
 
+// validateKit holds the data fields for a validateKit record.
+// [🧰semiorepo🖱️vscode💻extension🔖imports🛠️validatekit](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Imports/d/i/validateKit)
 function validateKit(_kit: unknown): { problems: Problem[] } {
   return { problems: [] };
 }
@@ -109,15 +115,15 @@ const UI_STRINGS = {
  * Each entry maps an emoji (after VS16 normalization) to its entity kind name.
  * This is the single source of truth — regex patterns are derived from it.
  *
- * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityemojis](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/c/ENTITY_EMOJIS)
+ * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityemojis](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/ENTITY_EMOJIS)
  **/
 export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
-  // Technology kinds
+
   ["👤", "technology-user"],
   ["🧰", "technology-infrastructure"],
   ["🔬", "technology-research"],
   ["🌱", "technology-mono"],
-  // Bundle kinds
+
   ["📚", "bundle-library"],
   ["🛂", "bundle-schema"],
   ["⌨️", "bundle-binary"],
@@ -126,10 +132,10 @@ export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
   ["🌐", "bundle-site"],
   ["🏪", "bundle-assets"],
   ["🪆", "bundle-repo"],
-  // Folder kinds
+
   ["🗃️", "folder-organization"],
   ["🛅", "folder-required"],
-  // File kinds
+
   ["💻", "file-code"],
   ["🥼", "file-lab"],
   ["📜", "file-script"],
@@ -138,45 +144,45 @@ export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
   ["💾", "file-resource"],
   ["📋", "file-template"],
   ["⚖️", "file-license"],
-  // Line/Range
+
   ["📌", "line"],
-  // Section
+
   ["🔖", "section"],
-  // Definition kinds
+
   ["🛠️", "definition-implementation"],
   ["✂️", "definition-interface"],
   ["🪨", "definition-constant"],
   ["🧪", "definition-test"],
-  // Time hierarchy
+
   ["🎆", "year"],
   ["🌙", "month"],
   ["☀️", "day"],
   ["⏰", "hour"],
   ["⌚", "minute"],
   ["⏱️", "second"],
-  // Management
+
   ["🎯", "goal"],
   ["🎫", "ticket"],
   ["📝", "draft"],
-  // Policy/Breach
+
   ["👮", "policy"],
   ["🚫", "breach"],
   ["🔍", "breach-scope"],
-  // Contributor
+
   ["🧑‍💻", "contributor"],
-  // Checkpoint/Version
+
   ["🔀", "checkpoint"],
-  // Interaction kinds
+
   ["✏️", "interaction-edited"],
   ["✅", "interaction-finished"],
   ["🔁", "interaction-restarted"],
   ["🗑️", "interaction-deleted"],
-  // Sessions
+
   ["⚪", "session"],
   ["🟡", "session-running"],
   ["🟢", "session-completed"],
   ["🔴", "session-interrupted"],
-  // Collection emojis (plural)
+
   ["🖥️", "codebase"],
   ["🏗️", "technologies"],
   ["📦", "bundles"],
@@ -202,7 +208,7 @@ function escapeRegex(s: string): string {
  **/
 export function buildEntityEmojiPattern(): string {
   const emojis = Array.from(ENTITY_EMOJIS.keys());
-  // Sort descending by length so ZWJ sequences and multi-codepoint emojis match first
+
   emojis.sort((a, b) => b.length - a.length);
   return emojis.map(escapeRegex).join("|");
 }
@@ -214,12 +220,10 @@ export function buildEntityEmojiPattern(): string {
  * 2. Bare reference: <emoji-id> (emoji followed by non-whitespace, non-delimiter characters)
  *
  * Built dynamically from the ENTITY_EMOJIS registry.
- *
- * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🛠️buildentityidregex](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/buildEntityIdRegex)
  **/
 export function buildEntityIdRegex(): RegExp {
   const emojiAlt = buildEntityEmojiPattern();
-  // Match either:
+
   //  Group 1+2: Markdown link [<id>](semiorepo://uri) — group(1)=id, group(2)=uri
   //  Group 3: Bare emoji-prefixed ID (emoji followed by non-delimiter text)
   return new RegExp(
@@ -232,7 +236,7 @@ export function buildEntityIdRegex(): RegExp {
 /**
  * Compiled entity ID regex, built once from the registry.
  *
- * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityidregex](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/c/ENTITY_ID_REGEX)
+ * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityidregex](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/ENTITY_ID_REGEX)
  **/
 export const ENTITY_ID_REGEX = buildEntityIdRegex();
 
@@ -525,10 +529,6 @@ interface GraphqlSection {
 // #region 🔖Globals
 // [🧰semiorepo🖱️vscode💻extension🔖globals](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals)
 // Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
-
-/**
- * [🧰semiorepo🖱️vscode💻extension🔖globals🪨outputchannel](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/outputChannel)
- * outputChannel holds the data fields for a outputChannel record.
  **/
 let outputChannel: vscode.OutputChannel;
 /**
@@ -574,7 +574,6 @@ let filterProvider: FilterTreeDataProvider | undefined;
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖globals🪨monorepoprovider](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/monorepoProvider)
  * monorepoProvider holds the data fields for a monorepoProvider record.
- **/
 let monorepoProvider: MonorepoTreeDataProvider | undefined;
 
 // #endregion 🔖Globals
@@ -623,7 +622,7 @@ function getWorkspaceRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
-/**
+/** getRepoBinaryPath holds the data fields for a getRepoBinaryPath record.
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🛠️getrepobinarypath](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoBinaryPath)
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🪨getrepobinarypath](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoBinaryPath)
  **/
@@ -648,7 +647,7 @@ function execShell(cmd: string, cwd: string | undefined): Promise<string> {
   });
 }
 
-/**
+/** getRepoCommand holds the data fields for a getRepoCommand record.
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🛠️getrepocommand](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoCommand)
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🪨getrepocommand](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoCommand)
  **/
@@ -686,7 +685,7 @@ function resolveCheckpointSha(checkpoint: string | { sha?: string } | undefined)
   return checkpoint.sha;
 }
 
-/**
+/** getGitHubRepoBaseUrl holds the data fields for a getGitHubRepoBaseUrl record.
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🛠️getgithubrepobaseurl](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getGitHubRepoBaseUrl)
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🪨getgithubrepobaseurl](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getGitHubRepoBaseUrl)
  **/
@@ -807,7 +806,6 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
       return res;
     }
   }
-  return { data: lastResult };
 }
 
 // #endregion 🔖Utilities
@@ -1332,7 +1330,6 @@ function findSectionByPath(section: any, sectionPath: string): any | null {
       if (found) return found;
     }
   }
-  return null;
 }
 
 // #endregion 🔖URI Resolution
@@ -1418,7 +1415,6 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
   const endPos = typeof endLine === "number" ? new vscode.Position(Math.max(0, endLine - 1), 0) : startPos;
   const range = new vscode.Range(startPos, endPos);
   editor.selection = new vscode.Selection(startPos, startPos);
-  editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
 }
 
 // #endregion 🔖Helpers
@@ -1428,7 +1424,7 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
 // [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics)
 // File Analysis & Diagnostics MUST handle analysis, breach diagnostics, bundle caching, and kit validation.
 
-/**
+/** updateBundleCache holds the data fields for a updateBundleCache record.
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️updatebundlecache](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/updateBundleCache)
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨updatebundlecache](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/updateBundleCache)
  **/
@@ -1473,7 +1469,7 @@ function isInIgnoredDirectory(relativePath: string): boolean {
   });
 }
 
-/**
+/** shouldAnalyzeFile holds the data fields for a shouldAnalyzeFile record.
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️shouldanalyzefile](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/shouldAnalyzeFile)
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨shouldanalyzefile](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/shouldAnalyzeFile)
  **/
@@ -1569,7 +1565,7 @@ function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[])
   }
 }
 
-/**
+/** autofixBreach holds the data fields for a autofixBreach record.
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️autofixbreach](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/autofixBreach)
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨autofixbreach](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/autofixBreach)
  **/
@@ -1631,7 +1627,6 @@ function validateKitDocument(document: vscode.TextDocument): void {
   } catch (error) {
     logError("Failed to validate semio kit:", error);
     kitDiagnosticCollection.delete(document.uri);
-  }
 }
 
 // #endregion 🔖File Analysis & Diagnostics
@@ -2107,7 +2102,7 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
  **/
 let semioGutterIcon: vscode.TextEditorDecorationType;
 
-/**
+/** updateSemioDecorations holds the data fields for a updateSemioDecorations record.
  * [🧰semiorepo🖱️vscode💻extension🔖providers🛠️updatesemiodecorations](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Providers/d/i/updateSemioDecorations)
  * [🧰semiorepo🖱️vscode💻extension🔖providers🪨updatesemiodecorations](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Providers/d/i/updateSemioDecorations)
  **/
@@ -2124,7 +2119,6 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
     decorations.push({ range: new vscode.Range(startPos, endPos) });
   }
 
-  editor.setDecorations(semioGutterIcon, decorations);
 }
 
 // #endregion 🔖Providers

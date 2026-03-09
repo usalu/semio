@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [🧰semiorepo⌨️cli🥼maintestgo](semiorepo://p/i/semio-repo/b/b/cli/f/main_test.go)
+// [🧰semiorepo⌨️cli🥼maintest](semiorepo://p/i/semio-repo/b/b/cli/f/main_test.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -3323,9 +3323,8 @@ func TestFindMatchingSectionStartName(t *testing.T) {
 }
 
 // #region 🔖Test Command
-
 func TestIsTestFunctionName(t *testing.T) {
-	// Test function detection for Go test patterns
+
 	tests := []struct {
 		name     string
 		input    string
@@ -3357,7 +3356,7 @@ func TestIsTestFunctionName(t *testing.T) {
 }
 
 func TestDefinitionKindTestEmoji(t *testing.T) {
-	// DefinitionKindTest maps to 🧪 emoji
+
 	emoji := definitionKindEmoji(map[string]interface{}{"kind": string(DefinitionKindTest)})
 	expected := emojiText(EmojiDefinitionTest)
 	if emoji != expected {
@@ -3366,13 +3365,12 @@ func TestDefinitionKindTestEmoji(t *testing.T) {
 }
 
 func TestDefinitionKindTestCode(t *testing.T) {
-	// DefinitionKindTest maps to "t" code
+
 	code := definitionKindCode(map[string]interface{}{"kind": string(DefinitionKindTest)})
 	if code != "t" {
 		t.Errorf("definitionKindCode(DefinitionKindTest) = %q, want %q", code, "t")
 	}
 
-	// Code roundtrip: "t" -> 🧪 -> DefinitionKindTest
 	emoji := definitionEmojiFromCode("t")
 	if emoji != EmojiDefinitionTest {
 		t.Errorf("definitionEmojiFromCode(t) = %q, want %q", emoji, EmojiDefinitionTest)
@@ -3386,7 +3384,7 @@ func TestDefinitionKindTestIsValid(t *testing.T) {
 }
 
 func TestBuildDefinitionIDTestKind(t *testing.T) {
-	// When a function in a lab file matches a test pattern, it should get TEST kind emoji
+
 	labFileID := emojiText(EmojiTechnologyInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileLab) + "maintest"
 
 	id := buildDefinitionID(labFileID, nil, "TestSomething", DefinitionKindImplementation)
@@ -3400,13 +3398,11 @@ func TestBuildDefinitionIDTestKind(t *testing.T) {
 		t.Errorf("buildDefinitionID for TestSomething in lab file should NOT contain impl emoji %q, got %q", implEmoji, id)
 	}
 
-	// A non-test function in a lab file keeps impl emoji
 	id2 := buildDefinitionID(labFileID, nil, "helperFunc", DefinitionKindImplementation)
 	if !strings.Contains(id2, implEmoji) {
 		t.Errorf("buildDefinitionID for helperFunc in lab file should contain impl emoji %q, got %q", implEmoji, id2)
 	}
 
-	// A test function in a non-lab file keeps impl emoji
 	codeFileID := emojiText(EmojiTechnologyInfra) + "semiorepo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileCode) + "main"
 	id3 := buildDefinitionID(codeFileID, nil, "TestSomething", DefinitionKindImplementation)
 	if !strings.Contains(id3, implEmoji) {
@@ -3415,7 +3411,7 @@ func TestBuildDefinitionIDTestKind(t *testing.T) {
 }
 
 func TestDetectBundleLanguage(t *testing.T) {
-	// Create a temp dir acting as a Go bundle
+
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -3499,7 +3495,7 @@ func TestUnflattenTestName(t *testing.T) {
 }
 
 func TestResolveTestScopes(t *testing.T) {
-	// No args -> single scope of kind all
+
 	scopes := resolveTestScopes(nil)
 	if len(scopes) != 1 {
 		t.Fatalf("resolveTestScopes(nil) len = %d, want 1", len(scopes))
@@ -3508,13 +3504,11 @@ func TestResolveTestScopes(t *testing.T) {
 		t.Errorf("resolveTestScopes(nil)[0].Kind = %q, want %q", scopes[0].Kind, testScopeAll)
 	}
 
-	// Empty args -> single scope of kind all
 	scopes2 := resolveTestScopes([]string{})
 	if len(scopes2) != 1 || scopes2[0].Kind != testScopeAll {
 		t.Errorf("resolveTestScopes([]) should return testScopeAll scope")
 	}
 
-	// Unknown/invalid ID -> falls back to all
 	scopes3 := resolveTestScopes([]string{"notavalidid"})
 	if len(scopes3) != 1 || scopes3[0].Kind != testScopeAll {
 		t.Errorf("resolveTestScopes([invalid]) should return testScopeAll scope")
@@ -3527,7 +3521,6 @@ func TestCollectGoTestsInSection(t *testing.T) {
 	content := `package foo
 
 // #region 🔖Alpha
-
 func TestAlpha(t *testing.T) {}
 
 func TestAlphaBeta(t *testing.T) {}
@@ -3535,7 +3528,6 @@ func TestAlphaBeta(t *testing.T) {}
 // #endregion 🔖Alpha
 
 // #region 🔖Gamma
-
 func TestGamma(t *testing.T) {}
 
 // #endregion 🔖Gamma
@@ -3558,7 +3550,6 @@ func TestGamma(t *testing.T) {}
 		t.Errorf("pattern should NOT contain TestGamma from different section, got: %s", pattern)
 	}
 
-	// Non-existent section returns empty
 	empty := collectGoTestsInSection(testFile, "Nonexistent")
 	if empty != "" {
 		t.Errorf("collectGoTestsInSection for missing section should return empty, got: %s", empty)
@@ -3609,7 +3600,6 @@ func TestTestCommandHelp(t *testing.T) {
 // #endregion 🔖Cli
 
 // #region 🔖SQLite Export
-
 // testExportContext is a mock RepoContext for testing ExportToSQLite.
 type testExportContext struct {
 	rootDir      string
@@ -3687,7 +3677,6 @@ func TestExportToSQLiteSchema(t *testing.T) {
 	srcDir := filepath.Join(tmpDir, "mytechnology", "mybundle", "src")
 	os.MkdirAll(srcDir, 0755)
 
-	// Create a TypeScript file with sections and definitions
 	tsContent := `// #region 🔖Header
 
 // 💻src/app.ts
@@ -3699,10 +3688,9 @@ func TestExportToSQLiteSchema(t *testing.T) {
 
 // App module summary.
 
-// #endregion 🔖Header
+// #endregion 🔖SQLite Export
 
 // #region 🔖Functions
-
 // Processes work items.
 export function doWork(): void {}
 
@@ -3711,15 +3699,12 @@ export function doWork(): void {}
 	tsFile := filepath.Join(srcDir, "app.ts")
 	os.WriteFile(tsFile, []byte(tsContent), 0644)
 
-	// Create README.md for technology
 	technologyReadme := "# My Technology\n\n### Summary\n\nThis is the technology summary.\n\n### Specs\n\nSome specs.\n"
 	os.WriteFile(filepath.Join(tmpDir, "mytechnology", "README.md"), []byte(technologyReadme), 0644)
 
-	// Create README.md for bundle
 	bundleReadme := "# My Bundle\n\n### Summary\n\nThis is the bundle summary.\n"
 	os.WriteFile(filepath.Join(tmpDir, "mytechnology", "mybundle", "README.md"), []byte(bundleReadme), 0644)
 
-	// Create the context
 	ctx := &testExportContext{
 		rootDir: tmpDir,
 		technologies: []*Technology{
@@ -3744,7 +3729,6 @@ export function doWork(): void {}
 		t.Fatalf("ExportToSQLite failed: %v", err)
 	}
 
-	// Verify counts
 	if result.Technologies != 1 {
 		t.Errorf("expected 1 technology, got %d", result.Technologies)
 	}
@@ -3758,14 +3742,12 @@ export function doWork(): void {}
 		t.Errorf("expected 1 file, got %d", result.Files)
 	}
 
-	// Verify database schema by querying
 	db, err := sql.Open("sqlite", outputPath)
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
 	defer db.Close()
 
-	// Check synthetic checkpoint exists
 	var checkpointCount int
 	if err := db.QueryRow("SELECT COUNT(*) FROM checkpoint").Scan(&checkpointCount); err != nil {
 		t.Fatalf("failed to count checkpoints: %v", err)
@@ -3774,7 +3756,6 @@ export function doWork(): void {}
 		t.Errorf("expected 1 checkpoint, got %d", checkpointCount)
 	}
 
-	// Check kind tables are seeded
 	var folderKindCount int
 	if err := db.QueryRow("SELECT COUNT(*) FROM folder_kind").Scan(&folderKindCount); err != nil {
 		t.Fatalf("failed to count folder_kind: %v", err)
@@ -3790,7 +3771,6 @@ export function doWork(): void {}
 		t.Errorf("expected 8 file_kind rows, got %d", fileKindCount)
 	}
 
-	// Check technology table - integer id, folder_id FK, technology_kind_id FK, name UK
 	var technologyID int
 	var technologyFolderID int
 	var technologyKindID int
@@ -3809,7 +3789,6 @@ export function doWork(): void {}
 		t.Errorf("expected technology summary 'This is the technology summary.', got %q", technologySummary.String)
 	}
 
-	// Check bundle table - integer id, technology_id FK, folder_id FK, bundle_kind_id FK
 	var bundleID int
 	var bundleTechnologyID int
 	var bundleFolderID int
@@ -3828,7 +3807,6 @@ export function doWork(): void {}
 		t.Errorf("expected bundle technology_id %d, got %d", technologyID, bundleTechnologyID)
 	}
 
-	// Check folder table - integer id with checkpoint_id FK, parent_folder_id FK, folder_kind_id FK
 	var folderCount int
 	if err := db.QueryRow("SELECT COUNT(*) FROM folder").Scan(&folderCount); err != nil {
 		t.Fatalf("failed to count folders: %v", err)
@@ -3845,7 +3823,6 @@ export function doWork(): void {}
 		t.Errorf("expected folder checkpoint_id 1, got %d", folderCheckpointID)
 	}
 
-	// Check file table - integer id, checkpoint_id FK, parent_folder_id FK, file_kind_id FK, extension
 	var fileID int
 	var fileParentFolderID sql.NullInt64
 	var fileKindID int
@@ -3864,7 +3841,6 @@ export function doWork(): void {}
 		t.Errorf("expected file extension 'ts', got %q", fileExtension)
 	}
 
-	// Check section table - integer id, file_id FK
 	var sectionCount int
 	if err := db.QueryRow("SELECT COUNT(*) FROM section").Scan(&sectionCount); err != nil {
 		t.Fatalf("failed to count sections: %v", err)
@@ -3873,7 +3849,6 @@ export function doWork(): void {}
 		t.Error("expected at least 1 section")
 	}
 
-	// Check definition table - integer id, section_id FK, definition_kind_id FK, code field
 	var defCount int
 	if err := db.QueryRow("SELECT COUNT(*) FROM definition").Scan(&defCount); err != nil {
 		t.Fatalf("failed to count definitions: %v", err)
@@ -3897,7 +3872,6 @@ export function doWork(): void {}
 		}
 	}
 
-	// Verify unique constraint on contributor by trying to insert duplicate
 	_, dupErr := db.Exec("INSERT INTO contributor (github, name, alias) VALUES (?, ?, ?)", "export", "Export System", "export")
 	if dupErr == nil {
 		t.Error("expected unique constraint violation for duplicate contributor github")
@@ -3924,7 +3898,6 @@ func TestExportToSQLiteEmpty(t *testing.T) {
 			result.Technologies, result.Bundles, result.Folders, result.Files, result.Sections, result.Definitions)
 	}
 
-	// Verify all schema tables exist
 	db, err := sql.Open("sqlite", outputPath)
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
@@ -3945,7 +3918,6 @@ func TestExportToSQLiteEmpty(t *testing.T) {
 		}
 	}
 
-	// Verify synthetic contributor and checkpoint exist
 	var contributorCount int
 	if err := db.QueryRow("SELECT COUNT(*) FROM contributor").Scan(&contributorCount); err != nil {
 		t.Fatalf("failed to count contributors: %v", err)
@@ -3961,7 +3933,6 @@ func TestExportToSQLiteEmpty(t *testing.T) {
 		t.Errorf("expected 1 synthetic checkpoint, got %d", checkpointCount)
 	}
 
-	// Verify kind tables are seeded
 	var folderKindCount int
 	db.QueryRow("SELECT COUNT(*) FROM folder_kind").Scan(&folderKindCount)
 	if folderKindCount != 2 {
@@ -3990,7 +3961,7 @@ func TestExportToSQLiteEmpty(t *testing.T) {
 }
 
 func TestExportKindMappings(t *testing.T) {
-	// Test folder kind mapping
+
 	if folderKindToInt(FolderKindOrganization) != 0 {
 		t.Errorf("FolderKindOrganization should map to 0")
 	}
@@ -4001,7 +3972,6 @@ func TestExportKindMappings(t *testing.T) {
 		t.Errorf("FolderKindRoot should default to 0")
 	}
 
-	// Test technology kind mapping
 	if technologyKindToInt(TechnologyKindUser) != 0 {
 		t.Errorf("TechnologyKindUser should map to 0")
 	}
@@ -4012,7 +3982,6 @@ func TestExportKindMappings(t *testing.T) {
 		t.Errorf("TechnologyKindResearch should map to 2")
 	}
 
-	// Test bundle kind mapping
 	if bundleKindToInt(BundleKindLibrary) != 0 {
 		t.Errorf("BundleKindLibrary should map to 0")
 	}
@@ -4035,7 +4004,6 @@ func TestExportKindMappings(t *testing.T) {
 		t.Errorf("BundleKindAssets should map to 6")
 	}
 
-	// Test file kind mapping
 	if fileKindToInt(FileKindCode) != 0 {
 		t.Errorf("FileKindCode should map to 0")
 	}
@@ -4061,7 +4029,6 @@ func TestExportKindMappings(t *testing.T) {
 		t.Errorf("FileKindLicense should map to 7")
 	}
 
-	// Test definition kind mapping
 	if definitionKindToInt(DefinitionKindImplementation) != 0 {
 		t.Errorf("DefinitionKindImplementation should map to 0")
 	}
@@ -11851,26 +11818,21 @@ func TestIdUriRoundTrip(t *testing.T) {
 func TestMcpToolsSchemas(t *testing.T) {
 	s := createMcpServer()
 	tools := s.ListTools()
-	forbiddenTools := []string{
-		"analyze",
-		"contributor_add",
-		"contributor_remove",
-		"export",
-		"file_create",
-		"file_delete",
-		"file_move",
-		"folder_create",
-		"folder_delete",
-		"folder_move",
-		"graphql",
-		"move",
-		"policy_check",
-		"ticket_read",
+	allowedTools := []string{
+		"search",
+		"ticket_open",
+		"ticket_close",
+		"ticket_reopen",
+		"section_move",
+		"section_extract",
+		"file_integrate",
 	}
-
-	for _, forbidden := range forbiddenTools {
-		if _, exists := tools[forbidden]; exists {
-			t.Fatalf("forbidden MCP tool %q is still registered", forbidden)
+	if len(tools) != len(allowedTools) {
+		t.Fatalf("expected %d MCP tools, got %d", len(allowedTools), len(tools))
+	}
+	for _, allowed := range allowedTools {
+		if _, exists := tools[allowed]; !exists {
+			t.Fatalf("required MCP tool %q is not registered", allowed)
 		}
 	}
 
@@ -15566,18 +15528,36 @@ func TestIsToolBlocked(t *testing.T) {
 		blocked  bool
 	}{
 		{"git checkout blocked", "run_in_terminal", "git checkout main", true},
+		{"git add blocked", "run_in_terminal", "git add .", true},
+		{"git branch blocked", "run_in_terminal", "git branch feature/x", true},
+		{"git cherry-pick blocked", "run_in_terminal", "git cherry-pick abc123", true},
+		{"git clone blocked", "run_in_terminal", "git clone https://example.com/repo.git", true},
+		{"git commit blocked", "run_in_terminal", "git commit -m test", true},
+		{"git config blocked", "run_in_terminal", "git config user.name semio", true},
+		{"git fetch blocked", "run_in_terminal", "git fetch origin", true},
+		{"git init blocked", "run_in_terminal", "git init", true},
+		{"git merge blocked", "run_in_terminal", "git merge main", true},
+		{"git mv blocked", "run_in_terminal", "git mv a b", true},
+		{"git pull blocked", "run_in_terminal", "git pull origin main", true},
+		{"git push blocked", "run_in_terminal", "git push origin main", true},
+		{"git rebase blocked", "run_in_terminal", "git rebase main", true},
+		{"git remote blocked", "run_in_terminal", "git remote add origin https://example.com/repo.git", true},
+		{"git reset blocked", "run_in_terminal", "git reset --hard", true},
+		{"git restore blocked", "run_in_terminal", "git restore .", true},
+		{"git revert blocked", "run_in_terminal", "git revert abc123", true},
+		{"git rm blocked", "run_in_terminal", "git rm file.txt", true},
 		{"git stash blocked", "bash", "git stash", true},
 		{"git stash pop blocked", "shell", "git stash pop", true},
 		{"git stash drop blocked", "terminal", "git stash drop", true},
 		{"git stash apply blocked", "run", "git stash apply", true},
-		{"git reset hard blocked", "exec", "git reset --hard", true},
+		{"git switch blocked", "run_in_terminal", "git switch main", true},
+		{"git tag blocked", "run_in_terminal", "git tag v1.2.3", true},
 		{"git clean fd blocked", "terminal", "git clean -fd", true},
 		{"git checkout in args blocked", "", "git checkout feature/branch", true},
 		{"regular tool allowed", "read_file", "/path/to/file.ts", false},
-		{"git commit allowed", "terminal", "git commit -m test", false},
-		{"git push allowed", "terminal", "git push origin main", false},
-		{"git pull allowed", "terminal", "git pull", false},
-		{"git add allowed", "terminal", "git add .", false},
+		{"git status allowed", "terminal", "git status", false},
+		{"git log allowed", "terminal", "git log --oneline -n 5", false},
+		{"git diff allowed", "terminal", "git diff", false},
 		{"empty allowed", "", "", false},
 		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
 		{"grep with git checkout pattern not blocked", "", `grep "git checkout" file.go`, false},
@@ -15586,6 +15566,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"cd then git checkout blocked", "", "cd /workspaces && git checkout feature", true},
 		{"pipe grep allowed", "", `ls | grep "git checkout"`, false},
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
+		{"git restore after semicolon blocked", "", "echo done; git restore --staged .", true},
 		{"grep for git reset not blocked", "bash", `grep -rn "git reset --hard" .`, false},
 	}
 	for _, tc := range cases {
@@ -15631,15 +15612,35 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		segment string
 		blocked bool
 	}{
+		{"git add .", true},
+		{"git branch feature/x", true},
 		{"git checkout main", true},
+		{"git cherry-pick abc123", true},
+		{"git clone https://example.com/repo.git", true},
+		{"git commit -m msg", true},
+		{"git config user.email dev@example.com", true},
+		{"git fetch origin", true},
+		{"git init", true},
+		{"git merge main", true},
+		{"git mv a b", true},
+		{"git pull origin main", true},
+		{"git push origin main", true},
+		{"git rebase main", true},
+		{"git remote add origin https://example.com/repo.git", true},
+		{"git restore --staged .", true},
+		{"git revert abc123", true},
+		{"git rm file.txt", true},
 		{"git stash", true},
 		{"git reset --hard", true},
+		{"git switch feature/x", true},
+		{"git tag v1.2.3", true},
 		{"git clean -fd", true},
 		{`grep "git checkout" file.go`, false},
 		{`echo "git stash"`, false},
 		{"./semio-repo/cli/cli tree hooks", false},
-		{"git commit -m msg", false},
-		{"git push origin main", false},
+		{"git status", false},
+		{"git log --oneline -n 5", false},
+		{"git diff", false},
 		{"GIT CHECKOUT branch", true},
 		{"", false},
 	}
@@ -15905,6 +15906,9 @@ func TestHookCommandToolBlocking(t *testing.T) {
 	}
 	if !strings.Contains(result.GetMessage(), "git stash") {
 		t.Errorf("expected git stash in message, got: %s", result.GetMessage())
+	}
+	if !strings.Contains(result.GetMessage(), "other developers and agents may be editing the same files concurrently") {
+		t.Errorf("expected concurrent edit warning in message, got: %s", result.GetMessage())
 	}
 }
 
@@ -16394,13 +16398,13 @@ func TestGenerateClaudeCodeConfig(t *testing.T) {
 		if !ok {
 			t.Fatal("expected hooks key to be present with claude-code-exclusive events")
 		}
-		// Shared events handled by cursor must not be present to avoid duplicate firing.
+
 		for _, sharedKey := range []string{"SessionStart", "SessionEnd", "SubagentStart", "SubagentStop", "Stop", "UserPromptSubmit", "PreCompact", "PreToolUse", "PostToolUse", "PostToolUseFailure"} {
 			if _, ok := hooks[sharedKey]; ok {
 				t.Errorf("expected shared event %s to be absent when cursor hooks exist", sharedKey)
 			}
 		}
-		// Claude Code-exclusive events must remain so standalone claude-code still works.
+
 		for _, exclusiveKey := range []string{"PermissionRequest", "TaskCompleted", "Notification", "TeammateIdle"} {
 			arr, ok := hooks[exclusiveKey].([]interface{})
 			if !ok || len(arr) == 0 {
@@ -16510,10 +16514,34 @@ func TestGetClientHookMappings(t *testing.T) {
 }
 
 func TestBlockedToolPatterns(t *testing.T) {
-	if len(BlockedToolPatterns) < 5 {
-		t.Errorf("expected at least 5 blocked patterns, got %d", len(BlockedToolPatterns))
+	if len(BlockedToolPatterns) < 20 {
+		t.Errorf("expected at least 20 blocked patterns, got %d", len(BlockedToolPatterns))
 	}
-	expectedPatterns := []string{"git checkout", "git stash", "git reset --hard", "git clean -fd"}
+	expectedPatterns := []string{
+		"git add",
+		"git branch",
+		"git checkout",
+		"git cherry-pick",
+		"git clean",
+		"git clone",
+		"git commit",
+		"git config",
+		"git fetch",
+		"git init",
+		"git merge",
+		"git mv",
+		"git pull",
+		"git push",
+		"git rebase",
+		"git remote",
+		"git reset",
+		"git restore",
+		"git revert",
+		"git rm",
+		"git stash",
+		"git switch",
+		"git tag",
+	}
 	for _, ep := range expectedPatterns {
 		found := false
 		for _, bp := range BlockedToolPatterns {
@@ -16662,7 +16690,6 @@ func TestSessionJsonTracksPlan(t *testing.T) {
 		Input:    startPayload,
 	})
 
-	// First plan update: two steps, one in-progress, one pending.
 	plan1Payload := json.RawMessage(`{"session_id":"plan-track-session","tool_input":{"todoList":[{"title":"Step A","status":"in-progress"},{"title":"Step B","status":"pending"}]}}`)
 	RunHook(HookContext{
 		Event:    HookAgentToolPlanUpdatingEnded,
@@ -16716,7 +16743,6 @@ func TestSessionJsonTracksPlan(t *testing.T) {
 		assertHasLifecycle(step)
 	}
 
-	// Second plan update: Step A completed, Step B in-progress, Step C new.
 	plan2Payload := json.RawMessage(`{"session_id":"plan-track-session","tool_input":{"todoList":[{"title":"Step A","status":"completed"},{"title":"Step B","status":"in-progress"},{"title":"Step C","status":"pending"}]}}`)
 	RunHook(HookContext{
 		Event:    HookAgentToolPlanUpdatingEnded,
@@ -16758,7 +16784,6 @@ func TestSessionJsonTracksPlan(t *testing.T) {
 		assertHasLifecycle(step)
 	}
 
-	// Third plan update: Step B and Step C only (Step A removed but remains completed).
 	plan3Payload := json.RawMessage(`{"session_id":"plan-track-session","tool_input":{"todoList":[{"title":"Step B","status":"completed"},{"title":"Step C","status":"in-progress"}]}}`)
 	RunHook(HookContext{
 		Event:    HookAgentToolPlanUpdatingEnded,
@@ -18085,7 +18110,7 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"wget", "wget https://example.com", ToolKindTerminal},
 		{"ssh", "ssh user@host", ToolKindTerminal},
 		{"custom-tool", "./custom-tool --flag", ToolKindTerminal},
-		// Compound commands: cd && test command
+
 		{"cd && go test", "cd /workspaces/semio/semio-repo/cli && go test ./...", ToolKindTest},
 		{"cd && go test piped", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80", ToolKindTest},
 		{"cd && cargo test", "cd /path && cargo test", ToolKindTest},
@@ -18095,17 +18120,17 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"cd && dotnet test", "cd /app && dotnet test", ToolKindTest},
 		{"cd && jest", "cd frontend && jest --testPathPattern=foo", ToolKindTest},
 		{"cd && vitest", "cd app && vitest run", ToolKindTest},
-		// Compound commands: cd && non-test is still terminal
+
 		{"cd && go build", "cd /path && go build ./...", ToolKindTerminal},
 		{"cd && npm install", "cd /path && npm install", ToolKindTerminal},
-		// Compound with semicolons
+
 		{"cd; go test", "cd /path; go test ./...", ToolKindTest},
-		// Compound with || fallback
+
 		{"go test || echo", "go test ./... || echo 'failed'", ToolKindTest},
-		// Pipe only (not compound, just piped)
+
 		{"go test piped", "go test -v ./... | head -50", ToolKindTest},
 		{"cargo test piped", "cargo test 2>&1 | tail -20", ToolKindTest},
-		// Multiple cd + env + test
+
 		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /path && go test -v ./...", ToolKindTest},
 	}
 	for _, tc := range cases {
@@ -18209,17 +18234,17 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 		{"phpunit direct", "phpunit tests/"},
 		{"phpunit vendor", "./vendor/bin/phpunit tests/"},
 		{"cargo nextest", "cargo nextest run"},
-		// Compound commands with cd prefix
+
 		{"cd && go test", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80"},
 		{"cd && cargo test", "cd /path/to/technology && cargo test"},
 		{"cd && npm test", "cd frontend && npm test"},
 		{"cd && pytest", "cd tests && pytest -k test_integration"},
 		{"cd && dotnet test", "cd /app && dotnet test"},
-		// Compound with semicolons
+
 		{"cd; go test", "cd /path; go test ./..."},
-		// Pipe-only
+
 		{"go test piped", "go test -v ./... | head -50"},
-		// Multiple prefixes
+
 		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /path && go test -v ./..."},
 	}
 	clients := []struct {
@@ -18385,7 +18410,7 @@ func TestParseTestInfoFromCommand(t *testing.T) {
 		{"cargo test -- filter", "cargo test -- my_test", []string{"my_test"}, ""},
 		{"dotnet --filter", "dotnet test --filter Category=Unit", []string{"Category=Unit"}, ""},
 		{"rspec --example", "rspec --example myexample", []string{"myexample"}, ""},
-		// Compound commands with cd prefix
+
 		{"cd && go test -run", "cd /path && go test -run TestFoo -timeout 30s ./...", []string{"TestFoo"}, "30"},
 		{"cd && go test all", "cd /path && go test ./...", []string{""}, ""},
 		{"cd && go test piped", "cd /workspaces/semio/semio-repo/cli && go test -v -run TestBar -timeout 60s 2>&1 | tail -80", []string{"TestBar"}, "60"},
@@ -18451,7 +18476,6 @@ func TestResolveTestFilesFromCommand(t *testing.T) {
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
 
-	// Create Go test files
 	goDir := filepath.Join(tmpDir, "pkg", "main")
 	os.MkdirAll(goDir, 0755)
 	os.WriteFile(filepath.Join(goDir, "main.go"), []byte("package main\n"), 0644)
@@ -18460,24 +18484,20 @@ func TestResolveTestFilesFromCommand(t *testing.T) {
 	os.MkdirAll(subDir, 0755)
 	os.WriteFile(filepath.Join(subDir, "sub_test.go"), []byte("package sub\nfunc TestBar(t *testing.T) {}\n"), 0644)
 
-	// Create Python test files
 	pyDir := filepath.Join(tmpDir, "tests")
 	os.MkdirAll(pyDir, 0755)
 	os.WriteFile(filepath.Join(pyDir, "test_foo.py"), []byte("def test_foo(): pass\n"), 0644)
 	os.WriteFile(filepath.Join(pyDir, "helper.py"), []byte("def helper(): pass\n"), 0644)
 
-	// Create JS test files
 	jsDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(jsDir, 0755)
 	os.WriteFile(filepath.Join(jsDir, "app.test.ts"), []byte("test('works', () => {})\n"), 0644)
 	os.WriteFile(filepath.Join(jsDir, "app.ts"), []byte("export const a = 1\n"), 0644)
 
-	// Create Rust test files
 	rsDir := filepath.Join(tmpDir, "rsrc", "tests")
 	os.MkdirAll(rsDir, 0755)
 	os.WriteFile(filepath.Join(rsDir, "integration_test.rs"), []byte("#[test]\nfn test_it() {}\n"), 0644)
 
-	// Create Ruby spec files
 	specDir := filepath.Join(tmpDir, "spec")
 	os.MkdirAll(specDir, 0755)
 	os.WriteFile(filepath.Join(specDir, "app_spec.rb"), []byte("describe App do; end\n"), 0644)
@@ -18525,7 +18545,7 @@ func TestResolveTestFilesFromCommand(t *testing.T) {
 
 	t.Run("pytest_no_args", func(t *testing.T) {
 		files := resolveTestFilesFromCommand("pytest", tmpDir)
-		// Should find test_foo.py somewhere under cwd
+
 		foundTestFile := false
 		for _, f := range files {
 			if filepath.Base(f) == "test_foo.py" {
@@ -18609,7 +18629,7 @@ func helperNotATest() {}
 		if len(ids) < 2 {
 			t.Fatalf("expected at least 2 test definition IDs, got %d: %v", len(ids), ids)
 		}
-		// Check IDs contain test function names (flattened)
+
 		foundAlpha := false
 		foundBeta := false
 		for _, id := range ids {
@@ -18626,7 +18646,7 @@ func helperNotATest() {}
 		if !foundBeta {
 			t.Errorf("expected to find TestBeta in IDs, got %v", ids)
 		}
-		// helperNotATest should NOT be included
+
 		for _, id := range ids {
 			if strings.Contains(id, "helpernotatest") {
 				t.Errorf("expected helperNotATest to be excluded, but found in IDs: %s", id)
@@ -18692,7 +18712,6 @@ func TestExtractTestStartingFromInputResolvesTestIDs(t *testing.T) {
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
 
-	// Create a Go test file
 	goDir := filepath.Join(tmpDir, "mypackage")
 	os.MkdirAll(goDir, 0755)
 	goContent := `package mypackage
@@ -18710,7 +18729,7 @@ func TestTwo(t *testing.T) {}
 		if len(tests) == 0 {
 			t.Fatalf("expected tests to be resolved from files, got empty")
 		}
-		// Tests should contain resolved definition IDs, not raw names
+
 		foundOne := false
 		foundTwo := false
 		for _, id := range tests {
@@ -18740,7 +18759,7 @@ func TestTwo(t *testing.T) {}
 	t.Run("explicit_test_names_not_overwritten", func(t *testing.T) {
 		input := json.RawMessage(`{"tool_input":{"tests":["TestSpecific"],"files":["some_test.go"]}}`)
 		_, tests, _ := extractTestStartingFromInput(input, "")
-		// Should keep the explicit test name, not resolve from files
+
 		if len(tests) != 1 || tests[0] != "TestSpecific" {
 			t.Errorf("expected explicit test name to be preserved, got %v", tests)
 		}
@@ -19574,7 +19593,7 @@ func TestExtractSearchFromInput(t *testing.T) {
 		}
 		input := json.RawMessage(fmt.Sprintf(`{"native":{"event":{"tool_name":"Read","tool_input":{"file_path":%q,"limit":100}}}}`, tempFile))
 		_, ranges := extractSearchFromInput(input, "")
-		// limit=100 means "up to 100 lines" — the range reflects the requested limit, not the file length.
+
 		want := tempFile + "#L1-L100"
 		if len(ranges) != 1 || ranges[0] != want {
 			t.Errorf("expected ranges=[%s], got %v", want, ranges)
@@ -19597,7 +19616,7 @@ func TestExtractSearchFromInput(t *testing.T) {
 		tempDir := t.TempDir()
 		input := json.RawMessage(fmt.Sprintf(`{"tool_input":{"pattern":"foo","path":%q}}`, tempDir))
 		_, ranges := extractSearchFromInput(input, "")
-		// path is a search root, not a file — no range should be produced
+
 		if len(ranges) != 0 {
 			t.Errorf("grep with pattern+path should produce no file ranges, got %v", ranges)
 		}
@@ -19758,7 +19777,7 @@ func TestBuildDefinitionReadsFullFileReturnsFileID(t *testing.T) {
 	origRoot := GetRootDir()
 	SetRootDir(tmpDir)
 	defer SetRootDir(origRoot)
-	// Full-file lineSet: all 5 lines
+
 	lineSet := map[int]struct{}{1: {}, 2: {}, 3: {}, 4: {}, 5: {}}
 	filesToLines := map[string]map[int]struct{}{filePath: lineSet}
 	definitions := buildDefinitionReads(filesToLines)
@@ -20558,7 +20577,7 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 		Input:    sessionInput,
 	}
 	RunHook(hctx)
-	// Agent events are stored in session.json under the events array (not as separate files).
+
 	agentEventsDir := filepath.Join(tmpDir, ".semio-repo", "⚡", "🤖")
 	var sessionJSONPath string
 	filepath.WalkDir(agentEventsDir, func(path string, d os.DirEntry, walkErr error) error {
@@ -20581,11 +20600,11 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &meta); err != nil {
 		t.Fatalf("cannot unmarshal session.json: %v", err)
 	}
-	// The checkpoint SHA must be stored in session.json
+
 	if meta.Checkpoint != expectedSHA {
 		t.Errorf("expected session.json checkpoint=%s, got %q", expectedSHA, meta.Checkpoint)
 	}
-	// The agent.started event must be in the events array with the resolved checkpoint ID
+
 	expectedCheckpoint := resolveEventCheckpointID(expectedSHA)
 	found := false
 	for _, entry := range meta.Events {

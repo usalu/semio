@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🌐docs⚙️postcssconfigts](semiorepo://p/u/semio/b/w/docs/f/postcss.config.ts)
+// [👤semio🌐docs⚙️postcssconfig](semiorepo://p/u/semio/b/w/docs/f/postcss.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🌐docs⚙️postcssconfigts🔖configuration](semiorepo://p/u/semio/b/w/docs/f/postcss.config.ts/s/Configuration)
+// [👤semio🌐docs⚙️postcssconfig🔖configuration](semiorepo://p/u/semio/b/w/docs/f/postcss.config.ts/s/Configuration)
 // PostCSS plugin configuration for the docs application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 
@@ -27,7 +27,7 @@ import { Config } from "postcss-load-config";
 
 /**
  * PostCSS configuration with the Tailwind CSS PostCSS plugin.
-// [👤semio🌐docs⚙️postcssconfigts🔖configuration🪨config](semiorepo://p/u/semio/b/w/docs/f/postcss.config.ts/s/Configuration/d/i/config)
+// [👤semio🌐docs⚙️postcssconfig🔖configuration🪨config](semiorepo://p/u/semio/b/w/docs/f/postcss.config.ts/s/Configuration/d/i/config)
  *
  * Config MUST include the @tailwindcss/postcss plugin.
  **/

@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js⚙️viteconfigts](semiorepo://p/u/semio/b/l/js/f/vite.config.ts)
+// [👤semio📚js⚙️viteconfig](semiorepo://p/u/semio/b/l/js/f/vite.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio📚js⚙️viteconfigts🔖configuration](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration)
+// [👤semio📚js⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration)
 // Vite build and test configuration for the js library.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
@@ -40,14 +40,14 @@ import { defineConfig } from "vitest/config";
 
 /**
  * Absolute file path of the current module.
-// [👤semio📚js⚙️viteconfigts🔖configuration🪨filename](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration/d/i/__filename)
+// [👤semio📚js⚙️viteconfig🔖configuration🪨filename](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration/d/i/__filename)
  *
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
-// [👤semio📚js⚙️viteconfigts🔖configuration🪨dirname](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration/d/i/__dirname)
+// [👤semio📚js⚙️viteconfig🔖configuration🪨dirname](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration/d/i/__dirname)
  *
  * Path MUST be derived from __filename.
  **/

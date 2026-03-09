@@ -5,3 +5,17 @@ contributors: ["🧑‍💻ueli"]
 ---
 
 # Specification
+
+## Components
+
+### MCP Server
+
+Tools:
+
+- `search`
+- `ticket_open`
+- `ticket_close`
+- `ticket_reopen`
+- `section_move`
+- `section_extract`
+- `file_integrate`

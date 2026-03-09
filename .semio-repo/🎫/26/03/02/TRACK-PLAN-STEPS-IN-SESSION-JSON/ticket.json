@@ -2,7 +2,7 @@
   "title": "Track Plan Steps in Session Json",
   "status": "closed",
   "description": "The session.json should keep track of the plan with steps based on events. When agent.tool.plan.updating.ended fires, session.json must be updated with the merged plan steps. Smart merging: preserve timestamps from existing steps, add new steps, mark removed steps as abandoned. Add Abandoned field to TicketAgentPlanStep, Plan field to SessionMeta, mergeTicketAgentPlanSteps function, updateSessionMetaPlan function called from logHook. Also update trackHookInOpenTicket to use smart merging. Add tests.",
-  "summary": "Enforced lifecycle invariant for plan steps: no step can persist with name only. Added merge-time backfill so any legacy name-only step receives ideated, while existing lifecycle rules (started/completed/abandoned transitions) remain intact. Extended tests to assert lifecycle presence on all steps.",
+  "summary": "Updated plan merge to preserve all historical steps, including already-abandoned ones. Steps are no longer deleted from session plan; absent steps are marked or kept as abandoned. Updated regression test accordingly.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/742"
   },

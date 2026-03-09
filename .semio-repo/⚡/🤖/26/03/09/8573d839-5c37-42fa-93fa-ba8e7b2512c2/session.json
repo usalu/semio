@@ -1,0 +1,1182 @@
+{
+  "id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+  "uri": "semiorepo://s/8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-09T11:41:59Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:41:58.616Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 4945,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 4830
+          },
+          "tool_use_id": "toolu_bdrk_01M8LWfYeMvLe3FQuGmF545z__vscode-1773054462129",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️applyconnectionsdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applydesigndiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applypiecediff",
+            "loc": 62
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applypiecesdiff",
+            "loc": 23
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌4830📌4945"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚41⏱️59",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:42:06.683Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3298,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 3171
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01CgruLssUbTpVhN6VV8R9Uc__vscode-1773054462125",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️inversedesignsdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversekitdiff",
+            "loc": 67
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetypediff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetypesdiff",
+            "loc": 27
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌3171📌3298"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚42⏱️07",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:42:06.446Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3470,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 3295
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01G83QAFb9TK6T4o3a6hhadW__vscode-1773054462126",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️inverseconceptdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseconceptsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversedesigndiff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversedesignsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseportdiff",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inverseportsdiff",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetagdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️inversetagsdiff",
+            "loc": 27
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌3295📌3470"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚42⏱️07",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:42:06.904Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 4945,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 4830
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01M8LWfYeMvLe3FQuGmF545z__vscode-1773054462129",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️applyconnectionsdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applydesigndiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applypiecediff",
+            "loc": 62
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️applypiecesdiff",
+            "loc": 23
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌4830📌4945"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚42⏱️07",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:42:17.790Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n \"^func \\(inverse\\|apply\\|are\\)\\w*\\(Diff\\|Equal\\)\" /workspaces/semio/semio/go/semio.go | head -100",
+            "explanation": "Get exact line numbers for all diff and equal functions in semio.go",
+            "goal": "Find exact function locations",
+            "isBackground": false,
+            "timeout": 10000
+          },
+          "tool_use_id": "toolu_bdrk_01SAwGRGsWp9GBp1q6WJ7Sqy__vscode-1773054462131",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚42⏱️18",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:42:27.423Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n \"^func \\(inverse\\|apply\\|are\\)\\w*\\(Diff\\|Equal\\)\" /workspaces/semio/semio/go/semio.go | head -100",
+            "explanation": "Get exact line numbers for all diff and equal functions in semio.go",
+            "goal": "Find exact function locations",
+            "isBackground": false,
+            "timeout": 10000
+          },
+          "tool_response": "Note: The tool simplified the command to ` grep -n \"^func \\(inverse\\|apply\\|are\\)\\w*\\(Diff\\|Equal\\)\" /workspaces/semio/semio/go/semio.go | head -100`, and this is the output of running that command instead:\n92:func areLocationIdsEqual(a, b *LocationId) bool {\n102:func areTypeIdsEqual(a, b *TypeId) bool {\n112:func areDesignIdsEqual(a, b *DesignId) bool {\n122:func arePortIdsEqual(a, b *PortId) bool {\n132:func areLayerIdsEqual(a, b *LayerId) bool {\n149:func areAuthorIdsEqual(a, b []AuthorId) bool {\n161:func areConceptIdsEqual(a, b []ConceptId) bool {\n173:func arePortIdSlicesEqual(a, b []PortId) bool {\n185:func areAttributesEqual(a, b []Attribute) bool {\n205:func arePropsEqual(a, b []Prop) bool {\n2194:func areTypesDiffsEqual(a, b *TypesDiff) bool {\n2231:func areDesignsDiffsEqual(a, b *DesignsDiff) bool {\n2268:func areTagsDiffsEqual(a, b *TagsDiff) bool {\n2305:func areConceptsDiffsEqual(a, b *ConceptsDiff) bool {\n2342:func arePortsDiffsEqual(a, b *PortsDiff) bool {\n2379:func areFilesDiffsEqual(a, b *FilesDiff) bool {\n2416:func areFoldersDiffsEqual(a, b *FoldersDiff) bool {\n2453:func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {\n3242:func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {\n3273:func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {\n3295:func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) Designs\nDiff {                                                                          3326:func inverseDesignDiff(original Design, appliedDiff DesignDiff) DesignDiff \n{                                                                               3348:func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {\n3379:func inverseTagDiff(original Tag, appliedDiff TagDiff) TagDiff {\n3393:func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) Conc\neptsDiff {                                                                      3424:func inverseConceptDiff(original Concept, appliedDiff ConceptDiff) ConceptD\niff {                                                                           3438:func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {\n3469:func inversePortDiff(original Port, appliedDiff PortDiff) PortDiff {\n3483:func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {\n3514:func inverseFileDiff(original File, appliedDiff FileDiff) FileDiff {\n3550:func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) Folders\nDiff {                                                                          3581:func inverseFolderDiff(original Folder, appliedDiff FolderDiff) FolderDiff \n{                                                                               3592:func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) Authors\nDiff {                                                                          3623:func inverseAuthorDiff(original Author, appliedDiff AuthorDiff) AuthorDiff \n{                                                                               3634:func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff\n) ConnectorsDiff {                                                              3650:func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff\n {                                                                              3666:func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff\n {                                                                              3682:func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsD\niff) ConnectionsDiff {                                                          3698:func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff\n) AttributesDiff {                                                              3731:func areFolderIdsEqual(a, b *FolderId) bool {\n3989:func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute\n {                                                                              4211:func arePlanesEqual(a, b Plane) bool {\n4332:func areTypesEqual(a, b Type) bool {\n4381:func areConnectorsEqual(a, b Connector) bool {\n4400:func areModelsEqual(a, b Model) bool {\n4413:func areDesignsEqual(a, b Design) bool {\n4462:func arePiecesEqual(a, b Piece) bool {\n4484:func areConnectionsEqual(a, b Connection) bool {\n4503:func areTagsEqual(a, b Tag) bool {\n4516:func areConceptsEqual(a, b Concept) bool {\n4529:func arePortsEqual(a, b Port) bool {\n4542:func areFilesEqual(a, b File) bool {\n4561:func areFoldersEqual(a, b Folder) bool {\n4571:func areAuthorsEqual(a, b Author) bool {\n4646:func applyTypesDiff(base []Type, diff TypesDiff) []Type {\n4673:func applyTypeDiff(base Type, diff TypeDiff) Type {\n4699:func applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector\n {                                                                              4726:func applyConnectorDiff(base Connector, diff ConnectorDiff) Connector {\n4762:func applyModelsDiff(base []Model, diff ModelsDiff) []Model {\n4789:func applyModelDiff(base Model, diff ModelDiff) Model {\n4803:func applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n4830:func applyDesignDiff(base Design, diff DesignDiff) Design {\n4850:func applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {\n4877:func applyPieceDiff(base Piece, diff PieceDiff) Piece {\n4943:func applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connec\ntion {                                                                          4970:func applyConnectionDiff(base Connection, diff ConnectionDiff) Connection {\n4996:func applyTagsDiff(base []Tag, diff TagsDiff) []Tag {\n5023:func applyTagDiff(base Tag, diff TagDiff) Tag {\n5037:func applyConceptsDiff(base []Concept, diff ConceptsDiff) []Concept {\n5064:func applyConceptDiff(base Concept, diff ConceptDiff) Concept {\n5078:func applyPortsDiff(base []Port, diff PortsDiff) []Port {\n5105:func applyPortDiff(base Port, diff PortDiff) Port {\n5119:func applyFilesDiff(base []File, diff FilesDiff) []File {\n5146:func applyFileDiff(base File, diff FileDiff) File {\n5181:func applyFoldersDiff(base []Folder, diff FoldersDiff) []Folder {\n5208:func applyFolderDiff(base Folder, diff FolderDiff) Folder {\n5219:func applyAuthorsDiff(base []Author, diff AuthorsDiff) []Author {\n5246:func applyAuthorDiff(base Author, diff AuthorDiff) Author {\n",
+          "tool_use_id": "toolu_bdrk_01SAwGRGsWp9GBp1q6WJ7Sqy__vscode-1773054462131",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚42⏱️27",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:42:51.413Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "wc -l /workspaces/semio/semio/go/semio.go",
+            "explanation": "Check total line count of the file",
+            "goal": "Determine file size",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01AeL7AbCk7cGhuHf6oxp2xA__vscode-1773054462132",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚42⏱️51",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:00.899Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "wc -l /workspaces/semio/semio/go/semio.go",
+            "explanation": "Check total line count of the file",
+            "goal": "Determine file size",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` wc -l /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\n6932 /workspaces/semio/semio/go/semio.go\n",
+          "tool_use_id": "toolu_bdrk_01AeL7AbCk7cGhuHf6oxp2xA__vscode-1773054462132",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️01",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:11.559Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n \"^func \\(Inverse\\|Apply\\|AreKits\\|AreKit\\)\" /workspaces/semio/semio/go/semio.go",
+            "explanation": "Find public Inverse/Apply/AreKits functions",
+            "goal": "Locate public functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_017QfGQPrcFiQo34xe3imZUG__vscode-1773054462133",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️12",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:23.597Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n \"^func \\(Inverse\\|Apply\\|AreKits\\|AreKit\\)\" /workspaces/semio/semio/go/semio.go",
+            "explanation": "Find public Inverse/Apply/AreKits functions",
+            "goal": "Locate public functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` grep -n \"^func \\(Inverse\\|Apply\\|AreKits\\|AreKit\\)\" /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\n1970:func AreKitsEqual(a, b Kit) bool {\n2145:func AreKitDiffsEqual(a, b KitDiff) bool {\n3171:func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {\n4584:func ApplyKitDiff(base Kit, diff KitDiff) Kit {\n6928:func ApplyDesignDiff(base Design, diff DesignDiff) Design {\n",
+          "tool_use_id": "toolu_bdrk_017QfGQPrcFiQo34xe3imZUG__vscode-1773054462133",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️24",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:29.267Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '185,225p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read areAttributesEqual and arePropsEqual",
+            "goal": "Extract areAttributesEqual function",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_017s8jVWh7T9xKokCZpYWGoV__vscode-1773054462134",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️29",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:39.588Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '185,225p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read areAttributesEqual and arePropsEqual",
+            "goal": "Extract areAttributesEqual function",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '185,225p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc areAttributesEqual(a, b []Attribute) bool {\nif len(a) != len(b) {\nreturn false\n}\naMap := make(map[string]Attribute)\nfor _, attr := range a {\naMap[attr.Guid] = attr\n}\nfor _, attr := range b {\nother, ok := aMap[attr.Guid]\nif !ok {\nreturn false\n}\nif attr.Key != other.Key || attr.Value != other.Value {\nreturn false\n}\n}\nreturn true\n}\n\nfunc arePropsEqual(a, b []Prop) bool {\nif len(a) != len(b) {\nreturn false\n}\naMap := make(map[string]Prop)\nfor _, p := range a {\naMap[p.Guid] = p\n}\nfor _, p := range b {\nother, ok := aMap[p.Guid]\nif !ok {\nreturn false\n}\nif p.Quality.Guid != other.Quality.Guid || p.Value != other.Value || normalizeSt\nr(p.Unit) != normalizeStr(other.Unit) {                                         return false\n}\n}\nreturn true\n}\n\n\n",
+          "tool_use_id": "toolu_bdrk_017s8jVWh7T9xKokCZpYWGoV__vscode-1773054462134",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️40",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:44.940Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '3171,3440p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read InverseKitDiff through inverseConceptDiff",
+            "goal": "Extract inverse diff functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01GK8oGwAv5jA8HHhYWmmWFj__vscode-1773054462135",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️45",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:43:54.307Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '3171,3440p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read InverseKitDiff through inverseConceptDiff",
+            "goal": "Extract inverse diff functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '3171,3440p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {\n        inverse := KitDiff{}\n        if appliedDiff.Name != nil {\n                inverse.Name = \u0026original.Name\n        }\n        if appliedDiff.Version != nil {\n                inverse.Version = \u0026original.Version\n        }\n        if appliedDiff.Description != nil {\n                inverse.Description = original.Description\n        }\n        if appliedDiff.Icon != nil {\n                inverse.Icon = original.Icon\n        }\n        if appliedDiff.Image != nil {\n                inverse.Image = original.Image\n        }\n        if appliedDiff.Remote != nil {\n                inverse.Remote = original.Remote\n        }\n        if appliedDiff.Homepage != nil {\n                inverse.Homepage = original.Homepage\n        }\n        if appliedDiff.License != nil {\n                inverse.License = original.License\n        }\n        if appliedDiff.Preview != nil {\n                inverse.Preview = original.Preview\n        }\n        if appliedDiff.Types != nil {\n                typesDiff := inverseTypesDiff(original.Types, *appliedDiff.Types\n)                                                                                               inverse.Types = \u0026typesDiff\n        }\n        if appliedDiff.Designs != nil {\n                designsDiff := inverseDesignsDiff(original.Designs, *appliedDiff\n.Designs)                                                                                       inverse.Designs = \u0026designsDiff\n        }\n        if appliedDiff.Tags != nil {\n                tagsDiff := inverseTagsDiff(original.Tags, *appliedDiff.Tags)\n                inverse.Tags = \u0026tagsDiff\n        }\n        if appliedDiff.Concepts != nil {\n                conceptsDiff := inverseConceptsDiff(original.Concepts, *appliedD\niff.Concepts)                                                                                   inverse.Concepts = \u0026conceptsDiff\n        }\n        if appliedDiff.Ports != nil {\n                interfacesDiff := inversePortsDiff(original.Ports, *appliedDiff.\nPorts)                                                                                          inverse.Ports = \u0026interfacesDiff\n        }\n        if appliedDiff.Files != nil {\n                filesDiff := inverseFilesDiff(original.Files, *appliedDiff.Files\n)                                                                                               inverse.Files = \u0026filesDiff\n        }\n        if appliedDiff.Folders != nil {\n                foldersDiff := inverseFoldersDiff(original.Folders, *appliedDiff\n.Folders)                                                                                       inverse.Folders = \u0026foldersDiff\n        }\n        if appliedDiff.Authors != nil {\n                authorsDiff := inverseAuthorsDiff(original.Authors, *appliedDiff\n.Authors)                                                                                       inverse.Authors = \u0026authorsDiff\n        }\n        if appliedDiff.Attributes != nil {\n                attrsDiff := inverseAttributesDiff(original.Attributes, *applied\nDiff.Attributes)                                                                                inverse.Attributes = \u0026attrsDiff\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversetypesdiff](semiorepo://p/u/semio/b/\nl/go/f/semio.go/s/Kit%20Operations/d/i/inverseTypesDiff)                        // inverseTypesDiff holds the data fields for a inverseTypesDiff record.\n// inverseTypesDiff MUST perform the inverseTypesDiff operation.\nfunc inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {\n        inverse := TypesDiff{}\n        for _, added := range appliedDiff.Added {\n                inverse.Removed = append(inverse.Removed, TypeId{Guid: added.Gui\nd})                                                                                     }\n        for _, removed := range appliedDiff.Removed {\n                for _, t := range original {\n                        if t.Guid == removed.Guid {\n                                inverse.Added = append(inverse.Added, t)\n                                break\n                        }\n                }\n        }\n        for _, updated := range appliedDiff.Updated {\n                for _, t := range original {\n                        if t.Guid == updated.Type.Guid {\n                                inverseDiff := inverseTypeDiff(t, updated.Diff)\n                                inverse.Updated = append(inverse.Updated, struct\n {                                                                                                                      Type TypeId   `json:\"type\"`\n                                        Diff TypeDiff `json:\"diff\"`\n                                }{Type: TypeId{Guid: t.Guid}, Diff: inverseDiff}\n)                                                                                                               break\n                        }\n                }\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversetypediff](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/inverseTypeDiff)                          // inverseTypeDiff holds the data fields for a inverseTypeDiff record.\n// inverseTypeDiff MUST perform the inverseTypeDiff operation.\nfunc inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {\n        inverse := TypeDiff{}\n        if appliedDiff.Name != nil {\n                inverse.Name = \u0026original.Name\n        }\n        if appliedDiff.Description != nil {\n                inverse.Description = original.Description\n        }\n        if appliedDiff.Connectors != nil {\n                connDiff := inverseConnectorsDiff(original.Connectors, *appliedD\niff.Connectors)                                                                                 inverse.Connectors = \u0026connDiff\n        }\n        if appliedDiff.Models != nil {\n                modelsDiff := inverseModelsDiff(original.Models, *appliedDiff.Mo\ndels)                                                                                           inverse.Models = \u0026modelsDiff\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversedesignsdiff](semiorepo://p/u/semio/\nb/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseDesignsDiff)                    // inverseDesignsDiff holds the data fields for a inverseDesignsDiff record.\n// inverseDesignsDiff MUST perform the inverseDesignsDiff operation.\nfunc inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) DesignsDiff \n{                                                                                       inverse := DesignsDiff{}\n        for _, added := range appliedDiff.Added {\n                inverse.Removed = append(inverse.Removed, DesignId{Guid: added.G\nuid})                                                                                   }\n        for _, removed := range appliedDiff.Removed {\n                for _, d := range original {\n                        if d.Guid == removed.Guid {\n                                inverse.Added = append(inverse.Added, d)\n                                break\n                        }\n                }\n        }\n        for _, updated := range appliedDiff.Updated {\n                for _, d := range original {\n                        if d.Guid == updated.Design.Guid {\n                                inverseDiff := inverseDesignDiff(d, updated.Diff\n)                                                                                                               inverse.Updated = append(inverse.Updated, struct\n {                                                                                                                      Design DesignId   `json:\"design\"`\n                                        Diff   DesignDiff `json:\"diff\"`\n                                }{Design: DesignId{Guid: d.Guid}, Diff: inverseD\niff})                                                                                                           break\n                        }\n                }\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversedesigndiff](semiorepo://p/u/semio/b\n/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseDesignDiff)                      // inverseDesignDiff holds the data fields for a inverseDesignDiff record.\n// inverseDesignDiff MUST perform the inverseDesignDiff operation.\nfunc inverseDesignDiff(original Design, appliedDiff DesignDiff) DesignDiff {\n        inverse := DesignDiff{}\n        if appliedDiff.Name != nil {\n                inverse.Name = \u0026original.Name\n        }\n        if appliedDiff.Description != nil {\n                inverse.Description = original.Description\n        }\n        if appliedDiff.Pieces != nil {\n                piecesDiff := inversePiecesDiff(original.Pieces, *appliedDiff.Pi\neces)                                                                                           inverse.Pieces = \u0026piecesDiff\n        }\n        if appliedDiff.Connections != nil {\n                connsDiff := inverseConnectionsDiff(original.Connections, *appli\nedDiff.Connections)                                                                             inverse.Connections = \u0026connsDiff\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversetagsdiff](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/inverseTagsDiff)                          // inverseTagsDiff holds the data fields for a inverseTagsDiff record.\n// inverseTagsDiff MUST perform the inverseTagsDiff operation.\nfunc inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {\n        inverse := TagsDiff{}\n        for _, added := range appliedDiff.Added {\n                inverse.Removed = append(inverse.Removed, TagId{Guid: added.Guid\n})                                                                                      }\n        for _, removed := range appliedDiff.Removed {\n                for _, t := range original {\n                        if t.Guid == removed.Guid {\n                                inverse.Added = append(inverse.Added, t)\n                                break\n                        }\n                }\n        }\n        for _, updated := range appliedDiff.Updated {\n                for _, t := range original {\n                        if t.Guid == updated.Tag.Guid {\n                                inverseDiff := inverseTagDiff(t, updated.Diff)\n                                inverse.Updated = append(inverse.Updated, struct\n {                                                                                                                      Tag  TagId   `json:\"tag\"`\n                                        Diff TagDiff `json:\"diff\"`\n                                }{Tag: TagId{Guid: t.Guid}, Diff: inverseDiff})\n                                break\n                        }\n                }\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inversetagdiff](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/inverseTagDiff)                            // inverseTagDiff holds the data fields for a inverseTagDiff record.\n// inverseTagDiff MUST perform the inverseTagDiff operation.\nfunc inverseTagDiff(original Tag, appliedDiff TagDiff) TagDiff {\n        inverse := TagDiff{}\n        if appliedDiff.Name != nil {\n                inverse.Name = \u0026original.Name\n        }\n        if appliedDiff.Description != nil {\n                inverse.Description = original.Description\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inverseconceptsdiff](semiorepo://p/u/semio\n/b/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseConceptsDiff)                  // inverseConceptsDiff holds the data fields for a inverseConceptsDiff record.\n// inverseConceptsDiff MUST perform the inverseConceptsDiff operation.\nfunc inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) ConceptsD\niff {                                                                                   inverse := ConceptsDiff{}\n        for _, added := range appliedDiff.Added {\n                inverse.Removed = append(inverse.Removed, ConceptId{Guid: added.\nGuid})                                                                                  }\n        for _, removed := range appliedDiff.Removed {\n                for _, c := range original {\n                        if c.Guid == removed.Guid {\n                                inverse.Added = append(inverse.Added, c)\n                                break\n                        }\n                }\n        }\n        for _, updated := range appliedDiff.Updated {\n                for _, c := range original {\n                        if c.Guid == updated.Concept.Guid {\n                                inverseDiff := inverseConceptDiff(c, updated.Dif\nf)                                                                                                              inverse.Updated = append(inverse.Updated, struct\n {                                                                                                                      Concept ConceptId   `json:\"concept\"`\n                                        Diff    ConceptDiff `json:\"diff\"`\n                                }{Concept: ConceptId{Guid: c.Guid}, Diff: invers\neDiff})                                                                                                         break\n                        }\n                }\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inverseconceptdiff](semiorepo://p/u/semio/\nb/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseConceptDiff)                    // inverseConceptDiff holds the data fields for a inverseConceptDiff record.\n// inverseConceptDiff MUST perform the inverseConceptDiff operation.\nfunc inverseConceptDiff(original Concept, appliedDiff ConceptDiff) ConceptDiff {\n        inverse := ConceptDiff{}\n        if appliedDiff.Name != nil {\n                inverse.Name = \u0026original.Name\n        }\n        if appliedDiff.Description != nil {\n                inverse.Description = original.Description\n        }\n        return inverse\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️inverseportsdiff](semiorepo://p/u/semio/b/\nl/go/f/semio.go/s/Kit%20Operations/d/i/inversePortsDiff)                        // inversePortsDiff holds the data fields for a inversePortsDiff record.\n// inversePortsDiff MUST perform the inversePortsDiff operation.\nfunc inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {\n        inverse := PortsDiff{}\n        for _, added := range appliedDiff.Added {\n",
+          "tool_use_id": "toolu_bdrk_01GK8oGwAv5jA8HHhYWmmWFj__vscode-1773054462135",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚43⏱️54",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:44:01.232Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01GK8oGwAv5jA8HHhYWmmWFj__vscode-1773054462135/content.txt",
+            "startLine": 1,
+            "endLine": 270
+          },
+          "tool_use_id": "toolu_bdrk_01TLV3cYDp5ztePjYdzN1Nox__vscode-1773054462136",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01gk8ogwav5ja8hhhywmmwfjvscode1773054462135📃content📌1📌270"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚44⏱️01",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:44:12.761Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01GK8oGwAv5jA8HHhYWmmWFj__vscode-1773054462135/content.txt",
+            "startLine": 1,
+            "endLine": 270
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01TLV3cYDp5ztePjYdzN1Nox__vscode-1773054462136",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01gk8ogwav5ja8hhhywmmwfjvscode1773054462135📃content📌1📌270"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚44⏱️13",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:44:22.875Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4584,4645p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read ApplyKitDiff function",
+            "goal": "Extract ApplyKitDiff function",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01Uz5y6M7ZNQbiFGX4apvYgg__vscode-1773054462137",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚44⏱️23",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:44:33.285Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4584,4645p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read ApplyKitDiff function",
+            "goal": "Extract ApplyKitDiff function",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '4584,4645p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc ApplyKitDiff(base Kit, diff KitDiff) Kit {\n        result := base\n        if diff.Name != nil {\n                result.Name = *diff.Name\n        }\n        if diff.Version != nil {\n                result.Version = *diff.Version\n        }\n        if diff.Description != nil {\n                result.Description = diff.Description\n        }\n        if diff.Icon != nil {\n                result.Icon = diff.Icon\n        }\n        if diff.Image != nil {\n                result.Image = diff.Image\n        }\n        if diff.Remote != nil {\n                result.Remote = diff.Remote\n        }\n        if diff.Homepage != nil {\n                result.Homepage = diff.Homepage\n        }\n        if diff.License != nil {\n                result.License = diff.License\n        }\n        if diff.Preview != nil {\n                result.Preview = diff.Preview\n        }\n        if diff.Types != nil {\n                result.Types = applyTypesDiff(base.Types, *diff.Types)\n        }\n        if diff.Designs != nil {\n                result.Designs = applyDesignsDiff(base.Designs, *diff.Designs)\n        }\n        if diff.Tags != nil {\n                result.Tags = applyTagsDiff(base.Tags, *diff.Tags)\n        }\n        if diff.Concepts != nil {\n                result.Concepts = applyConceptsDiff(base.Concepts, *diff.Concept\ns)                                                                                      }\n        if diff.Ports != nil {\n                result.Ports = applyPortsDiff(base.Ports, *diff.Ports)\n        }\n        if diff.Files != nil {\n                result.Files = applyFilesDiff(base.Files, *diff.Files)\n        }\n        if diff.Folders != nil {\n                result.Folders = applyFoldersDiff(base.Folders, *diff.Folders)\n        }\n        if diff.Authors != nil {\n                result.Authors = applyAuthorsDiff(base.Authors, *diff.Authors)\n        }\n        if diff.Attributes != nil {\n                result.Attributes = applyAttributesDiff(base.Attributes, *diff.A\nttributes)                                                                              }\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applytypesdiff](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/applyTypesDiff)                            // applyTypesDiff holds the data fields for a applyTypesDiff record.\n// applyTypesDiff MUST perform the applyTypesDiff operation.\n",
+          "tool_use_id": "toolu_bdrk_01Uz5y6M7ZNQbiFGX4apvYgg__vscode-1773054462137",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚44⏱️33",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:44:39.651Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4646,4805p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read applyTypesDiff through applyDesignsDiff start",
+            "goal": "Extract apply diff functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01PResLo8V5QyGtB2H3TZTV9__vscode-1773054462138",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚44⏱️40",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:44:49.584Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4646,4805p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read applyTypesDiff through applyDesignsDiff start",
+            "goal": "Extract apply diff functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '4646,4805p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc applyTypesDiff(base []Type, diff TypesDiff) []Type {\n        result := make([]Type, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        updatedDiffs := make(map[string]TypeDiff)\n        for _, u := range diff.Updated {\n                updatedDiffs[u.Type.Guid] = u.Diff\n        }\n        for _, t := range base {\n                if removedGuids[t.Guid] {\n                        continue\n                }\n                if d, ok := updatedDiffs[t.Guid]; ok {\n                        result = append(result, applyTypeDiff(t, d))\n                } else {\n                        result = append(result, t)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applytypediff](semiorepo://p/u/semio/b/l/g\no/f/semio.go/s/Kit%20Operations/d/i/applyTypeDiff)                              // applyTypeDiff holds the data fields for a applyTypeDiff record.\n// applyTypeDiff MUST perform the applyTypeDiff operation.\nfunc applyTypeDiff(base Type, diff TypeDiff) Type {\n        result := base\n        if diff.HasField(\"name\") \u0026\u0026 diff.Name != nil {\n                result.Name = *diff.Name\n        }\n        if diff.HasField(\"description\") {\n                result.Description = diff.Description\n        }\n        if diff.HasField(\"virtual\") {\n                result.Virtual = diff.Virtual\n        }\n        if diff.HasField(\"unit\") {\n                result.Unit = diff.Unit\n        }\n        if diff.Connectors != nil {\n                result.Connectors = applyConnectorsDiff(base.Connectors, *diff.C\nonnectors)                                                                              }\n        if diff.Models != nil {\n                result.Models = applyModelsDiff(base.Models, *diff.Models)\n        }\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applyconnectorsdiff](semiorepo://p/u/semio\n/b/l/go/f/semio.go/s/Kit%20Operations/d/i/applyConnectorsDiff)                  // applyConnectorsDiff holds the data fields for a applyConnectorsDiff record.\n// applyConnectorsDiff MUST perform the applyConnectorsDiff operation.\nfunc applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector {\n        result := make([]Connector, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        updatedDiffs := make(map[string]ConnectorDiff)\n        for _, u := range diff.Updated {\n                updatedDiffs[u.Connector.Guid] = u.Diff\n        }\n        for _, c := range base {\n                if removedGuids[c.Guid] {\n                        continue\n                }\n                if d, ok := updatedDiffs[c.Guid]; ok {\n                        result = append(result, applyConnectorDiff(c, d))\n                } else {\n                        result = append(result, c)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applyconnectordiff](semiorepo://p/u/semio/\nb/l/go/f/semio.go/s/Kit%20Operations/d/i/applyConnectorDiff)                    // applyConnectorDiff holds the data fields for a applyConnectorDiff record.\n// applyConnectorDiff MUST perform the applyConnectorDiff operation.\nfunc applyConnectorDiff(base Connector, diff ConnectorDiff) Connector {\n        result := base\n        if diff.Name != nil {\n                result.Name = diff.Name\n        }\n        if diff.T != nil {\n                result.T = *diff.T\n        }\n        if diff.Point != nil {\n                if diff.Point.X != nil {\n                        result.Point.X = *diff.Point.X\n                }\n                if diff.Point.Y != nil {\n                        result.Point.Y = *diff.Point.Y\n                }\n                if diff.Point.Z != nil {\n                        result.Point.Z = *diff.Point.Z\n                }\n        }\n        if diff.Direction != nil {\n                if diff.Direction.X != nil {\n                        result.Direction.X = *diff.Direction.X\n                }\n                if diff.Direction.Y != nil {\n                        result.Direction.Y = *diff.Direction.Y\n                }\n                if diff.Direction.Z != nil {\n                        result.Direction.Z = *diff.Direction.Z\n                }\n        }\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applymodelsdiff](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/applyModelsDiff)                          // applyModelsDiff holds the data fields for a applyModelsDiff record.\n// applyModelsDiff MUST perform the applyModelsDiff operation.\nfunc applyModelsDiff(base []Model, diff ModelsDiff) []Model {\n        result := make([]Model, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        updatedDiffs := make(map[string]ModelDiff)\n        for _, u := range diff.Updated {\n                updatedDiffs[u.Model.Guid] = u.Diff\n        }\n        for _, m := range base {\n                if removedGuids[m.Guid] {\n                        continue\n                }\n                if d, ok := updatedDiffs[m.Guid]; ok {\n                        result = append(result, applyModelDiff(m, d))\n                } else {\n                        result = append(result, m)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applymodeldiff](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/applyModelDiff)                            // applyModelDiff holds the data fields for a applyModelDiff record.\n// applyModelDiff MUST perform the applyModelDiff operation.\nfunc applyModelDiff(base Model, diff ModelDiff) Model {\n        result := base\n        if diff.Name != nil {\n                result.Name = diff.Name\n        }\n        if diff.File != nil {\n                result.File = *diff.File\n        }\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applydesignsdiff](semiorepo://p/u/semio/b/\nl/go/f/semio.go/s/Kit%20Operations/d/i/applyDesignsDiff)                        // applyDesignsDiff holds the data fields for a applyDesignsDiff record.\n// applyDesignsDiff MUST perform the applyDesignsDiff operation.\nfunc applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n        result := make([]Design, 0)\n        removedGuids := make(map[string]bool)\n",
+          "tool_use_id": "toolu_bdrk_01PResLo8V5QyGtB2H3TZTV9__vscode-1773054462138",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚44⏱️50",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:04.147Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4803,4945p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read applyDesignsDiff through applyConnectionsDiff",
+            "goal": "Extract remaining apply diff functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01Upamy4XCdw2jKrBikUqTsd__vscode-1773054462139",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️04",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:15.594Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4803,4945p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read applyDesignsDiff through applyConnectionsDiff",
+            "goal": "Extract remaining apply diff functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '4803,4945p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc applyDesignsDiff(base []Design, diff DesignsDiff) []Design {\n        result := make([]Design, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        updatedDiffs := make(map[string]DesignDiff)\n        for _, u := range diff.Updated {\n                updatedDiffs[u.Design.Guid] = u.Diff\n        }\n        for _, d := range base {\n                if removedGuids[d.Guid] {\n                        continue\n                }\n                if df, ok := updatedDiffs[d.Guid]; ok {\n                        result = append(result, applyDesignDiff(d, df))\n                } else {\n                        result = append(result, d)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applydesigndiff](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/applyDesignDiff)                          // applyDesignDiff holds the data fields for a applyDesignDiff record.\n// applyDesignDiff MUST perform the applyDesignDiff operation.\nfunc applyDesignDiff(base Design, diff DesignDiff) Design {\n        result := base\n        if diff.Name != nil {\n                result.Name = *diff.Name\n        }\n        if diff.Description != nil {\n                result.Description = diff.Description\n        }\n        if diff.Pieces != nil {\n                result.Pieces = applyPiecesDiff(base.Pieces, *diff.Pieces)\n        }\n        if diff.Connections != nil {\n                result.Connections = applyConnectionsDiff(base.Connections, *dif\nf.Connections)                                                                          }\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applypiecesdiff](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/applyPiecesDiff)                          // applyPiecesDiff holds the data fields for a applyPiecesDiff record.\n// applyPiecesDiff MUST perform the applyPiecesDiff operation.\nfunc applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {\n        result := make([]Piece, 0)\n        removedGuids := make(map[string]bool)\n        for _, r := range diff.Removed {\n                removedGuids[r.Guid] = true\n        }\n        updatedDiffs := make(map[string]PieceDiff)\n        for _, u := range diff.Updated {\n                updatedDiffs[u.Piece.Guid] = u.Diff\n        }\n        for _, p := range base {\n                if removedGuids[p.Guid] {\n                        continue\n                }\n                if d, ok := updatedDiffs[p.Guid]; ok {\n                        result = append(result, applyPieceDiff(p, d))\n                } else {\n                        result = append(result, p)\n                }\n        }\n        result = append(result, diff.Added...)\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applypiecediff](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/applyPieceDiff)                            // applyPieceDiff holds the data fields for a applyPieceDiff record.\n// applyPieceDiff MUST perform the applyPieceDiff operation.\nfunc applyPieceDiff(base Piece, diff PieceDiff) Piece {\n        result := base\n        if diff.Name != nil {\n                result.Name = diff.Name\n        }\n        if diff.Type != nil {\n                result.Type = diff.Type\n        }\n        if diff.Scale != nil {\n                result.Scale = diff.Scale\n        }\n        if diff.Plane != nil {\n                if result.Plane == nil {\n                        result.Plane = \u0026Plane{}\n                }\n                if diff.Plane.Origin != nil {\n                        if diff.Plane.Origin.X != nil {\n                                result.Plane.Origin.X = *diff.Plane.Origin.X\n                        }\n                        if diff.Plane.Origin.Y != nil {\n                                result.Plane.Origin.Y = *diff.Plane.Origin.Y\n                        }\n                        if diff.Plane.Origin.Z != nil {\n                                result.Plane.Origin.Z = *diff.Plane.Origin.Z\n                        }\n                }\n                if diff.Plane.XAxis != nil {\n                        if diff.Plane.XAxis.X != nil {\n                                result.Plane.XAxis.X = *diff.Plane.XAxis.X\n                        }\n                        if diff.Plane.XAxis.Y != nil {\n                                result.Plane.XAxis.Y = *diff.Plane.XAxis.Y\n                        }\n                        if diff.Plane.XAxis.Z != nil {\n                                result.Plane.XAxis.Z = *diff.Plane.XAxis.Z\n                        }\n                }\n                if diff.Plane.YAxis != nil {\n                        if diff.Plane.YAxis.X != nil {\n                                result.Plane.YAxis.X = *diff.Plane.YAxis.X\n                        }\n                        if diff.Plane.YAxis.Y != nil {\n                                result.Plane.YAxis.Y = *diff.Plane.YAxis.Y\n                        }\n                        if diff.Plane.YAxis.Z != nil {\n                                result.Plane.YAxis.Z = *diff.Plane.YAxis.Z\n                        }\n                }\n        }\n        if diff.Center != nil {\n                if result.Center == nil {\n                        result.Center = \u0026Coord{}\n                }\n                if diff.Center.U != nil {\n                        result.Center.U = *diff.Center.U\n                }\n                if diff.Center.V != nil {\n                        result.Center.V = *diff.Center.V\n                }\n        }\n        return result\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️applyconnectionsdiff](semiorepo://p/u/semi\no/b/l/go/f/semio.go/s/Kit%20Operations/d/i/applyConnectionsDiff)                // applyConnectionsDiff holds the data fields for a applyConnectionsDiff record.\n// applyConnectionsDiff MUST perform the applyConnectionsDiff operation.\nfunc applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connection \n{                                                                                       result := make([]Connection, 0)\n        removedGuids := make(map[string]bool)\n",
+          "tool_use_id": "toolu_bdrk_01Upamy4XCdw2jKrBikUqTsd__vscode-1773054462139",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️16",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:22.472Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4332,4582p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read areTypesEqual through areAuthorsEqual",
+            "goal": "Extract all areXEqual functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01SvgYgYypAeXhVXD4P3G83j__vscode-1773054462140",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️23",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:32.191Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '4332,4582p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read areTypesEqual through areAuthorsEqual",
+            "goal": "Extract all areXEqual functions",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '4332,4582p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc areTypesEqual(a, b Type) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Description) != normalizeStr(b.Description) {\n                return false\n        }\n        if len(a.Connectors) != len(b.Connectors) {\n                return false\n        }\n        for _, ca := range a.Connectors {\n                found := false\n                for _, cb := range b.Connectors {\n                        if ca.Guid == cb.Guid {\n                                if !areConnectorsEqual(ca, cb) {\n                                        return false\n                                }\n                                found = true\n                                break\n                        }\n                }\n                if !found {\n                        return false\n                }\n        }\n        if len(a.Models) != len(b.Models) {\n                return false\n        }\n        for _, ma := range a.Models {\n                found := false\n                for _, mb := range b.Models {\n                        if ma.Guid == mb.Guid {\n                                if !areModelsEqual(ma, mb) {\n                                        return false\n                                }\n                                found = true\n                                break\n                        }\n                }\n                if !found {\n                        return false\n                }\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️areconnectorsequal](semiorepo://p/u/semio/\nb/l/go/f/semio.go/s/Kit%20Operations/d/i/areConnectorsEqual)                    // areConnectorsEqual holds the data fields for a areConnectorsEqual record.\n// areConnectorsEqual MUST perform the areConnectorsEqual operation.\nfunc areConnectorsEqual(a, b Connector) bool {\n        if normalizeStr(a.Name) != normalizeStr(b.Name) {\n                return false\n        }\n        if a.Point.X != b.Point.X || a.Point.Y != b.Point.Y || a.Point.Z != b.Po\nint.Z {                                                                                         return false\n        }\n        if a.Direction.X != b.Direction.X || a.Direction.Y != b.Direction.Y || a\n.Direction.Z != b.Direction.Z {                                                                 return false\n        }\n        if a.T != b.T {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️aremodelsequal](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/areModelsEqual)                            // areModelsEqual holds the data fields for a areModelsEqual record.\n// areModelsEqual MUST perform the areModelsEqual operation.\nfunc areModelsEqual(a, b Model) bool {\n        if normalizeStr(a.Name) != normalizeStr(b.Name) {\n                return false\n        }\n        if a.File.Guid != b.File.Guid {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️aredesignsequal](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/areDesignsEqual)                          // areDesignsEqual holds the data fields for a areDesignsEqual record.\n// areDesignsEqual MUST perform the areDesignsEqual operation.\nfunc areDesignsEqual(a, b Design) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Description) != normalizeStr(b.Description) {\n                return false\n        }\n        if len(a.Pieces) != len(b.Pieces) {\n                return false\n        }\n        for _, pa := range a.Pieces {\n                found := false\n                for _, pb := range b.Pieces {\n                        if pa.Guid == pb.Guid {\n                                if !arePiecesEqual(pa, pb) {\n                                        return false\n                                }\n                                found = true\n                                break\n                        }\n                }\n                if !found {\n                        return false\n                }\n        }\n        if len(a.Connections) != len(b.Connections) {\n                return false\n        }\n        for _, ca := range a.Connections {\n                found := false\n                for _, cb := range b.Connections {\n                        if ca.Guid == cb.Guid {\n                                if !areConnectionsEqual(ca, cb) {\n                                        return false\n                                }\n                                found = true\n                                break\n                        }\n                }\n                if !found {\n                        return false\n                }\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️arepiecesequal](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Kit%20Operations/d/i/arePiecesEqual)                            // arePiecesEqual holds the data fields for a arePiecesEqual record.\n// arePiecesEqual MUST perform the arePiecesEqual operation.\nfunc arePiecesEqual(a, b Piece) bool {\n        if normalizeStr(a.Name) != normalizeStr(b.Name) {\n                return false\n        }\n        if (a.Type == nil) != (b.Type == nil) {\n                return false\n        }\n        if a.Type != nil \u0026\u0026 a.Type.Guid != b.Type.Guid {\n                return false\n        }\n        if (a.Scale == nil) != (b.Scale == nil) {\n                return false\n        }\n        if a.Scale != nil \u0026\u0026 *a.Scale != *b.Scale {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️areconnectionsequal](semiorepo://p/u/semio\n/b/l/go/f/semio.go/s/Kit%20Operations/d/i/areConnectionsEqual)                  // areConnectionsEqual holds the data fields for a areConnectionsEqual record.\n// areConnectionsEqual MUST perform the areConnectionsEqual operation.\nfunc areConnectionsEqual(a, b Connection) bool {\n        if a.Connected.Piece.Guid != b.Connected.Piece.Guid {\n                return false\n        }\n        if a.Connecting.Piece.Guid != b.Connecting.Piece.Guid {\n                return false\n        }\n        if a.Gap != b.Gap || a.Shift != b.Shift || a.Rise != b.Rise {\n                return false\n        }\n        if a.Rotation != b.Rotation || a.Turn != b.Turn || a.Tilt != b.Tilt {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️aretagsequal](semiorepo://p/u/semio/b/l/go\n/f/semio.go/s/Kit%20Operations/d/i/areTagsEqual)                                // areTagsEqual holds the data fields for a areTagsEqual record.\n// areTagsEqual MUST perform the areTagsEqual operation.\nfunc areTagsEqual(a, b Tag) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Description) != normalizeStr(b.Description) {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️areconceptsequal](semiorepo://p/u/semio/b/\nl/go/f/semio.go/s/Kit%20Operations/d/i/areConceptsEqual)                        // areConceptsEqual holds the data fields for a areConceptsEqual record.\n// areConceptsEqual MUST perform the areConceptsEqual operation.\nfunc areConceptsEqual(a, b Concept) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Description) != normalizeStr(b.Description) {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️areportsequal](semiorepo://p/u/semio/b/l/g\no/f/semio.go/s/Kit%20Operations/d/i/arePortsEqual)                              // arePortsEqual holds the data fields for a arePortsEqual record.\n// arePortsEqual MUST perform the arePortsEqual operation.\nfunc arePortsEqual(a, b Port) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Description) != normalizeStr(b.Description) {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️arefilesequal](semiorepo://p/u/semio/b/l/g\no/f/semio.go/s/Kit%20Operations/d/i/areFilesEqual)                              // areFilesEqual holds the data fields for a areFilesEqual record.\n// areFilesEqual MUST perform the areFilesEqual operation.\nfunc areFilesEqual(a, b File) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Mime) != normalizeStr(b.Mime) {\n                return false\n        }\n        if normalizeStr(a.Remote) != normalizeStr(b.Remote) {\n                return false\n        }\n        if normalizeStr(a.Blob) != normalizeStr(b.Blob) {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️arefoldersequal](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/areFoldersEqual)                          // areFoldersEqual holds the data fields for a areFoldersEqual record.\n// areFoldersEqual MUST perform the areFoldersEqual operation.\nfunc areFoldersEqual(a, b Folder) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        return true\n}\n\n// [👤semio📚go💻semio🔖kitoperations🛠️areauthorsequal](semiorepo://p/u/semio/b/l\n/go/f/semio.go/s/Kit%20Operations/d/i/areAuthorsEqual)                          // areAuthorsEqual holds the data fields for a areAuthorsEqual record.\n// areAuthorsEqual MUST perform the areAuthorsEqual operation.\nfunc areAuthorsEqual(a, b Author) bool {\n        if a.Name != b.Name {\n                return false\n        }\n        if normalizeStr(a.Email) != normalizeStr(b.Email) {\n                return false\n        }\n        return true\n}\n\n// ApplyKitDiff MUST apply all additions, removals and updates from the diff.\n// ApplyKitDiff applies a diff to a base kit producing the updated kit.\n",
+          "tool_use_id": "toolu_bdrk_01SvgYgYypAeXhVXD4P3G83j__vscode-1773054462140",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️32",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:37.043Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 260,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01SvgYgYypAeXhVXD4P3G83j__vscode-1773054462140/content.txt",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_bdrk_017c9KsmohpCvqMsCR5aYXQk__vscode-1773054462141",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01svgygyypaexhvxd4p3g83jvscode1773054462140📃content"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01svgygyypaexhvxd4p3g83jvscode1773054462140📃content📌1📌260"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️37",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:48.812Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 260,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01SvgYgYypAeXhVXD4P3G83j__vscode-1773054462140/content.txt",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_017c9KsmohpCvqMsCR5aYXQk__vscode-1773054462141",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01svgygyypaexhvxd4p3g83jvscode1773054462140📃content"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01svgygyypaexhvxd4p3g83jvscode1773054462140📃content📌1📌260"
+        ],
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️49",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:45:54.255Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '6928,6932p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read ApplyDesignDiff at end of file",
+            "goal": "Extract ApplyDesignDiff function",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01CCLzLVjDcCXagFBf6iWsoq__vscode-1773054462142",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚45⏱️54",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:46:04.526Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '6928,6932p' /workspaces/semio/semio/go/semio.go",
+            "explanation": "Read ApplyDesignDiff at end of file",
+            "goal": "Extract ApplyDesignDiff function",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '6928,6932p' /workspaces/semio/semio/go/semio.go`, and this is the output of running that command instead:\nfunc ApplyDesignDiff(base Design, diff DesignDiff) Design {\n        return applyDesignDiff(base, diff)\n}\n\n// #endregion 🔖Flatten Design\n",
+          "tool_use_id": "toolu_bdrk_01CCLzLVjDcCXagFBf6iWsoq__vscode-1773054462142",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚46⏱️05",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T11:48:41.770Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "8573d839-5c37-42fa-93fa-ba8e7b2512c2",
+          "agent_id": "5b6d5efc-836b-4db1-9136-165e2a5389a9",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰11⌚48⏱️42",
+        "session": "⚪8573d8395c3742fa93faba8e7b2512c2"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

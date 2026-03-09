@@ -1278,6 +1278,22 @@
       "response": {
         "allowed": true
       }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰20⌚46⏱️43"
+      },
+      "response": {
+        "allowed": true
+      }
     }
   ]
 }

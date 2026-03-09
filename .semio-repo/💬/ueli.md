@@ -82,7 +82,15 @@ TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
 
 semio:
-Extend the semio diff test asset. It MUST include every single feature of a kit diff (currently, only a tiny subset is used). All diff tests for all programming languages MUST pass. You MUST fix everything and all implementations MUST be functionally equivalent.
+
+File blobs should not be pure base encoded strings, but common data encoded with uri etc. You MUST update all programming languages.
+
+Introduce new entity called \*Change. A change has forward (diff), backward (inverse diff of forward diff), author, time. Optionally add before (full entity) and after (full entity).
+There are KitChange, DesignChange, etc
+You MUST introduce it to every programming language for every entity.
+Rewrite the existing Diff test as a single change test with all the assertions (include diff to foward, inverse to backward).
+
+Extend the semio diff test asset. It MUST include every single feature exactly once in a kit diff (currently, only a tiny subset is used). All diff tests for all programming languages MUST pass. You MUST fix everything and all implementations MUST be functionally equivalent.
 
 Extend file with `blob` data property that contains the basencoded datastring.
 This change is necessary to guarantee that `.json` kits can be equivalent to `.zip`.
@@ -103,6 +111,19 @@ There MUST be only one schema, no migrations or legacy api support.
 ## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)
 
 ## 👤semio🖱️gh
+
+semio gh:
+Add a new component `Import Model` that takes a file blob string as input and has output param Rhino ModelObject
+
+There MUST be an apply diff for every entity. All apply componentsMUST NOT be persistent. Only Update Kit takes a kit diff and an optional directory and then it MUST update the static kit along with sqlite.
+You MUST NOT call semio repo cli hooks manually.
+You MUST NOT create scripts to automate the task but do it manually.
+
+All params must have the most specific param type possible.
+E.g.
+All id inputs must be of the proper id param type. e.g. design id is not text but design id.
+All ids need to have casts.
+e.g. a design to design id just selects the guid.
 
 Replace illegal guis with proper generated guids.
 

@@ -382,7 +382,7 @@ class Semio(sqlmodel.SQLModel, table=True):
 # [🔖semio/py/semio.py#Modeling](semiorepo://section/semio/py/semio.py/MODELING)
 
 # region Primitives
-# [👤semio📚py💻semio🔖modeling](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling)
+# [👤semio📚py💻semio🔖modeling🔖primitives](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives)
 # Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
 class SModel(sqlmodel.SQLModel, abc.ABC):
@@ -628,7 +628,7 @@ class TableEntityNode(TableNode):
 # [🔖semio/py/semio.py#Domain](semiorepo://section/semio/py/semio.py/DOMAIN)
 
 # region Attribute
-# [👤semio📚py💻semio🔖domain🔖attribute](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute)
+# [👤semio📚py💻semio🔖domain](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain)
 # Attribute entity with key-value pairs and definitions.
 
 class AttributeKeyField(RealField, abc.ABC):
@@ -2378,10 +2378,6 @@ class QualityId(QualityKeyField, Id):
     pass
 
 class QualityProps(
-    """Property fields for a quality.
-    QualityProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityprops](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityProps)
-    """
     QualityUnitField,
     QualityImageField,
     QualityIconField,
@@ -2402,13 +2398,13 @@ class QualityProps(
     QualityKeyField,
     Props,
 ):
+    """Property fields for a quality.
+    QualityProps MUST contain all non-relational property fields.
+    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityprops](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityProps)
+    """
     pass
 
 class QualityInput(
-    """Input fields for creating or updating a quality.
-    QualityInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityInput)
-    """
     QualityUnitField,
     QualityImageField,
     QualityIconField,
@@ -2429,6 +2425,10 @@ class QualityInput(
     QualityKeyField,
     Input,
 ):
+    """Input fields for creating or updating a quality.
+    QualityInput MUST contain all fields required for creation.
+    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityInput)
+    """
     pass
 
 class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
@@ -2439,10 +2439,6 @@ class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField,
     pass
 
 class QualityOutput(
-    """Output fields returned when fetching a quality.
-    QualityOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityOutput)
-    """
     QualityUpdatedField,
     QualityCreatedField,
     QualityUnitField,
@@ -2465,14 +2461,14 @@ class QualityOutput(
     QualityKeyField,
     Output,
 ):
+    """Output fields returned when fetching a quality.
+    QualityOutput MUST contain all fields returned on fetch.
+    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityOutput)
+    """
     benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 class Quality(
-    """Quality entity with units, constraints, formula and folder classification.
-    Quality MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️quality](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/Quality)
-    """
     QualityUpdatedField,
     QualityCreatedField,
     QualityUnitField,
@@ -2496,6 +2492,10 @@ class Quality(
     TableEntity,
     table=True,
 ):
+    """Quality entity with units, constraints, formula and folder classification.
+    Quality MUST implement idMembers and inherit from the appropriate field mixins.
+    [👤semio📚py💻semio🔖domain🔖quality🛠️quality](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/Quality)
+    """
     PLURAL = "qualities"
     __tablename__ = "quality"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -2975,7 +2975,7 @@ class PortInputNode(InputNode):
 # [🔖semio/py/semio.py#Connector](semiorepo://section/semio/py/semio.py/CONNECTOR)
 
 # region CompatiblePort
-# [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort)
+# [👤semio📚py💻semio🔖domain🔖connector](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector)
 # Compatible port entity for specifying allowed port pairings on connectors.
 
 class CompatiblePortNameField(RealField, abc.ABC):
@@ -3522,10 +3522,6 @@ class TypeContext(
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 class Type(
-    """Type entity defining a reusable parametric building block.
-    Type MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖type🛠️type](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/Type)
-    """
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
@@ -3544,6 +3540,10 @@ class Type(
     TableEntity,
     table=True,
 ):
+    """Type entity defining a reusable parametric building block.
+    Type MUST implement idMembers and inherit from the appropriate field mixins.
+    [👤semio📚py💻semio🔖domain🔖type🛠️type](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/Type)
+    """
     PLURAL = "types"
     __tablename__ = "type"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -5268,10 +5268,6 @@ class DesignPrediction(DesignDescriptionField, Prediction):
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 class Design(
-    """Design entity composing pieces and connections into an assembly.
-    Design MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖design🛠️design](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/Design)
-    """
     DesignNameField,
     DesignVariantField,
     DesignViewField,
@@ -5290,6 +5286,10 @@ class Design(
     TableEntity,
     table=True,
 ):
+    """Design entity composing pieces and connections into an assembly.
+    Design MUST implement idMembers and inherit from the appropriate field mixins.
+    [👤semio📚py💻semio🔖domain🔖design🛠️design](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/Design)
+    """
     PLURAL = "designs"
     __tablename__ = "design"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -7117,6 +7117,7 @@ def validateKitDict(kit: dict) -> ValidationResult:
                         },
                     )
                     problems.append(
+                        Problem(
                             constraintId="layer-path-unique",
                             message=f'Duplicate layer path "{path}" inside design "{designName}".',
                             entityKind="Layer",
@@ -7498,14 +7499,16 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
             newPiece["center"] = {"u": 0, "v": 0}
         updatedPieces.append(newPiece)
     return {
-            "updated": [
-                {
-                    "id": p["guid"],
-                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
-                }
-                for p in updatedPieces
-                if p["guid"] in piecePlanes
-            ]
+            "pieces": {
+                "updated": [
+                    {
+                        "id": p["guid"],
+                        "diff": {"plane": p.get("plane"), "center": p.get("center")},
+                    }
+                    for p in updatedPieces
+                    if p["guid"] in piecePlanes
+                ]
+            }
         }
 
 # endregion FlattenDesign
@@ -7595,10 +7598,10 @@ def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
-def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+def areConnectorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     """Check whether two port dictionaries are equal.
     arePortsEqualDict MUST compare all port fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areportsequaldict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/arePortsEqualDict)
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areconnectorsequaldict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areConnectorsEqualDict)
     """
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7612,13 +7615,13 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             return False
         pointA = connectorA.get("point", {})
         pointB = connectorB.get("point", {})
-        if pointA.get("x") != pointB.get("x") or pointA.get("y") != pointB.get("y") or pointA.get("z") != pointB.get("z"):
+        if not _floatEqual(pointA.get("x"), pointB.get("x")) or not _floatEqual(pointA.get("y"), pointB.get("y")) or not _floatEqual(pointA.get("z"), pointB.get("z")):
             return False
         dirA = connectorA.get("direction", {})
         dirB = connectorB.get("direction", {})
-        if dirA.get("x") != dirB.get("x") or dirA.get("y") != dirB.get("y") or dirA.get("z") != dirB.get("z"):
+        if not _floatEqual(dirA.get("x"), dirB.get("x")) or not _floatEqual(dirA.get("y"), dirB.get("y")) or not _floatEqual(dirA.get("z"), dirB.get("z")):
             return False
-        if connectorA.get("t") != connectorB.get("t"):
+        if not _floatEqual(connectorA.get("t"), connectorB.get("t")):
             return False
         if _normalizeBoolean(connectorA.get("mandatory")) != _normalizeBoolean(connectorB.get("mandatory")):
             return False
@@ -7738,7 +7741,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             return False
         if not areModelsEqualDict(typeA.get("models"), typeB.get("models"), strict):
             return False
-        if not arePortsEqualDict(typeA.get("connectors"), typeB.get("connectors"), strict):
+        if not areConnectorsEqualDict(typeA.get("connectors"), typeB.get("connectors"), strict):
             return False
         if not areAttributesEqualDict(typeA.get("attributes"), typeB.get("attributes"), strict):
             return False
@@ -7840,6 +7843,20 @@ def _getGuidFromRef(ref: typing.Any) -> str | None:
         return ref.get("guid")
     return ref
 
+
+def _floatEqual(a, b, epsilon=1e-9):
+    """Compare two float values with epsilon tolerance.
+    _floatEqual MUST perform the _floatEqual operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️floatequal](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_floatEqual)
+    """
+    if a is None and b is None:
+        return True
+    if a is None or b is None:
+        return a == b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return abs(float(a) - float(b)) < epsilon
+    return a == b
+
 def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     """Check whether two connection dictionaries are equal.
     areConnectionsEqualDict MUST compare all connection fields for equality.
@@ -7870,21 +7887,21 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
             return False
         if _getGuidFromRef(connectingA.get("connector")) != _getGuidFromRef(connectingB.get("connector")):
             return False
-        if connA.get("gap") != connB.get("gap"):
+        if not _floatEqual(connA.get("gap"), connB.get("gap")):
             return False
-        if connA.get("shift") != connB.get("shift"):
+        if not _floatEqual(connA.get("shift"), connB.get("shift")):
             return False
-        if connA.get("rise") != connB.get("rise"):
+        if not _floatEqual(connA.get("rise"), connB.get("rise")):
             return False
-        if connA.get("rotation") != connB.get("rotation"):
+        if not _floatEqual(connA.get("rotation"), connB.get("rotation")):
             return False
-        if connA.get("turn") != connB.get("turn"):
+        if not _floatEqual(connA.get("turn"), connB.get("turn")):
             return False
-        if connA.get("tilt") != connB.get("tilt"):
+        if not _floatEqual(connA.get("tilt"), connB.get("tilt")):
             return False
-        if connA.get("u") != connB.get("u"):
+        if not _floatEqual(connA.get("u"), connB.get("u")):
             return False
-        if connA.get("v") != connB.get("v"):
+        if not _floatEqual(connA.get("v"), connB.get("v")):
             return False
         if _normalizeValue(connA.get("description")) != _normalizeValue(connB.get("description")):
             return False
@@ -8275,31 +8292,30 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️gettypediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getTypeDiff)
     """
     diff: dict = {}
-    if before.get("name") != after.get("name"):
-        diff["name"] = after.get("name")
-    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
-        diff["description"] = after.get("description")
-    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
-        diff["icon"] = after.get("icon")
-    if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
-        diff["image"] = after.get("image")
-    if _normalizeValue(before.get("unit")) != _normalizeValue(after.get("unit")):
-        diff["unit"] = after.get("unit")
-    if _normalizeBoolean(before.get("isAbstract")) != _normalizeBoolean(after.get("isAbstract")):
-        diff["isAbstract"] = after.get("isAbstract")
-    if _normalizeBoolean(before.get("virtual")) != _normalizeBoolean(after.get("virtual")):
-        diff["virtual"] = after.get("virtual")
-    connectorsDiff = _getCollectionDiff(
-        before.get("connectors", []),
-        after.get("connectors", []),
-        _getConnectorDiff,
-        "connector",
-    )
+    for key in ["name", "description", "icon", "image", "folder", "unit", "stock"]:
+        if _normalizeValue(before.get(key)) != _normalizeValue(after.get(key)):
+            diff[key] = after.get(key)
+    for key in ["isAbstract", "virtual"]:
+        if _normalizeBoolean(before.get(key)) != _normalizeBoolean(after.get(key)):
+            diff[key] = after.get(key)
+    for refKey in ["location", "parent"]:
+        bGuid = before.get(refKey, {}).get("guid") if isinstance(before.get(refKey), dict) else None
+        aGuid = after.get(refKey, {}).get("guid") if isinstance(after.get(refKey), dict) else None
+        if _normalizeValue(bGuid) != _normalizeValue(aGuid):
+            diff[refKey] = after.get(refKey)
+    if json.dumps(sorted(before.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+        diff["concepts"] = after.get("concepts")
+    if json.dumps(sorted(before.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+        diff["authors"] = after.get("authors")
+    connectorsDiff = _getCollectionDiff(before.get("connectors", []), after.get("connectors", []), _getConnectorDiff, "connector")
     if connectorsDiff:
         diff["connectors"] = connectorsDiff
     modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff, "model")
     if modelsDiff:
         diff["models"] = modelsDiff
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyTypeDiff(base: dict, diff: dict) -> dict:
@@ -8308,26 +8324,22 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytypediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTypeDiff)
     """
     result = dict(base)
-    for key in [
-        "name",
-        "description",
-        "icon",
-        "image",
-        "unit",
-        "isAbstract",
-        "virtual",
-    ]:
+    for key in ["name", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual"]:
         if key in diff:
             result[key] = diff[key]
+    for refKey in ["location", "parent"]:
+        if refKey in diff:
+            result[refKey] = diff[refKey]
+    if "concepts" in diff:
+        result["concepts"] = diff["concepts"]
+    if "authors" in diff:
+        result["authors"] = diff["authors"]
     if diff.get("connectors"):
-        result["connectors"] = _applyCollectionDiff(
-            base.get("connectors", []),
-            diff["connectors"],
-            _applyConnectorDiff,
-            "connector",
-        )
+        result["connectors"] = _applyCollectionDiff(base.get("connectors", []), diff["connectors"], _applyConnectorDiff, "connector")
     if diff.get("models"):
         result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getConnectorDiff(before: dict, after: dict) -> dict:
@@ -8338,10 +8350,39 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
     if before.get("t") != after.get("t"):
         diff["t"] = after.get("t")
     if _normalizeBoolean(before.get("mandatory")) != _normalizeBoolean(after.get("mandatory")):
         diff["mandatory"] = after.get("mandatory")
+    bPortGuid = before.get("port", {}).get("guid") if isinstance(before.get("port"), dict) else None
+    aPortGuid = after.get("port", {}).get("guid") if isinstance(after.get("port"), dict) else None
+    if _normalizeValue(bPortGuid) != _normalizeValue(aPortGuid):
+        diff["port"] = after.get("port")
+    bPoint = before.get("point", {})
+    aPoint = after.get("point", {})
+    if bPoint and aPoint and isinstance(bPoint, dict) and isinstance(aPoint, dict):
+        px = (aPoint.get("x", 0) or 0) - (bPoint.get("x", 0) or 0)
+        py = (aPoint.get("y", 0) or 0) - (bPoint.get("y", 0) or 0)
+        pz = (aPoint.get("z", 0) or 0) - (bPoint.get("z", 0) or 0)
+        if abs(px) > 1e-10 or abs(py) > 1e-10 or abs(pz) > 1e-10:
+            diff["point"] = {"x": px, "y": py, "z": pz}
+    elif aPoint and not bPoint:
+        diff["point"] = aPoint
+    bDir = before.get("direction", {})
+    aDir = after.get("direction", {})
+    if bDir and aDir and isinstance(bDir, dict) and isinstance(aDir, dict):
+        dx = (aDir.get("x", 0) or 0) - (bDir.get("x", 0) or 0)
+        dy = (aDir.get("y", 0) or 0) - (bDir.get("y", 0) or 0)
+        dz = (aDir.get("z", 0) or 0) - (bDir.get("z", 0) or 0)
+        if abs(dx) > 1e-10 or abs(dy) > 1e-10 or abs(dz) > 1e-10:
+            diff["direction"] = {"x": dx, "y": dy, "z": dz}
+    elif aDir and not bDir:
+        diff["direction"] = aDir
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyConnectorDiff(base: dict, diff: dict) -> dict:
@@ -8350,9 +8391,25 @@ def _applyConnectorDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconnectordiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConnectorDiff)
     """
     result = dict(base)
-    for key in ["name", "t", "mandatory"]:
+    for key in ["name", "description", "t", "mandatory"]:
         if key in diff:
             result[key] = diff[key]
+    if "port" in diff:
+        result["port"] = diff["port"]
+    if "point" in diff:
+        bPoint = base.get("point", {})
+        if bPoint and isinstance(bPoint, dict):
+            result["point"] = {"x": (bPoint.get("x", 0) or 0) + (diff["point"].get("x", 0) or 0), "y": (bPoint.get("y", 0) or 0) + (diff["point"].get("y", 0) or 0), "z": (bPoint.get("z", 0) or 0) + (diff["point"].get("z", 0) or 0)}
+        else:
+            result["point"] = diff["point"]
+    if "direction" in diff:
+        bDir = base.get("direction", {})
+        if bDir and isinstance(bDir, dict):
+            result["direction"] = {"x": (bDir.get("x", 0) or 0) + (diff["direction"].get("x", 0) or 0), "y": (bDir.get("y", 0) or 0) + (diff["direction"].get("y", 0) or 0), "z": (bDir.get("z", 0) or 0) + (diff["direction"].get("z", 0) or 0)}
+        else:
+            result["direction"] = diff["direction"]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getModelDiff(before: dict, after: dict) -> dict:
@@ -8363,6 +8420,17 @@ def _getModelDiff(before: dict, after: dict) -> dict:
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    bFileGuid = before.get("file", {}).get("guid") if isinstance(before.get("file"), dict) else None
+    aFileGuid = after.get("file", {}).get("guid") if isinstance(after.get("file"), dict) else None
+    if _normalizeValue(bFileGuid) != _normalizeValue(aFileGuid):
+        diff["file"] = after.get("file")
+    if json.dumps(sorted(before.get("tags", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("tags", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+        diff["tags"] = after.get("tags")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyModelDiff(base: dict, diff: dict) -> dict:
@@ -8371,8 +8439,15 @@ def _applyModelDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applymodeldiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyModelDiff)
     """
     result = dict(base)
-    if "name" in diff:
-        result["name"] = diff["name"]
+    for key in ["name", "description"]:
+        if key in diff:
+            result[key] = diff[key]
+    if "file" in diff:
+        result["file"] = diff["file"]
+    if "tags" in diff:
+        result["tags"] = diff["tags"]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
@@ -8381,25 +8456,30 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesigndiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getDesignDiff)
     """
     diff: dict = {}
-    if before.get("name") != after.get("name"):
-        diff["name"] = after.get("name")
-    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
-        diff["description"] = after.get("description")
-    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
-        diff["icon"] = after.get("icon")
-    if _normalizeValue(before.get("image")) != _normalizeValue(after.get("image")):
-        diff["image"] = after.get("image")
+    for key in ["name", "variant", "view", "description", "icon", "image", "unit", "folder"]:
+        if _normalizeValue(before.get(key)) != _normalizeValue(after.get(key)):
+            diff[key] = after.get(key)
+    for key in ["isAbstract", "canScale", "canMirror"]:
+        if _normalizeBoolean(before.get(key)) != _normalizeBoolean(after.get(key)):
+            diff[key] = after.get(key)
+    for refKey in ["activeLayer", "parent", "location"]:
+        bGuid = before.get(refKey, {}).get("guid") if isinstance(before.get(refKey), dict) else None
+        aGuid = after.get(refKey, {}).get("guid") if isinstance(after.get(refKey), dict) else None
+        if _normalizeValue(bGuid) != _normalizeValue(aGuid):
+            diff[refKey] = after.get(refKey)
+    if json.dumps(sorted(before.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+        diff["concepts"] = after.get("concepts")
+    if json.dumps(sorted(before.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+        diff["authors"] = after.get("authors")
     piecesDiff = _getCollectionDiff(before.get("pieces", []), after.get("pieces", []), _getPieceDiff, "piece")
     if piecesDiff:
         diff["pieces"] = piecesDiff
-    connectionsDiff = _getCollectionDiff(
-        before.get("connections", []),
-        after.get("connections", []),
-        _getConnectionDiff,
-        "connection",
-    )
+    connectionsDiff = _getCollectionDiff(before.get("connections", []), after.get("connections", []), _getConnectionDiff, "connection")
     if connectionsDiff:
         diff["connections"] = connectionsDiff
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyDesignDiff(base: dict, diff: dict) -> dict:
@@ -8408,18 +8488,22 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applydesigndiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyDesignDiff)
     """
     result = dict(base)
-    for key in ["name", "description", "icon", "image"]:
+    for key in ["name", "variant", "view", "description", "icon", "image", "unit", "folder", "isAbstract", "canScale", "canMirror"]:
         if key in diff:
             result[key] = diff[key]
+    for refKey in ["activeLayer", "parent", "location"]:
+        if refKey in diff:
+            result[refKey] = diff[refKey]
+    if "concepts" in diff:
+        result["concepts"] = diff["concepts"]
+    if "authors" in diff:
+        result["authors"] = diff["authors"]
     if diff.get("pieces"):
         result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff, "piece")
     if diff.get("connections"):
-        result["connections"] = _applyCollectionDiff(
-            base.get("connections", []),
-            diff["connections"],
-            _applyConnectionDiff,
-            "connection",
-        )
+        result["connections"] = _applyCollectionDiff(base.get("connections", []), diff["connections"], _applyConnectionDiff, "connection")
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getPieceDiff(before: dict, after: dict) -> dict:
@@ -8430,8 +8514,27 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    for refKey in ["type", "design"]:
+        bGuid = before.get(refKey, {}).get("guid") if isinstance(before.get(refKey), dict) else None
+        aGuid = after.get(refKey, {}).get("guid") if isinstance(after.get(refKey), dict) else None
+        if _normalizeValue(bGuid) != _normalizeValue(aGuid):
+            diff[refKey] = after.get(refKey)
+    if before.get("plane") != after.get("plane"):
+        diff["plane"] = after.get("plane")
+    if before.get("center") != after.get("center"):
+        diff["center"] = after.get("center")
     if before.get("scale") != after.get("scale"):
         diff["scale"] = after.get("scale")
+    if _normalizeValue(before.get("color")) != _normalizeValue(after.get("color")):
+        diff["color"] = after.get("color")
+    for key in ["isHidden", "isLocked"]:
+        if before.get(key) != after.get(key):
+            diff[key] = after.get(key)
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyPieceDiff(base: dict, diff: dict) -> dict:
@@ -8440,9 +8543,14 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applypiecediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPieceDiff)
     """
     result = dict(base)
-    for key in ["name", "scale", "plane", "center"]:
+    for key in ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked"]:
         if key in diff:
             result[key] = diff[key]
+    for refKey in ["type", "design"]:
+        if refKey in diff:
+            result[refKey] = diff[refKey]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
@@ -8452,8 +8560,20 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
     """
     diff: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
-        if before.get(key) != after.get(key):
-            diff[key] = after.get(key)
+        bVal = before.get(key, 0) or 0
+        aVal = after.get(key, 0) or 0
+        delta = aVal - bVal
+        if abs(delta) > 1e-10:
+            diff[key] = delta
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    if before.get("connecting") != after.get("connecting"):
+        diff["connecting"] = after.get("connecting")
+    if before.get("connected") != after.get("connected"):
+        diff["connected"] = after.get("connected")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyConnectionDiff(base: dict, diff: dict) -> dict:
@@ -8464,7 +8584,15 @@ def _applyConnectionDiff(base: dict, diff: dict) -> dict:
     result = dict(base)
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in diff:
+            result[key] = (base.get(key, 0) or 0) + (diff[key] or 0)
+    for key in ["description"]:
+        if key in diff:
             result[key] = diff[key]
+    for key in ["connecting", "connected"]:
+        if key in diff:
+            result[key] = diff[key]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getTagDiff(before: dict, after: dict) -> dict:
@@ -8477,6 +8605,11 @@ def _getTagDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
         diff["description"] = after.get("description")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyTagDiff(base: dict, diff: dict) -> dict:
@@ -8485,9 +8618,11 @@ def _applyTagDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytagdiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTagDiff)
     """
     result = dict(base)
-    for key in ["name", "description"]:
+    for key in ["name", "description", "icon"]:
         if key in diff:
             result[key] = diff[key]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
@@ -8500,6 +8635,11 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
         diff["description"] = after.get("description")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyConceptDiff(base: dict, diff: dict) -> dict:
@@ -8508,9 +8648,11 @@ def _applyConceptDiff(base: dict, diff: dict) -> dict:
     _applyConceptDiff MUST perform the _applyConceptDiff operation.
     """
     result = dict(base)
-    for key in ["name", "description"]:
+    for key in ["name", "description", "icon"]:
         if key in diff:
             result[key] = diff[key]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getPortDiff(before: dict, after: dict) -> dict:
@@ -8523,6 +8665,13 @@ def _getPortDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
         diff["description"] = after.get("description")
+    if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
+        diff["icon"] = after.get("icon")
+    if json.dumps(sorted(before.get("compatiblePorts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("compatiblePorts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+        diff["compatiblePorts"] = after.get("compatiblePorts")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyPortDiff(base: dict, diff: dict) -> dict:
@@ -8531,9 +8680,13 @@ def _applyPortDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyportdiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPortDiff)
     """
     result = dict(base)
-    for key in ["name", "description"]:
+    for key in ["name", "description", "icon"]:
         if key in diff:
             result[key] = diff[key]
+    if "compatiblePorts" in diff:
+        result["compatiblePorts"] = diff["compatiblePorts"]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getFileDiff(before: dict, after: dict) -> dict:
@@ -8544,6 +8697,25 @@ def _getFileDiff(before: dict, after: dict) -> dict:
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    if _normalizeValue(before.get("mime")) != _normalizeValue(after.get("mime")):
+        diff["mime"] = after.get("mime")
+    if _normalizeValue(before.get("remote")) != _normalizeValue(after.get("remote")):
+        diff["remote"] = after.get("remote")
+    if before.get("size") != after.get("size"):
+        diff["size"] = after.get("size")
+    if _normalizeValue(before.get("hash")) != _normalizeValue(after.get("hash")):
+        diff["hash"] = after.get("hash")
+    if _normalizeValue(before.get("blob")) != _normalizeValue(after.get("blob")):
+        diff["blob"] = after.get("blob")
+    bFolderGuid = before.get("folder", {}).get("guid") if isinstance(before.get("folder"), dict) else None
+    aFolderGuid = after.get("folder", {}).get("guid") if isinstance(after.get("folder"), dict) else None
+    if _normalizeValue(bFolderGuid) != _normalizeValue(aFolderGuid):
+        diff["folder"] = after.get("folder")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyFileDiff(base: dict, diff: dict) -> dict:
@@ -8552,8 +8724,13 @@ def _applyFileDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyfilediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyFileDiff)
     """
     result = dict(base)
-    if "name" in diff:
-        result["name"] = diff["name"]
+    for key in ["name", "description", "mime", "remote", "size", "hash", "blob"]:
+        if key in diff:
+            result[key] = diff[key]
+    if "folder" in diff:
+        result["folder"] = diff["folder"]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getFolderDiff(before: dict, after: dict) -> dict:
@@ -8564,6 +8741,11 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
+    if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
+        diff["description"] = after.get("description")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyFolderDiff(base: dict, diff: dict) -> dict:
@@ -8572,8 +8754,11 @@ def _applyFolderDiff(base: dict, diff: dict) -> dict:
     _applyFolderDiff MUST perform the _applyFolderDiff operation.
     """
     result = dict(base)
-    if "name" in diff:
-        result["name"] = diff["name"]
+    for key in ["name", "description"]:
+        if key in diff:
+            result[key] = diff[key]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
@@ -8657,6 +8842,9 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     if _normalizeValue(before.get("email")) != _normalizeValue(after.get("email")):
         diff["email"] = after.get("email")
+    attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
+    if attributesDiff:
+        diff["attributes"] = attributesDiff
     return diff
 
 def _applyAuthorDiff(base: dict, diff: dict) -> dict:
@@ -8668,6 +8856,8 @@ def _applyAuthorDiff(base: dict, diff: dict) -> dict:
     for key in ["name", "email"]:
         if key in diff:
             result[key] = diff[key]
+    if diff.get("attributes") or base.get("attributes"):
+        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
@@ -8676,7 +8866,8 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getattributediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAttributeDiff)
     """
     diff: dict = {}
-
+    if _normalizeValue(before.get("key")) != _normalizeValue(after.get("key")):
+        diff["key"] = after.get("key")
     if _normalizeValue(before.get("value")) != _normalizeValue(after.get("value")):
         diff["value"] = after.get("value")
     if _normalizeValue(before.get("definition")) != _normalizeValue(after.get("definition")):
@@ -8689,7 +8880,7 @@ def _applyAttributeDiff(base: dict, diff: dict) -> dict:
     _applyAttributeDiff MUST perform the _applyAttributeDiff operation.
     """
     result = dict(base)
-    for key in ["value", "definition"]:
+    for key in ["key", "value", "definition"]:
         if key in diff:
             result[key] = diff[key]
     return result
@@ -8785,10 +8976,9 @@ def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
     _inverseAttributeDiff MUST perform the _inverseAttributeDiff operation.
     """
     inverse: dict = {}
-    if "value" in appliedDiff:
-        inverse["value"] = original.get("value")
-    if "definition" in appliedDiff:
-        inverse["definition"] = original.get("definition")
+    for key in ["key", "value", "definition"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
     return inverse
 
 def getKitDiffDict(before: dict, after: dict) -> dict:
@@ -8960,24 +9150,22 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetypediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTypeDiff)
     """
     inverse: dict = {}
-    for key in [
-        "name",
-        "description",
-        "icon",
-        "image",
-        "unit",
-        "isAbstract",
-        "virtual",
-    ]:
+    for key in ["name", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    for refKey in ["location", "parent"]:
+        if refKey in appliedDiff:
+            inverse[refKey] = original.get(refKey)
+    if "concepts" in appliedDiff:
+        inverse["concepts"] = original.get("concepts")
+    if "authors" in appliedDiff:
+        inverse["authors"] = original.get("authors")
     if appliedDiff.get("connectors"):
-        inverse["connectors"] = _inverseCollectionDiff(
-            original.get("connectors", []),
-            appliedDiff["connectors"],
-            _inverseConnectorDiff,
-            "connector",
-        )
+        inverse["connectors"] = _inverseCollectionDiff(original.get("connectors", []), appliedDiff["connectors"], _inverseConnectorDiff, "connector")
+    if appliedDiff.get("models"):
+        inverse["models"] = _inverseCollectionDiff(original.get("models", []), appliedDiff["models"], _inverseModelDiff, "model")
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
@@ -8986,9 +9174,91 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectordiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectorDiff)
     """
     inverse: dict = {}
-    for key in ["name", "t", "mandatory"]:
+    for key in ["name", "description", "t", "mandatory"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    if "port" in appliedDiff:
+        inverse["port"] = original.get("port")
+    if "point" in appliedDiff:
+        p = appliedDiff["point"]
+        inverse["point"] = {"x": -(p.get("x", 0) or 0), "y": -(p.get("y", 0) or 0), "z": -(p.get("z", 0) or 0)}
+    if "direction" in appliedDiff:
+        d = appliedDiff["direction"]
+        inverse["direction"] = {"x": -(d.get("x", 0) or 0), "y": -(d.get("y", 0) or 0), "z": -(d.get("z", 0) or 0)}
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
+    return inverse
+
+def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a model diff.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversemodeldiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseModelDiff)
+    _inverseModelDiff MUST perform the _inverseModelDiff operation.
+    """
+    inverse: dict = {}
+    for key in ["name", "description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if "file" in appliedDiff:
+        inverse["file"] = original.get("file")
+    if "tags" in appliedDiff:
+        inverse["tags"] = original.get("tags")
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
+    return inverse
+
+def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a connection diff (negate numeric deltas).
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectiondiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectionDiff)
+    _inverseConnectionDiff MUST perform the _inverseConnectionDiff operation.
+    """
+    inverse: dict = {}
+    for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
+        if key in appliedDiff:
+            inverse[key] = -(appliedDiff[key] or 0)
+    for key in ["description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    for key in ["connecting", "connected"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
+    return inverse
+
+def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a model diff.
+    _inverseModelDiff MUST perform the _inverseModelDiff operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversemodeldiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseModelDiff)
+    """
+    inverse: dict = {}
+    for key in ["name", "description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if "file" in appliedDiff:
+        inverse["file"] = original.get("file")
+    if "tags" in appliedDiff:
+        inverse["tags"] = original.get("tags")
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
+    return inverse
+
+def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
+    """Compute inverse of a connection diff (negate numeric deltas).
+    _inverseConnectionDiff MUST perform the _inverseConnectionDiff operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectiondiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectionDiff)
+    """
+    inverse: dict = {}
+    for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
+        if key in appliedDiff:
+            inverse[key] = -(appliedDiff[key] or 0)
+    for key in ["description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    for key in ["connecting", "connected"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
@@ -8997,16 +9267,22 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversedesigndiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseDesignDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description", "icon", "image"]:
+    for key in ["name", "variant", "view", "description", "icon", "image", "unit", "folder", "isAbstract", "canScale", "canMirror"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    for refKey in ["activeLayer", "parent", "location"]:
+        if refKey in appliedDiff:
+            inverse[refKey] = original.get(refKey)
+    if "concepts" in appliedDiff:
+        inverse["concepts"] = original.get("concepts")
+    if "authors" in appliedDiff:
+        inverse["authors"] = original.get("authors")
     if appliedDiff.get("pieces"):
-        inverse["pieces"] = _inverseCollectionDiff(
-            original.get("pieces", []),
-            appliedDiff["pieces"],
-            _inversePieceDiff,
-            "piece",
-        )
+        inverse["pieces"] = _inverseCollectionDiff(original.get("pieces", []), appliedDiff["pieces"], _inversePieceDiff, "piece")
+    if appliedDiff.get("connections"):
+        inverse["connections"] = _inverseCollectionDiff(original.get("connections", []), appliedDiff["connections"], _inverseConnectionDiff, "connection")
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9015,9 +9291,14 @@ def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversepiecediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePieceDiff)
     """
     inverse: dict = {}
-    for key in ["name", "scale", "plane", "center"]:
+    for key in ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    for refKey in ["type", "design"]:
+        if refKey in appliedDiff:
+            inverse[refKey] = original.get(refKey)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9026,9 +9307,11 @@ def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetagdiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTagDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description"]:
+    for key in ["name", "description", "icon"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9037,9 +9320,11 @@ def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconceptdiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConceptDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description"]:
+    for key in ["name", "description", "icon"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9048,9 +9333,13 @@ def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseportdiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePortDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description"]:
+    for key in ["name", "description", "icon"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    if "compatiblePorts" in appliedDiff:
+        inverse["compatiblePorts"] = original.get("compatiblePorts")
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9059,8 +9348,13 @@ def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefilediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFileDiff)
     """
     inverse: dict = {}
-    if "name" in appliedDiff:
-        inverse["name"] = original.get("name")
+    for key in ["name", "description", "mime", "remote", "size", "hash", "blob"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if "folder" in appliedDiff:
+        inverse["folder"] = original.get("folder")
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9069,8 +9363,11 @@ def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefolderdiff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFolderDiff)
     """
     inverse: dict = {}
-    if "name" in appliedDiff:
-        inverse["name"] = original.get("name")
+    for key in ["name", "description"]:
+        if key in appliedDiff:
+            inverse[key] = original.get(key)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
@@ -9111,6 +9408,8 @@ def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
     for key in ["name", "email"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
+    if appliedDiff.get("attributes"):
+        inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
@@ -9179,6 +9478,209 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
+
+@dataclasses.dataclass
+class Change:
+    """Change holds the data fields for a Change record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️change](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/Change)
+    """
+    forward: dict
+    backward: dict
+    author: typing.Optional[str] = None
+    time: typing.Optional[datetime.datetime] = None
+    before: typing.Optional[dict] = None
+    after: typing.Optional[dict] = None
+
+
+def changeToDict(change: Change) -> dict:
+    """changeToDict performs the changeToDict operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️changetodict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/changeToDict)
+    changeToDict MUST perform the changeToDict operation.
+    """
+    result: dict = {"forward": change.forward, "backward": change.backward}
+    if change.author is not None:
+        result["author"] = change.author
+    if change.time is not None:
+        result["time"] = change.time.isoformat()
+    if change.before is not None:
+        result["before"] = change.before
+    if change.after is not None:
+        result["after"] = change.after
+    return result
+
+
+@dataclasses.dataclass
+class AttributeChange(Change):
+    """AttributeChange holds the data fields for a AttributeChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️attributechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AttributeChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class AuthorChange(Change):
+    """AuthorChange holds the data fields for a AuthorChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️authorchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AuthorChange)
+    AuthorChange MUST perform the AuthorChange operation.
+    """
+    pass
+
+
+@dataclasses.dataclass
+class FileChange(Change):
+    """FileChange holds the data fields for a FileChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️filechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FileChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class FolderChange(Change):
+    """FolderChange holds the data fields for a FolderChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️folderchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FolderChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class QualityChange(Change):
+    """QualityChange holds the data fields for a QualityChange record.
+    QualityChange MUST perform the QualityChange operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️qualitychange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/QualityChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class PortChange(Change):
+    """PortChange holds the data fields for a PortChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️portchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PortChange)
+    PortChange MUST perform the PortChange operation.
+    """
+    pass
+
+
+@dataclasses.dataclass
+class PropChange(Change):
+    """PropChange holds the data fields for a PropChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️propchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PropChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class TagChange(Change):
+    """TagChange holds the data fields for a TagChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️tagchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TagChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class ConceptChange(Change):
+    """ConceptChange holds the data fields for a ConceptChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️conceptchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConceptChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class ModelChange(Change):
+    """ModelChange holds the data fields for a ModelChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️modelchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ModelChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class ConnectorChange(Change):
+    """ConnectorChange holds the data fields for a ConnectorChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectorchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectorChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class TypeChange(Change):
+    """TypeChange holds the data fields for a TypeChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️typechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TypeChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class LayerChange(Change):
+    """LayerChange holds the data fields for a LayerChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️layerchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/LayerChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class PieceChange(Change):
+    """PieceChange holds the data fields for a PieceChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️piecechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PieceChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class GroupChange(Change):
+    """GroupChange holds the data fields for a GroupChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️groupchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/GroupChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class ConnectionChange(Change):
+    """ConnectionChange holds the data fields for a ConnectionChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectionchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectionChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class StatChange(Change):
+    """StatChange holds the data fields for a StatChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️statchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/StatChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class DesignChange(Change):
+    """DesignChange holds the data fields for a DesignChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️designchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/DesignChange)
+    """
+    pass
+
+
+@dataclasses.dataclass
+class KitChange(Change):
+    """KitChange holds the data fields for a KitChange record.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️kitchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/KitChange)
+    """
+    pass
+
+
+def getDesignChange(before: dict, after: dict, author: typing.Optional[str] = None, time: typing.Optional[datetime.datetime] = None) -> DesignChange:
+    """getDesignChange performs the getDesignChange operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesignchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getDesignChange)
+    """
+    forward_diff = _getDesignDiff(before, after)
+    backward_diff = _inverseDesignDiff(before, forward_diff)
+    return DesignChange(forward=forward_diff, backward=backward_diff, author=author, time=time, before=before, after=after)
+
+
+def getKitChange(before: dict, after: dict, author: typing.Optional[str] = None, time: typing.Optional[datetime.datetime] = None) -> KitChange:
+    """getKitChange performs the getKitChange operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getkitchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getKitChange)
+    """
+    forward_diff = getKitDiffDict(before, after)
+    backward_diff = inverseKitDiffDict(before, forward_diff)
+    return KitChange(forward=forward_diff, backward=backward_diff, author=author, time=time, before=before, after=after)
+
 def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
     """Extract guid from an updated entry which might use EntityId format or old id format.
     _extractUpdateGuid MUST perform the _extractUpdateGuid operation.
@@ -9188,6 +9690,40 @@ def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
         if key in update and isinstance(update[key], dict):
             return update[key].get("guid", "")
     return update.get("id", "")
+
+
+FLOAT_EPSILON = 1e-10
+
+def _areDiffDictsEqual(a: dict, b: dict) -> bool:
+    """Deep equality check for diff dicts with float epsilon tolerance.
+    _areDiffDictsEqual MUST recursively compare dict values with float tolerance.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arediffdictsequal](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_areDiffDictsEqual)
+    """
+    if a is b:
+        return True
+    if type(a) != type(b):
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            return abs(float(a) - float(b)) < FLOAT_EPSILON
+        return _normalizeValue(a) == _normalizeValue(b)
+    if isinstance(a, dict):
+        keysA = {k for k, v in a.items() if _normalizeValue(v) is not None}
+        keysB = {k for k, v in b.items() if _normalizeValue(v) is not None}
+        if keysA != keysB:
+            return False
+        for key in keysA:
+            if not _areDiffDictsEqual(a[key], b[key]):
+                return False
+        return True
+    if isinstance(a, list):
+        if len(a) != len(b):
+            return False
+        for i in range(len(a)):
+            if not _areDiffDictsEqual(a[i], b[i]):
+                return False
+        return True
+    if isinstance(a, float):
+        return abs(a - b) < FLOAT_EPSILON
+    return _normalizeValue(a) == _normalizeValue(b)
 
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     """Deep equality check for kit diffs.
@@ -9235,6 +9771,16 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
         updatedA = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffA.get("updated", [])}
         updatedB = {_extractUpdateGuid(u, [entityKey]): u["diff"] for u in diffB.get("updated", [])}
         if set(updatedA.keys()) != set(updatedB.keys()):
+            return False
+
+        for guid in addedA:
+            if not _areDiffDictsEqual(addedA[guid], addedB[guid]):
+                return False
+
+        for guid in updatedA:
+            if not _areDiffDictsEqual(updatedA[guid], updatedB[guid]):
+                return False
+
     return True
 
 # endregion Kit Diff Operations
@@ -9452,7 +9998,10 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
     }
 
 def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
-    """Build folder path from folder hierarchy."""
+    """Build folder path from folder hierarchy.
+    _build_folder_path MUST perform the _build_folder_path operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️buildfolderpath](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_build_folder_path)
+    """
     for f in kit_dict.get("folders", []):
         if f.get("guid") == folder_guid:
             parent = f.get("parent")
@@ -9464,7 +10013,10 @@ def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
     return ""
 
 def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
-    """Build file path from folder hierarchy and file name."""
+    """Build file path from folder hierarchy and file name.
+    _build_file_path MUST perform the _build_file_path operation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️buildfilepath](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_build_file_path)
+    """
     folder = file_dict.get("folder")
     if folder:
         folder_path = _build_folder_path(kit_dict, folder.get("guid", ""))
@@ -9500,11 +10052,13 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
 
     kit_dict = json.loads(kit_json_data)
 
-    # Populate blob fields from actual files
+
     for file_entry in kit_dict.get("files", []):
         file_path = _build_file_path(kit_dict, file_entry)
         if file_path in files:
-            file_entry["blob"] = base64.b64encode(files[file_path]).decode("ascii")
+            mime = file_entry.get("mime") or "application/octet-stream"
+            encoded = base64.b64encode(files[file_path]).decode("ascii")
+            file_entry["blob"] = f"data:{mime};base64,{encoded}"
 
     return KitData(kit_dict), files
 
@@ -9888,7 +10442,7 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
     import copy
     data = kit.to_dict() if isinstance(kit, KitData) else kit
 
-    # Strip blob from files for kit.json
+
     kit_for_zip = copy.deepcopy(data)
     for file_entry in kit_for_zip.get("files", []):
         file_entry.pop("blob", None)

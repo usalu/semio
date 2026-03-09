@@ -531,11 +531,10 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 		return nil, nil, fmt.Errorf("failed to deserialize kit.json: %w", err)
 	}
 
-	// Populate blob fields from actual files
 	for i := range kit.Files {
 		filePath := buildFilePath(&kit, &kit.Files[i])
 		if data, ok := files[filePath]; ok {
-			encoded := base64Encode(data)
+			encoded := blobEncode(data, kit.Files[i].Mime)
 			kit.Files[i].Blob = &encoded
 		}
 	}
@@ -544,6 +543,8 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 }
 
 // buildFilePath constructs the file path from the folder hierarchy and file name
+// buildFilePath MUST perform the buildFilePath operation.
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfilepath](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFilePath)
 func buildFilePath(kit *Kit, file *File) string {
 	if file.Folder == nil {
 		return file.Name
@@ -556,6 +557,8 @@ func buildFilePath(kit *Kit, file *File) string {
 }
 
 // buildFolderPath constructs the folder path from the folder hierarchy
+// buildFolderPath MUST perform the buildFolderPath operation.
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfolderpath](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFolderPath)
 func buildFolderPath(kit *Kit, folderGuid string) string {
 	for _, f := range kit.Folders {
 		if f.Guid == folderGuid {
@@ -572,13 +575,30 @@ func buildFolderPath(kit *Kit, folderGuid string) string {
 	return ""
 }
 
-// base64Encode encodes bytes to base64 string
-func base64Encode(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
+// blobEncode encodes bytes to a data URI string with the given mime type.
+// If mime is nil or empty, falls back to "application/octet-stream".
+// blobEncode MUST perform the blobEncode operation.
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobencode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobEncode)
+func blobEncode(data []byte, mime *string) string {
+	mimeStr := "application/octet-stream"
+	if mime != nil && *mime != "" {
+		mimeStr = *mime
+	}
+	return "data:" + mimeStr + ";base64," + base64.StdEncoding.EncodeToString(data)
 }
 
-// base64Decode decodes base64 string to bytes
-func base64Decode(s string) ([]byte, error) {
+// blobDecode decodes a data URI string to bytes.
+// Supports "data:<mime>;base64,<data>" format as well as raw base64 for backwards compatibility.
+// blobDecode MUST perform the blobDecode operation.
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobdecode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobDecode)
+func blobDecode(s string) ([]byte, error) {
+	if strings.HasPrefix(s, "data:") {
+		commaIdx := strings.Index(s, ",")
+		if commaIdx < 0 {
+			return nil, fmt.Errorf("invalid data URI: missing comma")
+		}
+		return base64.StdEncoding.DecodeString(s[commaIdx+1:])
+	}
 	return base64.StdEncoding.DecodeString(s)
 }
 
@@ -586,7 +606,7 @@ func base64Decode(s string) ([]byte, error) {
 // Callers MUST provide a valid Kit, writable zip path
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitToZip)
 func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL string) error {
-	// Serialize kit to JSON without blob data
+
 	kitForZip := *kit
 	kitForZip.Files = make([]File, len(kit.Files))
 	copy(kitForZip.Files, kit.Files)
@@ -608,7 +628,6 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 	w := zip.NewWriter(zipFile)
 	defer w.Close()
 
-	// Write kit.json
 	kitWriter, err := w.Create("kit.json")
 	if err != nil {
 		return err
@@ -617,7 +636,6 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 		return err
 	}
 
-	// Write actual files
 	for name, data := range files {
 		fw, err := w.Create(name)
 		if err != nil {
