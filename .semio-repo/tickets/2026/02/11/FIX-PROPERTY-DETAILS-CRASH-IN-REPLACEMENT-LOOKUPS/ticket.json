@@ -1,10 +1,11 @@
 {
   "title": "Fix Property Details Crash in Replacement Lookups",
-  "status": "open",
+  "status": "closed",
   "prompt": "Scan codebase and map selection, document model, mutation flow, undo/redo, and layout state ownership for editor/inspector/details.",
-  "summary": "Property/details panel parity hardened: canonical selection guid resolution, known-connection validated details routing, and Design e2e assertions for no-selection + alternate payloads; tsc and unit tests pass, e2e blocked by webServer start failure in this environment.",
+  "summary": "Bulk close",
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-02-11T18:27:17.239847369Z",
+  "finished": "2026-03-05T13:26:26.409516528Z",
   "interactions": [
     {
       "dates": {
@@ -58707,7 +58708,8 @@
     },
     {
       "dates": {
-        "started": "2026-02-22 23:27:57"
+        "started": "2026-02-22 23:27:57",
+        "finished": "2026-03-05 13:26:26"
       },
       "author": "unknown",
       "system": "linux",

@@ -1,13 +1,14 @@
 {
   "title": "Design App Compilation Fix",
-  "status": "open",
+  "status": "closed",
   "prompt": "Fix all TypeScript compilation errors in the design app (and related sketchpad files) to get it compiling and running without changing any functionalities. 13 errors across 6 files: Design.tsx, Feedback.tsx, Home.tsx, Sketchpad.tsx, Type.tsx, elements.tsx",
-  "summary": "Fixed all TS compilation errors and runtime issues. All tests pass: 11 unit tests, 6 e2e tests (Home, Kit, Type, Design, Docs, Feedback). Key fixes: react-resizable-panels v4 API, arePortsCompatible Port resolution, React 19 JSX namespace, Design render loop, dispatchEvent freeze, KitStore dirty flag propagation.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/510"
   },
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2026-02-11T20:37:49.427532153Z",
+  "finished": "2026-03-05T13:26:26.373875385Z",
   "interactions": [
     {
       "dates": {
@@ -859,7 +860,8 @@
     },
     {
       "dates": {
-        "started": "2026-03-04 08:40:57"
+        "started": "2026-03-04 08:40:57",
+        "finished": "2026-03-05 13:26:26"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

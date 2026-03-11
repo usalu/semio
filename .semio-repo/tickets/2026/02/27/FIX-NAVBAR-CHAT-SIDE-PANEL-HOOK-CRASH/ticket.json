@@ -1,10 +1,11 @@
 {
   "title": "Fix Navbar Chat Side Panel Hook Crash",
-  "status": "open",
+  "status": "closed",
   "prompt": "Fix the sketchpad crash after clicking the chat tab in the navbar by resolving the SidePanel hook-order violation and validate the affected path.",
-  "summary": "Render side panel tab callbacks as component boundaries to prevent the design chat hook-order crash, update the panel regression to cover the fixed path, and align the stale embedded utility-tab assertion with the current UI.",
+  "summary": "Bulk close",
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-02-27T12:58:29.653855927Z",
+  "finished": "2026-03-05T13:26:27.050495711Z",
   "interactions": [
     {
       "dates": {
@@ -360,7 +361,8 @@
     },
     {
       "dates": {
-        "started": "2026-02-27 13:42:51"
+        "started": "2026-02-27 13:42:51",
+        "finished": "2026-03-05 13:26:27"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

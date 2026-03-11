@@ -35,7 +35,7 @@ from starlette.testclient import TestClient
 
 # region Constants
 
-ASSETS_DIR = pathlib.Path(__file__).parent.parent.parent / "assets" / "semio"
+ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
 KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
 
 # endregion Constants
@@ -237,6 +237,35 @@ class TestMcp:
         diff = {"name": "ModifiedKit"}
         result = engine.inverse_kit_diff(minimalKitJson, diff)
         assert isinstance(result, dict)
+
+    def test_drag_pieces_in_design_tool(self):
+        designPath = ASSETS_DIR / "drag" / "design.json"
+        piecesPath = ASSETS_DIR / "drag" / "pieces.json"
+        offsetPath = ASSETS_DIR / "drag" / "offset.json"
+        diffDesignPath = ASSETS_DIR / "drag" / "diff_design.json"
+        with open(designPath, "r", encoding="utf-8") as f:
+            design = json.load(f)
+        with open(piecesPath, "r", encoding="utf-8") as f:
+            pieces = json.load(f)
+        with open(offsetPath, "r", encoding="utf-8") as f:
+            offset = json.load(f)
+        with open(diffDesignPath, "r", encoding="utf-8") as f:
+            expectedDiff = json.load(f)
+        result = engine.drag_pieces_in_design(design, pieces, offset)
+        assert len(result.get("pieces", {}).get("updated", [])) == len(expectedDiff.get("pieces", {}).get("updated", []))
+        expectedPieceMap = {u["piece"]["guid"]: u["diff"] for u in expectedDiff["pieces"]["updated"]}
+        for u in result["pieces"]["updated"]:
+            guid = u["piece"]["guid"]
+            assert guid in expectedPieceMap
+            assert u["diff"]["center"]["u"] == expectedPieceMap[guid]["center"]["u"]
+            assert u["diff"]["center"]["v"] == expectedPieceMap[guid]["center"]["v"]
+        assert len(result.get("connections", {}).get("updated", [])) == len(expectedDiff.get("connections", {}).get("updated", []))
+        expectedConnMap = {u["connection"]["guid"]: u["diff"] for u in expectedDiff["connections"]["updated"]}
+        for u in result["connections"]["updated"]:
+            guid = u["connection"]["guid"]
+            assert guid in expectedConnMap
+            assert u["diff"]["u"] == expectedConnMap[guid]["u"]
+            assert u["diff"]["v"] == expectedConnMap[guid]["v"]
 
 # endregion MCP Tests
 

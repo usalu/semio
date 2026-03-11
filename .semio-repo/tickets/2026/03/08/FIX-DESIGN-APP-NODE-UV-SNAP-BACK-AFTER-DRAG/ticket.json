@@ -1,0 +1,164 @@
+{
+  "title": "Fix Design App Node Uv Snap Back After Drag",
+  "status": "closed",
+  "prompt": "Node UV positions snap back to original positions after drag because onNodeDragStop mutates the nodes array directly instead of calling setNodes. Need to replace direct node mutation with proper setNodes call.",
+  "summary": "Fixed UV snap-back by computing absolute final centers directly in onNodeDragStop using metadata center as fallback baseline when pieces have no stored centers. Removed debug logging. 15/15 tests pass, 0 TS errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/798"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-08T10:57:11.737574773Z",
+  "finished": "2026-03-08T11:42:31.484783656Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-08 10:57:11",
+        "finished": "2026-03-08 11:00:02"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "25a194ed76ad1a71a5d242990f19c5ace57b0bc2",
+      "prompt": "Node UV positions snap back to original positions after drag because onNodeDragStop mutates the nodes array directly instead of calling setNodes. Need to replace direct node mutation with proper setNodes call.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 29,
+                "removed": 26
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 28,
+                "removed": 26
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-08 11:32:17",
+        "finished": "2026-03-08 11:42:31"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "25a194ed76ad1a71a5d242990f19c5ace57b0bc2",
+      "prompt": "Previous setNodes fix was insufficient. User reports positions still snap back. Suspect flattenDesign BFS recomputing centers and overwriting dragged positions. Need to trace full path from onNodeDragStop -\u003e updatePieces -\u003e store.change -\u003e piecesMetadata -\u003e flattenDesign -\u003e designToNodesAndEdges.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 30,
+                "removed": 27
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 29,
+                "removed": 27
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

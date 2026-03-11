@@ -6,7 +6,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Added missing locale labels for the design, kit, and type detail sections so the right panel shows readable headings instead of raw ids, and extended the existing sketchpad Playwright coverage to assert those headings. The targeted Design run confirmed the design and kit labels are visible but still failed later in an unrelated existing connection gap stepper assertion.
+Bulk close
 ## Changes
 - Added locale labels for `semio.sketchpad.app.design.properties` and `semio.sketchpad.app.kit.properties`.
 - Extended the existing sketchpad Playwright coverage to assert the rendered section headers.

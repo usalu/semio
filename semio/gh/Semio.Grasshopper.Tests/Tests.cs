@@ -27,5 +27,5 @@ namespace Semio.Grasshopper.Tests;
 
 public class DesignTests
 {
-    
+
 }

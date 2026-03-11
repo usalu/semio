@@ -6,7 +6,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Render side panel tab callbacks as component boundaries to prevent the design chat hook-order crash, update the panel regression to cover the fixed path, and align the stale embedded utility-tab assertion with the current UI.
+Bulk close
 ## Changes
 - Refactor `semio/js/sketchpad/elements.tsx` so `SidePanel` mounts function-valued tab content with JSX instead of invoking it directly during `SidePanel` render
 - Extend the existing `semio/js/sketchpad.test.ts` panel-combination coverage to assert the design chat side panel content stays mounted when the navbar chat toggle is used

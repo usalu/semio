@@ -265,6 +265,62 @@ func TestFlatten(t *testing.T) {
 	})
 }
 
+func TestDrag(t *testing.T) {
+	t.Run("Design + Pieces + Offset = DiffDesign", func(t *testing.T) {
+		var design Design
+		loadJSON(t, "drag/design.json", &design)
+		var pieces Design
+		loadJSON(t, "drag/pieces.json", &pieces)
+		var offset Coord
+		loadJSON(t, "drag/offset.json", &offset)
+		var expectedDiff DesignDiff
+		loadJSON(t, "drag/diff_design.json", &expectedDiff)
+		computedDiff := DragPiecesInDesign(design, pieces, offset)
+		if len(computedDiff.Pieces.Updated) != len(expectedDiff.Pieces.Updated) {
+			t.Fatalf("Expected %d piece updates, got %d", len(expectedDiff.Pieces.Updated), len(computedDiff.Pieces.Updated))
+		}
+		expectedPieceMap := make(map[string]PieceDiff)
+		for _, u := range expectedDiff.Pieces.Updated {
+			expectedPieceMap[u.Piece.Guid] = u.Diff
+		}
+		for _, u := range computedDiff.Pieces.Updated {
+			expected, ok := expectedPieceMap[u.Piece.Guid]
+			if !ok {
+				t.Errorf("Unexpected piece update for %s", u.Piece.Guid)
+				continue
+			}
+			if u.Diff.Center == nil || expected.Center == nil {
+				t.Errorf("Piece %s center is nil", u.Piece.Guid)
+				continue
+			}
+			if *u.Diff.Center.U != *expected.Center.U || *u.Diff.Center.V != *expected.Center.V {
+				t.Errorf("Piece %s center mismatch: got (%f, %f), expected (%f, %f)", u.Piece.Guid, *u.Diff.Center.U, *u.Diff.Center.V, *expected.Center.U, *expected.Center.V)
+			}
+		}
+		if len(computedDiff.Connections.Updated) != len(expectedDiff.Connections.Updated) {
+			t.Fatalf("Expected %d connection updates, got %d", len(expectedDiff.Connections.Updated), len(computedDiff.Connections.Updated))
+		}
+		expectedConnMap := make(map[string]ConnectionDiff)
+		for _, u := range expectedDiff.Connections.Updated {
+			expectedConnMap[u.Connection.Guid] = u.Diff
+		}
+		for _, u := range computedDiff.Connections.Updated {
+			expected, ok := expectedConnMap[u.Connection.Guid]
+			if !ok {
+				t.Errorf("Unexpected connection update for %s", u.Connection.Guid)
+				continue
+			}
+			if u.Diff.U == nil || expected.U == nil || u.Diff.V == nil || expected.V == nil {
+				t.Errorf("Connection %s u/v is nil", u.Connection.Guid)
+				continue
+			}
+			if *u.Diff.U != *expected.U || *u.Diff.V != *expected.V {
+				t.Errorf("Connection %s u/v mismatch: got (%f, %f), expected (%f, %f)", u.Connection.Guid, *u.Diff.U, *u.Diff.V, *expected.U, *expected.V)
+			}
+		}
+	})
+}
+
 func TestDiff(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit", func(t *testing.T) {

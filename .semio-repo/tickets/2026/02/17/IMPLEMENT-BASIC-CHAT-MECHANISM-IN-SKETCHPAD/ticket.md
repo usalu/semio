@@ -6,8 +6,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Moved Settings and Chat panels from the right side panel tabs into the main canvas container as GoldenLayout windows. Settings and Chat are now rendered as tab components within existing stacks alongside primary content windows (e.g., Table, Scene, Diagram, Page). Removed `CHAT` and `SETTINGS` from `PanelKind` enum and all associated panel infrastructure (PanelVisibility, PanelSizes, PanelSections, panelKindConfigs). Added `SETTINGS` and `CHAT` to `WindowKind` enum. Each app now defines Settings/Chat as `AppWindowKind` entries with proper GoldenLayout single-stack tab layouts.
-
+Bulk close
 ## Changes
 
 - `semio/js/sketchpad/shared.ts`: Added SETTINGS/CHAT to WindowKind, removed from PanelKind, PanelVisibility, PanelSizes, PanelSections, PanelKey, panelKindConfigs, EMPTY_PANEL_VISIBILITY.

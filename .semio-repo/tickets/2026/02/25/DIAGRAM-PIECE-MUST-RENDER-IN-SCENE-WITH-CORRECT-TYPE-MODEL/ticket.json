@@ -1,16 +1,19 @@
 {
   "title": "Diagram Piece Must Render In Scene With Correct Type Model",
-  "status": "open",
+  "status": "closed",
   "prompt": "Fix and validate Sketchpad Design behavior so newly added diagram pieces render in scene with the correct type model. When a piece is added in the Diagram window, it must appear in the Scene window immediately with the correct model associated with that piece's type.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/696"
   },
   "goal": "SKETCHPAD/DESIGNIMPLEMENTATION",
   "started": "2026-02-25T13:33:42.098909296Z",
+  "finished": "2026-03-05T13:26:26.949410799Z",
   "interactions": [
     {
       "dates": {
-        "started": "2026-02-25 13:33:42"
+        "started": "2026-02-25 13:33:42",
+        "finished": "2026-03-05 13:26:26"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

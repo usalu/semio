@@ -5,8 +5,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 # Ticket
 
 ## Summary
-Continues prior work on parent connection section visibility. Fixes flaky e2e test assertion, verifies child piece parent connection section, cleans DEBUG logs.
 
+Bulk close
 ## Changes
 
 ## Log

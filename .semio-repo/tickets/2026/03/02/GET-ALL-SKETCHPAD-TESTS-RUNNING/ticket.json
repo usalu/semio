@@ -1,13 +1,16 @@
 {
   "title": "Get All Sketchpad Tests Running",
-  "status": "open",
+  "status": "closed",
   "prompt": "get all sketchpad tests running",
+  "summary": "Bulk close",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2026-03-02T10:51:11.625315368Z",
+  "finished": "2026-03-05T13:26:27.283475012Z",
   "interactions": [
     {
       "dates": {
-        "started": "2026-03-02 10:51:11"
+        "started": "2026-03-02 10:51:11",
+        "finished": "2026-03-05 13:26:27"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

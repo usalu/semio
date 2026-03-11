@@ -1,3 +1,61 @@
+
+
+dragging is the action of offsetting a piece centers in the diagram 
+moving is the action of translating piece planes in the scene
+
+your task is to extend semmo with draging.
+introduce a new function to every programming language :`dragPiecesInDesign(design,pieces,offset):DesignDiff `
+
+Add a Design/Drag test to every programming language. Take the input and output from the assets.
+
+
+The drag algorithm ignores child (or grandchild) pieces of a fixed parent. When a child is draged but the parent is not selected then the parent connection of the child is adjusted.
+
+sketchpad:
+Use the the drag function for dragging nodes.
+
+
+
+------------------------------
+
+extend semio with anotehr function
+`movePieces` 
+design
+offset
+pieces
+
+-----------------------------
+create a design diff that offsets the selected pieces:
+
+add offset to piece center
+
+Pieces:
+b0
+b1
+
+add offset to connection  
+
+Conns:
+b2 -- t_fx_b2_co
+
+ensure consistency with semio.ts
+
+------------------
+
+migrate design and pieces to the new format
+all infos must be consistent with Metabolism.json
+
+
+exchange
+"guid": "{{piece-guid}}" 
+
+map piece id to Name
+
+
+
+
+-------------------------------------------------
+
 Sketchpad Design app seletion Create selection tests within the existing test structure. All new tests must pass without breaking any current functionality.
 
 Requirements

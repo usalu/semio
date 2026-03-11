@@ -1,9 +1,17 @@
 {
   "pieces": [
     {
-      "id_": "EmptyDaygecko48",
+      "guid": "e2faf536-dbe0-49e2-97b2-965e57acd512",
+      "name": "b0",
       "type": {
-        "name": "Base"
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "center": {
+        "u": 4.82491,
+        "v": 0.18330000000000002
       },
       "plane": {
         "origin": {
@@ -22,47 +30,57 @@
           "z": 0
         }
       },
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "guid": "ed7b6b3c-02d5-4ed6-ae51-f9cbec92cb83",
+      "name": "ci_bs_b0_c0",
+      "type": {
+        "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "guid": "a7a6c527-0e89-4922-b6c1-2af6fb64ae29",
+      "name": "t_fs_b0_c1",
+      "type": {
+        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "qualities": [
+        {
+          "name": "semio.diffStatus",
+          "value": "unchanged"
+        }
+      ]
+    },
+    {
+      "guid": "3910be91-289e-493b-9f4c-7ef4ac75603e",
+      "name": "b1",
+      "type": {
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
       "center": {
-        "x": 4.82491,
-        "y": 0.18330000000000002
-      },
-      "qualities": [
-        {
-          "name": "semio.diffStatus",
-          "value": "unchanged"
-        }
-      ]
-    },
-    {
-      "id_": "TinyDrever740",
-      "type": {
-        "name": "Capsule",
-        "variant": "\\"
-      },
-      "qualities": [
-        {
-          "name": "semio.diffStatus",
-          "value": "unchanged"
-        }
-      ]
-    },
-    {
-      "id_": "PutridMynah16",
-      "type": {
-        "name": "Tambour",
-        "variant": "First Storey"
-      },
-      "qualities": [
-        {
-          "name": "semio.diffStatus",
-          "value": "unchanged"
-        }
-      ]
-    },
-    {
-      "id_": "ApatheticWirehair974",
-      "type": {
-        "name": "Base"
+        "u": 12.745473939343363,
+        "v": 0.037757142777375796
       },
       "plane": {
         "origin": {
@@ -81,10 +99,6 @@
           "z": 0
         }
       },
-      "center": {
-        "x": 12.745473939343363,
-        "y": 0.037757142777375796
-      },
       "qualities": [
         {
           "name": "semio.diffStatus",
@@ -93,11 +107,14 @@
       ]
     },
     {
-      "id_": "TragicAlpinegoat158",
+      "guid": "b6aff18a-820b-4629-a401-4c8e2ed0e01a",
+      "name": "t_fs_b2_c0",
       "type": {
-        "name": "Tambour",
-        "variant": "First Storey"
+        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
       },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
       "qualities": [
         {
           "name": "semio.diffStatus",
@@ -106,10 +123,14 @@
       ]
     },
     {
-      "id_": "UntriedSmew98",
+      "guid": "c52879d5-d5dc-47da-a37b-b97a5889756e",
+      "name": "t_f0_b0_c0",
       "type": {
-        "name": "Tambour"
+        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
       },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
       "qualities": [
         {
           "name": "semio.diffStatus",

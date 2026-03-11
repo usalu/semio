@@ -1,13 +1,14 @@
 {
   "title": "Add Backspace Key to Delete Selected in Design App",
-  "status": "open",
+  "status": "closed",
   "prompt": "Add backspace keyboard shortcut alongside existing delete key shortcut for deleting selected connections and pieces in the sketchpad Design app",
-  "summary": "Added backspace key alongside delete key for deleting selected connections and pieces in Design app. Changed useHotkeys binding from delete to delete,backspace in Design.tsx App component. All 14 unit tests pass.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/764"
   },
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-03-02T21:11:18.220056671Z",
+  "finished": "2026-03-05T13:26:27.17992986Z",
   "interactions": [
     {
       "dates": {
@@ -443,7 +444,8 @@
     },
     {
       "dates": {
-        "started": "2026-03-02 21:37:07"
+        "started": "2026-03-02 21:37:07",
+        "finished": "2026-03-05 13:26:27"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

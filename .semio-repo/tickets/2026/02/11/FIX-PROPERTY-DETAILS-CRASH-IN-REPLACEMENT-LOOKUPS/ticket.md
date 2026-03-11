@@ -6,7 +6,7 @@ goal: R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS
 
 ## Summary
 
-Property/details panel parity hardened: canonical selection guid resolution, known-connection validated details routing, and Design e2e assertions for no-selection + alternate payloads; tsc and unit tests pass, e2e blocked by webServer start failure in this environment.
+Bulk close
 ## Panel Parity Completion 2026-02-22
 
 ### Plan

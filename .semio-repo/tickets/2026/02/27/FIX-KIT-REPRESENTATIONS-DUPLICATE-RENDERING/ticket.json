@@ -1,10 +1,11 @@
 {
   "title": "Fix Kit Representations Duplicate Rendering",
-  "status": "open",
+  "status": "closed",
   "prompt": "Sketchpad Kit app renders Representations twice, once as a file and once as a folder. Analyze the mismatch against the zip metabolism folder-file structure, fix the rendering, and extend the existing test structure to cover it.",
-  "summary": "Unified Kit zip-backed file and folder row rendering to remove duplicate mixed-view entries, added mixed-view regression coverage, and recorded the current unrelated Kit legacy-tab test failure.",
+  "summary": "Bulk close",
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-02-27T12:35:25.787163107Z",
+  "finished": "2026-03-05T13:26:27.018071462Z",
   "interactions": [
     {
       "dates": {
@@ -189,7 +190,8 @@
     },
     {
       "dates": {
-        "started": "2026-02-27 13:40:46"
+        "started": "2026-02-27 13:40:46",
+        "finished": "2026-03-05 13:26:27"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

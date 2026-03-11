@@ -135,6 +135,7 @@ from semio import (
     changeKeys,
     changeValues,
     decode,
+    dragPiecesInDesignDict,
     encode,
     flattenDesignDict,
     getKitDiffDict,
@@ -1767,6 +1768,17 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
     """
     try:
         return flattenDesignDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+@mcp.tool()
+def drag_pieces_in_design(design: dict, pieces: dict, offset: dict) -> dict:
+    """Compute a design diff that drags selected pieces by an offset.
+    Callers MUST provide a valid design dict, a pieces dict with selected pieces, and an offset dict with u/v.
+    [👤semio📚engine💻enginepy🔖mcp🛠️dragpiecesindesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/DRAG-PIECES-IN-DESIGN)
+    """
+    try:
+        return dragPiecesInDesignDict(design, pieces, offset)
     except Exception as e:
         return {"error": str(e)}
 

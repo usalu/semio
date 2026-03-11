@@ -6,12 +6,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Restructured the Design app piece details panel to display piece information and parent connection as two separate collapsible TreeItem groups. When a piece is selected, the details panel now shows:
-- **Piece** (collapsible): ID, Name, Type/Design, Variant, Description, Scale, Color, Center, Plane, Attributes
-- **Parent Connection** (collapsible): Connecting/Connected info, Plane (Translation/Orientation), Diagram offsets
-
-Added i18n keys for `pieceInfo`, `properties`, `multipleTitle` under `section.piece` and `section.connection` in both en.json and de.json locale files.
-
+Bulk close
 ## Changes
 
 - `semio/js/sketchpad/Design.tsx`: Wrapped piece fields inside `<TreeItem id="...pieceInfo" defaultOpen={true}>` collapsible group. Parent connection remains at sibling level as `<TreeItem id="...parentConnection">`.

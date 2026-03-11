@@ -6,7 +6,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Unified Kit zip-backed file and folder row rendering to remove duplicate mixed-view entries, added mixed-view regression coverage, and recorded the current unrelated Kit legacy-tab test failure.
+Bulk close
 ## Changes
 
 - Updated `semio/js/sketchpad/Kit.tsx` so zip-backed rows no longer render from both the standalone file tree and the folder hierarchy at the same time.

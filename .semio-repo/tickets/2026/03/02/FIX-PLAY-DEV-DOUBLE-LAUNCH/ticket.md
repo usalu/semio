@@ -5,8 +5,8 @@ goal: R26-02/RUNNING-SKETCHPAD
 # Ticket
 
 ## Summary
-Removed the duplicate `semio/play dev` startup path in VS Code so the play app launches once on port 4000, and added `--strictPort` so accidental duplicate starts fail instead of silently shifting ports.
 
+Bulk close
 ## Changes
 - Inspect `.vscode/tasks.json` and `.vscode/launch.json` to trace the duplicate launch path.
 - Remove the `preLaunchTask` from the `semio/play dev` launch configuration because the launch entry already runs `npx nx dev @semio/play`.

@@ -32,6 +32,11 @@ export { default as InvalidKit } from "./semio/kit_invalid.json";
 export { default as MetabolismKitDiffed } from "./semio/kit_metabolism_diffed.json";
 export { default as InvalidKitValidation } from "./semio/validation.json";
 export { MetabolismKitData as MetabolismKit };
+export { default as DragDesign } from "./semio/drag/design.json";
+export { default as DragPieces } from "./semio/drag/pieces.json";
+export { default as DragOffset } from "./semio/drag/offset.json";
+export { default as DragDiffDesign } from "./semio/drag/diff_design.json";
+export { default as DragDiffDesignFree } from "./semio/drag/diff_design_free.json";
 
 /**
  * Metabolism kit types array

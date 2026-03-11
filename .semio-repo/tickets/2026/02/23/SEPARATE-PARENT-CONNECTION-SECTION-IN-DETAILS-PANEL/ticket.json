@@ -1,13 +1,14 @@
 {
   "title": "Separate Parent Connection Section in Details Panel",
-  "status": "open",
+  "status": "closed",
   "prompt": "When a piece is selected, the parent connection section should show as a separate collapsible TreeSection in the details panel, following the old build pattern. Currently it is embedded inside the piece section.",
-  "summary": "Separated the parent connection from the piece section into its own collapsible TreeSection in the details panel. Created ParentConnectionSection component. Conditionally registered only when selected pieces have parent connections.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/677"
   },
   "goal": "SKETCHPAD/DETAILSPANEL",
   "started": "2026-02-23T20:51:48.852589519Z",
+  "finished": "2026-03-05T13:26:26.594719105Z",
   "interactions": [
     {
       "dates": {
@@ -573,7 +574,8 @@
     },
     {
       "dates": {
-        "started": "2026-02-24 06:59:31"
+        "started": "2026-02-24 06:59:31",
+        "finished": "2026-03-05 13:26:26"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

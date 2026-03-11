@@ -1,10 +1,11 @@
 {
   "title": "Fix Sketchpad Detail Panel Section Labels",
-  "status": "open",
+  "status": "closed",
   "prompt": "Fix sketchpad detail panel section names so raw ids like semio.sketchpad.app.design.properties and semio.sketchpad.app.kit.properties render as Design and Kit Properties.",
-  "summary": "Added missing locale labels for the design and kit detail sections so the right panel shows readable headings instead of raw ids, and extended the existing sketchpad Playwright coverage to assert those headings. The targeted Design run confirmed both labels are visible but still failed later in an unrelated existing connection gap stepper assertion.",
+  "summary": "Bulk close",
   "goal": "SKETCHPAD-IMPROVEMENTS",
   "started": "2026-03-02T10:28:28.51060329Z",
+  "finished": "2026-03-05T13:26:27.248857908Z",
   "interactions": [
     {
       "dates": {
@@ -111,7 +112,8 @@
     },
     {
       "dates": {
-        "started": "2026-03-02 19:55:40"
+        "started": "2026-03-02 19:55:40",
+        "finished": "2026-03-05 13:26:27"
       },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "linux",

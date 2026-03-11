@@ -93,6 +93,7 @@ import {
     createClusteredDesign,
     Design,
     DiffStatus,
+    dragPiecesInDesign,
     expandDesignPieces,
     findDesignInKit,
     findPieceInDesign,
@@ -7655,6 +7656,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   if (!design) return null;
 
   const dragPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const dragStartPositionRef = useRef<{ x: number; y: number } | null>(null);
   const pendingPieceUpdatesRef = useRef<Array<{ id: string; diff: any }>>([]);
   const dragDescendantsRef = useRef<Set<string>>(new Set());
   const dragDescendantOffsetsRef = useRef<Map<string, { dx: number; dy: number }>>(new Map());
@@ -7812,6 +7814,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         isDraggingRef.current = false;
         isDraggingNodeRef.current = false;
         dragPositionRef.current = null;
+        dragStartPositionRef.current = null;
         pendingPieceUpdatesRef.current = [];
         pendingSelectionRef.current = null;
         dragDescendantsRef.current = new Set();
@@ -8059,6 +8062,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       else pendingSelectionRef.current = { pieceId, compositionKind };
 
       dragPositionRef.current = { x: node.position.x, y: node.position.y };
+      dragStartPositionRef.current = { x: node.position.x, y: node.position.y };
       pendingPieceUpdatesRef.current = [];
       isDraggingRef.current = true;
       isDraggingNodeRef.current = true;
@@ -8620,8 +8624,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragNonSelectedNodesRef.current = [];
       const pendingSelection = pendingSelectionRef.current;
       const currentSelection = selectionRef.current;
-      const descendants = dragDescendantsRef.current;
-      const descendantOffsets = dragDescendantOffsetsRef.current;
       pendingSelectionRef.current = null;
       pendingPieceUpdatesRef.current = [];
       dragPositionRef.current = null;
@@ -8636,34 +8638,38 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const draggedPieceId = getPieceIdFromNode(node);
       const selectedPieceIds = currentSelection?.pieces ?? [];
       const pieceIdsToUpdate = selectedPieceIds.length > 0 ? selectedPieceIds : [draggedPieceId];
+      const startPos = dragStartPositionRef.current;
+      dragStartPositionRef.current = null;
       const finalUpdates: Array<{ id: string; diff: any }> = [];
-      for (const pieceId of pieceIdsToUpdate) {
-        if (pieceId === draggedPieceId) {
-          finalUpdates.push({ id: pieceId, diff: { center: { u: finalX / ICON_WIDTH, v: -finalY / ICON_WIDTH } } });
-        } else if (reactFlowInstanceRef.current) {
-          const pieceNode = nodes.find((n) => getPieceIdFromNode(n) === pieceId);
-          const internalNode = pieceNode ? reactFlowInstanceRef.current.getInternalNode(pieceNode.id) : null;
-          if (internalNode) {
-            finalUpdates.push({ id: pieceId, diff: { center: { u: internalNode.internals.positionAbsolute.x / ICON_WIDTH, v: -internalNode.internals.positionAbsolute.y / ICON_WIDTH } } });
-          }
+      if (design && startPos) {
+        const offsetU = (finalX - startPos.x) / ICON_WIDTH;
+        const offsetV = -(finalY - startPos.y) / ICON_WIDTH;
+        for (const pieceGuid of pieceIdsToUpdate) {
+          const originalPiece = design.pieces?.find((p) => p.guid === pieceGuid);
+          if (!originalPiece) continue;
+          const baseCenter = originalPiece.center ?? metadata.get(pieceGuid)?.center ?? { u: 0, v: 0 };
+          finalUpdates.push({ id: pieceGuid, diff: { center: { u: (baseCenter.u ?? 0) + offsetU, v: (baseCenter.v ?? 0) + offsetV } } });
         }
-      }
-      for (const descGuid of descendants) {
-        if (pieceIdsToUpdate.includes(descGuid)) continue;
-        const offset = descendantOffsets.get(descGuid);
-        if (offset) {
-          finalUpdates.push({ id: descGuid, diff: { center: { u: (finalX + offset.dx) / ICON_WIDTH, v: -(finalY + offset.dy) / ICON_WIDTH } } });
+        const piecesDesign = { guid: "", name: "", pieces: pieceIdsToUpdate.map((g) => ({ guid: g })) } as Design;
+        const dragDiff = dragPiecesInDesign(design, piecesDesign, { u: offsetU, v: offsetV });
+        const connectionDiffUpdates = dragDiff.connections?.updated ?? [];
+        if (connectionDiffUpdates.length > 0) {
+          const connUpdates = connectionDiffUpdates.map((cu) => {
+            const originalConn = design.connections?.find((c) => c.guid === cu.connection.guid);
+            return { id: cu.connection.guid, diff: { u: (originalConn?.u ?? 0) + (cu.diff.u ?? 0), v: (originalConn?.v ?? 0) + (cu.diff.v ?? 0) } };
+          });
+          setTimeout(() => updateConnections?.(connUpdates), 600);
         }
       }
       if (finalUpdates.length > 0) {
         const updateMap = new Map(finalUpdates.map(u => [u.id, u.diff.center]));
-        for (const n of nodes) {
+        setNodes(prevNodes => prevNodes.map(n => {
           const pieceGuid = (n as any).data?.piece?.guid;
-          if (!pieceGuid) continue;
+          if (!pieceGuid) return n;
           const center = updateMap.get(pieceGuid);
-          if (!center) continue;
-          (n as any).position = { x: center.u * ICON_WIDTH, y: -center.v * ICON_WIDTH };
-        }
+          if (!center) return n;
+          return { ...n, position: { x: center.u * ICON_WIDTH, y: -center.v * ICON_WIDTH } };
+        }));
         setTimeout(() => updatePieces?.(finalUpdates), 600);
       }
       if (reactFlowInstanceRef.current && !event.altKey) {
@@ -8759,7 +8765,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       updateHelperLinesDom(EMPTY_HELPER_LINES);
       sceneFrameControlRef.current?.resume();
     },
-    [transaction, updatePieces, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId],
+    [transaction, updatePieces, updateConnections, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId],
   );
 
   const onConnect = useCallback(
@@ -8853,7 +8859,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           `}</style>
             <Diagram
               nodes={nodes}
-              edges={EMPTY_EDGES_ARRAY}
+              edges={edges}
               onNodesChangeReactFlow={onNodesChangeReactFlow}
               nodeTypes={nodeComponents as NodeTypes}
               edgeTypes={edgeComponents as EdgeTypes}
@@ -8915,9 +8921,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               onFocusComplete={() => setFocusedItemId(undefined)}
               panels={
                 <>
-                  <ViewportPortal>
-                    <CustomDesignEdgeLayer edges={edges} suppressRecomputeRef={suppressEdgeRecomputeRef} onEdgeClick={onEdgeClick as any} />
-                  </ViewportPortal>
                   <ViewportPortal>
                     <div className="pointer-events-none">⌞</div>
                   </ViewportPortal>

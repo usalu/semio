@@ -6,7 +6,7 @@ goal: R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS
 
 ## Summary
 
-Prepared undo/redo migration analysis: current Design app already has store-level history, transaction hooks, hotkeys, and drag abort/finalize; remaining migration work is the old Console command surface and dedicated undo/redo regression coverage.
+Bulk close
 ## Changes
 
 ### Undo Redo Migration Analysis 2026-03-04

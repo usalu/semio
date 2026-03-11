@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
+import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign } from "@semio/assets";
 import { describe, expect, it } from "vitest";
 import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
 import {
@@ -29,6 +29,7 @@ import {
   createClusteredDesign,
   Design,
   deserializeKit,
+  dragPiecesInDesign,
   exportKit,
   flattenDesign,
   getIncludedDesigns,
@@ -244,6 +245,32 @@ describe("Cluster", () => {
     expect(included.length).toBe(1);
     expect(included[0].guid).toBe(clusteredDesign.guid);
     expect(included[0].designGuid).toBe(clusteredDesign.guid);
+  });
+});
+
+describe("Drag", () => {
+  it("Design + Pieces + Offset = DiffDesign", () => {
+    const design = DragDesign as unknown as Design;
+    const pieces = DragPieces as unknown as Design;
+    const offset = DragOffset as { u: number; v: number };
+    const expectedDiff = DragDiffDesign as any;
+    const computedDiff = dragPiecesInDesign(design, pieces, offset);
+    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
+    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
+    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
+    for (let i = 0; i < computedPieceUpdates.length; i++) {
+      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);
+      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);
+      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);
+    }
+    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
+    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) => a.connection.guid.localeCompare(b.connection.guid));
+    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);
+    for (let i = 0; i < computedConnUpdates.length; i++) {
+      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
+      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);
+      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);
+    }
   });
 });
 

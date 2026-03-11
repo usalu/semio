@@ -6,7 +6,7 @@ goal: R26-02/RUNNING-SKETCHPAD
 
 ## Summary
 
-Reopened to fix the current sketchpad startup failure. The reproducible repo-level failure was the `@semio/js` sketchpad dev entrypoint aborting whenever port `5173` was already occupied because the script used Vite `--strictPort`. The updated script keeps `5173` as the preferred port and now falls back cleanly to the next free port.
+Bulk close
 ## Changes
 
 - `semio/js/package.json`: Remove `--strictPort` from `dev:sketchpad` so the dev server still starts when `5173` is occupied, while keeping `5173` as the preferred default port.

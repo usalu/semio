@@ -2815,6 +2815,82 @@ fn connector_to_plane(connector: &Connector) -> Plane {
     Plane::new(origin, x_axis, y_axis)
 }
 
+pub fn drag_pieces_in_design(
+    design_pieces: &[Piece],
+    design_connections: &[Connection],
+    selected_pieces: &[Piece],
+    offset: &Coord,
+) -> DesignDiff {
+    let selected_guids: HashSet<&str> = selected_pieces.iter().map(|p| p.guid.as_str()).collect();
+    let design_piece_map: HashMap<&str, &Piece> = design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+    let mut children_map: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut connection_by_child: HashMap<&str, &Connection> = HashMap::new();
+    for conn in design_connections {
+        let connecting_guid = conn.connecting.piece.guid.as_str();
+        let connected_guid = conn.connected.piece.guid.as_str();
+        children_map.entry(connecting_guid).or_default().push(connected_guid);
+        connection_by_child.insert(connected_guid, conn);
+    }
+    let root_movers: Vec<&str> = selected_guids.iter()
+        .filter(|&&guid| design_piece_map.get(guid).map_or(false, |p| p.center.is_some()))
+        .copied()
+        .collect();
+    let mut moving_set: HashSet<&str> = HashSet::new();
+    let mut queue: VecDeque<&str> = root_movers.iter().copied().collect();
+    while let Some(current) = queue.pop_front() {
+        if !moving_set.insert(current) { continue; }
+        if let Some(children) = children_map.get(current) {
+            for &child in children {
+                if !moving_set.contains(child) {
+                    queue.push_back(child);
+                }
+            }
+        }
+    }
+    let piece_updates: Vec<DiffUpdate<PieceDiff>> = root_movers.iter().map(|&guid| {
+        DiffUpdate {
+            key: "piece".to_string(),
+            guid: guid.to_string(),
+            diff: PieceDiff {
+                guid: guid.to_string(),
+                center: Some(Some(Coord { u: offset.u, v: offset.v })),
+                ..Default::default()
+            },
+        }
+    }).collect();
+    let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids.iter()
+        .filter(|&&guid| !moving_set.contains(guid) && connection_by_child.contains_key(guid))
+        .map(|&guid| {
+            let conn = connection_by_child[guid];
+            DiffUpdate {
+                key: "connection".to_string(),
+                guid: conn.guid.clone(),
+                diff: ConnectionDiff {
+                    guid: conn.guid.clone(),
+                    u: Some(Some(offset.u)),
+                    v: Some(Some(offset.v)),
+                    ..Default::default()
+                },
+            }
+        }).collect();
+    let mut diff = DesignDiff { guid: String::new(), ..Default::default() };
+    if !piece_updates.is_empty() {
+        diff.pieces = Some(CollectionDiff {
+            added: None,
+            removed: None,
+            updated: Some(piece_updates),
+        });
+    }
+    if !connection_updates.is_empty() {
+        diff.connections = Some(CollectionDiff {
+            added: None,
+            removed: None,
+            updated: Some(connection_updates),
+        });
+    }
+    diff
+}
+
 // #endregion 🔖FlattenDesign
 
 // #region 🔖Validation Types
@@ -4164,6 +4240,78 @@ mod tests {
     }
 
     // #endregion 🔖Flatten Tests
+
+    // #region 🔖Drag Tests
+// [👤semio📚rs💻semiors🔖tests🔖dragtests](semiorepo://section/SEMIO/RS/SEMIO.RS/TESTS/DRAG-TESTS)
+// Drag Tests MUST provide the drag tests functionality.
+
+    mod drag {
+        use super::*;
+
+        fn load_design_partial(filename: &str) -> (Vec<Piece>, Vec<Connection>) {
+            let path = Path::new(ASSETS_DIR).join(filename);
+            let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
+            let val: serde_json::Value = serde_json::from_str(&data).expect("Failed to parse JSON");
+            let pieces: Vec<Piece> = serde_json::from_value(val.get("pieces").cloned().unwrap_or(serde_json::Value::Array(vec![]))).unwrap_or_default();
+            let connections: Vec<Connection> = serde_json::from_value(val.get("connections").cloned().unwrap_or(serde_json::Value::Array(vec![]))).unwrap_or_default();
+            (pieces, connections)
+        }
+
+        fn load_coord(filename: &str) -> Coord {
+            let path = Path::new(ASSETS_DIR).join(filename);
+            let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
+            serde_json::from_str(&data).expect("Failed to deserialize coord")
+        }
+
+        fn load_design_diff(filename: &str) -> DesignDiff {
+            let path = Path::new(ASSETS_DIR).join(filename);
+            let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
+            let mut val: serde_json::Value = serde_json::from_str(&data).expect("Failed to parse JSON");
+            if let Some(obj) = val.as_object_mut() {
+                if !obj.contains_key("guid") {
+                    obj.insert("guid".to_string(), serde_json::Value::String(String::new()));
+                }
+            }
+            serde_json::from_value(val).expect("Failed to deserialize design diff")
+        }
+
+        #[test]
+        fn design_pieces_offset_diffdesign() {
+            let (design_pieces, design_connections) = load_design_partial("drag/design.json");
+            let (selected_pieces, _) = load_design_partial("drag/pieces.json");
+            let offset = load_coord("drag/offset.json");
+            let expected_diff = load_design_diff("drag/diff_design.json");
+            let computed_diff = drag_pieces_in_design(&design_pieces, &design_connections, &selected_pieces, &offset);
+            let computed_piece_updates = computed_diff.pieces.as_ref().and_then(|p| p.updated.as_ref());
+            let expected_piece_updates = expected_diff.pieces.as_ref().and_then(|p| p.updated.as_ref());
+            assert_eq!(computed_piece_updates.map(|v| v.len()), expected_piece_updates.map(|v| v.len()));
+            if let (Some(computed), Some(expected)) = (computed_piece_updates, expected_piece_updates) {
+                let expected_map: HashMap<&str, &PieceDiff> = expected.iter().map(|u| (u.guid.as_str(), &u.diff)).collect();
+                for u in computed {
+                    let exp = expected_map.get(u.guid.as_str()).expect(&format!("Unexpected piece update for {}", u.guid));
+                    let cc = u.diff.center.as_ref().and_then(|c| c.as_ref()).expect("Piece center is None");
+                    let ec = exp.center.as_ref().and_then(|c| c.as_ref()).expect("Expected piece center is None");
+                    assert!(float_eq(cc.u, ec.u) && float_eq(cc.v, ec.v), "Piece {} center mismatch", u.guid);
+                }
+            }
+            let computed_conn_updates = computed_diff.connections.as_ref().and_then(|c| c.updated.as_ref());
+            let expected_conn_updates = expected_diff.connections.as_ref().and_then(|c| c.updated.as_ref());
+            assert_eq!(computed_conn_updates.map(|v| v.len()), expected_conn_updates.map(|v| v.len()));
+            if let (Some(computed), Some(expected)) = (computed_conn_updates, expected_conn_updates) {
+                let expected_map: HashMap<&str, &ConnectionDiff> = expected.iter().map(|u| (u.guid.as_str(), &u.diff)).collect();
+                for u in computed {
+                    let exp = expected_map.get(u.guid.as_str()).expect(&format!("Unexpected connection update for {}", u.guid));
+                    let cu = u.diff.u.flatten().expect("Connection u is None");
+                    let cv = u.diff.v.flatten().expect("Connection v is None");
+                    let eu = exp.u.flatten().expect("Expected connection u is None");
+                    let ev = exp.v.flatten().expect("Expected connection v is None");
+                    assert!(float_eq(cu, eu) && float_eq(cv, ev), "Connection {} u/v mismatch", u.guid);
+                }
+            }
+        }
+    }
+
+    // #endregion 🔖Drag Tests
 
     // #region 🔖Diff Tests
 // [👤semio📚rs💻semiors🔖tests🔖difftests](semiorepo://section/SEMIO/RS/SEMIO.RS/TESTS/DIFF-TESTS)

@@ -5,8 +5,8 @@ goal: SKETCHPAD-IMPROVEMENTS
 # Ticket
 
 ## Summary
-Investigating why `@semio/play` fails to start with `vite --strictPort --port 4000` because the port is already occupied by a stale local process.
 
+Bulk close
 ## Changes
 - Identified an existing `node /workspaces/semio/node_modules/.bin/nx dev @semio/play` process (`PID 38848`) already running.
 - Confirmed the conflicting process started at `2026-03-04 01:44:36 UTC`.

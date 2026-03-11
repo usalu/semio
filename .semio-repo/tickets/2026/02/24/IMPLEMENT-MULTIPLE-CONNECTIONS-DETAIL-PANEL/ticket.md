@@ -5,33 +5,8 @@ goal: SKETCHPAD/DESIGN
 # Ticket
 
 ## Summary
-Implemented and tested the multiple connections detail panel in the Design app. The panel allows batch editing of connection properties for multiple selected connections simultaneously. All required fields (Translation, Orientation, Diagram) are present and functional per the spec.
 
-##Changes
-
-### 1. Added comprehensive test coverage for multiple connections detail panel
-
-Added new test section in [semio/js/sketchpad.test.ts](semio/js/sketchpad.test.ts#L3319-L3502) covering:
-
-- **Multiple connection selection**: Programmatically selects 2+ connections via `DESIGN.SET_SELECTION` event
-- **Detail panel verification**: Confirms multiple connections section (`semio.sketchpad.app.design.panel.details.section.connection.multipleTitle`) appears and single connection section is hidden  
-- **Field visibility**: Validates all required fields are visible:
-  - Description textarea
-  - Plane > Translation sliders (gap, shift, rise)
-  - Plane > Orientation sliders (rotation, turn, tilt)  
-  - Diagram steppers (x offset, y offset)
-- **Batch editing**: Tests updating gap and rotation values for all selected connections simultaneously
-- **Persistence verification**: Reads connection properties from store before/after edits to confirm batch updates applied correctly
-- **Single selection toggle**: Verifies switching back to single connection shows the correct detail panel with connection metadata fields (connecting/connected piece IDs and port IDs)
-
-### 2. Verified implementation matches specification
-
-The existing implementation in [semio/js/sketchpad/Design.tsx](semio/js/sketchpad/Design.tsx#L5812-L5950):
-- `ConnectionsSectionForm` component handles both single and multiple connections
-- Uses `getCommonValue` helper to display mixed values (shows undefined if values differ)
-- Uses `handleBulkUpdate` to apply changes to all selected connections via transaction
-- All fields match the spec: Translation (gap, shift, rise), Orientation (rotation, turn, tilt), Diagram (x/y)
-
+Bulk close
 ## Log
 
 - **2026-02-24**: Created ticket and analyzed existing implementation
