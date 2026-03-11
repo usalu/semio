@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio📚js🗃️sketchpad💻portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts)
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

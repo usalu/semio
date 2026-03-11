@@ -1,0 +1,26 @@
+{
+  "title": "Build Functional Parity Inventory",
+  "status": "closed",
+  "prompt": "Inventory and document all features, behaviors, dependencies, and constraints of the existing build to establish full functional parity requirements",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/622"
+  },
+  "goal": "BUILDGRAPH",
+  "started": "2026-02-18T15:17:42.682974665Z",
+  "finished": "2026-02-18T15:30:18.409773841Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-18 15:17:42",
+        "finished": "2026-02-18 15:30:18"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "b02e5676a32481161a859ed23cd52fb810c779ea",
+      "prompt": "Inventory and document all features, behaviors, dependencies, and constraints of the existing build to establish full functional parity requirements",
+      "llm": "opus-4-6"
+    }
+  ]
+}

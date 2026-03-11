@@ -1,5 +1,6 @@
-// #region 🔖Header
-// [👤semio📚js🗃️sketchpad💻type](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx)
+// #region Header
+
+// js/semio/sketchpad/Type.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,85 +15,87 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Type editor app for defining and editing type properties and ports.
+// #endregion Header
 
-// #endregion 🔖Header
-
-// #region 🔖Imports
-// [👤semio📚js🗃️sketchpad💻type🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports)
-// External and internal dependency imports. MUST group third-party and local imports.
+// #region Imports
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { useSelector } from "@xstate/react";
-import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
+import { useSearchParams } from "react-router";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit, Model, Point, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
-import { Geometry, Input, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, TransactionProvider, TreeContent, TreeItem } from "./elements";
-import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext, TypeAppId } from "./shared";
+import { BasicChatPanel, Geometry, Input, Ring, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, ToolbarGroup, TransactionProvider, Tree, TreeItem, TreeRow, TreeStateProvider } from "./elements";
+import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext, TypeAppId } from "./shared";
 import {
-  AppConfig,
-  AppPlugin,
-  conditionalHookResult,
-  createKeyedTransactionHandlers,
-  createPanelDefinition,
-  EMPTY_PANEL_VISIBILITY,
-  Expertise,
-  Mode,
-  PanelKind,
-  readonlyHookResult,
-  registerAppPlugin,
-  registerEventHandler,
-  registerKeyedAppEventHandlers,
-  Theme,
-  ToolKind,
+    AppConfig,
+    applySelectionComposition,
+    AppPlugin,
+    conditionalHookResult,
+    createKeyedTransactionHandlers,
+    createPanelDefinition,
+    EMPTY_PANEL_VISIBILITY,
+    Expertise,
+    isSelectionToolKind,
+    Mode,
+    PanelKind,
+    readonlyHookResult,
+    registerAppPlugin,
+    registerEventHandler,
+    registerKeyedAppEventHandlers,
+    resolveSelectionCompositionKind,
+    Theme,
+    ToolKind,
+    toSelectionToolKind,
 } from "./shared";
 import {
-  Canvas,
-  createDefaultLayout,
-  createDefaultTypeAppState,
-  createTypeActiveToolSelector,
-  createTypeAppSelector,
-  createTypeCameraSelector,
-  createTypeFocusedConnectorSelector,
-  createTypeHoverSelector,
-  createTypeOthersSelector,
-  createTypePanelVisibilitySelector,
-  createTypeSelectedModelTagsSelector,
-  createTypeSelectionSelector,
-  KitScopeProvider,
-  KitStore,
-  LayoutCanvas,
-  TypeAppFullscreenWindow as SketchpadTypeAppFullscreenWindow,
-  ToolGroup,
-  TypeScopeProvider,
-  useAddFooterItem,
-  useAddPanelSection,
-  useAppType,
-  useDevice,
-  useExpertise,
-  useFocusSafe,
-  useIsInTypeScope,
-  useKit,
-  useKitCommands,
-  useKitFiles,
-  useKitScope,
-  useKitStore,
-  useKitTags,
-  useKitTransaction,
-  useLanguage,
-  useMode,
-  useRemoveFooterItem,
-  useRemovePanelSection,
-  useSketchpadActor,
-  useTheme,
-  useTooltip,
-  useType,
-  useTypeAppXState,
-  useTypeScope,
+    Canvas,
+    createDefaultTypeAppState,
+    createTypeActiveToolSelector,
+    createTypeAppSelector,
+    createTypeCameraSelector,
+    createTypeFocusedConnectorSelector,
+    createTypeHoverSelector,
+    createTypeOthersSelector,
+    createTypePanelVisibilitySelector,
+    createTypeSelectedModelTagsSelector,
+    createTypeSelectionSelector,
+    KitScopeProvider,
+    KitStore,
+    LayoutCanvas,
+    TypeAppFullscreenWindow as SketchpadTypeAppFullscreenWindow,
+    TypeScopeProvider,
+    useAddFooterItem,
+    useAddPanelSection,
+    useAddSidePanelTab,
+    useAppType,
+    useDevice,
+    useExpertise,
+    useFocusSafe,
+    useIsInTypeScope,
+    useKit,
+    useKitCommands,
+    useKitFiles,
+    useKitScope,
+    useKitStore,
+    useKitTags,
+    useKitTransaction,
+    useLanguage,
+    useMode,
+    useRemoveFooterItem,
+    useRemovePanelSection,
+    useRemoveSidePanelTab,
+    useSketchpadActor,
+    useTheme,
+    useTooltip,
+    useType,
+    useTypeAppXState,
+    useTypeScope
 } from "./Sketchpad";
 
 /**
@@ -101,10 +104,13 @@ import {
  **/
 const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
 
-import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, ChatIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SettingsIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
-// #region 🔖Internal State Management
-// [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management)
+// #endregion Imports
+
+// #region Internal State Management
+
+// [👤semio📚js🗃️sketchpad💻typetsx🔖internalstatemanagement](semiorepo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/INTERNAL-STATE-MANAGEMENT)
 // TypeApp state interfaces, enums, and diffing types. MUST define all shared state shapes.
 
 /**
@@ -206,17 +212,7 @@ export interface TypeAppDiff {
   selectedModelTags?: string[];
   windowLayout?: any;
 }
-/**
- * Edit record combining a TypeApp selection diff with kit-level diff metadata.
- *
- *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappedit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppEdit)
- **/
-export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> { }
-/**
- * Full mutable state of a TypeApp instance.
- *
- *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🛠️typeappstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/TypeAppState)
- **/
+export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
 export interface TypeAppState {
   fullscreenWindow: TypeAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -262,7 +258,9 @@ const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
  **/
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
-// #region 🔖Type App Plugin Registration
+// #endregion Internal State Management
+
+// #region Type App Plugin Registration
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖typeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Type%20App%20Plugin%20Registration)
 // Plugin registration and XState event handlers for the TypeApp. MUST register all event handlers at module load.
@@ -280,7 +278,7 @@ const typeAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): TypeAppState => ({
-      panelVisibility: EMPTY_PANEL_VISIBILITY,
+      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
       activeTool: ToolKind.SELECTION_NORMAL,
       fullscreenWindow: TypeAppFullscreenWindow.None,
       selection: undefined,
@@ -483,7 +481,9 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #region 🔖XState Hooks
+// #endregion Type App Plugin Registration
+
+// #region XState Hooks
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks)
 // React hooks that read and write TypeApp XState machine state. MUST use memoized selectors for performance.
@@ -714,9 +714,9 @@ interface Transaction {
 export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
   // TODO: Implement transaction via XState events
   return {
-    start: () => { },
-    finalize: () => { },
-    abort: () => { },
+    start: () => {},
+    finalize: () => {},
+    abort: () => {},
   };
 }
 
@@ -735,7 +735,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
   const typeGuid = typeScope?.guid ?? id?.type ?? "";
 
   return useMemo(() => {
-    const noOp = () => { };
+    const noOp = () => {};
     if (!kitGuid || !typeGuid) {
       return {
         startTransaction: noOp,
@@ -911,7 +911,9 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
     };
   }, [actor, kitGuid, typeGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
-//#region 🔖Action Hooks
+}
+
+//#region Action Hooks
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/s/Action%20Hooks)
 // Convenience React hooks wrapping state hooks into single-purpose actions. MUST return action-canAct tuples.
@@ -1197,7 +1199,7 @@ export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: strin
   return [action, canSetSelectedModel];
 }
 
-//#endregion 🔖Action Hooks
+//#endregion Action Hooks
 
 /**
  * TypeAppScopeContext holds the data fields for a TypeAppScopeContext record.
@@ -1224,9 +1226,9 @@ export const TypeAppScopeProvider = (props: { id: string; children: React.ReactN
  * [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
  * useTypeAppScope holds the data fields for a useTypeAppScope record.
 
-// #endregion 🔖XState Hooks
+// #endregion XState Hooks
 
-// #region 🔖Commands
+// #region Commands
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Commands)
 // Command definitions for the TypeApp producing diffs from context. MUST return TypeAppCommandResult.
@@ -1386,9 +1388,9 @@ export const commands = {
       },
     };
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #region 🔖Scene
+// #region Scene
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene)
 // Three.js scene components for connectors, meshes, and the 3D viewport. MUST render inside a React Three Fiber canvas.
@@ -1868,26 +1870,26 @@ const selectTypeGuid = (type: Type) => type.guid;
  **/
 const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
+  const typeFilters = useTypeFilters();
 
   const typePorts = useType(selectTypePorts) as Connector[] | undefined;
   const typeGuid = useType(selectTypeGuid) as string | undefined;
 
   const kitCommands = useKitCommands();
-  const [selection] = useTypeAppSelection();
+  const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
 
-  const [selectConnector] = useTypeAppSelectConnector();
-  const [deselectConnector] = useTypeAppDeselectConnector();
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
   const [focusPort] = useTypeAppFocusPort();
   const [connectorPreview, setConnectorPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
   const focusContext = useFocusSafe();
   const prevItemsRef = useRef<string>("");
+  const visibleTypePorts = useMemo(() => (typeFilters.showConnectors ? typePorts : []), [typeFilters.showConnectors, typePorts]);
 
   useEffect(() => {
-    if (!focusContext || !typePorts) return;
-    const items = typePorts.map((connector) => ({
+    if (!focusContext) return;
+    const items = (visibleTypePorts || []).map((connector) => ({
       id: connector.guid,
       label: connector.description || `Connector ${connector.guid.substring(0, 8)}`,
       category: "Connectors",
@@ -1897,7 +1899,7 @@ const SceneContent: FC = React.memo(() => {
       prevItemsRef.current = itemsKey;
       focusContext.setFocusItems(items);
     }
-  }, [focusContext, typePorts]);
+  }, [focusContext, visibleTypePorts]);
 
   useEffect(() => {
     if (!focusContext) return;
@@ -1951,24 +1953,23 @@ const SceneContent: FC = React.memo(() => {
     if (clearHover) clearHover();
   }, [clearHover]);
 
+  useEffect(() => {
+    if (typeFilters.showConnectors) return;
+    setConnectorPreview(null);
+    if (clearHover) clearHover();
+  }, [typeFilters.showConnectors, clearHover]);
+
   const handlePortClick = useCallback(
     (connectorId: string) => {
-      const isSelected = selection?.connectors?.includes(connectorId) || false;
-      if (activeTool === ToolKind.SELECTION_ADDITIVE) {
-        if (!isSelected && selectConnector) selectConnector(connectorId);
-      } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) {
-        if (isSelected && deselectConnector) deselectConnector(connectorId);
-      } else {
-        const currentConnectors = selection?.connectors ?? [];
-        if (currentConnectors.length > 0) {
-          currentConnectors.forEach((id) => deselectConnector && deselectConnector(id));
-        }
-        if (!isSelected || currentConnectors.length > 1) {
-          if (selectConnector) selectConnector(connectorId);
-        }
-      }
+      if (!setSelection) return;
+      const compositionKind = resolveSelectionCompositionKind(activeTool);
+      setSelection({
+        ...(selection || {}),
+        connectors: applySelectionComposition(selection?.connectors, [connectorId], compositionKind),
+        models: compositionKind === "replace" ? [] : (selection?.models || []),
+      });
     },
-    [selection, selectConnector, deselectConnector, activeTool],
+    [selection, setSelection, activeTool],
   );
 
   const handlePortHover = useCallback(
@@ -1991,8 +1992,8 @@ const SceneContent: FC = React.memo(() => {
 
   return (
     <>
-      <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />
-      {typePorts?.map((connector) => {
+      {typeFilters.showModels && <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />}
+      {visibleTypePorts?.map((connector) => {
         const isSelected = selection?.connectors?.includes(connector.guid) || false;
         const isHovered = hover?.connector === connector.guid;
         return (
@@ -2008,6 +2009,8 @@ const SceneContent: FC = React.memo(() => {
           />
         );
       })}
+      {typeFilters.showConnectors && connectorPreview && <ConnectorPreview position={connectorPreview.position} normal={connectorPreview.normal} />}
+    </>
   );
 });
 
@@ -2050,17 +2053,15 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
       )}
 };
 
-// #endregion 🔖Scene
+// #endregion Scene
 
-// [🔖semio/js/sketchpad/Type.tsx#Panels](semiorepo://section/semio/js/sketchpad/Type.tsx/PANELS)
-// Panel UI sections for the right sidebar including details and settings editors. MUST use the panel section registration API.
-// #region 🔖Right
-// [🔖semio/js/sketchpad/Type.tsx#Right](semiorepo://section/semio/js/sketchpad/Type.tsx/RIGHT)
-// Right sidebar panel containing details and settings sub-sections. MUST nest detail and settings regions.
+// #region Panels
 
-// #region 🔖Details
+// #region Right
 
-// [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details)
+// #region Details
+
+// [👤semio📚js🗃️sketchpad💻typetsx🔖panels](semiorepo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/PANELS)
 // Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
 /**
@@ -2089,13 +2090,10 @@ const TypeDetailsForm: FC = () => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} onLazyChange={(value) => updateTypeField({ name: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea
             lazy
             id="semio.sketchpad.app.type.panel.details.section.type.description"
@@ -2104,20 +2102,14 @@ const TypeDetailsForm: FC = () => {
             onLazyChange={(value) => updateTypeField({ description: value })}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.icon" value={type.icon || ""} placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" onLazyChange={(value) => updateTypeField({ icon: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.image" value={type.image || ""} placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" onLazyChange={(value) => updateTypeField({ image: value })} showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.type.parent"
@@ -2126,19 +2118,14 @@ const TypeDetailsForm: FC = () => {
             onLazyChange={(value) => updateTypeField({ parent: value ? { guid: value } : undefined })}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Toggle id="semio.sketchpad.app.type.panel.details.section.type.abstract" pressed={type.isAbstract || false} onPressedChange={(value) => updateTypeField({ isAbstract: value })} showLabel icon={<CheckIcon />} />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       {type.unit !== undefined && (
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.unit" value={type.unit} onLazyChange={(value) => updateTypeField({ unit: value })} showLabel />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       )}
     </>
   );
@@ -2162,14 +2149,13 @@ export const ModelsSection: FC = () => {
  **/
 const ModelsSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const [selectModel] = useTypeAppSelectModel();
-  const [deselectModel] = useTypeAppDeselectModel();
   const [hoverModel] = useTypeAppHoverModel();
   const [clearHover] = useTypeAppClearHover();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
-  const [selection] = useTypeAppSelection();
+  const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
+  const [activeTool] = useTypeAppActiveTool();
 
   const applyDiff = (diff: any) => {
     kitCommands?.updateType(type.guid, diff);
@@ -2230,7 +2216,20 @@ const ModelsSectionForm: FC = () => {
                   key={`model-${index}`}
                   onPointerEnter={() => hoverModel && hoverModel(model.guid)}
                   onPointerLeave={() => clearHover && clearHover()}
-                  onClick={() => (isSelected ? deselectModel && deselectModel(model.guid) : selectModel && selectModel(model.guid))}
+                  onClick={(e: React.MouseEvent) => {
+                    if (!setSelection) return;
+                    const compositionKind = resolveSelectionCompositionKind(activeTool, {
+                      shiftKey: e.shiftKey,
+                      altKey: e.altKey,
+                      ctrlKey: e.ctrlKey,
+                      metaKey: e.metaKey,
+                    });
+                    setSelection({
+                      ...(selection || {}),
+                      models: applySelectionComposition(selection?.models, [model.guid], compositionKind),
+                      connectors: compositionKind === "replace" ? [] : (selection?.connectors || []),
+                    });
+                  }}
                 >
                   <TreeItem
                     key={`model-${index}`}
@@ -2255,8 +2254,7 @@ const ModelsSectionForm: FC = () => {
                       },
                     ]}
                   >
-                    <TreeItem>
-                      <TreeContent>
+                    <TreeRow>
                         <Input
                           id="semio.sketchpad.app.type.panel.details.section.models.url"
                           value={model.url}
@@ -2265,10 +2263,8 @@ const ModelsSectionForm: FC = () => {
                           }}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                      </TreeRow>
+                    <TreeRow>
                         <Textarea
                           id="semio.sketchpad.app.type.panel.details.section.models.description"
                           value={model.description || ""}
@@ -2278,10 +2274,8 @@ const ModelsSectionForm: FC = () => {
                           }}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                      </TreeRow>
+                    <TreeRow>
                         <Input
                           id="semio.sketchpad.app.type.panel.details.section.models.tags"
                           value={(model.tags || []).join(", ")}
@@ -2296,8 +2290,7 @@ const ModelsSectionForm: FC = () => {
                           }}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
+                      </TreeRow>
                   </TreeItem>
                 </div>
               );
@@ -2327,14 +2320,13 @@ export const ConnectorsListSection: FC = () => {
  **/
 const ConnectorsListSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const [selectConnector] = useTypeAppSelectConnector();
-  const [deselectConnector] = useTypeAppDeselectConnector();
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
-  const [selection] = useTypeAppSelection();
+  const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
+  const [activeTool] = useTypeAppActiveTool();
 
   const applyDiff = (diff: any) => {
     kitCommands?.updateType(type.guid, diff);
@@ -2393,6 +2385,39 @@ const ConnectorsListSectionForm: FC = () => {
         ]}
       >
         {hasPorts && (
+          <TreeRow>
+            <Ring
+              id="semio.sketchpad.app.type.panel.details.section.connectors.ring"
+              orbs={(type.connectors || []).map((connector: any) => {
+                const isSelected = selection?.connectors?.includes(connector.guid) || false;
+                return {
+                  id: connector.guid,
+                  t: connector.t ?? 0,
+                  selected: isSelected,
+                  hovered: hover?.connector === connector.guid,
+                  disabled: !isSelected,
+                };
+              })}
+              onOrbChange={(orbId, _oldT, newT) => {
+                updatePort(orbId, { t: newT });
+              }}
+              onOrbSelect={(orbId) => {
+                if (!setSelection) return;
+                setSelection({
+                  ...(selection || {}),
+                  connectors: [orbId],
+                  models: [],
+                });
+              }}
+              onOrbHoverChange={(orbId, hovered) => {
+                if (hovered) hoverPort?.(orbId);
+                else clearHover?.();
+              }}
+              showLabel
+            />
+          </TreeRow>
+        )}
+        {hasPorts && (
           <SortableTreeItems
             items={(type.connectors || []).map((connector: any, index: number) => ({
               ...connector,
@@ -2415,11 +2440,18 @@ const ConnectorsListSectionForm: FC = () => {
               const isHovered = hover?.connector === connector.guid;
               const handleClick = (event: React.MouseEvent) => {
                 event.stopPropagation();
-                if (isSelected) {
-                  if (deselectConnector) deselectConnector(connector.guid);
-                } else {
-                  if (selectConnector) selectConnector(connector.guid);
-                }
+                if (!setSelection) return;
+                const compositionKind = resolveSelectionCompositionKind(activeTool, {
+                  shiftKey: event.shiftKey,
+                  altKey: event.altKey,
+                  ctrlKey: event.ctrlKey,
+                  metaKey: event.metaKey,
+                });
+                setSelection({
+                  ...(selection || {}),
+                  connectors: applySelectionComposition(selection?.connectors, [connector.guid], compositionKind),
+                  models: compositionKind === "replace" ? [] : (selection?.models || []),
+                });
               };
 
               const handleHover = () => {
@@ -2455,8 +2487,7 @@ const ConnectorsListSectionForm: FC = () => {
                       },
                     ]}
                   >
-                    <TreeItem>
-                      <TreeContent>
+                    <TreeRow>
                         <Input
                           lazy
                           id="semio.sketchpad.app.type.panel.details.section.connectors.port"
@@ -2467,10 +2498,8 @@ const ConnectorsListSectionForm: FC = () => {
                           }}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                      </TreeRow>
+                    <TreeRow>
                         <Textarea
                           lazy
                           id="semio.sketchpad.app.type.panel.details.section.connectors.description"
@@ -2481,26 +2510,9 @@ const ConnectorsListSectionForm: FC = () => {
                           }}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
-                        <Slider
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.t"
-                          value={[connector.t ?? 0]}
-                          onValueChange={([value]) => {
-                            updatePort(connector.guid, { t: value });
-                          }}
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          showLabel
-                        />
-                      </TreeContent>
-                    </TreeItem>
+                      </TreeRow>
                     <TreeItem id="semio.sketchpad.app.type.connectorPoint">
-                      <TreeItem>
-                        <TreeContent>
+                      <TreeRow>
                           <Stepper
                             id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
                             value={connector.point.x}
@@ -2509,10 +2521,8 @@ const ConnectorsListSectionForm: FC = () => {
                             }}
                             step={0.1}
                           />
-                        </TreeContent>
-                      </TreeItem>
-                      <TreeItem>
-                        <TreeContent>
+                        </TreeRow>
+                      <TreeRow>
                           <Stepper
                             id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
                             value={connector.point.y}
@@ -2521,10 +2531,8 @@ const ConnectorsListSectionForm: FC = () => {
                             }}
                             step={0.1}
                           />
-                        </TreeContent>
-                      </TreeItem>
-                      <TreeItem>
-                        <TreeContent>
+                        </TreeRow>
+                      <TreeRow>
                           <Stepper
                             id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
                             value={connector.point.z}
@@ -2533,12 +2541,10 @@ const ConnectorsListSectionForm: FC = () => {
                             }}
                             step={0.1}
                           />
-                        </TreeContent>
-                      </TreeItem>
+                        </TreeRow>
                     </TreeItem>
                     <TreeItem id="semio.sketchpad.app.type.connectorDirection">
-                      <TreeItem>
-                        <TreeContent>
+                      <TreeRow>
                           <Stepper
                             id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
                             value={connector.direction.x}
@@ -2547,10 +2553,8 @@ const ConnectorsListSectionForm: FC = () => {
                             }}
                             step={0.1}
                           />
-                        </TreeContent>
-                      </TreeItem>
-                      <TreeItem>
-                        <TreeContent>
+                        </TreeRow>
+                      <TreeRow>
                           <Stepper
                             id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
                             value={connector.direction.y}
@@ -2559,10 +2563,8 @@ const ConnectorsListSectionForm: FC = () => {
                             }}
                             step={0.1}
                           />
-                        </TreeContent>
-                      </TreeItem>
-                      <TreeItem>
-                        <TreeContent>
+                        </TreeRow>
+                      <TreeRow>
                           <Stepper
                             id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
                             value={connector.direction.z}
@@ -2571,11 +2573,9 @@ const ConnectorsListSectionForm: FC = () => {
                             }}
                             step={0.1}
                           />
-                        </TreeContent>
-                      </TreeItem>
+                        </TreeRow>
                     </TreeItem>
-                    <TreeItem>
-                      <TreeContent>
+                    <TreeRow>
                         <Input
                           lazy
                           id="semio.sketchpad.app.type.panel.details.section.connectors.compatiblePorts"
@@ -2591,8 +2591,7 @@ const ConnectorsListSectionForm: FC = () => {
                           }}
                           showLabel
                         />
-                      </TreeContent>
-                    </TreeItem>
+                      </TreeRow>
                   </TreeItem>
                 </div>
               );
@@ -2686,8 +2685,7 @@ const AuthorsSectionForm: FC = () => {
                   },
                 ]}
               >
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.type.panel.details.section.authors.name"
                       value={item.name}
@@ -2696,10 +2694,8 @@ const AuthorsSectionForm: FC = () => {
                       }}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.type.panel.details.section.authors.email"
                       value={item.email}
@@ -2708,8 +2704,7 @@ const AuthorsSectionForm: FC = () => {
                       }}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
             )}
           </SortableTreeItems>
@@ -2814,8 +2809,7 @@ const AttributesSectionForm: FC = () => {
                   },
                 ]}
               >
-                <TreeItem>
-                  <TreeContent>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.type.panel.details.section.attributes.name"
                       value={attribute.key}
@@ -2824,10 +2818,8 @@ const AttributesSectionForm: FC = () => {
                       }}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.type.panel.details.section.attributes.value"
                       value={attribute.value || ""}
@@ -2837,10 +2829,8 @@ const AttributesSectionForm: FC = () => {
                       }}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
-                <TreeItem>
-                  <TreeContent>
+                  </TreeRow>
+                <TreeRow>
                     <Input
                       id="semio.sketchpad.app.type.panel.details.section.attributes.definition"
                       value={attribute.definition || ""}
@@ -2850,8 +2840,7 @@ const AttributesSectionForm: FC = () => {
                       }}
                       showLabel
                     />
-                  </TreeContent>
-                </TreeItem>
+                  </TreeRow>
               </TreeItem>
             )}
           </SortableTreeItems>
@@ -2886,11 +2875,9 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
 
   if (!connector) {
     return (
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorNotFound")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     );
   }
 
@@ -2920,8 +2907,7 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.connectors.port"
@@ -2932,10 +2918,8 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
             }}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea
             lazy
             id="semio.sketchpad.app.type.panel.details.section.connectors.description"
@@ -2946,26 +2930,24 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
             }}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
-          <Slider
-            id="semio.sketchpad.app.type.panel.details.section.connectors.t"
-            value={[connector.t ?? 0]}
-            onValueChange={([value]) => {
-              updatePort(connector.guid, { t: value });
+        </TreeRow>
+      <TreeRow>
+          <Ring
+            id="semio.sketchpad.app.type.panel.details.section.connector.ring"
+            orbs={(type.connectors || []).map((c: Connector) => ({
+              id: c.guid,
+              t: c.t ?? 0,
+              selected: c.guid === connector.guid,
+              disabled: c.guid !== connector.guid,
+            }))}
+            onOrbChange={(_orbId, _oldT, newT) => {
+              updatePort(connector.guid, { t: newT });
             }}
-            min={0}
-            max={1}
-            step={0.01}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       <TreeItem id="semio.sketchpad.app.type.connectorPoint">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
               value={connector.point.x}
@@ -2974,10 +2956,8 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
               value={connector.point.y}
@@ -2986,10 +2966,8 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
               value={connector.point.z}
@@ -2998,12 +2976,10 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.type.connectorDirection">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
               value={connector.direction.x}
@@ -3012,10 +2988,8 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
               value={connector.direction.y}
@@ -3024,10 +2998,8 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
               value={connector.direction.z}
@@ -3036,11 +3008,9 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </TreeItem>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.connectors.compatiblePorts"
@@ -3056,8 +3026,7 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
             }}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -3087,11 +3056,9 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 
   if (connectors.length === 0) {
     return (
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorsNotFound")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     );
   }
 
@@ -3136,8 +3103,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input
             lazy
             id="semio.sketchpad.app.type.panel.details.section.connectors.port"
@@ -3146,10 +3112,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
             onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.port", { port: value })}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Slider
             id="semio.sketchpad.app.type.panel.details.section.connectors.t"
             value={[commonT ?? 0]}
@@ -3161,11 +3125,9 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
             step={0.01}
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
       <TreeItem id="semio.sketchpad.app.type.connectorPoint">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
               value={commonPointX}
@@ -3174,20 +3136,16 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
               value={commonPointY}
               onChange={(value: number) => {
                 updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
               value={commonPointZ}
@@ -3196,12 +3154,10 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.type.connectorDirection">
-        <TreeItem>
-          <TreeContent>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
               value={commonDirectionX}
@@ -3210,10 +3166,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
               value={commonDirectionY}
@@ -3222,10 +3176,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
-        <TreeItem>
-          <TreeContent>
+          </TreeRow>
+        <TreeRow>
             <Stepper
               id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
               value={commonDirectionZ}
@@ -3234,14 +3186,13 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               }}
               step={0.1}
             />
-          </TreeContent>
-        </TreeItem>
+          </TreeRow>
       </TreeItem>
   );
 
-// #endregion 🔖Details
+// #endregion Details
 
-// #region 🔖Settings
+// #region Settings
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Settings)
 // Settings panel for theme, language, device, expertise, and mode selection. MUST use toggle groups and select elements.
@@ -3264,8 +3215,7 @@ const TypeSettingsContent: FC = () => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.settings.theme"
             value={theme}
@@ -3279,10 +3229,8 @@ const TypeSettingsContent: FC = () => {
               { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
             <SelectTrigger>
               <SelectValue placeholder={languagePlaceholder} />
@@ -3290,10 +3238,8 @@ const TypeSettingsContent: FC = () => {
             <SelectContent>
               <SelectItem value="en">{languageEnLabel}</SelectItem>
           </Select>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.settings.device"
             value={typeof device === "object" ? "desktop" : device}
@@ -3306,10 +3252,8 @@ const TypeSettingsContent: FC = () => {
               { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.settings.expertise"
             value={expertise}
@@ -3323,10 +3267,8 @@ const TypeSettingsContent: FC = () => {
               { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.settings.mode"
             value={mode}
@@ -3339,15 +3281,18 @@ const TypeSettingsContent: FC = () => {
               { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
 
-// #endregion 🔖Right
+// #endregion Settings
 
-// #region 🔖Tools
+// #endregion Right
+
+// #endregion Panels
+
+// #region Tools
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖tools](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Tools)
 // Tool definitions for selection modes and connector creation. MUST export tool objects and settings components.
@@ -3412,37 +3357,67 @@ export const SelectionSubtractiveTool: Tool<TypeAppState> = {
   icon: <RemoveIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
- * Settings component for switching between selection tool modes.
+
+/**
+ * Tool definition for hand/pan tool.
  *
- *  * [👤semio📚js🗃️sketchpad💻type🔖tools🪨typeselectsettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools/d/i/TypeSelectSettings)
+ *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨handtool](semiorepo://definition/SEMIO/JS/SKETCHPAD/TYPE.TSX/TOOLS/HAND-TOOL)
+ **/
+export const HandTool: Tool<TypeAppState> = {
+  id: ToolKind.HAND,
+  icon: <HandIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<TypeAppState>) => ({}),
+};
+
+/**
+ * Settings component for the selection tool group with mode toggles.
+ *
+ * MUST render toggle buttons for each selection sub-mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨typeselectsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/TYPE.TSX/TOOLS/TYPE-SELECT-SETTINGS)
  **/
 export const TypeSelectSettings: FC = () => {
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
-  const kit = kitScope?.guid;
-  const type = typeScope?.guid;
-  const [activeTool, , canSetActiveTool] = useTypeAppActiveTool();
-  const [setActiveTool] = useTypeAppSetActiveTool();
-
-  const labelNormal = useLabel("semio.sketchpad.app.type.tools.select.normal");
-  const labelAdditive = useLabel("semio.sketchpad.app.type.tools.select.additive");
-  const labelSubtractive = useLabel("semio.sketchpad.app.type.tools.select.subtractive");
-
-  if (!kit || !type || !canSetActiveTool) return null;
-
-  const modes = [
-    { id: ToolKind.SELECTION_NORMAL, icon: <SelectToolIcon className="size-tiny" />, text: labelNormal },
-    { id: ToolKind.SELECTION_ADDITIVE, icon: <AddIcon className="size-tiny" />, text: labelAdditive },
-    { id: ToolKind.SELECTION_SUBTRACTIVE, icon: <RemoveIcon className="size-tiny" />, text: labelSubtractive },
-  ];
+  const [activeTool, setActiveTool] = useTypeAppActiveTool();
+  const additiveLabel = useLabel("semio.sketchpad.app.type.tools.select.additive");
+  const subtractiveLabel = useLabel("semio.sketchpad.app.type.tools.select.subtractive");
 
   return (
-    <div className="flex shrink-0 gap-single h-full items-center px-single">
-      {modes.map((mode) => (
-        <Toggle key={mode.id} id={mode.id} pressed={activeTool === mode.id} onPressedChange={() => setActiveTool && setActiveTool(mode.id as ToolKind)} icon={mode.icon} text={mode.text} />
-      ))}
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <Toggle
+        id="semio.sketchpad.app.type.tools.select.additive"
+        icon={<AddIcon className="size-tiny" />}
+        text={additiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.type.tools.select.subtractive"
+        icon={<RemoveIcon className="size-tiny" />}
+        text={subtractiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
+      />
     </div>
   );
+};
+
+/**
+ * Settings component for the hand tool.
+ *
+ * MUST activate the hand tool on mount.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻typetsx🔖tools🪨typehandsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/TYPE.TSX/TOOLS/TYPE-HAND-SETTINGS)
+ **/
+export const TypeHandSettings: FC = () => {
+  const [activeTool, setActiveTool] = useTypeAppActiveTool();
+
+  useEffect(() => {
+    if (activeTool !== ToolKind.HAND && setActiveTool) {
+      setActiveTool(ToolKind.HAND);
+    }
+  }, [setActiveTool]);
+
+  return null;
 };
 
 /**
@@ -3451,34 +3426,38 @@ export const TypeSelectSettings: FC = () => {
  *  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖tools🪨typeconnectorsettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Tools/d/i/TypeConnectorSettings)
  **/
 export const TypeConnectorSettings: FC = () => {
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
-  const kit = kitScope?.guid;
-  const type = typeScope?.guid;
-  const [activeTool, , canSetActiveTool] = useTypeAppActiveTool();
-  const [setActiveTool] = useTypeAppSetActiveTool();
-
-  if (!kit || !type || !canSetActiveTool) return null;
-
-  const isActive = activeTool === ToolKind.CONNECTOR;
+  const [activeTool, setActiveTool] = useTypeAppActiveTool();
+  const connectorLabel = useLabel("semio.sketchpad.app.type.tools.connector");
 
   return (
-    <div className="flex shrink-0 gap-single h-full items-center px-single">
-      <Toggle id={ToolKind.CONNECTOR} pressed={isActive} onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)} icon={<ConnectorIcon className="size-tiny" />} text="Connector" />
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <Toggle
+        id="semio.sketchpad.app.type.tools.connector"
+        pressed={activeTool === ToolKind.CONNECTOR}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.CONNECTOR : ToolKind.SELECTION_NORMAL)}
+        icon={<ConnectorIcon className="size-tiny" />}
+        text={connectorLabel}
+      />
     </div>
   );
 };
 
 /**
- * Array of all TypeApp tool definitions.
+ * Array of all Type app tool configurations.
  *
  *
  **/
-export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, ConnectorTool];
+export const TypeAppTools: Tool<TypeAppState>[] = [
+  SelectionNormalTool,
+  SelectionAdditiveTool,
+  SelectionSubtractiveTool,
+  HandTool,
+  ConnectorTool,
+];
 
 // #endregion Tools
 
-// #region 🔖App
+// #region App
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/App)
 // Main TypeApp component orchestrating panels, scene, keyboard shortcuts, and drag-and-drop. MUST register sections on mount.
@@ -3493,27 +3472,41 @@ const App: FC = () => {
   const removeSection = useRemovePanelSection();
   const appType = useAppType();
   const [setActiveTool] = useTypeAppSetActiveTool();
+  const { undo, redo } = useTypeAppCommands();
 
   const [activeTool] = useTypeAppActiveTool();
   const [selection] = useTypeAppSelection();
   const [isDragOver, setIsDragOver] = useState(false);
 
+  useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+y", () => redo?.(), { enableOnFormTags: true });
+  useHotkeys("ctrl+shift+z", () => redo?.(), { enableOnFormTags: true });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (activeTool === ToolKind.SELECTION_NORMAL) {
-        if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          if (setActiveTool) setActiveTool(ToolKind.SELECTION_ADDITIVE);
-        } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-          if (setActiveTool) setActiveTool(ToolKind.SELECTION_SUBTRACTIVE);
-        }
-      }
+      if (!setActiveTool || !isSelectionToolKind(activeTool)) return;
+      const nextToolKind = toSelectionToolKind(
+        resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
+          metaKey: e.metaKey,
+        }),
+      );
+      if (nextToolKind !== ToolKind.SELECTION_NORMAL && nextToolKind !== activeTool) setActiveTool(nextToolKind);
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (activeTool === ToolKind.SELECTION_ADDITIVE && !e.shiftKey) {
-        if (setActiveTool) setActiveTool(ToolKind.SELECTION_NORMAL);
-      } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
-        if (setActiveTool) setActiveTool(ToolKind.SELECTION_NORMAL);
-      }
+      if (!setActiveTool || !isSelectionToolKind(activeTool)) return;
+      const nextToolKind = toSelectionToolKind(
+        resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
+          metaKey: e.metaKey,
+        }),
+      );
+      if (nextToolKind === ToolKind.SELECTION_NORMAL && activeTool !== ToolKind.SELECTION_NORMAL) setActiveTool(ToolKind.SELECTION_NORMAL);
+      if (nextToolKind !== ToolKind.SELECTION_NORMAL && nextToolKind !== activeTool) setActiveTool(nextToolKind);
     };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -3594,37 +3587,6 @@ const App: FC = () => {
   useEffect(() => {
     if (appType !== "type") return;
 
-    addSection("settings", {
-      id: "semio.sketchpad.app.type.settings",
-      specificity: 30,
-      order: 0,
-      content: () => <>{ }</>,
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.app.kit.settings",
-      specificity: 10,
-      order: 0,
-      content: () => <TypeSettingsContent />,
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.settings",
-      specificity: 0,
-      order: 0,
-      content: () => <TypeSettingsContent />,
-    });
-
-    return () => {
-      removeSection("settings", "semio.sketchpad.app.type.settings");
-      removeSection("settings", "semio.sketchpad.app.kit.settings");
-      removeSection("settings", "semio.sketchpad.settings");
-    };
-  }, [appType, addSection, removeSection]);
-
-  useEffect(() => {
-    if (appType !== "type") return;
-
     const handleDrop = async (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
@@ -3693,10 +3655,54 @@ const App: FC = () => {
   }, [appType, type, kitCommands, setSelectedModel]);
 
   const persistedWindowLayout = useTypeApp((s) => s?.windowLayout);
+  const addSidePanelTab = useAddSidePanelTab();
+  const removeSidePanelTab = useRemoveSidePanelTab();
 
-  const defaultLayout = useMemo(() => {
-    return createDefaultLayout([TypeAppWindowKind.Scene], "row", undefined);
-  }, []);
+  useEffect(() => {
+    if (appType !== "type") return;
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.type.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <TypeSettingsContent />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.type.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => <BasicChatPanel id="semio.sketchpad.app.type.chat" title="Type" />,
+    });
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.type.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.type.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
+
+  const defaultLayout = useMemo(() => ({
+    root: {
+      type: "row",
+      content: [
+        {
+          type: "stack",
+          size: "100%",
+          content: [
+            {
+              type: "component",
+              componentName: TypeAppWindowKind.Scene,
+              title: "scene",
+              componentState: {},
+            },
+          ],
+        },
+      ],
+    },
+  }), []);
 
   const windowLayout = useMemo(() => {
     if (!persistedWindowLayout) return undefined;
@@ -3733,23 +3739,118 @@ const App: FC = () => {
 
   const handleLayoutChange = useCallback((_config: any) => {
     // TODO: Add TYPE.SET_WINDOW_LAYOUT event to XState machine
+    // Layout changes are currently not persisted via XState
   }, []);
 
   return (
     <>
       <TypeAppFooter />
       <Canvas>
+        {/* PERF: Always use default layout to prevent window accumulation performance issues */}
         <LayoutCanvas windowConfig={windowConfig} layoutState={undefined} onLayoutChange={handleLayoutChange} />
       </Canvas>
     </>
   );
 };
 
-// [👤semio📚js🗃️sketchpad💻type🔖app🪨typeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/TypeApp)
-/**
- * [👤semio📚js🗃️sketchpad💻type🔖app🪨typeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/TypeApp)
- * TypeApp holds the data fields for a TypeApp record.
- **/
+// #region Filters
+
+// [👤semio📚js🗃️sketchpad💻typetsx🔖filters](semiorepo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/FILTERS)
+// Type filter context and toolbar toggles MUST control connector and model visibility via URL search params.
+
+type TypeFilterKind = "connectors" | "models";
+
+interface TypeFilterState {
+  showConnectors: boolean;
+  showModels: boolean;
+}
+
+const isTypeFilterKind = (value: string): value is TypeFilterKind => value === "connectors" || value === "models";
+const parseTypeFilterState = (searchParams: URLSearchParams): TypeFilterState => {
+  const kinds = searchParams.getAll("filter").filter(isTypeFilterKind);
+  if (kinds.length === 0) {
+    return { showConnectors: true, showModels: true };
+  }
+  return {
+    showConnectors: kinds.includes("connectors"),
+    showModels: kinds.includes("models"),
+  };
+};
+
+const createTypeFilterStore = () => {
+  let state: TypeFilterState = { showConnectors: true, showModels: true };
+  const listeners = new Set<() => void>();
+
+  const getState = () => state;
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  const setState = (nextState: TypeFilterState) => {
+    if (state.showConnectors === nextState.showConnectors && state.showModels === nextState.showModels) {
+      return;
+    }
+    state = nextState;
+    listeners.forEach((listener) => listener());
+  };
+
+  return { getState, subscribe, setState };
+};
+
+const typeFilterStore = createTypeFilterStore();
+
+const useTypeFilters = (): TypeFilterState => useSyncExternalStore(typeFilterStore.subscribe, typeFilterStore.getState, typeFilterStore.getState);
+
+const TypeKindToggles: FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const selectedKindsFromUrl = useMemo(() => searchParams.getAll("filter").filter(isTypeFilterKind), [searchParams]);
+  const selectedKinds = useMemo(() => new Set(selectedKindsFromUrl), [selectedKindsFromUrl]);
+
+  useEffect(() => {
+    typeFilterStore.setState(parseTypeFilterState(searchParams));
+  }, [searchParams]);
+
+  const toggleKind = (kind: TypeFilterKind) => {
+    const allKinds: TypeFilterKind[] = ["connectors", "models"];
+    const newParams = new URLSearchParams(searchParams);
+    const kinds = newParams.getAll("filter").filter(isTypeFilterKind);
+
+    if (kinds.length === 0) {
+      newParams.delete("filter");
+      allKinds.filter((k) => k !== kind).forEach((k) => newParams.append("filter", k));
+    } else if (kinds.includes(kind)) {
+      const remaining = kinds.filter((k) => k !== kind);
+      newParams.delete("filter");
+      remaining.forEach((k) => newParams.append("filter", k));
+    } else {
+      const updated = [...kinds, kind];
+      newParams.delete("filter");
+      if (updated.length < allKinds.length) {
+        updated.forEach((k) => newParams.append("filter", k));
+      }
+    }
+
+    typeFilterStore.setState(parseTypeFilterState(newParams));
+    setSearchParams(newParams);
+  };
+  const isActive = (kind: TypeFilterKind) => selectedKindsFromUrl.length === 0 || selectedKinds.has(kind);
+
+  const labelConnectors = useLabel("semio.sketchpad.app.type.toolbar.showConnectors");
+  const labelModels = useLabel("semio.sketchpad.app.type.toolbar.showModels");
+
+  return (
+    <ToolbarGroup>
+      <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon />} text={labelConnectors} />
+      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon />} text={labelModels} />
+    </ToolbarGroup>
+  );
+};
+
+// #endregion Filters
+
 const TypeApp: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
@@ -3759,6 +3860,18 @@ const TypeApp: FC = () => {
     if (appType !== "type") return;
 
     addSection("toolbar", {
+      id: "semio.sketchpad.app.type.toolbar.filters",
+      specificity: 10,
+      order: 0,
+      toolbarGroup: {
+        id: "filter",
+        labelId: "semio.sketchpad.toolbar.parent.filter",
+        order: 5,
+      },
+      content: <TypeKindToggles />,
+    });
+
+    addSection("toolbar", {
       id: "semio.sketchpad.app.type.tools.selection",
       specificity: 20,
       order: 0,
@@ -3766,11 +3879,23 @@ const TypeApp: FC = () => {
         id: "selection",
         labelId: "semio.sketchpad.toolbar.parent.selection",
         order: 10,
-        subToolId: ToolKind.SELECTION_NORMAL,
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.selection",
-        subToolIcon: <SelectToolIcon className="size-tiny" />,
       },
       content: <TypeSelectSettings />,
+    });
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.type.tools.hand",
+      specificity: 20,
+      order: 2,
+      toolbarGroup: {
+        id: "hand",
+        labelId: "semio.sketchpad.toolbar.parent.hand",
+        order: 30,
+        subToolId: ToolKind.HAND,
+        subToolLabelId: "semio.sketchpad.toolbar.subtool.hand",
+        subToolIcon: <HandIcon className="size-tiny" />,
+      },
+      content: <TypeHandSettings />,
     });
 
     addSection("toolbar", {
@@ -3778,7 +3903,7 @@ const TypeApp: FC = () => {
       order: 10,
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
-        order: 10,
+        order: 40,
         subToolId: ToolKind.CONNECTOR,
         subToolLabelId: "semio.sketchpad.toolbar.subtool.connector",
         subToolIcon: <ConnectorIcon className="size-tiny" />,
@@ -3787,7 +3912,9 @@ const TypeApp: FC = () => {
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.type.toolbar.filters");
       removeSection("toolbar", "semio.sketchpad.app.type.tools.selection");
+      removeSection("toolbar", "semio.sketchpad.app.type.tools.hand");
       removeSection("toolbar", "semio.sketchpad.app.type.tools.connector");
     };
   }, [appType, addSection, removeSection]);
@@ -3825,7 +3952,7 @@ function useTypeAppInitialize() {
       kitGuid,
       typeGuid,
       state: {
-        panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+        panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
         selection: undefined,
         hover: undefined,
         focusedConnector: undefined,
@@ -3845,9 +3972,9 @@ function useTypeAppInitialize() {
 
 export default TypeApp;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Footer
+// #region Footer
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Footer)
 // Footer component displaying model tag toggles. MUST update footer items when tags change.
@@ -3932,9 +4059,9 @@ export const TypeAppFooter: FC = () => {
   return null;
 };
 
-// #endregion 🔖Footer
+// #endregion Footer
 
-// #region 🔖Config
+// #region Config
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Config)
 // App configuration for the TypeApp including route segments, panels, and path matching. MUST define all route segments.
@@ -3963,11 +4090,8 @@ export const config: AppConfig = {
     createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
     createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-    createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -3976,4 +4100,4 @@ export const config: AppConfig = {
   order: 30,
 };
 
-// #endregion 🔖Config
+// #endregion Config

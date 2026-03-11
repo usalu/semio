@@ -61,6 +61,7 @@ export default defineConfig(async () => {
     resolve: {
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),
+        "@semio/assets": path.resolve(__dirname, "../assets"),
       },
     },
     plugins: [

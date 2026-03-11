@@ -1,5 +1,6 @@
-// #region 🔖Header
-// [👤semio📚js🗃️sketchpad💻feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx)
+// #region Header
+
+// js/semio/sketchpad/Feedback.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,29 +15,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Feedback collection app with rating hooks and submission forms.
+// #endregion Header
 
-// #endregion 🔖Header
+// #region Imports
 
-// #region 🔖Imports
-// [👤semio📚js🗃️sketchpad💻feedback🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Imports)
-// MUST import external and internal modules for the Feedback app.
-
+import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { useSelector } from "@xstate/react";
 import { FC, useCallback, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { useLabel } from "../i18n";
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "./elements";
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, ToolbarGroup } from "./elements";
 import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
-import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, EMPTY_PANEL_VISIBILITY, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, stringifyWindowLayout, type AppWindowConfig } from "./shared";
-import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, LayoutCanvas, useAddPanelSection, useAppType, useRemovePanelSection, useSettings, useSketchpadActor, useSketchpadCommands } from "./Sketchpad";
+import { conditionalHookResult, createPanelDefinition, EMPTY_PANEL_VISIBILITY, PanelKind, registerAppPlugin, registerEventHandler } from "./shared";
+import { Canvas, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, useAddPanelSection, useAppType, useRemovePanelSection, useSketchpadActor } from "./Sketchpad";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖Feedback App Plugin Registration
-// [👤semio📚js🗃️sketchpad💻feedback🔖feedbackapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Feedback%20App%20Plugin%20Registration)
+// #region Feedback App Plugin Registration
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖feedbackapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/FEEDBACK-APP-PLUGIN-REGISTRATION)
 // MUST register the Feedback app plugin with default state and event handlers.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖feedbackapppluginregistration🪨createdefaultfeedbackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Feedback%20App%20Plugin%20Registration/d/i/createDefaultFeedbackState)
@@ -135,10 +133,13 @@ if (typeof window !== "undefined") {
       feedbackApp: { ...context.feedbackApp, error: event.error, isSubmitting: false },
     }),
   });
-// #endregion 🔖Feedback App Plugin Registration
+}
 
-// #region 🔖Triadic Hooks
-// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks)
+// #endregion Feedback App Plugin Registration
+
+// #region Triadic Hooks
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS)
 // MUST provide triadic hooks for accessing and mutating Feedback app state.
 
 /**
@@ -256,11 +257,13 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   }, [actor, canReset]);
 }
 
-// #region 🔖Components
-// [🔖semio/js/sketchpad/Feedback.tsx#Components](semiorepo://section/semio/js/sketchpad/Feedback.tsx/COMPONENTS)
+// #endregion Triadic Hooks
 
-// #region 🔖Form
-// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖components🔖form](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/Components/s/Form)
+// #region Components
+
+// #region Form
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖components🔖form](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/COMPONENTS/FORM)
 // MUST render feedback form for submitting bug reports and ideas.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖components🔖form🪨feedbackform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components/s/Form/d/i/FeedbackForm)
@@ -394,7 +397,7 @@ const FeedbackForm: FC = () => {
         <label htmlFor="semio.sketchpad.app.feedback.form.kind" className="text-sm font-medium">
           {kindLabel}
         </label>
-        <Select id="semio.sketchpad.app.feedback.form.kind" value={kind} onValueChange={(v) => setKind(v as FeedbackKind)}>
+        <Select id="semio.sketchpad.app.feedback.form.kind.select" value={kind} onValueChange={(v) => setKind(v as FeedbackKind)}>
           <SelectTrigger id="semio.sketchpad.app.feedback.form.kind">
             <SelectValue />
           </SelectTrigger>
@@ -421,7 +424,7 @@ const FeedbackForm: FC = () => {
           <label htmlFor="semio.sketchpad.app.feedback.form.app" className="text-sm font-medium">
             {appLabel}
           </label>
-          <Select id="semio.sketchpad.app.feedback.form.app" value={app || ""} onValueChange={(v) => setApp(v as FeedbackAppKind)}>
+          <Select id="semio.sketchpad.app.feedback.form.app.select" value={app || ""} onValueChange={(v) => setApp(v as FeedbackAppKind)}>
             <SelectTrigger id="semio.sketchpad.app.feedback.form.app">
               <SelectValue placeholder={t("semio.sketchpad.app.feedback.form.appPlaceholder.label.normal", "Select app...")} />
             </SelectTrigger>
@@ -478,12 +481,13 @@ const FeedbackForm: FC = () => {
       </Button>
 };
 
-// #endregion 🔖Form
+// #endregion Form
 
-// #endregion 🔖Components
+// #endregion Components
 
-// #region 🔖App
-// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/App)
+// #region App
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/APP)
 // MUST integrate feedback app with toolbar and layout canvas.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/FeedbackToolbar)
@@ -503,12 +507,12 @@ const FeedbackToolbar: FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-single">
+    <ToolbarGroup>
       <Button id="semio.sketchpad.app.feedback.toolbar.send" onClick={handleSendClick} className="gap-single">
         <CheckIcon className="size-small" />
         {submitLabel}
       </Button>
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -521,16 +525,6 @@ const Feedback: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
-  const settings = useSettings();
-  const sketchpadCommands = useSketchpadCommands();
-  const feedbackWindowIds = useMemo(() => ["feedback"], []);
-  const storedWindowLayout = useMemo(() => {
-    const parsed = parseWindowLayout(settings?.apps?.feedback?.windowLayout);
-    return parsed ? deduplicateWindowLayout(parsed, feedbackWindowIds) : undefined;
-  }, [settings, feedbackWindowIds]);
-  const defaultLayout = useMemo(() => createDefaultLayout(feedbackWindowIds, "row", [100], ["feedback"]), [feedbackWindowIds]);
-  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
-  const lastLayoutRef = useMemo(() => ({ current: null as any }), []);
 
   useLayoutEffect(() => {
     if (appType !== "feedback") return;
@@ -554,40 +548,18 @@ const Feedback: FC = () => {
 
   return (
     <Canvas>
-      <LayoutCanvas
-        windowConfig={
-          {
-            windowKinds: [
-              {
-                id: "feedback",
-                label: "feedback",
-                component: () => <FeedbackForm />,
-              },
-            ],
-            defaultLayout,
-          } satisfies AppWindowConfig
-        }
-        layoutState={windowLayout}
-        onLayoutChange={(layout) => {
-          const next = stringifyWindowLayout(layout);
-          if (!next) return;
-          const prev = stringifyWindowLayout(lastLayoutRef.current);
-          if (next === prev) return;
-          lastLayoutRef.current = layout;
-          sketchpadCommands.setState("semio.sketchpad.app.feedback.windowLayout", {
-            settings: {
-              apps: {
-                feedback: {
-                  windowLayout: next,
-                },
-              },
-        }}
-      />
+      <FeedbackForm />
     </Canvas>
-// #endregion 🔖App
+  );
+};
 
-// #region 🔖Config
-// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/Config)
+export default Feedback;
+
+// #endregion App
+
+// #region Config
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/CONFIG)
 // MUST define app configuration for the Feedback app.
 
 /**
@@ -602,12 +574,13 @@ const Feedback: FC = () => {
   order: 10,
 };
 
-// #endregion 🔖Config
+// #endregion Config
 
-// #region 🔖Global Footer Item
-// [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖globalfooteritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/Global%20Footer%20Item)
+// #region Global Footer Item
+
+// [👤semio📚js🗃️sketchpad💻feedbacktsx🔖globalfooteritem](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/GLOBAL-FOOTER-ITEM)
 // MUST re-export the feedback icon for the footer item.
 
 export { FeedbackIcon };
 
-// #endregion 🔖Global Footer Item
+// #endregion Global Footer Item

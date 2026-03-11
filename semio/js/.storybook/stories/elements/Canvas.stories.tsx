@@ -19,7 +19,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
-import { Level, LevelProvider, Window, getLevelBgClass } from "../../../sketchpad/elements";
+import { DiagramNode, DiagramSkeleton, Level, LevelProvider, Window, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region 🔖Canvas
 const meta = {
@@ -109,3 +109,30 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Canvas
+
+// #region 🔖DiagramNode
+export const DiagramNodeDefault: Story = {
+  args: { children: null },
+  render: () => (
+    <div className="flex items-center gap-4 p-8">
+      <DiagramNode content="Capsule J" />
+      <DiagramNode content="Selected" selected />
+      <DiagramNode content="Hovered" hovered />
+      <DiagramNode content="Placeholder" isPlaceholder />
+      <DiagramNode content="Clickable" onClick={() => {}} />
+    </div>
+  ),
+};
+// #endregion 🔖DiagramNode
+
+// #region 🔖DiagramSkeleton
+export const DiagramSkeletonDefault: Story = {
+  args: { children: null },
+  render: () => (
+    <div className="h-[400px] w-full">
+      <DiagramSkeleton nodeCount={5} edgeCount={4} />
+    </div>
+  ),
+};
+// #endregion 🔖DiagramSkeleton
+

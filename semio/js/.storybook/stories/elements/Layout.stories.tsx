@@ -18,10 +18,10 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Home, Settings, User } from "lucide-react";
+import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
-import { Footer, Layout, Level, LevelProvider, Navbar, Window, getLevelBgClass } from "../../../sketchpad/elements";
+import { Footer, Layout, Level, LevelProvider, Navbar, Page, SidePanel, Window, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region 🔖Layout
 const meta = {
@@ -251,3 +251,42 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Layout
+
+// #region 🔖Page
+export const PageDefault: Story = {
+  args: { canvas: null },
+  render: () => (
+    <div className="h-[400px] w-[600px] border">
+      <Page frontmatter={{ title: "Getting Started", description: "Learn how to use semio to design modular architecture." }}>
+        <h2>Introduction</h2>
+        <p>Semio is a platform for kit-of-parts architecture. It helps you model, design and collaborate on modular buildings.</p>
+        <h2>Prerequisites</h2>
+        <p>You need a modern web browser and basic understanding of architectural concepts.</p>
+      </Page>
+    </div>
+  ),
+};
+// #endregion 🔖Page
+
+// #region 🔖SidePanel
+export const SidePanelDefault: Story = {
+  args: { canvas: null },
+  render: () => {
+    const [size, setSize] = useState(300);
+    return (
+      <div className="relative h-[400px] w-[600px] border bg-base">
+        <SidePanel
+          position="left"
+          size={size}
+          onSizeChange={setSize}
+          tabs={[
+            { id: "types", icon: Layers, order: 0, content: <div className="p-2">Types panel content</div> },
+            { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings panel content</div> },
+            { id: "info", icon: Info, order: 2, content: <div className="p-2">Info panel content</div> },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+// #endregion 🔖SidePanel

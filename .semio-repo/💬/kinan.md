@@ -1,4 +1,88 @@
 
+sketchpad toolbar:
+tool option buttons/toggles have inconsistent spacing between icon and name. e.g. kit app tool option create buttons are too narrow.
+
+sketchpad Toolbar :
+toolbar has currently diffeent elements.. toggles, drop down, commans and they are render slightly in different sizes. i want to create a mechanism to unify the spacing without hardcoding. e.g in filter -- settings toolbar has designs and it renderes in a different size to create Designs. i want to unify systematically. create a plan first 
+
+
+
+
+Sketchpad toolbar
+
+extend the funtionality mechanism of the toolbar to have subtools for eachtool. for the settings toolbar i want to be able to have filter, command and tools. create a prompt to 
+
+sketchpad toolbar kit app:
+same select tool option as design app
+
+
+sketchpad toolbar kit app
+the setting toolbar for select should be implemented the same way as in the design app with these categories: 
+
+65fb3ff445f7fcfe870cebdcd2c40bcbf30bdc34
+
+sketchpad design app
+freezing ocurs while selecting elements in the scene window 
+
+sketchpad toolbar:
+each tool setting category should have a divider between. Currently design app has it and kit app not. This shouldnt be possible.
+
+
+---------------------------------
+sketchpad toolbar kit app:
+same select tool option as design app
+
+
+sketchpad toolbar kit app
+the setting toolbar for select should be implemented the same way as in the design app with these categories: 
+
+
+Category 1: Selection Mode
+– Additive
+– Subtractive
+– Intersect
+
+Category 2: Selection Shape
+– Rectangular
+– Lasso
+
+Category 3: Navigation
+– Hand
+
+---
+
+
+
+
+sketchpad toolbar:
+Tool setting bar should have groups.
+e.g. 
+
+design 
+
+
+t appears there is a duplicate panel. A panel similar to the Toggle Right panel is showing at a narrower width on the right side of the screen while the Toggle Right panel itself is inactive. Please verify that there are only three toggle panels in total: Left, Right, and HUD.
+
+
+The Hub panel’s left and right panels as well as HUD PANEL are missing the tree elements, and their icons are not displaying. Please double-check for any extra or duplicate panels and ensure everything is properly integrated. During the migration from the old website new panels were mistakenly created instead of integrating with the existing one
+
+Fix the bottom toolbar so it stops jumping when the settings panel width changes. The center point must stay locked to the middle of the screen. The tool bar should only grow to the left, the settings bar should only grow to the right, and a small constant gap between them must always remain. Update the layout so the center seam is anchored independently of either bar’s width, ensuring size changes never recenter or shift both toolbars from two sides, only a single side
+
+In the Select tool’s settings toolbar, organize into distinct categories separated by visual dividers
+
+Category 1: Selection Mode
+– Additive
+– Subtractive
+– Intersect
+
+Category 2: Selection Shape
+– Rectangular
+– Lasso
+
+Category 3: Navigation
+– Hand
+
+
 
 sketchpad toolbar:
 hand is currently a subtool from select. it should be seperate to the left of  select tool 

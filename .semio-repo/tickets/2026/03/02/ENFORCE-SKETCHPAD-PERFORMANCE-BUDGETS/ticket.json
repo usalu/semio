@@ -1,0 +1,164 @@
+{
+  "title": "Enforce Sketchpad Performance Budgets",
+  "status": "closed",
+  "prompt": "Add hard performance budgets to the existing sketchpad performance test for render, pan or zoom, drag, and long tasks.",
+  "summary": "Duplicate ticket closed after redirecting work to the existing sketchpad performance ticket.",
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-02T22:42:51.598897056Z",
+  "finished": "2026-03-02T23:01:28.582059245Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-02 22:42:51",
+        "finished": "2026-03-02 23:01:28"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Add hard performance budgets to the existing sketchpad performance test for render, pan or zoom, drag, and long tasks.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 597,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪semio/js/sketchpad.test.ts",
+              "lines": {
+                "added": 625,
+                "removed": 28
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Home Panel Combinations",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Kit Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Design Panel Combinations",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Multiple Connections Detail Panel",
+              "lines": {
+                "added": 21,
+                "removed": 22
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Type Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Design Drag Performance",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Kit Zip Entry Filtering",
+              "lines": {
+                "added": 38,
+                "removed": 6
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Connection Delete",
+              "lines": {
+                "added": 219,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/js/sketchpad.test.ts#Design Selection State",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/sketchpad.test.ts#Design Drag Performance",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad.test.ts#Connection Delete",
+              "lines": {
+                "added": 219,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

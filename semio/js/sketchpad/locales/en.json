@@ -162,6 +162,13 @@
             }
           }
         },
+        "copyJsonToClipboard": {
+          "label": {
+            "normal": "Copy JSON",
+            "beginner": "Copy the current sketchpad JSON state to clipboard"
+          },
+          "hotkey": "Ctrl+Shift+J"
+        },
         "breadcrumb": {
           "label": {
             "normal": "",
@@ -370,6 +377,10 @@
             }
           },
           "chat": {
+            "label": {
+              "normal": "Toggle Chat",
+              "beginner": "Toggle the chat panel"
+            },
             "show": {
               "label": {
                 "normal": "Show",
@@ -386,6 +397,10 @@
             }
           },
           "settings": {
+            "label": {
+              "normal": "Toggle Settings",
+              "beginner": "Toggle the settings panel"
+            },
             "show": {
               "label": {
                 "normal": "Show",
@@ -676,6 +691,12 @@
           "label": {
             "normal": "Add Child",
             "beginner": "Add Child"
+          }
+        },
+        "duplicateType": {
+          "label": {
+            "normal": "Duplicate Type",
+            "beginner": "Duplicate Type"
           }
         },
         "addType": {
@@ -1310,6 +1331,30 @@
                 "normal": "Remote",
                 "beginner": "Remote"
               }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter kits by location"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Create",
+                "beginner": "Create a new kit"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Home settings"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Home chat"
             }
           }
         },
@@ -1317,6 +1362,12 @@
           "label": {
             "normal": "Kit",
             "beginner": "Kit"
+          },
+          "properties": {
+            "label": {
+              "normal": "Kit Properties",
+              "beginner": "Kit properties"
+            }
           },
           "notFound": {
             "label": {
@@ -1683,10 +1734,22 @@
                 "beginner": "Concepts"
               }
             },
+            "selection": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection tools"
+              }
+            },
             "filters": {
               "label": {
                 "normal": "Filters",
                 "beginner": "Filter artifacts by type"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Create",
+                "beginner": "Create new artifacts"
               }
             },
             "resetFilters": {
@@ -2035,6 +2098,56 @@
               "beginner": "Title"
             }
           },
+          "tools": {
+            "label": {
+              "normal": "Tools",
+              "beginner": "Tools"
+            },
+            "select": {
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additive",
+                    "beginner": "Additive selection mode - add to existing selection"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtractive",
+                    "beginner": "Subtractive selection mode - remove from existing selection"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Intersect",
+                    "beginner": "Intersect selection mode - select only overlapping items"
+                  }
+                }
+              },
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rectangular",
+                    "beginner": "Rectangular selection - drag to select in a rectangle"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freeform lasso selection - draw a freeform shape"
+                  }
+                }
+              },
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand tool - pan and navigate the canvas"
+                  }
+                }
+              }
+            }
+          },
           "tool": {
             "pointer": {
               "label": {
@@ -2047,6 +2160,18 @@
                 "normal": "Hand",
                 "beginner": "Hand"
               }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Kit settings"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Kit chat"
             }
           }
         },
@@ -2110,6 +2235,12 @@
           "label": {
             "normal": "Design",
             "beginner": "Design"
+          },
+          "properties": {
+            "label": {
+              "normal": "Design Properties",
+              "beginner": "Design properties"
+            }
           },
           "console": {
             "label": {
@@ -2420,6 +2551,18 @@
                       "normal": "Updated At",
                       "beginner": "The date and time when this design was last modified."
                     }
+                  },
+                  "pieceCount": {
+                    "label": {
+                      "normal": "Pieces",
+                      "beginner": "The total number of pieces in this design."
+                    }
+                  },
+                  "connectionCount": {
+                    "label": {
+                      "normal": "Connections",
+                      "beginner": "The total number of connections in this design."
+                    }
                   }
                 },
                 "location": {
@@ -2500,6 +2643,102 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
+                  },
+                  "properties": {
+                    "label": {
+                      "normal": "Piece",
+                      "beginner": "Properties of the selected piece."
+                    }
+                  },
+                  "multipleTitle": {
+                    "label": {
+                      "normal": "Pieces",
+                      "beginner": "Properties of the selected pieces."
+                    }
+                  },
+                  "pieceInfo": {
+                    "label": {
+                      "normal": "Piece",
+                      "beginner": "Basic information about the piece."
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "An optional name for this piece to identify it within the design."
+                    }
+                  },
+                  "namePlaceholder": {
+                    "label": {
+                      "normal": "Enter piece name...",
+                      "beginner": "Enter piece name..."
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Description",
+                      "beginner": "A description of this piece's purpose or role in the design."
+                    }
+                  },
+                  "descriptionPlaceholder": {
+                    "label": {
+                      "normal": "Enter piece description...",
+                      "beginner": "Enter piece description..."
+                    }
+                  },
+                  "scale": {
+                    "label": {
+                      "normal": "Scale",
+                      "beginner": "The scaling factor applied to this piece. Default is 1.0."
+                    }
+                  },
+                  "color": {
+                    "label": {
+                      "normal": "Color",
+                      "beginner": "An optional color override for this piece (e.g., #FF0000)."
+                    }
+                  },
+                  "colorPlaceholder": {
+                    "label": {
+                      "normal": "Enter color...",
+                      "beginner": "Enter color..."
+                    }
+                  },
+                  "attributes": {
+                    "label": {
+                      "normal": "Attributes",
+                      "beginner": "Custom key-value attributes for this piece."
+                    },
+                    "name": {
+                      "label": {
+                        "normal": "Name",
+                        "beginner": "The key identifier for this attribute."
+                      }
+                    },
+                    "value": {
+                      "label": {
+                        "normal": "Value",
+                        "beginner": "The value for this attribute."
+                      }
+                    },
+                    "unit": {
+                      "label": {
+                        "normal": "Unit",
+                        "beginner": "The measurement unit for this attribute."
+                      }
+                    },
+                    "definition": {
+                      "label": {
+                        "normal": "Definition",
+                        "beginner": "A URL or text defining this attribute."
+                      }
+                    }
+                  },
+                  "attribute": {
+                    "label": {
+                      "normal": "Attribute",
+                      "beginner": "A custom attribute of this piece."
+                    }
                   },
                   "center": {
                     "label": {
@@ -2611,10 +2850,40 @@
                     "normal": "",
                     "beginner": ""
                   },
+                  "properties": {
+                    "label": {
+                      "normal": "Connection",
+                      "beginner": "Properties of the selected connection."
+                    }
+                  },
+                  "multipleTitle": {
+                    "label": {
+                      "normal": "Connections",
+                      "beginner": "Properties of the selected connections."
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Description",
+                      "beginner": "A description of this connection's purpose."
+                    }
+                  },
+                  "descriptionPlaceholder": {
+                    "label": {
+                      "normal": "Enter connection description...",
+                      "beginner": "Enter connection description..."
+                    }
+                  },
                   "multipleEditing": {
                     "label": {
                       "normal": "Editing {{count}} connections simultaneously",
                       "beginner": "Editing {{count}} connections simultaneously"
+                    }
+                  },
+                  "connecting": {
+                    "label": {
+                      "normal": "Connecting",
+                      "beginner": "Connecting"
                     }
                   },
                   "connectingPieceId": {
@@ -2623,10 +2892,10 @@
                       "beginner": "Connecting Piece"
                     }
                   },
-                  "connectingConnectorId": {
+                  "connectingPortId": {
                     "label": {
-                      "normal": "Connecting Connector",
-                      "beginner": "Connecting Connector"
+                      "normal": "Connecting Port",
+                      "beginner": "Connecting Port"
                     }
                   },
                   "connectingDesignPieceId": {
@@ -2635,16 +2904,22 @@
                       "beginner": "Connecting Design Piece"
                     }
                   },
+                  "connected": {
+                    "label": {
+                      "normal": "Connected",
+                      "beginner": "Connected"
+                    }
+                  },
                   "connectedPieceId": {
                     "label": {
                       "normal": "Connected Piece",
                       "beginner": "Connected Piece"
                     }
                   },
-                  "connectedConnectorId": {
+                  "connectedPortId": {
                     "label": {
-                      "normal": "Connected Connector",
-                      "beginner": "Connected Connector"
+                      "normal": "Connected Port",
+                      "beginner": "Connected Port"
                     }
                   },
                   "connectedDesignPieceId": {
@@ -2703,14 +2978,14 @@
                   },
                   "u": {
                     "label": {
-                      "normal": "U",
-                      "beginner": "U"
+                      "normal": "X Offset",
+                      "beginner": "X Offset"
                     }
                   },
                   "v": {
                     "label": {
-                      "normal": "V",
-                      "beginner": "V"
+                      "normal": "Y Offset",
+                      "beginner": "Y Offset"
                     }
                   }
                 },
@@ -2723,6 +2998,18 @@
                     "label": {
                       "normal": "Connector ID",
                       "beginner": "The unique identifier of the connector"
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "The name of this connector."
+                    }
+                  },
+                  "t": {
+                    "label": {
+                      "normal": "T",
+                      "beginner": "The parameter t along the type's curve for this connector."
                     }
                   },
                   "position": {
@@ -2787,6 +3074,60 @@
                   "beginner": "Parent Connections"
                 }
               }
+            },
+            "hud": {
+              "overview": {
+                "label": {
+                  "normal": "HUD Overview",
+                  "beginner": "HUD Overview"
+                }
+              },
+              "selection": {
+                "pieces": {
+                  "label": {
+                    "normal": "Selected Pieces",
+                    "beginner": "Selected Pieces"
+                  }
+                },
+                "connections": {
+                  "label": {
+                    "normal": "Selected Connections",
+                    "beginner": "Selected Connections"
+                  }
+                },
+                "connector": {
+                  "label": {
+                    "normal": "Connector Selected",
+                    "beginner": "Connector Selected"
+                  }
+                }
+              }
+            },
+            "stats": {
+              "overview": {
+                "label": {
+                  "normal": "Statistics",
+                  "beginner": "Statistics"
+                }
+              },
+              "pieces": {
+                "label": {
+                  "normal": "Total Pieces",
+                  "beginner": "Total Pieces"
+                }
+              },
+              "connections": {
+                "label": {
+                  "normal": "Total Connections",
+                  "beginner": "Total Connections"
+                }
+              },
+              "windows": {
+                "label": {
+                  "normal": "Window Layout Loaded",
+                  "beginner": "Window Layout Loaded"
+                }
+              }
             }
           },
           "gridSize": {
@@ -2825,6 +3166,30 @@
                 "normal": "Turn",
                 "beginner": "Turn"
               }
+            },
+            "plane": {
+              "label": {
+                "normal": "Plane",
+                "beginner": "Plane"
+              }
+            },
+            "translation": {
+              "label": {
+                "normal": "Translation",
+                "beginner": "Translation"
+              }
+            },
+            "orientation": {
+              "label": {
+                "normal": "Orientation",
+                "beginner": "Orientation"
+              }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagram",
+                "beginner": "Diagram"
+              }
             }
           },
           "title": {
@@ -2839,36 +3204,50 @@
               "beginner": "Tools"
             },
             "select": {
-              "normal": {
-                "label": {
-                  "normal": "Normal",
-                  "beginner": "Normal Select"
+              "label": {
+                "normal": "Select",
+                "beginner": "Selection tool"
+              },
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additive",
+                    "beginner": "Additive selection mode - add to existing selection"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtractive",
+                    "beginner": "Subtractive selection mode - remove from existing selection"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Intersect",
+                    "beginner": "Intersect selection mode - select only overlapping items"
+                  }
                 }
               },
-              "additive": {
-                "label": {
-                  "normal": "Additive",
-                  "beginner": "Additive Select"
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rectangular",
+                    "beginner": "Rectangular selection - drag to select in a rectangle"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freeform lasso selection - draw a freeform shape"
+                  }
                 }
               },
-              "subtractive": {
-                "label": {
-                  "normal": "Subtractive",
-                  "beginner": "Subtractive Select"
-                }
-              }
-            },
-            "lasso": {
-              "rectangular": {
-                "label": {
-                  "normal": "Rectangular",
-                  "beginner": "Rectangular Lasso"
-                }
-              },
-              "freeform": {
-                "label": {
-                  "normal": "Freeform",
-                  "beginner": "Freeform Lasso"
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand tool - pan and navigate the canvas"
+                  }
                 }
               }
             }
@@ -2896,12 +3275,78 @@
               "normal": "Canvas",
               "beginner": "Canvas"
             }
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showPieces": {
+              "label": {
+                "normal": "Pieces",
+                "beginner": "Toggle visibility of design pieces"
+              }
+            },
+            "showConnections": {
+              "label": {
+                "normal": "Connections",
+                "beginner": "Toggle visibility of connections between pieces"
+              }
+            },
+            "showPorts": {
+              "label": {
+                "normal": "Ports",
+                "beginner": "Toggle visibility of ports on pieces"
+              }
+            },
+            "addPiece": {
+              "label": {
+                "normal": "Add Piece",
+                "beginner": "Add a new piece to the design"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter design elements by visibility"
+              }
+            }
           }
         },
         "type": {
           "label": {
             "normal": "Type",
             "beginner": "Type"
+          },
+          "properties": {
+            "label": {
+              "normal": "Type Properties",
+              "beginner": "Type properties"
+            }
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showConnectors": {
+              "label": {
+                "normal": "Connectors",
+                "beginner": "Connectors"
+              }
+            },
+            "showModels": {
+              "label": {
+                "normal": "Models",
+                "beginner": "Models"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter type elements by visibility"
+              }
+            }
           },
           "footer": {
             "label": {
@@ -3009,6 +3454,12 @@
             "label": {
               "normal": "Connector",
               "beginner": "Connector"
+            },
+            "properties": {
+              "label": {
+                "normal": "Connector Properties",
+                "beginner": "Connector properties"
+              }
             },
             "title": {
               "label": {
@@ -3374,20 +3825,58 @@
               "normal": {
                 "label": {
                   "normal": "Normal",
-                  "beginner": "Create Normal"
+                  "beginner": "Normal selection"
                 }
               },
               "additive": {
                 "label": {
                   "normal": "Additive",
-                  "beginner": "Create Additive"
+                  "beginner": "Additive selection - add to existing selection"
                 }
               },
               "subtractive": {
                 "label": {
                   "normal": "Subtractive",
-                  "beginner": "Create Subtractive"
+                  "beginner": "Subtractive selection - remove from existing selection"
                 }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Intersect",
+                  "beginner": "Intersect selection - select only overlapping items"
+                }
+              }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rectangular",
+                  "beginner": "Rectangular lasso selection"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freeform",
+                  "beginner": "Freeform lasso selection"
+                }
+              }
+            },
+            "selection": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection tool"
+              }
+            },
+            "hand": {
+              "label": {
+                "normal": "Hand",
+                "beginner": "Hand tool - pan and navigate"
+              }
+            },
+            "connector": {
+              "label": {
+                "normal": "Connector",
+                "beginner": "Connector creation tool"
               }
             }
           },
@@ -3407,6 +3896,80 @@
             "label": {
               "normal": "Define measurement qualities",
               "beginner": "Define measurement qualities"
+            }
+          },
+          "title": {
+            "label": {
+              "normal": "Quality",
+              "beginner": "Quality"
+            }
+          },
+          "toolbar": {
+            "view": {
+              "label": {
+                "normal": "View",
+                "beginner": "View options"
+              }
+            },
+            "actions": {
+              "label": {
+                "normal": "Actions",
+                "beginner": "Quality actions"
+              }
+            }
+          },
+          "workbench": {
+            "nodes": {
+              "label": {
+                "normal": "Nodes",
+                "beginner": "Quality formula nodes"
+              }
+            },
+            "qualities": {
+              "label": {
+                "normal": "Qualities",
+                "beginner": "Available qualities"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Quality settings"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Quality chat"
+            }
+          },
+          "tools": {
+            "selection": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection tool"
+              }
+            },
+            "select": {
+              "additive": {
+                "label": {
+                  "normal": "Additive",
+                  "beginner": "Additive selection - add to existing selection"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtractive",
+                  "beginner": "Subtractive selection - remove from existing selection"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Intersect",
+                  "beginner": "Intersect selection - select only overlapping items"
+                }
+              }
             }
           },
           "defaultName": {
@@ -3937,6 +4500,14 @@
                 "beginner": "Failed to submit feedback. Please try again."
               }
             }
+          },
+          "toolbar": {
+            "send": {
+              "label": {
+                "normal": "Send",
+                "beginner": "Send feedback"
+              }
+            }
           }
         }
       },
@@ -3961,20 +4532,77 @@
           "normal": "Toolbar",
           "beginner": "Toolbar"
         },
+        "group": {
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
+          "selection": {
+            "label": {
+              "normal": "Selection",
+              "beginner": "Selection"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
+            }
+          },
+          "filter": {
+            "label": {
+              "normal": "Filter",
+              "beginner": "Filter"
+            }
+          },
+          "create": {
+            "label": {
+              "normal": "Create",
+              "beginner": "Create"
+            }
+          },
+          "view": {
+            "label": {
+              "normal": "View",
+              "beginner": "View"
+            }
+          },
+          "actions": {
+            "label": {
+              "normal": "Actions",
+              "beginner": "Actions"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Settings"
+            }
+          }
+        },
         "parent": {
           "hand": "Hand",
           "selection": "Selection",
+          "lasso": "Lasso",
           "filter": "Filter",
           "create": "Create",
           "view": "View",
-          "actions": "Actions"
+          "actions": "Actions",
+          "settings": "Settings"
         },
         "subtool": {
           "select": "Select",
           "hand": "Hand",
+          "lasso": "Lasso",
           "additive": "Additive",
           "subtractive": "Subtractive",
-          "intersect": "Intersect"
+          "intersect": "Intersect",
+          "connector": "Connector",
+          "appSettings": "App Settings",
+          "command": "Command",
+          "tools": "Tools"
         }
       },
       "tutorial": {

@@ -1,0 +1,20 @@
+{
+  "title": "Fix Unregistered Toolbar Group I18n Names",
+  "status": "closed",
+  "prompt": "Fix toolbar group toggle IDs that have no corresponding i18n entries. The id semio.sketchpad.toolbar.group.selection/filter/etc has no i18n translation, causing raw IDs to show as tooltip labels. Also search for other similar unregistered IDs across the sketchpad UI.",
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-11T09:11:20.06270195Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-11 09:11:20"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "prompt": "Fix toolbar group toggle IDs that have no corresponding i18n entries. The id semio.sketchpad.toolbar.group.selection/filter/etc has no i18n translation, causing raw IDs to show as tooltip labels. Also search for other similar unregistered IDs across the sketchpad UI.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

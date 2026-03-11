@@ -8822,4 +8822,90 @@ func ApplyDesignDiff(base Design, diff DesignDiff) Design {
 	return applyDesignDiff(base, diff)
 }
 
+// DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
+// DragPiecesInDesign MUST return piece center offsets for root movers and u/v offsets for orphan connections.
+// [👤semio📚go💻semiogo🔖flattendesign🛠️dragpiecesindesign](semiorepo://definition/SEMIO/GO/SEMIO.GO/FLATTEN-DESIGN/DRAG-PIECES-IN-DESIGN)
+func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
+	selectedGuids := make(map[string]bool)
+	for _, p := range pieces.Pieces {
+		selectedGuids[p.Guid] = true
+	}
+	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
+	childrenMap := make(map[string][]string)
+	for _, c := range design.Connections {
+		parentMap[c.Connected.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connecting.Piece.Guid}
+		childrenMap[c.Connecting.Piece.Guid] = append(childrenMap[c.Connecting.Piece.Guid], c.Connected.Piece.Guid)
+	}
+	rootMovers := make(map[string]bool)
+	for _, p := range pieces.Pieces {
+		for _, dp := range design.Pieces {
+			if dp.Guid == p.Guid && dp.Center != nil {
+				rootMovers[p.Guid] = true
+				break
+			}
+		}
+	}
+	movingSet := make(map[string]bool)
+	queue := make([]string, 0, len(rootMovers))
+	for guid := range rootMovers {
+		queue = append(queue, guid)
+	}
+	for len(queue) > 0 {
+		guid := queue[len(queue)-1]
+		queue = queue[:len(queue)-1]
+		if movingSet[guid] {
+			continue
+		}
+		movingSet[guid] = true
+		for _, child := range childrenMap[guid] {
+			queue = append(queue, child)
+		}
+	}
+	var pieceUpdates []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+	u := offset.U
+	v := offset.V
+	for guid := range rootMovers {
+		pieceUpdates = append(pieceUpdates, struct {
+			Piece PieceId   `json:"piece"`
+			Diff  PieceDiff `json:"diff"`
+		}{
+			Piece: PieceId{Guid: guid},
+			Diff:  PieceDiff{Center: &CoordDiff{U: &u, V: &v}},
+		})
+	}
+	var connectionUpdates []struct {
+		Connection ConnectionId   `json:"connection"`
+		Diff       ConnectionDiff `json:"diff"`
+	}
+	for guid := range selectedGuids {
+		if movingSet[guid] {
+			continue
+		}
+		parent, ok := parentMap[guid]
+		if !ok {
+			continue
+		}
+		connectionUpdates = append(connectionUpdates, struct {
+			Connection ConnectionId   `json:"connection"`
+			Diff       ConnectionDiff `json:"diff"`
+		}{
+			Connection: ConnectionId{Guid: parent.connectionGuid},
+			Diff:       ConnectionDiff{U: &u, V: &v},
+		})
+	}
+	diff := DesignDiff{}
+	if len(pieceUpdates) > 0 || len(connectionUpdates) > 0 {
+		if len(pieceUpdates) > 0 {
+			diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
+		}
+		if len(connectionUpdates) > 0 {
+			diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
+		}
+	}
+	return diff
+}
+
 // #endregion 🔖Flatten Design

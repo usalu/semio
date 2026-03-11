@@ -1,0 +1,58 @@
+{
+  "title": "Locate Storybook Source",
+  "status": "closed",
+  "prompt": "The user is asking for the location of the Storybook implementation in the repository.",
+  "summary": "Storybook is programmed in the 'semio/js/.storybook' folder. Its configuration is in 'main.ts' and 'preview.ts', and the component stories are located in the 'stories' subfolder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/544"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "2026-02-12T14:34:15.72879408Z",
+  "finished": "2026-02-12T14:34:51.514259492Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-12 14:34:15",
+        "finished": "2026-02-12 14:34:51"
+      },
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "04a5784181e91bd6737d00d8ecf8c049a78d5ee0",
+      "prompt": "The user is asking for the location of the Storybook implementation in the repository.",
+      "llm": "gemini-3-flash",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

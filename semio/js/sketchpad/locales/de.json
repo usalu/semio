@@ -162,6 +162,13 @@
             }
           }
         },
+        "copyJsonToClipboard": {
+          "label": {
+            "normal": "JSON kopieren",
+            "beginner": "Den aktuellen Sketchpad-JSON-Status in die Zwischenablage kopieren"
+          },
+          "hotkey": "Ctrl+Shift+J"
+        },
         "breadcrumb": {
           "label": {
             "normal": "",
@@ -370,6 +377,10 @@
             }
           },
           "chat": {
+            "label": {
+              "normal": "Chat umschalten",
+              "beginner": "Chat-Panel umschalten"
+            },
             "show": {
               "label": {
                 "normal": "Anzeigen",
@@ -378,6 +389,10 @@
             }
           },
           "settings": {
+            "label": {
+              "normal": "Einstellungen umschalten",
+              "beginner": "Einstellungen-Panel umschalten"
+            },
             "show": {
               "label": {
                 "normal": "Anzeigen",
@@ -640,6 +655,12 @@
             "beginner": "Kind hinzufügen"
           }
         },
+        "duplicateType": {
+          "label": {
+            "normal": "Typ duplizieren",
+            "beginner": "Typ duplizieren"
+          }
+        },
         "addType": {
           "label": {
             "normal": "Typ hinzufügen",
@@ -833,7 +854,7 @@
           "settings": {
             "label": {
               "normal": "Einstellungen",
-              "beginner": "Anwendungseinstellungen konfigurieren"
+              "beginner": "Home-Einstellungen"
             },
             "theme": {
               "label": {
@@ -1065,7 +1086,7 @@
           "chat": {
             "label": {
               "normal": "Chat",
-              "beginner": "Chat"
+              "beginner": "Home-Chat"
             }
           },
           "createKit": {
@@ -1097,12 +1118,68 @@
               "normal": "Kit importieren",
               "beginner": "Kit importieren"
             }
+          },
+          "toolbar": {
+            "showTemporary": {
+              "label": {
+                "normal": "Temporär",
+                "beginner": "Temporär"
+              }
+            },
+            "showLocal": {
+              "label": {
+                "normal": "Lokal",
+                "beginner": "Lokal"
+              }
+            },
+            "showRemote": {
+              "label": {
+                "normal": "Remote",
+                "beginner": "Remote"
+              }
+            },
+            "createTemporary": {
+              "label": {
+                "normal": "Temporär",
+                "beginner": "Temporär"
+              }
+            },
+            "createLocal": {
+              "label": {
+                "normal": "Lokal",
+                "beginner": "Lokal"
+              }
+            },
+            "createRemote": {
+              "label": {
+                "normal": "Remote",
+                "beginner": "Remote"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Kits nach Standort filtern"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Erstellen",
+                "beginner": "Neues Kit erstellen"
+              }
+            }
           }
         },
         "kit": {
           "label": {
             "normal": "Kit",
             "beginner": "Kit"
+          },
+          "properties": {
+            "label": {
+              "normal": "Kit-Eigenschaften",
+              "beginner": "Kit-Eigenschaften"
+            }
           },
           "noKitLoaded": {
             "label": {
@@ -1466,6 +1543,18 @@
                 "normal": "Filter Zurücksetzen",
                 "beginner": "Aktive Artefaktfilter entfernen und alle Artefaktarten anzeigen"
               }
+            },
+            "selection": {
+              "label": {
+                "normal": "Auswahl",
+                "beginner": "Auswahlwerkzeuge"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Erstellen",
+                "beginner": "Neue Artefakte erstellen"
+              }
             }
           },
           "canvas": {
@@ -1681,8 +1770,8 @@
           },
           "settings": {
             "label": {
-              "normal": "Kit-Editor",
-              "beginner": "Kit-Editor-Einstellungen"
+              "normal": "Einstellungen",
+              "beginner": "Kit-Einstellungen"
             },
             "diagram": {
               "chargeStrength": {
@@ -1801,6 +1890,56 @@
               "beginner": "Titel"
             }
           },
+          "tools": {
+            "label": {
+              "normal": "Werkzeuge",
+              "beginner": "Werkzeuge"
+            },
+            "select": {
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additiv",
+                    "beginner": "Additiver Auswahlmodus - zur vorhandenen Auswahl hinzufügen"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtraktiv",
+                    "beginner": "Subtraktiver Auswahlmodus - aus vorhandener Auswahl entfernen"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Schnittmenge",
+                    "beginner": "Schnittmengen-Auswahlmodus - nur überlappende Elemente auswählen"
+                  }
+                }
+              },
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rechteckig",
+                    "beginner": "Rechteckige Auswahl - ziehen Sie, um in einem Rechteck auszuwählen"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freiform-Lasso-Auswahl - zeichnen Sie eine Freiform-Form"
+                  }
+                }
+              },
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand-Werkzeug - schwenken und navigieren Sie auf der Leinwand"
+                  }
+                }
+              }
+            }
+          },
           "folder": {
             "label": {
               "normal": "Ordner",
@@ -1813,6 +1952,12 @@
                   "beginner": "Describe this folder..."
                 }
               }
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Kit-Chat"
             }
           }
         },
@@ -1876,6 +2021,12 @@
           "label": {
             "normal": "Entwurf",
             "beginner": "Entwurf"
+          },
+          "properties": {
+            "label": {
+              "normal": "Entwurfs-Eigenschaften",
+              "beginner": "Entwurfs-Eigenschaften"
+            }
           },
           "defaultName": {
             "label": {
@@ -2106,6 +2257,30 @@
                 "normal": "Neigung",
                 "beginner": "Neigung"
               }
+            },
+            "plane": {
+              "label": {
+                "normal": "Ebene",
+                "beginner": "Ebene"
+              }
+            },
+            "translation": {
+              "label": {
+                "normal": "Verschiebung",
+                "beginner": "Verschiebung"
+              }
+            },
+            "orientation": {
+              "label": {
+                "normal": "Ausrichtung",
+                "beginner": "Ausrichtung"
+              }
+            },
+            "diagram": {
+              "label": {
+                "normal": "Diagramm",
+                "beginner": "Diagramm"
+              }
             }
           },
           "panel": {
@@ -2195,6 +2370,18 @@
                       "normal": "Aktualisiert am",
                       "beginner": "Das Datum und die Uhrzeit, wann dieser Entwurf zuletzt geaendert wurde."
                     }
+                  },
+                  "pieceCount": {
+                    "label": {
+                      "normal": "Bauteile",
+                      "beginner": "Die Gesamtanzahl der Bauteile in diesem Entwurf."
+                    }
+                  },
+                  "connectionCount": {
+                    "label": {
+                      "normal": "Verbindungen",
+                      "beginner": "Die Gesamtanzahl der Verbindungen in diesem Entwurf."
+                    }
                   }
                 },
                 "location": {
@@ -2275,6 +2462,102 @@
                   "label": {
                     "normal": "",
                     "beginner": ""
+                  },
+                  "properties": {
+                    "label": {
+                      "normal": "Bauteil",
+                      "beginner": "Eigenschaften des ausgewaehlten Bauteils."
+                    }
+                  },
+                  "multipleTitle": {
+                    "label": {
+                      "normal": "Bauteile",
+                      "beginner": "Eigenschaften der ausgewaehlten Bauteile."
+                    }
+                  },
+                  "pieceInfo": {
+                    "label": {
+                      "normal": "Bauteil",
+                      "beginner": "Grundinformationen ueber das Bauteil."
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Ein optionaler Name für dieses Bauteil zur Identifikation innerhalb des Entwurfs."
+                    }
+                  },
+                  "namePlaceholder": {
+                    "label": {
+                      "normal": "Bauteilname eingeben...",
+                      "beginner": "Bauteilname eingeben..."
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Beschreibung",
+                      "beginner": "Eine Beschreibung des Zwecks oder der Rolle dieses Bauteils im Entwurf."
+                    }
+                  },
+                  "descriptionPlaceholder": {
+                    "label": {
+                      "normal": "Bauteilbeschreibung eingeben...",
+                      "beginner": "Bauteilbeschreibung eingeben..."
+                    }
+                  },
+                  "scale": {
+                    "label": {
+                      "normal": "Skalierung",
+                      "beginner": "Der Skalierungsfaktor für dieses Bauteil. Standard ist 1.0."
+                    }
+                  },
+                  "color": {
+                    "label": {
+                      "normal": "Farbe",
+                      "beginner": "Eine optionale Farbüberschreibung für dieses Bauteil (z.B. #FF0000)."
+                    }
+                  },
+                  "colorPlaceholder": {
+                    "label": {
+                      "normal": "Farbe eingeben...",
+                      "beginner": "Farbe eingeben..."
+                    }
+                  },
+                  "attributes": {
+                    "label": {
+                      "normal": "Attribute",
+                      "beginner": "Benutzerdefinierte Schlüssel-Wert-Attribute für dieses Bauteil."
+                    },
+                    "name": {
+                      "label": {
+                        "normal": "Name",
+                        "beginner": "Der Schlüsselbezeichner für dieses Attribut."
+                      }
+                    },
+                    "value": {
+                      "label": {
+                        "normal": "Wert",
+                        "beginner": "Der Wert für dieses Attribut."
+                      }
+                    },
+                    "unit": {
+                      "label": {
+                        "normal": "Einheit",
+                        "beginner": "Die Maßeinheit für dieses Attribut."
+                      }
+                    },
+                    "definition": {
+                      "label": {
+                        "normal": "Definition",
+                        "beginner": "Eine URL oder ein Text, der dieses Attribut definiert."
+                      }
+                    }
+                  },
+                  "attribute": {
+                    "label": {
+                      "normal": "Attribut",
+                      "beginner": "Ein benutzerdefiniertes Attribut dieses Bauteils."
+                    }
                   },
                   "center": {
                     "label": {
@@ -2386,46 +2669,82 @@
                     "normal": "",
                     "beginner": ""
                   },
+                  "properties": {
+                    "label": {
+                      "normal": "Verbindung",
+                      "beginner": "Eigenschaften der ausgewaehlten Verbindung."
+                    }
+                  },
+                  "multipleTitle": {
+                    "label": {
+                      "normal": "Verbindungen",
+                      "beginner": "Eigenschaften der ausgewaehlten Verbindungen."
+                    }
+                  },
+                  "description": {
+                    "label": {
+                      "normal": "Beschreibung",
+                      "beginner": "Eine Beschreibung des Zwecks dieser Verbindung."
+                    }
+                  },
+                  "descriptionPlaceholder": {
+                    "label": {
+                      "normal": "Verbindungsbeschreibung eingeben...",
+                      "beginner": "Verbindungsbeschreibung eingeben..."
+                    }
+                  },
                   "multipleEditing": {
                     "label": {
                       "normal": "{{count}} Verbindungen werden gleichzeitig bearbeitet",
                       "beginner": "{{count}} Verbindungen werden gleichzeitig bearbeitet"
                     }
                   },
-                  "connectingPieceId": {
+                  "connecting": {
                     "label": {
-                      "normal": "Connecting Piece",
-                      "beginner": "Connecting Piece"
+                      "normal": "Verbindend",
+                      "beginner": "Verbindend"
                     }
                   },
-                  "connectingConnectorId": {
+                  "connectingPieceId": {
                     "label": {
-                      "normal": "Connecting Connector",
-                      "beginner": "Connecting Connector"
+                      "normal": "Verbindendes Stück",
+                      "beginner": "Verbindendes Stück"
+                    }
+                  },
+                  "connectingPortId": {
+                    "label": {
+                      "normal": "Verbindender Anschluss",
+                      "beginner": "Verbindender Anschluss"
                     }
                   },
                   "connectingDesignPieceId": {
                     "label": {
-                      "normal": "Connecting Design Piece",
-                      "beginner": "Connecting Design Piece"
+                      "normal": "Verbindendes Designstück",
+                      "beginner": "Verbindendes Designstück"
+                    }
+                  },
+                  "connected": {
+                    "label": {
+                      "normal": "Verbunden",
+                      "beginner": "Verbunden"
                     }
                   },
                   "connectedPieceId": {
                     "label": {
-                      "normal": "Connected Piece",
-                      "beginner": "Connected Piece"
+                      "normal": "Verbundenes Stück",
+                      "beginner": "Verbundenes Stück"
                     }
                   },
-                  "connectedConnectorId": {
+                  "connectedPortId": {
                     "label": {
-                      "normal": "Connected Connector",
-                      "beginner": "Connected Connector"
+                      "normal": "Verbundener Anschluss",
+                      "beginner": "Verbundener Anschluss"
                     }
                   },
                   "connectedDesignPieceId": {
                     "label": {
-                      "normal": "Connected Design Piece",
-                      "beginner": "Connected Design Piece"
+                      "normal": "Verbundenes Designstück",
+                      "beginner": "Verbundenes Designstück"
                     }
                   },
                   "gap": {
@@ -2478,14 +2797,14 @@
                   },
                   "u": {
                     "label": {
-                      "normal": "U",
-                      "beginner": "U"
+                      "normal": "X-Versatz",
+                      "beginner": "X-Versatz"
                     }
                   },
                   "v": {
                     "label": {
-                      "normal": "V",
-                      "beginner": "V"
+                      "normal": "Y-Versatz",
+                      "beginner": "Y-Versatz"
                     }
                   }
                 },
@@ -2498,6 +2817,18 @@
                     "label": {
                       "normal": "Connector-ID",
                       "beginner": "Die eindeutige Kennung des Connectors"
+                    }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Der Name dieses Connectors."
+                    }
+                  },
+                  "t": {
+                    "label": {
+                      "normal": "T",
+                      "beginner": "Der Parameter t entlang der Kurve des Typs für diesen Connector."
                     }
                   },
                   "position": {
@@ -2562,6 +2893,60 @@
                   "beginner": "Elternverbindungen"
                 }
               }
+            },
+            "hud": {
+              "overview": {
+                "label": {
+                  "normal": "HUD-Uebersicht",
+                  "beginner": "HUD-Uebersicht"
+                }
+              },
+              "selection": {
+                "pieces": {
+                  "label": {
+                    "normal": "Ausgewaehlte Bauteile",
+                    "beginner": "Ausgewaehlte Bauteile"
+                  }
+                },
+                "connections": {
+                  "label": {
+                    "normal": "Ausgewaehlte Verbindungen",
+                    "beginner": "Ausgewaehlte Verbindungen"
+                  }
+                },
+                "connector": {
+                  "label": {
+                    "normal": "Connector ausgewaehlt",
+                    "beginner": "Connector ausgewaehlt"
+                  }
+                }
+              }
+            },
+            "stats": {
+              "overview": {
+                "label": {
+                  "normal": "Statistik",
+                  "beginner": "Statistik"
+                }
+              },
+              "pieces": {
+                "label": {
+                  "normal": "Bauteile gesamt",
+                  "beginner": "Bauteile gesamt"
+                }
+              },
+              "connections": {
+                "label": {
+                  "normal": "Verbindungen gesamt",
+                  "beginner": "Verbindungen gesamt"
+                }
+              },
+              "windows": {
+                "label": {
+                  "normal": "Fensterlayout geladen",
+                  "beginner": "Fensterlayout geladen"
+                }
+              }
             }
           },
           "gridSize": {
@@ -2592,6 +2977,54 @@
             "label": {
               "normal": "Werkzeuge",
               "beginner": "Werkzeuge"
+            },
+            "select": {
+              "label": {
+                "normal": "Auswählen",
+                "beginner": "Auswahlwerkzeug"
+              },
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additiv",
+                    "beginner": "Additiver Auswahlmodus - zur vorhandenen Auswahl hinzufügen"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtraktiv",
+                    "beginner": "Subtraktiver Auswahlmodus - von vorhandener Auswahl entfernen"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Schnittmenge",
+                    "beginner": "Schnittmengen-Auswahlmodus - nur überlappende Elemente auswählen"
+                  }
+                }
+              },
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rechteckig",
+                    "beginner": "Rechteckige Auswahl - ziehen Sie, um in einem Rechteck auszuwählen"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freiform-Lasso-Auswahl - zeichnen Sie eine Freiformform"
+                  }
+                }
+              },
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand-Werkzeug - die Leinwand schwenken und navigieren"
+                  }
+                }
+              }
             }
           },
           "windows": {
@@ -2616,6 +3049,42 @@
             "label": {
               "normal": "Leinwand",
               "beginner": "Leinwand"
+            }
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showPieces": {
+              "label": {
+                "normal": "Bauteile",
+                "beginner": "Sichtbarkeit von Bauteilen umschalten"
+              }
+            },
+            "showConnections": {
+              "label": {
+                "normal": "Verbindungen",
+                "beginner": "Sichtbarkeit von Verbindungen zwischen Bauteilen umschalten"
+              }
+            },
+            "showPorts": {
+              "label": {
+                "normal": "Anschlüsse",
+                "beginner": "Sichtbarkeit von Anschlüssen an Bauteilen umschalten"
+              }
+            },
+            "addPiece": {
+              "label": {
+                "normal": "Bauteil hinzufügen",
+                "beginner": "Ein neues Bauteil zum Entwurf hinzufügen"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Design-Elemente nach Sichtbarkeit filtern"
+              }
             }
           }
         },
@@ -2885,12 +3354,50 @@
                 "beginner": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
               }
             }
+          },
+          "toolbar": {
+            "send": {
+              "label": {
+                "normal": "Senden",
+                "beginner": "Feedback senden"
+              }
+            }
           }
         },
         "type": {
           "label": {
             "normal": "Typ",
             "beginner": "Typ"
+          },
+          "properties": {
+            "label": {
+              "normal": "Typ-Eigenschaften",
+              "beginner": "Typ-Eigenschaften"
+            }
+          },
+          "toolbar": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "showConnectors": {
+              "label": {
+                "normal": "Connectors",
+                "beginner": "Connectors"
+              }
+            },
+            "showModels": {
+              "label": {
+                "normal": "Darstellungen",
+                "beginner": "Darstellungen"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Typ-Elemente nach Sichtbarkeit filtern"
+              }
+            }
           },
           "defaultName": {
             "label": {
@@ -2986,6 +3493,12 @@
             "label": {
               "normal": "Connector",
               "beginner": "Connector"
+            },
+            "properties": {
+              "label": {
+                "normal": "Connector-Eigenschaften",
+                "beginner": "Connector-Eigenschaften"
+              }
             },
             "title": {
               "label": {
@@ -3358,6 +3871,64 @@
             "label": {
               "normal": "Werkzeuge",
               "beginner": "Werkzeuge"
+            },
+            "select": {
+              "normal": {
+                "label": {
+                  "normal": "Normal",
+                  "beginner": "Normale Auswahl"
+                }
+              },
+              "additive": {
+                "label": {
+                  "normal": "Additiv",
+                  "beginner": "Additive Auswahl - zur bestehenden Auswahl hinzufügen"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtraktiv",
+                  "beginner": "Subtraktive Auswahl - von bestehender Auswahl entfernen"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Schnittmenge",
+                  "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
+                }
+              }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rechteckig",
+                  "beginner": "Rechteckige Lasso-Auswahl"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freihand",
+                  "beginner": "Freihand-Lasso-Auswahl"
+                }
+              }
+            },
+            "hand": {
+              "label": {
+                "normal": "Hand",
+                "beginner": "Hand-Werkzeug - Schwenken und Navigieren"
+              }
+            },
+            "connector": {
+              "label": {
+                "normal": "Konnektor",
+                "beginner": "Konnektor-Erstellungswerkzeug"
+              }
+            },
+            "selection": {
+              "label": {
+                "normal": "Auswahl",
+                "beginner": "Auswahlwerkzeug"
+              }
             }
           },
           "title": {
@@ -3376,6 +3947,34 @@
             "label": {
               "normal": "Messqualitaeten definieren",
               "beginner": "Messqualitaeten definieren"
+            }
+          },
+          "tools": {
+            "select": {
+              "additive": {
+                "label": {
+                  "normal": "Additiv",
+                  "beginner": "Additive Auswahl - zur bestehenden Auswahl hinzufügen"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtraktiv",
+                  "beginner": "Subtraktive Auswahl - von bestehender Auswahl entfernen"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Schnittmenge",
+                  "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
+                }
+              }
+            },
+            "selection": {
+              "label": {
+                "normal": "Auswahl",
+                "beginner": "Auswahlwerkzeug"
+              }
             }
           },
           "defaultName": {
@@ -3621,8 +4220,8 @@
           },
           "title": {
             "label": {
-              "normal": "Titel",
-              "beginner": "Titel"
+              "normal": "Qualität",
+              "beginner": "Qualität"
             }
           },
           "functions": {
@@ -3635,6 +4234,46 @@
             "label": {
               "normal": "Qualitäten",
               "beginner": "Qualitäten"
+            }
+          },
+          "toolbar": {
+            "view": {
+              "label": {
+                "normal": "Ansicht",
+                "beginner": "Ansichtsoptionen"
+              }
+            },
+            "actions": {
+              "label": {
+                "normal": "Aktionen",
+                "beginner": "Qualitätsaktionen"
+              }
+            }
+          },
+          "workbench": {
+            "nodes": {
+              "label": {
+                "normal": "Knoten",
+                "beginner": "Qualitätsformel-Knoten"
+              }
+            },
+            "qualities": {
+              "label": {
+                "normal": "Qualitäten",
+                "beginner": "Verfügbare Qualitäten"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Qualitäts-Einstellungen"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Qualitäts-Chat"
             }
           }
         }
@@ -3828,11 +4467,23 @@
           "normal": "Werkzeugleiste",
           "beginner": "Werkzeugleiste"
         },
-        "parent": {
+        "group": {
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
           "selection": {
             "label": {
               "normal": "Auswahl",
               "beginner": "Auswahl"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
             }
           },
           "filter": {
@@ -3857,6 +4508,124 @@
             "label": {
               "normal": "Aktionen",
               "beginner": "Aktionen"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Einstellungen"
+            }
+          }
+        },
+        "parent": {
+          "selection": {
+            "label": {
+              "normal": "Auswahl",
+              "beginner": "Auswahl"
+            }
+          },
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
+            }
+          },
+          "filter": {
+            "label": {
+              "normal": "Filter",
+              "beginner": "Filter"
+            }
+          },
+          "create": {
+            "label": {
+              "normal": "Erstellen",
+              "beginner": "Erstellen"
+            }
+          },
+          "view": {
+            "label": {
+              "normal": "Ansicht",
+              "beginner": "Ansicht"
+            }
+          },
+          "actions": {
+            "label": {
+              "normal": "Aktionen",
+              "beginner": "Aktionen"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Einstellungen"
+            }
+          }
+        },
+        "subtool": {
+          "select": {
+            "label": {
+              "normal": "Auswählen",
+              "beginner": "Auswählen"
+            }
+          },
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
+            }
+          },
+          "additive": {
+            "label": {
+              "normal": "Additiv",
+              "beginner": "Additiv"
+            }
+          },
+          "subtractive": {
+            "label": {
+              "normal": "Subtraktiv",
+              "beginner": "Subtraktiv"
+            }
+          },
+          "intersect": {
+            "label": {
+              "normal": "Schnittmenge",
+              "beginner": "Schnittmenge"
+            }
+          },
+          "connector": {
+            "label": {
+              "normal": "Konnektor",
+              "beginner": "Konnektor"
+            }
+          },
+          "appSettings": {
+            "label": {
+              "normal": "App Einstellungen",
+              "beginner": "App Einstellungen"
+            }
+          },
+          "command": {
+            "label": {
+              "normal": "Befehl",
+              "beginner": "Befehl"
+            }
+          },
+          "tools": {
+            "label": {
+              "normal": "Werkzeuge",
+              "beginner": "Werkzeuge"
             }
           }
         }

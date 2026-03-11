@@ -19,7 +19,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { CalendarDays } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage, Button, HoverCard, HoverCardContent, HoverCardTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
 const HoverCardExamples = () => (
   <div className="space-y-4">
@@ -109,3 +109,48 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖HoverCard
+
+// #region 🔖Aside
+export const AsideNote: Story = {
+  render: () => (
+    <div className="w-96 space-y-4">
+      <Aside kind="note" title="Note">
+        This is a note callout for general information.
+      </Aside>
+      <Aside kind="tip" title="Tip">
+        This is a tip callout for helpful suggestions.
+      </Aside>
+      <Aside kind="caution" title="Caution">
+        This is a caution callout for important warnings.
+      </Aside>
+      <Aside kind="danger" title="Danger">
+        This is a danger callout for critical alerts.
+      </Aside>
+    </div>
+  ),
+};
+// #endregion 🔖Aside
+
+// #region 🔖Card
+export const CardDefault: Story = {
+  render: () => (
+    <div className="w-96">
+      <Card title="Capsule J" icon="🏠">
+        A residential capsule unit with 2.5m × 4.0m footprint, designed for modular living.
+      </Card>
+    </div>
+  ),
+};
+
+export const CardGridDefault: Story = {
+  render: () => (
+    <CardGrid>
+      <Card title="Capsule J" icon="🏠">Residential unit</Card>
+      <Card title="Capsule K" icon="🏢">Commercial unit</Card>
+      <Card title="Base" icon="🏛️">Foundation module</Card>
+      <Card title="Capital" icon="🛠️">Roof module</Card>
+    </CardGrid>
+  ),
+};
+// #endregion 🔖Card
+

@@ -1,0 +1,252 @@
+{
+  "title": "Fix Kit Designs Toggle Deselection Race Condition",
+  "status": "closed",
+  "prompt": "Fix the Kit designs toggle in the sketchpad not removing kind=designs from the URL when clicked a second time, due to React Router BrowserRouter using startTransition by default, causing stale search params in toggleKind closure.",
+  "summary": "Fixed Kit designs toggle deselection by adding unstable_useTransitions={false} to BrowserRouter and MemoryRouter in Sketchpad.tsx. Root cause: React Router 7 wraps history listener state updates in React.startTransition by default, causing useSearchParams to return stale values when a second click fires before the transition commits. Setting unstable_useTransitions={false} makes navigation state updates synchronous, ensuring the component re-renders with fresh state between clicks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/500"
+  },
+  "goal": "clean-code/sketchpad",
+  "started": "2026-02-11T18:42:29.759184067Z",
+  "finished": "2026-02-11T21:15:29.36263196Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-11 18:42:29",
+        "finished": "2026-02-11 21:15:29"
+      },
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "d8f7005b643fe6f393319430779ae99b90c01d46",
+      "prompt": "Fix the Kit designs toggle in the sketchpad not removing kind=designs from the URL when clicked a second time, due to React Router BrowserRouter using startTransition by default, causing stale search params in toggleKind closure.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx",
+              "lines": {
+                "added": 40,
+                "removed": 19
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Canvas",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Navbar",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components",
+              "lines": {
+                "added": 17,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Imports",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Machine#Types#App State Types",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 14,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§YSketchpad",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§YSketchpadVal",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§designAppModuleCache",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§homeAppModuleCache",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§kitAppModuleCache",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§qualityAppModuleCache",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§typeAppModuleCache",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Machine#Types#App State Types§DesignAppState",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Machine#Types#App State Types§DesignAppState",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Machine#Types#App State Types§TypeAppState",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Machine#Types#App State Types§TypeAppState",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§designAppModuleCache",
+              "lines": {
+                "added": 1064,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§homeAppModuleCache",
+              "lines": {
+                "added": 1063,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§kitAppModuleCache",
+              "lines": {
+                "added": 1062,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§qualityAppModuleCache",
+              "lines": {
+                "added": 1060,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Sketchpad.tsx#Apps#Sketchpad§typeAppModuleCache",
+              "lines": {
+                "added": 1061,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

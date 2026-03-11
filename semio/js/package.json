@@ -11,8 +11,9 @@
     "./theme.css": "./theme.css"
   },
   "scripts": {
-    "dev": "tsx dev.ts",
-    "dev:storybook": "storybook dev -p 6006 --host 0.0.0.0 --no-open --debug",
+    "dev": "node --import tsx dev.ts",
+    "dev:storybook": "node --import tsx dev.ts storybook",
+    "dev:storybook:inner": "storybook dev -p 6006 --exact-port --host 0.0.0.0 --no-open --debug",
     "dev:sketchpad": "vite --port 5173 --host 0.0.0.0",
     "build": "storybook build",
     "test": "vitest run",

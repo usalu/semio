@@ -18,7 +18,8 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Level, LevelProvider, ResizableHandle, ResizablePanel, ResizablePanelGroup, getLevelBgClass } from "../../../../sketchpad/elements";
+import { useState } from "react";
+import { Level, LevelProvider, Panel as ResizableSidePanel, ResizableHandle, ResizablePanel, ResizablePanelGroup, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Resizable
 const meta = {
@@ -148,3 +149,26 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Resizable
+
+// #region 🔖Panel
+export const PanelDefault: Story = {
+  args: { direction: "horizontal" },
+  render: () => {
+    const [size, setSize] = useState(250);
+    return (
+      <div className="relative h-[400px] w-[600px] border bg-base">
+        <ResizableSidePanel
+          visible
+          size={size}
+          onSizeChange={setSize}
+          resizeSide="right"
+          sections={[
+            { id: "explorer", content: <div className="p-2 text-sm">Explorer content</div>, defaultOpen: true, order: 0 },
+            { id: "search", content: <div className="p-2 text-sm">Search results</div>, defaultOpen: false, order: 1 },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+// #endregion 🔖Panel

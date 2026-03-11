@@ -6,9 +6,9 @@ To actually build a design, you need to create **Pieces** — the bricks made fr
 
 ---
 
-## 🔖Place Your Bricks (Model Pieces – Pcs)
+## 🔖 Place Your Bricks (Model Pieces – Pcs)
 
-Now it’s time to **turn your molds into actual bricks** — called **Pieces** 🧩
+Now it’s time to **turn your molds into actual bricks** — called **Pieces** 🧩  
 These are the elements you’ll place, move, and connect in your design 🎯
 
 ![📤 sketch drawing](/assets/images/sketch-drawing-piece.png)
@@ -31,7 +31,7 @@ In short: a Piece is a fully formed brick, based on the rules and shape you defi
 
 ### 🆔 Name the Pieces
 
-Each Piece needs a unique name — its ID — so semio can 🧭 track, 🔗 reference, and 🧩connect it later on.
+Each Piece needs a unique name — its ID — so semio can 🧭 track, 🔗 reference, and 🧩 connect it later on.
 Think of it as giving your brick a personal label 🏷️
 
 In this example, we name the Pieces based on the semio logo — using both **color** and **position** for clarity 🎨
@@ -54,7 +54,7 @@ But a clear and consistent system makes your design easier to understand, build,
 To model a Piece, semio needs to know **which mold it’s made from** 🔗  
 That means linking it to a specific **Type** and **Variant**:
 
-- 🏷️**Type name** → e.g. `'Profile'`
+- 🏷️ **Type name** → e.g. `'Profile'`
 - 🔢 **Variant number** → e.g. `2`, `4`, or `5`
 
 👉 Without this reference, the Piece has no identity — it won’t know what shape to take or how to connect ⚠️
@@ -81,7 +81,7 @@ These are the **actual bricks** you'll be placing into your model 🧱
 
 ---
 
-##### 🛠️In Grasshopper
+##### 🛠️ In Grasshopper
 
 Now that you understand what a Piece is, let's learn how to **cast them** using the semio plugin in **Grasshopper** 🦗
 
@@ -89,7 +89,7 @@ As shown in the image, you’ll use the **Model Piece `Pce` component** and prov
 
 1. 🆔 **Piece IDs** → Unique names for each brick (e.g. `Yel`, `Blu-B`)
 2. 🔢 **Variant Numbers** → Tell semio which Variant of the mold to use (e.g. `2`, `5`)
-3. 🏷️**Type Name** → The shared name of the mold (e.g. `'Profile'`)
+3. 🏷️ **Type Name** → The shared name of the mold (e.g. `'Profile'`)
 
 Each row becomes a new **Piece**, named by its ID — like `Pce(Yel)` or `Pce(Red-R)` —  
 each one inherits geometry, connectors, and semantic logic from its **Type** and **Variant** 🔁
@@ -135,7 +135,7 @@ Put simply:
 
 ---
 
-##### 🧩Example: Connecting Two Pieces
+##### 🧩 Example: Connecting Two Pieces
 
 🧱 Before snapping the full model together, let’s start small — by connecting the **first two bricks**.  
 We’ll connect Piece `Yel` to Piece `Red-T`, using their **west-facing Connectors**.
@@ -177,7 +177,7 @@ Once this first connection is in place, you can continue snapping all remaining 
 
 ![Set Connection](/assets/images/set-connection-all-pcs-alpha.png)
 
-### 🎯Adjust Snap _(Optional Step)_
+### 🎯 Adjust Snap _(Optional Step)_
 
 When two Pieces are connected through Connectors, semio gives you control over **how the attached geometry is positioned** —  
 without changing the Connector itself.
@@ -259,11 +259,11 @@ when you move or rotate one Piece, all the connected Pieces after it will **upda
 
 ---
 
-## 🏗️️Build the Design (Model Design - Dsn)
+## 🏗️ Build the Design (Model Design - Dsn)
 
 Now that you've created your **Pieces** and defined their **Connections**, it's time to bring them all together into a final **Design** 🧰
 
-### 🧩What is a Design?
+### 🧩 What is a Design?
 
 A **Design** in semio is your full model — created by snapping together specific **Pieces** 🧱 using their **Connections** 🔗
 
@@ -275,14 +275,14 @@ You’re not just stacking bricks — you’re creating a model where every part
 
 ---
 
-### 🛠️Assembling the Design
+### 🛠️ Assembling the Design
 
 To build your Design in semio (e.g. in Grasshopper), you’ll use the `Model Design` component.  
 This is where you **bring together all the Pieces and Connections** to form your complete model 🧩
 
 You’ll provide three main inputs:
 
-1. **Design Name** (`Dn`) 🏷️
+1. **Design Name** (`Dn`) 🏷️  
    A unique name for your model — like `"Logo Example"` or `"Spaceship"`.
 
 2. **Pieces** (`Pcs`) 🧱  
@@ -299,20 +299,20 @@ You’ll provide three main inputs:
 
 ---
 
-## ⚙️️Workflow Mechanics
+## ⚙️ Workflow Mechanics
 
 Now that we've covered the core concepts of Semio, let's take a closer look at how the components actually work —  
 and explore the key features of the semio workflow inside Grasshopper
 
-### 🛠️Grasshopper Workflow
+### 🛠️ Grasshopper Workflow
 
 semio doesn’t change **how** Grasshopper works — it changes **what** you’re working with.  
 You’re no longer just wiring geometry — you’re wiring **design intent** 💡
 
 - **Types** 🧱 – Brick molds with meaning, not just shapes
-- **Pieces** 🧩– Placed bricks that follow system logic
+- **Pieces** 🧩 – Placed bricks that follow system logic
 - **Connections** 🔗 – Rules that control how elements relate
-- **Designs** 🧰– Full assemblies of smart, connected pieces
+- **Designs** 🧰 – Full assemblies of smart, connected pieces
 
 This shift lets you create not just geometry — but structured, adaptable systems 🧠
 
@@ -373,11 +373,11 @@ Only the inputs you change will be updated — everything else stays exactly as 
 
 ---
 
-### 🥼Example Use Case
+### 🧪 Example Use Case
 
 <br />
 
-#### 🧩Modify a Piece
+#### 🧩 Modify a Piece
 
 You can modify **any aspect** of a Piece — such as its **name**, **placement**, or other construction parameters by feeding its `Pc` output back into a new `Model Piece` component 🧩
 
@@ -413,7 +413,7 @@ This lets you modify its **Model**, **Connectors**, or **metadata** — without 
 
 ---
 
-#### 🧰Refactor a Design
+#### 🧰 Refactor a Design
 
 To modify a full **Design**, feed its `Ds` output into a new `Model Design` component 🔁  
 You can update the **Design name**, reorganize the structure, or tweak how certain Pieces are connected.

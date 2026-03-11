@@ -18,7 +18,7 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Avatar, AvatarFallback, AvatarImage, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, Level, LevelProvider, TableAvatar, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Avatar
 const meta = {
@@ -131,3 +131,29 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Avatar
+
+// #region 🔖DraggableAvatar
+export const DraggableAvatarDefault: Story = {
+  render: () => (
+    <div className="flex items-center gap-4">
+      <DraggableAvatar content="KK" title="Kisho Kurokawa" />
+      <DraggableAvatar content="KT" title="Kenzo Tange" isSelected />
+      <DraggableAvatar content="FM" title="Fumihiko Maki" isHovered />
+      <DraggableAvatar content="AI" title="Arata Isozaki" shouldFade />
+    </div>
+  ),
+};
+// #endregion 🔖DraggableAvatar
+
+// #region 🔖TableAvatar
+export const TableAvatarDefault: Story = {
+  render: () => (
+    <div className="flex items-center gap-4">
+      <TableAvatar name="Kisho Kurokawa" icon="https://github.com/shadcn.png" />
+      <TableAvatar name="Kenzo Tange" />
+      <TableAvatar name="Fumihiko Maki" isSelected />
+      <TableAvatar name="Arata Isozaki" isHovered />
+    </div>
+  ),
+};
+// #endregion 🔖TableAvatar

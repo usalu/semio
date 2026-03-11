@@ -1449,7 +1449,7 @@ interface PanelSection {
 
 - **LEFT**: Workbench, Tools (grouped)
 - **RIGHT**: Details, Chat, Settings (grouped)
-- **MIDDLE**: HUD, Stats (grouped, transparent)
+- **MIDDLE**: Stats (transparent)
 - **BOTTOM**: Toolbar
 
 #### Tool System
@@ -2181,6 +2181,9 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
 - `semio/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
 - `semio/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+- Selection composition is unified across apps through shared semantics: `replace`, `additive`, `subtractive`, `intersect`.
+- Shared selection composition applies stable ordering (`previous` order first, then first-seen additive entries) and dedupes ids at composition boundaries.
+- Selection modifier resolution is unified across apps: `Shift => additive`, `Alt/Ctrl/Meta => subtractive`, combined modifiers => `intersect`.
 
 ### Sketchpad windows
 

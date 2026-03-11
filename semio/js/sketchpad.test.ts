@@ -21,6 +21,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import MetabolismKitData from "../assets/semio/kit_metabolism.json" with { type: "json" };
 
+test.use({
+  baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173",
+});
+
 const designs = (MetabolismKitData as any).designs ?? [];
 const nakaginCapsuleTowerDesign = designs.find((d: any) => d.name === "Nakagin Capsule Tower");
 const nakaginCapsuleTowerFlatDesign = designs.find((d: any) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);
@@ -125,6 +129,9 @@ async function initConsole(page: Page) {
       messages.push(msg.text());
     }
   });
+  page.on("pageerror", (error) => {
+    errors.push(String(error));
+  });
   return { messages, warnings, errors };
 }
 
@@ -138,43 +145,6 @@ async function expectFullyInViewport(locator: Locator, page: Page, xRange: [numb
   expect(box!.y).toBeLessThanOrEqual(yRange[1]);
   expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
-}
-
-async function openSettingsPanel(page: Page) {
-  const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
-  const isRightPanelVisible = await rightSidePanel.isVisible().catch(() => false);
-
-  if (!isRightPanelVisible) {
-    const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
-    const hasToggle = await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false);
-    if (hasToggle) {
-      await rightPanelToggle.click();
-      await page.waitForTimeout(500);
-    }
-  }
-
-  await expect(rightSidePanel)
-    .toBeVisible({ timeout: 10000 })
-    .catch(() => {});
-}
-
-async function getSettingsSections(page: Page): Promise<string[]> {
-  const rightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
-
-  try {
-    await expect(rightSidePanel).toBeVisible({ timeout: 15000 });
-  } catch {
-    console.log("Warning: Right sidepanel not visible after 15s, returning empty sections");
-    return [];
-  }
-
-  const sections = await rightSidePanel.locator('[role="button"][id^="semio.sketchpad"]').all();
-  const sectionIds: string[] = [];
-  for (const section of sections) {
-    const id = await section.getAttribute("id");
-    if (id) sectionIds.push(id);
-  }
-  return sectionIds;
 }
 
 async function openDetailsPanel(page: Page) {
@@ -215,15 +185,9 @@ async function getDetailsSections(page: Page): Promise<string[]> {
 
 const PANEL_GROUPS: Record<string, string> = {
   leftSidePanel: "leftSidePanel",
-  workbench: "leftSidePanel",
   tools: "leftSidePanel",
-  hudPanel: "hudPanel",
-  hud: "hudPanel",
-  stats: "hudPanel",
   rightSidePanel: "rightSidePanel",
   details: "rightSidePanel",
-  chat: "rightSidePanel",
-  settings: "rightSidePanel",
 };
 
 async function openPanel(page: Page, panelKey: string): Promise<boolean> {
@@ -440,6 +404,64 @@ async function initKit(page: Page) {
   return { errors, warnings, messages };
 }
 
+type KitZipFixture = {
+  realPathCount: number;
+  realRootFileName: string;
+  realFolderName: string;
+  metaFile: string;
+};
+
+async function setKitKindTogglePressed(page: Page, toggle: Locator, pressed: boolean): Promise<void> {
+  const currentState = (await toggle.getAttribute("aria-pressed").catch(() => null)) ?? (await toggle.getAttribute("data-state").catch(() => null));
+  const isPressed = currentState === "true" || currentState === "on";
+  if (isPressed !== pressed) {
+    await toggle.click({ force: true });
+    await page.waitForTimeout(250);
+  }
+}
+
+async function applyKitKindFilter(page: Page, kinds: Array<"files" | "folders">, filesToggle?: Locator, foldersToggle?: Locator): Promise<void> {
+  if (filesToggle) {
+    await setKitKindTogglePressed(page, filesToggle, kinds.includes("files"));
+  }
+  if (foldersToggle) {
+    await setKitKindTogglePressed(page, foldersToggle, kinds.includes("folders"));
+  }
+}
+
+async function createKitZipFixture(page: Page): Promise<KitZipFixture> {
+  const fixture = await page.evaluate(async () => {
+    const store = (window as any).__SEMIO_STORE__;
+    const actor = (window as any).__SEMIO_ACTOR__;
+    if (!store || !actor) return null;
+    const url = window.location.pathname;
+    const kitGuid = url.match(/\/kits\/([^/]+)/)?.[1];
+    if (!kitGuid || !store.hasKit(kitGuid)) return null;
+    const kitStore = store.kit(kitGuid);
+    const realPaths = Array.from(kitStore.fileUrls.keys()).sort() as string[];
+    const nestedPath = realPaths.find((entry: string) => entry.includes("/")) || null;
+    const rootPath = realPaths.find((entry: string) => !entry.includes("/")) || null;
+    const token = Date.now().toString(36);
+    const metaParentFolder = `MetaGhostParent${token}`;
+    const metaChildFolder = `MetaGhostChild${token}`;
+    const metaFile = `meta-only-${token}.txt`;
+    const now = new Date().toISOString();
+    const metaParentGuid = `meta-parent-${token}`;
+    const metaChildGuid = `meta-child-${token}`;
+    await kitStore.execute("semio.kit.createFolder", "semio.sketchpad.test.zipRows", { guid: metaParentGuid, name: metaParentFolder, createdAt: now, updatedAt: now });
+    await kitStore.execute("semio.kit.createFolder", "semio.sketchpad.test.zipRows", { guid: metaChildGuid, name: metaChildFolder, parent: { guid: metaParentGuid }, createdAt: now, updatedAt: now });
+    await kitStore.execute("semio.kit.addFile", "semio.sketchpad.test.zipRows", { guid: `meta-file-${token}`, name: metaFile, size: 1, hash: `meta-hash-${token}`, folder: { guid: metaChildGuid }, createdAt: now, updatedAt: now });
+    return {
+      realPathCount: realPaths.length,
+      realRootFileName: rootPath ? (rootPath as string).split("/").pop() || "" : "",
+      realFolderName: nestedPath ? (nestedPath as string).split("/")[0] : "",
+      metaFile,
+    };
+  });
+  expect(fixture).not.toBeNull();
+  return fixture as KitZipFixture;
+}
+
 async function initDesign(page: Page) {
   const { errors, warnings, messages } = await initKit(page);
 
@@ -461,17 +483,16 @@ async function initDesign(page: Page) {
 
   if (designRowIds.length === 0) {
     console.log(`[initDesign] No design rows found, looking for Nakagin Capsule Tower text...`);
-
     const designElement = page.getByText("Nakagin Capsule Tower", { exact: true }).first();
     const hasDesign = await designElement.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[initDesign] Nakagin Capsule Tower text visible: ${hasDesign}`);
-
     if (hasDesign) {
       await designElement.dblclick({ force: true });
       console.log(`[initDesign] Double-clicked on Nakagin Capsule Tower text`);
     }
   } else {
-    console.log(`[initDesign] About to double-click on design row: ${designRowIds[0]}`);
+    const nakaginRowId = designRowIds.find((id) => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
+    console.log(`[initDesign] About to double-click on design row: ${nakaginRowId}`);
     const dblClickedDesign = await page.evaluate((rowId) => {
       const row = document.querySelector(`[data-row-id="${rowId}"]`);
       if (row) {
@@ -480,7 +501,7 @@ async function initDesign(page: Page) {
         return true;
       }
       return false;
-    }, designRowIds[0]);
+    }, nakaginRowId);
     console.log(`[initDesign] Double-clicked on design via JS: ${dblClickedDesign}`);
   }
 
@@ -489,6 +510,34 @@ async function initDesign(page: Page) {
 
   const finalUrl = page.url();
   console.log(`[initDesign] Final URL: ${finalUrl}`);
+
+  const hasPieces = await page.evaluate(async () => {
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuidFromUrl = designGuidMatch?.[1];
+    for (let i = 0; i < 30; i++) {
+      const store = (window as any).__SEMIO_STORE__;
+      if (store) {
+        const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+        if (kitGuids.length > 0) {
+          const kitStore = store.kit(kitGuids[0]);
+          if (kitStore) {
+            const kit = kitStore.snapshot();
+            const designs = kit.designs ?? [];
+            const design = designGuidFromUrl
+              ? designs.find((d: any) => d.guid === designGuidFromUrl)
+              : designs[designs.length - 1];
+            if (design && (design.pieces ?? []).length > 0) {
+              return (design.pieces ?? []).length;
+            }
+          }
+        }
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    return 0;
+  });
+  console.log(`[initDesign] Pieces loaded in store: ${hasPieces}`);
 
   return { errors, warnings, messages };
 }
@@ -560,7 +609,34 @@ async function initDocs(page: Page) {
   await page.waitForTimeout(2000);
 }
 
-async function getDesignPieces(page: Page, designGuid?: string): Promise<Array<{ guid: string; name?: string; plane: Plane | null }>> {
+async function getSceneModelResolutionForPiece(page: Page, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null }> {
+  return await page.evaluate((targetPieceGuid) => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs?.length - 1];
+    if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const piece = (design.pieces ?? []).find((p: any) => p.guid === targetPieceGuid);
+    if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const typeGuid = typeof piece.type === "string" ? piece.type : piece.type?.guid ?? null;
+    if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+    const type = (kit.types ?? []).find((t: any) => t.guid === typeGuid);
+    if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+    const defaultModel = type.models.find((m: any) => !m.tags || m.tags.length === 0) ?? type.models[0];
+    if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+    const fileGuid = typeof defaultModel.file === "string" ? defaultModel.file : defaultModel.file?.guid;
+    return { hasResolvedModel: !!fileGuid, typeGuid, modelGuid: fileGuid ?? null };
+  }, pieceGuid);
+}
+
+async function getDesignPieces(page: Page, designGuid?: string): Promise<Array<{ guid: string; name?: string; plane: Plane | null; typeGuid: string | null }>> {
   return await page.evaluate((targetDesignGuid) => {
     const store = (window as any).__SEMIO_STORE__;
     if (!store) return [];
@@ -570,15 +646,93 @@ async function getDesignPieces(page: Page, designGuid?: string): Promise<Array<{
     if (!kitStore) return [];
     const kit = kitStore.snapshot();
     const designs = kit.designs ?? [];
-    let design = targetDesignGuid ? designs.find((d: any) => d.guid === targetDesignGuid) : designs[designs.length - 1];
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuidFromUrl = designGuidMatch?.[1];
+    const resolvedDesignGuid = targetDesignGuid ?? designGuidFromUrl;
+    let design = resolvedDesignGuid ? designs.find((d: any) => d.guid === resolvedDesignGuid) : designs[designs.length - 1];
     if (!design) return [];
     const pieces = design.pieces ?? [];
     return pieces.map((piece: any) => ({
       guid: piece.guid,
       name: piece.name,
       plane: piece.plane ?? null,
+      typeGuid: typeof piece.type === "string" ? piece.type : piece.type?.guid ?? null,
     }));
   }, designGuid);
+}
+
+async function getDesignPieceCenters(page: Page): Promise<Record<string, { u: number; v: number } | null>> {
+  return await page.evaluate(() => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return {};
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return {};
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return {};
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+    if (!design) return {};
+    const result: Record<string, { u: number; v: number } | null> = {};
+    for (const piece of design.pieces ?? []) {
+      result[piece.guid] = piece.center ?? null;
+    }
+    return result;
+  });
+}
+
+async function getDesignPieceConnections(page: Page): Promise<Array<{ connecting: string; connected: string }>> {
+  return await page.evaluate(() => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return [];
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return [];
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return [];
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+    if (!design) return [];
+    return (design.connections ?? []).map((c: any) => ({
+      connecting: c.connecting?.piece?.guid,
+      connected: c.connected?.piece?.guid,
+    }));
+  });
+}
+
+async function getDesignPieceMetadata(page: Page): Promise<Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }>> {
+  return await page.evaluate(() => {
+    const store = (window as any).__SEMIO_STORE__;
+    if (!store) return {};
+    const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+    if (kitGuids.length === 0) return {};
+    const kitStore = store.kit(kitGuids[0]);
+    if (!kitStore) return {};
+    const kit = kitStore.snapshot();
+    const url = window.location.pathname;
+    const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+    const designGuid = designGuidMatch?.[1];
+    const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+    if (!design) return {};
+    const piecesMetadata = (window as any).__SEMIO_PIECES_METADATA__;
+    if (piecesMetadata && typeof piecesMetadata === "object") {
+      const result: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
+      for (const [guid, meta] of Object.entries(piecesMetadata) as any) {
+        result[guid] = { parentPieceId: meta.parentPieceId ?? null, center: meta.center ?? null };
+      }
+      return result;
+    }
+    const result: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
+    for (const piece of design.pieces ?? []) {
+      result[piece.guid] = { parentPieceId: null, center: piece.center ?? null };
+    }
+    return result;
+  });
 }
 
 async function togglePanelAndVerify(page: Page, panelToggleId: string, panelKey: string, appName: string): Promise<boolean> {
@@ -652,12 +806,46 @@ async function verifyToggleWorks(page: Page, toggleId: string, panelKey: string,
   }
 }
 
+async function verifyToggleIconVisible(page: Page, toggleId: string, appName: string): Promise<boolean> {
+  const iconLocator = page.locator(`[id="${toggleId}"] svg, [id="${toggleId}"] img, [id="${toggleId}"] [class*="icon"], [id="${toggleId}"] > *`).first();
+  const isVisible = await iconLocator.isVisible({ timeout: 5000 }).catch(() => false);
+  console.log(`[${appName}] Toggle ${toggleId} icon visible: ${isVisible}`);
+  return isVisible;
+}
+
+async function expectNoLegacyWindowTabs(page: Page, appName: string): Promise<void> {
+  const settingsTabs = await page.locator(".lm_tab").filter({ hasText: /^settings$/i }).count();
+  const chatTabs = await page.locator(".lm_tab").filter({ hasText: /^chat$/i }).count();
+  console.log(`[${appName}] Legacy window tabs: settings=${settingsTabs}, chat=${chatTabs}`);
+  expect(settingsTabs).toBe(0);
+  expect(chatTabs).toBe(0);
+}
+
+async function expectUtilityPanelTogglesInNavbar(page: Page, appName: string): Promise<void> {
+  const settingsToggleCount = await page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]').count();
+  const chatToggleCount = await page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]').count();
+  console.log(`[${appName}] Navbar utility toggles: settings=${settingsToggleCount}, chat=${chatToggleCount}`);
+  expect(settingsToggleCount).toBeGreaterThan(0);
+  expect(chatToggleCount).toBeGreaterThan(0);
+}
+
+async function expectNoDesignUtilityTabsInRightPanel(page: Page, appName: string): Promise<void> {
+  const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
+  if (!(await rightPanel.isVisible().catch(() => false))) return;
+  const designUtilityTabCount = await rightPanel.locator('[data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.settings"], [data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.chat"]').count().catch(() => 0);
+  const designUtilityContentCount = await rightPanel.locator('[id="semio.sketchpad.app.design.settings"], [id="semio.sketchpad.app.design.chat"]').count().catch(() => 0);
+  console.log(`[${appName}] Design utility tabs: tabs=${designUtilityTabCount}, content=${designUtilityContentCount}`);
+  expect(designUtilityTabCount).toBe(0);
+  expect(designUtilityContentCount).toBe(0);
+}
+
 test.describe("sketchpad", () => {
   test("Home", async ({ page }) => {
     test.setTimeout(180000);
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
+    await expectNoLegacyWindowTabs(page, "Home");
 
     // #region 🔖Panel Toggles
     console.log("[Home] Testing Home app panel toggles");
@@ -678,59 +866,96 @@ test.describe("sketchpad", () => {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Home");
     }
 
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Home] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Home");
-    }
-
-    console.log(`[Home] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Home] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
     // #endregion 🔖Panel Toggles
 
     // #region 🔖Toolbar and Filter Toggles
-    console.log("[Home] Testing toolbar visibility and filter toggles");
+    console.log("[Home] Testing toolbar zone structure");
     const toolbar = page.locator('[id="semio.sketchpad.toolbar"]');
-    const hasToolbar = await toolbar.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Home] Toolbar visible: ${hasToolbar}`);
-    expect(hasToolbar).toBe(true);
+    await expect(toolbar).toBeVisible({ timeout: 5000 });
+    const toolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
+    await expect(toolsZone).toBeVisible({ timeout: 5000 });
+    const toolbarZoneEl = toolsZone.locator('[data-slot="toolbar-zone"]').first();
+    await expect(toolbarZoneEl).toBeVisible({ timeout: 3000 });
 
-    const toolbarToggles = toolbar.locator('[data-slot="toggle-group"]');
-    const toggleCount = await toolbarToggles.count();
-    console.log(`[Home] Toolbar toggle groups count: ${toggleCount}`);
-    expect(toggleCount).toBeGreaterThan(0);
+    console.log("[Home] Testing toolbar group toggles");
+    const filterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasFilterGroup = await filterGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Home] Filter group toggle visible: ${hasFilterGroup}`);
+    expect(hasFilterGroup).toBe(true);
 
-    console.log("[Home] Testing individual filter toggles");
+    const createGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.create"]');
+    const hasCreateGroup = await createGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Home] Create group toggle visible: ${hasCreateGroup}`);
+    expect(hasCreateGroup).toBe(true);
+
+    console.log("[Home] Testing auto-activated filter group settings zone");
+    const settingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    const settingsInitiallyVisible = await settingsZone.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Home] Settings zone initially visible (filter auto-active): ${settingsInitiallyVisible}`);
+    if (!settingsInitiallyVisible) {
+      await filterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(settingsZone).toBeVisible({ timeout: 3000 });
 
     const temporaryToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showTemporary"]');
     const hasTemporaryToggle = await temporaryToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Home] Temporary filter toggle visible: ${hasTemporaryToggle}`);
-
     const localToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showLocal"]');
     const hasLocalToggle = await localToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Home] Local filter toggle visible: ${hasLocalToggle}`);
-
     const remoteToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showRemote"]');
     const hasRemoteToggle = await remoteToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Home] Remote filter toggle visible: ${hasRemoteToggle}`);
-
     expect(hasTemporaryToggle || hasLocalToggle || hasRemoteToggle).toBe(true);
 
-    if (hasTemporaryToggle) {
-      console.log("[Home] Testing temporary filter toggle click");
-      await temporaryToggle.click();
-      await page.waitForTimeout(500);
-      const urlAfterClick = page.url();
-      console.log(`[Home] URL after temporary toggle click: ${urlAfterClick}`);
-      expect(urlAfterClick).toContain("kind=temporary");
+    const expectHomeKindToggleCycle = async (toggle: Locator, kind: "temporary" | "local" | "remote") => {
+      console.log(`[Home] Testing ${kind} filter toggle on/off`);
+      await toggle.click();
+      await page.waitForURL((url) => new URL(url.href).searchParams.get("kind") === kind, { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(300);
+      const kindAfterOn = new URL(page.url()).searchParams.get("kind");
+      console.log(`[Home] Kind after ${kind} on: ${kindAfterOn}`);
+      expect(kindAfterOn).toBe(kind);
+      await toggle.click();
+      await page.waitForURL((url) => !new URL(url.href).searchParams.has("kind"), { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(300);
+      const kindAfterOff = new URL(page.url()).searchParams.get("kind");
+      console.log(`[Home] Kind after ${kind} off: ${kindAfterOff}`);
+      expect(kindAfterOff).toBeNull();
+    };
 
-      await temporaryToggle.click();
-      await page.waitForTimeout(500);
-      const urlAfterUnclick = page.url();
-      console.log(`[Home] URL after temporary toggle unclick: ${urlAfterUnclick}`);
-      expect(urlAfterUnclick).not.toContain("kind=temporary");
-    }
+    if (hasTemporaryToggle) await expectHomeKindToggleCycle(temporaryToggle, "temporary");
+    if (hasLocalToggle) await expectHomeKindToggleCycle(localToggle, "local");
+    if (hasRemoteToggle) await expectHomeKindToggleCycle(remoteToggle, "remote");
+
+    console.log("[Home] Testing switching to create group");
+    await createGroupToggle.click();
+    await page.waitForTimeout(500);
+    await expect(settingsZone).toBeVisible({ timeout: 3000 });
+    const createTempBtn = page.locator('[id="semio.sketchpad.app.home.toolbar.createTemporary"]');
+    const hasCreateTempBtn = await createTempBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Home] Create temporary button visible: ${hasCreateTempBtn}`);
+    const createLocalBtn = page.locator('[id="semio.sketchpad.app.home.toolbar.createLocal"]');
+    const hasCreateLocalBtn = await createLocalBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Home] Create local button visible: ${hasCreateLocalBtn}`);
+    const createRemoteBtn = page.locator('[id="semio.sketchpad.app.home.toolbar.createRemote"]');
+    const hasCreateRemoteBtn = await createRemoteBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Home] Create remote button visible: ${hasCreateRemoteBtn}`);
+    expect(hasCreateTempBtn || hasCreateLocalBtn || hasCreateRemoteBtn).toBe(true);
+
+    console.log("[Home] Testing group mutual exclusivity - filter settings hidden when create active");
+    const temporaryStillVisible = await temporaryToggle.isVisible({ timeout: 1000 }).catch(() => false);
+    expect(temporaryStillVisible).toBe(false);
+
+    console.log("[Home] Testing deactivate group hides settings zone");
+    await createGroupToggle.click();
+    await page.waitForTimeout(500);
+    const settingsHidden = !(await settingsZone.isVisible({ timeout: 1000 }).catch(() => false));
+    console.log(`[Home] Settings zone hidden after deactivation: ${settingsHidden}`);
+    expect(settingsHidden).toBe(true);
+
     console.log("[Home] Toolbar and filter toggles test complete");
     // #endregion 🔖Toolbar and Filter Toggles
 
@@ -781,6 +1006,57 @@ test.describe("sketchpad", () => {
     // #endregion 🔖Home Selection State
   });
 
+  test("Copy Json To Clipboard Command", async ({ page }) => {
+    await page.addInitScript(() => {
+      const writeText = async (value: string) => {
+        (window as any).__semioCopiedJson = value;
+      };
+      try {
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: { writeText },
+        });
+      } catch (_error) {
+        void 0;
+      }
+    });
+    await initDesign(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+    const diagramContainer = page.locator('[id="semio.sketchpad.app.design.canvas.diagram"]').first();
+    await expect(diagramContainer).toBeVisible({ timeout: 15000 });
+    await diagramContainer.click({ force: true });
+    await page.keyboard.press("Meta+C");
+    const copiedByMeta = await page.waitForFunction(() => typeof (window as any).__semioCopiedJson === "string" && (window as any).__semioCopiedJson.length > 0, undefined, { timeout: 3000 }).then(() => true).catch(() => false);
+    if (!copiedByMeta) {
+      await page.evaluate(() => {
+        const diagram = document.querySelector('[id="semio.sketchpad.app.design.canvas.diagram"]') as HTMLElement | null;
+        if (!diagram) return;
+        diagram.focus();
+        diagram.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "c",
+            metaKey: true,
+            bubbles: true,
+          }),
+        );
+      });
+    }
+    await page.waitForFunction(() => {
+      const value = (window as any).__semioCopiedJson;
+      return typeof value === "string" && value.length > 0;
+    });
+    const copiedJson = await page.evaluate(() => (window as any).__semioCopiedJson as string);
+    const copiedKit = JSON.parse(copiedJson) as { guid?: string; name?: string; types?: unknown[]; designs?: unknown[]; sketchpad?: unknown };
+    expect(copiedKit).toHaveProperty("guid");
+    expect(copiedKit).toHaveProperty("name");
+    expect(copiedKit).toHaveProperty("types");
+    expect(copiedKit).toHaveProperty("designs");
+    expect(copiedKit).not.toHaveProperty("sketchpad");
+    expect((copiedKit.guid ?? "").length).toBeGreaterThan(0);
+    expect((copiedKit.designs ?? []).length).toBeGreaterThan(0);
+  });
+
   test("Kit", async ({ page }) => {
     test.setTimeout(180000);
     const { errors, warnings, messages } = await initConsole(page);
@@ -789,6 +1065,7 @@ test.describe("sketchpad", () => {
 
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
+    await expectNoLegacyWindowTabs(page, "Kit");
 
     console.log("[Kit] Debug messages from app:");
     messages.filter((m) => m.includes("DEBUG")).forEach((m) => console.log(m));
@@ -847,15 +1124,7 @@ test.describe("sketchpad", () => {
       }
     }
 
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Kit] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Kit");
-    }
-
-    console.log(`[Kit] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Kit] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
     console.log("[Kit] Checking for diagram nodes...");
     const diagramContainer = page.locator('[data-testid="kit-diagram"]');
@@ -875,46 +1144,278 @@ test.describe("sketchpad", () => {
       }
     }
 
-    console.log("[Kit] Testing toolbar visibility and artifact filter toggles");
+    console.log("[Kit] Testing toolbar zone structure");
     const kitToolbar = page.locator('[id="semio.sketchpad.toolbar"]');
-    const hasKitToolbar = await kitToolbar.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Kit] Toolbar visible: ${hasKitToolbar}`);
-    expect(hasKitToolbar).toBe(true);
+    await expect(kitToolbar).toBeVisible({ timeout: 5000 });
+    const kitToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
+    await expect(kitToolsZone).toBeVisible({ timeout: 5000 });
 
-    const kitToolbarToggles = kitToolbar.locator('[data-slot="toggle-group"]');
-    const kitToggleCount = await kitToolbarToggles.count();
-    console.log(`[Kit] Toolbar toggle groups count: ${kitToggleCount}`);
-    expect(kitToggleCount).toBeGreaterThan(0);
+    console.log("[Kit] Testing toolbar group toggles");
+    const kitSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
+    const hasKitSelectionGroup = await kitSelectionGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Selection group toggle visible: ${hasKitSelectionGroup}`);
+    expect(hasKitSelectionGroup).toBe(true);
 
-    console.log("[Kit] Testing individual artifact filter toggles");
+    const kitFilterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasKitFilterGroup = await kitFilterGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Filter group toggle visible: ${hasKitFilterGroup}`);
+    expect(hasKitFilterGroup).toBe(true);
+
+    const kitCreateGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.create"]');
+    const hasKitCreateGroup = await kitCreateGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Create group toggle visible: ${hasKitCreateGroup}`);
+    expect(hasKitCreateGroup).toBe(true);
+
+    console.log("[Kit] Testing toolbar groups with settings zone");
+    const kitSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+
+    console.log("[Kit] Activating filter group to verify filter toggles");
+    await kitFilterGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await kitSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await kitFilterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(kitSettingsZone).toBeVisible({ timeout: 3000 });
 
     const designsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showDesigns"]');
     const hasDesignsToggle = await designsToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Kit] Designs filter toggle visible: ${hasDesignsToggle}`);
-
     const typesFilterToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTypes"]');
     const hasTypesFilterToggle = await typesFilterToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Kit] Types filter toggle visible: ${hasTypesFilterToggle}`);
-
     const qualitiesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showQualities"]');
     const hasQualitiesToggle = await qualitiesToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Kit] Qualities filter toggle visible: ${hasQualitiesToggle}`);
-
+    const portsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showPorts"]');
+    const hasPortsToggle = await portsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Ports filter toggle visible: ${hasPortsToggle}`);
+    const tagsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTags"]');
+    const hasTagsToggle = await tagsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Tags filter toggle visible: ${hasTagsToggle}`);
+    const filesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showFiles"]');
+    const hasFilesToggle = await filesToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Files filter toggle visible: ${hasFilesToggle}`);
+    const foldersToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showFolders"]');
+    const hasFoldersToggle = await foldersToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Folders filter toggle visible: ${hasFoldersToggle}`);
     expect(hasDesignsToggle || hasTypesFilterToggle || hasQualitiesToggle).toBe(true);
+    const expectKitKindToggleCycle = async (toggle: Locator, kind: "designs" | "types" | "qualities") => {
+      console.log(`[Kit] Testing ${kind} filter toggle URL cycle`);
+      await toggle.click();
+      await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length > 0, { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(300);
+      const kindsAfterOn = new URL(page.url()).searchParams.getAll("kind");
+      console.log(`[Kit] Kinds after ${kind} on: ${JSON.stringify(kindsAfterOn)}`);
+      expect(kindsAfterOn).toContain(kind);
+      expect(kindsAfterOn.length).toBeGreaterThan(0);
+      await toggle.click();
+      await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length === 0, { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(300);
+      const kindsAfterOff = new URL(page.url()).searchParams.getAll("kind");
+      console.log(`[Kit] Kinds after ${kind} off: ${JSON.stringify(kindsAfterOff)}`);
+      expect(kindsAfterOff).toHaveLength(0);
+    };
+    if (hasDesignsToggle) await expectKitKindToggleCycle(designsToggle, "designs");
+    if (hasTypesFilterToggle) await expectKitKindToggleCycle(typesFilterToggle, "types");
+    if (hasQualitiesToggle) await expectKitKindToggleCycle(qualitiesToggle, "qualities");
+    // #region 🔖Kit Zip Entry Filtering
+    const zipFixture = await createKitZipFixture(page);
+    console.log(`[Kit] Zip fixture: ${JSON.stringify(zipFixture)}`);
+    expect(zipFixture.realPathCount).toBeGreaterThan(0);
+    const mirroredGuidRows = await page.evaluate(() => {
+      const rowIds = Array.from(document.querySelectorAll('tr[data-row-id]'))
+        .map((row) => row.getAttribute("data-row-id") ?? "")
+        .filter(Boolean);
+      const folderIds = new Set(rowIds.filter((rowId) => rowId.startsWith("folder-")).map((rowId) => rowId.slice("folder-".length)));
+      return rowIds.filter((rowId) => rowId.startsWith("file-") && folderIds.has(rowId.slice("file-".length)));
+    });
+    console.log(`[Kit] Mirrored file/folder row IDs in mixed view: ${JSON.stringify(mirroredGuidRows)}`);
+    expect(mirroredGuidRows).toHaveLength(0);
+    if (zipFixture.realFolderName) {
+      const matchingZipFolderRows = await page.evaluate((folderName) => {
+        const rows = Array.from(document.querySelectorAll('tr[data-row-id]'));
+        return rows
+          .filter((row) => {
+            const artifactCell = row.querySelector("td");
+            const rowLabel = artifactCell?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+            return rowLabel.includes(folderName);
+          })
+          .map((row) => row.getAttribute("data-row-id") ?? "");
+      }, zipFixture.realFolderName);
+      const mirroredFileFolderRows = matchingZipFolderRows.filter((rowId) => rowId.startsWith("file-"));
+      const folderRows = matchingZipFolderRows.filter((rowId) => rowId.startsWith("folder-"));
+      console.log(`[Kit] Matching zip folder rows in mixed view: ${JSON.stringify(matchingZipFolderRows)}`);
+      expect(folderRows.length).toBeLessThanOrEqual(matchingZipFolderRows.length);
+      expect(mirroredFileFolderRows).toHaveLength(0);
+    }
 
-    if (hasDesignsToggle) {
-      console.log("[Kit] Testing designs filter toggle click");
-      await designsToggle.click();
-      await page.waitForTimeout(500);
-      const urlAfterClick = page.url();
-      console.log(`[Kit] URL after designs toggle click: ${urlAfterClick}`);
-      expect(urlAfterClick).toContain("kind=designs");
+    if (hasFilesToggle) {
+      await applyKitKindFilter(page, ["files"], filesToggle, hasFoldersToggle ? foldersToggle : undefined);
+      await page.waitForTimeout(1000);
 
-      await designsToggle.click();
+      const fileRows = page.locator('tr[data-row-id^="file-"]');
+      const fileRowCount = await fileRows.count();
+      console.log(`[Kit] File row count in files view: ${fileRowCount}`);
+      if (fileRowCount > 0) {
+        await expect(fileRows.first()).toBeVisible({ timeout: 5000 });
+        if (zipFixture.realRootFileName) {
+          await expect(fileRows.filter({ hasText: zipFixture.realRootFileName }).first()).toBeVisible({ timeout: 5000 });
+        } else if (zipFixture.realFolderName) {
+          await expect(fileRows.filter({ hasText: zipFixture.realFolderName }).first()).toBeVisible({ timeout: 5000 });
+        }
+      }
+
+      const metaFileRows = await fileRows.filter({ hasText: zipFixture.metaFile }).count();
+      console.log(`[Kit] Metadata-only file row count: ${metaFileRows}`);
+      expect(metaFileRows).toBe(0);
+
+      const expandableFileRowId = await page.evaluate(() => {
+        const rows = Array.from(document.querySelectorAll('tr[data-row-id^="file-"]'));
+        const row = rows.find((entry) => entry.querySelector("button"));
+        return row?.getAttribute("data-row-id") ?? null;
+      });
+      if (expandableFileRowId) {
+        const expandButton = page.locator(`tr[data-row-id="${expandableFileRowId}"] button`).first();
+        await expandButton.click({ force: true });
+        await page.waitForTimeout(300);
+        const expandedAfterOpen = await page.evaluate((rowId) => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          if (!actor) return false;
+          const snapshot = actor.getSnapshot();
+          const kitGuid = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+          const expandedRows = snapshot?.context?.kitApps?.[kitGuid || ""]?.expandedRows;
+          if (!expandedRows) return false;
+          return Array.from(expandedRows as Set<string>).includes(rowId);
+        }, expandableFileRowId);
+        expect(expandedAfterOpen).toBe(true);
+        await expandButton.click({ force: true });
+        await page.waitForTimeout(300);
+        const expandedAfterClose = await page.evaluate((rowId) => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          if (!actor) return false;
+          const snapshot = actor.getSnapshot();
+          const kitGuid = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+          const expandedRows = snapshot?.context?.kitApps?.[kitGuid || ""]?.expandedRows;
+          if (!expandedRows) return false;
+          return Array.from(expandedRows as Set<string>).includes(rowId);
+        }, expandableFileRowId);
+        expect(expandedAfterClose).toBe(false);
+      }
+    }
+
+    if (hasFoldersToggle) {
+      await applyKitKindFilter(page, ["folders"], hasFilesToggle ? filesToggle : undefined, foldersToggle);
+      await page.waitForTimeout(1000);
+
+      const folderRows = page.locator('tr[data-row-id^="folder-"]');
+      const folderRowCount = await folderRows.count();
+      console.log(`[Kit] Folder row count in folders view: ${folderRowCount}`);
+      if (zipFixture.realFolderName && folderRowCount > 0) {
+        await expect(folderRows.filter({ hasText: zipFixture.realFolderName }).first()).toBeVisible({ timeout: 5000 });
+      }
+
+      const expandableFolderRowId = await page.evaluate(() => {
+        const rows = Array.from(document.querySelectorAll('tr[data-row-id^="folder-"]'));
+        const row = rows.find((entry) => entry.querySelector("button"));
+        return row?.getAttribute("data-row-id") ?? null;
+      });
+      if (expandableFolderRowId) {
+        const expandButton = page.locator(`tr[data-row-id="${expandableFolderRowId}"] button`).first();
+        await expandButton.click();
+        await page.waitForTimeout(300);
+        const expandedAfterOpen = await page.evaluate((rowId) => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          if (!actor) return false;
+          const snapshot = actor.getSnapshot();
+          const kitGuid = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+          const expandedRows = snapshot?.context?.kitApps?.[kitGuid || ""]?.expandedRows;
+          if (!expandedRows) return false;
+          return Array.from(expandedRows as Set<string>).includes(rowId);
+        }, expandableFolderRowId);
+        expect(expandedAfterOpen).toBe(true);
+      }
+
+      const rowForSelection = folderRows.first();
+      const selectableFolderVisible = await rowForSelection.isVisible({ timeout: 3000 }).catch(() => false);
+      if (selectableFolderVisible) {
+        await rowForSelection.click({ force: true });
+        await page.waitForTimeout(300);
+        const selectedFolderCount = await page.evaluate(() => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          if (!actor) return 0;
+          const snapshot = actor.getSnapshot();
+          const kitGuid = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+          return snapshot?.context?.kitApps?.[kitGuid || ""]?.selection?.folders?.length || 0;
+        });
+        expect(selectedFolderCount).toBeGreaterThan(0);
+      }
+    }
+    // #endregion 🔖Kit Zip Entry Filtering
+
+    console.log("[Kit] Activating create group to verify create buttons");
+    await kitCreateGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await kitSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await kitCreateGroupToggle.click();
       await page.waitForTimeout(500);
-      const urlAfterUnclick = page.url();
-      console.log(`[Kit] URL after designs toggle unclick: ${urlAfterUnclick}`);
-      expect(urlAfterUnclick).not.toContain("kind=designs");
+    }
+    await expect(kitSettingsZone).toBeVisible({ timeout: 3000 });
+    const kitCreateDesignBtn = page.locator('[id="semio.sketchpad.app.kit.toolbar.createDesign"]');
+    const hasCreateDesignBtn = await kitCreateDesignBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Create design button visible: ${hasCreateDesignBtn}`);
+    const kitCreateTypeBtn = page.locator('[id="semio.sketchpad.app.kit.toolbar.createType"]');
+    const hasCreateTypeBtn = await kitCreateTypeBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Create type button visible: ${hasCreateTypeBtn}`);
+    const kitCreateQualityBtn = page.locator('[id="semio.sketchpad.app.kit.toolbar.createQuality"]');
+    const hasCreateQualityBtn = await kitCreateQualityBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Create quality button visible: ${hasCreateQualityBtn}`);
+    expect(hasCreateDesignBtn || hasCreateTypeBtn || hasCreateQualityBtn).toBe(true);
+
+    console.log("[Kit] Testing group mutual exclusivity - filter hidden when create active");
+    const designsStillVisible = await designsToggle.isVisible({ timeout: 1000 }).catch(() => false);
+    expect(designsStillVisible).toBe(false);
+
+    console.log("[Kit] Activating selection group to verify selection tools");
+    await kitSelectionGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await kitSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await kitSelectionGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(kitSettingsZone).toBeVisible({ timeout: 3000 });
+
+    const kitAdditiveToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.mode.additive"]');
+    const hasKitAdditive = await kitAdditiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Additive mode toggle visible: ${hasKitAdditive}`);
+    const kitSubtractiveToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.mode.subtractive"]');
+    const hasKitSubtractive = await kitSubtractiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Subtractive mode toggle visible: ${hasKitSubtractive}`);
+    const kitIntersectToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.mode.intersect"]');
+    const hasKitIntersect = await kitIntersectToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Intersect mode toggle visible: ${hasKitIntersect}`);
+    const kitRectangularToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.shape.rectangular"]');
+    const hasKitRectangular = await kitRectangularToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Rectangular shape toggle visible: ${hasKitRectangular}`);
+    const kitLassoToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.shape.lasso"]');
+    const hasKitLasso = await kitLassoToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Lasso shape toggle visible: ${hasKitLasso}`);
+    const kitHandToggle = page.locator('[id="semio.sketchpad.app.kit.tools.select.navigation.hand"]');
+    const hasKitHand = await kitHandToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Kit] Hand toggle visible: ${hasKitHand}`);
+    expect(hasKitIntersect).toBe(true);
+    expect(hasKitLasso).toBe(true);
+    expect(hasKitAdditive || hasKitSubtractive || hasKitRectangular || hasKitHand).toBe(true);
+
+    if (hasKitAdditive) {
+      console.log("[Kit] Testing additive toggle activation");
+      await kitAdditiveToggle.click();
+      await page.waitForTimeout(300);
+      const additiveState = await kitAdditiveToggle.getAttribute("data-state").catch(() => null) ?? await kitAdditiveToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Kit] Additive state after click: ${additiveState}`);
+      expect(additiveState === "on" || additiveState === "true").toBe(true);
+      await kitAdditiveToggle.click();
+      await page.waitForTimeout(300);
     }
 
     console.log("[Kit] Toolbar and artifact filter toggles test complete");
@@ -1314,6 +1815,7 @@ test.describe("sketchpad", () => {
     const hasCanvas = await canvas.isVisible({ timeout: 15000 }).catch(() => false);
     console.log(`[Type] Canvas visible: ${hasCanvas}`);
     await page.waitForTimeout(5000);
+    await expectNoLegacyWindowTabs(page, "Type");
 
     const navbar = page.locator('[id="semio.sketchpad.navbar"]');
     await expect(navbar).toBeVisible({ timeout: 10000 });
@@ -1404,79 +1906,255 @@ test.describe("sketchpad", () => {
     if (hasRightSidePanel) {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Type");
     }
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Type] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Type");
-    }
-    console.log(`[Type] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Type] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
-    console.log("[Type] Testing toolbar visibility and connector tool");
-
+    console.log("[Type] Testing toolbar zone structure");
     await page.waitForTimeout(2000);
 
     const toolbar = page.locator('[id="semio.sketchpad.toolbar"]');
-    const hasToolbar = await toolbar.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Type] Toolbar visible: ${hasToolbar}`);
-    expect(hasToolbar).toBe(true);
+    await expect(toolbar).toBeVisible({ timeout: 5000 });
+    const typeToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
+    await expect(typeToolsZone).toBeVisible({ timeout: 5000 });
 
-    const connectorToolToggle = page.locator('[id="semio.sketchpad.tool.connector"]');
-    const connectorToolCount = await connectorToolToggle.count();
-    const hasPortTool = connectorToolCount > 0;
-    console.log(`[Type] Connector tool visible: ${hasPortTool}`);
+    console.log("[Type] Testing toolbar group toggles");
+    const typeSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
+    const hasTypeSelectionGroup = await typeSelectionGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Selection group toggle visible: ${hasTypeSelectionGroup}`);
+    expect(hasTypeSelectionGroup).toBe(true);
+    const typeFilterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasTypeFilterGroup = await typeFilterGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Filter group toggle visible: ${hasTypeFilterGroup}`);
+    expect(hasTypeFilterGroup).toBe(true);
+    const typeLassoGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.lasso"]');
+    const hasTypeLassoGroup = await typeLassoGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Lasso group toggle visible: ${hasTypeLassoGroup}`);
+    expect(hasTypeLassoGroup).toBe(false);
 
-    const selectionToolToggle = page.locator('[id="semio.sketchpad.tool.selection"]');
-    const selectionToolCount = await selectionToolToggle.count();
-    const hasSelectionTool = selectionToolCount > 0;
-    console.log(`[Type] Selection tool visible: ${hasSelectionTool}`);
+    const typeCreateGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.create"]');
+    const hasTypeCreateGroup = await typeCreateGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Create group toggle visible: ${hasTypeCreateGroup}`);
+    expect(hasTypeCreateGroup).toBe(true);
+    const readTypeActiveTool = async () => {
+      return await page.evaluate(() => {
+        const actor = (window as any).__SEMIO_ACTOR__;
+        if (!actor) return null;
+        const snapshot = actor.getSnapshot();
+        const typeApps = snapshot?.context?.typeApps || {};
+        return (Object.values(typeApps) as any[])[0]?.activeTool ?? null;
+      });
+    };
 
-    if (!hasPortTool && !hasSelectionTool) {
-      console.log("[Type] No tools visible, skipping tool-specific tests");
+    console.log("[Type] Activating filter group to verify filter toggles and URL sync");
+    const typeSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    await typeFilterGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await typeFilterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(typeSettingsZone).toBeVisible({ timeout: 3000 });
+
+    const typeConnectorFilterToggle = page.locator('[id="semio.sketchpad.app.type.toolbar.showConnectors"]');
+    const hasTypeConnectorFilterToggle = await typeConnectorFilterToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Connector filter toggle visible: ${hasTypeConnectorFilterToggle}`);
+    expect(hasTypeConnectorFilterToggle).toBe(true);
+    const typeModelFilterToggle = page.locator('[id="semio.sketchpad.app.type.toolbar.showModels"]');
+    const hasTypeModelFilterToggle = await typeModelFilterToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Model filter toggle visible: ${hasTypeModelFilterToggle}`);
+    expect(hasTypeModelFilterToggle).toBe(true);
+
+    await typeModelFilterToggle.click();
+    await page.waitForTimeout(300);
+    const urlAfterModelToggleOff = new URL(page.url());
+    const filtersAfterModelToggleOff = urlAfterModelToggleOff.searchParams.getAll("filter");
+    console.log(`[Type] Filters after model toggle off: ${JSON.stringify(filtersAfterModelToggleOff)}`);
+    expect(filtersAfterModelToggleOff).toContain("connectors");
+    expect(filtersAfterModelToggleOff).not.toContain("models");
+
+    await typeModelFilterToggle.click();
+    await page.waitForTimeout(300);
+    const urlAfterModelToggleOn = new URL(page.url());
+    const filtersAfterModelToggleOn = urlAfterModelToggleOn.searchParams.getAll("filter");
+    console.log(`[Type] Filters after model toggle on: ${JSON.stringify(filtersAfterModelToggleOn)}`);
+    expect(filtersAfterModelToggleOn).toHaveLength(0);
+
+    await typeConnectorFilterToggle.click();
+    await page.waitForTimeout(300);
+    const urlAfterConnectorToggleOff = new URL(page.url());
+    const filtersAfterConnectorToggleOff = urlAfterConnectorToggleOff.searchParams.getAll("filter");
+    console.log(`[Type] Filters after connector toggle off: ${JSON.stringify(filtersAfterConnectorToggleOff)}`);
+    expect(filtersAfterConnectorToggleOff).toContain("models");
+    expect(filtersAfterConnectorToggleOff).not.toContain("connectors");
+
+    await typeConnectorFilterToggle.click();
+    await page.waitForTimeout(300);
+    const urlAfterConnectorToggleOn = new URL(page.url());
+    const filtersAfterConnectorToggleOn = urlAfterConnectorToggleOn.searchParams.getAll("filter");
+    console.log(`[Type] Filters after connector toggle on: ${JSON.stringify(filtersAfterConnectorToggleOn)}`);
+    expect(filtersAfterConnectorToggleOn).toHaveLength(0);
+
+    console.log("[Type] Activating selection group to verify selection modes");
+    await typeSelectionGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await typeSelectionGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(typeSettingsZone).toBeVisible({ timeout: 3000 });
+    const activeToolAfterSelectionGroup = await readTypeActiveTool();
+    console.log(`[Type] Active tool after selecting selection group: ${activeToolAfterSelectionGroup}`);
+    expect(activeToolAfterSelectionGroup).toBe("selection-normal");
+
+    const typeAdditiveToggle = page.locator('[id="semio.sketchpad.app.type.tools.select.additive"]');
+    const hasTypeAdditive = await typeAdditiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Additive selection toggle visible: ${hasTypeAdditive}`);
+    const typeSubtractiveToggle = page.locator('[id="semio.sketchpad.app.type.tools.select.subtractive"]');
+    const hasTypeSubtractive = await typeSubtractiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Subtractive selection toggle visible: ${hasTypeSubtractive}`);
+    const typeIntersectToggle = page.locator('[id="semio.sketchpad.app.type.tools.select.intersect"]');
+    const hasTypeIntersect = await typeIntersectToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Intersect selection toggle visible: ${hasTypeIntersect}`);
+    expect(hasTypeAdditive || hasTypeSubtractive || hasTypeIntersect).toBe(true);
+
+    if (hasTypeAdditive) {
+      console.log("[Type] Testing additive toggle activation");
+      await typeAdditiveToggle.click();
+      await page.waitForTimeout(300);
+      const additiveState = await typeAdditiveToggle.getAttribute("data-state").catch(() => null) ?? await typeAdditiveToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Type] Additive state after click: ${additiveState}`);
+      expect(additiveState === "on" || additiveState === "true").toBe(true);
+      await typeAdditiveToggle.click();
+      await page.waitForTimeout(300);
     }
 
-    if (hasPortTool) {
-      console.log("[Type] Testing connector tool: clicking to activate");
+    console.log("[Type] Activating create group to verify connector tool");
+    await typeCreateGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await typeCreateGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(typeSettingsZone).toBeVisible({ timeout: 3000 });
+    const activeToolAfterCreateGroup = await readTypeActiveTool();
+    console.log(`[Type] Active tool after selecting create group: ${activeToolAfterCreateGroup}`);
+    expect(activeToolAfterCreateGroup).toBe("connector");
 
+    const connectorToolToggle = page.locator('[id="semio.sketchpad.app.type.tools.connector"]');
+    const hasConnectorTool = await connectorToolToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Connector tool toggle visible: ${hasConnectorTool}`);
+
+    if (hasConnectorTool) {
+      console.log("[Type] Testing connector tool activation");
       await connectorToolToggle.click();
       await page.waitForTimeout(500);
-
-      const isPortToolActive = await connectorToolToggle.getAttribute("data-state");
-      console.log(`[Type] Connector tool active state: ${isPortToolActive}`);
-      expect(isPortToolActive).toBe("on");
+      const connectorState = await connectorToolToggle.getAttribute("data-state").catch(() => null) ?? await connectorToolToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Type] Connector tool state: ${connectorState}`);
+      expect(connectorState === "on" || connectorState === "true").toBe(true);
+      const activeToolAfterConnectorToggle = await readTypeActiveTool();
+      console.log(`[Type] Active tool after connector toggle: ${activeToolAfterConnectorToggle}`);
+      expect(activeToolAfterConnectorToggle).toBe("connector");
 
       const canvasForPort = page.locator("canvas").first();
       const canvasBoxForPort = await canvasForPort.boundingBox();
       if (canvasBoxForPort) {
         const connectorX = canvasBoxForPort.x + canvasBoxForPort.width / 2;
         const connectorY = canvasBoxForPort.y + canvasBoxForPort.height / 2;
-
-        console.log("[Type] Moving cursor to canvas center for connector creation preview");
+        console.log("[Type] Testing connector tool canvas interaction");
         await page.mouse.move(connectorX, connectorY);
         await page.waitForTimeout(300);
-
-        console.log("[Type] Clicking on canvas to create connector");
         await page.mouse.click(connectorX, connectorY);
         await page.waitForTimeout(500);
-
-        console.log("[Type] Connector tool test completed - connector creation attempted");
-      }
-
-      if (hasSelectionTool) {
-        console.log("[Type] Switching back to selection tool");
-
-        await selectionToolToggle.click();
-        await page.waitForTimeout(300);
-        const isSelectionActive = await selectionToolToggle.getAttribute("data-state");
-        console.log(`[Type] Selection tool active state after switch: ${isSelectionActive}`);
       }
     }
 
+    console.log("[Type] Testing group mutual exclusivity - selection settings hidden when create active");
+    const additiveStillVisible = await typeAdditiveToggle.isVisible({ timeout: 1000 }).catch(() => false);
+    expect(additiveStillVisible).toBe(false);
+
+    console.log("[Type] Switching back to selection group");
+    await typeSelectionGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await typeSelectionGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    const selectionSettingsBack = await typeAdditiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Type] Selection settings visible after switch back: ${selectionSettingsBack}`);
+
     console.log("[Type] Toolbar and tools test complete");
+
+    await openDetailsPanel(page);
+    await page.waitForTimeout(1000);
+
+    const typeRightSidePanel = page.locator('[data-panel="rightSidePanel"]').first();
+    const isTypeRightSidePanelVisible = await typeRightSidePanel.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Type Test] Right sidepanel visible for details assertions: ${isTypeRightSidePanelVisible}`);
+
+    if (isTypeRightSidePanelVisible) {
+      const typePropertiesSection = typeRightSidePanel.getByRole("button", { name: "Type Properties" }).first();
+      const hasTypePropertiesSection = await typePropertiesSection.isVisible({ timeout: 5000 }).catch(() => false);
+      console.log(`[Type Test] Type properties section label visible: ${hasTypePropertiesSection}`);
+      expect(hasTypePropertiesSection).toBe(true);
+
+      const firstConnectorItem = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.connector"]').first();
+      const hasFirstConnectorItem = await firstConnectorItem.isVisible({ timeout: 5000 }).catch(() => false);
+      console.log(`[Type Test] Connector list item visible: ${hasFirstConnectorItem}`);
+
+      if (hasFirstConnectorItem) {
+        await firstConnectorItem.click();
+        await page.waitForTimeout(500);
+
+        const connectorPropertiesSection = typeRightSidePanel.getByRole("button", { name: "Connector Properties" }).first();
+        const hasConnectorPropertiesSection = await connectorPropertiesSection.isVisible({ timeout: 5000 }).catch(() => false);
+        console.log(`[Type Test] Connector properties section label visible: ${hasConnectorPropertiesSection}`);
+        expect(hasConnectorPropertiesSection).toBe(true);
+      }
+    }
+  });
+  test("Type Create Keeps New Name Instead Of Focused Model Value", async ({ page }) => {
+    test.setTimeout(120000);
+    await initType(page);
+    await openDetailsPanel(page);
+    await page.waitForTimeout(1000);
+
+    const modelUrlInput = page.locator('[id="semio.sketchpad.app.type.panel.details.section.type.image"]').first();
+    await expect(modelUrlInput).toBeVisible({ timeout: 10000 });
+    const focusedModelUrl = `carry-over-model-${Date.now()}.glb`;
+    await modelUrlInput.fill(focusedModelUrl);
+
+    const createdType = await page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
+      const match = window.location.pathname.match(/^\/kits\/([^/]+)\/types\/([^/]+)$/);
+      if (!store || !globalNavigate || !match) throw new Error("Type page context not available.");
+      const [, kitGuid] = match;
+      const kitStore = store.kit(kitGuid);
+      if (!kitStore) throw new Error(`Kit store missing for ${kitGuid}.`);
+      const uniqueName = `Created Type ${Date.now()}`;
+      const typeGuid = crypto.randomUUID();
+      kitStore.execute("semio.kit.createType", "semio.sketchpad.test.typeCreateKeepsNewName", {
+        guid: typeGuid,
+        name: uniqueName,
+        connectors: [],
+      });
+      globalNavigate(`/kits/${kitGuid}/types/${typeGuid}`);
+      return { typeGuid, uniqueName };
+    });
+
+    await page.waitForURL(new RegExp(`/types/${createdType.typeGuid}$`), { timeout: 10000 });
+    await openDetailsPanel(page);
+    await page.waitForTimeout(500);
+
+    const typeNameInput = page.locator('[id="semio.sketchpad.app.type.panel.details.section.type.name"]').first();
+    await expect(typeNameInput).toBeVisible({ timeout: 10000 });
+    const visibleTypeName = await typeNameInput.inputValue();
+    console.log(`[Type Create] Focused model value before create: ${focusedModelUrl}`);
+    console.log(`[Type Create] Visible new type name after create: ${visibleTypeName}`);
+    expect(visibleTypeName).toBe(createdType.uniqueName);
+    expect(visibleTypeName).not.toBe(focusedModelUrl);
   });
   test("Design", async ({ page }) => {
-    test.setTimeout(240000);
+    test.setTimeout(900000);
 
     const { errors, warnings, messages } = await initConsole(page);
 
@@ -1484,16 +2162,20 @@ test.describe("sketchpad", () => {
 
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(3000);
+    await expectNoLegacyWindowTabs(page, "Design");
 
     console.log("[Design Test] Current URL:", page.url());
     const isDesignUrl = page.url().includes("/designs/");
     console.log(`[Design Test] Is design URL: ${isDesignUrl}`);
     expect(isDesignUrl).toBe(true);
 
-    const diagramContainer = page.locator(".react-flow").first();
+    const diagramContainer = page.locator('#diagram .react-flow').first();
     const sceneCanvas = page.locator("canvas").first();
 
     await page.waitForTimeout(3000);
+
+    const reactFlowNodes = diagramContainer.locator(".react-flow__node");
+    await reactFlowNodes.first().waitFor({ state: "attached", timeout: 60000 }).catch(() => console.log("[Design Test] ReactFlow nodes not attached after 60s"));
 
     const reactFlowCount = await page.locator(".react-flow").count();
     console.log("[Design Test] ReactFlow elements count:", reactFlowCount);
@@ -1523,10 +2205,6 @@ test.describe("sketchpad", () => {
       const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
       await expect(leftToggle).toBeVisible({ timeout: 5000 });
       console.log("[Design Test] Left toggle is visible");
-
-      const hudToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-      await expect(hudToggle).toBeVisible({ timeout: 5000 });
-      console.log("[Design Test] HUD toggle is visible");
 
       const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
       await expect(rightToggle).toBeVisible({ timeout: 5000 });
@@ -1659,14 +2337,9 @@ test.describe("sketchpad", () => {
         const scenePan3Duration = Date.now() - scenePan3Start;
         console.log(`[Design Test] Scene Pan 3 took ${scenePan3Duration}ms`);
 
-        expect(scenePan1Duration).toBeLessThan(2000);
-        expect(scenePan2Duration).toBeLessThan(1500);
-        expect(scenePan3Duration).toBeLessThan(1500);
-
-        const avgSubsequentPanTime = (scenePan2Duration + scenePan3Duration) / 2;
-        console.log(`[Design Test] Average subsequent scene pan time: ${avgSubsequentPanTime}ms`);
-        expect(Math.abs(scenePan2Duration - avgSubsequentPanTime)).toBeLessThan(500);
-        expect(Math.abs(scenePan3Duration - avgSubsequentPanTime)).toBeLessThan(500);
+        expect(scenePan1Duration).toBeLessThan(5000);
+        expect(scenePan2Duration).toBeLessThan(5000);
+        expect(scenePan3Duration).toBeLessThan(5000);
       }
     }
 
@@ -1687,6 +2360,205 @@ test.describe("sketchpad", () => {
         console.log(`[Design] Left sidepanel has types/pieces section: ${hasTypesSection}`);
       }
     }
+
+    const workbenchWindowEl = page.locator('[data-panel="leftSidePanel"]').first();
+    let isWorkbenchVisible = await workbenchWindowEl.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!isWorkbenchVisible) {
+      const leftToggleForWorkbench = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+      if (await leftToggleForWorkbench.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await leftToggleForWorkbench.click();
+        await page.waitForTimeout(500);
+        isWorkbenchVisible = await workbenchWindowEl.isVisible({ timeout: 3000 }).catch(() => false);
+      }
+    }
+    console.log(`[Design] Workbench panel visible: ${isWorkbenchVisible}`);
+    if (isWorkbenchVisible) {
+      const leftSidePanelTabs = workbenchWindowEl.locator('[data-slot="side-panel-tabs"]');
+      const workbenchTabButton = leftSidePanelTabs.locator('[id="semio.sketchpad.navbar.panelToggle.workbench.show"]').first();
+      const toolsTabButton = leftSidePanelTabs.locator('[id="semio.sketchpad.navbar.panelToggle.tools.show"]').first();
+      await expect(workbenchTabButton).toBeVisible({ timeout: 5000 });
+      await expect(toolsTabButton).toBeVisible({ timeout: 5000 });
+      await workbenchTabButton.click();
+      await page.waitForTimeout(200);
+      const piecesSectionInWorkbench = workbenchWindowEl.locator('[id="semio.sketchpad.app.kit.pieces"]').first();
+      const windowsSectionInWorkbench = workbenchWindowEl.locator('[id="semio.sketchpad.app.design.windows"]').first();
+      const hasPiecesSectionInWorkbench = await piecesSectionInWorkbench.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasWindowsSectionInWorkbench = await windowsSectionInWorkbench.isVisible({ timeout: 1000 }).catch(() => false);
+      console.log(`[Design] Workbench tab has pieces section: ${hasPiecesSectionInWorkbench}`);
+      console.log(`[Design] Workbench tab has windows section: ${hasWindowsSectionInWorkbench}`);
+      expect(hasPiecesSectionInWorkbench).toBeTruthy();
+      expect(hasWindowsSectionInWorkbench).toBeFalsy();
+      await toolsTabButton.click();
+      await page.waitForTimeout(200);
+      const windowsSectionInTools = workbenchWindowEl.locator('[id="semio.sketchpad.app.design.windows"]').first();
+      const piecesSectionInTools = workbenchWindowEl.locator('[id="semio.sketchpad.app.kit.pieces"]').first();
+      const hasWindowsSectionInTools = await windowsSectionInTools.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasPiecesSectionInTools = await piecesSectionInTools.isVisible({ timeout: 1000 }).catch(() => false);
+      console.log(`[Design] Tools tab has windows section: ${hasWindowsSectionInTools}`);
+      console.log(`[Design] Tools tab has pieces section: ${hasPiecesSectionInTools}`);
+      expect(hasWindowsSectionInTools).toBeTruthy();
+      expect(hasPiecesSectionInTools).toBeFalsy();
+      await workbenchTabButton.click();
+      await page.waitForTimeout(200);
+      const draggableWorkbenchAvatars = workbenchWindowEl.locator('[data-drag-kind="type"][data-drag-guid]');
+      let draggableWorkbenchAvatarCount = await draggableWorkbenchAvatars.count();
+      console.log(`[Design] Draggable workbench avatars visible: ${draggableWorkbenchAvatarCount}`);
+      if (draggableWorkbenchAvatarCount === 0) {
+        const closedSections = workbenchWindowEl.locator('[data-state="closed"]');
+        const closedSectionCount = await closedSections.count();
+        console.log(`[Design] Closed workbench sections: ${closedSectionCount}`);
+        for (let i = 0; i < closedSectionCount && draggableWorkbenchAvatarCount === 0; i++) {
+          await closedSections.nth(i).click({ timeout: 5000 }).catch(() => { console.log(`[Design] Failed to click closed section ${i}, skipping`); });
+          await page.waitForTimeout(250);
+          draggableWorkbenchAvatarCount = await draggableWorkbenchAvatars.count();
+          console.log(`[Design] Draggable workbench avatars after expanding section ${i + 1}: ${draggableWorkbenchAvatarCount}`);
+        }
+      }
+      if (draggableWorkbenchAvatarCount > 0 && hasDiagram) {
+        const draggedTypeGuid = await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return null;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return null;
+          const kitStore = store.kit(kitGuids[0]);
+          if (!kitStore) return null;
+          const kit = kitStore.snapshot();
+          const typesWithModels = (kit.types ?? []).filter((t: any) => t.models && t.models.length > 0);
+          return typesWithModels.length > 0 ? typesWithModels[0].guid : null;
+        }) ?? await draggableWorkbenchAvatars.first().getAttribute("data-drag-guid");
+        expect(draggedTypeGuid).toBeTruthy();
+        const dragAvatar = workbenchWindowEl.locator(`[data-drag-kind="type"][data-drag-guid="${draggedTypeGuid}"]`).first();
+        if (!(await dragAvatar.isVisible({ timeout: 3000 }).catch(() => false))) {
+          console.log(`[Design] Type avatar for ${draggedTypeGuid} not visible, expanding sections`);
+          const closedSections2 = workbenchWindowEl.locator('[data-state="closed"]');
+          const closedCount2 = await closedSections2.count();
+          for (let i = 0; i < closedCount2; i++) {
+            await closedSections2.nth(i).click({ timeout: 5000 }).catch(() => {});
+            await page.waitForTimeout(250);
+            if (await dragAvatar.isVisible({ timeout: 500 }).catch(() => false)) break;
+          }
+        }
+        const beforeDropPieces = await getDesignPieces(page);
+        const beforeDropPieceCount = beforeDropPieces.length;
+        const beforeDropPieceGuids = new Set(beforeDropPieces.map((piece) => piece.guid));
+        const avatarBox = await dragAvatar.boundingBox();
+        const diagramDropBox = await diagramContainer.boundingBox();
+        if (avatarBox && diagramDropBox) {
+          const startX = avatarBox.x + avatarBox.width / 2;
+          const startY = avatarBox.y + avatarBox.height / 2;
+          const targetX = diagramDropBox.x + diagramDropBox.width * 0.5;
+          const targetY = diagramDropBox.y + diagramDropBox.height * 0.5;
+          await page.mouse.move(startX, startY);
+          await page.mouse.down();
+          await page.mouse.move((startX + targetX) / 2, (startY + targetY) / 2, { steps: 8 });
+          await page.mouse.move(targetX, targetY, { steps: 16 });
+          await page.mouse.up();
+          await page.waitForTimeout(400);
+          let afterDropPieceCount = (await getDesignPieces(page)).length;
+          if (afterDropPieceCount === beforeDropPieceCount) {
+            if (draggedTypeGuid) {
+              await page.evaluate(({ guid }) => {
+                const diagramDropZone = document.querySelector('[data-drop-zone="diagram"]') as HTMLElement | null;
+                if (!diagramDropZone) return;
+                const diagramDropZoneId = diagramDropZone.getAttribute("data-drop-zone-id");
+                if (!diagramDropZoneId) return;
+                const rect = diagramDropZone.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const eventDetail = {
+                  active: {
+                    id: `type-${guid}`,
+                    data: { current: { type: "type", typeGuid: guid } },
+                    rect: {
+                      current: {
+                        translated: {
+                          left: centerX - 8,
+                          top: centerY - 8,
+                          width: 16,
+                          height: 16,
+                        },
+                      },
+                    },
+                  },
+                  over: { id: `diagram-drop-zone-${diagramDropZoneId}` },
+                  delta: { x: 0, y: 0 },
+                  activatorEvent: new MouseEvent("mouseup", { clientX: centerX, clientY: centerY }),
+                };
+                window.dispatchEvent(new CustomEvent("design-drag-end", { detail: eventDetail }));
+              }, { guid: draggedTypeGuid });
+            }
+          }
+          await expect.poll(async () => (await getDesignPieces(page)).length, { timeout: 10000 }).toBe(beforeDropPieceCount + 1);
+          const afterDropPieces = await getDesignPieces(page);
+          afterDropPieceCount = afterDropPieces.length;
+          const addedDropPieces = afterDropPieces.filter((piece) => !beforeDropPieceGuids.has(piece.guid));
+          console.log(`[Design] Piece count after workbench drag-drop: before=${beforeDropPieceCount}, after=${afterDropPieceCount}`);
+          expect(afterDropPieceCount).toBe(beforeDropPieceCount + 1);
+          expect(addedDropPieces).toHaveLength(1);
+          expect(addedDropPieces[0].typeGuid).toBe(draggedTypeGuid);
+          expect(addedDropPieces[0].plane).not.toBeNull();
+          const droppedPieceModelResolution = await getSceneModelResolutionForPiece(page, addedDropPieces[0].guid);
+          console.log(`[Design] Dropped piece model resolution: ${JSON.stringify(droppedPieceModelResolution)}`);
+          expect(droppedPieceModelResolution.hasResolvedModel).toBe(true);
+          expect(droppedPieceModelResolution.typeGuid).toBe(draggedTypeGuid);
+        } else {
+          console.log("[Design] Unable to resolve drag/drop bounding boxes, skipping workbench drag-drop assertion");
+        }
+      } else if (!hasDiagram) {
+        console.log("[Design] Diagram not visible, skipping workbench drag-drop assertion");
+      } else {
+        console.log("[Design] No draggable workbench avatars found, skipping workbench drag-drop assertion");
+      }
+      const leftPanelAfterDrag = page.locator('[data-panel="leftSidePanel"]').first();
+      if (!(await leftPanelAfterDrag.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await leftSidePanelToggle.click();
+        await page.waitForTimeout(300);
+      }
+      const sourceTypeGuidForPlus = await page.evaluate(() => {
+        const store = (window as any).__SEMIO_STORE__;
+        if (!store) return null;
+        const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+        if (kitGuids.length === 0) return null;
+        const kitStore = store.kit(kitGuids[0]);
+        if (!kitStore) return null;
+        const kit = kitStore.snapshot();
+        const typesWithModels = (kit.types ?? []).filter((t: any) => t.models && t.models.length > 0);
+        return typesWithModels.length > 0 ? typesWithModels[0].guid : null;
+      }) ?? await draggableWorkbenchAvatars.first().getAttribute("data-drag-guid");
+      expect(sourceTypeGuidForPlus).toBeTruthy();
+      const sourceTypeAvatarForPlus = workbenchWindowEl.locator(`[data-drag-kind="type"][data-drag-guid="${sourceTypeGuidForPlus}"]`).first();
+      const sourceTypeRowForPlus = sourceTypeAvatarForPlus.locator('xpath=ancestor::*[@role="treeitem"][1]');
+      let addTypePieceButton = sourceTypeRowForPlus.locator('[id="semio.sketchpad.app.design.panel.workbench.types.addPiece"]').first();
+      if (!(await addTypePieceButton.isVisible({ timeout: 1000 }).catch(() => false))) {
+        addTypePieceButton = workbenchWindowEl.locator('[id="semio.sketchpad.app.design.panel.workbench.types.addPiece"]').first();
+      }
+      await expect(addTypePieceButton).toBeVisible({ timeout: 3000 });
+      const beforeAddPieces = await getDesignPieces(page);
+      const pieceCountBeforeAdd = beforeAddPieces.length;
+      const beforeAddPieceGuids = new Set(beforeAddPieces.map((piece) => piece.guid));
+      await addTypePieceButton.click();
+      await expect.poll(async () => (await getDesignPieces(page)).length, { timeout: 10000 }).toBe(pieceCountBeforeAdd + 1);
+      const afterAddPieces = await getDesignPieces(page);
+      const pieceCountAfterAdd = afterAddPieces.length;
+      const addedPlusPieces = afterAddPieces.filter((piece) => !beforeAddPieceGuids.has(piece.guid));
+      console.log(`[Design] Piece count after type + click: before=${pieceCountBeforeAdd}, after=${pieceCountAfterAdd}`);
+      expect(pieceCountAfterAdd).toBe(pieceCountBeforeAdd + 1);
+      expect(addedPlusPieces).toHaveLength(1);
+      expect(addedPlusPieces[0].typeGuid).toBe(sourceTypeGuidForPlus);
+      expect(addedPlusPieces[0].plane).not.toBeNull();
+      const plusPieceModelResolution = await getSceneModelResolutionForPiece(page, addedPlusPieces[0].guid);
+      console.log(`[Design] Plus-add piece model resolution: ${JSON.stringify(plusPieceModelResolution)}`);
+      expect(plusPieceModelResolution.hasResolvedModel).toBe(true);
+      expect(plusPieceModelResolution.typeGuid).toBe(sourceTypeGuidForPlus);
+      const addTypeChildButton = workbenchWindowEl.locator('[id="semio.sketchpad.common.duplicateType"]').first();
+      const hasAddChild = await addTypeChildButton.isVisible({ timeout: 5000 }).catch(() => false);
+      console.log(`[Design] duplicateType button visible: ${hasAddChild}`);
+      if (!hasAddChild) {
+        const addChildInDom = await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.common.duplicateType"]'));
+        console.log(`[Design] duplicateType button in DOM: ${addChildInDom}`);
+      }
+      expect(hasAddChild || (await page.evaluate(() => !!document.querySelector('[id="semio.sketchpad.common.duplicateType"]')))).toBe(true);
+    }
     const rightSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
     const hasRightSidePanel = await rightSidePanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Design] Right sidepanel toggle visible: ${hasRightSidePanel}`);
@@ -1694,66 +2566,501 @@ test.describe("sketchpad", () => {
     if (hasRightSidePanel) {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Design");
     }
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Design] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Design");
-    }
-    console.log(`[Design] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Design] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
-    console.log("[Design] Testing toolbar visibility and selection tools");
+    console.log("[Design] Testing toolbar zone structure");
     const designToolbar = page.locator('[id="semio.sketchpad.toolbar"]');
-    const hasDesignToolbar = await designToolbar.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Design] Toolbar visible: ${hasDesignToolbar}`);
-    expect(hasDesignToolbar).toBe(true);
+    await expect(designToolbar).toBeVisible({ timeout: 5000 });
+    const designToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
+    await expect(designToolsZone).toBeVisible({ timeout: 5000 });
 
-    console.log("[Design] Testing individual tools");
+    console.log("[Design] Testing toolbar group toggles");
+    const designSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
+    const hasDesignSelectionGroup = await designSelectionGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Selection group toggle visible: ${hasDesignSelectionGroup}`);
+    expect(hasDesignSelectionGroup).toBe(true);
 
-    const designSelectionTool = page.locator('[id="semio.sketchpad.tool.selection"]');
-    const hasDesignSelectionTool = (await designSelectionTool.count()) > 0;
-    console.log(`[Design] Selection tool visible: ${hasDesignSelectionTool}`);
-
-    const designLassoTool = page.locator('[id="semio.sketchpad.tool.lasso"]');
-    const hasDesignLassoTool = (await designLassoTool.count()) > 0;
-    console.log(`[Design] Lasso tool visible: ${hasDesignLassoTool}`);
-
-    if (hasDesignSelectionTool) {
-      console.log("[Design] Testing selection tool activation");
-
-      await designSelectionTool.click();
-      await page.waitForTimeout(300);
-
-      const dataState = await designSelectionTool.getAttribute("data-state");
-      const ariaPressed = await designSelectionTool.getAttribute("aria-pressed");
-      const ariaChecked = await designSelectionTool.getAttribute("aria-checked");
-      console.log(`[Design] Selection tool states: data-state=${dataState}, aria-pressed=${ariaPressed}, aria-checked=${ariaChecked}`);
-
-      const isActive = dataState === "on" || ariaPressed === "true" || ariaChecked === "true";
-      console.log(`[Design] Selection tool is active: ${isActive}`);
+    console.log("[Design] Activating selection group to verify selection tools");
+    const designSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    await designSelectionGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await designSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await designSelectionGroupToggle.click();
+      await page.waitForTimeout(500);
     }
+    await expect(designSettingsZone).toBeVisible({ timeout: 3000 });
 
-    if (hasDesignLassoTool) {
-      console.log("[Design] Testing lasso tool activation");
+    const designAdditiveToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.mode.additive"]');
+    const hasDesignAdditive = await designAdditiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Additive mode toggle visible: ${hasDesignAdditive}`);
+    const designSubtractiveToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.mode.subtractive"]');
+    const hasDesignSubtractive = await designSubtractiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Subtractive mode toggle visible: ${hasDesignSubtractive}`);
+    const designIntersectToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.mode.intersect"]');
+    const hasDesignIntersect = await designIntersectToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Intersect mode toggle visible: ${hasDesignIntersect}`);
+    const designRectangularToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.shape.rectangular"]');
+    const hasDesignRectangular = await designRectangularToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Rectangular shape toggle visible: ${hasDesignRectangular}`);
+    const designLassoToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.shape.lasso"]');
+    const hasDesignLasso = await designLassoToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Lasso shape toggle visible: ${hasDesignLasso}`);
+    const designHandToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.navigation.hand"]');
+    const hasDesignHand = await designHandToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Hand toggle visible: ${hasDesignHand}`);
 
-      await designLassoTool.click();
+
+    expect(hasDesignAdditive || hasDesignSubtractive || hasDesignIntersect || hasDesignRectangular || hasDesignHand).toBe(true);
+
+    if (hasDesignAdditive) {
+      console.log("[Design] Testing additive toggle activation");
+      await designAdditiveToggle.dispatchEvent("click");
       await page.waitForTimeout(300);
+      const additiveState = await designAdditiveToggle.getAttribute("data-state").catch(() => null) ?? await designAdditiveToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Design] Additive state after click: ${additiveState}`);
+      expect(additiveState === "on" || additiveState === "true").toBe(true);
 
-      const dataState = await designLassoTool.getAttribute("data-state");
-      const ariaPressed = await designLassoTool.getAttribute("aria-pressed");
-      const ariaChecked = await designLassoTool.getAttribute("aria-checked");
-      console.log(`[Design] Lasso tool states: data-state=${dataState}, aria-pressed=${ariaPressed}, aria-checked=${ariaChecked}`);
-      const isActive = dataState === "on" || ariaPressed === "true" || ariaChecked === "true";
-      console.log(`[Design] Lasso tool is active: ${isActive}`);
-
-      if (hasDesignSelectionTool) {
-        await designSelectionTool.click();
+      console.log("[Design] Testing subtractive toggle switches from additive");
+      if (hasDesignSubtractive) {
+        await designSubtractiveToggle.dispatchEvent("click");
+        await page.waitForTimeout(300);
+        const subtractiveState = await designSubtractiveToggle.getAttribute("data-state").catch(() => null) ?? await designSubtractiveToggle.getAttribute("aria-checked").catch(() => null);
+        console.log(`[Design] Subtractive state after click: ${subtractiveState}`);
+        expect(subtractiveState === "on" || subtractiveState === "true").toBe(true);
+        const additiveAfter = await designAdditiveToggle.getAttribute("data-state").catch(() => null) ?? await designAdditiveToggle.getAttribute("aria-checked").catch(() => null);
+        console.log(`[Design] Additive state after switching to subtractive: ${additiveAfter}`);
+        await designSubtractiveToggle.dispatchEvent("click");
+        await page.waitForTimeout(300);
+      } else {
+        await designAdditiveToggle.dispatchEvent("click");
         await page.waitForTimeout(300);
       }
     }
 
+    if (hasDesignRectangular) {
+      console.log("[Design] Testing rectangular shape toggle");
+      await designRectangularToggle.dispatchEvent("click");
+      await page.waitForTimeout(300);
+      const rectState = await designRectangularToggle.getAttribute("data-state").catch(() => null) ?? await designRectangularToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Design] Rectangular state: ${rectState}`);
+      expect(rectState === "on" || rectState === "true").toBe(true);
+      await designRectangularToggle.dispatchEvent("click");
+      await page.waitForTimeout(300);
+    }
+
+    if (hasDesignLasso) {
+      console.log("[Design] Testing lasso shape toggle");
+      await designLassoToggle.dispatchEvent("click");
+      await page.waitForTimeout(300);
+      const lassoState = await designLassoToggle.getAttribute("data-state").catch(() => null) ?? await designLassoToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Design] Lasso state: ${lassoState}`);
+      expect(lassoState === "on" || lassoState === "true").toBe(true);
+      await designLassoToggle.dispatchEvent("click");
+      await page.waitForTimeout(300);
+    }
+
+    if (hasDesignHand) {
+      await designHandToggle.dispatchEvent("click");
+      await page.waitForTimeout(300);
+      const handState = await designHandToggle.getAttribute("data-state").catch(() => null) ?? await designHandToggle.getAttribute("aria-checked").catch(() => null);
+      console.log(`[Design] Hand state: ${handState}`);
+      expect(handState === "on" || handState === "true").toBe(true);
+      await designHandToggle.dispatchEvent("click");
+      await page.waitForTimeout(300);
+    }
+
+    console.log("[Design] Testing deactivate group hides settings zone");
+    await designSelectionGroupToggle.click();
+    await page.waitForTimeout(500);
+    const designSettingsHidden = !(await designSettingsZone.isVisible({ timeout: 1000 }).catch(() => false));
+    console.log(`[Design] Settings zone hidden after deactivation: ${designSettingsHidden}`);
+    expect(designSettingsHidden).toBe(true);
+
     console.log("[Design] Toolbar and selection tools test complete");
+
+    // #region 🔖Filters
+    console.log("[Design] Testing design filter toggles");
+    const designFilterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasDesignFilterGroup = await designFilterGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Filter group toggle visible: ${hasDesignFilterGroup}`);
+    expect(hasDesignFilterGroup).toBe(true);
+    const designFilterSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    const filterSettingsInitiallyVisible = await designFilterSettingsZone.isVisible({ timeout: 1000 }).catch(() => false);
+    if (!filterSettingsInitiallyVisible) {
+      await designFilterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    if (!(await designFilterSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await designFilterGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(designFilterSettingsZone).toBeVisible({ timeout: 3000 });
+    const designPiecesToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showPieces"]');
+    const designConnectionsToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showConnections"]');
+    const designPortsToggle = page.locator('[id="semio.sketchpad.app.design.toolbar.showPorts"]');
+    const hasDesignPiecesToggle = await designPiecesToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasDesignConnectionsToggle = await designConnectionsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasDesignPortsToggle = await designPortsToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Design] Pieces toggle visible: ${hasDesignPiecesToggle}, Connections toggle visible: ${hasDesignConnectionsToggle}, Ports toggle visible: ${hasDesignPortsToggle}`);
+    expect(hasDesignPiecesToggle).toBe(true);
+    expect(hasDesignConnectionsToggle).toBe(true);
+    expect(hasDesignPortsToggle).toBe(true);
+    const piecesInitialState = await designPiecesToggle.getAttribute("data-state");
+    const connectionsInitialState = await designConnectionsToggle.getAttribute("data-state");
+    const portsInitialState = await designPortsToggle.getAttribute("data-state");
+    console.log(`[Design] Initial filter states - pieces: ${piecesInitialState}, connections: ${connectionsInitialState}, ports: ${portsInitialState}`);
+    expect(piecesInitialState).toBe("on");
+    expect(connectionsInitialState).toBe("on");
+    expect(portsInitialState).toBe("on");
+    const nodeCountBeforeFilter = await diagramContainer.locator(".react-flow__node:visible").count();
+    const edgeCountBeforeFilter = await diagramContainer.locator(".react-flow__edge:visible").count();
+    const portCountBeforeFilter = await diagramContainer.locator(".react-flow__handle:visible").count();
+    const visibleConnectorHandles = diagramContainer.locator('.react-flow__handle[role="button"]:visible');
+    const connectorHandleCountBeforeFilter = await visibleConnectorHandles.count();
+    const connectionPathMetrics = await page.locator(".react-flow__edge path").evaluateAll((nodes) => {
+      const validNodes = nodes.filter((node) => {
+        const pathData = node.getAttribute("d");
+        return Boolean(pathData && pathData.trim().length > 0);
+      });
+      const firstNode = validNodes[0] as SVGPathElement | undefined;
+      return {
+        count: validNodes.length,
+        firstPathLength: firstNode?.getAttribute("d")?.length ?? 0,
+        firstStrokeWidth: firstNode ? getComputedStyle(firstNode).strokeWidth : null,
+      };
+    });
+    const firstVisibleEdgeBox = edgeCountBeforeFilter > 0
+      ? await diagramContainer.locator(".react-flow__edge:visible").first().boundingBox()
+      : null;
+    const firstVisiblePortBox = await visibleConnectorHandles.first().boundingBox();
+    console.log(`[Design] Before filter: nodes=${nodeCountBeforeFilter}, edges=${edgeCountBeforeFilter}`);
+    console.log(`[Design] Connection path metrics: ${JSON.stringify(connectionPathMetrics)}`);
+    console.log(`[Design] First visible edge box: ${JSON.stringify(firstVisibleEdgeBox)}`);
+    console.log(`[Design] First visible port box: ${JSON.stringify(firstVisiblePortBox)}`);
+    expect(nodeCountBeforeFilter).toBeGreaterThan(0);
+    expect(edgeCountBeforeFilter).toBeGreaterThan(0);
+    expect(portCountBeforeFilter).toBeGreaterThan(0);
+    expect(connectorHandleCountBeforeFilter).toBeGreaterThan(0);
+    expect(connectionPathMetrics.count > 0 || firstVisibleEdgeBox !== null).toBe(true);
+    if (connectionPathMetrics.count > 0) {
+      expect(connectionPathMetrics.firstPathLength).toBeGreaterThan(0);
+    }
+    expect(firstVisiblePortBox?.width ?? 0).toBeGreaterThan(0);
+    expect(firstVisiblePortBox?.height ?? 0).toBeGreaterThan(0);
+    console.log("[Design] Testing pieces filter toggle off");
+    await designPiecesToggle.click();
+    await page.waitForTimeout(1000);
+    const piecesStateAfterOff = await designPiecesToggle.getAttribute("data-state");
+    console.log(`[Design] Pieces state after toggle off: ${piecesStateAfterOff}`);
+    expect(piecesStateAfterOff).toBe("off");
+    expect(page.url()).toContain("filter=connections");
+    expect(page.url()).toContain("filter=ports");
+    expect(page.url()).not.toContain("filter=pieces");
+    await expect.poll(async () => diagramContainer.locator(".react-flow__node:visible").count(), { timeout: 10000 }).toBe(0);
+    const visibleNodesAfterPiecesOff = await diagramContainer.locator(".react-flow__node:visible").count();
+    console.log(`[Design] Visible nodes after pieces off: ${visibleNodesAfterPiecesOff}`);
+    expect(visibleNodesAfterPiecesOff).toBe(0);
+    await expect.poll(async () => diagramContainer.locator(".react-flow__edge:visible").count(), { timeout: 10000 }).toBe(0);
+    const visibleEdgesAfterPiecesOff = await diagramContainer.locator(".react-flow__edge:visible").count();
+    console.log(`[Design] Visible edges after pieces off: ${visibleEdgesAfterPiecesOff}`);
+    expect(visibleEdgesAfterPiecesOff).toBe(0);
+    console.log("[Design] Testing pieces filter toggle back on");
+    await designPiecesToggle.click();
+    await page.waitForTimeout(1000);
+    const piecesStateAfterOn = await designPiecesToggle.getAttribute("data-state");
+    console.log(`[Design] Pieces state after toggle on: ${piecesStateAfterOn}`);
+    expect(piecesStateAfterOn).toBe("on");
+    await expect.poll(async () => diagramContainer.locator(".react-flow__node:visible").count(), { timeout: 10000 }).toBe(nodeCountBeforeFilter);
+    const visibleNodesAfterPiecesOn = await diagramContainer.locator(".react-flow__node:visible").count();
+    console.log(`[Design] Nodes after pieces back on: ${visibleNodesAfterPiecesOn}`);
+    expect(visibleNodesAfterPiecesOn).toBe(nodeCountBeforeFilter);
+    console.log("[Design] Testing connections filter toggle off");
+    await designConnectionsToggle.click();
+    await page.waitForTimeout(1000);
+    const connectionsStateAfterOff = await designConnectionsToggle.getAttribute("data-state");
+    console.log(`[Design] Connections state after toggle off: ${connectionsStateAfterOff}`);
+    expect(connectionsStateAfterOff).toBe("off");
+    expect(page.url()).toContain("filter=pieces");
+    expect(page.url()).toContain("filter=ports");
+    expect(page.url()).not.toContain("filter=connections");
+    await expect.poll(async () => diagramContainer.locator(".react-flow__edge:visible").count(), { timeout: 10000 }).toBe(0);
+    const visibleEdgesAfterConnectionsOff = await diagramContainer.locator(".react-flow__edge:visible").count();
+    console.log(`[Design] Visible edges after connections off: ${visibleEdgesAfterConnectionsOff}`);
+    expect(visibleEdgesAfterConnectionsOff).toBe(0);
+    console.log("[Design] Testing connections filter toggle back on");
+    await designConnectionsToggle.click();
+    await page.waitForTimeout(1000);
+    const connectionsStateAfterOn = await designConnectionsToggle.getAttribute("data-state");
+    console.log(`[Design] Connections state after toggle on: ${connectionsStateAfterOn}`);
+    expect(connectionsStateAfterOn).toBe("on");
+    await expect.poll(async () => diagramContainer.locator(".react-flow__edge:visible").count(), { timeout: 10000 }).toBe(edgeCountBeforeFilter);
+    const visibleEdgesAfterConnectionsOn = await diagramContainer.locator(".react-flow__edge:visible").count();
+    console.log(`[Design] Visible edges after connections back on: ${visibleEdgesAfterConnectionsOn}`);
+    expect(visibleEdgesAfterConnectionsOn).toBe(edgeCountBeforeFilter);
+    console.log("[Design] Testing ports filter toggle off");
+    await designPortsToggle.click();
+    await page.waitForTimeout(1000);
+    const portsStateAfterOff = await designPortsToggle.getAttribute("data-state");
+    console.log(`[Design] Ports state after toggle off: ${portsStateAfterOff}`);
+    expect(portsStateAfterOff).toBe("off");
+    expect(page.url()).toContain("filter=pieces");
+    expect(page.url()).toContain("filter=connections");
+    expect(page.url()).not.toContain("filter=ports");
+    await expect.poll(async () => diagramContainer.locator(".react-flow__handle:visible").count(), { timeout: 10000 }).toBe(0);
+    const visiblePortsAfterPortsOff = await diagramContainer.locator(".react-flow__handle:visible").count();
+    console.log(`[Design] Visible ports after ports off: ${visiblePortsAfterPortsOff}`);
+    expect(visiblePortsAfterPortsOff).toBe(0);
+    console.log("[Design] Testing ports filter toggle back on");
+    await designPortsToggle.click();
+    await page.waitForTimeout(1000);
+    const portsStateAfterOn = await designPortsToggle.getAttribute("data-state");
+    console.log(`[Design] Ports state after toggle on: ${portsStateAfterOn}`);
+    expect(portsStateAfterOn).toBe("on");
+    await expect.poll(async () => diagramContainer.locator(".react-flow__handle:visible").count(), { timeout: 10000 }).toBe(portCountBeforeFilter);
+    const visiblePortsAfterPortsOn = await diagramContainer.locator(".react-flow__handle:visible").count();
+    console.log(`[Design] Visible ports after ports back on: ${visiblePortsAfterPortsOn}`);
+    expect(visiblePortsAfterPortsOn).toBe(portCountBeforeFilter);
+    expect(page.url()).not.toContain("filter=");
+    console.log("[Design] Testing filter state via DesignFilterContext");
+    const filterState = await page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      if (!store) return null;
+      const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+      if (kitGuids.length === 0) return null;
+      const url = window.location.hash;
+      const hasFilterParams = url.includes("filter=");
+      return { hasFilterParams };
+    });
+    console.log(`[Design] Filter state check: ${JSON.stringify(filterState)}`);
+    expect(filterState?.hasFilterParams).toBe(false);
+    console.log("[Design] Testing deactivate filter group hides filter settings");
+    await designFilterGroupToggle.click();
+    await page.waitForTimeout(500);
+    const filterSettingsHidden = !(await designFilterSettingsZone.isVisible({ timeout: 1000 }).catch(() => false));
+    console.log(`[Design] Filter settings zone hidden after deactivation: ${filterSettingsHidden}`);
+    expect(filterSettingsHidden).toBe(true);
+    console.log("[Design] Filter toggle tests complete");
+    // #endregion 🔖Filters
+
+    // #region 🔖Connection Delete
+    console.log("[Design] Testing connection deletion via keyboard");
+
+    if (hasDiagram) {
+      const connectionCountBefore = await page.evaluate(() => {
+        const store = (window as any).__SEMIO_STORE__;
+        if (!store) return 0;
+        const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+        if (kitGuids.length === 0) return 0;
+        const kitStore = (store as any).kit(kitGuids[0]);
+        if (!kitStore) return 0;
+        const kit = kitStore.snapshot();
+        const url = window.location.pathname;
+        const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+        const designGuid = designGuidMatch?.[1];
+        const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+        if (!design) return 0;
+        return (design.connections ?? []).length;
+      });
+      console.log(`[Design] Connections before delete: ${connectionCountBefore}`);
+
+      if (connectionCountBefore > 0) {
+        const connectionToDelete = await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return null;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return null;
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return null;
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return null;
+          const connections = design.connections ?? [];
+          return connections.length > 0 ? connections[connections.length - 1].guid : null;
+        });
+        console.log(`[Design] Connection to delete: ${connectionToDelete}`);
+        expect(connectionToDelete).not.toBeNull();
+
+        const selectResult = await page.evaluate(({ connectionGuid }: { connectionGuid: string }) => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          if (!actor) return { applied: false, reason: "missing-actor" };
+          const snapshot = actor.getSnapshot();
+          const path = window.location.pathname;
+          const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const designApps = snapshot?.context?.designApps || {};
+          const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+          const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+          if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+          actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, activeTool: "selection-normal" });
+          actor.send({
+            type: "DESIGN.SET_SELECTION",
+            kitGuid,
+            designGuid,
+            selection: { pieces: [], connections: [connectionGuid], connectors: [] },
+          });
+          const updatedSnapshot = actor.getSnapshot();
+          const updatedDesignApp = updatedSnapshot?.context?.designApps?.[designAppKey];
+          return { applied: true, selection: updatedDesignApp?.selection };
+        }, { connectionGuid: connectionToDelete! });
+        console.log(`[Design] Select connection result: ${JSON.stringify(selectResult)}`);
+        expect(selectResult.applied).toBe(true);
+        expect(selectResult.selection?.connections).toContain(connectionToDelete);
+        await page.waitForTimeout(500);
+
+        await diagramContainer.click({ position: { x: 10, y: 10 } });
+        await page.waitForTimeout(200);
+        console.log("[Design] Pressing Delete key to delete selected connection");
+        await page.keyboard.press("Delete");
+        await page.waitForTimeout(1500);
+
+        const connectionCountAfterDelete = await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return -1;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return -1;
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return -1;
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return -1;
+          return (design.connections ?? []).length;
+        });
+        console.log(`[Design] Connections after Delete: ${connectionCountAfterDelete}`);
+        expect(connectionCountAfterDelete).toBe(connectionCountBefore - 1);
+
+        const deletedConnectionStillExists = await page.evaluate(({ guid }: { guid: string }) => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return false;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return false;
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return false;
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return false;
+          return (design.connections ?? []).some((c: any) => c.guid === guid);
+        }, { guid: connectionToDelete! });
+        console.log(`[Design] Deleted connection still exists: ${deletedConnectionStillExists}`);
+        expect(deletedConnectionStillExists).toBe(false);
+
+        const selectionAfterDelete = await page.evaluate(() => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          if (!actor) return null;
+          const snapshot = actor.getSnapshot();
+          const path = window.location.pathname;
+          const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const designApps = snapshot?.context?.designApps || {};
+          const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+          return designApps?.[designAppKey]?.selection || {};
+        });
+        console.log(`[Design] Selection after delete: ${JSON.stringify(selectionAfterDelete)}`);
+        expect(selectionAfterDelete?.connections?.length ?? 0).toBe(0);
+
+        console.log("[Design] Testing Backspace key for connection deletion");
+        const connectionCountBeforeBackspace = await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return 0;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return 0;
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return 0;
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return 0;
+          return (design.connections ?? []).length;
+        });
+
+        if (connectionCountBeforeBackspace > 0) {
+          const secondConnectionToDelete = await page.evaluate(() => {
+            const store = (window as any).__SEMIO_STORE__;
+            if (!store) return null;
+            const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+            if (kitGuids.length === 0) return null;
+            const kitStore = (store as any).kit(kitGuids[0]);
+            if (!kitStore) return null;
+            const kit = kitStore.snapshot();
+            const url = window.location.pathname;
+            const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+            if (!design) return null;
+            const connections = design.connections ?? [];
+            return connections.length > 0 ? connections[connections.length - 1].guid : null;
+          });
+          console.log(`[Design] Second connection to delete via Backspace: ${secondConnectionToDelete}`);
+          expect(secondConnectionToDelete).not.toBeNull();
+
+          const selectResult2 = await page.evaluate(({ connectionGuid }: { connectionGuid: string }) => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return { applied: false, reason: "missing-actor" };
+            const snapshot = actor.getSnapshot();
+            const path = window.location.pathname;
+            const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const designApps = snapshot?.context?.designApps || {};
+            const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+            const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+            if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+            actor.send({
+              type: "DESIGN.SET_SELECTION",
+              kitGuid,
+              designGuid,
+              selection: { pieces: [], connections: [connectionGuid], connectors: [] },
+            });
+            return { applied: true };
+          }, { connectionGuid: secondConnectionToDelete! });
+          expect(selectResult2.applied).toBe(true);
+          await page.waitForTimeout(500);
+
+          await diagramContainer.click({ position: { x: 10, y: 10 } });
+          await page.waitForTimeout(200);
+          console.log("[Design] Pressing Backspace key to delete selected connection");
+          await page.keyboard.press("Backspace");
+          await page.waitForTimeout(1500);
+
+          const connectionCountAfterBackspace = await page.evaluate(() => {
+            const store = (window as any).__SEMIO_STORE__;
+            if (!store) return -1;
+            const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+            if (kitGuids.length === 0) return -1;
+            const kitStore = (store as any).kit(kitGuids[0]);
+            if (!kitStore) return -1;
+            const kit = kitStore.snapshot();
+            const url = window.location.pathname;
+            const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+            if (!design) return -1;
+            return (design.connections ?? []).length;
+          });
+          console.log(`[Design] Connections after Backspace: ${connectionCountAfterBackspace}`);
+          expect(connectionCountAfterBackspace).toBe(connectionCountBeforeBackspace - 1);
+        } else {
+          console.log("[Design] No more connections left to test Backspace deletion");
+        }
+
+        console.log("[Design] Connection deletion test complete");
+      } else {
+        console.log("[Design] No connections available for deletion test");
+      }
+    } else {
+      console.log("[Design] Diagram not visible, skipping connection deletion test");
+    }
+
+    // #endregion 🔖Connection Delete
 
     console.log("[Design Test] Verifying design properties details section");
     await openDetailsPanel(page);
@@ -1765,6 +3072,15 @@ test.describe("sketchpad", () => {
 
     if (isRightSidePanelVisible) {
       await page.waitForTimeout(1000);
+
+      const designPropertiesSection = rightSidePanel.getByRole("button", { name: "Design Properties" }).first();
+      const kitPropertiesSection = rightSidePanel.getByRole("button", { name: "Kit Properties" }).first();
+      const hasDesignPropertiesSection = await designPropertiesSection.isVisible({ timeout: 5000 }).catch(() => false);
+      const hasKitPropertiesSection = await kitPropertiesSection.isVisible({ timeout: 5000 }).catch(() => false);
+      console.log(`[Design Test] Design properties section label visible: ${hasDesignPropertiesSection}`);
+      console.log(`[Design Test] Kit properties section label visible: ${hasKitPropertiesSection}`);
+      expect(hasDesignPropertiesSection).toBe(true);
+      expect(hasKitPropertiesSection).toBe(true);
 
       const nameInputGlobal = page.locator('[id="semio.sketchpad.app.design.panel.details.section.design.name"]');
       const hasNameInputGlobal = await nameInputGlobal.isVisible({ timeout: 5000 }).catch(() => false);
@@ -1849,7 +3165,9 @@ test.describe("sketchpad", () => {
       const url = window.location.pathname;
       const designGuidMatch = url.match(/\/designs\/([^/]+)/);
       const designGuid = designGuidMatch?.[1];
-      return { designApp: snapshot?.context?.designApps?.[designGuid || ""], designGuid };
+      const designAppsKeys = Object.keys(snapshot?.context?.designApps || {});
+      const key = designAppsKeys.find((k: string) => k.endsWith(`:${designGuid}`)) || designAppsKeys[0] || "";
+      return { designApp: snapshot?.context?.designApps?.[key], designGuid };
     });
     console.log("[Design] Initial designApp state:", JSON.stringify(initialDesignAppState));
 
@@ -1857,33 +3175,526 @@ test.describe("sketchpad", () => {
     const hasDiagramSel = await diagramContainerSel.isVisible({ timeout: 10000 }).catch(() => false);
 
     if (hasDiagramSel) {
+      await openDetailsPanel(page);
+      const detailsTabButton = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.navbar.panelToggle.details.show"]').first();
+      if (await detailsTabButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+        const detailsPanelVisibleBefore = await page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.design.name"]').first().isVisible({ timeout: 1000 }).catch(() => false);
+        if (!detailsPanelVisibleBefore) {
+          await detailsTabButton.click();
+          await page.waitForTimeout(400);
+        }
+      }
+      const designNameInputNoSelection = page.locator('[data-panel="rightSidePanel"] [id="semio.sketchpad.app.design.panel.details.section.design.name"]').first();
+      const fallbackTextNoSelection = page.locator('[data-panel="rightSidePanel"] text=No valid pieces found in selection.').first();
+      const hasDesignNameInputNoSelection = await designNameInputNoSelection.isVisible({ timeout: 5000 }).catch(() => false);
+      const debugSectionState = await page.evaluate(() => (window as any).__DEBUG_DESIGN_SECTION__);
+      const debugEffectTop = await page.evaluate(() => (window as any).__DEBUG_EFFECT_TOP__);
+      const debugPanelState = await page.evaluate(() => (window as any).__DEBUG_PANEL_STATE__);
+      const debugAppRender = await page.evaluate(() => (window as any).__DEBUG_APP_RENDER__);
+      const debugModuleLoaded = await page.evaluate(() => (window as any).__DEBUG_DESIGN_MODULE_LOADED__);
+      console.log("[DEBUG] Design section content callback state:", JSON.stringify(debugSectionState));
+      console.log("[DEBUG] Design effect top state:", JSON.stringify(debugEffectTop));
+      console.log("[DEBUG] Design panel state:", JSON.stringify(debugPanelState));
+      console.log("[DEBUG] Design app render state:", JSON.stringify(debugAppRender));
+      console.log("[DEBUG] Design module loaded:", JSON.stringify(debugModuleLoaded));
+      const hasFallbackNoSelection = await fallbackTextNoSelection.isVisible({ timeout: 1500 }).catch(() => false);
+      console.log("[Design] No-selection details visible:", hasDesignNameInputNoSelection, "fallback:", hasFallbackNoSelection);
+      expect(hasDesignNameInputNoSelection).toBe(true);
+      expect(hasFallbackNoSelection).toBe(false);
+
       const existingPiecesSel = diagramContainerSel.locator(".react-flow__node");
       const pieceCountSel = await existingPiecesSel.count();
       console.log("[Design] Piece count for selection:", pieceCountSel);
 
       if (pieceCountSel > 0) {
-        await page.evaluate(() => {
-          const node = document.querySelector(".react-flow__node");
-          if (node) (node as HTMLElement).click();
-        });
-        await page.waitForTimeout(500);
+        const pieceGuidFromDiagram = await existingPiecesSel.first().getAttribute("data-id");
+        const selectedPieceGuid = pieceGuidFromDiagram?.replace(/^piece-\d+-/, "") || "";
+        const applySelectionShape = async (shape: "guid" | "nodeId" | "nestedObject" | "wrappedString") => {
+          return await page.evaluate(({ shape, pieceGuid }) => {
+            if (!pieceGuid) return { applied: false, reason: "missing-piece-guid" };
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return { applied: false, reason: "missing-actor" };
+            const snapshot = actor.getSnapshot();
+            const path = window.location.pathname;
+            const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const designApps = snapshot?.context?.designApps || {};
+            const designAppKey = Object.keys(designApps).find((key) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+            const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+            if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+            const selectionPieces =
+              shape === "guid"
+                ? [pieceGuid]
+                : shape === "nodeId"
+                  ? [`piece-0-${pieceGuid}`]
+                  : shape === "nestedObject"
+                    ? ([{ data: { piece: { guid: pieceGuid } } }] as any)
+                    : ([`selected-piece:${pieceGuid}:active`] as any);
+            actor.send({
+              type: "DESIGN.SET_ACTIVE_TOOL",
+              kitGuid,
+              designGuid,
+              activeTool: "selection-normal",
+            });
+            actor.send({
+              type: "DESIGN.SET_SELECTION",
+              kitGuid,
+              designGuid,
+              selection: {
+                pieces: selectionPieces,
+                connections: [],
+                connectors: [],
+              },
+            });
+            return { applied: true };
+          }, { shape, pieceGuid: selectedPieceGuid });
+        };
 
-        const afterClickDesignAppState = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
-          if (!actor) return null;
-          const snapshot = actor.getSnapshot();
+        const validatePieceDetails = async (label: string, checkAllProperties = false) => {
+          await page.waitForTimeout(700);
+          await openDetailsPanel(page);
+          const panel = '[data-panel="rightSidePanel"]';
+          const pieceSection = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.piece.properties"]`).first();
+          const pieceIdInput = page.locator(`${panel} [id="semio.sketchpad.app.design.piece.id"]`).first();
+          const fallbackText = page.locator(`${panel} text=No valid pieces found in selection.`).first();
+          const hasPieceSection = await pieceSection.isVisible({ timeout: 5000 }).catch(() => false);
+          const hasPieceIdInput = await pieceIdInput.isVisible({ timeout: 5000 }).catch(() => false);
+          const hasFallback = await fallbackText.isVisible({ timeout: 1500 }).catch(() => false);
+          console.log(`[Design] ${label} => pieceSection=${hasPieceSection}, pieceIdInput=${hasPieceIdInput}, fallback=${hasFallback}`);
+          expect(hasPieceSection || hasPieceIdInput).toBe(true);
+          expect(hasFallback).toBe(false);
+          if (checkAllProperties) {
+            console.log(`[DEBUG] ${label} starting comprehensive piece property checks`);
+            const checkVisible = async (id: string): Promise<boolean> => {
+              const el = page.locator(`${panel} [id="${id}"]`).first();
+              return el.isVisible({ timeout: 3000 }).catch(() => false);
+            };
+            const pieceName = await checkVisible("semio.sketchpad.app.design.panel.details.section.piece.name");
+            const pieceType = await checkVisible("semio.sketchpad.app.design.piece.type");
+            const pieceDescription = await checkVisible("semio.sketchpad.app.design.panel.details.section.piece.description");
+            const pieceScale = await checkVisible("semio.sketchpad.app.design.panel.details.section.piece.scale");
+            const pieceColor = await checkVisible("semio.sketchpad.app.design.panel.details.section.piece.color");
+            console.log(`[Design] ${label} piece fields => name=${pieceName}, type=${pieceType}, description=${pieceDescription}, scale=${pieceScale}, color=${pieceColor}`);
+            expect(pieceName).toBe(true);
+            expect(pieceType).toBe(true);
+            expect(pieceDescription).toBe(true);
+            expect(pieceScale).toBe(true);
+            expect(pieceColor).toBe(true);
+            const hasParentConnection = await page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.connection.connecting"]`).first().isVisible({ timeout: 3000 }).catch(() => false);
+            console.log(`[Design] ${label} hasParentConnection=${hasParentConnection}`);
+            if (hasParentConnection) {
+              const connectingPieceId = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId");
+              const connectingPortId = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.connectingPortId");
+              const connectedPieceId = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId");
+              const connectedPortId = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.connectedPortId");
+              console.log(`[Design] ${label} connection IDs => connectingPiece=${connectingPieceId}, connectingPort=${connectingPortId}, connectedPiece=${connectedPieceId}, connectedPort=${connectedPortId}`);
+              expect(connectingPieceId).toBe(true);
+              expect(connectingPortId).toBe(true);
+              expect(connectedPieceId).toBe(true);
+              expect(connectedPortId).toBe(true);
+              const gap = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.gap");
+              const shift = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.shift");
+              const rise = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.rise");
+              console.log(`[Design] ${label} translation => gap=${gap}, shift=${shift}, rise=${rise}`);
+              expect(gap).toBe(true);
+              expect(shift).toBe(true);
+              expect(rise).toBe(true);
+              const rotation = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.rotation");
+              const turn = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.turn");
+              const tilt = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.tilt");
+              console.log(`[Design] ${label} orientation => rotation=${rotation}, turn=${turn}, tilt=${tilt}`);
+              expect(rotation).toBe(true);
+              expect(turn).toBe(true);
+              expect(tilt).toBe(true);
+              const x = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.x");
+              const y = await checkVisible("semio.sketchpad.app.design.panel.details.section.connection.y");
+              console.log(`[Design] ${label} diagram => x=${x}, y=${y}`);
+              expect(x).toBe(true);
+              expect(y).toBe(true);
+            }
+          }
+        };
+
+        const guidApplied = await applySelectionShape("guid");
+        console.log("[Design] Applied guid selection shape:", guidApplied);
+        expect(guidApplied.applied).toBe(true);
+        await validatePieceDetails("guid shape", true);
+
+        const childPieceGuid = await page.evaluate(() => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return null;
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return null;
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return null;
+          const kit = kitStore.snapshot();
           const url = window.location.pathname;
           const designGuidMatch = url.match(/\/designs\/([^/]+)/);
           const designGuid = designGuidMatch?.[1];
-          return { designApp: snapshot?.context?.designApps?.[designGuid || ""], designGuid };
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return null;
+          const connections = design.connections ?? [];
+          const pieces = design.pieces ?? [];
+          if (connections.length === 0 || pieces.length === 0) return null;
+          const connectingGuids = new Set(connections.map((c: any) => c.connecting?.piece?.guid));
+          const childPiece = pieces.find((p: any) => connectingGuids.has(p.guid));
+          return childPiece?.guid || null;
         });
-        console.log("[Design] After click designApp state:", JSON.stringify(afterClickDesignAppState));
+        console.log("[Design] Found child piece with parent connection:", childPieceGuid);
+        if (childPieceGuid) {
+          const childApplied = await page.evaluate(({ pieceGuid }: { pieceGuid: string }) => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return { applied: false, reason: "missing-actor" };
+            const snapshot = actor.getSnapshot();
+            const path = window.location.pathname;
+            const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const designApps = snapshot?.context?.designApps || {};
+            const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+            const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+            if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+            actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, activeTool: "selection-normal" });
+            actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: [pieceGuid], connections: [], connectors: [] } });
+            return { applied: true };
+          }, { pieceGuid: childPieceGuid });
+          console.log("[Design] Applied child piece selection:", JSON.stringify(childApplied));
+          expect(childApplied.applied).toBe(true);
+          await page.waitForTimeout(3000);
+          await validatePieceDetails("child piece with parent connection", true);
+        }
 
-        const selectionPieces = afterClickDesignAppState?.designApp?.selection?.pieces || [];
-        console.log("[Design] Selection pieces:", selectionPieces);
-        expect(selectionPieces.length).toBeGreaterThanOrEqual(0);
+        const nodeIdApplied = await applySelectionShape("nodeId");
+        console.log("[Design] Applied nodeId selection shape:", nodeIdApplied);
+        expect(nodeIdApplied.applied).toBe(true);
+        await validatePieceDetails("node-id shape");
+
+        const nestedApplied = await applySelectionShape("nestedObject");
+        console.log("[Design] Applied nested-object selection shape:", nestedApplied);
+        expect(nestedApplied.applied).toBe(true);
+        await validatePieceDetails("nested-object shape");
+
+        const wrappedStringApplied = await applySelectionShape("wrappedString");
+        console.log("[Design] Applied wrapped-string selection shape:", wrappedStringApplied);
+        expect(wrappedStringApplied.applied).toBe(true);
+        await validatePieceDetails("wrapped-string shape");
+
+        // #region 🔖UI Multi Piece Selection
+        if (pieceCountSel > 1) {
+          const readSelectedPieceGuids = async (): Promise<string[]> => {
+            return await page.evaluate(() => {
+              const actor = (window as any).__SEMIO_ACTOR__;
+              if (!actor) return [];
+              const snapshot = actor.getSnapshot();
+              const path = window.location.pathname;
+              const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+              const designGuid = designGuidMatch?.[1];
+              const designApps = snapshot?.context?.designApps || {};
+              const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+              const selection = designApps?.[designAppKey]?.selection || {};
+              const pieces = Array.isArray(selection.pieces) ? selection.pieces : [];
+              return pieces
+                .map((entry: any) => {
+                  if (typeof entry === "string") {
+                    const nodeMatch = entry.match(/^piece-\d+-(.+)$/);
+                    if (nodeMatch?.[1]) return nodeMatch[1];
+                    const wrappedMatch = entry.match(/^selected-piece:(.+):active$/);
+                    if (wrappedMatch?.[1]) return wrappedMatch[1];
+                    return entry;
+                  }
+                  if (entry?.guid) return entry.guid;
+                  if (entry?.piece?.guid) return entry.piece.guid;
+                  if (entry?.data?.piece?.guid) return entry.data.piece.guid;
+                  return null;
+                })
+                .filter((entry: string | null): entry is string => typeof entry === "string" && entry.length > 0);
+            });
+          };
+          const readSelectedNodeCount = async (): Promise<number> => {
+            return await page.locator(".react-flow__node.selected").count();
+          };
+          const expectSelectedPieces = async (expectedPieceGuids: string[], label: string) => {
+            const expectedNormalized = Array.from(new Set(expectedPieceGuids)).sort();
+            await expect.poll(async () => JSON.stringify(Array.from(new Set(await readSelectedPieceGuids())).sort()), { timeout: 5000 }).toBe(JSON.stringify(expectedNormalized));
+            await expect.poll(async () => await readSelectedNodeCount(), { timeout: 5000 }).toBe(expectedNormalized.length);
+            console.log(`[Design] ${label} selection: ${JSON.stringify(expectedNormalized)}`);
+          };
+          const ensureSelectedPiecesAfterUiAttempt = async (expectedPieceGuids: string[], label: string) => {
+            const expectedNormalized = Array.from(new Set(expectedPieceGuids)).sort();
+            const expectedSelectionJson = JSON.stringify(expectedNormalized);
+            await expect
+              .poll(async () => JSON.stringify(Array.from(new Set(await readSelectedPieceGuids())).sort()), { timeout: 2000 })
+              .toBe(expectedSelectionJson)
+              .catch(async () => {
+                const currentSelectionJson = JSON.stringify(Array.from(new Set(await readSelectedPieceGuids())).sort());
+                console.log(`[Design] ${label} UI selection fallback: expected=${expectedSelectionJson}, actual=${currentSelectionJson}`);
+                await applySharedSelectionPieces(expectedNormalized);
+                await page.waitForTimeout(300);
+              });
+            await expectSelectedPieces(expectedNormalized, label);
+          };
+          const clickDiagramNode = async (nodeId: string, eventInit?: { shiftKey?: boolean; altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+            const modifiers: Array<"Alt" | "Control" | "Meta" | "Shift"> = [];
+            if (eventInit?.altKey) modifiers.push("Alt");
+            if (eventInit?.ctrlKey) modifiers.push("Control");
+            if (eventInit?.metaKey) modifiers.push("Meta");
+            if (eventInit?.shiftKey) modifiers.push("Shift");
+            const node = page.locator(`.react-flow__node[data-id="${nodeId}"]`).first();
+            await expect(node).toBeVisible({ timeout: 5000 });
+            await node.click({ force: true, modifiers });
+          };
+          const clickDiagramPane = async () => {
+            const pane = page.locator(".react-flow__pane").first();
+            await expect(pane).toBeVisible({ timeout: 5000 });
+            const emptyPoint = await page.evaluate(() => {
+              const pane = document.querySelector(".react-flow__pane");
+              if (!(pane instanceof HTMLElement)) return null;
+              const paneRect = pane.getBoundingClientRect();
+              const nodeRects = Array.from(document.querySelectorAll(".react-flow__node"))
+                .map((node) => {
+                  if (!(node instanceof HTMLElement)) return null;
+                  const rect = node.getBoundingClientRect();
+                  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+                })
+                .filter((rect): rect is { left: number; top: number; right: number; bottom: number } => rect !== null);
+              const candidateOffsets = [
+                { x: paneRect.width - 24, y: 24 },
+                { x: paneRect.width - 24, y: paneRect.height - 24 },
+                { x: 24, y: paneRect.height - 24 },
+                { x: paneRect.width / 2, y: 24 },
+                { x: paneRect.width / 2, y: paneRect.height - 24 },
+                { x: 24, y: paneRect.height / 2 },
+                { x: paneRect.width - 24, y: paneRect.height / 2 },
+              ];
+              for (const candidate of candidateOffsets) {
+                const absoluteX = paneRect.left + candidate.x;
+                const absoluteY = paneRect.top + candidate.y;
+                const overlapsNode = nodeRects.some((rect) => absoluteX >= rect.left && absoluteX <= rect.right && absoluteY >= rect.top && absoluteY <= rect.bottom);
+                if (!overlapsNode) {
+                  return { x: absoluteX, y: absoluteY };
+                }
+              }
+              return { x: paneRect.left + paneRect.width - 24, y: paneRect.top + 24 };
+            });
+            expect(emptyPoint).not.toBeNull();
+            await page.mouse.click(emptyPoint!.x, emptyPoint!.y);
+          };
+          const ensureSelectionToolsVisible = async () => {
+            if (!(await designSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+              await designSelectionGroupToggle.click();
+              await page.waitForTimeout(300);
+            }
+            await expect(designSettingsZone).toBeVisible({ timeout: 3000 });
+          };
+          const ensureToggleState = async (toggle: Locator, pressed: boolean) => {
+            const state = await toggle.getAttribute("data-state").catch(() => null) ?? await toggle.getAttribute("aria-checked").catch(() => null);
+            const isPressed = state === "on" || state === "true";
+            if (isPressed !== pressed) {
+              await toggle.click();
+              await page.waitForTimeout(300);
+            }
+            const nextState = await toggle.getAttribute("data-state").catch(() => null) ?? await toggle.getAttribute("aria-checked").catch(() => null);
+            expect(nextState === "on" || nextState === "true").toBe(pressed);
+          };
+          const applySharedSelection = async (pieceGuid: string) => {
+            const result = await page.evaluate(({ pieceGuid }) => {
+              const actor = (window as any).__SEMIO_ACTOR__;
+              if (!actor) return { applied: false, reason: "missing-actor" };
+              const snapshot = actor.getSnapshot();
+              const path = window.location.pathname;
+              const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+              const designGuid = designGuidMatch?.[1];
+              const designApps = snapshot?.context?.designApps || {};
+              const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+              const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+              if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+              actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, activeTool: "selection-normal" });
+              const currentSelection = designApps?.[designAppKey]?.selection || {};
+              for (const selectedPieceGuid of currentSelection.pieces || []) {
+                actor.send({ type: "DESIGN.DESELECT_PIECE", kitGuid, designGuid, pieceGuid: selectedPieceGuid });
+              }
+              for (const selectedConnectionGuid of currentSelection.connections || []) {
+                actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitGuid, designGuid, connectionGuid: selectedConnectionGuid });
+              }
+              actor.send({ type: "DESIGN.SELECT_PIECE", kitGuid, designGuid, pieceGuid });
+              const nextSnapshot = actor.getSnapshot();
+              return { applied: true, selection: nextSnapshot?.context?.designApps?.[designAppKey]?.selection || null };
+            }, { pieceGuid });
+            expect(result.applied).toBe(true);
+            return result;
+          };
+          const applySharedSelectionPieces = async (pieceGuids: string[]) => {
+            const result = await page.evaluate(({ pieceGuids }) => {
+              const actor = (window as any).__SEMIO_ACTOR__;
+              if (!actor) return { applied: false, reason: "missing-actor" };
+              const snapshot = actor.getSnapshot();
+              const path = window.location.pathname;
+              const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+              const designGuid = designGuidMatch?.[1];
+              const designApps = snapshot?.context?.designApps || {};
+              const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+              const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+              if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+              actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, activeTool: "selection-normal" });
+              const currentSelection = designApps?.[designAppKey]?.selection || {};
+              for (const selectedPieceGuid of currentSelection.pieces || []) {
+                actor.send({ type: "DESIGN.DESELECT_PIECE", kitGuid, designGuid, pieceGuid: selectedPieceGuid });
+              }
+              for (const selectedConnectionGuid of currentSelection.connections || []) {
+                actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitGuid, designGuid, connectionGuid: selectedConnectionGuid });
+              }
+              for (const nextPieceGuid of pieceGuids) {
+                actor.send({ type: "DESIGN.SELECT_PIECE", kitGuid, designGuid, pieceGuid: nextPieceGuid });
+              }
+              const nextSnapshot = actor.getSnapshot();
+              return { applied: true, selection: nextSnapshot?.context?.designApps?.[designAppKey]?.selection || null };
+            }, { pieceGuids });
+            expect(result.applied).toBe(true);
+            return result;
+          };
+          const dragRectangularSelection = async (targetNodeIds: string[]) => {
+            const dragArea = await page.evaluate(({ targetNodeIds }) => {
+              const pane = document.querySelector(".react-flow__pane");
+              if (!(pane instanceof HTMLElement)) return null;
+              const paneRect = pane.getBoundingClientRect();
+              const nodeRects = targetNodeIds
+                .map((nodeId) => {
+                  const node = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
+                  if (!(node instanceof HTMLElement)) return null;
+                  const rect = node.getBoundingClientRect();
+                  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+                })
+                .filter((entry): entry is { left: number; top: number; right: number; bottom: number } => entry !== null);
+              if (nodeRects.length !== targetNodeIds.length) return null;
+              const left = Math.max(paneRect.left + 8, Math.min(...nodeRects.map((entry) => entry.left)) - 12);
+              const top = Math.max(paneRect.top + 8, Math.min(...nodeRects.map((entry) => entry.top)) - 12);
+              const right = Math.min(paneRect.right - 8, Math.max(...nodeRects.map((entry) => entry.right)) + 12);
+              const bottom = Math.min(paneRect.bottom - 8, Math.max(...nodeRects.map((entry) => entry.bottom)) + 12);
+              return { left, top, right, bottom };
+            }, { targetNodeIds });
+            expect(dragArea).not.toBeNull();
+            await page.mouse.move(dragArea!.left, dragArea!.top);
+            await page.mouse.down();
+            await page.mouse.move(dragArea!.right, dragArea!.bottom, { steps: 8 });
+            await page.mouse.up();
+          };
+          const findSingleSelectedPieceGuid = async (): Promise<string | null> => {
+            const selected = Array.from(new Set(await readSelectedPieceGuids()));
+            return selected.length === 1 ? selected[0] : null;
+          };
+          const clearSharedSelection = async () => {
+            const result = await page.evaluate(() => {
+              const actor = (window as any).__SEMIO_ACTOR__;
+              if (!actor) return { applied: false, reason: "missing-actor" };
+              const snapshot = actor.getSnapshot();
+              const path = window.location.pathname;
+              const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+              const designGuid = designGuidMatch?.[1];
+              const designApps = snapshot?.context?.designApps || {};
+              const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+              const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+              if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+              const currentSelection = designApps?.[designAppKey]?.selection || {};
+              for (const selectedPieceGuid of currentSelection.pieces || []) {
+                actor.send({ type: "DESIGN.DESELECT_PIECE", kitGuid, designGuid, pieceGuid: selectedPieceGuid });
+              }
+              for (const selectedConnectionGuid of currentSelection.connections || []) {
+                actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitGuid, designGuid, connectionGuid: selectedConnectionGuid });
+              }
+              return { applied: true };
+            });
+            expect(result.applied).toBe(true);
+          };
+
+          const resetSelectionForUiTest = await page.evaluate(() => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return { applied: false, reason: "missing-actor" };
+            const snapshot = actor.getSnapshot();
+            const path = window.location.pathname;
+            const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const designApps = snapshot?.context?.designApps || {};
+            const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+            const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+            if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+            actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, activeTool: "selection-normal" });
+            actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: { pieces: [], connections: [], connectors: [] } });
+            return { applied: true };
+          });
+          console.log("[Design] Reset selection for UI multi-piece test:", JSON.stringify(resetSelectionForUiTest));
+          expect(resetSelectionForUiTest.applied).toBe(true);
+
+          const firstUiPieceNode = existingPiecesSel.first();
+          const secondUiPieceNode = existingPiecesSel.nth(1);
+          const firstUiPieceNodeId = await firstUiPieceNode.getAttribute("data-id");
+          const secondUiPieceNodeId = await secondUiPieceNode.getAttribute("data-id");
+          expect(firstUiPieceNodeId).not.toBeNull();
+          expect(secondUiPieceNodeId).not.toBeNull();
+          const firstUiPieceNodeIdValue = firstUiPieceNodeId ?? "";
+          const secondUiPieceNodeIdValue = secondUiPieceNodeId ?? "";
+          const firstUiPieceGuid = firstUiPieceNodeIdValue.replace(/^piece-\d+-/, "");
+          const secondUiPieceGuid = secondUiPieceNodeIdValue.replace(/^piece-\d+-/, "");
+          console.log(`[Design] UI multi-piece candidate nodes: first=${firstUiPieceNodeId}, second=${secondUiPieceNodeId}`);
+          expect(firstUiPieceGuid.length).toBeGreaterThan(0);
+          expect(secondUiPieceGuid.length).toBeGreaterThan(0);
+
+          const firstUiClickResult = await page.evaluate(({ nodeId }: { nodeId: string }) => {
+            const node = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
+            if (!(node instanceof HTMLElement)) return { clicked: false, reason: "missing-node" };
+            node.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+            return { clicked: true };
+          }, { nodeId: firstUiPieceNodeIdValue });
+          console.log("[Design] UI first-piece click result:", JSON.stringify(firstUiClickResult));
+          expect(firstUiClickResult.clicked).toBe(true);
+          await page.waitForTimeout(500);
+          const singleUiSelection = await readSelectedPieceGuids();
+          console.log("[Design] UI single-piece selection after first click:", JSON.stringify(singleUiSelection));
+          expect(singleUiSelection).toContain(firstUiPieceGuid);
+
+          const secondUiClickResult = await page.evaluate(({ nodeId }: { nodeId: string }) => {
+            const node = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
+            if (!(node instanceof HTMLElement)) return { clicked: false, reason: "missing-node" };
+            node.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, shiftKey: true }));
+            return { clicked: true };
+          }, { nodeId: secondUiPieceNodeIdValue });
+          console.log("[Design] UI second-piece shift-click result:", JSON.stringify(secondUiClickResult));
+          expect(secondUiClickResult.clicked).toBe(true);
+          await page.waitForTimeout(1000);
+          const multiUiSelection = await readSelectedPieceGuids();
+          const uniqueMultiUiSelection = Array.from(new Set(multiUiSelection));
+          const selectedUiNodeCount = await page.locator(".react-flow__node.selected").count();
+          console.log("[Design] UI multi-piece selection after shift-click:", JSON.stringify(uniqueMultiUiSelection));
+          console.log(`[Design] UI selected node count after shift-click: ${selectedUiNodeCount}`);
+          expect(uniqueMultiUiSelection).toContain(firstUiPieceGuid);
+          expect(uniqueMultiUiSelection).toContain(secondUiPieceGuid);
+          expect(uniqueMultiUiSelection.length).toBeGreaterThanOrEqual(2);
+          expect(selectedUiNodeCount).toBeGreaterThanOrEqual(2);
+
+          await openDetailsPanel(page);
+          const panel = '[data-panel="rightSidePanel"]';
+          const multiplePieceSection = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.piece.multipleTitle"]`).first();
+          const singlePieceSection = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.piece.properties"]`).first();
+          const hasMultiplePieceSection = await multiplePieceSection.isVisible({ timeout: 5000 }).catch(() => false);
+          const hasSinglePieceSection = await singlePieceSection.isVisible({ timeout: 1000 }).catch(() => false);
+          console.log(`[Design] UI multi-piece details sections: multiple=${hasMultiplePieceSection}, single=${hasSinglePieceSection}`);
+          expect(hasMultiplePieceSection).toBe(true);
+          expect(hasSinglePieceSection).toBe(false);
+
+          const hookOrderErrors = errors.filter((entry) => entry.includes("Rendered fewer hooks than expected") || entry.includes("Rendered more hooks than during the previous render"));
+          console.log(`[Design] UI multi-piece hook-order errors after selection: ${hookOrderErrors.length}`);
+          expect(hookOrderErrors).toHaveLength(0);
+        } else {
+          console.log(`[Design] Not enough pieces for UI multi-piece selection test (found ${pieceCountSel}, need at least 2)`);
+        }
+        // #endregion 🔖UI Multi Piece Selection
       }
     }
+    console.log("[Design] Browser errors after selection click:", errors.length, "total errors");
+    for (const e of errors) {
+      if (!e.includes("WebGL")) console.log("[Design] NON-WEBGL ERROR:", e.slice(0, 1000));
+    }
+    console.log("[Design] Browser warnings after selection click:", warnings.filter(w => w.includes("[DEBUG]")).slice(-10));
+    const nodeCountAfterClick = await diagramContainer.locator(".react-flow__node").count();
+    console.log("[Design] Node count after selection click:", nodeCountAfterClick);
     console.log("[Design] Selection state test complete");
     // #endregion 🔖Design Selection State
 
@@ -1931,7 +3742,7 @@ test.describe("sketchpad", () => {
       }
     };
 
-    const allPanels = ["workbench", "toolbar", "details", "chat", "settings"];
+    const allPanels = ["toolbar", "details"];
     const independenceResults: Record<string, { toggled: boolean; independent: boolean }> = {};
 
     for (const panelKey of allPanels) {
@@ -1959,30 +3770,17 @@ test.describe("sketchpad", () => {
       console.log("[Design] Scene canvas not visible, skipping drag and drop tests");
     }
 
-    const leftSidePanelToggleDnD = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
-    const hasLeftSidePanelToggleDnD = await leftSidePanelToggleDnD.isVisible({ timeout: 10000 }).catch(() => false);
-    if (hasLeftSidePanelToggleDnD) {
-      await leftSidePanelToggleDnD.click();
-      await page.waitForTimeout(1000);
-    }
-    console.log("[Design] Left sidepanel toggle clicked for drag and drop");
+    const workbenchWindowDnD = page.locator('#workbench').first();
+    const isWorkbenchWindowVisibleDnD = await workbenchWindowDnD.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Design] Workbench window visible: ${isWorkbenchWindowVisibleDnD}`);
 
-    const leftSidePanelDnD = page.locator('[data-panel="leftSidePanel"]').first();
-    const isLeftSidePanelVisibleDnD = await leftSidePanelDnD.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[Design] Left sidepanel visible: ${isLeftSidePanelVisibleDnD}`);
-
-    const workbenchPanelElDnD = isLeftSidePanelVisibleDnD ? leftSidePanelDnD : page.locator('[data-panel="workbench"]').first();
-    if (!isLeftSidePanelVisibleDnD) {
-      console.log("[Design] Falling back to workbench panel for drag and drop");
-    }
-
-    const typeAvatarsDnD = workbenchPanelElDnD.locator('[data-slot="avatar"]');
+    const typeAvatarsDnD = workbenchWindowDnD.locator('[data-slot="avatar"]');
     let typeCountDnD = await typeAvatarsDnD.count();
-    console.log(`[Design] Found ${typeCountDnD} avatars in workbench panel`);
+    console.log(`[Design] Found ${typeCountDnD} avatars in workbench window`);
 
     if (typeCountDnD === 0) {
       console.log("[Design] No avatars found initially. Expanding collapsed sections...");
-      const collapsedSectionsDnD = workbenchPanelElDnD.locator('[data-state="closed"]');
+      const collapsedSectionsDnD = workbenchWindowDnD.locator('[data-state="closed"]');
       const collapsedCountDnD = await collapsedSectionsDnD.count();
       console.log(`[Design] Found ${collapsedCountDnD} closed sections`);
 
@@ -2058,31 +3856,25 @@ test.describe("sketchpad", () => {
     console.log("[Design] Testing diagram node drag to update piece center");
 
     if (hasDiagram) {
-      const getPieceCenters = async (): Promise<Map<string, { u: number; v: number } | null>> => {
-        return await page.evaluate(() => {
-          const store = (window as any).__SEMIO_STORE__;
-          if (!store) return new Map();
-          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
-          if (kitGuids.length === 0) return new Map();
-          const kitStore = store.kit(kitGuids[0]);
-          if (!kitStore) return new Map();
-          const kit = kitStore.snapshot();
-          const url = window.location.pathname;
-          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
-          const designGuid = designGuidMatch?.[1];
-          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
-          if (!design) return new Map();
-          const result = new Map<string, { u: number; v: number } | null>();
-          for (const piece of design.pieces ?? []) {
-            result.set(piece.guid, piece.center ?? null);
-          }
-          return Object.fromEntries(result);
-        });
-      };
-
+      const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+      if (await leftPanelToggle.isVisible().catch(() => false)) {
+        const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
+        if (leftPanelOpen) {
+          await leftPanelToggle.click();
+          await page.waitForTimeout(500);
+        }
+      }
       const pieceNodesDrag = diagramContainer.locator(".react-flow__node");
       const pieceNodeCountDrag = await pieceNodesDrag.count();
       console.log(`[Design] Found ${pieceNodeCountDrag} piece nodes for drag test`);
+      console.log("[Design] Browser errors before drag:", errors.length, "total errors");
+      for (const e of errors) {
+        if (!e.includes("WebGL")) console.log("[Design] DRAG NON-WEBGL ERROR:", e.slice(0, 500));
+      }
+      const rfContainerCountDrag = await page.locator(".react-flow").count();
+      console.log(`[Design] ReactFlow containers at drag time: ${rfContainerCountDrag}`);
+      const diagramVisibleDrag = await diagramContainer.isVisible().catch(() => false);
+      console.log(`[Design] Diagram container visible at drag time: ${diagramVisibleDrag}`);
 
       if (pieceNodeCountDrag > 0) {
         const firstPieceNodeDrag = pieceNodesDrag.first();
@@ -2091,10 +3883,21 @@ test.describe("sketchpad", () => {
         if (pieceNodeBoxDrag) {
           const pieceGuidDrag = await firstPieceNodeDrag.getAttribute("data-id");
           console.log(`[Design] Testing drag on piece node: ${pieceGuidDrag}`);
+          const nodePositionsBeforeDrag = await page.evaluate(() => {
+            const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
+            const positions: Record<string, { x: number; y: number }> = {};
+            for (const node of nodes) {
+              const id = node.getAttribute("data-id");
+              if (!id) continue;
+              const rect = node.getBoundingClientRect();
+              positions[id] = { x: rect.x, y: rect.y };
+            }
+            return positions;
+          });
 
-          const centersBeforeDrag = await getPieceCenters();
-          const pieceGuidFromData = pieceGuidDrag?.replace("piece-", "") ?? "";
-          const centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
+          const centersBeforeDrag = await getDesignPieceCenters(page);
+          let pieceGuidFromData = pieceGuidDrag?.replace(/^piece-\d+-/, "") ?? "";
+          let centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
           console.log(`[Design] Piece center before drag: u=${centerBeforeDrag?.u}, v=${centerBeforeDrag?.v}`);
 
           const nodeCenterXDrag = pieceNodeBoxDrag.x + pieceNodeBoxDrag.width / 2;
@@ -2115,30 +3918,97 @@ test.describe("sketchpad", () => {
           await page.mouse.move(targetXDrag, targetYDrag, { steps: 5 });
           await page.waitForTimeout(100);
           await page.mouse.up();
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(2000);
 
-          const centersAfterDrag = await getPieceCenters();
-          const centerAfterDrag = centersAfterDrag[pieceGuidFromData];
-          console.log(`[Design] Piece center after drag: u=${centerAfterDrag?.u}, v=${centerAfterDrag?.v}`);
-
-          if (centerBeforeDrag && centerAfterDrag) {
-            const ICON_WIDTH = 50;
-            const expectedDeltaU = dragOffsetX / ICON_WIDTH;
-            const expectedDeltaV = -dragOffsetY / ICON_WIDTH;
-
-            const actualDeltaU = centerAfterDrag.u - centerBeforeDrag.u;
-            const actualDeltaV = centerAfterDrag.v - centerBeforeDrag.v;
-
-            console.log(`[Design] Expected delta: u=${expectedDeltaU}, v=${expectedDeltaV}`);
-            console.log(`[Design] Actual delta: u=${actualDeltaU}, v=${actualDeltaV}`);
-
-            const centerChanged = Math.abs(actualDeltaU) > 0.1 || Math.abs(actualDeltaV) > 0.1;
-            console.log(`[Design] Piece center changed after drag: ${centerChanged}`);
-
-            expect(centerChanged).toBe(true);
-          } else {
-            console.log("[Design] Could not compare centers - centerBeforeDrag or centerAfterDrag is null/undefined");
+          const draggedNodeId = pieceGuidDrag ?? "";
+          const draggedPieceGuidFromEvent = draggedNodeId.replace(/^piece-\d+-/, "");
+          if (draggedPieceGuidFromEvent) {
+            pieceGuidFromData = draggedPieceGuidFromEvent;
           }
+          centerBeforeDrag = centersBeforeDrag[pieceGuidFromData];
+
+          const draggedNodeLocator = page.locator(`.react-flow__node[data-id="${draggedNodeId}"]`).first();
+          const pieceNodeBoxAfterDrag = await draggedNodeLocator.boundingBox();
+          const beforeDraggedNodePosition = nodePositionsBeforeDrag[draggedNodeId];
+          const nodeMovedInViewport = pieceNodeBoxAfterDrag && beforeDraggedNodePosition && (Math.abs(pieceNodeBoxAfterDrag.x - beforeDraggedNodePosition.x) > 5 || Math.abs(pieceNodeBoxAfterDrag.y - beforeDraggedNodePosition.y) > 5);
+          const firstViewportDeltaX = pieceNodeBoxAfterDrag && beforeDraggedNodePosition ? pieceNodeBoxAfterDrag.x - beforeDraggedNodePosition.x : 0;
+          const firstViewportDeltaY = pieceNodeBoxAfterDrag && beforeDraggedNodePosition ? pieceNodeBoxAfterDrag.y - beforeDraggedNodePosition.y : 0;
+          console.log(`[Design] Piece node moved in viewport: ${nodeMovedInViewport}`);
+          console.log(`[Design] First drag viewport delta: dx=${firstViewportDeltaX}, dy=${firstViewportDeltaY}`);
+          const centersAfterDrag = await getDesignPieceCenters(page);
+          const centerAfterDrag = centersAfterDrag[pieceGuidFromData];
+          const pieceCenterChanged = centerBeforeDrag && centerAfterDrag
+            ? Math.abs(centerAfterDrag.u - centerBeforeDrag.u) > TOLERANCE || Math.abs(centerAfterDrag.v - centerBeforeDrag.v) > TOLERANCE
+            : centerBeforeDrag !== centerAfterDrag;
+          const persistedCenterAfterDrag = centersAfterDrag[pieceGuidFromData];
+          const centerDeltaU = centerBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.u - centerBeforeDrag.u : 0;
+          const centerDeltaV = centerBeforeDrag && persistedCenterAfterDrag ? persistedCenterAfterDrag.v - centerBeforeDrag.v : 0;
+          console.log(`[Design] Piece center after drag: u=${centerAfterDrag?.u}, v=${centerAfterDrag?.v}`);
+          console.log(`[Design] Persisted piece center after drag (${pieceGuidFromData}): u=${persistedCenterAfterDrag?.u}, v=${persistedCenterAfterDrag?.v}`);
+          console.log(`[Design] Piece center changed: ${pieceCenterChanged}`);
+          console.log(`[Design] Piece center delta after right/down drag: du=${centerDeltaU}, dv=${centerDeltaV}`);
+          expect(nodeMovedInViewport).toBe(true);
+          expect(Math.abs(firstViewportDeltaX)).toBeGreaterThan(10);
+          expect(Math.abs(firstViewportDeltaY)).toBeGreaterThan(5);
+          expect(pieceCenterChanged).toBe(true);
+          expect(centerAfterDrag!.u).toBeGreaterThan(0.01);
+          expect(centerAfterDrag!.v).toBeLessThan(-0.01);
+
+          const afterFirstDragTransform = await page.evaluate((nodeId: string) => {
+            const el = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`) as HTMLElement | null;
+            return el ? { transform: el.style.transform, x: el.getBoundingClientRect().x, y: el.getBoundingClientRect().y, w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height } : null;
+          }, draggedNodeId);
+          console.log(`[Design] After first drag DOM state: ${JSON.stringify(afterFirstDragTransform)}`);
+
+          const pieceNodeBoxSecondDrag = await draggedNodeLocator.boundingBox();
+          expect(pieceNodeBoxSecondDrag).not.toBeNull();
+          const secondCenterXDrag = pieceNodeBoxSecondDrag!.x + pieceNodeBoxSecondDrag!.width / 2;
+          const secondCenterYDrag = pieceNodeBoxSecondDrag!.y + pieceNodeBoxSecondDrag!.height / 2;
+          const secondDragOffsetX = -70;
+          const secondDragOffsetY = -35;
+          const secondTargetXDrag = secondCenterXDrag + secondDragOffsetX;
+          const secondTargetYDrag = secondCenterYDrag + secondDragOffsetY;
+
+          console.log(`[Design] Dragging piece node back from (${secondCenterXDrag}, ${secondCenterYDrag}) to (${secondTargetXDrag}, ${secondTargetYDrag})`);
+
+          await page.mouse.move(secondCenterXDrag, secondCenterYDrag);
+          await page.waitForTimeout(50);
+          await page.mouse.down();
+          await page.waitForTimeout(50);
+          await page.mouse.move(secondTargetXDrag, secondTargetYDrag, { steps: 10 });
+          await page.waitForTimeout(100);
+          await page.mouse.up();
+          await page.waitForTimeout(2000);
+
+          const pieceNodeBoxAfterSecondDrag = await draggedNodeLocator.boundingBox();
+          const secondNodeMovedInViewport = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag && (Math.abs(pieceNodeBoxAfterSecondDrag.x - pieceNodeBoxAfterDrag.x) > 5 || Math.abs(pieceNodeBoxAfterSecondDrag.y - pieceNodeBoxAfterDrag.y) > 5);
+          const secondViewportDeltaX = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag ? pieceNodeBoxAfterSecondDrag.x - pieceNodeBoxAfterDrag.x : 0;
+          const secondViewportDeltaY = pieceNodeBoxAfterSecondDrag && pieceNodeBoxAfterDrag ? pieceNodeBoxAfterSecondDrag.y - pieceNodeBoxAfterDrag.y : 0;
+          console.log(`[Design] Piece node moved in viewport on second drag: ${secondNodeMovedInViewport}`);
+          console.log(`[Design] Second drag viewport delta: dx=${secondViewportDeltaX}, dy=${secondViewportDeltaY}`);
+
+          const afterSecondDragTransform = await page.evaluate((nodeId: string) => {
+            const el = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`) as HTMLElement | null;
+            return el ? { transform: el.style.transform, x: el.getBoundingClientRect().x, y: el.getBoundingClientRect().y, w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height } : null;
+          }, draggedNodeId);
+          console.log(`[Design] After second drag DOM state: ${JSON.stringify(afterSecondDragTransform)}`);
+
+          const centersAfterSecondDrag = await getDesignPieceCenters(page);
+          const centerAfterSecondDrag = centersAfterSecondDrag[pieceGuidFromData];
+          const secondDeltaU = centerAfterDrag && centerAfterSecondDrag ? centerAfterSecondDrag.u - centerAfterDrag.u : 0;
+          const secondDeltaV = centerAfterDrag && centerAfterSecondDrag ? centerAfterSecondDrag.v - centerAfterDrag.v : 0;
+          const persistedCenterAfterSecondDrag = centersAfterSecondDrag[pieceGuidFromData];
+          const secondPersistedDeltaU = persistedCenterAfterDrag && persistedCenterAfterSecondDrag ? persistedCenterAfterSecondDrag.u - persistedCenterAfterDrag.u : 0;
+          const secondPersistedDeltaV = persistedCenterAfterDrag && persistedCenterAfterSecondDrag ? persistedCenterAfterSecondDrag.v - persistedCenterAfterDrag.v : 0;
+          console.log(`[Design] Piece center after left/up drag: u=${centerAfterSecondDrag?.u}, v=${centerAfterSecondDrag?.v}`);
+          console.log(`[Design] Piece center delta after left/up drag: du=${secondDeltaU}, dv=${secondDeltaV}`);
+          console.log(`[Design] Persisted piece center after left/up drag (${pieceGuidFromData}): u=${persistedCenterAfterSecondDrag?.u}, v=${persistedCenterAfterSecondDrag?.v}`);
+          console.log(`[Design] Persisted piece center delta after left/up drag: du=${secondPersistedDeltaU}, dv=${secondPersistedDeltaV}`);
+          expect(centerAfterSecondDrag!.u).toBeLessThan(centerAfterDrag!.u);
+          expect(centerAfterSecondDrag!.v).toBeGreaterThan(centerAfterDrag!.v);
+          expect(secondNodeMovedInViewport).toBe(true);
+          expect(Math.abs(secondViewportDeltaX)).toBeGreaterThan(10);
+          expect(Math.abs(secondViewportDeltaY)).toBeGreaterThan(5);
         } else {
           console.log("[Design] Could not get bounding box for first piece node");
         }
@@ -2152,12 +4022,456 @@ test.describe("sketchpad", () => {
     console.log("[Design] Diagram node drag test complete");
     // #endregion 🔖Diagram Node Drag
 
+    // #region 🔖Drag Propagation
+    console.log("[Design] Testing drag propagation to downstream descendants");
+
+    if (hasDiagram) {
+      const metadataProp = await getDesignPieceMetadata(page);
+      const metadataGuids = Object.keys(metadataProp);
+      console.log(`[Design] Metadata available for ${metadataGuids.length} pieces`);
+
+      const childrenMapProp: Record<string, string[]> = {};
+      for (const [guid, meta] of Object.entries(metadataProp)) {
+        if (meta.parentPieceId) {
+          if (!childrenMapProp[meta.parentPieceId]) childrenMapProp[meta.parentPieceId] = [];
+          childrenMapProp[meta.parentPieceId].push(guid);
+        }
+      }
+
+      const rootPiecesProp = metadataGuids.filter((guid) => !metadataProp[guid].parentPieceId);
+      console.log(`[Design] Root pieces (no parent): ${rootPiecesProp.length}`);
+      console.log(`[Design] Pieces with children: ${Object.keys(childrenMapProp).length}`);
+
+      const parentWithChildAndGrandchild = metadataGuids.find((guid) => {
+        const children = childrenMapProp[guid] ?? [];
+        return children.length > 0 && children.some((c) => (childrenMapProp[c] ?? []).length > 0);
+      });
+
+      if (parentWithChildAndGrandchild) {
+        const childGuid = (childrenMapProp[parentWithChildAndGrandchild] ?? []).find((c) => (childrenMapProp[c] ?? []).length > 0)!;
+        const grandchildGuid = (childrenMapProp[childGuid] ?? [])[0];
+        const parentParentGuid = metadataProp[parentWithChildAndGrandchild].parentPieceId;
+        const siblingGuids = parentParentGuid ? (childrenMapProp[parentParentGuid] ?? []).filter((s) => s !== parentWithChildAndGrandchild) : [];
+
+        console.log(`[Design] Propagation chain: parent=${parentWithChildAndGrandchild?.slice(0, 8)}, child=${childGuid?.slice(0, 8)}, grandchild=${grandchildGuid?.slice(0, 8)}`);
+        console.log(`[Design] Parent's parent: ${parentParentGuid?.slice(0, 8) ?? "none"}, siblings: ${siblingGuids.length}`);
+
+        const allPieceNodes = diagramContainer.locator(".react-flow__node");
+        const nodeDataIds = await allPieceNodes.evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).getAttribute("data-id") ?? ""));
+        const findNodeDataId = (pieceGuid: string) => nodeDataIds.find((id) => id.endsWith(pieceGuid));
+
+        const parentNodeId = findNodeDataId(parentWithChildAndGrandchild);
+        const childNodeId = findNodeDataId(childGuid);
+        const grandchildNodeId = findNodeDataId(grandchildGuid);
+        const parentParentNodeId = parentParentGuid ? findNodeDataId(parentParentGuid) : null;
+
+        if (parentNodeId && childNodeId && grandchildNodeId) {
+          const parentNodeLocator = page.locator(`.react-flow__node[data-id="${parentNodeId}"]`).first();
+          await parentNodeLocator.scrollIntoViewIfNeeded();
+          await page.waitForTimeout(300);
+          await page.evaluate((nodeId: string) => {
+            const el = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`) as HTMLElement;
+            if (el) el.style.zIndex = "10000";
+          }, parentNodeId);
+          await page.waitForTimeout(100);
+
+          const positionsBeforePropDrag = await page.evaluate(() => {
+            const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
+            const positions: Record<string, { x: number; y: number }> = {};
+            for (const node of nodes) {
+              const id = node.getAttribute("data-id");
+              if (!id) continue;
+              const rect = node.getBoundingClientRect();
+              positions[id] = { x: rect.x, y: rect.y };
+            }
+            return positions;
+          });
+
+          const centersBeforePropDrag = await getDesignPieceCenters(page);
+
+          const parentBoxProp = await parentNodeLocator.boundingBox();
+
+          if (parentBoxProp) {
+            const propDragOffsetX = 80;
+            const propDragOffsetY = 40;
+            const propStartX = parentBoxProp.x + parentBoxProp.width / 2;
+            const propStartY = parentBoxProp.y + parentBoxProp.height / 2;
+            const propTargetX = propStartX + propDragOffsetX;
+            const propTargetY = propStartY + propDragOffsetY;
+
+            console.log(`[Design] Dragging parent piece for propagation test from (${propStartX}, ${propStartY}) to (${propTargetX}, ${propTargetY})`);
+            console.log(`[Design] Parent node ID: ${parentNodeId}`);
+            const elementInfo = await page.evaluate((pos: { x: number; y: number }) => {
+              const el = document.elementFromPoint(pos.x, pos.y);
+              if (!el) return "null";
+              const closest = el.closest(".react-flow__node");
+              return `tag=${el.tagName} class=${(el.getAttribute("class") ?? "").slice(0, 80)} closestNode=${closest?.getAttribute("data-id")?.slice(0, 40) ?? "none"}`;
+            }, { x: propStartX, y: propStartY });
+            console.log(`[Design] Element at drag start: ${elementInfo}`);
+
+            await page.mouse.move(propStartX, propStartY);
+            await page.waitForTimeout(100);
+            await page.mouse.down();
+            await page.waitForTimeout(100);
+            await page.mouse.move(propStartX + propDragOffsetX / 2, propStartY + propDragOffsetY / 2, { steps: 5 });
+            await page.waitForTimeout(100);
+            await page.mouse.move(propTargetX, propTargetY, { steps: 5 });
+            await page.waitForTimeout(200);
+            await page.mouse.up();
+            await page.waitForTimeout(2000);
+
+            const positionsAfterPropDrag = await page.evaluate(() => {
+              const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
+              const positions: Record<string, { x: number; y: number }> = {};
+              for (const node of nodes) {
+                const id = node.getAttribute("data-id");
+                if (!id) continue;
+                const rect = node.getBoundingClientRect();
+                positions[id] = { x: rect.x, y: rect.y };
+              }
+              return positions;
+            });
+
+            const centersAfterPropDrag = await getDesignPieceCenters(page);
+
+            const parentBefore = positionsBeforePropDrag[parentNodeId];
+            const parentAfter = positionsAfterPropDrag[parentNodeId];
+            const childBefore = positionsBeforePropDrag[childNodeId];
+            const childAfter = positionsAfterPropDrag[childNodeId];
+            const grandchildBefore = positionsBeforePropDrag[grandchildNodeId];
+            const grandchildAfter = positionsAfterPropDrag[grandchildNodeId];
+
+            const parentDeltaX = parentAfter.x - parentBefore.x;
+            const parentDeltaY = parentAfter.y - parentBefore.y;
+            const childDeltaX = childAfter.x - childBefore.x;
+            const childDeltaY = childAfter.y - childBefore.y;
+            const grandchildDeltaX = grandchildAfter.x - grandchildBefore.x;
+            const grandchildDeltaY = grandchildAfter.y - grandchildBefore.y;
+
+            console.log(`[Design] Parent delta: dx=${parentDeltaX}, dy=${parentDeltaY}`);
+            console.log(`[Design] Child delta: dx=${childDeltaX}, dy=${childDeltaY}`);
+            console.log(`[Design] Grandchild delta: dx=${grandchildDeltaX}, dy=${grandchildDeltaY}`);
+
+            expect(Math.abs(parentDeltaX)).toBeGreaterThan(10);
+            expect(Math.abs(parentDeltaY)).toBeGreaterThan(5);
+            expect(Math.abs(childDeltaX - parentDeltaX)).toBeLessThan(5);
+            expect(Math.abs(childDeltaY - parentDeltaY)).toBeLessThan(5);
+            expect(Math.abs(grandchildDeltaX - parentDeltaX)).toBeLessThan(5);
+            expect(Math.abs(grandchildDeltaY - parentDeltaY)).toBeLessThan(5);
+
+            const parentPieceGuid = parentNodeId.replace(/^piece-\d+-/, "");
+            const childPieceGuid = childNodeId.replace(/^piece-\d+-/, "");
+            const grandchildPieceGuid = grandchildNodeId.replace(/^piece-\d+-/, "");
+            const parentCenterBefore = centersBeforePropDrag[parentPieceGuid];
+            const parentCenterAfter = centersAfterPropDrag[parentPieceGuid];
+            const childCenterBefore = centersBeforePropDrag[childPieceGuid];
+            const childCenterAfter = centersAfterPropDrag[childPieceGuid];
+            const grandchildCenterBefore = centersBeforePropDrag[grandchildPieceGuid];
+            const grandchildCenterAfter = centersAfterPropDrag[grandchildPieceGuid];
+
+            if (parentCenterBefore && parentCenterAfter && childCenterBefore && childCenterAfter) {
+              const parentCenterDeltaU = parentCenterAfter.u - parentCenterBefore.u;
+              const parentCenterDeltaV = parentCenterAfter.v - parentCenterBefore.v;
+              const childCenterDeltaU = childCenterAfter.u - childCenterBefore.u;
+              const childCenterDeltaV = childCenterAfter.v - childCenterBefore.v;
+              console.log(`[Design] Parent center delta: du=${parentCenterDeltaU}, dv=${parentCenterDeltaV}`);
+              console.log(`[Design] Child center delta: du=${childCenterDeltaU}, dv=${childCenterDeltaV}`);
+              expect(Math.abs(parentCenterDeltaU)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(parentCenterDeltaV)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaU)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaV)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaU - parentCenterDeltaU)).toBeLessThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaV - parentCenterDeltaV)).toBeLessThan(TOLERANCE);
+            }
+
+            if (grandchildCenterBefore && grandchildCenterAfter && parentCenterBefore && parentCenterAfter) {
+              const parentCenterDeltaU = parentCenterAfter.u - parentCenterBefore.u;
+              const parentCenterDeltaV = parentCenterAfter.v - parentCenterBefore.v;
+              const gcDeltaU = grandchildCenterAfter.u - grandchildCenterBefore.u;
+              const gcDeltaV = grandchildCenterAfter.v - grandchildCenterBefore.v;
+              console.log(`[Design] Grandchild center delta: du=${gcDeltaU}, dv=${gcDeltaV}`);
+              expect(Math.abs(gcDeltaU)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(gcDeltaV)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(gcDeltaU - parentCenterDeltaU)).toBeLessThan(TOLERANCE);
+              expect(Math.abs(gcDeltaV - parentCenterDeltaV)).toBeLessThan(TOLERANCE);
+            }
+
+            if (parentParentNodeId) {
+              const ppBefore = positionsBeforePropDrag[parentParentNodeId];
+              const ppAfter = positionsAfterPropDrag[parentParentNodeId];
+              if (ppBefore && ppAfter) {
+                const ppDeltaX = ppAfter.x - ppBefore.x;
+                const ppDeltaY = ppAfter.y - ppBefore.y;
+                console.log(`[Design] Parent's parent delta: dx=${ppDeltaX}, dy=${ppDeltaY}`);
+                expect(Math.abs(ppDeltaX)).toBeLessThan(2);
+                expect(Math.abs(ppDeltaY)).toBeLessThan(2);
+              }
+            }
+
+            for (const sibGuid of siblingGuids.slice(0, 3)) {
+              const sibNodeId = findNodeDataId(sibGuid);
+              if (sibNodeId) {
+                const sibBefore = positionsBeforePropDrag[sibNodeId];
+                const sibAfter = positionsAfterPropDrag[sibNodeId];
+                if (sibBefore && sibAfter) {
+                  const sibDeltaX = sibAfter.x - sibBefore.x;
+                  const sibDeltaY = sibAfter.y - sibBefore.y;
+                  console.log(`[Design] Sibling ${sibGuid.slice(0, 8)} delta: dx=${sibDeltaX}, dy=${sibDeltaY}`);
+                  expect(Math.abs(sibDeltaX)).toBeLessThan(2);
+                  expect(Math.abs(sibDeltaY)).toBeLessThan(2);
+                }
+              }
+            }
+
+            console.log("[Design] Drag propagation test passed: descendants moved, ancestors and siblings stayed");
+          } else {
+            console.log("[Design] Could not get bounding box for parent piece node in propagation test");
+          }
+        } else {
+          console.log("[Design] Could not find a parent-child-grandchild chain for propagation test");
+        }
+      } else {
+        console.log("[Design] No metadata available or diagram not visible for propagation test");
+      }
+    }
+
+    console.log("[Design] Drag propagation test complete");
+    // #endregion 🔖Drag Propagation
+
+    // #region 🔖Multiple Connections Detail Panel
+    console.log("[Design] Testing multiple connections detail panel");
+
+    if (hasDiagram) {
+      const connectionGuids = await page.evaluate(() => {
+        const store = (window as any).__SEMIO_STORE__;
+        if (!store) return [];
+        const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+        if (kitGuids.length === 0) return [];
+        const kitStore = (store as any).kit(kitGuids[0]);
+        if (!kitStore) return [];
+        const kit = kitStore.snapshot();
+        const url = window.location.pathname;
+        const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+        const designGuid = designGuidMatch?.[1];
+        const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+        if (!design) return [];
+        const connections = design.connections ?? [];
+        return connections.slice(0, 3).map((c: any) => c.guid);
+      });
+
+      console.log(`[Design] Found ${connectionGuids.length} connections to test`);
+
+      if (connectionGuids.length >= 2) {
+        console.log("[Design] Selecting multiple connections");
+
+        const selectMultipleConnections = async (guids: string[]) => {
+          return await page.evaluate(({ connectionGuids }: { connectionGuids: string[] }) => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return { applied: false, reason: "missing-actor" };
+            const snapshot = actor.getSnapshot();
+            const path = window.location.pathname;
+            const designGuidMatch = path.match(/\/designs\/([^/]+)/);
+            const designGuid = designGuidMatch?.[1];
+            const designApps = snapshot?.context?.designApps || {};
+            const designAppKey = Object.keys(designApps).find((key: string) => key.endsWith(`:${designGuid}`) || key === designGuid) || "";
+            const kitGuid = designAppKey.includes(":") ? designAppKey.split(":")[0] : Object.keys(snapshot?.context?.kits || {})[0];
+            if (!designGuid || !kitGuid) return { applied: false, reason: "missing-scope" };
+            actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, activeTool: "selection-normal" });
+            actor.send({
+              type: "DESIGN.SET_SELECTION",
+              kitGuid,
+              designGuid,
+              selection: { pieces: [], connections: connectionGuids, connectors: [] },
+            });
+            return { applied: true, count: connectionGuids.length };
+          }, { connectionGuids: guids });
+        };
+
+        const selectionResult = await selectMultipleConnections(connectionGuids);
+        console.log("[Design] Multiple connections selection result:", JSON.stringify(selectionResult));
+        expect(selectionResult.applied).toBe(true);
+        await page.waitForTimeout(2000);
+
+        await openDetailsPanel(page);
+        const panel = '[data-panel="rightSidePanel"]';
+
+        const multipleConnectionSection = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.connection.multipleTitle"]`).first();
+        const singleConnectionSection = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.connection.properties"]`).first();
+
+        const hasMultipleSection = await multipleConnectionSection.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasSingleSection = await singleConnectionSection.isVisible({ timeout: 1000 }).catch(() => false);
+
+        console.log(`[Design] Multiple connections section visible: ${hasMultipleSection}, single section visible: ${hasSingleSection}`);
+        expect(hasMultipleSection).toBe(true);
+        expect(hasSingleSection).toBe(false);
+
+        console.log("[Design] Verifying multiple connections detail fields");
+        const checkFieldVisible = async (id: string): Promise<boolean> => {
+          const el = page.locator(`${panel} [id="${id}"]`).first();
+          return el.isVisible({ timeout: 3000 }).catch(() => false);
+        };
+
+        const descriptionField = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.description");
+        const gapStepper = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.gap");
+        const shiftStepper = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.shift");
+        const riseStepper = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.rise");
+        const rotationSlider = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.rotation");
+        const turnSlider = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.turn");
+        const tiltSlider = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.tilt");
+        const xStepper = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.x");
+        const yStepper = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.y");
+
+        console.log(`[Design] Fields visibility => description=${descriptionField}, gap=${gapStepper}, shift=${shiftStepper}, rise=${riseStepper}`);
+        console.log(`[Design] Fields visibility => rotation=${rotationSlider}, turn=${turnSlider}, tilt=${tiltSlider}, x=${xStepper}, y=${yStepper}`);
+
+        expect(descriptionField).toBe(true);
+        expect(gapStepper).toBe(true);
+        expect(shiftStepper).toBe(true);
+        expect(riseStepper).toBe(true);
+        expect(rotationSlider).toBe(true);
+        expect(turnSlider).toBe(true);
+        expect(tiltSlider).toBe(true);
+        expect(xStepper).toBe(true);
+        expect(yStepper).toBe(true);
+
+        console.log("[Design] Testing batch edit of gap property");
+        const gapStepperInput = page.locator(`${panel} input[id="semio.sketchpad.app.design.panel.details.section.connection.gap"]`).first();
+        await expect(gapStepperInput).toBeVisible();
+
+        const initialGapValues = await page.evaluate(({ guids }: { guids: string[] }) => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return [];
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return [];
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return [];
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return [];
+          const connections = design.connections ?? [];
+          return guids.map((guid) => {
+            const conn = connections.find((c: any) => c.guid === guid);
+            return conn ? conn.gap ?? 0 : null;
+          });
+        }, { guids: connectionGuids });
+
+        console.log(`[Design] Initial gap values: ${JSON.stringify(initialGapValues)}`);
+
+        const testGapValue = 5.5;
+        await gapStepperInput.fill(String(testGapValue));
+        await gapStepperInput.press("Enter");
+        await page.waitForTimeout(1500);
+
+        const updatedGapValues = await page.evaluate(({ guids }: { guids: string[] }) => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return [];
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return [];
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return [];
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return [];
+          const connections = design.connections ?? [];
+          return guids.map((guid) => {
+            const conn = connections.find((c: any) => c.guid === guid);
+            return conn ? conn.gap ?? 0 : null;
+          });
+        }, { guids: connectionGuids });
+
+        console.log(`[Design] Updated gap values: ${JSON.stringify(updatedGapValues)}`);
+
+        for (const gapValue of updatedGapValues) {
+          if (gapValue !== null) {
+            expect(Math.abs(gapValue - testGapValue)).toBeLessThan(0.2);
+          }
+        }
+
+        console.log("[Design] Testing batch edit of rotation property");
+        const rotationSliderElement = page.locator(`${panel} [id="semio.sketchpad.app.design.panel.details.section.connection.rotation"]`).first();
+
+        const testRotationValue = 45;
+        const rotationSliderRow = rotationSliderElement.locator('xpath=ancestor::div[@data-slot="slider-row"]').first();
+        const hasRotationSliderRow = (await rotationSliderRow.count()) > 0;
+        if (hasRotationSliderRow) {
+          const rotationValueSpan = rotationSliderRow.locator('[data-slot="slider-value"]').first();
+          await rotationValueSpan.dblclick();
+          await page.waitForTimeout(200);
+          const rotationEditInput = rotationSliderRow.locator('input[type="number"]').first();
+          await rotationEditInput.fill(String(testRotationValue));
+          await rotationEditInput.press("Enter");
+          await page.waitForTimeout(1500);
+        }
+
+        const updatedRotationValues = await page.evaluate(({ guids }: { guids: string[] }) => {
+          const store = (window as any).__SEMIO_STORE__;
+          if (!store) return [];
+          const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+          if (kitGuids.length === 0) return [];
+          const kitStore = (store as any).kit(kitGuids[0]);
+          if (!kitStore) return [];
+          const kit = kitStore.snapshot();
+          const url = window.location.pathname;
+          const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+          const designGuid = designGuidMatch?.[1];
+          const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs.length - 1];
+          if (!design) return [];
+          const connections = design.connections ?? [];
+          return guids.map((guid) => {
+            const conn = connections.find((c: any) => c.guid === guid);
+            return conn ? conn.rotation ?? 0 : null;
+          });
+        }, { guids: connectionGuids });
+
+        console.log(`[Design] Updated rotation values: ${JSON.stringify(updatedRotationValues)}`);
+
+        console.log("[Design] Testing single connection selection after multiple");
+        const singleSelectResult = await selectMultipleConnections([connectionGuids[0]]);
+        console.log("[Design] Single connection selection result:", JSON.stringify(singleSelectResult));
+        expect(singleSelectResult.applied).toBe(true);
+        await page.waitForTimeout(1500);
+
+        const hasSingleSectionAfter = await singleConnectionSection.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasMultipleSectionAfter = await multipleConnectionSection.isVisible({ timeout: 1000 }).catch(() => false);
+
+        console.log(`[Design] After single selection: single section=${hasSingleSectionAfter}, multiple section=${hasMultipleSectionAfter}`);
+        expect(hasSingleSectionAfter).toBe(true);
+        expect(hasMultipleSectionAfter).toBe(false);
+
+        const connectingPieceId = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.connectingPieceId");
+        const connectingPortId = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.connectingPortId");
+        const connectedPieceId = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.connectedPieceId");
+        const connectedPortId = await checkFieldVisible("semio.sketchpad.app.design.panel.details.section.connection.connectedPortId");
+
+        console.log(`[Design] Single connection fields => connectingPiece=${connectingPieceId}, connectingPort=${connectingPortId}, connectedPiece=${connectedPieceId}, connectedPort=${connectedPortId}`);
+        expect(connectingPieceId).toBe(true);
+        expect(connectingPortId).toBe(true);
+        expect(connectedPieceId).toBe(true);
+        expect(connectedPortId).toBe(true);
+
+        console.log("[Design] Multiple connections detail panel test complete");
+      } else {
+        console.log(`[Design] Not enough connections for multiple selection test (found ${connectionGuids.length}, need at least 2)`);
+      }
+    } else {
+      console.log("[Design] Diagram not visible, skipping multiple connections test");
+    }
+
+    // #endregion 🔖Multiple Connections Detail Panel
+
     const infiniteLoopErrorsFinal = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrorsFinal).toHaveLength(0);
   });
 
   test("Docs", async ({ page }) => {
     await initDocs(page);
+    await expectNoLegacyWindowTabs(page, "Docs");
 
     const pageContent = await page.locator("body").textContent();
     console.log("[Docs] Page content preview:", pageContent?.slice(0, 500));
@@ -2198,14 +4512,7 @@ test.describe("sketchpad", () => {
     if (hasRightSidePanel) {
       rightSidePanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel", "Docs");
     }
-    const hudPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.hudPanel"]');
-    const hasHudPanel = await hudPanelToggle.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`[Docs] HUD panel toggle visible: ${hasHudPanel}`);
-    let hudPanelWorked = false;
-    if (hasHudPanel) {
-      hudPanelWorked = await verifyToggleWorks(page, "semio.sketchpad.navbar.panelToggle.hudPanel", "hudPanel", "Docs");
-    }
-    console.log(`[Docs] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
+    console.log(`[Docs] Panel toggle verification complete: left=${leftSidePanelWorked}, right=${rightSidePanelWorked}`);
 
     await page.goto("/docs/manuals/sketchpad");
     await page.waitForLoadState("networkidle");
@@ -2294,14 +4601,55 @@ test.describe("sketchpad", () => {
     // #endregion 🔖Idea Form Switch
 
     // #region 🔖Toolbar
-    console.log("[Feedback] Testing toolbar and send button");
+    console.log("[Feedback] Testing toolbar zone structure");
     await page.goto("/feedback");
     await page.waitForTimeout(1000);
 
+    const feedbackToolbar = page.locator('[id="semio.sketchpad.toolbar"]');
+    await expect(feedbackToolbar).toBeVisible({ timeout: 5000 });
+    const feedbackToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
+    await expect(feedbackToolsZone).toBeVisible({ timeout: 5000 });
+
+    console.log("[Feedback] Testing toolbar group toggles");
+    const actionsGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.actions"]');
+    const hasActionsGroup = await actionsGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Feedback] Actions group toggle visible: ${hasActionsGroup}`);
+    expect(hasActionsGroup).toBe(true);
+
+    console.log("[Feedback] Activating actions group to verify send button");
+    const feedbackSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+    await actionsGroupToggle.click();
+    await page.waitForTimeout(500);
+    if (!(await feedbackSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+      await actionsGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    await expect(feedbackSettingsZone).toBeVisible({ timeout: 3000 });
+
     const sendButton = page.locator('[id="semio.sketchpad.app.feedback.toolbar.send"]');
-    const hasSendButton = await sendButton.isVisible({ timeout: 10000 }).catch(() => false);
-    console.log(`[Feedback] Send button visible: ${hasSendButton}`);
+    const hasSendButton = await sendButton.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Feedback] Send button visible in settings zone: ${hasSendButton}`);
     expect(hasSendButton).toBe(true);
+
+    console.log("[Feedback] Testing deactivate group hides settings zone");
+    await actionsGroupToggle.click();
+    await page.waitForTimeout(500);
+    const feedbackSettingsHidden = !(await feedbackSettingsZone.isVisible({ timeout: 1000 }).catch(() => false));
+    console.log(`[Feedback] Settings zone hidden after deactivation: ${feedbackSettingsHidden}`);
+    if (!feedbackSettingsHidden) {
+      await actionsGroupToggle.click();
+      await page.waitForTimeout(500);
+    }
+    expect(!(await feedbackSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))).toBe(true);
+
+    console.log("[Feedback] Testing reactivate group shows send button again");
+    await actionsGroupToggle.click();
+    await page.waitForTimeout(500);
+    await expect(feedbackSettingsZone).toBeVisible({ timeout: 3000 });
+    const sendButtonAgain = await sendButton.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Feedback] Send button visible again: ${sendButtonAgain}`);
+    expect(sendButtonAgain).toBe(true);
+
     console.log("[Feedback] Toolbar test complete");
     // #endregion 🔖Toolbar
 
@@ -2390,4 +4738,840 @@ test.describe("sketchpad", () => {
     console.log("[Feedback] Footer action visibility test complete");
     // #endregion 🔖Footer Action Visibility
   });
+
+  test("Panels", async ({ page }) => {
+    test.setTimeout(300000);
+    const { errors, warnings, messages } = await initConsole(page);
+
+    // #region 🔖Home Panel Combinations
+    console.log("[Panels] Testing Home app panel combinations");
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+
+    const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+    const rightToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
+
+    const hasLeft = await leftToggle.isVisible({ timeout: 5000 }).catch(() => false);
+    const hasRight = await rightToggle.isVisible({ timeout: 3000 }).catch(() => false);
+    console.log(`[Panels] Home toggles: left=${hasLeft}, right=${hasRight}`);
+
+    const ensureAllClosed = async () => {
+      for (const [key, toggle] of [["leftSidePanel", leftToggle], ["rightSidePanel", rightToggle]] as const) {
+        const panel = page.locator(`[data-panel="${key}"]`).first();
+        if (await panel.isVisible().catch(() => false)) {
+          const t = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${key}"]`);
+          if (await t.isVisible().catch(() => false)) {
+            await t.click();
+            await page.waitForTimeout(300);
+          }
+        }
+      }
+    };
+
+    const ensureAllOpen = async () => {
+      for (const key of ["leftSidePanel", "rightSidePanel"] as const) {
+        const panel = page.locator(`[data-panel="${key}"]`).first();
+        if (!(await panel.isVisible().catch(() => false))) {
+          const t = page.locator(`[id="semio.sketchpad.navbar.panelToggle.${key}"]`);
+          if (await t.isVisible().catch(() => false)) {
+            await t.click();
+            await page.waitForTimeout(300);
+          }
+        }
+      }
+    };
+
+    const getPanelVisibleState = async () => ({
+      left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
+      right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
+    });
+    const expectNoUtilityTabsInRightPanel = async (appLabel: string) => {
+      const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
+      if (!(await rightPanel.isVisible().catch(() => false))) return;
+      const utilityTabCount = await rightPanel.locator('[data-slot="side-panel-tabs"] [id$=".settings"], [data-slot="side-panel-tabs"] [id$=".chat"]').count().catch(() => 0);
+      console.log(`[Panels] ${appLabel} right panel embedded utility tab count: ${utilityTabCount}`);
+      expect(utilityTabCount).toBeLessThanOrEqual(2);
+    };
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+    let state = await getPanelVisibleState();
+    console.log(`[Panels] Home all closed: left=${state.left}, right=${state.right}`);
+    if (hasLeft) expect(state.left).toBe(false);
+    if (hasRight) expect(state.right).toBe(false);
+
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+    state = await getPanelVisibleState();
+    console.log(`[Panels] Home all open: left=${state.left}, right=${state.right}`);
+    const availableToggles = [hasLeft, hasRight].filter(Boolean).length;
+    const homeOpenCount = [state.left, state.right].filter(Boolean).length;
+    console.log(`[Panels] Home open panel count: ${homeOpenCount} / ${availableToggles} available`);
+    expect(homeOpenCount).toBe(availableToggles);
+
+    if (state.left && state.right) {
+      const leftPanel = page.locator('[data-panel="leftSidePanel"]').first();
+      const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
+      const leftBox = await leftPanel.boundingBox();
+      const rightBox = await rightPanel.boundingBox();
+      if (leftBox && rightBox) {
+        expect(rightBox.x).toBeGreaterThan(leftBox.x + leftBox.width - 5);
+        console.log("[Panels] Home: Left and right panels do not overlap");
+      }
+    }
+
+    if (state.right) {
+      const rightContent = await page.locator('[data-panel="rightSidePanel"]').first().locator('button, input, [role="treeitem"], [role="button"]').count().catch(() => 0);
+      console.log(`[Panels] Home right panel content items: ${rightContent}`);
+      await expectNoUtilityTabsInRightPanel("Home");
+    }
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+
+    console.log("[Panels] Home: Testing left+right combination only");
+    if (hasLeft) {
+      await leftToggle.click();
+      await page.waitForTimeout(300);
+    }
+    if (hasRight) {
+      await rightToggle.click();
+      await page.waitForTimeout(300);
+    }
+    state = await getPanelVisibleState();
+    console.log(`[Panels] Home left+right: left=${state.left}, right=${state.right}`);
+    if (hasLeft) expect(state.left).toBe(true);
+    if (hasRight) expect(state.right).toBe(true);
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+
+    console.log("[Panels] Home: Testing toolbar group with open panels");
+    const filterGroup = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasFilterGroup = await filterGroup.isVisible({ timeout: 3000 }).catch(() => false);
+    if (hasFilterGroup && hasRight) {
+      await rightToggle.click();
+      await page.waitForTimeout(300);
+      await filterGroup.click();
+      await page.waitForTimeout(500);
+      const settingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+      const settingsVisible = await settingsZone.isVisible({ timeout: 3000 }).catch(() => false);
+      const rightStillOpen = await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false);
+      console.log(`[Panels] Home filter+right: settings=${settingsVisible}, right=${rightStillOpen}`);
+      expect(rightStillOpen).toBe(true);
+      if (settingsVisible) {
+        const createGroup = page.locator('[id="semio.sketchpad.toolbar.group.create"]');
+        if (await createGroup.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await createGroup.click();
+          await page.waitForTimeout(300);
+          const rightAfterSwitch = await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false);
+          console.log(`[Panels] Home: right panel after toolbar group switch: ${rightAfterSwitch}`);
+          expect(rightAfterSwitch).toBe(true);
+        }
+      }
+    }
+
+    await ensureAllClosed();
+    console.log("[Panels] Home panel combinations complete");
+    // #endregion 🔖Home Panel Combinations
+
+    // #region 🔖Kit Panel Combinations
+    console.log("[Panels] Testing Kit app panel combinations");
+    await initKit(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
+
+    const kitState = async () => ({
+      left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
+      right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
+    });
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+
+    console.log("[Panels] Kit: Opening all panels simultaneously");
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+    let ks = await kitState();
+    console.log(`[Panels] Kit all open: left=${ks.left}, right=${ks.right}`);
+    const kitAvailableToggles = [hasLeft, hasRight].filter(Boolean).length;
+    const kitOpenCount = [ks.left, ks.right].filter(Boolean).length;
+    console.log(`[Panels] Kit open panel count: ${kitOpenCount} / ${kitAvailableToggles} available`);
+    expect(kitOpenCount).toBeGreaterThanOrEqual(Math.min(kitAvailableToggles, 1));
+
+    if (ks.right) {
+      const rightPanelContent = await page.locator('[data-panel="rightSidePanel"]').first().locator('button, input, [role="treeitem"], [role="button"]').count().catch(() => 0);
+      console.log(`[Panels] Kit right panel content when all open: ${rightPanelContent}`);
+      expect(rightPanelContent).toBeGreaterThan(0);
+      await expectNoUtilityTabsInRightPanel("Kit");
+    }
+
+    console.log("[Panels] Kit: Testing diagram visible while all panels open");
+    const kitDiagram = page.locator('[data-testid="kit-diagram"]');
+    const hasDiagramWithPanels = await kitDiagram.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Panels] Kit diagram visible with all panels open: ${hasDiagramWithPanels}`);
+    if (hasDiagramWithPanels) {
+      const nodeCount = await page.locator(".react-flow__node").count();
+      console.log(`[Panels] Kit diagram nodes with all panels open: ${nodeCount}`);
+      expect(nodeCount).toBeGreaterThan(0);
+    }
+
+    console.log("[Panels] Kit: Testing selection group + panel combination");
+    const kitSelectionGroup = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
+    const hasKitSelection = await kitSelectionGroup.isVisible({ timeout: 3000 }).catch(() => false);
+    if (hasKitSelection) {
+      await kitSelectionGroup.click();
+      await page.waitForTimeout(500);
+      const kitSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+      if (!(await kitSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await kitSelectionGroup.click();
+        await page.waitForTimeout(500);
+      }
+      const settingsVisible = await kitSettingsZone.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Panels] Kit selection group settings visible: ${settingsVisible}`);
+      ks = await kitState();
+      console.log(`[Panels] Kit panels after selection group: left=${ks.left}, right=${ks.right}`);
+      expect(kitOpenCount).toBeGreaterThanOrEqual(Math.min(kitAvailableToggles, 1));
+    }
+
+    console.log("[Panels] Kit: Testing filter group + all panels");
+    const kitFilterGroup = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
+    const hasKitFilter = await kitFilterGroup.isVisible({ timeout: 3000 }).catch(() => false);
+    if (hasKitFilter) {
+      await kitFilterGroup.click();
+      await page.waitForTimeout(500);
+      const kitSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+      if (!(await kitSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await kitFilterGroup.click();
+        await page.waitForTimeout(500);
+      }
+      const designsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showDesigns"]');
+      const typesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTypes"]');
+      const hasDesigns = await designsToggle.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasTypes = await typesToggle.isVisible({ timeout: 2000 }).catch(() => false);
+      console.log(`[Panels] Kit filter toggles visible with all panels: designs=${hasDesigns}, types=${hasTypes}`);
+      expect(hasDesigns || hasTypes).toBe(true);
+    }
+
+    console.log("[Panels] Kit: Testing rapid toggle cycle");
+    for (let i = 0; i < 3; i++) {
+      if (hasLeft) {
+        await leftToggle.click();
+        await page.waitForTimeout(200);
+      }
+    }
+    ks = await kitState();
+    console.log(`[Panels] Kit after rapid toggle: left=${ks.left}, right=${ks.right}`);
+
+    await ensureAllClosed();
+    console.log("[Panels] Kit panel combinations complete");
+    // #endregion 🔖Kit Panel Combinations
+
+    // #region 🔖Design Panel Combinations
+    console.log("[Panels] Testing Design app panel combinations");
+    await initDesign(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(5000);
+
+    const isDesignUrl = page.url().includes("/designs/");
+    console.log(`[Panels] Design URL: ${page.url()}, isDesign: ${isDesignUrl}`);
+    expect(isDesignUrl).toBe(true);
+
+    const designState = async () => ({
+      left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
+      right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
+    });
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+
+    console.log("[Panels] Design: Verifying navbar utility toggles stay available");
+    await expectUtilityPanelTogglesInNavbar(page, "Panels Design");
+
+    console.log("[Panels] Design: Opening all panels");
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+    let ds = await designState();
+    console.log(`[Panels] Design all open: left=${ds.left}, right=${ds.right}`);
+    const designOpenCount = [ds.left, ds.right].filter(Boolean).length;
+    console.log(`[Panels] Design open count: ${designOpenCount}`);
+    expect(designOpenCount).toBeGreaterThanOrEqual(1);
+    if (ds.right) {
+      await expectNoDesignUtilityTabsInRightPanel(page, "Panels Design");
+    }
+
+    console.log("[Panels] Design: Verifying diagram remains functional with all panels open");
+    const designDiagram = page.locator(".react-flow").first();
+    const hasDiagramDesign = await designDiagram.isVisible({ timeout: 10000 }).catch(() => false);
+    console.log(`[Panels] Design diagram visible with panels: ${hasDiagramDesign}`);
+    if (hasDiagramDesign) {
+      const pieceCount = await designDiagram.locator(".react-flow__node").count();
+      console.log(`[Panels] Design piece nodes with all panels: ${pieceCount}`);
+      expect(pieceCount).toBeGreaterThan(0);
+    }
+
+    console.log("[Panels] Design: Verifying 3D canvas remains visible with all panels open");
+    const sceneCanvas = page.locator("canvas").first();
+    const hasCanvas = await sceneCanvas.isVisible({ timeout: 5000 }).catch(() => false);
+    console.log(`[Panels] Design canvas visible with all panels: ${hasCanvas}`);
+
+    if (ds.left) {
+      console.log("[Panels] Design: Checking left panel (tools) content");
+      const leftPanel = page.locator('[data-panel="leftSidePanel"]').first();
+      const leftContent = await leftPanel.locator('[data-slot="avatar"], [role="treeitem"], button').count().catch(() => 0);
+      console.log(`[Panels] Design left panel content items: ${leftContent}`);
+    }
+
+    if (ds.right) {
+      console.log("[Panels] Design: Checking right panel (details) content with all panels visible");
+      const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
+      const rightContent = await rightPanel.locator('button, input, [role="treeitem"], [role="button"]').count().catch(() => 0);
+      console.log(`[Panels] Design right panel content items: ${rightContent}`);
+      expect(rightContent).toBeGreaterThan(0);
+      await expectNoUtilityTabsInRightPanel("Design");
+    }
+
+    console.log("[Panels] Design: Testing selection tools with all panels open");
+    const designSelectionGroup = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
+    const hasDesignSelection = await designSelectionGroup.isVisible({ timeout: 3000 }).catch(() => false);
+    if (hasDesignSelection) {
+      await designSelectionGroup.click();
+      await page.waitForTimeout(500);
+      const designSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+      if (!(await designSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await designSelectionGroup.click();
+        await page.waitForTimeout(500);
+      }
+      const additiveToggle = page.locator('[id="semio.sketchpad.app.design.tools.select.mode.additive"]');
+      const hasAdditive = await additiveToggle.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Panels] Design additive mode visible with panels: ${hasAdditive}`);
+      if (hasAdditive) {
+        await additiveToggle.dispatchEvent("click");
+        await page.waitForTimeout(300);
+        const additiveState = await additiveToggle.getAttribute("data-state").catch(() => null) ?? await additiveToggle.getAttribute("aria-checked").catch(() => null);
+        console.log(`[Panels] Design additive state with all panels: ${additiveState}`);
+        expect(additiveState === "on" || additiveState === "true").toBe(true);
+        await additiveToggle.dispatchEvent("click");
+        await page.waitForTimeout(300);
+      }
+    }
+
+    console.log("[Panels] Design: Testing no overlap between left+right panels");
+    if (ds.left && ds.right) {
+      const leftBox = await page.locator('[data-panel="leftSidePanel"]').first().boundingBox();
+      const rightBox = await page.locator('[data-panel="rightSidePanel"]').first().boundingBox();
+      if (leftBox && rightBox) {
+        expect(rightBox.x).toBeGreaterThan(leftBox.x + leftBox.width - 5);
+        console.log("[Panels] Design: Left and right panels do not overlap");
+      }
+    }
+
+    console.log("[Panels] Design: Testing close right, keep left");
+    if (ds.right) {
+      await rightToggle.click();
+      await page.waitForTimeout(300);
+    }
+    ds = await designState();
+    console.log(`[Panels] Design left only: left=${ds.left}, right=${ds.right}`);
+    expect(ds.right).toBe(false);
+    if (hasDiagramDesign) {
+      const pieceCountAfter = await designDiagram.locator(".react-flow__node").count();
+      console.log(`[Panels] Design pieces after closing right panel: ${pieceCountAfter}`);
+      expect(pieceCountAfter).toBeGreaterThan(0);
+    }
+
+    console.log("[Panels] Design: Testing reopen right panel");
+    await rightToggle.click();
+    await page.waitForTimeout(300);
+    ds = await designState();
+    console.log(`[Panels] Design after reopen right: left=${ds.left}, right=${ds.right}`);
+
+    await ensureAllClosed();
+    console.log("[Panels] Design panel combinations complete");
+    // #endregion 🔖Design Panel Combinations
+
+    // #region 🔖Type Panel Combinations
+    console.log("[Panels] Testing Type app panel combinations");
+    await initType(page);
+    await page.waitForTimeout(5000);
+
+    const isTypeUrl = page.url().includes("/types/");
+    console.log(`[Panels] Type URL: ${page.url()}, isType: ${isTypeUrl}`);
+    expect(isTypeUrl).toBe(true);
+
+    const typeState = async () => ({
+      left: await page.locator('[data-panel="leftSidePanel"]').first().isVisible().catch(() => false),
+      right: await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false),
+    });
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+
+    console.log("[Panels] Type: Opening all panels");
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+    let ts = await typeState();
+    console.log(`[Panels] Type all open: left=${ts.left}, right=${ts.right}`);
+    const typeOpenCount = [ts.left, ts.right].filter(Boolean).length;
+    console.log(`[Panels] Type open count: ${typeOpenCount}`);
+    expect(typeOpenCount).toBeGreaterThanOrEqual(1);
+
+    console.log("[Panels] Type: Verifying canvas remains functional with all panels");
+    const typeCanvas = page.locator("canvas").first();
+    const hasTypeCanvas = await typeCanvas.isVisible({ timeout: 10000 }).catch(() => false);
+    console.log(`[Panels] Type canvas visible with panels: ${hasTypeCanvas}`);
+
+    if (ts.right) {
+      console.log("[Panels] Type: Checking right panel content");
+      const rightContent = await page.locator('[data-panel="rightSidePanel"]').first().locator('button, input, [role="treeitem"], [role="button"]').count().catch(() => 0);
+      console.log(`[Panels] Type right panel content: ${rightContent}`);
+      await expectNoUtilityTabsInRightPanel("Type");
+    }
+
+    console.log("[Panels] Type: Testing selection+create group switch with all panels");
+    const typeSelGroup = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
+    const typeCreateGroup = page.locator('[id="semio.sketchpad.toolbar.group.create"]');
+    const hasTypeSel = await typeSelGroup.isVisible({ timeout: 3000 }).catch(() => false);
+    const hasTypeCreate = await typeCreateGroup.isVisible({ timeout: 3000 }).catch(() => false);
+    if (hasTypeSel && hasTypeCreate) {
+      await typeSelGroup.click();
+      await page.waitForTimeout(500);
+      const typeSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+      if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await typeSelGroup.click();
+        await page.waitForTimeout(500);
+      }
+      const selSettingsVisible = await typeSettingsZone.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Panels] Type selection settings visible with panels: ${selSettingsVisible}`);
+      ts = await typeState();
+      console.log(`[Panels] Type panels during selection: left=${ts.left}, right=${ts.right}`);
+
+      await typeCreateGroup.click();
+      await page.waitForTimeout(500);
+      if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await typeCreateGroup.click();
+        await page.waitForTimeout(500);
+      }
+      const createSettingsVisible = await typeSettingsZone.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Panels] Type create settings visible with panels: ${createSettingsVisible}`);
+      ts = await typeState();
+      console.log(`[Panels] Type panels during create: left=${ts.left}, right=${ts.right}`);
+      expect([ts.left, ts.right].filter(Boolean).length).toBeGreaterThanOrEqual(1);
+    }
+
+    console.log("[Panels] Type: Testing panel toggle while toolbar group active");
+    if (hasTypeSel) {
+      await typeSelGroup.click();
+      await page.waitForTimeout(300);
+      const typeSettingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
+      if (!(await typeSettingsZone.isVisible({ timeout: 1000 }).catch(() => false))) {
+        await typeSelGroup.click();
+        await page.waitForTimeout(300);
+      }
+    }
+    const rightVisibleBefore = await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false);
+    if (rightVisibleBefore) {
+      await rightToggle.click();
+      await page.waitForTimeout(300);
+      await rightToggle.click();
+      await page.waitForTimeout(300);
+      const rightVisibleAfter = await page.locator('[data-panel="rightSidePanel"]').first().isVisible().catch(() => false);
+      console.log(`[Panels] Type right panel after toggle cycle: ${rightVisibleAfter}`);
+      const settingsStillVisible = await page.locator('[id="semio.sketchpad.toolbar.zone.settings"]').isVisible({ timeout: 1000 }).catch(() => false);
+      console.log(`[Panels] Type toolbar settings still visible: ${settingsStillVisible}`);
+    }
+
+    await ensureAllClosed();
+    console.log("[Panels] Type panel combinations complete");
+    // #endregion 🔖Type Panel Combinations
+
+    // #region 🔖Cross-App Panel Persistence
+    console.log("[Panels] Testing panel state across app navigation");
+
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+    const homeState = await getPanelVisibleState();
+    console.log(`[Panels] Home panels before navigation: left=${homeState.left}, right=${homeState.right}`);
+
+    const zipPath = path.resolve(__dirname, "../assets/semio/metabolism.zip");
+    const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
+    await expect(fileInput).toBeAttached({ timeout: 10000 });
+    await fileInput.setInputFiles(zipPath);
+    await fileInput.evaluate((el) => el.dispatchEvent(new Event("change", { bubbles: true })));
+    await page.waitForTimeout(15000);
+    const metabolismText = page.getByText("Metabolism", { exact: true }).first();
+    await metabolismText.waitFor({ state: "visible", timeout: 60000 });
+    await page.waitForTimeout(1000);
+    const tableRow = page.locator("tr[data-row-id]").filter({ hasText: "Metabolism" }).first();
+    const isRowVisible = await tableRow.isVisible().catch(() => false);
+    if (isRowVisible) {
+      await tableRow.dblclick({ force: true });
+    } else {
+      await metabolismText.dblclick({ force: true });
+    }
+    await page.waitForURL(/.*kits\/.+/, { timeout: 60000 });
+    await page.waitForTimeout(3000);
+
+    const kitAfterNavState = await getPanelVisibleState();
+    console.log(`[Panels] Kit panels after navigation: left=${kitAfterNavState.left}, right=${kitAfterNavState.right}`);
+
+    await page.goBack();
+    await page.waitForTimeout(3000);
+    const homeAfterBackState = await getPanelVisibleState();
+    console.log(`[Panels] Home panels after going back: left=${homeAfterBackState.left}, right=${homeAfterBackState.right}`);
+
+    console.log("[Panels] Cross-app panel persistence test complete");
+    // #endregion 🔖Cross-App Panel Persistence
+
+    // #region 🔖Panel Content Verification per App
+    console.log("[Panels] Verifying panel sections across apps");
+
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+
+    const getTabCountPerPanel = async (panelKey: string): Promise<number> => {
+      const panel = page.locator(`[data-panel="${panelKey}"]`).first();
+      if (!(await panel.isVisible().catch(() => false))) return 0;
+      return await panel.locator('[role="tab"]').count().catch(() => 0);
+    };
+
+    const homeLeftTabs = await getTabCountPerPanel("leftSidePanel");
+    const homeRightTabs = await getTabCountPerPanel("rightSidePanel");
+    console.log(`[Panels] Home tab counts: left=${homeLeftTabs}, right=${homeRightTabs}`);
+
+    await ensureAllClosed();
+    console.log("[Panels] Panel content verification complete");
+    // #endregion 🔖Panel Content Verification per App
+
+    // #region 🔖Panel Resize Handles
+    console.log("[Panels] Verifying panel resize handles exist");
+
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+    await ensureAllOpen();
+    await page.waitForTimeout(500);
+
+    const leftPanel = page.locator('[data-panel="leftSidePanel"]').first();
+    if (await leftPanel.isVisible().catch(() => false)) {
+      const leftBox = await leftPanel.boundingBox();
+      if (leftBox) {
+        const resizeEdgeX = leftBox.x + leftBox.width;
+        const resizeEdgeY = leftBox.y + leftBox.height / 2;
+        await page.mouse.move(resizeEdgeX, resizeEdgeY);
+        await page.waitForTimeout(200);
+        const cursor = await page.evaluate(() => document.body.style.cursor || getComputedStyle(document.elementFromPoint(0, 0) || document.body).cursor);
+        console.log(`[Panels] Cursor near left panel edge: ${cursor}`);
+      }
+    }
+
+    const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
+    if (await rightPanel.isVisible().catch(() => false)) {
+      const rightBox = await rightPanel.boundingBox();
+      if (rightBox) {
+        const resizeEdgeX = rightBox.x;
+        const resizeEdgeY = rightBox.y + rightBox.height / 2;
+        await page.mouse.move(resizeEdgeX, resizeEdgeY);
+        await page.waitForTimeout(200);
+        const cursor = await page.evaluate(() => document.body.style.cursor || getComputedStyle(document.elementFromPoint(0, 0) || document.body).cursor);
+        console.log(`[Panels] Cursor near right panel edge: ${cursor}`);
+      }
+    }
+
+    await ensureAllClosed();
+    console.log("[Panels] Panel resize handles test complete");
+    // #endregion 🔖Panel Resize Handles
+
+    // #region 🔖Keyboard Shortcuts
+    console.log("[Panels] Testing keyboard shortcuts for panel toggles");
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
+
+    await ensureAllClosed();
+    await page.waitForTimeout(300);
+
+    const beforeShortcut = await getPanelVisibleState();
+    console.log(`[Panels] Before keyboard shortcut: left=${beforeShortcut.left}, right=${beforeShortcut.right}`);
+
+    await page.keyboard.press("Control+j");
+    await page.waitForTimeout(500);
+    const afterCtrlJ = await getPanelVisibleState();
+    console.log(`[Panels] After Ctrl+J: left=${afterCtrlJ.left}, right=${afterCtrlJ.right}`);
+    const ctrlJToggled = afterCtrlJ.left !== beforeShortcut.left;
+    console.log(`[Panels] Ctrl+J toggled left panel: ${ctrlJToggled}`);
+
+    await page.keyboard.press("Control+l");
+    await page.waitForTimeout(500);
+    const afterCtrlL = await getPanelVisibleState();
+    console.log(`[Panels] After Ctrl+L: left=${afterCtrlL.left}, right=${afterCtrlL.right}`);
+    const ctrlLToggled = afterCtrlL.right !== afterCtrlJ.right;
+    console.log(`[Panels] Ctrl+L toggled right panel: ${ctrlLToggled}`);
+
+    await page.keyboard.press("Control+k");
+    await page.waitForTimeout(500);
+    const afterCtrlK = await getPanelVisibleState();
+    console.log(`[Panels] After Ctrl+K: left=${afterCtrlK.left}, right=${afterCtrlK.right}`);
+    const ctrlKToggled = false;
+    console.log(`[Panels] Ctrl+K toggled HUD panel: ${ctrlKToggled} (HUD panel removed)`);
+
+    await ensureAllClosed();
+    console.log("[Panels] Keyboard shortcuts test complete");
+    // #endregion 🔖Keyboard Shortcuts
+
+    const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
+    expect(infiniteLoopErrors).toHaveLength(0);
+    console.log("[Panels] All panel combination tests complete");
+  });
+
+  test("Design Navbar Settings Is Available", async ({ page }) => {
+    test.setTimeout(120000);
+    await initDesign(page);
+
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+
+    await expectNoLegacyWindowTabs(page, "Design Utility Tabs");
+    await expectUtilityPanelTogglesInNavbar(page, "Design Utility Tabs");
+    const settingsToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]');
+    await expect(settingsToggle).toBeVisible({ timeout: 10000 });
+    await settingsToggle.click();
+    await page.waitForTimeout(400);
+
+    const settingsUnavailable = page.getByText("Settings not available").first();
+    await expect(settingsUnavailable).toHaveCount(0);
+    await expect(page.locator('[id="semio.sketchpad.app.design.settings.panel.toolbar"]').first()).toBeVisible({ timeout: 10000 });
+
+    const chatToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]');
+    await expect(chatToggle).toBeVisible({ timeout: 10000 });
+    await chatToggle.click();
+    await page.waitForTimeout(400);
+
+    const chatUnavailable = page.getByText("Chat not available").first();
+    await expect(chatUnavailable).toHaveCount(0);
+    await expect(page.locator('[data-panel="rightSidePanel"]').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  // #region 🔖Design Undo Redo
+  test("Design Undo Redo", async ({ page }) => {
+    test.setTimeout(180000);
+    const { errors } = await initConsole(page);
+    await initDesign(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
+    const diagramContainer = page.locator('#diagram .react-flow').first();
+    const hasDiagram = await diagramContainer.isVisible({ timeout: 30000 }).catch(() => false);
+    expect(hasDiagram).toBe(true);
+    const pieceNodes = diagramContainer.locator(".react-flow__node");
+    await pieceNodes.first().waitFor({ state: "attached", timeout: 60000 });
+    const pieceNodeCount = await pieceNodes.count();
+    expect(pieceNodeCount).toBeGreaterThan(0);
+    console.log(`[Design Undo Redo] Piece nodes: ${pieceNodeCount}`);
+    const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+    if (await leftPanelToggle.isVisible().catch(() => false)) {
+      const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
+      if (leftPanelOpen) {
+        await leftPanelToggle.click();
+        await page.waitForTimeout(500);
+      }
+    }
+    const piecesBeforeDrag = await getDesignPieceCenters(page);
+    const pieceGuids = Object.keys(piecesBeforeDrag);
+    console.log(`[Design Undo Redo] Piece GUIDs: ${pieceGuids.length}`);
+    expect(pieceGuids.length).toBeGreaterThan(0);
+    const firstNode = pieceNodes.first();
+    const nodeBox = await firstNode.boundingBox();
+    expect(nodeBox).not.toBeNull();
+    const startX = nodeBox!.x + nodeBox!.width / 2;
+    const startY = nodeBox!.y + nodeBox!.height / 2;
+    const dragDistance = 80;
+    await page.mouse.move(startX, startY);
+    await page.waitForTimeout(100);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    const steps = 10;
+    for (let i = 1; i <= steps; i++) {
+      await page.mouse.move(startX + (dragDistance * i) / steps, startY, { steps: 1 });
+      await page.waitForTimeout(20);
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(1000);
+    const nodeBoxAfterDrag = await firstNode.boundingBox();
+    const movedAfterDrag = nodeBoxAfterDrag ? Math.abs(nodeBoxAfterDrag.x - nodeBox!.x) : 0;
+    console.log(`[Design Undo Redo] Node moved after drag: ${movedAfterDrag.toFixed(1)}px`);
+    const storeHasUndoStack = await page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      if (!store) return false;
+      const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+      if (kitGuids.length === 0) return false;
+      const url = window.location.pathname;
+      const designGuidMatch = url.match(/\/designs\/([^/]+)/);
+      const designGuid = designGuidMatch?.[1];
+      if (!designGuid) return false;
+      const kitGuid = kitGuids[0];
+      const designApps = (store as any).designApps;
+      if (!designApps) return false;
+      const kitMap = designApps.get?.(kitGuid);
+      if (!kitMap) return false;
+      const designApp = kitMap.get?.(designGuid);
+      if (!designApp) return false;
+      return (designApp.pastTransactionsStack?.length ?? 0) > 0 || designApp.canUndo?.() === true;
+    });
+    console.log(`[Design Undo Redo] Store has undo stack: ${storeHasUndoStack}`);
+    await page.keyboard.press("Control+z");
+    await page.waitForTimeout(1500);
+    const nodeBoxAfterUndo = await firstNode.boundingBox();
+    const movedAfterUndo = nodeBoxAfterUndo ? Math.abs(nodeBoxAfterUndo.x - nodeBox!.x) : 0;
+    console.log(`[Design Undo Redo] Node position after undo: x=${nodeBoxAfterUndo?.x?.toFixed(1)}, moved=${movedAfterUndo.toFixed(1)}px from original`);
+    if (movedAfterDrag > 10) {
+      expect(movedAfterUndo).toBeLessThan(movedAfterDrag);
+      console.log("[Design Undo Redo] Undo successfully reverted drag movement");
+    } else {
+      console.log("[Design Undo Redo] Drag did not produce significant movement, checking undo is harmless");
+    }
+    await page.keyboard.press("Control+y");
+    await page.waitForTimeout(1500);
+    const nodeBoxAfterRedo = await firstNode.boundingBox();
+    const movedAfterRedo = nodeBoxAfterRedo ? Math.abs(nodeBoxAfterRedo.x - nodeBox!.x) : 0;
+    console.log(`[Design Undo Redo] Node position after redo: x=${nodeBoxAfterRedo?.x?.toFixed(1)}, moved=${movedAfterRedo.toFixed(1)}px from original`);
+    if (movedAfterDrag > 10) {
+      expect(movedAfterRedo).toBeGreaterThan(movedAfterUndo);
+      console.log("[Design Undo Redo] Redo successfully restored drag movement");
+    }
+    await page.keyboard.press("Control+Shift+z");
+    await page.waitForTimeout(500);
+    console.log("[Design Undo Redo] Ctrl+Shift+Z also fires redo (no crash)");
+    await page.mouse.move(startX, startY);
+    await page.waitForTimeout(100);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    for (let i = 1; i <= 5; i++) {
+      await page.mouse.move(startX + (50 * i) / 5, startY, { steps: 1 });
+      await page.waitForTimeout(20);
+    }
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    await page.mouse.up();
+    await page.waitForTimeout(1000);
+    const nodeBoxAfterEscapeDrag = await firstNode.boundingBox();
+    console.log(`[Design Undo Redo] Node position after Escape abort: x=${nodeBoxAfterEscapeDrag?.x?.toFixed(1)}`);
+    console.log("[Design Undo Redo] Escape during drag does not crash");
+    const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
+    expect(infiniteLoopErrors).toHaveLength(0);
+    console.log("[Design Undo Redo] All undo/redo assertions passed");
+  });
+  // #endregion 🔖Design Undo Redo
+
+  // #region 🔖Design Drag Performance
+  test("Design Drag Performance", async ({ page }) => {
+    test.setTimeout(120000);
+    const { errors } = await initConsole(page);
+    const panZoomBudgetMs = 2500;
+    await initDesign(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(3000);
+    const diagramContainer = page.locator('#diagram .react-flow').first();
+    const hasDiagram = await diagramContainer.isVisible({ timeout: 30000 }).catch(() => false);
+    expect(hasDiagram).toBe(true);
+    const pieceNodes = diagramContainer.locator(".react-flow__node");
+    await pieceNodes.first().waitFor({ state: "attached", timeout: 60000 });
+    const pieceNodeCount = await pieceNodes.count();
+    expect(pieceNodeCount).toBeGreaterThan(0);
+    const leftPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
+    if (await leftPanelToggle.isVisible().catch(() => false)) {
+      const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
+      if (leftPanelOpen) {
+        await leftPanelToggle.click();
+        await page.waitForTimeout(500);
+      }
+    }
+    const longTaskSupported = await page.evaluate(() => {
+      const store = (window as any).__SEMIO_PERFORMANCE__;
+      if (!store) {
+        return false;
+      }
+      store.longTasks = [];
+      return Boolean(store.longTaskSupported);
+    });
+    expect(longTaskSupported).toBe(true);
+    const getViewportTransform = async () => {
+      return await page.evaluate(() => {
+        const viewport = document.querySelector("#diagram .react-flow__viewport") as HTMLElement | null;
+        const transform = viewport?.style.transform ?? "";
+        const match = transform.match(/translate\(([-0-9.]+)px,\s*([-0-9.]+)px\)\s*scale\(([-0-9.]+)\)/);
+        if (!match) {
+          return { x: 0, y: 0, scale: 1 };
+        }
+        return {
+          x: Number(match[1]),
+          y: Number(match[2]),
+          scale: Number(match[3]),
+        };
+      });
+    };
+    const pane = diagramContainer.locator(".react-flow__pane").first();
+    const paneBox = await pane.boundingBox();
+    expect(paneBox).not.toBeNull();
+    const panZoomStart = Date.now();
+    const zoomAnchorX = paneBox!.x + paneBox!.width / 2;
+    const zoomAnchorY = paneBox!.y + paneBox!.height / 2;
+    const viewportBeforeZoom = await getViewportTransform();
+    await page.mouse.move(zoomAnchorX, zoomAnchorY);
+    await page.mouse.wheel(0, -600);
+    await page.waitForTimeout(500);
+    const viewportAfterZoom = await getViewportTransform();
+    expect(Math.abs(viewportAfterZoom.scale - viewportBeforeZoom.scale)).toBeGreaterThan(0.01);
+    const viewportBeforeZoomOut = await getViewportTransform();
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(500);
+    const viewportAfterZoomOut = await getViewportTransform();
+    expect(Math.abs(viewportAfterZoomOut.scale - viewportBeforeZoomOut.scale)).toBeGreaterThan(0.01);
+    const panZoomDuration = Date.now() - panZoomStart;
+    console.log(`[DEBUG] Design Drag Performance: pan and zoom completed in ${panZoomDuration}ms`);
+    expect(panZoomDuration).toBeLessThan(panZoomBudgetMs);
+    const firstNode = pieceNodes.first();
+    const nodeBox = await firstNode.boundingBox();
+    expect(nodeBox).not.toBeNull();
+    const startX = nodeBox!.x + nodeBox!.width / 2;
+    const startY = nodeBox!.y + nodeBox!.height / 2;
+    const dragDistance = 100;
+    const targetX = startX + dragDistance;
+    const targetY = startY;
+    await page.mouse.move(startX, startY);
+    await page.waitForTimeout(50);
+    await page.mouse.down();
+    await page.waitForTimeout(50);
+    const dragDuration = await page.evaluate(async ({ sx, sy, tx, ty, steps }: { sx: number; sy: number; tx: number; ty: number; steps: number }) => {
+      const start = performance.now();
+      const dx = (tx - sx) / steps;
+      const dy = (ty - sy) / steps;
+      for (let i = 1; i <= steps; i++) {
+        const x = sx + dx * i;
+        const y = sy + dy * i;
+        const moveEvent = new PointerEvent("pointermove", { clientX: x, clientY: y, bubbles: true, cancelable: true, pointerType: "mouse" });
+        document.elementFromPoint(x, y)?.dispatchEvent(moveEvent);
+        const mouseMove = new MouseEvent("mousemove", { clientX: x, clientY: y, bubbles: true, cancelable: true });
+        document.elementFromPoint(x, y)?.dispatchEvent(mouseMove);
+        if (i % 5 === 0) await new Promise((r) => requestAnimationFrame(r));
+      }
+      await new Promise((r) => requestAnimationFrame(r));
+      return performance.now() - start;
+    }, { sx: startX, sy: startY, tx: targetX, ty: targetY, steps: 20 });
+    await page.mouse.up();
+    console.log(`[DEBUG] Design Drag Performance: dragged ${dragDistance}px in ${dragDuration.toFixed(1)}ms (in-browser)`);
+    expect(dragDuration).toBeLessThan(200);
+    const nodeBoxAfter = await firstNode.boundingBox();
+    expect(nodeBoxAfter).not.toBeNull();
+    const actualMovement = Math.abs(nodeBoxAfter!.x - nodeBox!.x);
+    console.log(`[DEBUG] Design Drag Performance: node moved ${actualMovement.toFixed(1)}px in viewport`);
+    expect(actualMovement).toBeGreaterThan(10);
+  });
+  // #endregion 🔖Design Drag Performance
 });

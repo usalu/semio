@@ -277,4 +277,39 @@ public class Tests
         }
     }
 
+    public class Drag
+    {
+        [Fact]
+        public void Design_Pieces_Offset_DiffDesign()
+        {
+            var design = Tests.LoadAsset<Design>("drag/design.json");
+            var pieces = Tests.LoadAsset<Design>("drag/pieces.json");
+            var offset = Tests.LoadAsset<Coord>("drag/offset.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff_design.json");
+            var computedDiff = Design.DragPiecesInDesign(design, pieces, offset);
+            Assert.NotNull(computedDiff.Pieces);
+            Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
+            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Updated)
+            {
+                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
+                var expected = expectedPieceMap[u.Piece.Guid];
+                Assert.NotNull(u.Diff!.Center);
+                Assert.NotNull(expected!.Center);
+                Assert.Equal(expected.Center!.U, u.Diff.Center!.U, 3);
+                Assert.Equal(expected.Center.V, u.Diff.Center.V, 3);
+            }
+            Assert.NotNull(computedDiff.Connections);
+            Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
+            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Connections.Updated)
+            {
+                Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
+                var expected = expectedConnMap[u.Connection.Guid];
+                Assert.Equal(expected!.U!.Value, u.Diff!.U!.Value, 3);
+                Assert.Equal(expected.V!.Value, u.Diff.V!.Value, 3);
+            }
+        }
+    }
+
 }

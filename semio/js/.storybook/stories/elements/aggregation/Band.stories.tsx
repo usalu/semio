@@ -19,7 +19,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
-import { Band, Button, Input, Level, LevelProvider, Toggle, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Band, Button, Input, Level, LevelProvider, Strip, Toggle, getLevelBgClass } from "../../../../sketchpad/elements";
 
 const meta = {
   title: "Elements/Aggregation/Band",
@@ -247,3 +247,41 @@ export const Temporary: Story = {
   args: { ...HorizontalWithToggles.args },
   render: createLevelRender("temporary"),
 };
+
+// #endregion 🔖Band
+
+// #region 🔖Strip
+export const StripHorizontal: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: () => (
+    <div className="w-[600px]">
+      <Strip
+        id="strip-horizontal"
+        items={[
+          { content: <Toggle key="designs" pressed={false} onPressedChange={() => {}} id="strip-toggle-1" icon={<LayoutIcon className="size-tiny" />} /> },
+          { content: <Toggle key="types" pressed={true} onPressedChange={() => {}} id="strip-toggle-2" icon={<TypeIcon className="size-tiny" />} /> },
+          { content: <Input key="search" id="strip-search" placeholder="Search..." className="min-w-[160px]" /> },
+          { content: <Button key="add" id="strip-add" icon={<AddIcon className="size-tiny" />}>Add</Button> },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const StripNonScrollable: Story = {
+  args: { ...HorizontalWithToggles.args },
+  render: () => (
+    <div className="w-[600px]">
+      <Strip
+        id="strip-non-scrollable"
+        scrollable={false}
+        items={[
+          { content: <Toggle key="1" pressed={false} onPressedChange={() => {}} id="strip-ns-1" icon={<LayoutIcon className="size-tiny" />} /> },
+          { content: <Toggle key="2" pressed={true} onPressedChange={() => {}} id="strip-ns-2" icon={<TypeIcon className="size-tiny" />} /> },
+          { content: <span className="text-sm">Fixed layout strip</span> },
+        ]}
+      />
+    </div>
+  ),
+};
+// #endregion 🔖Strip

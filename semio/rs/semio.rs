@@ -3891,6 +3891,82 @@ fn connector_to_plane(connector: &Connector) -> Plane {
     Plane::new(origin, x_axis, y_axis)
 }
 
+pub fn drag_pieces_in_design(
+    design_pieces: &[Piece],
+    design_connections: &[Connection],
+    selected_pieces: &[Piece],
+    offset: &Coord,
+) -> DesignDiff {
+    let selected_guids: HashSet<&str> = selected_pieces.iter().map(|p| p.guid.as_str()).collect();
+    let design_piece_map: HashMap<&str, &Piece> = design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+    let mut children_map: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut connection_by_child: HashMap<&str, &Connection> = HashMap::new();
+    for conn in design_connections {
+        let connecting_guid = conn.connecting.piece.guid.as_str();
+        let connected_guid = conn.connected.piece.guid.as_str();
+        children_map.entry(connecting_guid).or_default().push(connected_guid);
+        connection_by_child.insert(connected_guid, conn);
+    }
+    let root_movers: Vec<&str> = selected_guids.iter()
+        .filter(|&&guid| design_piece_map.get(guid).map_or(false, |p| p.center.is_some()))
+        .copied()
+        .collect();
+    let mut moving_set: HashSet<&str> = HashSet::new();
+    let mut queue: VecDeque<&str> = root_movers.iter().copied().collect();
+    while let Some(current) = queue.pop_front() {
+        if !moving_set.insert(current) { continue; }
+        if let Some(children) = children_map.get(current) {
+            for &child in children {
+                if !moving_set.contains(child) {
+                    queue.push_back(child);
+                }
+            }
+        }
+    }
+    let piece_updates: Vec<DiffUpdate<PieceDiff>> = root_movers.iter().map(|&guid| {
+        DiffUpdate {
+            key: "piece".to_string(),
+            guid: guid.to_string(),
+            diff: PieceDiff {
+                guid: guid.to_string(),
+                center: Some(Some(Coord { u: offset.u, v: offset.v })),
+                ..Default::default()
+            },
+        }
+    }).collect();
+    let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids.iter()
+        .filter(|&&guid| !moving_set.contains(guid) && connection_by_child.contains_key(guid))
+        .map(|&guid| {
+            let conn = connection_by_child[guid];
+            DiffUpdate {
+                key: "connection".to_string(),
+                guid: conn.guid.clone(),
+                diff: ConnectionDiff {
+                    guid: conn.guid.clone(),
+                    u: Some(Some(offset.u)),
+                    v: Some(Some(offset.v)),
+                    ..Default::default()
+                },
+            }
+        }).collect();
+    let mut diff = DesignDiff { guid: String::new(), ..Default::default() };
+    if !piece_updates.is_empty() {
+        diff.pieces = Some(CollectionDiff {
+            added: None,
+            removed: None,
+            updated: Some(piece_updates),
+        });
+    }
+    if !connection_updates.is_empty() {
+        diff.connections = Some(CollectionDiff {
+            added: None,
+            removed: None,
+            updated: Some(connection_updates),
+        });
+    }
+    diff
+}
+
 // #endregion 🔖FlattenDesign
 
 // #region 🔖Validation Types

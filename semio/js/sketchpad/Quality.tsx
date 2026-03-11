@@ -1,5 +1,6 @@
-// #region 🔖Header
-// [👤semio📚js🗃️sketchpad💻quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx)
+// #region Header
+
+// js/semio/sketchpad/Quality.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,77 +15,80 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Quality inspection app for viewing and editing quality attributes.
+// #endregion Header
 
-// #endregion 🔖Header
-
-// #region 🔖Imports
-// [👤semio📚js🗃️sketchpad💻quality🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Imports)
-// External and internal module imports MUST be declared here.
+// #region Imports
 
 import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
+import { AddIcon, AwardIcon, ChatIcon, CodeIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SettingsIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
 import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
 import {
-  Diagram as BaseDiagram,
-  calculateDiagramLayout,
-  DiagramNode,
-  DraggableAvatar,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-  Input,
-  PlaceholderDiagramNode,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-  ToggleGroup,
-  TreeContent,
-  TreeItem,
+    Diagram as BaseDiagram,
+    calculateDiagramLayout,
+    BasicChatPanel,
+    DiagramNode,
+    DraggableAvatar,
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+    Input,
+    PlaceholderDiagramNode,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    Textarea,
+    Toggle,
+    ToggleGroup,
+    Tree,
+    TreeContent,
+    TreeItem,
+    TreeRow,
+    TreeStateProvider,
 } from "./elements";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
-import { AppConfig, AppPlugin, createPanelDefinition, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, Theme, ToolKind } from "./shared";
+import { AppConfig, applySelectionComposition, AppPlugin, createPanelDefinition, Expertise, isSelectionToolKind, Mode, PanelKind, registerAppPlugin, registerEventHandler, resolveSelectionCompositionKind, Theme, ToolKind, toSelectionToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";
 import {
-  Canvas,
-  createDefaultLayout,
-  createDefaultQualityAppState,
-  identitySelector,
-  KitScopeProvider,
-  LayoutCanvas,
-  PlainKitDiffAppStore,
-  QualityScopeProvider,
-  registerQualityAppStoreFactory,
-  useActiveInteraction,
-  useAddPanelSection,
-  useAppType,
-  useDevice,
-  useExpertise,
-  useKit,
-  useKitScope,
-  useLanguage,
-  useMode,
-  useQuality,
-  useQualityScope,
-  useRemovePanelSection,
-  useSketchpadCommands,
-  useSketchpadStore,
-  useSyncDeep,
-  useTheme,
+    Canvas,
+    createDefaultQualityAppState,
+    identitySelector,
+    KitScopeProvider,
+    LayoutCanvas,
+    PlainKitDiffAppStore,
+    QualityScopeProvider,
+    registerQualityAppStoreFactory,
+    useActiveInteraction,
+    useAddPanelSection,
+    useAddSidePanelTab,
+    useAppType,
+    useDevice,
+    useExpertise,
+    useKit,
+    useKitScope,
+    useLanguage,
+    useMode,
+    useQuality,
+    useQualityScope,
+    useRemovePanelSection,
+    useRemoveSidePanelTab,
+    useSketchpadCommands,
+    useSketchpadStore,
+    useSyncDeep,
+    useTheme,
 } from "./Sketchpad";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖Types
-// [👤semio📚js🗃️sketchpad💻quality🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Types)
+// #region Types
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/TYPES)
 // Type definitions MUST declare quality app state, selections, and formula structures.
 
 /**
@@ -174,12 +178,7 @@ export interface QualityAppDiff {
   windowLayout?: any;
 }
 
-/**
- * Edit record for undo and redo in the quality app.
- *
- *  * [👤semio📚js🗃️sketchpad💻quality🔖types🛠️qualityappedit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Types/d/i/QualityAppEdit)
- **/
-export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> { }
+export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> {}
 
 /**
  * Complete quality app state including selection, hover, formula nodes, and layout.
@@ -231,10 +230,11 @@ export interface FormulaFunction {
   toLatex: (...operands: string[]) => string;
 }
 
-// #endregion 🔖Types
+// #endregion Types
 
-// #region 🔖Functions
-// [👤semio📚js🗃️sketchpad💻quality🔖functions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions)
+// #region Functions
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/FUNCTIONS)
 // Formula function definitions, parsing, and LaTeX conversion utilities MUST be declared here.
 
 /**
@@ -585,10 +585,11 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
     };
 }
 
-// #endregion 🔖Functions
+// #endregion Functions
 
-// #region 🔖Commands
-// [👤semio📚js🗃️sketchpad💻quality🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Commands)
+// #region Commands
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMMANDS)
 // Quality app command handlers MUST modify state through diff objects.
 
 /**
@@ -698,10 +699,11 @@ const qualityAppCommands = {
   },
 };
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #region 🔖Store
-// [👤semio📚js🗃️sketchpad💻quality🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store)
+// #region Store
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)
 // Quality app store, hooks, and reactive state management MUST be declared here.
 
 /**
@@ -714,7 +716,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
   constructor(parent: SketchpadStore, id: QualityAppId) {
     const defaultState: QualityAppState = {
       fullscreenWindow: QualityAppFullscreenWindow.None,
-      panelVisibility: { toolbar: false, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
       activeTool: ToolKind.SELECTION_NORMAL,
       selection: undefined,
       hover: undefined,
@@ -844,14 +846,16 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     if (result.diff) {
       this.change(result.diff);
     }
-    if (result.qualityDiff) {
-      kitStore.change({
-        qualities: {
-          updated: [{ quality: { guid: this.Guid.quality }, diff: result.qualityDiff }],
-        },
-      });
-    }
+    const qualityKitDiff = result.qualityDiff ? {
+      qualities: {
+        updated: [{ quality: { guid: this.Guid.quality }, diff: result.qualityDiff }],
+      },
+    } : undefined;
+    if (qualityKitDiff) (result as any).kitDiff = qualityKitDiff;
     this.recordEdit(result);
+    if (qualityKitDiff) {
+      kitStore.change(qualityKitDiff);
+    }
     return result as T;
   }
     return this.executeCommand(command, ...rest);
@@ -862,8 +866,9 @@ if (typeof window !== "undefined") {
   registerQualityAppStoreFactory((parent, id) => new QualityAppStore(parent, id));
 }
 
-// #region 🔖Quality App Plugin Registration
-// [👤semio📚js🗃️sketchpad💻quality🔖store🔖qualityapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store/s/Quality%20App%20Plugin%20Registration)
+// #region Quality App Plugin Registration
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖qualityapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/QUALITY-APP-PLUGIN-REGISTRATION)
 // Plugin registration and event handler wiring MUST initialize quality app context.
 
 /**
@@ -880,7 +885,7 @@ const qualityAppPlugin: AppPlugin = {
     selectors: {},
     createDefaultState: (): QualityAppState => ({
       fullscreenWindow: QualityAppFullscreenWindow.None,
-      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
       activeTool: ToolKind.SELECTION_NORMAL,
       selection: undefined,
       hover: undefined,
@@ -888,7 +893,7 @@ const qualityAppPlugin: AppPlugin = {
       windowLayout: undefined,
     }),
   },
-  registerStores: () => { },
+  registerStores: () => {},
 };
 
 if (typeof window !== "undefined") {
@@ -912,7 +917,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🔖Quality App Plugin Registration
+// #endregion Quality App Plugin Registration
 
 /**
  * QualityAppScope holds the data fields for a QualityAppScope record.
@@ -971,7 +976,7 @@ export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: 
   const store = useQualityAppStore(identitySelector, id);
   if (!store) return null;
   const selectedSelector = selector || identitySelector;
-  return useSyncDeep<QualityAppState>(store as QualityAppStore, selectedSelector as (value: QualityAppState) => QualityAppState);
+  return useSyncDeep<QualityAppState>(store as any, selectedSelector as (value: QualityAppState) => QualityAppState);
 }
 
 /**
@@ -985,11 +990,11 @@ export function useQualityAppCommands(id?: QualityAppId) {
   const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
   if (!store) {
     return {
-      startTransaction: () => { },
-      finalizeTransaction: () => { },
-      abortTransaction: () => { },
-      undo: () => { },
-      redo: () => { },
+      startTransaction: () => {},
+      finalizeTransaction: () => {},
+      abortTransaction: () => {},
+      undo: () => {},
+      redo: () => {},
       toggleFormulaFullscreen: () => Promise.resolve(),
       toggleDiagramFullscreen: () => Promise.resolve(),
       setActiveTool: (_origin: string, _tool: ToolKind) => Promise.resolve(),
@@ -1001,7 +1006,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
       hoverFormulaNode: (_origin: string, _nodeId: Guid) => Promise.resolve(),
       clearHover: () => Promise.resolve(),
       connectNodes: (_origin: string, _sourceId: Guid, _targetId: Guid) => Promise.resolve(),
-      togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
+      togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
       execute: (_origin: string, _command: string, ..._args: any[]) => Promise.resolve(),
     };
   }
@@ -1150,7 +1155,7 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
     },
     [store],
   );
-  return [panelVisibility ?? { toolbar: true, workbench: false, details: false, chat: false, settings: false }, setPanelVisibility, canSet];
+  return [panelVisibility ?? { toolbar: true, details: false }, setPanelVisibility, canSet];
 }
 
 /**
@@ -1172,8 +1177,9 @@ export function useQualityAppWindowLayout(): HookResult<any> {
   return [windowLayout, setWindowLayout, canSet];
 }
 
-//#region 🔖Action Hooks
-// [👤semio📚js🗃️sketchpad💻quality🔖store🔖actionhooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store/s/Action%20Hooks)
+//#region Action Hooks
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖actionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/ACTION-HOOKS)
 // Memoized action hooks MUST provide formula node interaction callbacks.
 
 /**
@@ -1295,12 +1301,13 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
-//#endregion 🔖Action Hooks
+//#endregion Action Hooks
 
-// #endregion 🔖Store
+// #endregion Store
 
-// #region 🔖Components
-// [👤semio📚js🗃️sketchpad💻quality🔖components](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components)
+// #region Components
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖components](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS)
 // React components MUST render the quality app formula diagram, details panel, and workbench.
 
 declare global {
@@ -1392,7 +1399,8 @@ interface QualityDiagramProps {
  **/
 const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [formulaNodes] = useQualityAppFormulaNodes();
-  const [selectFormulaNode] = useQualityAppSelectFormulaNode();
+  const [selection, setSelection] = useQualityAppSelection();
+  const [activeTool] = useQualityAppActiveTool();
   const [hoverFormulaNode] = useQualityAppHoverFormulaNode();
   const [clearHover] = useQualityAppClearHover();
   const { connectNodes } = useQualityAppCommands();
@@ -1493,7 +1501,18 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
         initialNodes={initialNodes}
         initialEdges={initialEdges}
         onConnect={handleConnect}
-        onNodeClick={(_: React.MouseEvent, node: any) => selectFormulaNode && selectFormulaNode(node.id)}
+        onNodeClick={(e: React.MouseEvent, node: any) => {
+          if (!setSelection) return;
+          const compositionKind = resolveSelectionCompositionKind(activeTool, {
+            shiftKey: e.shiftKey,
+            altKey: e.altKey,
+            ctrlKey: e.ctrlKey,
+            metaKey: e.metaKey,
+          });
+          const currentNodes = selection?.formulaNodes || [];
+          const newNodes = applySelectionComposition(currentNodes, [node.id], compositionKind);
+          setSelection({ formulaNodes: newNodes });
+        }}
         onNodeMouseEnter={(_: React.MouseEvent, node: any) => hoverFormulaNode && hoverFormulaNode(node.id)}
         onNodeMouseLeave={() => clearHover && clearHover()}
         reactFlowInstanceRef={reactFlowInstanceRef}
@@ -1526,7 +1545,7 @@ const Formula: FC = () => {
     const loadMathJax = () => {
       if (window.MathJax) {
         if (mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
         }
         return;
       }
@@ -1535,10 +1554,10 @@ const Formula: FC = () => {
       script.async = true;
       script.onload = () => {
         if (window.MathJax && mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
         }
       };
-      script.onerror = () => { };
+      script.onerror = () => {};
       document.head.appendChild(script);
     };
     loadMathJax();
@@ -1549,7 +1568,7 @@ const Formula: FC = () => {
       mathRef.current.innerHTML = "";
       const latex = formulaToLatexString(quality?.formula);
       mathRef.current.textContent = `\\[${latex}\\]`;
-      window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
+      window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
     }
   }, [quality?.formula, formulaToLatexString]);
 
@@ -1573,23 +1592,16 @@ export const QualityDetails: FC = () => {
 
   return (
     <>
-      <TreeItem id="semio.sketchpad.app.quality.key">
-        <TreeContent>
+      <TreeRow id="semio.sketchpad.app.quality.key">
           <Input id="semio.sketchpad.app.quality.panel.details.key" value={quality.key ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.name">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.name">
           <Input id="semio.sketchpad.app.quality.panel.details.name" value={quality.name ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.description">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.description">
           <Textarea id="semio.sketchpad.app.quality.panel.details.description" value={quality.description ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.formula">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.formula">
           <Textarea
             id="semio.sketchpad.app.quality.panel.details.formula"
             value={quality.formula ?? ""}
@@ -1599,53 +1611,34 @@ export const QualityDetails: FC = () => {
             placeholderId="semio.sketchpad.app.quality.formulaPlaceholder"
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.defaultSiUnit">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.defaultSiUnit">
           <Input id="semio.sketchpad.app.quality.panel.details.defaultSiUnit" value={quality.defaultSiUnit ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.defaultImperialUnit">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.defaultImperialUnit">
           <Input id="semio.sketchpad.app.quality.panel.details.defaultImperialUnit" value={quality.defaultImperialUnit ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.kind">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.kind">
           <Input id="semio.sketchpad.app.quality.panel.details.kind" type="number" value={quality.kind?.toString() ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.canScale">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.canScale">
           <Input id="semio.sketchpad.app.quality.panel.details.canScale" type="checkbox" checked={quality.canScale ?? false} disabled className="size-tiny" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.defaultValue">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.defaultValue">
           <Input id="semio.sketchpad.app.quality.panel.details.defaultValue" type="number" value={quality.defaultValue?.toString() ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.min">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.min">
           <Input id="semio.sketchpad.app.quality.panel.details.min" type="number" value={quality.min?.toString() ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.isMinExcluded">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.isMinExcluded">
           <Input id="semio.sketchpad.app.quality.panel.details.isMinExcluded" type="checkbox" checked={quality.isMinExcluded ?? false} disabled className="size-tiny" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.max">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.max">
           <Input id="semio.sketchpad.app.quality.panel.details.max" type="number" value={quality.max?.toString() ?? ""} readOnly className="w-full" showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.isMaxExcluded">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.isMaxExcluded">
           <Input id="semio.sketchpad.app.quality.panel.details.isMaxExcluded" type="checkbox" checked={quality.isMaxExcluded ?? false} disabled className="size-tiny" showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -1797,32 +1790,26 @@ export const QualityWorkbench: FC = () => {
 
   return (
     <>
-      <TreeItem id="semio.sketchpad.app.quality.numericFunctions">
-        <TreeContent>
+      <TreeRow id="semio.sketchpad.app.quality.numericFunctions">
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="Add" kind="function" label={useLabel("semio.sketchpad.app.quality.add")} />
-            <FunctionNode name="Subtract" kind="function" label={useLabel("semio.sketchpad.app.quality.subtract")} />
-            <FunctionNode name="Multiply" kind="function" label={useLabel("semio.sketchpad.app.quality.multiply")} />
-            <FunctionNode name="Divide" kind="function" label={useLabel("semio.sketchpad.app.quality.divide")} />
+            <FunctionNode name="Add" kind="function" label={useLabel("semio.sketchpad.app.quality.add") ?? ""} />
+            <FunctionNode name="Subtract" kind="function" label={useLabel("semio.sketchpad.app.quality.subtract") ?? ""} />
+            <FunctionNode name="Multiply" kind="function" label={useLabel("semio.sketchpad.app.quality.multiply") ?? ""} />
+            <FunctionNode name="Divide" kind="function" label={useLabel("semio.sketchpad.app.quality.divide") ?? ""} />
           </div>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.branchingFunctions">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.branchingFunctions">
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="If" kind="function" label={useLabel("semio.sketchpad.app.quality.if")} />
-            <FunctionNode name="Switch" kind="function" label={useLabel("semio.sketchpad.app.quality.switch")} />
+            <FunctionNode name="If" kind="function" label={useLabel("semio.sketchpad.app.quality.if") ?? ""} />
+            <FunctionNode name="Switch" kind="function" label={useLabel("semio.sketchpad.app.quality.switch") ?? ""} />
           </div>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.quality.dataStructures">
-        <TreeContent>
+        </TreeRow>
+      <TreeRow id="semio.sketchpad.app.quality.dataStructures">
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="List" kind="function" label={useLabel("semio.sketchpad.app.quality.list")} />
-            <FunctionNode name="Dictionary" kind="function" label={useLabel("semio.sketchpad.app.quality.dictionary")} />
+            <FunctionNode name="List" kind="function" label={useLabel("semio.sketchpad.app.quality.list") ?? ""} />
+            <FunctionNode name="Dictionary" kind="function" label={useLabel("semio.sketchpad.app.quality.dictionary") ?? ""} />
           </div>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -1937,23 +1924,139 @@ const QualityWorkbenchQualities: FC = () => {
   return <QualityTree qualities={qualities} />;
 };
 
-// #endregion 🔖Components
-
-// #region 🔖App
-// [👤semio📚js🗃️sketchpad💻quality🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App)
-// Main quality app component MUST compose window layout, drag-drop, and hotkey handling.
-
 /**
- * Props for the quality app root component.
+ * Settings component for the selection tool group with mode toggles.
  *
- *  * [👤semio📚js🗃️sketchpad💻quality🔖app🛠️appprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App/d/i/AppProps)
+ * MUST render toggle buttons for each selection sub-mode.
+ *
+ *  * [👤semio📚js🗃️sketchpad💻qualitytsx🔖components🪨qualityselectsettings](semiorepo://definition/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS/QUALITY-SELECT-SETTINGS)
  **/
-export interface AppProps { }
+export const QualitySelectSettings: FC = () => {
+  const [activeTool, setActiveTool] = useQualityAppActiveTool();
+  const additiveLabel = useLabel("semio.sketchpad.app.quality.tools.select.additive");
+  const subtractiveLabel = useLabel("semio.sketchpad.app.quality.tools.select.subtractive");
+  const intersectLabel = useLabel("semio.sketchpad.app.quality.tools.select.intersect");
+  return (
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <Toggle
+        id="semio.sketchpad.app.quality.tools.select.additive"
+        icon={<AddIcon className="size-tiny" />}
+        text={additiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.quality.tools.select.subtractive"
+        icon={<RemoveIcon className="size-tiny" />}
+        text={subtractiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.quality.tools.select.intersect"
+        icon={<IntersectIcon className="size-tiny" />}
+        text={intersectLabel}
+        pressed={activeTool === ToolKind.SELECTION_INTERSECT}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
+      />
+    </div>
+  );
+};
 
-/**
- * [👤semio📚js🗃️sketchpad💻quality🔖app🪨formulawindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App/d/i/FormulaWindow)
- * FormulaWindow holds the data fields for a FormulaWindow record.
- **/
+// #endregion Components
+
+// #region Settings
+
+const QualitySettingsContent: FC = () => {
+  const [theme, setTheme, canSetTheme] = useTheme();
+  const [language, setLanguage, canSetLanguage] = useLanguage();
+  const [device, setDevice, canSetDevice] = useDevice();
+  const [expertise, setExpertise, canSetExpertise] = useExpertise();
+  const [mode, setMode, canSetMode] = useMode();
+  const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
+  const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
+  const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
+  return (
+    <>
+      <TreeRow>
+          <ToggleGroup
+            id="semio.sketchpad.settings.theme"
+            value={theme}
+            onValueChange={(value: string) => setTheme?.(value as Theme)}
+            showLabel
+            kind="single"
+            disabled={!canSetTheme}
+            items={[
+              { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+              { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+              { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+            ]}
+          />
+        </TreeRow>
+      <TreeRow>
+          <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
+            <SelectTrigger>
+              <SelectValue placeholder={languagePlaceholder} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">{languageEnLabel}</SelectItem>
+              <SelectItem value="de">{languageDeLabel}</SelectItem>
+            </SelectContent>
+          </Select>
+        </TreeRow>
+      <TreeRow>
+          <ToggleGroup
+            id="semio.sketchpad.settings.device"
+            value={typeof device === "object" ? "desktop" : device}
+            onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
+            showLabel
+            kind="single"
+            disabled={!canSetDevice}
+            items={[
+              { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
+              { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
+            ]}
+          />
+        </TreeRow>
+      <TreeRow>
+          <ToggleGroup
+            id="semio.sketchpad.settings.expertise"
+            value={expertise}
+            onValueChange={(value: string) => setExpertise?.(value as Expertise)}
+            showLabel
+            kind="single"
+            disabled={!canSetExpertise}
+            items={[
+              { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+              { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+              { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+            ]}
+          />
+        </TreeRow>
+      <TreeRow>
+          <ToggleGroup
+            id="semio.sketchpad.settings.mode"
+            value={mode}
+            onValueChange={(value: string) => setMode?.(value as Mode)}
+            showLabel
+            kind="single"
+            disabled={!canSetMode}
+            items={[
+              { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+              { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+            ]}
+          />
+        </TreeRow>
+    </>
+  );
+};
+
+// #endregion Settings
+
+// #region App
+
+export interface AppProps {}
+
 const FormulaWindow = memo(() => <Formula />);
 FormulaWindow.displayName = "FormulaWindow";
 
@@ -1978,6 +2081,7 @@ const App: FC<AppProps> = () => {
   const { undo, redo, addFormulaNode, connectNodes, startTransaction, finalizeTransaction } = useQualityAppCommands();
   const quality = useQuality() as Quality | undefined;
   const appType = useAppType();
+  const [activeTool, setActiveTool] = useQualityAppActiveTool();
 
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -1990,115 +2094,38 @@ const App: FC<AppProps> = () => {
   useHotkeys("ctrl+shift+z", () => redo("semio.sketchpad.app.quality.hotkey"));
 
   useEffect(() => {
-    if (appType !== "quality") return;
-
-    const SketchpadSettingsContent = () => {
-      const [theme, setTheme, canSetTheme] = useTheme();
-      const [language, setLanguage, canSetLanguage] = useLanguage();
-      const [device, setDevice, canSetDevice] = useDevice();
-      const [expertise, setExpertise, canSetExpertise] = useExpertise();
-      const [mode, setMode, canSetMode] = useMode();
-
-      const languageEnLabel = useLabel("semio.sketchpad.settings.language.en");
-      const languageDeLabel = useLabel("semio.sketchpad.settings.language.de");
-      const languagePlaceholder = useLabel("semio.sketchpad.app.home.settings.language.placeholder");
-
-      return (
-        <>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.theme"
-                value={theme}
-                onValueChange={(value: string) => setTheme?.(value as Theme)}
-                showLabel
-                kind="single"
-                disabled={!canSetTheme}
-                items={[
-                  { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-                  { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-                  { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <Select id="semio.sketchpad.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
-                <SelectTrigger>
-                  <SelectValue placeholder={languagePlaceholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">{languageEnLabel}</SelectItem>
-                  <SelectItem value="de">{languageDeLabel}</SelectItem>
-                </SelectContent>
-              </Select>
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.device"
-                value={typeof device === "object" ? "desktop" : device}
-                onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
-                showLabel
-                kind="single"
-                disabled={!canSetDevice}
-                items={[
-                  { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
-                  { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.expertise"
-                value={expertise}
-                onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-                showLabel
-                kind="single"
-                disabled={!canSetExpertise}
-                items={[
-                  { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-                  { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-                  { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem>
-            <TreeContent>
-              <ToggleGroup
-                id="semio.sketchpad.settings.mode"
-                value={mode}
-                onValueChange={(value: string) => setMode?.(value as Mode)}
-                showLabel
-                kind="single"
-                disabled={!canSetMode}
-                items={[
-                  { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-                  { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-                ]}
-              />
-            </TreeContent>
-          </TreeItem>
-        </>
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!setActiveTool || !isSelectionToolKind(activeTool)) return;
+      const nextToolKind = toSelectionToolKind(
+        resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
+          metaKey: e.metaKey,
+        }),
       );
+      if (nextToolKind !== ToolKind.SELECTION_NORMAL && nextToolKind !== activeTool) setActiveTool(nextToolKind);
     };
-
-    addSection("settings", {
-      id: "semio.sketchpad.settings",
-      specificity: 0,
-      order: 0,
-      content: SketchpadSettingsContent,
-    });
-
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!setActiveTool || !isSelectionToolKind(activeTool)) return;
+      const nextToolKind = toSelectionToolKind(
+        resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
+          metaKey: e.metaKey,
+        }),
+      );
+      if (nextToolKind === ToolKind.SELECTION_NORMAL && activeTool !== ToolKind.SELECTION_NORMAL) setActiveTool(ToolKind.SELECTION_NORMAL);
+      if (nextToolKind !== ToolKind.SELECTION_NORMAL && nextToolKind !== activeTool) setActiveTool(nextToolKind);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     return () => {
-      removeSection("settings", "semio.sketchpad.settings");
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [appType, addSection, removeSection]);
+  }, [activeTool, setActiveTool]);
 
   useEffect(() => {
     if (appType !== "quality") return;
@@ -2117,6 +2144,18 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     if (appType !== "quality") return;
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.quality.tools.selection",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "selection",
+        labelId: "semio.sketchpad.toolbar.parent.selection",
+        order: 10,
+      },
+      content: <QualitySelectSettings />,
+    });
 
     addSection("toolbar", {
       id: "semio.sketchpad.app.quality.toolbar.view",
@@ -2143,6 +2182,7 @@ const App: FC<AppProps> = () => {
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.quality.tools.selection");
       removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.view");
       removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.actions");
     };
@@ -2150,24 +2190,22 @@ const App: FC<AppProps> = () => {
 
   useEffect(() => {
     if (appType !== "quality") return;
-
     addSection("workbench", {
-      id: "semio.sketchpad.app.quality.functions",
-      specificity: 20,
-      order: 0,
-      content: () => <QualityWorkbench />,
-    });
-
-    addSection("workbench", {
-      id: "semio.sketchpad.app.quality.qualities",
+      id: "semio.sketchpad.app.quality.workbench.nodes",
       specificity: 20,
       order: 1,
+      content: () => <QualityWorkbench />,
+    });
+    addSection("workbench", {
+      id: "semio.sketchpad.app.quality.workbench.qualities",
+      specificity: 20,
+      order: 2,
       content: () => <QualityWorkbenchQualities />,
     });
 
     return () => {
-      removeSection("workbench", "semio.sketchpad.app.quality.functions");
-      removeSection("workbench", "semio.sketchpad.app.quality.qualities");
+      removeSection("workbench", "semio.sketchpad.app.quality.workbench.nodes");
+      removeSection("workbench", "semio.sketchpad.app.quality.workbench.qualities");
     };
   }, [appType, addSection, removeSection]);
 
@@ -2246,9 +2284,87 @@ const App: FC<AppProps> = () => {
 
   const store = useQualityAppStore() as QualityAppStore | null;
   const [windowLayout] = useQualityAppWindowLayout();
+  const addSidePanelTab = useAddSidePanelTab();
+  const removeSidePanelTab = useRemoveSidePanelTab();
+  const migratedWindowLayout = useMemo(() => {
+    if (!windowLayout) return windowLayout;
+    const removeWorkbenchWindowFromLayout = (layoutNode: any): any => {
+      if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
+      if (
+        layoutNode.type === "component" &&
+        (layoutNode.componentType === "workbench" || layoutNode.componentType === "settings" || layoutNode.componentType === "chat")
+      ) {
+        return null;
+      }
+      if (Array.isArray(layoutNode.content)) {
+        const content = layoutNode.content.map((item: any) => removeWorkbenchWindowFromLayout(item)).filter(Boolean);
+        if (content.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
+        return { ...layoutNode, content };
+      }
+      if (Array.isArray(layoutNode.contentItems)) {
+        const contentItems = layoutNode.contentItems.map((item: any) => removeWorkbenchWindowFromLayout(item)).filter(Boolean);
+        if (contentItems.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
+        return { ...layoutNode, contentItems };
+      }
+      return layoutNode;
+    };
+    return removeWorkbenchWindowFromLayout(windowLayout);
+  }, [windowLayout]);
+
+  useEffect(() => {
+    if (appType !== "quality") return;
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.quality.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <QualitySettingsContent />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.quality.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => <BasicChatPanel id="semio.sketchpad.app.quality.chat" title="Quality" />,
+    });
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.quality.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.quality.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(() => {
-    return createDefaultLayout([QualityAppWindowKind.Formula, QualityAppWindowKind.Diagram], "row", [20, 80]);
+    return {
+      type: "row",
+      content: [
+        {
+          type: "stack",
+          width: 25,
+          content: [
+            {
+              type: "component",
+              componentType: QualityAppWindowKind.Formula,
+              title: "Formula",
+            },
+          ],
+        },
+        {
+          type: "stack",
+          width: 75,
+          content: [
+            {
+              type: "component",
+              componentType: QualityAppWindowKind.Diagram,
+              title: "Diagram",
+            },
+          ],
+        },
+      ],
+    };
   }, []);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
@@ -2280,17 +2396,18 @@ const App: FC<AppProps> = () => {
 
   return (
     <Canvas>
-      <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
+      <LayoutCanvas windowConfig={windowConfig} layoutState={migratedWindowLayout} onLayoutChange={handleLayoutChange} />
     </Canvas>
   );
 };
 
 export default App;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Config
-// [👤semio📚js🗃️sketchpad💻quality🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Config)
+// #region Config
+
+// [👤semio📚js🗃️sketchpad💻qualitytsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/CONFIG)
 // Quality app route, panel, and path matching configuration MUST be exported.
 
 /**
@@ -2317,11 +2434,8 @@ export const config: AppConfig = {
     createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
     createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-    createPanelDefinition(PanelKind.HUD, "semio.sketchpad.navbar.panelToggle.hud.show"),
     createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts: string[]) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -2330,4 +2444,4 @@ export const config: AppConfig = {
   order: 40,
 };
 
-// #endregion 🔖Config
+// #endregion Config

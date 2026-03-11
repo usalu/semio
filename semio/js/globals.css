@@ -272,6 +272,11 @@
     --size-huge: calc(11 * var(--spacing));
     --size-mega: calc(13 * var(--spacing));
     --size-giga: calc(15 * var(--spacing));
+    --toolbar-item-height: var(--size-medium);
+    --toolbar-gap: var(--spacing-single);
+    --toolbar-group-gap: var(--spacing-double);
+    --toolbar-padding-inline: var(--spacing-single);
+    --toolbar-divider-height: var(--size-small);
     --text-2xs: 0.6rem;
     --text-2xs--line-height: calc(0.9 / 0.6);
     --text-xs: 0.7rem;
@@ -585,6 +590,17 @@
     [data-slot="breadcrumb-separator"][class*="cursor-pointer"] {
       cursor: var(--cursor-pointer) !important;
     }
+
+    [data-slot="toolbar-zone"] [data-slot="toggle-group"],
+    [data-slot="toolbar-zone"] [data-slot="button-group"] {
+      border-width: 0;
+      height: 100%;
+    }
+
+    [data-slot="toolbar-zone"] [data-slot="toggle-group-item"],
+    [data-slot="toolbar-zone"] [data-slot="button-group-item"] {
+      height: 100%;
+    }
   }
 }
 
@@ -851,6 +867,17 @@
 }
 @utility h-dot {
   height: calc(2 * var(--spacing));
+}
+
+@utility size-single {
+  width: var(--spacing-single);
+  height: var(--spacing-single);
+}
+@utility w-single {
+  width: var(--spacing-single);
+}
+@utility h-single {
+  height: var(--spacing-single);
 }
 
 @utility size-tiny {

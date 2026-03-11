@@ -1,5 +1,6 @@
-// #region 🔖Header
-// [👤semio📚js🗃️sketchpad🗃️apps💻index](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts)
+// #region Header
+
+// js/semio/sketchpad/apps/index.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,14 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Barrel export for all sketchpad app components.
-
-// #endregion 🔖Header
-
-// #region 🔖Exports
-// [👤semio📚js🗃️sketchpad🗃️apps💻index🔖exports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts/s/Exports)
-// Re-exports of app plugin utilities and types from the shared module.
-// Exports MUST expose only the public API surface of the shared module.
+// #endregion Header
 
 export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";
 export type { AppMachineContribution, AppPlugin } from "../shared";

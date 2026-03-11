@@ -7509,6 +7509,61 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
             }
         }
 
+def dragPiecesInDesignDict(design: dict, pieces: dict, offset: dict) -> dict:
+    """Compute a design diff that drags selected pieces by an offset.
+    dragPiecesInDesignDict MUST return a DesignDiff with updated piece centers and orphan connections.
+    [👤semio📚py💻semiopy🔖domain🔖flattendesign🛠️dragpiecesindesigndict](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/FLATTEN-DESIGN/DRAG-PIECES-IN-DESIGN-DICT)
+    """
+    designPieces = design.get("pieces", [])
+    designConnections = design.get("connections", [])
+    selectedPieces = pieces.get("pieces", [])
+    selectedGuids = {p["guid"] for p in selectedPieces}
+    designPieceMap = {p["guid"]: p for p in designPieces}
+    childrenMap: dict[str, list[str]] = {}
+    parentMap: dict[str, str] = {}
+    connectionByChild: dict[str, dict] = {}
+    for conn in designConnections:
+        connectingGuid = conn["connecting"]["piece"]["guid"]
+        connectedGuid = conn["connected"]["piece"]["guid"]
+        childrenMap.setdefault(connectingGuid, []).append(connectedGuid)
+        parentMap[connectedGuid] = connectingGuid
+        connectionByChild[connectedGuid] = conn
+    rootMovers: list[str] = []
+    for guid in selectedGuids:
+        p = designPieceMap.get(guid)
+        if p and p.get("center") is not None:
+            rootMovers.append(guid)
+    movingSet: set[str] = set()
+    queue = list(rootMovers)
+    while queue:
+        current = queue.pop(0)
+        if current in movingSet:
+            continue
+        movingSet.add(current)
+        for child in childrenMap.get(current, []):
+            if child not in movingSet:
+                queue.append(child)
+    pieceUpdates = []
+    for guid in rootMovers:
+        pieceUpdates.append({
+            "piece": {"guid": guid},
+            "diff": {"center": {"u": offset.get("u", 0), "v": offset.get("v", 0)}},
+        })
+    connectionUpdates = []
+    for guid in selectedGuids:
+        if guid not in movingSet and guid in connectionByChild:
+            conn = connectionByChild[guid]
+            connectionUpdates.append({
+                "connection": {"guid": conn["guid"]},
+                "diff": {"u": offset.get("u", 0), "v": offset.get("v", 0)},
+            })
+    result: dict = {}
+    if pieceUpdates:
+        result["pieces"] = {"updated": pieceUpdates}
+    if connectionUpdates:
+        result["connections"] = {"updated": connectionUpdates}
+    return result
+
 # endregion FlattenDesign
 
 # region Kit Diff Operations

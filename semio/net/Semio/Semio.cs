@@ -5972,6 +5972,74 @@ text {
             Attributes = newAttributes
         };
     }
+
+    public static DesignDiff DragPiecesInDesign(Design design, Design pieces, Coord offset)
+    {
+        var designPieces = design.Pieces;
+        var designConnections = design.Connections;
+        var selectedPieces = pieces.Pieces;
+        var selectedGuids = new HashSet<string>(selectedPieces.Select(p => p.Guid));
+        var designPieceMap = designPieces.ToDictionary(p => p.Guid, p => p);
+        var childrenMap = new Dictionary<string, List<string>>();
+        var connectionByChild = new Dictionary<string, Connection>();
+        foreach (var conn in designConnections)
+        {
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            var connectedGuid = conn.Connected.Piece.Guid;
+            if (!childrenMap.ContainsKey(connectingGuid))
+                childrenMap[connectingGuid] = new List<string>();
+            childrenMap[connectingGuid].Add(connectedGuid);
+            connectionByChild[connectedGuid] = conn;
+        }
+        var rootMovers = new List<string>();
+        foreach (var guid in selectedGuids)
+        {
+            if (designPieceMap.TryGetValue(guid, out var p) && p.Center != null)
+                rootMovers.Add(guid);
+        }
+        var movingSet = new HashSet<string>();
+        var queue = new Queue<string>(rootMovers);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!movingSet.Add(current)) continue;
+            if (childrenMap.TryGetValue(current, out var children))
+            {
+                foreach (var child in children)
+                {
+                    if (!movingSet.Contains(child))
+                        queue.Enqueue(child);
+                }
+            }
+        }
+        var pieceUpdates = new List<PieceDiffUpdate>();
+        foreach (var guid in rootMovers)
+        {
+            pieceUpdates.Add(new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = guid },
+                Diff = new PieceDiff { Center = new Coord { U = offset.U, V = offset.V } },
+            });
+        }
+        var connectionUpdates = new List<ConnectionDiffUpdate>();
+        foreach (var guid in selectedGuids)
+        {
+            if (!movingSet.Contains(guid) && connectionByChild.TryGetValue(guid, out var conn))
+            {
+                connectionUpdates.Add(new ConnectionDiffUpdate
+                {
+                    Connection = new ConnectionId { Guid = conn.Guid },
+                    Diff = new ConnectionDiff { U = offset.U, V = offset.V },
+                });
+            }
+        }
+        var diff = new DesignDiff();
+        if (pieceUpdates.Count > 0)
+            diff.Pieces = new PiecesDiff { Updated = pieceUpdates };
+        if (connectionUpdates.Count > 0)
+            diff.Connections = new ConnectionsDiff { Updated = connectionUpdates };
+        return diff;
+    }
 }
 
 #endregion 🔖Design

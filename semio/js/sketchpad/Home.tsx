@@ -1,5 +1,6 @@
-// #region 🔖Header
-// [👤semio📚js🗃️sketchpad💻home](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx)
+// #region Header
+
+// js/semio/sketchpad/Home.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,22 +15,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Home screen app showing recent projects and getting started content.
+// #endregion Header
 
-// #endregion 🔖Header
+// #region Imports
 
-// #region 🔖Imports
-// [👤semio📚js🗃️sketchpad💻home🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports)
-// External and internal module imports MUST be declared here.
-
-import { formatDistanceToNow } from "date-fns";
-import { de, enUS } from "date-fns/locale";
-import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router";
 import {
   AddIcon,
   AwardIcon,
+  ChatIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   CodeIcon,
@@ -40,6 +33,7 @@ import {
   MoonIcon,
   MousePointerIcon,
   RemoteKitIcon,
+  SettingsIcon,
   SortAscendingIcon,
   SortDescendingIcon,
   SunIcon,
@@ -47,18 +41,24 @@ import {
   TutorialIcon,
   UserIcon,
 } from "@semio/assets";
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS } from "date-fns/locale";
+import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Action, BasicChatPanel, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
-import { createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, Theme } from "./shared";
+import { applySelectionComposition, createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, resolveSelectionCompositionKind, Theme, ToolKind } from "./shared";
 import {
   AppWindowConfig,
   Canvas,
   LayoutCanvas,
   useAddFooterItem,
   useAddPanelSection,
+  useAddSidePanelTab,
   useAppType,
   useDevice,
   useExpertise,
@@ -76,6 +76,7 @@ import {
   useNavigation,
   useRemoveFooterItem,
   useRemovePanelSection,
+  useRemoveSidePanelTab,
   useSketchpadActor,
   useSketchpadCommands,
   useTheme,
@@ -88,8 +89,11 @@ import {
  **/
 const useHome = useHomeApp;
 
-// #region 🔖Types
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types)
+// #endregion Imports
+
+// #region Types
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES)
 // Home app type definitions MUST be declared here.
 
 /**
@@ -179,12 +183,7 @@ export interface HomeDiff {
   sortDirection?: HomeSortDirection;
 }
 
-/**
- * Edit event for the Home app selection.
- *
- *  * [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🛠️homeedit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/d/i/HomeEdit)
- **/
-export interface HomeEdit extends AppEdit<HomeSelectionDiff> { }
+export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
 
 /**
  * Command context carrying Home state and origin.
@@ -205,8 +204,11 @@ export interface HomeCommandResult {
   diff?: HomeDiff;
 }
 
-// #region 🔖Home App Plugin Registration
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖homeapppluginregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Home%20App%20Plugin%20Registration)
+// #endregion Types
+
+// #region Home App Plugin Registration
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖homeapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/HOME-APP-PLUGIN-REGISTRATION)
 // Home app plugin and event handler registration MUST initialize XState context.
 
 /** createDefaultHomeState holds the data fields for a createDefaultHomeState record.
@@ -266,18 +268,38 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🔖Home App Plugin Registration
+// #endregion Home App Plugin Registration
 
-// #region 🔖Hooks (XState-based)
-// [👤semio📚js🗃️sketchpad💻home🔖hooksxstatebased](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Hooks%20(XState-based))
+// #region Hooks (XState-based)
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖hooksxstatebased](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/HOOKS-X-STATE-BASED)
 // XState-based hooks MUST re-export state selectors for the Home app.
 
-// #region 🔖Table
-// [👤semio📚js🗃️sketchpad💻home🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Table)
-// Table window MUST display kit entries in tabular form.
+export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
 
-// #region 🔖Details
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details)
+export { useHome };
+
+// #endregion Hooks (XState-based)
+
+// #region Canvas
+
+// #region Windows
+
+// #region Table
+
+  export { };
+
+// #endregion Table
+
+// #endregion Windows
+
+// #region Panels
+
+// #region Right
+
+// #region Details
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/DETAILS)
 // Details panel MUST show properties of selected kits.
 
 /**
@@ -306,40 +328,28 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   const kitShallow = kitShallows.find((k) => k.guid === kitId);
   if (!kitShallow) {
     return (
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     );
   }
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
+        </TreeRow>
     </>
   );
 };
@@ -368,13 +378,10 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : undefined} readOnly showLabel />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.version"
             value={commonVersion || ""}
@@ -382,10 +389,8 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Textarea
             id="semio.sketchpad.app.home.panel.details.kits.description"
             value={commonDescription || ""}
@@ -393,10 +398,8 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.icon"
             value={commonIcon || ""}
@@ -404,42 +407,36 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
             readOnly
             showLabel
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Input
             id="semio.sketchpad.app.home.panel.details.kits.image"
             value={commonImage || ""}
             placeholder={commonImage === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
             readOnly
-        </TreeContent>
-      </TreeItem>
+            showLabel
+          />
+        </TreeRow>
     </>
   );
 };
 
-// #endregion 🔖Details
+// #endregion Details
 
-// #region 🔖Chat
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖chat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Chat)
+// #region Chat
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖chat](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/CHAT)
 // Chat panel MUST show the chat placeholder content.
 
- * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖chat🪨chatplaceholder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Chat/d/i/ChatPlaceholder)
- * ChatPlaceholder holds the data fields for a ChatPlaceholder record.
- **/
-    <TreeItem>
-      <TreeContent>
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.chat.placeholder")}</p>
-      </TreeContent>
-    </TreeItem>
-  );
+const ChatPlaceholder: FC = () => {
+  return <BasicChatPanel id="semio.sketchpad.app.home.chat" title="Home" />;
 };
 
-// #endregion 🔖Chat
+// #endregion Chat
 
-// #region 🔖Settings
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Settings)
+// #region Settings
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖settings](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/SETTINGS)
 // Settings panel MUST expose theme, language, device, expertise, and mode toggles.
 
 // [👤semio📚js🗃️sketchpad💻home🔖settings🪨settingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Settings/d/i/SettingsContent)
@@ -460,8 +457,7 @@ const SettingsContent: FC = () => {
 
   return (
     <>
-      <TreeItem>
-        <TreeContent>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.theme"
             value={theme}
@@ -475,10 +471,8 @@ const SettingsContent: FC = () => {
               { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
             <SelectTrigger>
               <SelectValue placeholder={languagePlaceholder} />
@@ -488,10 +482,8 @@ const SettingsContent: FC = () => {
               <SelectItem value="de">{languageDeLabel}</SelectItem>
             </SelectContent>
           </Select>
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.device"
             value={typeof device === "object" ? "desktop" : device}
@@ -504,10 +496,8 @@ const SettingsContent: FC = () => {
               { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.expertise"
             value={expertise}
@@ -521,10 +511,8 @@ const SettingsContent: FC = () => {
               { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
             ]}
           />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem>
-        <TreeContent>
+        </TreeRow>
+      <TreeRow>
           <ToggleGroup
             id="semio.sketchpad.app.home.settings.mode"
             value={mode}
@@ -537,20 +525,22 @@ const SettingsContent: FC = () => {
               { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
             ]}
           />
+        </TreeRow>
     </>
   );
 };
 
-// #endregion 🔖Settings
+// #endregion Settings
 
-// #endregion 🔖Table
+// #endregion Right
 
-// #endregion 🔖Hooks (XState-based)
+// #endregion Panels
 
-// #endregion 🔖Types
+// #endregion Canvas
 
-// #region 🔖Footer
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Footer)
+// #region Footer
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/FOOTER)
 // Footer component MUST manage Home app footer items.
 
   const removeFooterItem = useRemoveFooterItem();
@@ -559,16 +549,17 @@ const SettingsContent: FC = () => {
   useEffect(() => {
     if (appType !== "home") return;
 
-    return () => { };
+    return () => {};
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;
 };
 
-// #endregion 🔖Footer
+// #endregion Footer
 
-// #region 🔖DropZone
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖dropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/DropZone)
+// #region DropZone
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖dropzone](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/DROP-ZONE)
 // DropZone component MUST handle drag-and-drop kit imports.
 
 /** HomeDropZone holds the data fields for a HomeDropZone record.
@@ -655,6 +646,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
         await storeKitFileBlobs(kit.guid, kit);
         completeKitImport(operationId);
+        // Don't auto-navigate - let user click the now-enabled row
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
         failKitImport(operationId, error instanceof Error ? error.message : String(error));
@@ -678,10 +670,11 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-// #endregion 🔖DropZone
+// #endregion DropZone
 
-// #region 🔖App
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App)
+// #region App
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/APP)
 // App components MUST compose the Home app toolbar, table, and logic.
 
 /**
@@ -718,11 +711,11 @@ const HomeToolbarFilters: FC = () => {
   const labelRemote = useLabel("semio.sketchpad.app.home.toolbar.showRemote");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} />
       <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon />} text={labelLocal} />
       <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon />} text={labelRemote} />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -739,7 +732,7 @@ const HomeToolbarCreate: FC = () => {
   const handleCreateKit = useCallback(
     (type: KitKind) => {
       const existingNames = kits.map((kit) => kit.name);
-      const uniqueName = generateUniqueName(defaultKitName, existingNames);
+      const uniqueName = generateUniqueName(defaultKitName ?? "", existingNames) ?? defaultKitName ?? "";
       const newKit: Kit = {
         guid: guid(),
         name: uniqueName,
@@ -760,11 +753,11 @@ const HomeToolbarCreate: FC = () => {
   const labelRemote = useLabel("semio.sketchpad.app.home.toolbar.createRemote");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Action id="semio.sketchpad.app.home.toolbar.createTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} onClick={() => handleCreateKit("temporary")} />
       <Action id="semio.sketchpad.app.home.toolbar.createLocal" icon={<LocalKitIcon />} text={labelLocal} onClick={() => handleCreateKit("local")} />
       <Action id="semio.sketchpad.app.home.toolbar.createRemote" icon={<RemoteKitIcon />} text={labelRemote} onClick={() => handleCreateKit("remote")} />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -845,52 +838,6 @@ const HomeTableContent: FC = () => {
       removeSection("details", "semio.sketchpad.app.home.kits.multiple");
     };
   }, [appType, addSection, removeSection, selection.length]);
-
-  useEffect(() => {
-    if (appType !== "home") return;
-
-    addSection("chat", {
-      id: "semio.sketchpad.app.home.chat",
-      specificity: 0,
-      order: 0,
-      content: () => {
-        return <ChatPlaceholder />;
-      },
-    });
-
-    return () => {
-      removeSection("chat", "semio.sketchpad.app.home.chat");
-    };
-  }, [appType, addSection, removeSection]);
-
-  useEffect(() => {
-    if (appType !== "home") {
-      return;
-    }
-
-    addSection("settings", {
-      id: "semio.sketchpad.app.home.settings",
-      specificity: 20,
-      order: 0,
-      content: () => {
-        return <SettingsContent />;
-      },
-    });
-
-    addSection("settings", {
-      id: "semio.sketchpad.settings",
-      specificity: 0,
-      order: 0,
-      content: () => {
-        return <SettingsContent />;
-      },
-    });
-
-    return () => {
-      removeSection("settings", "semio.sketchpad.app.home.settings");
-      removeSection("settings", "semio.sketchpad.settings");
-    };
-  }, [appType, addSection, removeSection]);
 
   const selectedKind = searchParams.get("kind") as KitKind | null;
   const selectedName = searchParams.get("name");
@@ -1195,7 +1142,7 @@ const HomeTableContent: FC = () => {
 
   const handleCreateKit = (type: KitKind) => {
     const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(defaultKitName, existingNames);
+    const uniqueName = generateUniqueName(defaultKitName ?? "", existingNames) ?? defaultKitName ?? "";
     const newKit: Kit = {
       guid: guid(),
       name: uniqueName,
@@ -1211,7 +1158,7 @@ const HomeTableContent: FC = () => {
 
   const handleCreateVersion = (kitName: string, type: KitKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(newVersionLabel, existingVersions);
+    const uniqueVersion = generateUniqueName(newVersionLabel ?? "", existingVersions) ?? newVersionLabel ?? "";
     const newKit: Kit = {
       guid: guid(),
       name: kitName,
@@ -1308,31 +1255,35 @@ const HomeTableContent: FC = () => {
   };
 
   const handleRowClick = (kitId: string, e: React.MouseEvent) => {
-    if (e.shiftKey) {
+    const compositionKind = resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, {
+      shiftKey: e.shiftKey,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+    });
+    const useRangeSelection = e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey;
+    if (useRangeSelection && lastClickedIdRef.current) {
       const currentIndex = rows.findIndex((r) => r.kit?.guid === kitId);
-      if (lastClickedIdRef.current) {
-        const lastIndex = rows.findIndex((r) => r.kit?.guid === lastClickedIdRef.current);
-        if (lastIndex !== -1 && currentIndex !== -1) {
-          const start = Math.min(lastIndex, currentIndex);
-          const end = Math.max(lastIndex, currentIndex);
-          const rangeIds = rows
-            .slice(start, end + 1)
-            .map((r) => r.kit?.guid)
-            .filter((id): id is string => id !== undefined);
-          homeCommands.selectKits("semio.sketchpad.app.home.canvas.table.selectKitsRange", rangeIds);
+      const lastIndex = rows.findIndex((r) => r.kit?.guid === lastClickedIdRef.current);
+      if (lastIndex !== -1 && currentIndex !== -1) {
+        const start = Math.min(lastIndex, currentIndex);
+        const end = Math.max(lastIndex, currentIndex);
+        const rangeIds = rows
+          .slice(start, end + 1)
+          .map((r) => r.kit?.guid)
+          .filter((id): id is string => id !== undefined);
+        const newSelection = applySelectionComposition(selection, rangeIds, compositionKind);
+        homeCommands.clearSelection();
+        for (const id of newSelection) {
+          homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.selectKitsRange", id);
         }
-      } else {
-        homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKitShift", kitId);
-        lastClickedIdRef.current = kitId;
-      }
-    } else if (e.metaKey || e.ctrlKey) {
-      if (selection.includes(kitId)) {
-        homeCommands.removeKitFromSelection("semio.sketchpad.app.home.canvas.table.removeKitCtrl", kitId);
-      } else {
-        homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.addKitCtrl", kitId);
       }
     } else {
-      homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKit", kitId);
+      const newSelection = applySelectionComposition(selection, [kitId], compositionKind);
+      homeCommands.clearSelection();
+      for (const id of newSelection) {
+        homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.selectKit", id);
+      }
       lastClickedIdRef.current = kitId;
     }
   };
@@ -1473,39 +1424,39 @@ const HomeTableContent: FC = () => {
         columns={[
           ...(!selectedKind
             ? [
-              {
-                id: "type",
-                header: (
-                  <div className="inline-flex items-center gap-single">
-                    <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
-                    <Toggle
-                      kind="dropdown"
-                      pressed={sortColumn === "type"}
-                      value={sortColumn === "type" ? sortDirection : "asc"}
-                      onValueChange={(value) => {
-                        homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
-                        homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
-                      }}
-                      items={[
-                        { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                        { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-                      ]}
-                      id={"semio.sketchpad.app.home.sortByType"}
-                    />
-                  </div>
-                ),
-                accessor: (row) => (
-                  <>
-                    {row.type === "temporary" && <TemporaryKitIcon />}
-                    {row.type === "local" && <LocalKitIcon />}
-                    {row.type === "remote" && <RemoteKitIcon />}
-                    {row.type === "docs" && <DocumentIcon className="size-small" />}
-                  </>
-                ),
-                width: "w-0 whitespace-nowrap",
-                headerClassName: "relative group w-0 whitespace-nowrap",
-              } as TableColumn<TableRow>,
-            ]
+                {
+                  id: "type",
+                  header: (
+                    <div className="inline-flex items-center gap-single">
+                      <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
+                      <Toggle
+                        kind="dropdown"
+                        pressed={sortColumn === "type"}
+                        value={sortColumn === "type" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
+                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+                          { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+                        ]}
+                        id={"semio.sketchpad.app.home.sortByType"}
+                      />
+                    </div>
+                  ),
+                  accessor: (row) => (
+                    <>
+                      {row.type === "temporary" && <TemporaryKitIcon />}
+                      {row.type === "local" && <LocalKitIcon />}
+                      {row.type === "remote" && <RemoteKitIcon />}
+                      {row.type === "docs" && <DocumentIcon className="size-small" />}
+                    </>
+                  ),
+                  width: "w-0 whitespace-nowrap",
+                  headerClassName: "relative group w-0 whitespace-nowrap",
+                } as TableColumn<TableRow>,
+              ]
             : []),
           {
             id: "name",
@@ -1665,8 +1616,9 @@ const HomeTableContent: FC = () => {
   );
 };
 
-// #region 🔖Multi-Window App
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖app🔖multiwindowapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/App/s/Multi-Window%20App)
+// #region Multi-Window App
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖app🔖multiwindowapp](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/APP/MULTI-WINDOW-APP)
 // Multi-window app MUST orchestrate the Home canvas and layout.
 
 /**
@@ -1726,6 +1678,45 @@ const Home: FC = () => {
       removeSection("toolbar", "semio.sketchpad.app.home.toolbar.create");
     };
   }, [appType, addSection, removeSection]);
+
+  // Add Settings and Chat as side panel tabs
+  const addSidePanelTab = useAddSidePanelTab();
+  const removeSidePanelTab = useRemoveSidePanelTab();
+
+  useEffect(() => {
+    if (appType !== "home") return;
+
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.home.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <SettingsContent />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.home.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <ChatPlaceholder />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.home.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.home.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(
     () => ({
@@ -1795,14 +1786,15 @@ const Home: FC = () => {
   );
 };
 
-// #endregion 🔖Multi-Window App
+// #endregion Multi-Window App
 
 export default Home;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Config
-// [👤semio📚js🗃️sketchpad💻home🔖imports🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Config)
+// #region Config
+
+// [👤semio📚js🗃️sketchpad💻hometsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CONFIG)
 // Config MUST define the Home app registration and panel setup.
 
 /**
@@ -1818,11 +1810,9 @@ export const config: AppConfig = {
   getPanels: (): PanelDefinition[] => [
     createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
     createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-    createPanelDefinition(PanelKind.CHAT, "semio.sketchpad.navbar.panelToggle.chat.show"),
-    createPanelDefinition(PanelKind.SETTINGS, "semio.sketchpad.navbar.panelToggle.settings.show"),
   ],
   matchesPath: (pathParts) => pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === "kits"),
   order: 0,
 };
 
-// #endregion 🔖Config
+// #endregion Config

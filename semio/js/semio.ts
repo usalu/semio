@@ -21,15 +21,15 @@
 // #region 🔖Imports
 // [👤semio📚js💻semio🔖imports](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
 // External dependency imports MUST be declared here.
-import { default as adjectives } from "@semio/assets/lists/adjectives.json";
-import { default as animals } from "@semio/assets/lists/animals.json";
+import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
+import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
 import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
-import CONSTANTS from "./constants.json";
+import CONSTANTS from "./constants.json" with { type: "json" };
 
 // #endregion 🔖Imports
 
@@ -6783,10 +6783,11 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
           }
         }
 
-        const childCenter = {
+        const computedChildCenter = {
           u: round(childU),
           v: round(childV),
         };
+        const childCenter = childPiece.center ?? computedChildCenter;
 
         const flatChildPiece: Piece = setAttributes(
           {
@@ -7237,6 +7238,60 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   );
 };
 
+/**
+ * Computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
+ *
+ * MUST return a DesignDiff with center offsets for root movers and u/v offsets for orphan connections.
+ *
+ *  * [👤semio📚js💻semiots🔖design🪨dragpiecesindesign](semiorepo://definition/SEMIO/JS/SEMIO.TS/DESIGN/DRAG-PIECES-IN-DESIGN)
+ **/
+export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord): DesignDiff => {
+  const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
+  const connections = design.connections ?? [];
+  const designPieces = design.pieces ?? [];
+  const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
+  const childrenMap = new Map<string, string[]>();
+  for (const c of connections) {
+    parentMap.set(c.connected.piece.guid, { connectionGuid: c.guid, parentGuid: c.connecting.piece.guid });
+    const children = childrenMap.get(c.connecting.piece.guid) ?? [];
+    children.push(c.connected.piece.guid);
+    childrenMap.set(c.connecting.piece.guid, children);
+  }
+  const rootMovers = new Set<string>();
+  for (const p of pieces.pieces ?? []) {
+    if (designPieces.find((dp) => dp.guid === p.guid)?.center) {
+      rootMovers.add(p.guid);
+    }
+  }
+  const movingSet = new Set<string>();
+  const queue = [...rootMovers];
+  while (queue.length > 0) {
+    const guid = queue.pop()!;
+    if (movingSet.has(guid)) continue;
+    movingSet.add(guid);
+    for (const child of childrenMap.get(guid) ?? []) {
+      queue.push(child);
+    }
+  }
+  const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
+  for (const guid of rootMovers) {
+    pieceUpdates.push({ piece: { guid }, diff: { center: { u: offset.u, v: offset.v } } });
+  }
+  const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
+  for (const guid of selectedGuids) {
+    if (movingSet.has(guid)) continue;
+    const parent = parentMap.get(guid);
+    if (!parent) continue;
+    connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: { u: offset.u, v: offset.v } });
+  }
+  const diff: DesignDiff = {};
+  if (pieceUpdates.length > 0 || connectionUpdates.length > 0) {
+    if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
+    if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
+  }
+  return diff;
+};
+
 // #endregion 🔖Design
 
 // #region 🔖Kit
@@ -7404,7 +7459,10 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   if (appliedDiff.removed) inverse.added = original.filter((i) => removedGuids.includes(i.guid));
   if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: i.guid }));
   if (appliedDiff.updated) {
-    inverse.updated = appliedDiff.updated.map((u) => {
+    inverse.updated = appliedDiff.updated.filter((u) => {
+      const entityId = (u as any)[entityKey] as EntityIdType;
+      return original.some((i) => i.guid === entityId.guid);
+    }).map((u) => {
       const entityId = (u as any)[entityKey] as EntityIdType;
       const originalItem = original.find((i) => i.guid === entityId.guid)!;
       return { [entityKey]: entityId, diff: inverseItemDiff(originalItem, u.diff) } as { [key in K]: EntityIdType } & { diff: D };
@@ -11877,8 +11935,8 @@ export const toValidationResult = (result: ValidationResult): SerializableValida
   problems: result.problems.map((problem) => ({
     constraintId: problem.constraintId,
     message: problem.message,
-    entityKind: problem.location?.entityKind ?? "",
-    entityGuid: problem.location?.entityGuid ?? "",
+    entityKind: problem.location?.entityKind ?? (problem as any).entityKind,
+    entityGuid: problem.location?.entityGuid ?? (problem as any).entityGuid ?? "",
     fixes: problem.fixes.map((fix) => ({ title: fix.title, diff: fix.diff })),
   })),
 });

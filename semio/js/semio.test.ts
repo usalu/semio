@@ -16,8 +16,10 @@
 
 // #endregion 🔖Header
 
-import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
+import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign } from "@semio/assets";
 import { describe, expect, it } from "vitest";
+import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
+import { buildControlTree, ControlDef } from "./sketchpad/elements";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -25,7 +27,9 @@ import {
   areKitsEqual,
   areValidationResultsEqual,
   createClusteredDesign,
+  Design,
   deserializeKit,
+  dragPiecesInDesign,
   exportKit,
   flattenDesign,
   getIncludedDesigns,
@@ -38,10 +42,10 @@ import {
   Plane,
   replaceClusterWithDesign,
   serializeKit,
-  toValidationResult,
   validateKit,
   ValidationResult,
 } from "./semio";
+import { applySelectionComposition, getNextPanelVisibilityFromToggle, resolveSelectionCompositionKind, ToolKind } from "./sketchpad/shared";
 
 const TOLERANCE = 0.001;
 
@@ -183,8 +187,8 @@ describe("Validation", () => {
   describe("Invalid", () => {
     it("Invalid Kit -> Validate = Invalid Report", () => {
       const invalidKit = InvalidKit as unknown as Kit;
-      const result = toValidationResult(validateKit(invalidKit));
-      const expected = InvalidKitValidation as ValidationResult;
+      const result = validateKit(invalidKit);
+      const expected = InvalidKitValidation as unknown as ValidationResult;
       expect(areValidationResultsEqual(result, expected)).toBe(true);
     });
   });
@@ -214,7 +218,7 @@ describe("Cluster", () => {
       ],
       createdAt: "2025-01-01T00:00:00.000Z",
       updatedAt: "2025-01-01T00:00:00.000Z",
-    } as Kit["designs"][number];
+    } as Design;
 
     const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
     const diff = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
@@ -228,5 +232,120 @@ describe("Cluster", () => {
     expect(included.length).toBe(1);
     expect(included[0].guid).toBe(clusteredDesign.guid);
     expect(included[0].designGuid).toBe(clusteredDesign.guid);
+  });
+});
+
+describe("Drag", () => {
+  it("Design + Pieces + Offset = DiffDesign", () => {
+    const design = DragDesign as unknown as Design;
+    const pieces = DragPieces as unknown as Design;
+    const offset = DragOffset as { u: number; v: number };
+    const expectedDiff = DragDiffDesign as any;
+    const computedDiff = dragPiecesInDesign(design, pieces, offset);
+    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
+    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
+    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
+    for (let i = 0; i < computedPieceUpdates.length; i++) {
+      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);
+      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);
+      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);
+    }
+    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
+    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) => a.connection.guid.localeCompare(b.connection.guid));
+    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);
+    for (let i = 0; i < computedConnUpdates.length; i++) {
+      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
+      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);
+      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);
+    }
+  });
+});
+
+describe("Sketchpad Selection Composition", () => {
+  it("applies replace/additive/subtractive/intersect and resolves mode from tools/modifiers", () => {
+    expect(applySelectionComposition(["a", "b", "a"], ["c", "c", "b"], "replace")).toEqual(["c", "b"]);
+    expect(applySelectionComposition(["a", "b"], ["b", "c", "c"], "additive")).toEqual(["a", "b", "c"]);
+    expect(applySelectionComposition(["a", "b", "c", "b"], ["b", "x"], "subtractive")).toEqual(["a", "c"]);
+    expect(applySelectionComposition(["a", "b", "c"], ["c", "a", "x"], "intersect")).toEqual(["a", "c"]);
+    expect(applySelectionComposition(["a", "b"], [], "replace")).toEqual([]);
+    expect(applySelectionComposition(["a", "b"], [], "additive")).toEqual(["a", "b"]);
+    expect(applySelectionComposition(["a", "b"], [], "subtractive")).toEqual(["a", "b"]);
+    expect(applySelectionComposition(["a", "b"], [], "intersect")).toEqual([]);
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL)).toBe("replace");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_ADDITIVE)).toBe("additive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_SUBTRACTIVE)).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_INTERSECT)).toBe("intersect");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true })).toBe("additive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { ctrlKey: true })).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { altKey: true })).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { metaKey: true })).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true, ctrlKey: true })).toBe("intersect");
+  });
+});
+
+describe("Sketchpad ControlTree", () => {
+  it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
+    const controls: ControlDef[] = [
+      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+    ];
+    const folderSettings = {
+      Transform: { path: "Transform", order: 2 },
+      "Appearance/Material": { path: "Appearance/Material", order: 1, collapsed: true },
+    };
+    const fullTree = buildControlTree(controls, "", folderSettings);
+    expect(Object.keys(fullTree)).toEqual(["Transform", "Appearance"]);
+    expect(fullTree.Transform.kind).toBe("folder");
+    expect(fullTree.Transform.order).toBe(2);
+    expect(fullTree.Transform.children?.Position.kind).toBe("folder");
+    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe("control");
+    expect(fullTree.Appearance.children?.Material.order).toBe(1);
+    const filteredTree = buildControlTree(controls, "rouGH", folderSettings);
+    expect(Object.keys(filteredTree)).toEqual(["Appearance"]);
+    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe("control");
+    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe("Appearance/Material/roughness");
+  });
+});
+
+describe("Sketchpad Panel Visibility", () => {
+  it("keeps chat, settings, and property tabs mutually exclusive when toggled on", () => {
+    const initialVisibility = {
+      rightSidePanel: false,
+      chat: false,
+      settings: false,
+      leftSidePanel: false,
+    };
+    const propertyVisible = getNextPanelVisibilityFromToggle(initialVisibility, "rightSidePanel");
+    expect(propertyVisible.rightSidePanel).toBe(true);
+    expect(propertyVisible.chat).toBe(false);
+    expect(propertyVisible.settings).toBe(false);
+    const chatVisible = getNextPanelVisibilityFromToggle(propertyVisible, "chat");
+    expect(chatVisible.rightSidePanel).toBe(false);
+    expect(chatVisible.chat).toBe(true);
+    expect(chatVisible.settings).toBe(false);
+    const settingsVisible = getNextPanelVisibilityFromToggle(chatVisible, "settings");
+    expect(settingsVisible.rightSidePanel).toBe(false);
+    expect(settingsVisible.chat).toBe(false);
+    expect(settingsVisible.settings).toBe(true);
+    const settingsHidden = getNextPanelVisibilityFromToggle(settingsVisible, "settings");
+    expect(settingsHidden.rightSidePanel).toBe(false);
+    expect(settingsHidden.chat).toBe(false);
+    expect(settingsHidden.settings).toBe(false);
+    const leftVisible = getNextPanelVisibilityFromToggle(settingsVisible, "leftSidePanel");
+    expect(leftVisible.leftSidePanel).toBe(true);
+    expect(leftVisible.settings).toBe(true);
+  });
+});
+
+describe("JS Dev Launcher", () => {
+  it("classifies storybook launches as start, reuse, or fail and parses the wrapper inputs", async () => {
+    await expect(detectStorybookLaunchKind(async () => true, async () => false)).resolves.toBe("start");
+    await expect(detectStorybookLaunchKind(async () => false, async () => true)).resolves.toBe("reuse");
+    await expect(detectStorybookLaunchKind(async () => false, async () => false)).resolves.toBe("fail");
+    expect(isStorybookIndexPayload("{\"v\":5,\"entries\":{}}")).toBe(true);
+    expect(isStorybookIndexPayload("{\"hello\":\"world\"}")).toBe(false);
+    expect(readLaunchKind(["storybook"])).toBe("storybook");
+    expect(readLaunchKind([])).toBe("workspace");
   });
 });

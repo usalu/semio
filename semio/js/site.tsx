@@ -24,8 +24,23 @@
 // Entrypoint MUST render into the root element defined in index.html.
 
 import { createRoot } from "react-dom/client";
-import { Sketchpad } from "@semio/js";
+import Sketchpad, { appRegistry } from "./sketchpad/Sketchpad";
 import "./globals.css";
+import { config as designConfig } from "./sketchpad/Design";
+import { config as docsConfig } from "./sketchpad/Docs";
+import { config as feedbackConfig } from "./sketchpad/Feedback";
+import { config as homeConfig } from "./sketchpad/Home";
+import { config as kitConfig } from "./sketchpad/Kit";
+import { config as qualityConfig } from "./sketchpad/Quality";
+import { config as typeConfig } from "./sketchpad/Type";
+
+appRegistry.register(designConfig);
+appRegistry.register(docsConfig);
+appRegistry.register(feedbackConfig);
+appRegistry.register(homeConfig);
+appRegistry.register(kitConfig);
+appRegistry.register(qualityConfig);
+appRegistry.register(typeConfig);
 
 createRoot(document.getElementById("root")!).render(
   <div className="h-screen w-screen">
