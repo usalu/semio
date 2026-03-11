@@ -714,8 +714,7 @@
           "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
         },
         "diff": {
-          "name": "updated-base_1to500.3dm",
-          "mime": "application/x-rhino3d-modified"
+          "name": "updated-base_1to500.3dm"
         }
       }
     ],
@@ -723,7 +722,6 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000021",
         "name": "new-file.txt",
-        "mime": "text/plain",
         "remote": "https://example.com/new-file.txt",
         "size": 42,
         "hash": "sha256:newfilehash",

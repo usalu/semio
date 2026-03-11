@@ -621,10 +621,10 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
-        const { kit, files: importedFiles } = await importKit(zipFile);
+        const { kit } = await importKit(zipFile);
         await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
 
-        await storeKitFileBlobs(kit.guid, importedFiles);
+        await storeKitFileBlobs(kit.guid, kit);
         completeKitImport(operationId);
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
@@ -643,10 +643,10 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
-        const { kit, files: importedFiles } = await importKit(file);
+        const { kit } = await importKit(file);
         await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
 
-        await storeKitFileBlobs(kit.guid, importedFiles);
+        await storeKitFileBlobs(kit.guid, kit);
         completeKitImport(operationId);
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);

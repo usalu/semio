@@ -1,0 +1,153 @@
+{
+  "id": "f28b4366-3bff-49f5-a90b-bf8da5ba46f8",
+  "uri": "semiorepo://s/f28b4366-3bff-49f5-a90b-bf8da5ba46f8",
+  "checkpoint": "5c0ab8b008efbe1510e11efe66a0fd119419a013",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-11T02:01:39Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T02:01:39.262Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "f28b4366-3bff-49f5-a90b-bf8da5ba46f8",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl",
+          "source": "new",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.started acknowledged",
+            "hookEventName": "SessionStart"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰02⌚01⏱️39",
+        "session": "⚪f28b43663bff49f5a90bbf8da5ba46f8",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T02:01:51.213Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "f28b4366-3bff-49f5-a90b-bf8da5ba46f8",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl",
+          "prompt": "semio 3dm:\nCurrently when running start in Visual Studio Rhino starts but I get no semio sideview in rhino. Make sure it works exactly like this:\nhttps://github.com/specklesystems/speckle-sharp-connectors/tree/main",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.prompt.submitting acknowledged",
+            "hookEventName": "UserPromptSubmit"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "prompt": "semio 3dm:\nCurrently when running start in Visual Studio Rhino starts but I get no semio sideview in rhino. Make sure it works exactly like this:\nhttps://github.com/specklesystems/speckle-sharp-connectors/tree/main",
+        "second": "🎆26🌙03☀️11⏰02⌚01⏱️51",
+        "session": "⚪f28b43663bff49f5a90bbf8da5ba46f8",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T02:02:13.718Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "f28b4366-3bff-49f5-a90b-bf8da5ba46f8",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl",
+          "tool_name": "mcp_semio-repo_search",
+          "tool_input": {
+            "query": "3dm rhino panel sideview connector plugin"
+          },
+          "tool_use_id": "toolu_bdrk_0162DC1NX97jiR94LAYiHQ9m__vscode-1773054465054",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "input": {
+          "query": "3dm rhino panel sideview connector plugin"
+        },
+        "kind": "agent.tool.starting",
+        "name": "mcp_semio-repo_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰02⌚02⏱️14",
+        "session": "⚪f28b43663bff49f5a90bbf8da5ba46f8",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T02:02:13.562Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "f28b4366-3bff-49f5-a90b-bf8da5ba46f8",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/memories/repo/semio-3dm-structure.md",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_use_id": "toolu_bdrk_014euBMNXryjaGc7hNYhRAHf__vscode-1773054465055",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️memories🗃️repo📃semio3dmstructure📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️11⏰02⌚02⏱️14",
+        "session": "⚪f28b43663bff49f5a90bbf8da5ba46f8",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f28b4366-3bff-49f5-a90b-bf8da5ba46f8.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

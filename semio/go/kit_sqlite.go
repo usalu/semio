@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -534,7 +535,7 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 	for i := range kit.Files {
 		filePath := buildFilePath(&kit, &kit.Files[i])
 		if data, ok := files[filePath]; ok {
-			encoded := blobEncode(data, kit.Files[i].Mime)
+			encoded := blobEncode(data, kit.Files[i].Name)
 			kit.Files[i].Blob = &encoded
 		}
 	}
@@ -575,16 +576,39 @@ func buildFolderPath(kit *Kit, folderGuid string) string {
 	return ""
 }
 
-// blobEncode encodes bytes to a data URI string with the given mime type.
-// If mime is nil or empty, falls back to "application/octet-stream".
+// blobEncode encodes bytes to a data URI string with the mime type inferred from filename.
+// Falls back to "application/octet-stream" when the extension is unknown.
 // blobEncode MUST perform the blobEncode operation.
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobencode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobEncode)
-func blobEncode(data []byte, mime *string) string {
-	mimeStr := "application/octet-stream"
-	if mime != nil && *mime != "" {
-		mimeStr = *mime
-	}
+func blobEncode(data []byte, filename string) string {
+	mimeStr := mimeFromFilename(filename)
 	return "data:" + mimeStr + ";base64," + base64.StdEncoding.EncodeToString(data)
+}
+
+// mimeFromFilename returns the mime type for a given filename based on its extension.
+// Returns "application/octet-stream" when the extension is unknown.
+func mimeFromFilename(filename string) string {
+	ext := strings.ToLower(filepath.Ext(filename))
+	mimes := map[string]string{
+		".stl":  "model/stl",
+		".obj":  "model/obj",
+		".glb":  "model/gltf-binary",
+		".gltf": "model/gltf+json",
+		".3dm":  "model/vnd.3dm",
+		".png":  "image/png",
+		".jpg":  "image/jpeg",
+		".jpeg": "image/jpeg",
+		".svg":  "image/svg+xml",
+		".pdf":  "application/pdf",
+		".zip":  "application/zip",
+		".json": "application/json",
+		".csv":  "text/csv",
+		".txt":  "text/plain",
+	}
+	if m, ok := mimes[ext]; ok {
+		return m
+	}
+	return "application/octet-stream"
 }
 
 // blobDecode decodes a data URI string to bytes.

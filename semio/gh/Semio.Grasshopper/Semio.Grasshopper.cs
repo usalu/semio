@@ -33,6 +33,9 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
+using Grasshopper.Rhinoceros;
+using Grasshopper.Rhinoceros.Model;
+using Grasshopper.Rhinoceros.Model.Params;
 using Humanizer;
 using Rhino;
 using Rhino.Geometry;
@@ -41,9 +44,12 @@ using System.Text.RegularExpressions;
 using Point = Semio.Point;
 using Vector = Semio.Vector;
 using Plane = Semio.Plane;
+using SemioGroup = Semio.Group;
 using Attribute = Semio.Attribute;
 using Type = Semio.Type;
 using File = Semio.File;
+using SemioModel = Semio.Model;
+using RhinoModelObjectData = Grasshopper.Rhinoceros.Model.ModelObject;
 
 #endregion 🔖Imports
 
@@ -170,17 +176,37 @@ public static class IconResources
 
 public static class Utility
 {
+    private const string SemioImportModelBlobKey = "semio.import-model.blob";
+    private const string SemioImportModelObjectIdKey = "semio.import-model.object-id";
+    private static readonly object semioImportDocumentsLock = new();
+    private static readonly List<RhinoDoc> semioImportDocuments = new();
+
+    private static RhinoDoc CreateTrackedHeadlessImportDocument()
+    {
+        var doc = RhinoDoc.CreateHeadless(null);
+        lock (semioImportDocumentsLock)
+        {
+            semioImportDocuments.Add(doc);
+            return doc;
+        }
+    }
+
     public sealed class RhinoModelObject
     {
-        public RhinoModelObject(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject modelObject)
+        public RhinoModelObject(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject? modelObject)
         {
             Model = model;
             ModelObject = modelObject;
         }
 
         public Rhino.FileIO.File3dm Model { get; }
-        public Rhino.FileIO.File3dmObject ModelObject { get; }
+        public Rhino.FileIO.File3dmObject? ModelObject { get; }
     }
+
+    public static string Serialize<TEntity>(this TEntity value, string indent = "") => Semio.Utility.Serialize(value, indent);
+    public static TEntity? Deserialize<TEntity>(this string value) => Semio.Utility.Deserialize<TEntity>(value);
+    public static TEntity? DeepClone<TEntity>(this TEntity value) where TEntity : Semio.Entity<TEntity>
+        => Semio.Entity<TEntity>.DeepClone(value);
 
     public static bool IsValidLengthUnitSystem(string unit) => new[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd" }.Contains(unit);
     public static string LengthUnitSystemToAbbreviation(UnitSystem unitSystem)
@@ -202,6 +228,29 @@ public static class Utility
         if (IsValidLengthUnitSystem(unit) == false)
             throw new ArgumentException("Invalid length unit system", nameof(unitSystem));
         return unit;
+    }
+
+    public static UnitSystem LengthUnitAbbreviationToUnitSystem(string unit)
+    {
+        if (string.IsNullOrWhiteSpace(unit))
+            throw new ArgumentException("Length unit abbreviation cannot be empty.", nameof(unit));
+
+        var normalizedUnit = unit.Trim().ToLowerInvariant();
+        return normalizedUnit switch
+        {
+            "nm" => UnitSystem.Nanometers,
+            "mm" => UnitSystem.Millimeters,
+            "cm" => UnitSystem.Centimeters,
+            "dm" => UnitSystem.Decimeters,
+            "m" => UnitSystem.Meters,
+            "km" => UnitSystem.Kilometers,
+            "µin" => UnitSystem.Microinches,
+            "uin" => UnitSystem.Microinches,
+            "in" => UnitSystem.Inches,
+            "ft" => UnitSystem.Feet,
+            "yd" => UnitSystem.Yards,
+            _ => throw new ArgumentException($"Unsupported length unit abbreviation '{unit}'.", nameof(unit))
+        };
     }
 
     public static Rhino.Geometry.Plane GetPlaneFromYAxis(Vector3d yAxis, float theta, Point3d origin)
@@ -308,7 +357,7 @@ public static class Utility
             var payloadStart = encodedData.IndexOf(',');
             if (payloadStart < 0 || payloadStart == encodedData.Length - 1)
                 throw new ArgumentException("Invalid data URI file blob string.", nameof(fileBlob));
-            encodedData = encodedData[(payloadStart + 1)..];
+            encodedData = encodedData.Substring(payloadStart + 1);
         }
 
         try
@@ -323,25 +372,444 @@ public static class Utility
 
     public static Rhino.FileIO.File3dmObject ImportRhinoModelObjectFromBlob(string fileBlob)
     {
-        var fileBytes = DecodeFileBlobString(fileBlob);
-        var file3dm = Rhino.FileIO.File3dm.FromByteArray(fileBytes)
-            ?? throw new InvalidOperationException("Could not read Rhino model from file blob.");
-        if (file3dm.Objects.Count == 0)
-            throw new InvalidOperationException("Rhino model has no model objects.");
-        return file3dm.Objects.First();
+        var context = ImportRhinoModelContextFromBlob(fileBlob);
+        return context.ModelObject ?? throw new InvalidOperationException("Imported Rhino model has no model objects.");
     }
 
-    public static RhinoModelObject ImportRhinoModelContextFromBlob(string fileBlob)
+    public static RhinoModelObjectData ImportRhinoModelObjectDataFromSemioFile(File file)
+    {
+        if (file is null)
+            throw new ArgumentNullException(nameof(file));
+        if (string.IsNullOrWhiteSpace(file.Blob))
+            throw new ArgumentException("Semio file blob cannot be empty.", nameof(file));
+
+        var importedContext = ImportRhinoModelContextFromSemioFile(file);
+        return ConvertRhinoModelContextToRhinoModelObjectData(importedContext, file.Blob);
+    }
+
+    public static Rhino.DocObjects.RhinoObject ImportRhinoDocumentObjectFromSemioFile(File file, SemioModel? model = null)
+    {
+        return ImportRhinoDocumentObjectsFromSemioFile(file, model).First();
+    }
+
+    public static List<Rhino.DocObjects.RhinoObject> ImportRhinoDocumentObjectsFromSemioFile(File file, SemioModel? model = null)
+    {
+        if (file is null)
+            throw new ArgumentNullException(nameof(file));
+        if (string.IsNullOrWhiteSpace(file.Blob))
+            throw new ArgumentException("Semio file blob cannot be empty.", nameof(file));
+
+        var sourceName = !string.IsNullOrWhiteSpace(file.Name) ? file.Name : file.Remote;
+        var targetUnitSystem = ResolveModelUnitSystem(model);
+        var importedContext = ImportRhinoModelContextFromSemioFile(file);
+        var sourceModelObjects = importedContext.Model.Objects
+            .Where(sourceModelObject => sourceModelObject?.Geometry is not null)
+            .ToList();
+        if (sourceModelObjects.Count > 0)
+        {
+            var sourceUnitSystem = importedContext.Model.Settings.ModelUnitSystem;
+            return AddFile3dmObjectsToIsolatedDocument(sourceModelObjects!, file.Blob, sourceUnitSystem, targetUnitSystem);
+        }
+
+        return ImportRhinoDocumentObjectsFromBlobFallback(file.Blob, sourceName, targetUnitSystem);
+    }
+
+    public static RhinoModelObject ImportRhinoModelContextFromBlob(string fileBlob, string? sourceName = null)
     {
         var fileBytes = DecodeFileBlobString(fileBlob);
-        var file3dm = Rhino.FileIO.File3dm.FromByteArray(fileBytes)
-            ?? throw new InvalidOperationException("Could not read Rhino model from file blob.");
-        var modelObject = file3dm.Objects.FirstOrDefault()
-            ?? throw new InvalidOperationException("Rhino model has no model objects.");
+        var file3dm = Rhino.FileIO.File3dm.FromByteArray(fileBytes);
+        if (file3dm is null)
+        {
+            var extension = ResolveImportExtension(sourceName, fileBlob, fileBytes);
+            file3dm = ImportRhinoModelViaHeadlessDocument(fileBytes, extension);
+        }
+
+        var modelObject = file3dm.Objects.FirstOrDefault();
+        AttachSemioImportMetadata(modelObject, fileBlob);
         return new RhinoModelObject(file3dm, modelObject);
     }
 
-    public static Group TranslateRhinoModelObjectToSingleGroup(RhinoModelObject rhinoModelObject)
+    public static RhinoModelObject ImportRhinoModelContextFromSemioFile(File file)
+    {
+        if (file is null)
+            throw new ArgumentNullException(nameof(file));
+        if (string.IsNullOrWhiteSpace(file.Blob))
+            throw new ArgumentException("Semio file blob cannot be empty.", nameof(file));
+        var sourceName = !string.IsNullOrWhiteSpace(file.Name) ? file.Name : file.Remote;
+        return ImportRhinoModelContextFromBlob(file.Blob, sourceName);
+    }
+
+    public static void AttachSemioImportMetadata(Rhino.FileIO.File3dmObject? modelObject, string fileBlob)
+    {
+        if (modelObject?.Attributes is null || string.IsNullOrWhiteSpace(fileBlob))
+            return;
+
+        modelObject.Attributes.SetUserString(SemioImportModelBlobKey, fileBlob);
+        modelObject.Attributes.SetUserString(SemioImportModelObjectIdKey, ResolveRhinoObjectId(modelObject, -1));
+    }
+
+    public static RhinoModelObjectData ConvertRhinoModelContextToRhinoModelObjectData(RhinoModelObject rhinoModelObject, string fileBlob)
+    {
+        if (rhinoModelObject is null)
+            throw new ArgumentNullException(nameof(rhinoModelObject));
+        if (string.IsNullOrWhiteSpace(fileBlob))
+            throw new ArgumentException("Semio file blob cannot be empty.", nameof(fileBlob));
+
+        var sourceModelObject = rhinoModelObject.ModelObject ?? rhinoModelObject.Model.Objects.FirstOrDefault();
+        var attributes = new RhinoModelObjectData.Attributes();
+        var metadata = new[]
+        {
+            new KeyValuePair<string, string>(SemioImportModelBlobKey, fileBlob),
+            new KeyValuePair<string, string>(
+                SemioImportModelObjectIdKey,
+                sourceModelObject is null
+                    ? string.Empty
+                    : ResolveRhinoObjectId(sourceModelObject, -1))
+        };
+        attributes.UserText = new ModelUserText(metadata);
+
+        if (sourceModelObject?.Geometry is null)
+            return new RhinoModelObjectData(attributes);
+
+        var objectAttributes = sourceModelObject.Attributes?.Duplicate() ?? new Rhino.DocObjects.ObjectAttributes();
+        objectAttributes.SetUserString(SemioImportModelBlobKey, fileBlob);
+        objectAttributes.SetUserString(
+            SemioImportModelObjectIdKey,
+            ResolveRhinoObjectId(sourceModelObject, -1));
+
+        var objectGeometry = sourceModelObject.Geometry.Duplicate();
+        var addedRhinoObject = AddRhinoObjectToTargetDocument(objectGeometry, objectAttributes);
+        if (addedRhinoObject is not null)
+            return new RhinoModelObjectData(addedRhinoObject);
+
+        var directModelObject = new RhinoModelObjectData(new RhinoModelObjectData.Attributes { UserText = new ModelUserText(metadata) });
+        if (directModelObject.IsValid)
+            return directModelObject;
+
+        return new RhinoModelObjectData(attributes);
+    }
+
+    private static string ResolveImportExtension(string? sourceName, string fileBlob, byte[] fileBytes)
+    {
+        if (!string.IsNullOrWhiteSpace(sourceName))
+        {
+            var pathExtension = Path.GetExtension(sourceName);
+            if (!string.IsNullOrWhiteSpace(pathExtension))
+                return pathExtension;
+        }
+
+        if (fileBlob.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            var mimeStart = "data:".Length;
+            var mimeEnd = fileBlob.IndexOf(';');
+            if (mimeEnd > mimeStart)
+            {
+                var mime = fileBlob.Substring(mimeStart, mimeEnd - mimeStart).Trim().ToLowerInvariant();
+                if (mime == "model/gltf-binary")
+                    return ".glb";
+                if (mime == "model/gltf+json")
+                    return ".gltf";
+                if (mime == "model/3dm" || mime == "application/vnd.rhino")
+                    return ".3dm";
+            }
+        }
+
+        if (fileBytes.Length >= 4 &&
+            fileBytes[0] == (byte)'g' &&
+            fileBytes[1] == (byte)'l' &&
+            fileBytes[2] == (byte)'T' &&
+            fileBytes[3] == (byte)'F')
+            return ".glb";
+
+        return ".3dm";
+    }
+
+    private static Rhino.FileIO.File3dm ImportRhinoModelViaHeadlessDocument(byte[] fileBytes, string extension)
+    {
+        var normalizedExtension = extension.StartsWith(".") ? extension : "." + extension;
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "semio-gh-import");
+        Directory.CreateDirectory(tempDirectory);
+
+        var importPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}{normalizedExtension}");
+        var exportPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}.3dm");
+        try
+        {
+            System.IO.File.WriteAllBytes(importPath, fileBytes);
+
+            using var document = RhinoDoc.CreateHeadless(null);
+            if (!document.Import(importPath))
+                throw new InvalidOperationException($"Could not import Rhino model using RhinoDoc.Import for extension {normalizedExtension}.");
+            if (!document.SaveAs(exportPath))
+                throw new InvalidOperationException("Could not export imported Rhino model to temporary 3dm.");
+
+            return Rhino.FileIO.File3dm.Read(exportPath)
+                ?? throw new InvalidOperationException("Could not read temporary 3dm after Rhino import.");
+        }
+        finally
+        {
+            TryDeletePath(importPath);
+            TryDeletePath(exportPath);
+        }
+    }
+
+    private static void TryDeletePath(string path)
+    {
+        try
+        {
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
+        }
+        catch
+        {
+            // Best-effort cleanup for temp import artifacts.
+        }
+    }
+
+    private static List<Rhino.DocObjects.RhinoObject> ImportRhinoDocumentObjectsFromBlobFallback(
+        string fileBlob,
+        string? sourceName,
+        UnitSystem? targetUnitSystem)
+    {
+        var fileBytes = DecodeFileBlobString(fileBlob);
+        var extension = ResolveImportExtension(sourceName, fileBlob, fileBytes);
+        var normalizedExtension = extension.StartsWith(".") ? extension : "." + extension;
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "semio-gh-import");
+        Directory.CreateDirectory(tempDirectory);
+
+        var importPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}{normalizedExtension}");
+        var targetDocument = CreateTrackedHeadlessImportDocument();
+        if (targetUnitSystem.HasValue)
+            targetDocument.ModelUnitSystem = targetUnitSystem.Value;
+        var existingObjectIds = targetDocument.Objects
+            .Select(rhinoObject => rhinoObject.Id)
+            .ToHashSet();
+
+        try
+        {
+            System.IO.File.WriteAllBytes(importPath, fileBytes);
+            if (!targetDocument.Import(importPath))
+                throw new InvalidOperationException($"Could not import Rhino model using RhinoDoc.Import for extension {normalizedExtension}.");
+
+            var importedRhinoObjects = targetDocument.Objects
+                .Where(rhinoObject => !existingObjectIds.Contains(rhinoObject.Id) && rhinoObject.Geometry is not null)
+                .ToList();
+            if (importedRhinoObjects.Count == 0)
+                throw new InvalidOperationException("Imported Rhino model has no model objects.");
+
+            foreach (var importedRhinoObject in importedRhinoObjects)
+                AttachSemioImportMetadata(importedRhinoObject, fileBlob, importedRhinoObject.Id.ToString());
+            return importedRhinoObjects;
+        }
+        finally
+        {
+            TryDeletePath(importPath);
+        }
+    }
+
+    private static List<Rhino.DocObjects.RhinoObject> AddFile3dmObjectsToIsolatedDocument(
+        IReadOnlyList<Rhino.FileIO.File3dmObject> sourceModelObjects,
+        string fileBlob,
+        UnitSystem sourceUnitSystem,
+        UnitSystem? targetUnitSystem)
+    {
+        var targetDocument = CreateTrackedHeadlessImportDocument();
+        if (targetUnitSystem.HasValue)
+            targetDocument.ModelUnitSystem = targetUnitSystem.Value;
+
+        var requiresScaling = targetUnitSystem.HasValue && targetUnitSystem.Value != sourceUnitSystem;
+        var unitScale = requiresScaling
+            ? RhinoMath.UnitScale(sourceUnitSystem, targetUnitSystem!.Value)
+            : 1.0;
+        var importedRhinoObjects = new List<Rhino.DocObjects.RhinoObject>();
+        for (var sourceIndex = 0; sourceIndex < sourceModelObjects.Count; sourceIndex++)
+        {
+            var sourceModelObject = sourceModelObjects[sourceIndex];
+            if (sourceModelObject?.Geometry is null)
+                continue;
+
+            var objectAttributes = sourceModelObject.Attributes?.Duplicate() ?? new Rhino.DocObjects.ObjectAttributes();
+            var objectGeometry = sourceModelObject.Geometry.Duplicate();
+            if (requiresScaling && !RhinoMath.EpsilonEquals(unitScale, 1.0, RhinoMath.ZeroTolerance))
+                objectGeometry.Transform(Transform.Scale(Point3d.Origin, unitScale));
+            var addedObjectId = targetDocument.Objects.Add(objectGeometry, objectAttributes);
+            if (addedObjectId == Guid.Empty)
+                continue;
+
+            var importedRhinoObject = targetDocument.Objects.FindId(addedObjectId);
+            if (importedRhinoObject is null)
+                continue;
+
+            AttachSemioImportMetadata(importedRhinoObject, fileBlob, ResolveRhinoObjectId(sourceModelObject, sourceIndex));
+            importedRhinoObjects.Add(importedRhinoObject);
+        }
+
+        if (importedRhinoObjects.Count == 0)
+            throw new InvalidOperationException("Imported Rhino model has no model objects.");
+        return importedRhinoObjects;
+    }
+
+    private static UnitSystem? ResolveModelUnitSystem(SemioModel? model)
+    {
+        if (model is null)
+            return null;
+
+        var modelUnitAttributeValue = model.Attributes?
+            .FirstOrDefault(attribute => string.Equals(attribute?.Key, "Unit", StringComparison.OrdinalIgnoreCase))
+            ?.Value;
+        if (string.IsNullOrWhiteSpace(modelUnitAttributeValue))
+            return null;
+        if (!IsValidLengthUnitSystem(modelUnitAttributeValue))
+            return null;
+
+        return LengthUnitAbbreviationToUnitSystem(modelUnitAttributeValue);
+    }
+
+    private static Rhino.DocObjects.RhinoObject AddRhinoObjectToTargetDocument(
+        Rhino.Geometry.GeometryBase objectGeometry,
+        Rhino.DocObjects.ObjectAttributes objectAttributes)
+    {
+        var targetDocument = CreateTrackedHeadlessImportDocument();
+        var addedObjectId = targetDocument.Objects.Add(objectGeometry, objectAttributes);
+        if (addedObjectId == Guid.Empty)
+            throw new InvalidOperationException("Could not add imported Rhino model object to target document.");
+
+        return targetDocument.Objects.FindId(addedObjectId)
+            ?? throw new InvalidOperationException("Could not resolve imported Rhino model object in target document.");
+    }
+
+    private static void AttachSemioImportMetadata(
+        Rhino.DocObjects.RhinoObject rhinoObject,
+        string fileBlob,
+        string importedObjectId)
+    {
+        if (rhinoObject is null || string.IsNullOrWhiteSpace(fileBlob))
+            return;
+
+        var objectAttributes = rhinoObject.Attributes.Duplicate();
+        objectAttributes.SetUserString(SemioImportModelBlobKey, fileBlob);
+        objectAttributes.SetUserString(SemioImportModelObjectIdKey, importedObjectId);
+        var targetDocument = rhinoObject.Document;
+        if (targetDocument is not null)
+            targetDocument.Objects.ModifyAttributes(rhinoObject, objectAttributes, true);
+    }
+
+    public static bool TryResolveRhinoModelContext(object modelObjectInput, out RhinoModelObject rhinoModelObject)
+    {
+        rhinoModelObject = null!;
+        if (modelObjectInput is RhinoModelObject existingContext)
+        {
+            rhinoModelObject = existingContext;
+            return true;
+        }
+
+        if (modelObjectInput is RhinoModelObjectData modelObjectData &&
+            TryResolveSemioImportMetadata(modelObjectData, out var modelBlob, out var modelObjectId))
+        {
+            return TryResolveRhinoModelContextFromMetadata(modelBlob, modelObjectId, out rhinoModelObject);
+        }
+
+        if (modelObjectInput is IGH_Goo goo)
+            modelObjectInput = goo.ScriptVariable();
+
+        if (modelObjectInput is RhinoModelObjectData scriptedModelObjectData &&
+            TryResolveSemioImportMetadata(scriptedModelObjectData, out var scriptedBlob, out var scriptedModelObjectId))
+        {
+            return TryResolveRhinoModelContextFromMetadata(scriptedBlob, scriptedModelObjectId, out rhinoModelObject);
+        }
+
+        if (modelObjectInput is not Rhino.FileIO.File3dmObject importedModelObject)
+        {
+            if (modelObjectInput is Rhino.DocObjects.RhinoObject rhinoObject)
+            {
+                var rhinoFileBlob = rhinoObject.Attributes?.GetUserString(SemioImportModelBlobKey);
+                if (string.IsNullOrWhiteSpace(rhinoFileBlob))
+                    return false;
+
+                var rhinoObjectId = rhinoObject.Attributes?.GetUserString(SemioImportModelObjectIdKey);
+                return TryResolveRhinoModelContextFromMetadata(rhinoFileBlob, rhinoObjectId, out rhinoModelObject);
+            }
+            return false;
+        }
+
+        var fileBlob = importedModelObject.Attributes?.GetUserString(SemioImportModelBlobKey);
+        if (string.IsNullOrWhiteSpace(fileBlob))
+            return false;
+
+        var importedContext = ImportRhinoModelContextFromBlob(fileBlob);
+        var importedObjectId = importedModelObject.Attributes?.GetUserString(SemioImportModelObjectIdKey);
+        if (string.IsNullOrWhiteSpace(importedObjectId))
+        {
+            rhinoModelObject = importedContext;
+            return true;
+        }
+
+        var matchingModelObject = importedContext.Model.Objects
+            .FirstOrDefault(modelObject => ResolveRhinoObjectId(modelObject, -1) == importedObjectId);
+        rhinoModelObject = matchingModelObject is null
+            ? importedContext
+            : new RhinoModelObject(importedContext.Model, matchingModelObject);
+        return true;
+    }
+
+    private static bool TryResolveSemioImportMetadata(
+        RhinoModelObjectData modelObjectData,
+        out string fileBlob,
+        out string? importedObjectId)
+    {
+        fileBlob = string.Empty;
+        importedObjectId = null;
+
+        var userText = modelObjectData.UserText;
+        if (!userText.TryGetValue(SemioImportModelBlobKey, out fileBlob) || string.IsNullOrWhiteSpace(fileBlob))
+            return false;
+        userText.TryGetValue(SemioImportModelObjectIdKey, out importedObjectId);
+        return true;
+    }
+
+    private static bool TryResolveRhinoModelContextFromMetadata(
+        string fileBlob,
+        string? importedObjectId,
+        out RhinoModelObject rhinoModelObject)
+    {
+        rhinoModelObject = null!;
+        if (string.IsNullOrWhiteSpace(fileBlob))
+            return false;
+
+        var importedContext = ImportRhinoModelContextFromBlob(fileBlob);
+        if (string.IsNullOrWhiteSpace(importedObjectId))
+        {
+            rhinoModelObject = importedContext;
+            return true;
+        }
+
+        var matchingModelObject = importedContext.Model.Objects
+            .FirstOrDefault(modelObject => ResolveRhinoObjectId(modelObject, -1) == importedObjectId);
+        rhinoModelObject = matchingModelObject is null
+            ? importedContext
+            : new RhinoModelObject(importedContext.Model, matchingModelObject);
+        return true;
+    }
+
+    public static List<Attribute> ToAttributesList(AttributesDiff? attributesDiff)
+    {
+        if (attributesDiff is null)
+            return new List<Attribute>();
+
+        var attributes = new List<Attribute>();
+        if (attributesDiff.Added is not null)
+            attributes.AddRange(attributesDiff.Added.Where(attribute => attribute is not null).Select(attribute => attribute.DeepClone()));
+        if (attributesDiff.Updated is not null)
+        {
+            foreach (var update in attributesDiff.Updated.Where(update => update is not null))
+            {
+                var sourceAttribute = update.Attribute is null ? new Attribute() : ((Attribute)update.Attribute).DeepClone();
+                attributes.Add(update.Diff is null ? sourceAttribute : Attribute.ApplyDiff(sourceAttribute, update.Diff.DeepClone()));
+            }
+        }
+        return attributes;
+    }
+
+    public static SemioGroup TranslateRhinoModelObjectToSingleGroup(RhinoModelObject rhinoModelObject)
     {
         if (rhinoModelObject is null)
             throw new ArgumentNullException(nameof(rhinoModelObject));
@@ -430,13 +898,80 @@ public static class Utility
             Definition = "Root named layer group containing all recursive layers."
         });
 
-        return new Group
+        return new SemioGroup
         {
-            Guid = ResolveRhinoObjectId(importedObject, -1),
+            Guid = importedObject is null ? Guid.NewGuid().ToString() : ResolveRhinoObjectId(importedObject, -1),
             Name = "Imported Rhino Layer Group",
             Description = "Single semio group translated from Rhino model object with recursive named layer groups.",
             Pieces = allPieceIds.Distinct().Select(pieceId => new PieceId { Guid = pieceId }).ToList(),
             Attributes = attributes
+        };
+    }
+
+    public static SemioGroup TranslateRhinoModelObjectsToSingleGroup(IEnumerable<RhinoModelObject> rhinoModelObjects)
+    {
+        if (rhinoModelObjects is null)
+            throw new ArgumentNullException(nameof(rhinoModelObjects));
+
+        var translatedGroups = rhinoModelObjects
+            .Where(modelObject => modelObject is not null)
+            .Select(TranslateRhinoModelObjectToSingleGroup)
+            .ToList();
+        if (translatedGroups.Count == 0)
+            throw new InvalidOperationException("Input must contain at least one Rhino ModelObject output of Import Model.");
+
+        var pieceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var attributeValuesByKey = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var group in translatedGroups)
+        {
+            foreach (var piece in group.Pieces ?? new List<PieceId>())
+            {
+                if (!string.IsNullOrWhiteSpace(piece?.Guid))
+                    pieceIds.Add(piece.Guid);
+            }
+
+            foreach (var attribute in group.Attributes ?? new List<Attribute>())
+            {
+                if (attribute is null || string.IsNullOrWhiteSpace(attribute.Key))
+                    continue;
+
+                if (!attributeValuesByKey.TryGetValue(attribute.Key, out var attributeValues))
+                {
+                    attributeValues = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    attributeValuesByKey[attribute.Key] = attributeValues;
+                }
+
+                foreach (var valuePart in (attribute.Value ?? string.Empty).Split(','))
+                {
+                    var trimmedValuePart = valuePart.Trim();
+                    if (!string.IsNullOrWhiteSpace(trimmedValuePart))
+                        attributeValues.Add(trimmedValuePart);
+                }
+            }
+        }
+
+        var mergedAttributes = attributeValuesByKey
+            .OrderBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(entry => new Attribute
+            {
+                Guid = Guid.NewGuid().ToString(),
+                Key = entry.Key,
+                Value = string.Join(",", entry.Value.OrderBy(value => value, StringComparer.OrdinalIgnoreCase)),
+                Definition = entry.Key == "LayerGroup"
+                    ? "Root named layer group containing all recursive layers."
+                    : "Recursive named layer group from imported Rhino model."
+            })
+            .ToList();
+
+        return new SemioGroup
+        {
+            Guid = translatedGroups.First().Guid,
+            Name = "Imported Rhino Layer Group",
+            Description = "Single semio group translated from Rhino model object with recursive named layer groups.",
+            Pieces = pieceIds.OrderBy(pieceId => pieceId, StringComparer.OrdinalIgnoreCase)
+                .Select(pieceId => new PieceId { Guid = pieceId })
+                .ToList(),
+            Attributes = mergedAttributes
         };
     }
 
@@ -458,6 +993,35 @@ public static class Utility
         return fallbackIndex >= 0
             ? $"rhino-object-{fallbackIndex}"
             : Guid.NewGuid().ToString();
+    }
+
+    public static IEnumerable<RhinoModelObjectData> ExtractRhinoModelObjectDataFromGeometryGroup(GH_GeometryGroup group)
+    {
+        if (group is null)
+            throw new ArgumentNullException(nameof(group));
+
+        return ExtractRhinoModelObjectDataFromGeometricGoo(group);
+    }
+
+    private static IEnumerable<RhinoModelObjectData> ExtractRhinoModelObjectDataFromGeometricGoo(IGH_GeometricGoo goo)
+    {
+        if (goo is GH_GeometryGroup subGroup)
+        {
+            foreach (var obj in subGroup.Objects)
+                foreach (var data in ExtractRhinoModelObjectDataFromGeometricGoo(obj))
+                    yield return data;
+        }
+        else if (goo is not null)
+        {
+            var scriptVariable = goo.ScriptVariable();
+            var geometry = scriptVariable as Rhino.Geometry.GeometryBase;
+            if (geometry is null && scriptVariable is Rhino.Geometry.Point3d point3d)
+                geometry = new Rhino.Geometry.Point(point3d);
+            if (geometry is null)
+                yield break;
+            var rhinoObject = AddRhinoObjectToTargetDocument(geometry.Duplicate(), new Rhino.DocObjects.ObjectAttributes());
+            yield return new RhinoModelObjectData(rhinoObject);
+        }
     }
 }
 
@@ -569,6 +1133,209 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
     }
 }
 
+internal static class GhNaming
+{
+    private static readonly Dictionary<string, string> dictionaryCodes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["attribute"] = "At",
+        ["attributes"] = "At",
+        ["author"] = "Au",
+        ["authors"] = "Au",
+        ["benchmark"] = "Jc",
+        ["benchmarks"] = "Jc",
+        ["blob"] = "Bl",
+        ["cache"] = "Ca",
+        ["center"] = "Ce",
+        ["child"] = "CNa",
+        ["children"] = "CNa",
+        ["collider"] = "Cl",
+        ["color"] = "Cl",
+        ["colour"] = "Cl",
+        ["concept"] = "Ce",
+        ["connection"] = "Co",
+        ["connections"] = "Co",
+        ["connector"] = "Po",
+        ["connectors"] = "Po",
+        ["createdat"] = "CA",
+        ["createdby"] = "Au",
+        ["default"] = "De",
+        ["definition"] = "Df",
+        ["definitions"] = "Df",
+        ["description"] = "Dc",
+        ["design"] = "Dn",
+        ["designs"] = "Dn",
+        ["diagram"] = "Dg",
+        ["directory"] = "Di",
+        ["direction"] = "Dr",
+        ["email"] = "Em",
+        ["file"] = "Ca",
+        ["files"] = "Ca",
+        ["folder"] = "Di",
+        ["folders"] = "Di",
+        ["formula"] = "Fx",
+        ["geometry"] = "Ge",
+        ["guid"] = "GI",
+        ["id"] = "Id",
+        ["image"] = "Im",
+        ["imperial"] = "Ip",
+        ["indent"] = "In",
+        ["input"] = "In",
+        ["key"] = "FK",
+        ["kit"] = "Kt",
+        ["latitude"] = "Y",
+        ["layer"] = "LN",
+        ["layers"] = "LN",
+        ["length"] = "Ln",
+        ["location"] = "Og",
+        ["longitude"] = "X",
+        ["mandatory"] = "CD",
+        ["max"] = "Ma",
+        ["min"] = "Mi",
+        ["model"] = "Rp",
+        ["models"] = "Rp",
+        ["name"] = "Na",
+        ["object"] = "Ob",
+        ["objects"] = "Ob",
+        ["output"] = "Ou",
+        ["parent"] = "Pa",
+        ["path"] = "Ph",
+        ["piece"] = "Pc",
+        ["pieces"] = "Pc",
+        ["plane"] = "Pn",
+        ["point"] = "Pt",
+        ["port"] = "Po",
+        ["ports"] = "Po",
+        ["preview"] = "Pv",
+        ["prop"] = "Pp",
+        ["props"] = "Pp",
+        ["quality"] = "Jc",
+        ["remote"] = "Rm",
+        ["replace"] = "Re",
+        ["rotation"] = "Rt",
+        ["run"] = "Ru",
+        ["scale"] = "Sc",
+        ["shift"] = "Sf",
+        ["side"] = "Sd",
+        ["size"] = "Pl",
+        ["slot"] = "Sl",
+        ["slots"] = "Sl",
+        ["source"] = "SD",
+        ["success"] = "Su",
+        ["tag"] = "Tg",
+        ["tags"] = "Tg",
+        ["target"] = "TD",
+        ["text"] = "Tx",
+        ["tilt"] = "Tl",
+        ["transform"] = "Tr",
+        ["type"] = "Ty",
+        ["types"] = "Ty",
+        ["unit"] = "Ut",
+        ["updatedat"] = "Up",
+        ["updatedby"] = "Up",
+        ["uri"] = "Ui",
+        ["url"] = "Ur",
+        ["validate"] = "Vd",
+        ["value"] = "Vl",
+        ["variant"] = "Vn",
+        ["vector"] = "Vc",
+        ["version"] = "Ve",
+        ["view"] = "Vw",
+        ["x"] = "X",
+        ["y"] = "Y",
+        ["z"] = "Z",
+    };
+
+    private static readonly HashSet<string> stopWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "a", "an", "and", "for", "from", "in", "of", "on", "the", "to", "with"
+    };
+
+    public static string NormalizeComponentNickname(string componentName, string fallbackNickname)
+    {
+        var source = string.IsNullOrWhiteSpace(componentName) ? fallbackNickname : componentName;
+        var letters = string.Concat(ExtractWords(source)
+            .Where(word => !stopWords.Contains(word))
+            .Select(word => char.ToUpperInvariant(word[0])));
+        if (letters.Length >= 3)
+            return letters.Substring(0, 3);
+        if (letters.Length == 2)
+            return $"{letters}X";
+        if (letters.Length == 1)
+            return $"{letters}XX";
+        return "Cmp";
+    }
+
+    public static void NormalizeComponentParameters(GH_Component component)
+    {
+        var componentName = string.IsNullOrWhiteSpace(component.Name) ? component.GetType().Name : component.Name;
+        NormalizeParameterCollection(component.Params.Input, componentName, false);
+        NormalizeParameterCollection(component.Params.Output, componentName, true);
+    }
+
+    private static void NormalizeParameterCollection(IReadOnlyList<IGH_Param> parameters, string componentName, bool isOutput)
+    {
+        foreach (var parameter in parameters)
+        {
+            parameter.NickName = NormalizeParameterNickname(parameter.Name, parameter.Access, parameter.Optional, parameter.NickName);
+            parameter.Description = BuildParameterDescription(componentName, parameter.Name, parameter.Access, parameter.Optional, isOutput);
+        }
+    }
+
+    private static string BuildParameterDescription(string componentName, string parameterName, GH_ParamAccess access, bool optional, bool isOutput)
+    {
+        var cardinality = access is GH_ParamAccess.list or GH_ParamAccess.tree ? "zero or more" : optional ? "zero or one" : "exactly one";
+        var direction = isOutput ? "produced by" : "consumed by";
+        return $"{cardinality} `{parameterName}` value {direction} `{componentName}`.";
+    }
+
+    public static string NormalizeParameterNickname(string parameterName, GH_ParamAccess access, bool optional, string fallbackNickname = "")
+    {
+        var key = string.Concat(ExtractWords(parameterName)).ToLowerInvariant();
+        var code = dictionaryCodes.TryGetValue(key, out var mappedCode)
+            ? mappedCode
+            : ResolveFallbackCode(parameterName, fallbackNickname);
+        code = string.Concat(code.Where(char.IsLetterOrDigit));
+        if (code.Length >= 2)
+            code = code.Substring(0, 2);
+        else if (code.Length == 1)
+            code = $"{char.ToUpperInvariant(code[0])}x";
+        else
+            code = "Px";
+
+        var suffix = access is GH_ParamAccess.list or GH_ParamAccess.tree ? "*" : optional ? "?" : string.Empty;
+        return $"{code}{suffix}";
+    }
+
+    private static string ResolveFallbackCode(string parameterName, string fallbackNickname)
+    {
+        var words = ExtractWords(parameterName).Where(word => !stopWords.Contains(word)).ToList();
+        if (words.Count > 0)
+        {
+            var first = words[0];
+            return first.Length >= 2
+                ? $"{char.ToUpperInvariant(first[0])}{char.ToLowerInvariant(first[1])}"
+                : $"{char.ToUpperInvariant(first[0])}x";
+        }
+
+        var fallback = string.Concat((fallbackNickname ?? string.Empty).Where(char.IsLetterOrDigit));
+        return fallback.Length >= 2 ? fallback.Substring(0, 2) : "Px";
+    }
+
+    private static IEnumerable<string> ExtractWords(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<string>();
+
+        var splitOnWhitespace = Regex.Split(value, @"[\s_\-/→⇒…+Δ]+")
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        var words = new List<string>();
+        foreach (var part in splitOnWhitespace)
+            words.AddRange(Regex.Matches(part, @"[A-Z]?[a-z0-9]+|[A-Z]+(?![a-z])").Cast<Match>().Select(match => match.Value));
+        return words;
+    }
+}
+
 /// Generic Grasshopper parameter for semio entity types.
 /// Implementations MUST provide component exposure and icon metadata.
 /// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️param](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/Param)
@@ -580,8 +1347,8 @@ public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo 
     protected abstract string IconResourceName { get; }
     protected Param() : base("", "", "", Constants.Category, "Params") { }
     public override string Name => ModelName;
-    public override string NickName => ModelNickname;
-    public override string Description => ModelDescription;
+    public override string NickName => GhNaming.NormalizeParameterNickname(ModelName, GH_ParamAccess.item, false, ModelNickname);
+    public override string Description => $"exactly one `{ModelName}` value persisted in `{GetType().Name}`.";
     protected override Bitmap Icon => IconResources.ResolveOrPlaceholder(IconResourceName);
 
     protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
@@ -633,7 +1400,28 @@ public abstract class Component : GH_Component
 {
     public Component(string name, string nickname, string description, string subcategory) : base(
         name, nickname, description, Constants.Category, subcategory)
-    { }
+    {
+        ApplyNamingPolicy();
+    }
+
+    public override void AddedToDocument(GH_Document document)
+    {
+        base.AddedToDocument(document);
+        ApplyNamingPolicy();
+    }
+
+    public override void CreateAttributes()
+    {
+        base.CreateAttributes();
+        ApplyNamingPolicy();
+    }
+
+    private void ApplyNamingPolicy()
+    {
+        NickName = GhNaming.NormalizeComponentNickname(Name, NickName);
+        Description = $"{Name} operation in semio Grasshopper.";
+        GhNaming.NormalizeComponentParameters(this);
+    }
 }
 
 /// Abstract Grasshopper component that passes input through transformation.
@@ -650,8 +1438,8 @@ public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     protected PassthroughComponent() : base("", "", "", "Data") { }
 
     public override string Name => $"Passthrough {ModelName}";
-    public override string NickName => $"~{ModelNickname}";
-    public override string Description => ModelDescription;
+    public override string NickName => GhNaming.NormalizeComponentNickname(Name, ModelNickname);
+    public override string Description => $"{Name} operation in semio Grasshopper.";
 
     protected override Bitmap Icon => IconResources.ResolveOrPlaceholder(
         $"{IconResourceName.Replace("_24x24", "")}_modify_24x24",
@@ -768,6 +1556,192 @@ public abstract class DiffComponent<TParam, TGoo, TModel> : PassthroughComponent
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
+/// Generic Grasshopper data wrapper for semio change types.
+/// Implementations MUST convert between JSON and typed change values.
+public abstract class ChangeGoo<TChange> : GH_Goo<TChange> where TChange : class, new()
+{
+    public ChangeGoo() { Value = new TChange(); }
+    public ChangeGoo(TChange value) { Value = value; }
+    public override bool IsValid => Value is not null;
+    public override string TypeName => typeof(TChange).Name;
+    public override string TypeDescription => typeof(TChange).Name;
+    public override IGH_Goo Duplicate()
+    {
+        var duplicate = (ChangeGoo<TChange>)(Activator.CreateInstance(GetType())
+            ?? throw new InvalidOperationException($"Could not create instance of {GetType()}"));
+        duplicate.Value = Value.Serialize().Deserialize<TChange>() ?? new TChange();
+        return duplicate;
+    }
+    public override string ToString() => Value?.ToString() ?? typeof(TChange).Name;
+    public override bool Write(GH_IWriter writer)
+    {
+        writer.SetString(typeof(TChange).Name, Value.Serialize());
+        return base.Write(writer);
+    }
+    public override bool Read(GH_IReader reader)
+    {
+        Value = reader.GetString(typeof(TChange).Name).Deserialize<TChange>() ?? new TChange();
+        return base.Read(reader);
+    }
+    internal virtual bool CustomCastTo<Q>(ref Q target) => false;
+    internal virtual bool CustomCastFrom(object source) => false;
+    public override bool CastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(TChange)))
+        {
+            target = (Q)(object)Value;
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Serialize());
+            return true;
+        }
+        return CustomCastTo(ref target);
+    }
+
+    public override bool CastFrom(object source)
+    {
+        if (source is null) return false;
+        if (source is TChange model)
+        {
+            Value = model;
+            return true;
+        }
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            var deserialized = str.Deserialize<TChange>();
+            if (deserialized is null)
+                return false;
+            Value = deserialized;
+            return true;
+        }
+        return CustomCastFrom(source);
+    }
+}
+
+/// Generic Grasshopper parameter for semio change types.
+/// Implementations MUST provide component exposure and icon metadata.
+public abstract class ChangeParam<TGoo, TChange> : GH_PersistentParam<TGoo>
+    where TGoo : ChangeGoo<TChange>
+    where TChange : class, new()
+{
+    protected abstract string ModelName { get; }
+    protected abstract string ModelNickname { get; }
+    protected abstract string ModelDescription { get; }
+    protected abstract string IconResourceName { get; }
+    protected ChangeParam() : base("", "", "", Constants.Category, "Params") { }
+    public override string Name => ModelName;
+    public override string NickName => GhNaming.NormalizeParameterNickname(ModelName, GH_ParamAccess.item, false, ModelNickname);
+    public override string Description => $"exactly one `{ModelName}` value persisted in `{GetType().Name}`.";
+    protected override Bitmap Icon => IconResources.ResolveOrPlaceholder(IconResourceName);
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
+    protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
+}
+
+/// Abstract Grasshopper component for constructing entity changes.
+/// Implementations MUST register input parameters matching change fields.
+public abstract class ChangeComponent<TEntityParam, TEntityGoo, TEntity, TDiffParam, TDiffGoo, TDiff, TChangeParam, TChangeGoo, TChange> : Component
+    where TEntityParam : Param<TEntityGoo, TEntity>, new()
+    where TEntityGoo : Goo<TEntity>, new()
+    where TEntity : Entity<TEntity>, new()
+    where TDiffParam : DiffParam<TDiffGoo, TDiff>, new()
+    where TDiffGoo : DiffGoo<TDiff>, new()
+    where TDiff : Entity<TDiff>, new()
+    where TChangeParam : ChangeParam<TChangeGoo, TChange>, new()
+    where TChangeGoo : ChangeGoo<TChange>, new()
+    where TChange : Change<TEntity, TDiff>, new()
+{
+    protected abstract string EntityName { get; }
+    protected abstract string EntityNickname { get; }
+    protected abstract string IconResourceName { get; }
+
+    protected ChangeComponent() : base("", "", "", "Data") { }
+
+    public override string Name => $"Passthrough {EntityName} Change";
+    public override string NickName => GhNaming.NormalizeComponentNickname(Name, EntityNickname);
+    public override string Description => $"{Name} operation in semio Grasshopper.";
+    protected override Bitmap Icon => IconResources.ResolveOrPlaceholder(IconResourceName);
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TChangeParam(), $"{EntityName} Change", $"{EntityNickname}Ch?", $"The optional {EntityName.ToLower()} change.", GH_ParamAccess.item);
+        pManager.AddParameter(new TDiffParam(), $"Forward {EntityName} Diff", $"{EntityNickname}Fw?", $"The optional forward {EntityName.ToLower()} diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new TDiffParam(), $"Backward {EntityName} Diff", $"{EntityNickname}Bw?", $"The optional backward {EntityName.ToLower()} diff.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Author", "Au?", "The optional author.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("Time", "Tm?", "The optional change timestamp.", GH_ParamAccess.item);
+        pManager.AddParameter(new TEntityParam(), $"Before {EntityName}", "Bf?", $"The optional {EntityName.ToLower()} before change.", GH_ParamAccess.item);
+        pManager.AddParameter(new TEntityParam(), $"After {EntityName}", "Af?", $"The optional {EntityName.ToLower()} after change.", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TChangeParam(), $"{EntityName} Change", $"{EntityNickname}Ch", $"The constructed or modified {EntityName.ToLower()} change.", GH_ParamAccess.item);
+        pManager.AddParameter(new TDiffParam(), $"Forward {EntityName} Diff", $"{EntityNickname}Fw", $"The optional forward {EntityName.ToLower()} diff.", GH_ParamAccess.item);
+        pManager.AddParameter(new TDiffParam(), $"Backward {EntityName} Diff", $"{EntityNickname}Bw", $"The optional backward {EntityName.ToLower()} diff.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Author", "Au?", "The optional author.", GH_ParamAccess.item);
+        pManager.AddTimeParameter("Time", "Tm?", "The optional change timestamp.", GH_ParamAccess.item);
+        pManager.AddParameter(new TEntityParam(), $"Before {EntityName}", "Bf", $"The optional {EntityName.ToLower()} before change.", GH_ParamAccess.item);
+        pManager.AddParameter(new TEntityParam(), $"After {EntityName}", "Af", $"The optional {EntityName.ToLower()} after change.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var changeGoo = new TChangeGoo();
+        if (DA.GetData(0, ref changeGoo))
+            changeGoo = (TChangeGoo)changeGoo.Duplicate();
+
+        var forward = new TDiffGoo();
+        var backward = new TDiffGoo();
+        var author = "";
+        var time = default(DateTime);
+        var before = new TEntityGoo();
+        var after = new TEntityGoo();
+
+        if (DA.GetData(1, ref forward))
+            changeGoo.Value.Forward = forward.Value.DeepClone();
+        if (DA.GetData(2, ref backward))
+            changeGoo.Value.Backward = backward.Value.DeepClone();
+        if (DA.GetData(3, ref author))
+            changeGoo.Value.Author = author;
+        if (DA.GetData(4, ref time))
+            changeGoo.Value.Time = time;
+        if (DA.GetData(5, ref before))
+            changeGoo.Value.Before = before.Value.DeepClone();
+        if (DA.GetData(6, ref after))
+            changeGoo.Value.After = after.Value.DeepClone();
+
+        DA.SetData(0, changeGoo.Duplicate());
+        if (changeGoo.Value.Forward is not null)
+        {
+            var forwardGoo = new TDiffGoo { Value = changeGoo.Value.Forward.DeepClone() };
+            DA.SetData(1, forwardGoo);
+        }
+        if (changeGoo.Value.Backward is not null)
+        {
+            var backwardGoo = new TDiffGoo { Value = changeGoo.Value.Backward.DeepClone() };
+            DA.SetData(2, backwardGoo);
+        }
+        DA.SetData(3, changeGoo.Value.Author);
+        DA.SetData(4, changeGoo.Value.Time);
+        if (changeGoo.Value.Before is not null)
+        {
+            var beforeGoo = new TEntityGoo { Value = changeGoo.Value.Before.DeepClone() };
+            DA.SetData(5, beforeGoo);
+        }
+        if (changeGoo.Value.After is not null)
+        {
+            var afterGoo = new TEntityGoo { Value = changeGoo.Value.After.DeepClone() };
+            DA.SetData(6, afterGoo);
+        }
+    }
+}
+
 /// Abstract Grasshopper component for applying an entity diff to an entity.
 /// Implementations MUST apply diffs without performing persistence operations.
 /// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️applydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/ApplyDiffComponent)
@@ -785,10 +1759,11 @@ public abstract class ApplyDiffComponent<TEntityParam, TEntityGoo, TEntity, TDif
     protected abstract string EntityNickname { get; }
     protected abstract string DiffNickname { get; }
     protected abstract string IconResourceName { get; }
+    protected abstract TEntity Apply(TEntity entity, TDiff diff);
 
     public override string Name => $"Apply {EntityName} Diff";
-    public override string NickName => $"{EntityNickname}+Δ";
-    public override string Description => $"Apply a diff to a {EntityName.ToLower()}.";
+    public override string NickName => GhNaming.NormalizeComponentNickname(Name, EntityNickname);
+    public override string Description => $"{Name} operation in semio Grasshopper.";
     protected override Bitmap Icon => IconResources.ResolveOrPlaceholder(IconResourceName);
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 
@@ -810,7 +1785,7 @@ public abstract class ApplyDiffComponent<TEntityParam, TEntityGoo, TEntity, TDif
         if (!DA.GetData(0, ref entityGoo)) return;
         if (!DA.GetData(1, ref diffGoo)) return;
 
-        var updatedEntity = (TEntity)((dynamic)entityGoo.Value).ApplyDiff((dynamic)diffGoo.Value);
+        var updatedEntity = Apply(entityGoo.Value, diffGoo.Value);
         var updatedGoo = new TEntityGoo { Value = updatedEntity };
         DA.SetData(0, updatedGoo);
     }
@@ -823,6 +1798,7 @@ public class ApplyAttributeDiffComponent : ApplyDiffComponent<AttributeParam, At
     protected override string EntityNickname => "At";
     protected override string DiffNickname => "AtΔ";
     protected override string IconResourceName => "attribute_modify_24x24";
+    protected override Attribute Apply(Attribute entity, AttributeDiff diff) => Attribute.ApplyDiff(entity, diff);
 }
 
 public class ApplyFolderDiffComponent : ApplyDiffComponent<FolderParam, FolderGoo, Folder, FolderDiffParam, FolderDiffGoo, FolderDiff>
@@ -832,6 +1808,7 @@ public class ApplyFolderDiffComponent : ApplyDiffComponent<FolderParam, FolderGo
     protected override string EntityNickname => "Fd";
     protected override string DiffNickname => "FdΔ";
     protected override string IconResourceName => "folder_modify_24x24";
+    protected override Folder Apply(Folder entity, FolderDiff diff) => Folder.ApplyDiff(entity, diff);
 }
 
 public class ApplyModelDiffComponent : ApplyDiffComponent<ModelParam, ModelGoo, Model, ModelDiffParam, ModelDiffGoo, ModelDiff>
@@ -841,6 +1818,7 @@ public class ApplyModelDiffComponent : ApplyDiffComponent<ModelParam, ModelGoo, 
     protected override string EntityNickname => "Mo";
     protected override string DiffNickname => "MoΔ";
     protected override string IconResourceName => "model_modify_24x24";
+    protected override Model Apply(Model entity, ModelDiff diff) => Model.ApplyDiff(entity, diff);
 }
 
 public class ApplyConnectorDiffComponent : ApplyDiffComponent<ConnectorParam, ConnectorGoo, Connector, ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
@@ -850,6 +1828,7 @@ public class ApplyConnectorDiffComponent : ApplyDiffComponent<ConnectorParam, Co
     protected override string EntityNickname => "Cn";
     protected override string DiffNickname => "CnΔ";
     protected override string IconResourceName => "connector_modify_24x24";
+    protected override Connector Apply(Connector entity, ConnectorDiff diff) => Connector.ApplyDiff(entity, diff);
 }
 
 public class ApplyTypeDiffComponent : ApplyDiffComponent<TypeParam, TypeGoo, Type, TypeDiffParam, TypeDiffGoo, TypeDiff>
@@ -859,6 +1838,7 @@ public class ApplyTypeDiffComponent : ApplyDiffComponent<TypeParam, TypeGoo, Typ
     protected override string EntityNickname => "Tp";
     protected override string DiffNickname => "TpΔ";
     protected override string IconResourceName => "type_modify_24x24";
+    protected override Type Apply(Type entity, TypeDiff diff) => Type.ApplyDiff(entity, diff);
 }
 
 public class ApplyPieceDiffComponent : ApplyDiffComponent<PieceParam, PieceGoo, Piece, PieceDiffParam, PieceDiffGoo, PieceDiff>
@@ -868,6 +1848,7 @@ public class ApplyPieceDiffComponent : ApplyDiffComponent<PieceParam, PieceGoo, 
     protected override string EntityNickname => "Pc";
     protected override string DiffNickname => "PcΔ";
     protected override string IconResourceName => "piece_modify_24x24";
+    protected override Piece Apply(Piece entity, PieceDiff diff) => Piece.ApplyDiff(entity, diff);
 }
 
 public class ApplySideDiffComponent : ApplyDiffComponent<SideParam, SideGoo, Side, SideDiffParam, SideDiffGoo, SideDiff>
@@ -877,6 +1858,7 @@ public class ApplySideDiffComponent : ApplyDiffComponent<SideParam, SideGoo, Sid
     protected override string EntityNickname => "Sd";
     protected override string DiffNickname => "SdΔ";
     protected override string IconResourceName => "side_modify_24x24";
+    protected override Side Apply(Side entity, SideDiff diff) => Side.ApplyDiff(entity, diff);
 }
 
 public class ApplyConnectionDiffComponent : ApplyDiffComponent<ConnectionParam, ConnectionGoo, Connection, ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
@@ -886,6 +1868,7 @@ public class ApplyConnectionDiffComponent : ApplyDiffComponent<ConnectionParam, 
     protected override string EntityNickname => "Cnx";
     protected override string DiffNickname => "CnxΔ";
     protected override string IconResourceName => "connection_modify_24x24";
+    protected override Connection Apply(Connection entity, ConnectionDiff diff) => Connection.ApplyDiff(entity, diff);
 }
 
 public class ApplyDesignDiffComponent : ApplyDiffComponent<DesignParam, DesignGoo, Design, DesignDiffParam, DesignDiffGoo, DesignDiff>
@@ -895,6 +1878,7 @@ public class ApplyDesignDiffComponent : ApplyDiffComponent<DesignParam, DesignGo
     protected override string EntityNickname => "De";
     protected override string DiffNickname => "DeΔ";
     protected override string IconResourceName => "design_modify_24x24";
+    protected override Design Apply(Design entity, DesignDiff diff) => Design.ApplyDiff(entity, diff);
 }
 
 /// Abstract Grasshopper component for serializing entities to JSON.
@@ -909,8 +1893,8 @@ public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingCompon
     protected SerializeComponent() : base("", "", "") { }
 
     public override string Name => $"Serialize {ModelName}";
-    public override string NickName => $">{ModelNickname}";
-    public override string Description => $"Serialize a {ModelName.ToLower()}.";
+    public override string NickName => GhNaming.NormalizeComponentNickname(Name, ModelNickname);
+    public override string Description => $"{Name} operation in semio Grasshopper.";
     protected override Bitmap Icon => IconResources.ResolveOrPlaceholder($"{typeof(TModel).Name.ToLower()}_serialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 
@@ -949,8 +1933,8 @@ public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComp
     protected DeserializeComponent() : base("", "", "") { }
 
     public override string Name => $"Deserialize {ModelName}";
-    public override string NickName => $"<{ModelNickname}";
-    public override string Description => $"Deserialize a {ModelName.ToLower()}.";
+    public override string NickName => GhNaming.NormalizeComponentNickname(Name, ModelNickname);
+    public override string Description => $"{Name} operation in semio Grasshopper.";
     protected override Bitmap Icon => IconResources.ResolveOrPlaceholder($"{typeof(TModel).Name.ToLower()}_deserialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -1774,7 +2758,7 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 
 #region 🔖File
 // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖file](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/File)
-// Implementations MUST reference a file with URI, MIME type, and optional content.
+// Implementations MUST reference a file with URI and optional content.
 
 public class FileGoo : Goo<File>
 {
@@ -1830,11 +2814,11 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
     {
         pManager.AddTextParameter("Guid", "Gd", "The guid of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Mime", "Mi?", "The optional MIME type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Size", "Sz?", "The optional file size in bytes.", GH_ParamAccess.item);
         pManager.AddTextParameter("Hash", "Hs?", "The optional file hash.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Blob", "Bl?", "The optional file blob.", GH_ParamAccess.item);
         pManager.AddTimeParameter("CreatedAt", "CA?", "The optional creation timestamp.", GH_ParamAccess.item);
         pManager.AddTextParameter("CreatedBy", "CB?", "The optional creator.", GH_ParamAccess.item);
         pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional update timestamp.", GH_ParamAccess.item);
@@ -1845,11 +2829,11 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
     {
         pManager.AddTextParameter("Guid", "Gd", "The guid of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Mime", "Mi?", "The optional MIME type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Size", "Sz?", "The optional file size in bytes.", GH_ParamAccess.item);
         pManager.AddTextParameter("Hash", "Hs?", "The optional file hash.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Blob", "Bl?", "The optional file blob.", GH_ParamAccess.item);
         pManager.AddTimeParameter("CreatedAt", "CA?", "The optional creation timestamp.", GH_ParamAccess.item);
         pManager.AddTextParameter("CreatedBy", "CB?", "The optional creator.", GH_ParamAccess.item);
         pManager.AddTimeParameter("UpdatedAt", "UA?", "The optional update timestamp.", GH_ParamAccess.item);
@@ -1858,17 +2842,17 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 
     protected override void GetModelData(IGH_DataAccess DA, File model)
     {
-        string guid = "", name = "", mime = "", remote = "", hash = "", createdBy = "", updatedBy = "";
+        string guid = "", name = "", remote = "", hash = "", blob = "", createdBy = "", updatedBy = "";
         var folderIdGoo = new FolderIdGoo();
         int size = 0;
         DateTime createdAt = default, updatedAt = default;
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
-        if (DA.GetData(4, ref mime)) model.Mime = mime;
-        if (DA.GetData(5, ref remote)) model.Remote = remote;
-        if (DA.GetData(6, ref folderIdGoo)) model.Folder = folderIdGoo.Value;
-        if (DA.GetData(7, ref size)) model.Size = size;
-        if (DA.GetData(8, ref hash)) model.Hash = hash;
+        if (DA.GetData(4, ref remote)) model.Remote = remote;
+        if (DA.GetData(5, ref folderIdGoo)) model.Folder = folderIdGoo.Value;
+        if (DA.GetData(6, ref size)) model.Size = size;
+        if (DA.GetData(7, ref hash)) model.Hash = hash;
+        if (DA.GetData(8, ref blob)) model.Blob = blob;
         if (DA.GetData(9, ref createdAt)) model.CreatedAt = createdAt;
         if (DA.GetData(10, ref createdBy)) model.CreatedBy = createdBy;
         if (DA.GetData(11, ref updatedAt)) model.UpdatedAt = updatedAt;
@@ -1879,11 +2863,11 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
     {
         DA.SetData(2, model.Guid);
         DA.SetData(3, model.Name);
-        DA.SetData(4, model.Mime);
-        DA.SetData(5, model.Remote);
-        DA.SetData(6, model.Folder is not null ? new FolderIdGoo(model.Folder) : null);
-        DA.SetData(7, model.Size);
-        DA.SetData(8, model.Hash);
+        DA.SetData(4, model.Remote);
+        DA.SetData(5, model.Folder is not null ? new FolderIdGoo(model.Folder) : null);
+        DA.SetData(6, model.Size);
+        DA.SetData(7, model.Hash);
+        DA.SetData(8, model.Blob);
         DA.SetData(9, model.CreatedAt);
         DA.SetData(10, model.CreatedBy);
         DA.SetData(11, model.UpdatedAt);
@@ -2273,7 +3257,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
         var attributes = new List<AttributeGoo>();
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
-        if (DA.GetData(4, ref parentIdGoo)) model.Parent = parentIdGoo.Value.Guid;
+        if (DA.GetData(4, ref parentIdGoo)) model.Parent = parentIdGoo.Value;
         if (DA.GetData(5, ref description)) model.Description = description;
         if (DA.GetDataList(6, attributes)) model.Attributes = attributes.Select(a => a.Value).ToList();
         if (DA.GetData(7, ref createdAt)) model.CreatedAt = createdAt.ToString("o");
@@ -2286,7 +3270,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
     {
         DA.SetData(2, model.Guid);
         DA.SetData(3, model.Name);
-        DA.SetData(4, !string.IsNullOrEmpty(model.Parent) ? new FolderIdGoo(new FolderId { Guid = model.Parent }) : null);
+        DA.SetData(4, model.Parent != null ? new FolderIdGoo(model.Parent) : null);
         DA.SetData(5, model.Description);
         DA.SetDataList(6, model.Attributes.Select(a => new AttributeGoo(a)).ToList());
         DA.SetData(7, !string.IsNullOrEmpty(model.CreatedAt) && DateTime.TryParse(model.CreatedAt, null, System.Globalization.DateTimeStyles.RoundtripKind, out var ca) ? ca : (DateTime?)null);
@@ -2432,7 +3416,7 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
         var attributes = new List<AttributeGoo>();
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
-        if (DA.GetData(4, ref parent)) model.Parent = parent;
+        if (DA.GetData(4, ref parent)) model.Parent = string.IsNullOrEmpty(parent) ? null : new FolderId { Guid = parent };
         if (DA.GetData(5, ref description)) model.Description = description;
         if (DA.GetDataList(6, attributes)) model.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
         if (DA.GetData(7, ref createdAt)) model.CreatedAt = createdAt;
@@ -3676,7 +4660,7 @@ public class ModelDiffComponent : DiffComponent<ModelDiffParam, ModelDiffGoo, Mo
         if (model.ShouldSerializeFile()) DA.SetData(4, model.File is not null ? new FileIdGoo(model.File.DeepClone()) : null);
         if (model.ShouldSerializeDescription()) DA.SetData(5, model.Description);
         if (model.ShouldSerializeTags()) DA.SetDataList(6, model.Tags?.Select(t => new TagIdGoo(t.DeepClone())).ToList());
-        if (model.ShouldSerializeAttributes()) DA.SetDataList(7, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(7, model.Attributes?.Added?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
     }
 }
 
@@ -4140,7 +5124,7 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
         if (model.ShouldSerializePoint()) DA.SetData(8, model.Point is not null ? model.Point.Convert() : Point3d.Origin);
         if (model.ShouldSerializeDirection()) DA.SetData(9, model.Direction is not null ? model.Direction.Convert() : Vector3d.YAxis);
         if (model.ShouldSerializeProps()) DA.SetDataList(10, model.Props?.Select(p => new PropGoo(p.DeepClone())).ToList());
-        if (model.ShouldSerializeAttributes()) DA.SetDataList(11, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(11, model.Attributes?.Added?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
     }
 }
 
@@ -5002,7 +5986,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
         if (model.ShouldSerializeModels()) DA.SetData(15, model.Models is not null ? new ModelsDiffGoo(model.Models.DeepClone()) : null);
         if (model.ShouldSerializeConnectors()) DA.SetData(16, model.Connectors is not null ? new ConnectorsDiffGoo(model.Connectors.DeepClone()) : null);
         if (model.ShouldSerializeAuthors()) DA.SetDataList(17, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
-        if (model.ShouldSerializeAttributes()) DA.SetDataList(18, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(18, model.Attributes?.Added?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
         if (model.ShouldSerializeConcepts()) DA.SetDataList(19, model.Concepts?.Select(c => new ConceptIdGoo(c.DeepClone())).ToList());
         if (model.ShouldSerializeCreatedAt()) DA.SetData(20, model.CreatedAt);
         if (model.ShouldSerializeUpdatedAt()) DA.SetData(21, model.UpdatedAt);
@@ -5241,10 +6225,10 @@ public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerG
 // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖group](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Group)
 // Implementations MUST group pieces by name within a design.
 
-public class GroupGoo : Goo<Group>
+public class GroupGoo : Goo<SemioGroup>
 {
     public GroupGoo() { }
-    public GroupGoo(Group value) : base(value) { }
+    public GroupGoo(SemioGroup value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -5274,7 +6258,7 @@ public class GroupGoo : Goo<Group>
     }
 }
 
-public class GroupParam : Param<GroupGoo, Group>
+public class GroupParam : Param<GroupGoo, SemioGroup>
 {
     protected override string ModelName => "Group";
     protected override string ModelNickname => "Grp";
@@ -5283,7 +6267,7 @@ public class GroupParam : Param<GroupGoo, Group>
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
-public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, Group>
+public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGroup>
 {
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override string ModelName => "Group";
@@ -5739,7 +6723,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
         if (model.ShouldSerializeIsLocked()) DA.SetData(12, model.IsLocked);
         if (model.ShouldSerializeColor()) DA.SetData(13, model.Color);
         if (model.ShouldSerializeProps()) DA.SetDataList(14, model.Props?.Select(p => new PropGoo(p.DeepClone())).ToList());
-        if (model.ShouldSerializeAttributes()) DA.SetDataList(15, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(15, model.Attributes?.Added?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
     }
 }
 
@@ -6419,7 +7403,7 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
         if (model.ShouldSerializeTilt()) DA.SetData(10, model.Tilt);
         if (model.ShouldSerializeU()) DA.SetData(11, model.U);
         if (model.ShouldSerializeV()) DA.SetData(12, model.V);
-        if (model.ShouldSerializeAttributes()) DA.SetDataList(13, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(13, model.Attributes?.Added?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
     }
 }
 
@@ -6846,7 +7830,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
         if (DA.GetData(14, ref canScale)) model.CanScale = canScale;
         if (DA.GetData(15, ref canMirror)) model.CanMirror = canMirror;
         if (DA.GetDataList(16, layers)) model.Layers = layers.Select(l => l.Value.DeepClone()).ToList();
-        if (DA.GetData(17, ref activeLayer)) model.ActiveLayer = activeLayer;
+        if (DA.GetData(17, ref activeLayer)) model.ActiveLayer = string.IsNullOrEmpty(activeLayer) ? null : new LayerId { Guid = activeLayer };
         if (DA.GetDataList(18, pieces)) model.Pieces = pieces.Select(p => p.Value.DeepClone()).ToList();
         if (DA.GetDataList(19, groups)) model.Groups = groups.Select(g => g.Value.DeepClone()).ToList();
         if (DA.GetDataList(20, connections)) model.Connections = connections.Select(c => c.Value.DeepClone()).ToList();
@@ -7120,7 +8104,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
         if (DA.GetData(11, ref unit)) model.Unit = unit;
         if (DA.GetData(12, ref canScale)) model.CanScale = canScale;
         if (DA.GetData(13, ref canMirror)) model.CanMirror = canMirror;
-        if (DA.GetData(14, ref activeLayer)) model.ActiveLayer = activeLayer;
+        if (DA.GetData(14, ref activeLayer)) model.ActiveLayer = string.IsNullOrEmpty(activeLayer) ? null : new LayerId { Guid = activeLayer };
         if (DA.GetData(15, ref pieces)) model.Pieces = pieces.Value.DeepClone();
         if (DA.GetData(16, ref connections)) model.Connections = connections.Value.DeepClone();
         if (DA.GetDataList(17, props)) model.Props = props.Select(p => p.Value.DeepClone()).ToList();
@@ -7157,7 +8141,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
         if (model.ShouldSerializeGroups()) DA.SetDataList(20, model.Groups?.Select(g => new GroupGoo(g.DeepClone())).ToList());
         if (model.ShouldSerializeAuthors()) DA.SetDataList(21, model.Authors?.Select(a => new AuthorIdGoo(a.DeepClone())).ToList());
         if (model.ShouldSerializeConcepts()) DA.SetDataList(22, model.Concepts?.Select(c => new ConceptIdGoo(c.DeepClone())).ToList());
-        if (model.ShouldSerializeAttributes()) DA.SetDataList(23, model.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
+        if (model.ShouldSerializeAttributes()) DA.SetDataList(23, model.Attributes?.Added?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
         if (model.ShouldSerializeCreatedAt()) DA.SetData(24, model.CreatedAt);
         if (model.ShouldSerializeUpdatedAt()) DA.SetData(25, model.UpdatedAt);
     }
@@ -7925,6 +8909,459 @@ public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, 
 
 #endregion 🔖Kit
 
+#region 🔖Change
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖change](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Change)
+// Implementations MUST expose params and passthrough components for semio change entities.
+
+public class AuthorDiffGoo : DiffGoo<AuthorDiff> { public AuthorDiffGoo() { } public AuthorDiffGoo(AuthorDiff value) : base(value) { } }
+public class AuthorDiffParam : DiffParam<AuthorDiffGoo, AuthorDiff>
+{
+    protected override string ModelName => "AuthorDiff";
+    protected override string ModelNickname => "AuD";
+    protected override string ModelDescription => "Author diff";
+    protected override string IconResourceName => "author_24x24";
+    public override Guid ComponentGuid => new("8F239855-4077-4672-9C62-2162F6B9A301");
+}
+
+public class BenchmarkDiffGoo : DiffGoo<BenchmarkDiff> { public BenchmarkDiffGoo() { } public BenchmarkDiffGoo(BenchmarkDiff value) : base(value) { } }
+public class BenchmarkDiffParam : DiffParam<BenchmarkDiffGoo, BenchmarkDiff>
+{
+    protected override string ModelName => "BenchmarkDiff";
+    protected override string ModelNickname => "BmD";
+    protected override string ModelDescription => "Benchmark diff";
+    protected override string IconResourceName => "benchmark_24x24";
+    public override Guid ComponentGuid => new("D02285B2-53A9-45EA-8F38-FCF0D6A2A301");
+}
+
+public class PortDiffGoo : DiffGoo<PortDiff> { public PortDiffGoo() { } public PortDiffGoo(PortDiff value) : base(value) { } }
+public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
+{
+    protected override string ModelName => "PortDiff";
+    protected override string ModelNickname => "PoD";
+    protected override string ModelDescription => "Port diff";
+    protected override string IconResourceName => "port_24x24";
+    public override Guid ComponentGuid => new("A5D2AAE4-B8C6-41FD-A64F-1D4A0B27A301");
+}
+
+public class PropDiffGoo : DiffGoo<PropDiff> { public PropDiffGoo() { } public PropDiffGoo(PropDiff value) : base(value) { } }
+public class PropDiffParam : DiffParam<PropDiffGoo, PropDiff>
+{
+    protected override string ModelName => "PropDiff";
+    protected override string ModelNickname => "PrD";
+    protected override string ModelDescription => "Prop diff";
+    protected override string IconResourceName => "prop_24x24";
+    public override Guid ComponentGuid => new("60B4A67D-2C6D-4730-A739-5EA66123A301");
+}
+
+public class TagDiffGoo : DiffGoo<TagDiff> { public TagDiffGoo() { } public TagDiffGoo(TagDiff value) : base(value) { } }
+public class TagDiffParam : DiffParam<TagDiffGoo, TagDiff>
+{
+    protected override string ModelName => "TagDiff";
+    protected override string ModelNickname => "TgD";
+    protected override string ModelDescription => "Tag diff";
+    protected override string IconResourceName => "tag_24x24";
+    public override Guid ComponentGuid => new("50E1C62B-81EF-45F3-8462-57D7C68FA301");
+}
+
+public class ConceptDiffGoo : DiffGoo<ConceptDiff> { public ConceptDiffGoo() { } public ConceptDiffGoo(ConceptDiff value) : base(value) { } }
+public class ConceptDiffParam : DiffParam<ConceptDiffGoo, ConceptDiff>
+{
+    protected override string ModelName => "ConceptDiff";
+    protected override string ModelNickname => "CnD";
+    protected override string ModelDescription => "Concept diff";
+    protected override string IconResourceName => "concept_24x24";
+    public override Guid ComponentGuid => new("8DCE6E2B-4EAD-421C-B7D2-E9F5D164A301");
+}
+
+public class LayerDiffGoo : DiffGoo<LayerDiff> { public LayerDiffGoo() { } public LayerDiffGoo(LayerDiff value) : base(value) { } }
+public class LayerDiffParam : DiffParam<LayerDiffGoo, LayerDiff>
+{
+    protected override string ModelName => "LayerDiff";
+    protected override string ModelNickname => "LyD";
+    protected override string ModelDescription => "Layer diff";
+    protected override string IconResourceName => "layer_24x24";
+    public override Guid ComponentGuid => new("4C44B36F-2854-4B53-8E34-1AD0E8DEA301");
+}
+
+public class GroupDiffGoo : DiffGoo<GroupDiff> { public GroupDiffGoo() { } public GroupDiffGoo(GroupDiff value) : base(value) { } }
+public class GroupDiffParam : DiffParam<GroupDiffGoo, GroupDiff>
+{
+    protected override string ModelName => "GroupDiff";
+    protected override string ModelNickname => "GrD";
+    protected override string ModelDescription => "Group diff";
+    protected override string IconResourceName => "group_24x24";
+    public override Guid ComponentGuid => new("810B8571-BC34-485C-BAD7-C5FAEF8CA301");
+}
+
+public class StatDiffGoo : DiffGoo<StatDiff> { public StatDiffGoo() { } public StatDiffGoo(StatDiff value) : base(value) { } }
+public class StatDiffParam : DiffParam<StatDiffGoo, StatDiff>
+{
+    protected override string ModelName => "StatDiff";
+    protected override string ModelNickname => "StD";
+    protected override string ModelDescription => "Stat diff";
+    protected override string IconResourceName => "stat_24x24";
+    public override Guid ComponentGuid => new("C9A3F76F-30A9-4EF1-A92B-2A83AA4CA301");
+}
+
+public class AttributeChangeGoo : ChangeGoo<AttributeChange> { public AttributeChangeGoo() { } public AttributeChangeGoo(AttributeChange value) : base(value) { } }
+public class AttributeChangeParam : ChangeParam<AttributeChangeGoo, AttributeChange>
+{
+    protected override string ModelName => "AttributeChange";
+    protected override string ModelNickname => "AtC";
+    protected override string ModelDescription => "Attribute change";
+    protected override string IconResourceName => "attribute_diff_24x24";
+    public override Guid ComponentGuid => new("0DA5D764-5322-47A2-A0BC-551C2BEACB01");
+}
+public class AttributeChangeComponent : ChangeComponent<AttributeParam, AttributeGoo, Attribute, AttributeDiffParam, AttributeDiffGoo, AttributeDiff, AttributeChangeParam, AttributeChangeGoo, AttributeChange>
+{
+    public override Guid ComponentGuid => new("0DA5D764-5322-47A2-A0BC-551C2BEACB02");
+    protected override string EntityName => "Attribute";
+    protected override string EntityNickname => "At";
+    protected override string IconResourceName => "attribute_diff_24x24";
+}
+
+public class AuthorChangeGoo : ChangeGoo<AuthorChange> { public AuthorChangeGoo() { } public AuthorChangeGoo(AuthorChange value) : base(value) { } }
+public class AuthorChangeParam : ChangeParam<AuthorChangeGoo, AuthorChange>
+{
+    protected override string ModelName => "AuthorChange";
+    protected override string ModelNickname => "AuC";
+    protected override string ModelDescription => "Author change";
+    protected override string IconResourceName => "author_24x24";
+    public override Guid ComponentGuid => new("3E6E5C8F-6D0D-4CA6-A06A-6F2CCB8DF101");
+}
+public class AuthorChangeComponent : ChangeComponent<AuthorParam, AuthorGoo, Author, AuthorDiffParam, AuthorDiffGoo, AuthorDiff, AuthorChangeParam, AuthorChangeGoo, AuthorChange>
+{
+    public override Guid ComponentGuid => new("3E6E5C8F-6D0D-4CA6-A06A-6F2CCB8DF102");
+    protected override string EntityName => "Author";
+    protected override string EntityNickname => "Au";
+    protected override string IconResourceName => "author_24x24";
+}
+
+public class FileChangeGoo : ChangeGoo<FileChange> { public FileChangeGoo() { } public FileChangeGoo(FileChange value) : base(value) { } }
+public class FileChangeParam : ChangeParam<FileChangeGoo, FileChange>
+{
+    protected override string ModelName => "FileChange";
+    protected override string ModelNickname => "FlC";
+    protected override string ModelDescription => "File change";
+    protected override string IconResourceName => "file_diff_24x24";
+    public override Guid ComponentGuid => new("8F2B2F13-64C0-4A7D-9F5E-9DBA5E2F4101");
+}
+public class FileChangeComponent : ChangeComponent<FileParam, FileGoo, File, FileDiffParam, FileDiffGoo, FileDiff, FileChangeParam, FileChangeGoo, FileChange>
+{
+    public override Guid ComponentGuid => new("8F2B2F13-64C0-4A7D-9F5E-9DBA5E2F4102");
+    protected override string EntityName => "File";
+    protected override string EntityNickname => "Fl";
+    protected override string IconResourceName => "file_diff_24x24";
+}
+
+public class FolderChangeGoo : ChangeGoo<FolderChange> { public FolderChangeGoo() { } public FolderChangeGoo(FolderChange value) : base(value) { } }
+public class FolderChangeParam : ChangeParam<FolderChangeGoo, FolderChange>
+{
+    protected override string ModelName => "FolderChange";
+    protected override string ModelNickname => "FoC";
+    protected override string ModelDescription => "Folder change";
+    protected override string IconResourceName => "folder_diff_24x24";
+    public override Guid ComponentGuid => new("EEA0E8CF-178F-42CD-8ECA-5E3365B82101");
+}
+public class FolderChangeComponent : ChangeComponent<FolderParam, FolderGoo, Folder, FolderDiffParam, FolderDiffGoo, FolderDiff, FolderChangeParam, FolderChangeGoo, FolderChange>
+{
+    public override Guid ComponentGuid => new("EEA0E8CF-178F-42CD-8ECA-5E3365B82102");
+    protected override string EntityName => "Folder";
+    protected override string EntityNickname => "Fo";
+    protected override string IconResourceName => "folder_diff_24x24";
+}
+
+public class BenchmarkChangeGoo : ChangeGoo<BenchmarkChange> { public BenchmarkChangeGoo() { } public BenchmarkChangeGoo(BenchmarkChange value) : base(value) { } }
+public class BenchmarkChangeParam : ChangeParam<BenchmarkChangeGoo, BenchmarkChange>
+{
+    protected override string ModelName => "BenchmarkChange";
+    protected override string ModelNickname => "BmC";
+    protected override string ModelDescription => "Benchmark change";
+    protected override string IconResourceName => "benchmark_24x24";
+    public override Guid ComponentGuid => new("07D84C07-EE9C-4E70-B28D-D089D58D5101");
+}
+public class BenchmarkChangeComponent : ChangeComponent<BenchmarkParam, BenchmarkGoo, Benchmark, BenchmarkDiffParam, BenchmarkDiffGoo, BenchmarkDiff, BenchmarkChangeParam, BenchmarkChangeGoo, BenchmarkChange>
+{
+    public override Guid ComponentGuid => new("07D84C07-EE9C-4E70-B28D-D089D58D5102");
+    protected override string EntityName => "Benchmark";
+    protected override string EntityNickname => "Bm";
+    protected override string IconResourceName => "benchmark_24x24";
+}
+
+public class QualityChangeGoo : ChangeGoo<QualityChange> { public QualityChangeGoo() { } public QualityChangeGoo(QualityChange value) : base(value) { } }
+public class QualityChangeParam : ChangeParam<QualityChangeGoo, QualityChange>
+{
+    protected override string ModelName => "QualityChange";
+    protected override string ModelNickname => "QlC";
+    protected override string ModelDescription => "Quality change";
+    protected override string IconResourceName => "quality_diff_24x24";
+    public override Guid ComponentGuid => new("B5F78DDB-53A8-4A29-97A3-76F8D46AC101");
+}
+public class QualityChangeComponent : ChangeComponent<QualityParam, QualityGoo, Quality, QualityDiffParam, QualityDiffGoo, QualityDiff, QualityChangeParam, QualityChangeGoo, QualityChange>
+{
+    public override Guid ComponentGuid => new("B5F78DDB-53A8-4A29-97A3-76F8D46AC102");
+    protected override string EntityName => "Quality";
+    protected override string EntityNickname => "Ql";
+    protected override string IconResourceName => "quality_diff_24x24";
+}
+
+public class PortChangeGoo : ChangeGoo<PortChange> { public PortChangeGoo() { } public PortChangeGoo(PortChange value) : base(value) { } }
+public class PortChangeParam : ChangeParam<PortChangeGoo, PortChange>
+{
+    protected override string ModelName => "PortChange";
+    protected override string ModelNickname => "PoC";
+    protected override string ModelDescription => "Port change";
+    protected override string IconResourceName => "port_24x24";
+    public override Guid ComponentGuid => new("D7FCA4AA-7099-4D0F-B66B-177A41F4E101");
+}
+public class PortChangeComponent : ChangeComponent<PortParam, PortGoo, Port, PortDiffParam, PortDiffGoo, PortDiff, PortChangeParam, PortChangeGoo, PortChange>
+{
+    public override Guid ComponentGuid => new("D7FCA4AA-7099-4D0F-B66B-177A41F4E102");
+    protected override string EntityName => "Port";
+    protected override string EntityNickname => "Po";
+    protected override string IconResourceName => "port_24x24";
+}
+
+public class PropChangeGoo : ChangeGoo<PropChange> { public PropChangeGoo() { } public PropChangeGoo(PropChange value) : base(value) { } }
+public class PropChangeParam : ChangeParam<PropChangeGoo, PropChange>
+{
+    protected override string ModelName => "PropChange";
+    protected override string ModelNickname => "PrC";
+    protected override string ModelDescription => "Prop change";
+    protected override string IconResourceName => "prop_24x24";
+    public override Guid ComponentGuid => new("7C6D159C-5C29-4A15-A9D0-4DB9E66D7101");
+}
+public class PropChangeComponent : ChangeComponent<PropParam, PropGoo, Prop, PropDiffParam, PropDiffGoo, PropDiff, PropChangeParam, PropChangeGoo, PropChange>
+{
+    public override Guid ComponentGuid => new("7C6D159C-5C29-4A15-A9D0-4DB9E66D7102");
+    protected override string EntityName => "Prop";
+    protected override string EntityNickname => "Pr";
+    protected override string IconResourceName => "prop_24x24";
+}
+
+public class TagChangeGoo : ChangeGoo<TagChange> { public TagChangeGoo() { } public TagChangeGoo(TagChange value) : base(value) { } }
+public class TagChangeParam : ChangeParam<TagChangeGoo, TagChange>
+{
+    protected override string ModelName => "TagChange";
+    protected override string ModelNickname => "TgC";
+    protected override string ModelDescription => "Tag change";
+    protected override string IconResourceName => "tag_24x24";
+    public override Guid ComponentGuid => new("17C0BE7A-3D72-4933-A8A6-B0D0B7AA8101");
+}
+public class TagChangeComponent : ChangeComponent<TagParam, TagGoo, Tag, TagDiffParam, TagDiffGoo, TagDiff, TagChangeParam, TagChangeGoo, TagChange>
+{
+    public override Guid ComponentGuid => new("17C0BE7A-3D72-4933-A8A6-B0D0B7AA8102");
+    protected override string EntityName => "Tag";
+    protected override string EntityNickname => "Tg";
+    protected override string IconResourceName => "tag_24x24";
+}
+
+public class ConceptChangeGoo : ChangeGoo<ConceptChange> { public ConceptChangeGoo() { } public ConceptChangeGoo(ConceptChange value) : base(value) { } }
+public class ConceptChangeParam : ChangeParam<ConceptChangeGoo, ConceptChange>
+{
+    protected override string ModelName => "ConceptChange";
+    protected override string ModelNickname => "CnC";
+    protected override string ModelDescription => "Concept change";
+    protected override string IconResourceName => "concept_24x24";
+    public override Guid ComponentGuid => new("CAD88735-2F40-46CB-928B-369D84928101");
+}
+public class ConceptChangeComponent : ChangeComponent<ConceptParam, ConceptGoo, Concept, ConceptDiffParam, ConceptDiffGoo, ConceptDiff, ConceptChangeParam, ConceptChangeGoo, ConceptChange>
+{
+    public override Guid ComponentGuid => new("CAD88735-2F40-46CB-928B-369D84928102");
+    protected override string EntityName => "Concept";
+    protected override string EntityNickname => "Cn";
+    protected override string IconResourceName => "concept_24x24";
+}
+
+public class ModelChangeGoo : ChangeGoo<ModelChange> { public ModelChangeGoo() { } public ModelChangeGoo(ModelChange value) : base(value) { } }
+public class ModelChangeParam : ChangeParam<ModelChangeGoo, ModelChange>
+{
+    protected override string ModelName => "ModelChange";
+    protected override string ModelNickname => "MoC";
+    protected override string ModelDescription => "Model change";
+    protected override string IconResourceName => "model_diff_24x24";
+    public override Guid ComponentGuid => new("71A8A53D-C8B8-43E4-918D-1D7DD7D59101");
+}
+public class ModelChangeComponent : ChangeComponent<ModelParam, ModelGoo, Model, ModelDiffParam, ModelDiffGoo, ModelDiff, ModelChangeParam, ModelChangeGoo, ModelChange>
+{
+    public override Guid ComponentGuid => new("71A8A53D-C8B8-43E4-918D-1D7DD7D59102");
+    protected override string EntityName => "Model";
+    protected override string EntityNickname => "Mo";
+    protected override string IconResourceName => "model_diff_24x24";
+}
+
+public class ConnectorChangeGoo : ChangeGoo<ConnectorChange> { public ConnectorChangeGoo() { } public ConnectorChangeGoo(ConnectorChange value) : base(value) { } }
+public class ConnectorChangeParam : ChangeParam<ConnectorChangeGoo, ConnectorChange>
+{
+    protected override string ModelName => "ConnectorChange";
+    protected override string ModelNickname => "CoC";
+    protected override string ModelDescription => "Connector change";
+    protected override string IconResourceName => "connector_diff_24x24";
+    public override Guid ComponentGuid => new("7A10C866-F666-497D-8FD7-1D1AD39CA101");
+}
+public class ConnectorChangeComponent : ChangeComponent<ConnectorParam, ConnectorGoo, Connector, ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff, ConnectorChangeParam, ConnectorChangeGoo, ConnectorChange>
+{
+    public override Guid ComponentGuid => new("7A10C866-F666-497D-8FD7-1D1AD39CA102");
+    protected override string EntityName => "Connector";
+    protected override string EntityNickname => "Co";
+    protected override string IconResourceName => "connector_diff_24x24";
+}
+
+public class TypeChangeGoo : ChangeGoo<TypeChange> { public TypeChangeGoo() { } public TypeChangeGoo(TypeChange value) : base(value) { } }
+public class TypeChangeParam : ChangeParam<TypeChangeGoo, TypeChange>
+{
+    protected override string ModelName => "TypeChange";
+    protected override string ModelNickname => "TyC";
+    protected override string ModelDescription => "Type change";
+    protected override string IconResourceName => "type_diff_24x24";
+    public override Guid ComponentGuid => new("A305B34B-8153-467E-A9F8-5FA158CA9101");
+}
+public class TypeChangeComponent : ChangeComponent<TypeParam, TypeGoo, Type, TypeDiffParam, TypeDiffGoo, TypeDiff, TypeChangeParam, TypeChangeGoo, TypeChange>
+{
+    public override Guid ComponentGuid => new("A305B34B-8153-467E-A9F8-5FA158CA9102");
+    protected override string EntityName => "Type";
+    protected override string EntityNickname => "Ty";
+    protected override string IconResourceName => "type_diff_24x24";
+}
+
+public class LayerChangeGoo : ChangeGoo<LayerChange> { public LayerChangeGoo() { } public LayerChangeGoo(LayerChange value) : base(value) { } }
+public class LayerChangeParam : ChangeParam<LayerChangeGoo, LayerChange>
+{
+    protected override string ModelName => "LayerChange";
+    protected override string ModelNickname => "LyC";
+    protected override string ModelDescription => "Layer change";
+    protected override string IconResourceName => "layer_24x24";
+    public override Guid ComponentGuid => new("A61BEAB7-92A4-4862-9F4A-BBB80CD9A101");
+}
+public class LayerChangeComponent : ChangeComponent<LayerParam, LayerGoo, Layer, LayerDiffParam, LayerDiffGoo, LayerDiff, LayerChangeParam, LayerChangeGoo, LayerChange>
+{
+    public override Guid ComponentGuid => new("A61BEAB7-92A4-4862-9F4A-BBB80CD9A102");
+    protected override string EntityName => "Layer";
+    protected override string EntityNickname => "Ly";
+    protected override string IconResourceName => "layer_24x24";
+}
+
+public class PieceChangeGoo : ChangeGoo<PieceChange> { public PieceChangeGoo() { } public PieceChangeGoo(PieceChange value) : base(value) { } }
+public class PieceChangeParam : ChangeParam<PieceChangeGoo, PieceChange>
+{
+    protected override string ModelName => "PieceChange";
+    protected override string ModelNickname => "PcC";
+    protected override string ModelDescription => "Piece change";
+    protected override string IconResourceName => "piece_diff_24x24";
+    public override Guid ComponentGuid => new("836AAB61-44B5-4881-8C66-EFF8DBD4B101");
+}
+public class PieceChangeComponent : ChangeComponent<PieceParam, PieceGoo, Piece, PieceDiffParam, PieceDiffGoo, PieceDiff, PieceChangeParam, PieceChangeGoo, PieceChange>
+{
+    public override Guid ComponentGuid => new("836AAB61-44B5-4881-8C66-EFF8DBD4B102");
+    protected override string EntityName => "Piece";
+    protected override string EntityNickname => "Pc";
+    protected override string IconResourceName => "piece_diff_24x24";
+}
+
+public class GroupChangeGoo : ChangeGoo<GroupChange> { public GroupChangeGoo() { } public GroupChangeGoo(GroupChange value) : base(value) { } }
+public class GroupChangeParam : ChangeParam<GroupChangeGoo, GroupChange>
+{
+    protected override string ModelName => "GroupChange";
+    protected override string ModelNickname => "GrC";
+    protected override string ModelDescription => "Group change";
+    protected override string IconResourceName => "group_24x24";
+    public override Guid ComponentGuid => new("9FE9F093-3EFF-47CE-BF1D-31E5AFD5C101");
+}
+public class GroupChangeComponent : ChangeComponent<GroupParam, GroupGoo, SemioGroup, GroupDiffParam, GroupDiffGoo, GroupDiff, GroupChangeParam, GroupChangeGoo, GroupChange>
+{
+    public override Guid ComponentGuid => new("9FE9F093-3EFF-47CE-BF1D-31E5AFD5C102");
+    protected override string EntityName => "Group";
+    protected override string EntityNickname => "Gr";
+    protected override string IconResourceName => "group_24x24";
+}
+
+public class SideChangeGoo : ChangeGoo<SideChange> { public SideChangeGoo() { } public SideChangeGoo(SideChange value) : base(value) { } }
+public class SideChangeParam : ChangeParam<SideChangeGoo, SideChange>
+{
+    protected override string ModelName => "SideChange";
+    protected override string ModelNickname => "SdC";
+    protected override string ModelDescription => "Side change";
+    protected override string IconResourceName => "side_diff_24x24";
+    public override Guid ComponentGuid => new("2B8B5287-8F3D-4CF9-BEEA-DF04E778D101");
+}
+public class SideChangeComponent : ChangeComponent<SideParam, SideGoo, Side, SideDiffParam, SideDiffGoo, SideDiff, SideChangeParam, SideChangeGoo, SideChange>
+{
+    public override Guid ComponentGuid => new("2B8B5287-8F3D-4CF9-BEEA-DF04E778D102");
+    protected override string EntityName => "Side";
+    protected override string EntityNickname => "Sd";
+    protected override string IconResourceName => "side_diff_24x24";
+}
+
+public class ConnectionChangeGoo : ChangeGoo<ConnectionChange> { public ConnectionChangeGoo() { } public ConnectionChangeGoo(ConnectionChange value) : base(value) { } }
+public class ConnectionChangeParam : ChangeParam<ConnectionChangeGoo, ConnectionChange>
+{
+    protected override string ModelName => "ConnectionChange";
+    protected override string ModelNickname => "CnC";
+    protected override string ModelDescription => "Connection change";
+    protected override string IconResourceName => "connection_diff_24x24";
+    public override Guid ComponentGuid => new("59352953-A18D-4339-A81B-125A15C3E101");
+}
+public class ConnectionChangeComponent : ChangeComponent<ConnectionParam, ConnectionGoo, Connection, ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff, ConnectionChangeParam, ConnectionChangeGoo, ConnectionChange>
+{
+    public override Guid ComponentGuid => new("59352953-A18D-4339-A81B-125A15C3E102");
+    protected override string EntityName => "Connection";
+    protected override string EntityNickname => "Cn";
+    protected override string IconResourceName => "connection_diff_24x24";
+}
+
+public class StatChangeGoo : ChangeGoo<StatChange> { public StatChangeGoo() { } public StatChangeGoo(StatChange value) : base(value) { } }
+public class StatChangeParam : ChangeParam<StatChangeGoo, StatChange>
+{
+    protected override string ModelName => "StatChange";
+    protected override string ModelNickname => "StC";
+    protected override string ModelDescription => "Stat change";
+    protected override string IconResourceName => "stat_24x24";
+    public override Guid ComponentGuid => new("D9190DF2-A738-4FE2-9244-410C70A3F101");
+}
+public class StatChangeComponent : ChangeComponent<StatParam, StatGoo, Stat, StatDiffParam, StatDiffGoo, StatDiff, StatChangeParam, StatChangeGoo, StatChange>
+{
+    public override Guid ComponentGuid => new("D9190DF2-A738-4FE2-9244-410C70A3F102");
+    protected override string EntityName => "Stat";
+    protected override string EntityNickname => "St";
+    protected override string IconResourceName => "stat_24x24";
+}
+
+public class DesignChangeGoo : ChangeGoo<DesignChange> { public DesignChangeGoo() { } public DesignChangeGoo(DesignChange value) : base(value) { } }
+public class DesignChangeParam : ChangeParam<DesignChangeGoo, DesignChange>
+{
+    protected override string ModelName => "DesignChange";
+    protected override string ModelNickname => "DeC";
+    protected override string ModelDescription => "Design change";
+    protected override string IconResourceName => "design_diff_24x24";
+    public override Guid ComponentGuid => new("4F16F428-3E34-4D2D-B067-27A20A06A101");
+}
+public class DesignChangeComponent : ChangeComponent<DesignParam, DesignGoo, Design, DesignDiffParam, DesignDiffGoo, DesignDiff, DesignChangeParam, DesignChangeGoo, DesignChange>
+{
+    public override Guid ComponentGuid => new("4F16F428-3E34-4D2D-B067-27A20A06A102");
+    protected override string EntityName => "Design";
+    protected override string EntityNickname => "De";
+    protected override string IconResourceName => "design_diff_24x24";
+}
+
+public class KitChangeGoo : ChangeGoo<KitChange> { public KitChangeGoo() { } public KitChangeGoo(KitChange value) : base(value) { } }
+public class KitChangeParam : ChangeParam<KitChangeGoo, KitChange>
+{
+    protected override string ModelName => "KitChange";
+    protected override string ModelNickname => "KtC";
+    protected override string ModelDescription => "Kit change";
+    protected override string IconResourceName => "kitdiff_24x24";
+    public override Guid ComponentGuid => new("4B4F48E0-28BA-476A-B7A5-BC325F3CB101");
+}
+public class KitChangeComponent : ChangeComponent<KitParam, KitGoo, Kit, KitDiffParam, KitDiffGoo, KitDiff, KitChangeParam, KitChangeGoo, KitChange>
+{
+    public override Guid ComponentGuid => new("4B4F48E0-28BA-476A-B7A5-BC325F3CB102");
+    protected override string EntityName => "Kit";
+    protected override string EntityNickname => "Kt";
+    protected override string IconResourceName => "kitdiff_24x24";
+}
+
+#endregion 🔖Change
+
 #region 🔖Scripting
 // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖scripting](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Scripting)
 // Callers MUST use these helpers for C# script component integration.
@@ -8013,29 +9450,34 @@ public class DecodeTextComponent : ScriptingComponent
 
 public class ImportModelComponent : ScriptingComponent
 {
-    public ImportModelComponent() : base("Import Model", "ImpModel", "Imports a Rhino model object from a file blob string.") { }
+    public ImportModelComponent() : base("Import Model", "ImpModel", "Imports a Rhino model object from a semio file.") { }
     public override Guid ComponentGuid => new("0E2A82A4-494E-4D38-9E32-FD26A1B6EC6D");
     protected override Bitmap Icon => Resources.model_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("File Blob", "Bl", "Rhino file blob string (base64 or data URI).", GH_ParamAccess.item);
+        pManager.AddParameter(new ModelParam(), "Model", "Md", "Model consumed by Import Model for unit-aware import scaling.", GH_ParamAccess.item);
+        pManager.AddParameter(new FileParam(), "File", "Fi", "Semio file consumed by Import Model that contains a Rhino file blob.", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddGenericParameter("Rhino ModelObject", "Mo", "Imported Rhino model object.", GH_ParamAccess.item);
+        pManager.AddParameter(new Param_ModelObject(), "Rhino ModelObject", "Mo*", "Imported Rhino model objects produced by Import Model.", GH_ParamAccess.list);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var fileBlob = "";
-        if (!DA.GetData(0, ref fileBlob)) return;
+        ModelGoo modelGoo = null;
+        if (!DA.GetData(0, ref modelGoo) || modelGoo?.Value is null) return;
+
+        FileGoo fileGoo = null;
+        if (!DA.GetData(1, ref fileGoo) || fileGoo?.Value is null) return;
 
         try
         {
-            DA.SetData(0, Utility.ImportRhinoModelContextFromBlob(fileBlob));
+            var importedRhinoObjects = Utility.ImportRhinoDocumentObjectsFromSemioFile(fileGoo.Value, modelGoo.Value);
+            DA.SetDataList(0, importedRhinoObjects.Select(importedRhinoObject => new RhinoModelObjectData(importedRhinoObject)));
         }
         catch (Exception exception)
         {
@@ -8046,35 +9488,178 @@ public class ImportModelComponent : ScriptingComponent
 
 public class ModelObjectToGroupComponent : ScriptingComponent
 {
-    public ModelObjectToGroupComponent() : base("ModelObject To Group", "Mo→Gr", "Translates an imported Rhino model object into a single semio group with recursive named layer groups.") { }
+    public ModelObjectToGroupComponent() : base("ModelObject To Group", "Mo→Gr", "ModelObject To Group translates imported Rhino model objects into a single native Rhino/Grasshopper group.") { }
     public override Guid ComponentGuid => new("9C74A31E-3B07-48EC-A6C9-B16A3F1EA9DD");
     protected override Bitmap Icon => Resources.group_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddGenericParameter("Rhino ModelObject", "Mo", "Imported Rhino model object context.", GH_ParamAccess.item);
+        pManager.AddParameter(new Param_ModelObject(), "Rhino ModelObject", "Mo*", "Rhino model objects consumed by ModelObject To Group.", GH_ParamAccess.list);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new GroupParam(), "Group", "Gr", "Single translated semio group.", GH_ParamAccess.item);
+        pManager.AddParameter(new Param_Group(), "Group", "Gr", "Single native Rhino/Grasshopper group produced by ModelObject To Group.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        object modelObjectInput = null;
-        if (!DA.GetData(0, ref modelObjectInput)) return;
+        var modelObjectInputs = new List<object>();
+        if (!DA.GetDataList(0, modelObjectInputs)) return;
 
-        if (modelObjectInput is not Utility.RhinoModelObject rhinoModelObject)
+        var rhinoModelObjects = new List<Utility.RhinoModelObject>();
+        foreach (var modelObjectInput in modelObjectInputs)
         {
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Input must be the Rhino ModelObject output of Import Model.");
-            return;
+            if (!Utility.TryResolveRhinoModelContext(modelObjectInput, out var rhinoModelObject))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Input must be the Rhino ModelObject output of Import Model.");
+                return;
+            }
+            rhinoModelObjects.Add(rhinoModelObject);
         }
 
         try
         {
-            DA.SetData(0, new GroupGoo(Utility.TranslateRhinoModelObjectToSingleGroup(rhinoModelObject)));
+            var nativeGroupData = BuildNativeRhinoGeometryGroup(rhinoModelObjects);
+            DA.SetData(0, nativeGroupData);
+        }
+        catch (Exception exception)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, exception.Message);
+        }
+    }
+
+    private sealed class LayerGroupNode
+    {
+        public LayerGroupNode(string name) => Name = name;
+
+        public string Name { get; }
+        public Dictionary<string, LayerGroupNode> Children { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public List<IGH_GeometricGoo> Geometries { get; } = new();
+    }
+
+    private static GH_GeometryGroup BuildNativeRhinoGeometryGroup(List<Utility.RhinoModelObject> rhinoModelObjects)
+    {
+        var rootNode = new LayerGroupNode(BuildNativeRootGroupName(rhinoModelObjects));
+        var objectCounter = 0;
+        foreach (var rhinoModelObject in rhinoModelObjects)
+        {
+            var model = rhinoModelObject.Model;
+            var modelObjects = ResolveModelObjects(rhinoModelObject).ToList();
+            if (modelObjects.Count == 0)
+                continue;
+
+            foreach (var modelObject in modelObjects)
+            {
+                var sourceGeometry = modelObject?.Geometry;
+                if (sourceGeometry is null)
+                    continue;
+
+                var geometricGoo = GH_Convert.ToGeometricGoo(sourceGeometry.Duplicate());
+                if (geometricGoo is null)
+                    continue;
+
+                var layerPath = ResolveLayerPath(model, modelObject, objectCounter++);
+                AddGeometryToLayerTree(rootNode, layerPath, geometricGoo);
+            }
+        }
+
+        return BuildGeometryGroup(rootNode);
+    }
+
+    private static IEnumerable<Rhino.FileIO.File3dmObject> ResolveModelObjects(Utility.RhinoModelObject rhinoModelObject)
+    {
+        if (rhinoModelObject?.ModelObject is not null)
+            return new[] { rhinoModelObject.ModelObject };
+        return rhinoModelObject?.Model?.Objects?.Where(modelObject => modelObject is not null) ?? Enumerable.Empty<Rhino.FileIO.File3dmObject>();
+    }
+
+    private static string BuildNativeRootGroupName(List<Utility.RhinoModelObject> rhinoModelObjects)
+    {
+        var modelCount = rhinoModelObjects.Count;
+        return $"Imported Rhino Group ({modelCount} model object{(modelCount == 1 ? string.Empty : "s")})";
+    }
+
+    private static string ResolveLayerPath(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject modelObject, int fallbackIndex)
+    {
+        var layerIndex = modelObject.Attributes?.LayerIndex ?? -1;
+        if (layerIndex < 0 || layerIndex >= model.Layers.Count)
+            return $"Unlayered::{fallbackIndex}";
+
+        var layer = model.Layers[layerIndex];
+        if (layer is null || layer.IsDeleted)
+            return $"Unlayered::{fallbackIndex}";
+        if (!string.IsNullOrWhiteSpace(layer.FullPath))
+            return layer.FullPath;
+        if (!string.IsNullOrWhiteSpace(layer.Name))
+            return layer.Name;
+        return $"Layer::{fallbackIndex}";
+    }
+
+    private static void AddGeometryToLayerTree(LayerGroupNode rootNode, string layerPath, IGH_GeometricGoo geometry)
+    {
+        var currentNode = rootNode;
+        var layerParts = (layerPath ?? string.Empty)
+            .Split(new[] { "::", "/" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(layerPart => layerPart.Trim())
+            .Where(layerPart => !string.IsNullOrWhiteSpace(layerPart));
+        foreach (var layerPart in layerParts)
+        {
+            if (!currentNode.Children.TryGetValue(layerPart, out var childNode))
+            {
+                childNode = new LayerGroupNode(layerPart);
+                currentNode.Children[layerPart] = childNode;
+            }
+            currentNode = childNode;
+        }
+        currentNode.Geometries.Add(geometry);
+    }
+
+    private static GH_GeometryGroup BuildGeometryGroup(LayerGroupNode node)
+    {
+        var group = new GH_GeometryGroup
+        {
+            Name = node.Name
+        };
+
+        foreach (var childNode in node.Children.Values.OrderBy(child => child.Name, StringComparer.OrdinalIgnoreCase))
+            group.Objects.Add(BuildGeometryGroup(childNode));
+
+        foreach (var geometry in node.Geometries)
+            group.Objects.Add(geometry);
+
+        return group;
+    }
+}
+
+public class GroupToModelObjectComponent : ScriptingComponent
+{
+    public GroupToModelObjectComponent() : base("Group To Model Object", "Gr→Mo", "Group To Model Object extracts individual Rhino model objects from a native Rhino/Grasshopper group.") { }
+    public override Guid ComponentGuid => new("A2B1C3D4-E5F6-4789-B1C2-D3E4F5A6B7C8");
+    protected override Bitmap Icon => Resources.group_24x24;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new Param_Group(), "Group", "Gr", "Group consumed by Group To Model Object.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new Param_ModelObject(), "Rhino ModelObject", "Mo*", "Rhino model objects produced by Group To Model Object.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        GH_GeometryGroup group = null;
+        if (!DA.GetData(0, ref group) || group is null)
+            return;
+
+        try
+        {
+            var modelObjectDatas = Utility.ExtractRhinoModelObjectDataFromGeometryGroup(group).ToList();
+            DA.SetDataList(0, modelObjectDatas);
         }
         catch (Exception exception)
         {
@@ -8184,7 +9769,47 @@ public class TruncateTextComponent : ScriptingComponent
 // [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖engine](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Engine)
 // Implementations MUST use KitSqlite for direct local kit CRUD operations.
 
-public abstract class KitOperationComponent : Component
+public readonly struct Unit
+{
+}
+
+public readonly struct PersistenceRequest<TInput>
+{
+    public string Directory { get; }
+    public TInput Input { get; }
+
+    public PersistenceRequest(string directory, TInput input)
+    {
+        Directory = directory;
+        Input = input;
+    }
+}
+
+public readonly struct UpdateKitInput
+{
+    public string Directory { get; }
+    public KitDiff Diff { get; }
+
+    public UpdateKitInput(string directory, KitDiff diff)
+    {
+        Directory = directory;
+        Diff = diff;
+    }
+}
+
+public readonly struct UpdateKitOutput
+{
+    public string Directory { get; }
+    public Kit Kit { get; }
+
+    public UpdateKitOutput(string directory, Kit kit)
+    {
+        Directory = directory;
+        Kit = kit;
+    }
+}
+
+public abstract class KitOperationComponent<TInput, TOutput> : Component
 {
     protected KitOperationComponent(string name, string nickname, string description, string subcategory = "Persistence") : base(name, nickname, description, subcategory) { }
     protected virtual string RunDescription => "True to start the operation.";
@@ -8201,15 +9826,19 @@ public abstract class KitOperationComponent : Component
         pManager.AddBooleanParameter("Success", "Sc", SuccessDescription, GH_ParamAccess.item);
         RegisterKitOutputParams(pManager);
     }
-    protected virtual dynamic? GetInput(IGH_DataAccess DA) => null;
-    protected abstract dynamic? Run(dynamic? input = null);
-    protected virtual void SetOutput(IGH_DataAccess DA, dynamic response) { }
+    protected virtual bool TryGetInput(IGH_DataAccess DA, out TInput input)
+    {
+        input = default!;
+        return true;
+    }
+    protected abstract TOutput Run(TInput input);
+    protected virtual void SetOutput(IGH_DataAccess DA, TOutput response) { }
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var run = false;
         DA.GetData(Params.Input.Count - 1, ref run);
         if (!run) return;
-        var input = GetInput(DA);
+        if (!TryGetInput(DA, out var input)) return;
         try
         {
             var response = Run(input);
@@ -8234,7 +9863,7 @@ public static class KitRuntimeState
     public static string StaticKitDirectory { get; set; } = "";
 }
 
-public abstract class PersistenceComponent : KitOperationComponent
+public abstract class PersistenceComponent<TPersistentInput, TResponse> : KitOperationComponent<PersistenceRequest<TPersistentInput>, TResponse>
 {
     protected PersistenceComponent(string name, string nickname, string description, string subcategory = "Persistence") : base(name, nickname, description, subcategory) { }
     protected virtual void RegisterPersitenceInputParams(GH_InputParamManager pManager) { }
@@ -8253,7 +9882,11 @@ public abstract class PersistenceComponent : KitOperationComponent
     {
         RegisterPersitenceOutputParams(pManager);
     }
-    protected virtual dynamic? GetPersistentInput(IGH_DataAccess DA) => null;
+    protected virtual bool TryGetPersistentInput(IGH_DataAccess DA, out TPersistentInput input)
+    {
+        input = default!;
+        return true;
+    }
 
     protected string ResolveKitDirectory(IGH_DataAccess DA)
     {
@@ -8265,16 +9898,22 @@ public abstract class PersistenceComponent : KitOperationComponent
         return directory;
     }
 
-    protected override dynamic? GetInput(IGH_DataAccess DA)
+    protected override bool TryGetInput(IGH_DataAccess DA, out PersistenceRequest<TPersistentInput> input)
     {
+        if (!TryGetPersistentInput(DA, out var persistentInput))
+        {
+            input = default;
+            return false;
+        }
         var directory = ResolveKitDirectory(DA);
-        return new { Directory = directory, Input = GetPersistentInput(DA) };
+        input = new PersistenceRequest<TPersistentInput>(directory, persistentInput);
+        return true;
     }
-    protected abstract dynamic? RunOnKit(string directory, dynamic? input);
-    protected override dynamic? Run(dynamic? input = null) => input is not null ? RunOnKit(input.Directory, input.Input) : null;
+    protected abstract TResponse RunOnKit(string directory, TPersistentInput input);
+    protected override TResponse Run(PersistenceRequest<TPersistentInput> input) => RunOnKit(input.Directory, input.Input);
 }
 
-public class LoadKitComponent : PersistenceComponent
+public class LoadKitComponent : PersistenceComponent<Unit, Kit>
 {
     public LoadKitComponent() : base("Load Kit", "/Kit", "Load a kit from a local directory.") { }
     protected override string RunDescription => "True to load the kit.";
@@ -8290,9 +9929,9 @@ public class LoadKitComponent : PersistenceComponent
             GH_ParamAccess.item);
     }
 
-    protected override dynamic? RunOnKit(string directory, dynamic? input) => KitSqlite.LoadKit(directory);
+    protected override Kit RunOnKit(string directory, Unit input) => KitSqlite.LoadKit(directory);
 
-    protected override void SetOutput(IGH_DataAccess DA, dynamic response)
+    protected override void SetOutput(IGH_DataAccess DA, Kit response)
     {
         DA.SetData(1, new KitGoo(response));
         var directory = "";
@@ -8307,7 +9946,7 @@ public class LoadKitComponent : PersistenceComponent
     }
 }
 
-public class SaveKitComponent : PersistenceComponent
+public class SaveKitComponent : PersistenceComponent<Kit, Kit>
 {
     public SaveKitComponent() : base("Save Kit", "Kit/", "Save a kit to a local directory.") { }
     protected override string RunDescription => "True to save the kit.";
@@ -8320,25 +9959,26 @@ public class SaveKitComponent : PersistenceComponent
         pManager.AddParameter(new KitParam(), "Kit", "Kt", "The kit to save.", GH_ParamAccess.item);
     }
 
-    protected override dynamic? GetPersistentInput(IGH_DataAccess DA)
+    protected override bool TryGetPersistentInput(IGH_DataAccess DA, out Kit input)
     {
         KitGoo? kitGoo = null;
-        DA.GetData(0, ref kitGoo);
-        return kitGoo?.Value;
+        if (!DA.GetData(0, ref kitGoo) || kitGoo is null)
+        {
+            input = default!;
+            return false;
+        }
+        input = kitGoo.Value;
+        return true;
     }
 
-    protected override dynamic? RunOnKit(string directory, dynamic? input)
+    protected override Kit RunOnKit(string directory, Kit input)
     {
-        if (input is Kit kit)
-        {
-            KitSqlite.SaveKit(directory, kit);
-            return kit;
-        }
-        return null;
+        KitSqlite.SaveKit(directory, input);
+        return input;
     }
 }
 
-public class UpdateKitComponent : KitOperationComponent
+public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKitOutput>
 {
     public UpdateKitComponent() : base("Update Kit", "Kit↻", "Update a static kit with a kit diff and persist it to SQLite.") { }
     protected override string RunDescription => "True to update the kit.";
@@ -8362,10 +10002,14 @@ public class UpdateKitComponent : KitOperationComponent
         pManager.AddTextParameter("Local Directory", "Di", "The local directory of the kit.", GH_ParamAccess.item);
     }
 
-    protected override dynamic? GetInput(IGH_DataAccess DA)
+    protected override bool TryGetInput(IGH_DataAccess DA, out UpdateKitInput input)
     {
         KitDiffGoo? diffGoo = null;
-        if (!DA.GetData(0, ref diffGoo) || diffGoo is null) return null;
+        if (!DA.GetData(0, ref diffGoo) || diffGoo is null)
+        {
+            input = default;
+            return false;
+        }
         var directory = "";
         if (!DA.GetData(1, ref directory) || string.IsNullOrWhiteSpace(directory))
         {
@@ -8373,26 +10017,26 @@ public class UpdateKitComponent : KitOperationComponent
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
         }
-        return new { Directory = directory, Diff = diffGoo.Value };
+        input = new UpdateKitInput(directory, diffGoo.Value);
+        return true;
     }
 
-    protected override dynamic? Run(dynamic? input = null)
+    protected override UpdateKitOutput Run(UpdateKitInput input)
     {
-        if (input is null) return null;
-        var directory = (string)input.Directory;
-        var diff = (KitDiff)input.Diff;
+        var directory = input.Directory;
+        var diff = input.Diff;
 
         var baseKit = KitRuntimeState.StaticKit is not null && KitRuntimeState.StaticKitDirectory == directory
             ? KitRuntimeState.StaticKit
             : KitSqlite.LoadKit(directory);
-        var updatedKit = baseKit.ApplyDiff(diff);
+        var updatedKit = Kit.ApplyDiff(baseKit, diff);
         KitSqlite.SaveKit(directory, updatedKit);
         KitRuntimeState.StaticKit = updatedKit;
         KitRuntimeState.StaticKitDirectory = directory;
-        return new { Directory = directory, Kit = updatedKit };
+        return new UpdateKitOutput(directory, updatedKit);
     }
 
-    protected override void SetOutput(IGH_DataAccess DA, dynamic response)
+    protected override void SetOutput(IGH_DataAccess DA, UpdateKitOutput response)
     {
         DA.SetData(1, new KitGoo(response.Kit));
         DA.SetData(2, response.Directory);
@@ -8426,7 +10070,7 @@ public class FlattenDesignComponent : ScriptingComponent
         string designId = "";
         if (!DA.GetData(1, ref designId)) return;
 
-        var result = SemioExt.FlattenDesign(kitGoo.Value, designId);
+        var result = Kit.FlattenDesign(kitGoo.Value, designId);
         DA.SetData(0, new DesignDiffGoo(result));
     }
 }
@@ -8460,7 +10104,7 @@ public class ReplaceClusterWithDesignComponent : ScriptingComponent
         List<ConnectionGoo> externalConnectionsGoo = new List<ConnectionGoo>();
         if (!DA.GetDataList(3, externalConnectionsGoo)) return;
 
-        var result = SemioExt.ReplaceClusterWithDesign(originalDesignGoo.Value, clusterPieceIds, clusteredDesignGoo.Value, externalConnectionsGoo.Select(c => c.Value).ToList());
+        var result = Kit.ReplaceClusterWithDesign(originalDesignGoo.Value, clusterPieceIds, clusteredDesignGoo.Value, externalConnectionsGoo.Select(c => c.Value).ToList());
         DA.SetData(0, new DesignDiffGoo(result));
     }
 }
@@ -8488,7 +10132,7 @@ public class FindPieceInDesignComponent : ScriptingComponent
         string pieceGuid = "";
         if (!DA.GetData(1, ref pieceGuid)) return;
 
-        var result = SemioExt.FindPieceInDesign(designGoo.Value, pieceGuid);
+        var result = Piece.FindInDesign(designGoo.Value, pieceGuid);
         DA.SetData(0, new PieceGoo(result));
     }
 }
@@ -8523,7 +10167,7 @@ public class FindReplacableTypesForPieceInDesignComponent : ScriptingComponent
         List<string> variants = new List<string>();
         DA.GetDataList(3, variants);
 
-        var result = SemioExt.FindReplacableTypesForPieceInDesign(kitGoo.Value, designGuid, pieceGuid, variants.Count > 0 ? variants.ToArray() : null);
+        var result = Kit.FindReplacableTypesForPieceInDesign(kitGoo.Value, designGuid, pieceGuid, variants.Count > 0 ? variants.ToArray() : null);
         DA.SetDataList(0, result.Select(r => new TypeGoo(r)));
     }
 }
@@ -8554,7 +10198,7 @@ public class FindTagComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindTag(in0.Select(x => x.Value).ToList(), in1);
+            var result = Tag.Find(in0.Select(x => x.Value).ToList(), in1);
             DA.SetData(0, result != null ? new TagGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8586,7 +10230,7 @@ public class FindConceptComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConcept(in0.Select(x => x.Value).ToList(), in1);
+            var result = Concept.Find(in0.Select(x => x.Value).ToList(), in1);
             DA.SetData(0, result != null ? new ConceptGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8618,7 +10262,7 @@ public class FindModelComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindModel(in0.Select(x => x.Value).ToList(), in1);
+            var result = Model.Find(in0.Select(x => x.Value).ToList(), in1);
             DA.SetData(0, result != null ? new ModelGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8650,7 +10294,7 @@ public class FindConnectorComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnector(in0.Select(x => x.Value).ToList(), in1);
+            var result = Connector.Find(in0.Select(x => x.Value).ToList(), in1);
             DA.SetData(0, result != null ? new ConnectorGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8682,7 +10326,7 @@ public class FindConnectorInTypeComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnectorInType(in0.Value, in1);
+            var result = Connector.FindInType(in0.Value, in1);
             DA.SetData(0, result != null ? new ConnectorGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8714,7 +10358,7 @@ public class FindPieceComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindPiece(in0.Select(x => x.Value).ToList(), in1);
+            var result = Piece.Find(in0.Select(x => x.Value).ToList(), in1);
             DA.SetData(0, result != null ? new PieceGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8746,7 +10390,7 @@ public class FindConnectionComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnection(in0.Select(x => x.Value).ToList(), in1);
+            var result = Connection.Find(in0.Select(x => x.Value).ToList(), in1);
             DA.SetData(0, result != null ? new ConnectionGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8778,7 +10422,7 @@ public class FindPieceConnectionsComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindPieceConnections(in0.Select(x => x.Value).ToList(), in1);
+            var result = Connection.FindByPiece(in0.Select(x => x.Value).ToList(), in1);
             DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8813,7 +10457,7 @@ public class FindConnectorForPieceInConnectionComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnectorForPieceInConnection(in0.Value, in1.Value, in2);
+            var result = Connector.FindForPieceInConnection(in0.Value, in1.Value, in2);
             DA.SetData(0, result != null ? new ConnectorGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8845,7 +10489,7 @@ public class FindConnectionInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnectionInDesign(in0.Value, in1);
+            var result = Connection.FindInDesign(in0.Value, in1);
             DA.SetData(0, result != null ? new ConnectionGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8877,7 +10521,7 @@ public class FindConnectionsInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnectionsInDesign(in0.Value, in1);
+            var result = Connection.FindManyInDesign(in0.Value, in1);
             DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8909,7 +10553,7 @@ public class FindPieceConnectionsInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindPieceConnectionsInDesign(in0.Value, in1);
+            var result = Connection.FindByPieceInDesign(in0.Value, in1);
             DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8938,7 +10582,7 @@ public class FindStaleConnectionsInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindStaleConnectionsInDesign(in0.Value);
+            var result = Connection.FindStaleInDesign(in0.Value);
             DA.SetDataList(0, result?.Select(r => new ConnectionGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -8970,7 +10614,7 @@ public class FindFileInKitComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindFileInKit(in0.Value, in1);
+            var result = Kit.FindFile(in0.Value, in1);
             DA.SetData(0, result != null ? new FileGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9002,7 +10646,7 @@ public class FindTagInKitComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindTagInKit(in0.Value, in1);
+            var result = Kit.FindTag(in0.Value, in1);
             DA.SetData(0, result != null ? new TagGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9034,7 +10678,7 @@ public class FindConceptInKitComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConceptInKit(in0.Value, in1);
+            var result = Kit.FindConcept(in0.Value, in1);
             DA.SetData(0, result != null ? new ConceptGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9066,7 +10710,7 @@ public class FindTypeInKitComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindTypeInKit(in0.Value, in1);
+            var result = Kit.FindType(in0.Value, in1);
             DA.SetData(0, result != null ? new TypeGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9098,7 +10742,7 @@ public class FindDesignInKitComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindDesignInKit(in0.Value, in1);
+            var result = Kit.FindDesign(in0.Value, in1);
             DA.SetData(0, result != null ? new DesignGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9130,7 +10774,7 @@ public class FindPortInKitComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindPortInKit(in0.Value, in1);
+            var result = Kit.FindPort(in0.Value, in1);
             DA.SetData(0, result != null ? new PortGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9165,7 +10809,7 @@ public class FindPieceTypeInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindPieceTypeInDesign(in0.Value, in1, in2);
+            var result = Kit.FindPieceTypeInDesign(in0.Value, in1, in2);
             DA.SetData(0, result != null ? new TypeGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9200,7 +10844,7 @@ public class FindParentPieceInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindParentPieceInDesign(in0.Value, in1, in2);
+            var result = Kit.FindParentPieceInDesign(in0.Value, in1, in2);
             DA.SetData(0, result != null ? new PieceGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9235,7 +10879,7 @@ public class FindParentConnectionForPieceInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindParentConnectionForPieceInDesign(in0.Value, in1, in2);
+            var result = Kit.FindParentConnectionForPieceInDesign(in0.Value, in1, in2);
             DA.SetData(0, result != null ? new ConnectionGoo(result) : null);
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9270,7 +10914,7 @@ public class FindChildrenPiecesInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindChildrenPiecesInDesign(in0.Value, in1, in2);
+            var result = Kit.FindChildrenPiecesInDesign(in0.Value, in1, in2);
             DA.SetDataList(0, result?.Select(r => new PieceGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9305,7 +10949,7 @@ public class FindUsedConnectorsByPieceInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindUsedConnectorsByPieceInDesign(in0.Value, in1, in2);
+            var result = Kit.FindUsedConnectorsByPieceInDesign(in0.Value, in1, in2);
             DA.SetDataList(0, result?.Select(r => new ConnectorGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9344,7 +10988,7 @@ public class FindReplacableTypesForPiecesInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindReplacableTypesForPiecesInDesign(in0.Value, in1, in2.ToArray(), in3.Count > 0 ? in3.ToArray() : null);
+            var result = Kit.FindReplacableTypesForPiecesInDesign(in0.Value, in1, in2.ToArray(), in3.Count > 0 ? in3.ToArray() : null);
             DA.SetDataList(0, result?.Select(r => new TypeGoo(r)));
         }
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
@@ -9377,7 +11021,7 @@ public class FindConnectionPiecesInDesignComponent : ScriptingComponent
 
         try
         {
-            var result = SemioExt.FindConnectionPiecesInDesign(in0.Value, in1.Value);
+            var result = Connection.FindPiecesInDesign(in0.Value, in1.Value);
             DA.SetData(0, new PieceGoo(result.connecting));
             DA.SetData(1, new PieceGoo(result.connected));
         }

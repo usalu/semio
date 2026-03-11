@@ -1,0 +1,752 @@
+#region 🔖Header
+// [👤semio📚3dm🛅semiorhino💻semiorhino](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs)
+
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Rhino 8 plugin hosting a WebView2 panel for importing semio kits and models.
+
+#endregion 🔖Header
+
+#region 🔖Imports
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖imports](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Imports)
+// Callers MUST import all required namespaces listed here.
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+#if RHINO_PLUGIN
+using System.Windows;
+using System.Windows.Controls;
+using Rhino.Input.Custom;
+#endif
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Rhino;
+using Rhino.Commands;
+using Rhino.DocObjects;
+using Rhino.Geometry;
+using Rhino.PlugIns;
+using Rhino.UI;
+using Semio;
+using RhinoLayer = global::Rhino.DocObjects.Layer;
+using Type = Semio.Type;
+using File = Semio.File;
+
+#endregion 🔖Imports
+
+#region 🔖Namespace
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖namespace](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Namespace)
+// Implementations MUST reside in this namespace.
+namespace Semio.Rhino;
+#endregion 🔖Namespace
+
+#region 🔖Constants
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖constants](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Constants)
+// Consumers MUST use these shared constants for configuration.
+
+public static class Constants
+{
+    public const string Category = Semio.Constants.Name;
+    public const string Version = "1.0.0";
+    public const string PanelId = "D3A4E2C1-7B8F-4D5E-9A1C-6F2B3E4D5A6B";
+}
+
+#endregion 🔖Constants
+
+#region 🔖BridgeProtocol
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖bridgeprotocol](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/BridgeProtocol)
+// Bridge protocol types for JSON-RPC style communication between React UI and C#.
+
+/// <summary>
+/// Incoming request from the React UI to native C#.
+/// </summary>
+public class BridgeRequest
+{
+    [JsonProperty("id")] public string Id { get; set; } = "";
+    [JsonProperty("binding")] public string Binding { get; set; } = "";
+    [JsonProperty("method")] public string Method { get; set; } = "";
+    [JsonProperty("params")] public JToken? Params { get; set; }
+}
+
+/// <summary>
+/// Outgoing response from native C# to the React UI.
+/// </summary>
+public class BridgeResponse
+{
+    [JsonProperty("id")] public string Id { get; set; } = "";
+    [JsonProperty("ok")] public bool Ok { get; set; }
+    [JsonProperty("result")] public object? Result { get; set; }
+    [JsonProperty("error")] public BridgeError? Error { get; set; }
+}
+
+/// <summary>
+/// Error detail for a failed bridge response.
+/// </summary>
+public class BridgeError
+{
+    [JsonProperty("code")] public string Code { get; set; } = "";
+    [JsonProperty("message")] public string Message { get; set; } = "";
+    [JsonProperty("details")] public object? Details { get; set; }
+}
+
+/// <summary>
+/// Outgoing event from native C# to the React UI.
+/// </summary>
+public class BridgeEvent
+{
+    [JsonProperty("event")] public string Event { get; set; } = "";
+    [JsonProperty("payload")] public object? Payload { get; set; }
+}
+
+#endregion 🔖BridgeProtocol
+
+#region 🔖BridgeBinding
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖bridgebinding](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/BridgeBinding)
+// Bridge bindings define the native methods callable from the React UI.
+
+/// <summary>
+/// Interface for a bridge binding exposing named methods.
+/// </summary>
+public interface IBridgeBinding
+{
+    string Name { get; }
+    IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods { get; }
+}
+
+#endregion 🔖BridgeBinding
+
+#region 🔖BridgeRegistry
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖bridgeregistry](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/BridgeRegistry)
+// Central registry routing bridge requests to the correct binding and method.
+
+/// <summary>
+/// Routes incoming bridge requests to registered bindings.
+/// </summary>
+public class BridgeRegistry
+{
+    private readonly Dictionary<string, IBridgeBinding> _bindings = new(StringComparer.OrdinalIgnoreCase);
+
+    public void Register(IBridgeBinding binding)
+    {
+        _bindings[binding.Name] = binding;
+    }
+
+    public async Task<BridgeResponse> HandleAsync(BridgeRequest request)
+    {
+        if (!_bindings.TryGetValue(request.Binding, out var binding))
+        {
+            return new BridgeResponse
+            {
+                Id = request.Id,
+                Ok = false,
+                Error = new BridgeError
+                {
+                    Code = "BINDING_NOT_FOUND",
+                    Message = $"Binding '{request.Binding}' is not registered."
+                }
+            };
+        }
+
+        if (!binding.Methods.TryGetValue(request.Method, out var method))
+        {
+            return new BridgeResponse
+            {
+                Id = request.Id,
+                Ok = false,
+                Error = new BridgeError
+                {
+                    Code = "METHOD_NOT_FOUND",
+                    Message = $"Method '{request.Method}' not found in binding '{request.Binding}'."
+                }
+            };
+        }
+
+        try
+        {
+            var result = await method(request.Params);
+            return new BridgeResponse
+            {
+                Id = request.Id,
+                Ok = true,
+                Result = result
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BridgeResponse
+            {
+                Id = request.Id,
+                Ok = false,
+                Error = new BridgeError
+                {
+                    Code = "INTERNAL_ERROR",
+                    Message = ex.Message
+                }
+            };
+        }
+    }
+
+    public IEnumerable<string> GetBindingNames() => _bindings.Keys;
+
+    public IEnumerable<string> GetMethodNames(string binding) =>
+        _bindings.TryGetValue(binding, out var b) ? b.Methods.Keys : Enumerable.Empty<string>();
+}
+
+#endregion 🔖BridgeRegistry
+
+#region 🔖AppBinding
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖appbinding](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/AppBinding)
+// Application-level bridge binding for version info and diagnostics.
+
+/// <summary>
+/// Provides application-level methods: ping, getVersion, getBridgeInfo.
+/// </summary>
+public class AppBinding : IBridgeBinding
+{
+    public string Name => "app";
+
+    public IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods => new Dictionary<string, Func<JToken?, Task<object?>>>
+    {
+        ["ping"] = _ => Task.FromResult<object?>("pong"),
+        ["getVersion"] = _ => Task.FromResult<object?>(Constants.Version),
+        ["getBridgeInfo"] = _ => Task.FromResult<object?>(new
+        {
+            protocolVersion = "1.0",
+            pluginVersion = Constants.Version,
+            rhinoVersion = RhinoApp.Version.ToString()
+        })
+    };
+}
+
+#endregion 🔖AppBinding
+
+#region 🔖DocumentBinding
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖documentbinding](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/DocumentBinding)
+// Document-level bridge binding for Rhino document information.
+
+/// <summary>
+/// Provides document-level methods: getInfo, getUnits, getLayers.
+/// </summary>
+public class DocumentBinding : IBridgeBinding
+{
+    public string Name => "document";
+
+    public IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods => new Dictionary<string, Func<JToken?, Task<object?>>>
+    {
+        ["getInfo"] = _ =>
+        {
+            var doc = RhinoDoc.ActiveDoc;
+            return Task.FromResult<object?>(new
+            {
+                name = doc?.Name ?? "",
+                path = doc?.Path ?? "",
+                isModified = doc?.Modified ?? false
+            });
+        },
+        ["getUnits"] = _ =>
+        {
+            var doc = RhinoDoc.ActiveDoc;
+            return Task.FromResult<object?>(new
+            {
+                system = doc?.ModelUnitSystem.ToString() ?? "None"
+            });
+        },
+        ["getLayers"] = _ =>
+        {
+            var doc = RhinoDoc.ActiveDoc;
+            if (doc == null) return Task.FromResult<object?>(new List<object>());
+            var layers = doc.Layers.Select(l => new
+            {
+                name = l.Name,
+                fullPath = l.FullPath,
+                id = l.Id.ToString(),
+                color = ColorTranslator.ToHtml(l.Color),
+                visible = l.IsVisible
+            }).ToList();
+            return Task.FromResult<object?>(layers);
+        }
+    };
+}
+
+#endregion 🔖DocumentBinding
+
+#region 🔖LayerService
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖layerservice](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/LayerService)
+// Service for creating and managing Rhino layers following the semio hierarchy.
+
+/// <summary>
+/// Creates nested layer hierarchies for semio imports.
+/// Layer path: semio::KITNAME::Types::TYPENAME::Models::MODELTAGS
+/// </summary>
+public static class LayerService
+{
+    /// <summary>
+    /// Ensures a layer exists at the given full path, creating parents as needed.
+    /// Returns the layer index.
+    /// </summary>
+    public static int EnsureLayer(RhinoDoc doc, string fullPath)
+    {
+        var parts = fullPath.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        var parentIndex = -1;
+
+        for (var i = 0; i < parts.Length; i++)
+        {
+            var layerName = parts[i].Trim();
+            var existingIndex = FindLayer(doc, layerName, parentIndex);
+
+            if (existingIndex >= 0)
+            {
+                parentIndex = existingIndex;
+                continue;
+            }
+
+            var layer = new RhinoLayer { Name = layerName };
+
+            if (parentIndex >= 0)
+                layer.ParentLayerId = doc.Layers[parentIndex].Id;
+
+            parentIndex = doc.Layers.Add(layer);
+        }
+
+        return parentIndex;
+    }
+
+    /// <summary>
+    /// Finds a layer by name under the given parent index.
+    /// </summary>
+    private static int FindLayer(RhinoDoc doc, string name, int parentIndex)
+    {
+        for (var i = 0; i < doc.Layers.Count; i++)
+        {
+            var layer = doc.Layers[i];
+            if (!string.Equals(layer.Name, name, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (parentIndex < 0 && layer.ParentLayerId == Guid.Empty)
+                return i;
+
+            if (parentIndex >= 0 && layer.ParentLayerId == doc.Layers[parentIndex].Id)
+                return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Builds the semio layer path for a model import.
+    /// </summary>
+    public static string BuildModelLayerPath(string kitName, string typeName, IEnumerable<string> tags)
+    {
+        var tagString = string.Join("-", tags.Where(t => !string.IsNullOrEmpty(t)));
+        if (string.IsNullOrEmpty(tagString))
+            tagString = "default";
+        return $"semio::{kitName}::Types::{typeName}::Models::{tagString}";
+    }
+}
+
+#endregion 🔖LayerService
+
+#region 🔖ImportBinding
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖importbinding](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/ImportBinding)
+// Bridge binding for importing kits and models into the active Rhino document.
+
+/// <summary>
+/// DTO for an import model request from the React UI.
+/// </summary>
+public class ImportModelRequest
+{
+    [JsonProperty("kitName")] public string KitName { get; set; } = "";
+    [JsonProperty("typeName")] public string TypeName { get; set; } = "";
+    [JsonProperty("modelGuid")] public string ModelGuid { get; set; } = "";
+    [JsonProperty("fileUrl")] public string FileUrl { get; set; } = "";
+    [JsonProperty("tags")] public List<string> Tags { get; set; } = new();
+}
+
+/// <summary>
+/// Provides import methods: importModel, importKit (placeholder for file dialog trigger).
+/// </summary>
+public class ImportBinding : IBridgeBinding
+{
+    public string Name => "import";
+
+    public IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods => new Dictionary<string, Func<JToken?, Task<object?>>>
+    {
+        ["importModel"] = async parameters =>
+        {
+            var request = parameters?.ToObject<ImportModelRequest>()
+                ?? throw new ArgumentException("Invalid import model request.");
+
+            var doc = RhinoDoc.ActiveDoc
+                ?? throw new InvalidOperationException("No active Rhino document.");
+
+            var layerPath = LayerService.BuildModelLayerPath(
+                request.KitName, request.TypeName, request.Tags);
+            var layerIndex = LayerService.EnsureLayer(doc, layerPath);
+
+            if (!string.IsNullOrEmpty(request.FileUrl))
+            {
+                var tempPath = Path.Combine(Path.GetTempPath(), $"semio_{request.ModelGuid}.3dm");
+
+                try
+                {
+                    using var client = new HttpClient();
+                    var bytes = await client.GetByteArrayAsync(request.FileUrl);
+                    System.IO.File.WriteAllBytes(tempPath, bytes);
+
+                    var importedFile = global::Rhino.FileIO.File3dm.Read(tempPath);
+                    if (importedFile != null)
+                    {
+                        foreach (var obj in importedFile.Objects)
+                        {
+                            if (obj.Geometry == null) continue;
+                            var attributes = new ObjectAttributes { LayerIndex = layerIndex };
+                            doc.Objects.Add(obj.Geometry, attributes);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (System.IO.File.Exists(tempPath))
+                        System.IO.File.Delete(tempPath);
+                }
+            }
+
+            doc.Views.Redraw();
+
+            return new { layerPath, layerIndex };
+        },
+        ["openImportKitDialog"] = _ =>
+        {
+            // Signals the React UI should show its kit import dialog.
+            return Task.FromResult<object?>(new { dialogKind = "importKit" });
+        }
+    };
+}
+
+#endregion 🔖ImportBinding
+
+#if RHINO_PLUGIN
+#region 🔖SemioRhinoPlugin
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖semiorhinoplugin](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/SemioRhinoPlugin)
+// Main Rhino plugin class bootstrapping the bridge bindings.
+// Panel registration is done in the ShowSemioCommand constructor (like Speckle).
+
+/// <summary>
+/// Entry point for the semio Rhino plugin.
+/// Registers bridge bindings on load. Panel is registered by the command.
+/// </summary>
+public class SemioRhinoPlugin : PlugIn
+{
+    public static SemioRhinoPlugin? Instance { get; private set; }
+    public BridgeRegistry Bridge { get; } = new();
+    public SemioWebViewControl? WebViewControl { get; set; }
+
+    public SemioRhinoPlugin()
+    {
+        Instance = this;
+    }
+
+    protected override LoadReturnCode OnLoad(ref string errorMessage)
+    {
+        Bridge.Register(new AppBinding());
+        Bridge.Register(new DocumentBinding());
+        Bridge.Register(new ImportBinding());
+
+        RhinoApp.WriteLine("semio.3dm plugin loaded.");
+        return LoadReturnCode.Success;
+    }
+}
+
+#endregion 🔖SemioRhinoPlugin
+
+#region 🔖SemioWebViewControl
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖semiowebviewcontrol](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/SemioWebViewControl)
+// WPF UserControl hosting WebView2 that loads the semio React UI.
+// This control is wrapped by SemioPanelHost (WpfElementHost) for Rhino panel integration.
+
+/// <summary>
+/// WPF UserControl hosting WebView2 that loads the semio React UI.
+/// Handles bridge message routing between the browser and native C#.
+/// </summary>
+public class SemioWebViewControl : System.Windows.Controls.UserControl
+{
+    private Microsoft.Web.WebView2.Wpf.WebView2? _webView;
+    private bool _isReady;
+
+    public SemioWebViewControl()
+    {
+        InitializeWebView();
+    }
+
+    private async void InitializeWebView()
+    {
+        _webView = new Microsoft.Web.WebView2.Wpf.WebView2();
+        Content = _webView;
+
+        var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(
+            null,
+            Path.Combine(Path.GetTempPath(), "semio-webview2-data")
+        );
+
+        await _webView.EnsureCoreWebView2Async(env);
+
+        _webView.CoreWebView2.Settings.AreDevToolsEnabled =
+#if DEBUG
+            true;
+#else
+            false;
+#endif
+        _webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+
+        _webView.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
+
+        // Determine URL: dev server or local build
+        var uiPath = GetUiPath();
+        if (uiPath != null)
+            _webView.CoreWebView2.Navigate(uiPath);
+        else
+            _webView.CoreWebView2.NavigateToString(
+                "<html><body><h3>semio UI not found.</h3><p>Run the UI dev server or build the UI.</p></body></html>");
+
+        _isReady = true;
+    }
+
+    private string? GetUiPath()
+    {
+#if DEBUG
+        // In debug mode, try the Vite dev server first
+        try
+        {
+            using var client = new System.Net.WebClient();
+            client.DownloadString("http://localhost:5174/");
+            return "http://localhost:5174/";
+        }
+        catch
+        {
+            // Fall through to local build
+        }
+#endif
+        // Look for local built UI assets
+        var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+        var indexPath = Path.Combine(pluginDir, "ui", "dist", "index.html");
+        if (System.IO.File.Exists(indexPath))
+            return new Uri(indexPath).AbsoluteUri;
+
+        return null;
+    }
+
+    private async void OnWebMessageReceived(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+    {
+        try
+        {
+            var json = e.WebMessageAsJson;
+            var request = JsonConvert.DeserializeObject<BridgeRequest>(json);
+            if (request == null) return;
+
+            var plugin = SemioRhinoPlugin.Instance;
+            if (plugin == null) return;
+
+            var response = await plugin.Bridge.HandleAsync(request);
+            var responseJson = JsonConvert.SerializeObject(response);
+
+            _webView?.CoreWebView2?.PostWebMessageAsJson(responseJson);
+        }
+        catch (Exception ex)
+        {
+            RhinoApp.WriteLine($"[semio.3dm] Bridge error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Sends an event from native C# to the React UI.
+    /// </summary>
+    public void SendEvent(BridgeEvent evt)
+    {
+        if (!_isReady || _webView?.CoreWebView2 == null) return;
+        var json = JsonConvert.SerializeObject(evt);
+        _webView.CoreWebView2.PostWebMessageAsJson(json);
+    }
+}
+
+#endregion 🔖SemioWebViewControl
+
+#region 🔖SemioPanelHost
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖semiopanelhost](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/SemioPanelHost)
+// Dockable Rhino panel host wrapping the WPF WebView2 control.
+// Follows the Speckle pattern: inherits RhinoWindows.Controls.WpfElementHost.
+
+/// <summary>
+/// WpfElementHost panel wrapping SemioWebViewControl for Rhino docking.
+/// Handles panel close/reopen lifecycle by disconnecting the WPF child.
+/// </summary>
+[Guid(Constants.PanelId)]
+public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
+{
+    private readonly SemioWebViewControl? _webViewControl;
+
+    public SemioPanelHost(uint docSn)
+        : base(GetOrCreateWebViewControl(), null)
+    {
+        _webViewControl = SemioRhinoPlugin.Instance?.WebViewControl;
+        Panels.Closed += PanelsOnClosed;
+    }
+
+    private static SemioWebViewControl GetOrCreateWebViewControl()
+    {
+        var plugin = SemioRhinoPlugin.Instance;
+        if (plugin?.WebViewControl == null && plugin != null)
+        {
+            plugin.WebViewControl = new SemioWebViewControl();
+        }
+        return plugin?.WebViewControl!;
+    }
+
+    /// <summary>
+    /// Disconnects the WPF child so the same WebView control can be re-parented when the panel reopens.
+    /// </summary>
+    public static void Reinitialize(SemioWebViewControl? webViewControl)
+    {
+        if (webViewControl == null) return;
+        if (Panels.IsPanelVisible(typeof(SemioPanelHost).GUID)) return;
+        if (LogicalTreeHelper.GetParent(webViewControl) is Border border)
+        {
+            border.Child = null;
+        }
+    }
+
+    private void PanelsOnClosed(object? sender, PanelEventArgs e)
+    {
+        if (e.PanelId != typeof(SemioPanelHost).GUID) return;
+        if (!Panels.IsPanelVisible(typeof(SemioPanelHost).GUID)) return;
+
+        Panels.Closed -= PanelsOnClosed;
+
+        if (_webViewControl != null)
+        {
+            if (LogicalTreeHelper.GetParent(_webViewControl) is Border border)
+            {
+                border.Child = null;
+            }
+        }
+    }
+}
+
+#endregion 🔖SemioPanelHost
+
+#region 🔖ShowSemioCommand
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖showsemiocommand](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/ShowSemioCommand)
+// Rhino command to open or focus the semio dockable panel.
+// Panel registration happens in the constructor (like Speckle connectors).
+
+/// <summary>
+/// Command that opens the semio dockable side panel.
+/// Registers the panel in its constructor following Speckle's pattern.
+/// </summary>
+[CommandStyle(global::Rhino.Commands.Style.ScriptRunner)]
+public class ShowSemioCommand : Command
+{
+    public static ShowSemioCommand? Instance { get; private set; }
+
+    public ShowSemioCommand()
+    {
+        Instance = this;
+
+        var iconPath = Path.Combine(GetAssemblyDirectory(), "Resources", "semio32.ico");
+        var sysIcon = System.IO.File.Exists(iconPath)
+            ? new System.Drawing.Icon(iconPath)
+            : System.Drawing.SystemIcons.Application;
+
+        Panels.RegisterPanel(
+            SemioRhinoPlugin.Instance!,
+            typeof(SemioPanelHost),
+            "semio",
+            sysIcon
+        );
+    }
+
+    private static string GetAssemblyDirectory()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var location = assembly.Location;
+        return Path.GetDirectoryName(location) ?? "";
+    }
+
+    public override string EnglishName => "ShowSemio";
+
+    protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+    {
+        var panelId = typeof(SemioPanelHost).GUID;
+
+        if (mode == RunMode.Interactive)
+        {
+            SemioPanelHost.Reinitialize(SemioRhinoPlugin.Instance?.WebViewControl);
+            Panels.OpenPanel(panelId);
+            return Result.Success;
+        }
+
+        var panelVisible = Panels.IsPanelVisible(panelId);
+        var prompt = panelVisible
+            ? "semio panel is visible. New value"
+            : "semio panel is hidden. New value";
+
+        using var go = new GetOption();
+        go.SetCommandPrompt(prompt);
+        var hideIndex = go.AddOption("Hide");
+        var showIndex = go.AddOption("Show");
+        var toggleIndex = go.AddOption("Toggle");
+        go.Get();
+
+        if (go.CommandResult() != Result.Success) return go.CommandResult();
+
+        var option = go.Option();
+        if (option == null) return Result.Failure;
+
+        var index = option.Index;
+        if (index == hideIndex)
+        {
+            if (panelVisible) Panels.ClosePanel(panelId);
+        }
+        else if (index == showIndex)
+        {
+            if (!panelVisible)
+            {
+                SemioPanelHost.Reinitialize(SemioRhinoPlugin.Instance?.WebViewControl);
+                Panels.OpenPanel(panelId);
+            }
+        }
+        else if (index == toggleIndex)
+        {
+            if (panelVisible)
+            {
+                Panels.ClosePanel(panelId);
+            }
+            else
+            {
+                SemioPanelHost.Reinitialize(SemioRhinoPlugin.Instance?.WebViewControl);
+                Panels.OpenPanel(panelId);
+            }
+        }
+
+        return Result.Success;
+    }
+}
+
+#endregion 🔖ShowSemioCommand
+#endif

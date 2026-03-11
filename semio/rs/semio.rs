@@ -491,8 +491,6 @@ pub struct File {
     pub guid: Guid,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mime: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub remote: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub folder: Option<FolderId>,
@@ -2062,8 +2060,6 @@ pub struct FileDiff {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mime: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub remote: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub folder: Option<Option<FolderId>>,
@@ -2160,6 +2156,9 @@ pub struct KitDiff {
 // [👤semio📚rs💻semio🔖difftypes🛠️change](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/Change)
 /// <summary>Change holds the data fields for a Change record.</summary>
 /// Change MUST perform the Change operation.
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️change](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/Change)
+/// </remarks>
 pub struct Change<TEntity, TDiff> {
     pub forward: TDiff,
     pub backward: TDiff,
@@ -2175,63 +2174,105 @@ pub struct Change<TEntity, TDiff> {
 
 // [👤semio📚rs💻semio🔖difftypes🛠️attributechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeChange)
 /// <summary>AttributeChange holds the data fields for a AttributeChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️attributechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeChange)
+/// </remarks>
 pub type AttributeChange = Change<Attribute, AttributeDiff>;
 /// <summary>AuthorChange holds the data fields for a AuthorChange record.</summary>
-// [👤semio📚rs💻semio🔖difftypes🛠️authorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorChange)
+/// [👤semio📚rs💻semio🔖difftypes🛠️authorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorChange)
 pub type AuthorChange = Change<Author, AuthorDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️filechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileChange)
 /// <summary>FileChange holds the data fields for a FileChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️filechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileChange)
+/// </remarks>
 pub type FileChange = Change<File, FileDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️folderchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderChange)
 /// <summary>FolderChange holds the data fields for a FolderChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️folderchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderChange)
+/// </remarks>
 pub type FolderChange = Change<Folder, FolderDiff>;
 /// <summary>QualityChange holds the data fields for a QualityChange record.</summary>
-// [👤semio📚rs💻semio🔖difftypes🛠️qualitychange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityChange)
+/// [👤semio📚rs💻semio🔖difftypes🛠️qualitychange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityChange)
 pub type QualityChange = Change<Quality, QualityDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️portchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortChange)
 /// <summary>PortChange holds the data fields for a PortChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️portchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortChange)
+/// </remarks>
 pub type PortChange = Change<Port, PortDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️propchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropChange)
 /// <summary>PropChange holds the data fields for a PropChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️propchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropChange)
+/// </remarks>
 pub type PropChange = Change<Prop, PropDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️tagchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagChange)
 /// <summary>TagChange holds the data fields for a TagChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️tagchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagChange)
+/// </remarks>
 pub type TagChange = Change<Tag, TagDiff>;
 /// <summary>ConceptChange holds the data fields for a ConceptChange record.</summary>
-// [👤semio📚rs💻semio🔖difftypes🛠️conceptchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptChange)
+/// [👤semio📚rs💻semio🔖difftypes🛠️conceptchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptChange)
 pub type ConceptChange = Change<Concept, ConceptDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️modelchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelChange)
 /// <summary>ModelChange holds the data fields for a ModelChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️modelchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelChange)
+/// </remarks>
 pub type ModelChange = Change<Model, ModelDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️connectorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorChange)
 /// <summary>ConnectorChange holds the data fields for a ConnectorChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️connectorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorChange)
+/// </remarks>
 pub type ConnectorChange = Change<Connector, ConnectorDiff>;
 /// <summary>TypeChange holds the data fields for a TypeChange record.</summary>
-// [👤semio📚rs💻semio🔖difftypes🛠️typechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeChange)
+/// [👤semio📚rs💻semio🔖difftypes🛠️typechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeChange)
 pub type TypeChange = Change<Type, TypeDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️layerchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerChange)
 /// <summary>LayerChange holds the data fields for a LayerChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️layerchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerChange)
+/// </remarks>
 pub type LayerChange = Change<Layer, LayerDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️piecechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceChange)
 /// <summary>PieceChange holds the data fields for a PieceChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️piecechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceChange)
+/// </remarks>
 pub type PieceChange = Change<Piece, PieceDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️groupchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupChange)
 /// <summary>GroupChange holds the data fields for a GroupChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️groupchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupChange)
+/// </remarks>
 pub type GroupChange = Change<Group, GroupDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️sidechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideChange)
 /// <summary>SideChange holds the data fields for a SideChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️sidechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideChange)
+/// </remarks>
 pub type SideChange = Change<Side, SideDiff>;
 /// <summary>ConnectionChange holds the data fields for a ConnectionChange record.</summary>
-// [👤semio📚rs💻semio🔖difftypes🛠️connectionchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionChange)
+/// [👤semio📚rs💻semio🔖difftypes🛠️connectionchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionChange)
 pub type ConnectionChange = Change<Connection, ConnectionDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️statchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatChange)
 /// <summary>StatChange holds the data fields for a StatChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️statchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatChange)
+/// </remarks>
 pub type StatChange = Change<Stat, StatDiff>;
 // [👤semio📚rs💻semio🔖difftypes🛠️designchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignChange)
 /// <summary>DesignChange holds the data fields for a DesignChange record.</summary>
+/// <remarks>
+/// [👤semio📚rs💻semio🔖difftypes🛠️designchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignChange)
+/// </remarks>
 pub type DesignChange = Change<Design, DesignDiff>;
 /// <summary>KitChange holds the data fields for a KitChange record.</summary>
-// [👤semio📚rs💻semio🔖difftypes🛠️kitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitChange)
+/// [👤semio📚rs💻semio🔖difftypes🛠️kitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitChange)
 pub type KitChange = Change<Kit, KitDiff>;
 
 // #endregion 🔖Diff Types
@@ -3203,9 +3244,6 @@ pub fn apply_quality_diff(item: &mut Quality, diff: &QualityDiff) {
 pub fn apply_file_diff(item: &mut File, diff: &FileDiff) {
     if let Some(value) = &diff.name {
         item.name = value.clone();
-    }
-    if let Some(value) = &diff.mime {
-        item.mime = value.clone();
     }
     if let Some(value) = &diff.remote {
         item.remote = value.clone();
@@ -4451,8 +4489,8 @@ pub mod sqlite {
         if let Some(ref files) = kit.files {
             for file in files {
                 conn.execute(
-                    "INSERT INTO file (guid, name, mime, folder_guid, size, hash, remote_url, created, updated, kit_guid) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
-                    params![file.guid, file.name, file.mime, file.folder.as_ref().map(|f| &f.guid), file.size, file.hash, file.remote, now, now, kit.guid],
+                    "INSERT INTO file (guid, name, folder_guid, size, hash, remote_url, created, updated, kit_guid) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                    params![file.guid, file.name, file.folder.as_ref().map(|f| &f.guid), file.size, file.hash, file.remote, now, now, kit.guid],
                 ).map_err(|e| SemioError::Database { message: e.to_string() })?;
             }
         }
@@ -4739,20 +4777,19 @@ pub mod sqlite {
     }
 
     fn load_files(conn: &rusqlite::Connection, kit_guid: &str) -> Result<Vec<File>> {
-        let mut stmt = conn.prepare("SELECT guid, name, mime, folder_guid, size, hash, remote_url FROM file WHERE kit_guid = ?1")
+        let mut stmt = conn.prepare("SELECT guid, name, folder_guid, size, hash, remote_url FROM file WHERE kit_guid = ?1")
             .map_err(|e| SemioError::Database { message: e.to_string() })?;
         let rows = stmt
             .query_map([kit_guid], |row| {
                 Ok(File {
                     guid: row.get(0)?,
                     name: row.get(1)?,
-                    mime: row.get(2)?,
                     folder: row
-                        .get::<_, Option<String>>(3)?
+                        .get::<_, Option<String>>(2)?
                         .map(|g| FolderId { guid: g }),
-                    size: row.get(4)?,
-                    hash: row.get(5)?,
-                    remote: row.get(6)?,
+                    size: row.get(3)?,
+                    hash: row.get(4)?,
+                    remote: row.get(5)?,
                     blob: None,
                     created_at: None,
                     updated_at: None,
@@ -5198,6 +5235,26 @@ pub mod sqlite {
 #[cfg(not(target_arch = "wasm32"))]
 /// <summary>zip_roundtrip holds the data fields for a zip_roundtrip record.</summary>
 /// [👤semio📚rs💻semio🔖zipimport🔖export🛠️ziproundtrip](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export/d/i/zip_roundtrip)
+fn mime_from_filename(filename: &str) -> &'static str {
+    let ext = filename.rsplit('.').next().unwrap_or("").to_lowercase();
+    match ext.as_str() {
+        "stl" => "model/stl",
+        "obj" => "model/obj",
+        "glb" => "model/gltf-binary",
+        "gltf" => "model/gltf+json",
+        "3dm" => "model/vnd.3dm",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "svg" => "image/svg+xml",
+        "pdf" => "application/pdf",
+        "zip" => "application/zip",
+        "json" => "application/json",
+        "csv" => "text/csv",
+        "txt" => "text/plain",
+        _ => "application/octet-stream",
+    }
+}
+
 pub mod zip_roundtrip {
     use super::*;
     use base64::Engine;
@@ -5235,6 +5292,7 @@ pub mod zip_roundtrip {
             }
             return format!("{}/{}", folder_path, file.name);
         }
+        file.name.clone()
     }
 
     pub fn import_kit_from_zip(zip_path: &str) -> Result<KitImportResult> {
@@ -5278,7 +5336,6 @@ pub mod zip_roundtrip {
         })?;
         let mut kit = deserialize_kit(&kit_str)?;
 
-        // Pre-compute paths before mutable borrow
         let file_paths: Vec<String> = kit
             .files
             .as_ref()
@@ -5287,7 +5344,8 @@ pub mod zip_roundtrip {
         if let Some(ref mut kit_files) = kit.files {
             for (i, f) in kit_files.iter_mut().enumerate() {
                 if let Some(data) = files.get(&file_paths[i]) {
-                    f.blob = Some(base64::engine::general_purpose::STANDARD.encode(data));
+                    let mime = crate::mime_from_filename(&f.name);
+                    f.blob = Some(format!("data:{};base64,{}", mime, base64::engine::general_purpose::STANDARD.encode(data)));
                 }
             }
         }
@@ -5698,8 +5756,13 @@ mod tests {
             if let Some(ref kit_files) = kit.files {
                 for f in kit_files {
                     if let Some(ref blob) = f.blob {
+                        let b64 = if let Some(pos) = blob.find(";base64,") {
+                            &blob[pos + 8..]
+                        } else {
+                            blob.as_str()
+                        };
                         let decoded = base64::engine::general_purpose::STANDARD
-                            .decode(blob)
+                            .decode(b64)
                             .unwrap();
                         let file_path = crate::zip_roundtrip::build_file_path(&kit, f);
                         files.insert(file_path, decoded);

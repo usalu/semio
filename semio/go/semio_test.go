@@ -252,58 +252,6 @@ func TestChange(t *testing.T) {
 			appliedForward := ApplyKitDiff(kitOriginal, change.Forward)
 			if !AreKitsEqual(appliedForward, kitDiffed) {
 				t.Error("Original + Diff should equal DiffedKit")
-				// [DEBUG] Find differences
-				afJSON, _ := json.Marshal(appliedForward)
-				dkJSON, _ := json.Marshal(kitDiffed)
-				if len(afJSON) != len(dkJSON) {
-					t.Errorf("[DEBUG] JSON size: appliedForward=%d kitDiffed=%d", len(afJSON), len(dkJSON))
-				}
-
-				for _, ta := range appliedForward.Types {
-					for _, tb := range kitDiffed.Types {
-						if ta.Guid == tb.Guid {
-							if !areTypesEqual(ta, tb) {
-								t.Errorf("[DEBUG] Type %s %q differs", ta.Guid[:8], ta.Name)
-							}
-							break
-						}
-					}
-				}
-
-				for _, da := range appliedForward.Designs {
-					for _, db := range kitDiffed.Designs {
-						if da.Guid == db.Guid {
-							if !areDesignsEqual(da, db) {
-								t.Errorf("[DEBUG] Design %s %q differs", da.Guid[:8], da.Name)
-							}
-							break
-						}
-					}
-				}
-				for _, ta := range kitDiffed.Tags {
-					found := false
-					for _, tb := range appliedForward.Tags {
-						if ta.Guid == tb.Guid {
-							found = true
-							break
-						}
-					}
-					if !found {
-						t.Errorf("[DEBUG] Missing tag %s", ta.Guid[:8])
-					}
-				}
-				for _, ca := range kitDiffed.Concepts {
-					found := false
-					for _, cb := range appliedForward.Concepts {
-						if ca.Guid == cb.Guid {
-							found = true
-							break
-						}
-					}
-					if !found {
-						t.Errorf("[DEBUG] Missing concept %s", ca.Guid[:8])
-					}
-				}
 			}
 
 			appliedInverse := ApplyKitDiff(kitDiffed, change.Backward)

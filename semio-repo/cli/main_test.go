@@ -15451,8 +15451,8 @@ func TestValidateHookEvent(t *testing.T) {
 		{"agent tool ended", "agent.tool.ended", true, HookAgentToolEnded},
 		{"agent tool plan updating starting", "agent.tool.plan.updating.starting", true, HookAgentToolPlanUpdatingStarting},
 		{"agent tool plan updating ended", "agent.tool.plan.updating.ended", true, HookAgentToolPlanUpdatingEnded},
-		{"agent tool code searching", "agent.tool.search.starting", true, HookAgentToolSearchStarting},
-		{"agent tool searched", "agent.tool.search.ended", true, HookAgentToolSearchEnded},
+		{"agent tool code searching", "agent.file.read.starting", true, HookAgentToolSearchStarting},
+		{"agent tool searched", "agent.file.read.ended", true, HookAgentToolSearchEnded},
 		{"agent tool code editing", "agent.tool.code.edit.starting", true, HookAgentToolCodeEditStarting},
 		{"agent tool code edited", "agent.tool.code.edit.ended", true, HookAgentToolCodeEditEnded},
 		{"agent tool terminal starting", "agent.tool.terminal.starting", true, HookAgentToolTerminalStarting},
@@ -16038,7 +16038,7 @@ func TestVSCodeEventFromHookEvent(t *testing.T) {
 		{"agent.ended subagent", HookAgentEnded, "subagent", "SubagentStop"},
 		{"agent.prompt.submitting", HookAgentPromptSubmitting, "", "UserPromptSubmit"},
 		{"agent.compacting", HookAgentCompacting, "", "PreCompact"},
-		{"agent.tool.search.starting", HookAgentToolSearchStarting, "", "PreToolUse"},
+		{"agent.file.read.starting", HookAgentToolSearchStarting, "", "PreToolUse"},
 		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, "", "PreToolUse"},
 		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, "", "PostToolUse"},
 		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, "", "PreToolUse"},
@@ -17235,8 +17235,8 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 		entry := meta.Events[0]
 		var evt map[string]interface{}
 		json.Unmarshal(entry.Event, &evt)
-		if evt["kind"] != "repo.tree.starting" {
-			t.Errorf("expected kind repo.tree.starting, got: %v", evt["kind"])
+		if evt["kind"] != "agent.tree.starting" {
+			t.Errorf("expected kind agent.tree.starting, got: %v", evt["kind"])
 		}
 	})
 
@@ -17268,8 +17268,8 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 		entry := meta.Events[1]
 		var evt map[string]interface{}
 		json.Unmarshal(entry.Event, &evt)
-		if evt["kind"] != "repo.ticket.open.ended" {
-			t.Errorf("expected kind repo.ticket.open.ended, got: %v", evt["kind"])
+		if evt["kind"] != "agent.ticket.open.ended" {
+			t.Errorf("expected kind agent.ticket.open.ended, got: %v", evt["kind"])
 		}
 	})
 
@@ -17341,8 +17341,8 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 		entry := meta.Events[0]
 		var evt map[string]interface{}
 		json.Unmarshal(entry.Event, &evt)
-		if evt["kind"] != "repo.ticket.open.starting" {
-			t.Errorf("expected kind repo.ticket.open.starting, got: %v", evt["kind"])
+		if evt["kind"] != "agent.ticket.open.starting" {
+			t.Errorf("expected kind agent.ticket.open.starting, got: %v", evt["kind"])
 		}
 	})
 
@@ -17374,8 +17374,8 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 		entry := meta.Events[1]
 		var evt map[string]interface{}
 		json.Unmarshal(entry.Event, &evt)
-		if evt["kind"] != "repo.goal.close.ended" {
-			t.Errorf("expected kind repo.goal.close.ended, got: %v", evt["kind"])
+		if evt["kind"] != "agent.goal.close.ended" {
+			t.Errorf("expected kind agent.goal.close.ended, got: %v", evt["kind"])
 		}
 	})
 }
@@ -17417,13 +17417,13 @@ func TestRunHookAgentToolStartingDerivedRepoEvents(t *testing.T) {
 	for _, entry := range meta.Events {
 		var evt map[string]interface{}
 		json.Unmarshal(entry.Event, &evt)
-		if evt["kind"] == "repo.ticket.open.starting" {
+		if evt["kind"] == "agent.ticket.open.starting" {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected derived repo.ticket.open.starting event in session.json events")
+		t.Errorf("expected derived agent.ticket.open.starting event in session.json events")
 	}
 }
 func setupTicketDir(t *testing.T) (string, string) {
@@ -17499,8 +17499,8 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}{
 		{"agent.started", HookAgentStarted, sessionInput},
 		{"agent.tool.starting", HookAgentToolStarting, json.RawMessage(`{"session_id":"test-session-1","tool_name":"grep_search"}`)},
-		{"agent.tool.search.starting", HookAgentToolSearchStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"hello","includePattern":"src/**"}}`)},
-		{"agent.tool.search.ended", HookAgentToolSearchEnded, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"world"}}`)},
+		{"agent.file.read.starting", HookAgentToolSearchStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"hello","includePattern":"src/**"}}`)},
+		{"agent.file.read.ended", HookAgentToolSearchEnded, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"query":"world"}}`)},
 		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
 		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"filePath":"/tmp/test.go","oldString":"old","newString":"new"}}`)},
 		{"agent.tool.terminal.starting", HookAgentToolTerminalStarting, json.RawMessage(`{"session_id":"test-session-1","tool_input":{"command":"go test ./..."}}`)},
@@ -17917,6 +17917,7 @@ func TestClassifyTool(t *testing.T) {
 		{"create_and_run_task", "create_and_run_task", ToolKindBuild},
 		{"fetch_webpage", "fetch_webpage", ToolKindCodeSearch},
 		{"open_simple_browser", "open_simple_browser", ToolKindCodeSearch},
+		{"Glob", "Glob", ToolKindCodeSearch},
 		{"tool_search_tool_regex", "tool_search_tool_regex", ToolKindGeneric},
 		{"empty", "", ToolKindGeneric},
 	}
@@ -18854,6 +18855,8 @@ func TestResolveHookEvent(t *testing.T) {
 		{"claude PreToolUse Bash", "PreToolUse", "claude-code", "Bash", HookAgentToolTerminalStarting, "", false},
 		{"claude PostToolUse Bash", "PostToolUse", "claude-code", "Bash", HookAgentToolTerminalEnded, "", false},
 		{"claude PreToolUse Read", "PreToolUse", "claude-code", "Read", HookAgentToolSearchStarting, "", false},
+		{"claude PreToolUse Glob", "PreToolUse", "claude-code", "Glob", HookAgentToolSearchStarting, "", false},
+		{"claude PostToolUse Glob", "PostToolUse", "claude-code", "Glob", HookAgentToolSearchEnded, "", false},
 		{"claude PreToolUse Edit", "PreToolUse", "claude-code", "Edit", HookAgentToolCodeEditStarting, "", false},
 		{"claude PostToolUse Edit", "PostToolUse", "claude-code", "Edit", HookAgentToolCodeEditEnded, "", false},
 		{"droid PreToolUse", "PreToolUse", "droid", "Bash", HookAgentToolTerminalStarting, "", false},
@@ -19029,7 +19032,7 @@ func TestPopulateEventDataAgentStartingParentFromContext(t *testing.T) {
 }
 
 func TestPopulateEventDataAgentEnded(t *testing.T) {
-	payload := json.RawMessage(`{"session_id":"sess-end"}`)
+	payload := json.RawMessage(`{"session_id":"sess-end","tool_info":{"response":"final report text"}}`)
 	hctx := HookContext{
 		Event:    HookAgentEnded,
 		Client:   "cursor-chat",
@@ -19050,6 +19053,9 @@ func TestPopulateEventDataAgentEnded(t *testing.T) {
 	}
 	if res.Client != "cursor-chat" {
 		t.Errorf("expected client=cursor-chat, got %s", res.Client)
+	}
+	if res.Report != "final report text" {
+		t.Errorf("expected report to be extracted, got %q", res.Report)
 	}
 }
 
@@ -20019,6 +20025,36 @@ func TestExtractChatFromInput(t *testing.T) {
 	})
 }
 
+func TestExtractReportFromInput(t *testing.T) {
+	t.Run("report field", func(t *testing.T) {
+		input := json.RawMessage(`{"report":"agent summary"}`)
+		result := extractReportFromInput(input)
+		if result != "agent summary" {
+			t.Errorf("expected agent summary, got %s", result)
+		}
+	})
+	t.Run("tool_info response field", func(t *testing.T) {
+		input := json.RawMessage(`{"tool_info":{"response":"from tool info"}}`)
+		result := extractReportFromInput(input)
+		if result != "from tool info" {
+			t.Errorf("expected from tool info, got %s", result)
+		}
+	})
+	t.Run("native event tool_info response field", func(t *testing.T) {
+		input := json.RawMessage(`{"native":{"event":{"tool_info":{"response":"nested response"}}}}`)
+		result := extractReportFromInput(input)
+		if result != "nested response" {
+			t.Errorf("expected nested response, got %s", result)
+		}
+	})
+	t.Run("empty input", func(t *testing.T) {
+		result := extractReportFromInput(nil)
+		if result != "" {
+			t.Errorf("expected empty report, got %s", result)
+		}
+	})
+}
+
 func TestExtractCheckpointMessageFromInput(t *testing.T) {
 	t.Run("from input json", func(t *testing.T) {
 		input := json.RawMessage(`{"message":"feat: new feature"}`)
@@ -20474,8 +20510,8 @@ func TestCheckpointInAllAgentEvents(t *testing.T) {
 		{"agent.tool.ended", HookAgentToolEnded, json.RawMessage(`{"session_id":"checkpoint-test","tool_name":"read_file"}`)},
 		{"agent.tool.plan.updating.starting", HookAgentToolPlanUpdatingStarting, sessionInput},
 		{"agent.tool.plan.updating.ended", HookAgentToolPlanUpdatingEnded, sessionInput},
-		{"agent.tool.search.starting", HookAgentToolSearchStarting, sessionInput},
-		{"agent.tool.search.ended", HookAgentToolSearchEnded, sessionInput},
+		{"agent.file.read.starting", HookAgentToolSearchStarting, sessionInput},
+		{"agent.file.read.ended", HookAgentToolSearchEnded, sessionInput},
 		{"agent.tool.code.edit.starting", HookAgentToolCodeEditStarting, sessionInput},
 		{"agent.tool.code.edit.ended", HookAgentToolCodeEditEnded, sessionInput},
 		{"agent.tool.test.starting", HookAgentToolTestStarting, sessionInput},

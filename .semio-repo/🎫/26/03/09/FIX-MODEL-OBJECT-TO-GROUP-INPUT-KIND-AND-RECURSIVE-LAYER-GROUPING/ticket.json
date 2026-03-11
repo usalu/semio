@@ -1,0 +1,13 @@
+{
+  "title": "Fix Model Object To Group Input Kind and Recursive Layer Grouping",
+  "status": "closed",
+  "description": "ModelObject to Group does not handle Rhino ModelObject output of Import Model. Input 1 must accept Rhino ModelObject, support list inputs, recursively bundle all layers into a group, and accept Model Objects in general.",
+  "summary": "ModelObject To Group now produces native GH_GeometryGroup output only, recursively grouped by Rhino layer path, with geometry from Import Model Rhino model objects; removed semio-group conversion path from this component.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/820"
+  },
+  "goal": "🎯r2603🎯runningnet🎯runninggrasshopper🎯testedgrasshoppercomponents",
+  "sessions": [
+    "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013⚪019cd4966b837be1bfe363142062e4b1"
+  ]
+}

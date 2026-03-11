@@ -2,12 +2,13 @@
   "title": "Add Import Model Component",
   "status": "closed",
   "description": "Add a new Grasshopper component Import Model that accepts a file blob string input and outputs Rhino ModelObject.",
-  "summary": "Added Import Model component with blob decoding utility and extended Grasshopper tests for blob/data-URI decoding and Rhino model-object import.",
+  "summary": "Import Model now takes Model first and File second; scales from source file units to model unit attribute exactly once and avoids active-doc/default scaling side effects.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/814"
   },
   "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
   "sessions": [
-    "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09⚪019cd2cbe0a47b70829277c26485b956"
+    "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09⚪019cd2cbe0a47b70829277c26485b956",
+    "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013⚪019cd2cbe0a47b70829277c26485b956"
   ]
 }

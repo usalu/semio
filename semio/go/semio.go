@@ -101,6 +101,19 @@ func optBoolEqual(a, b *bool) bool {
 	return *a == *b
 }
 
+// optStringEqual holds the data fields for a optStringEqual record.
+// optStringEqual MUST perform the optStringEqual operation.
+// [👤semio📚go💻semio🔖utils🛠️optstringequal](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Utils/d/i/optStringEqual)
+func optStringEqual(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
 // [👤semio📚go💻semio🔖utils🛠️arelocationidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Utils/d/i/areLocationIdsEqual)
 // areLocationIdsEqual holds the data fields for a areLocationIdsEqual record.
 // areLocationIdsEqual MUST perform the areLocationIdsEqual operation.
@@ -237,7 +250,13 @@ func areAttributesEqual(a, b []Attribute) bool {
 		if !ok {
 			return false
 		}
-		if attr.Key != other.Key || attr.Value != other.Value {
+		if attr.Key != other.Key {
+			return false
+		}
+		if !optStringEqual(attr.Value, other.Value) {
+			return false
+		}
+		if !optStringEqual(attr.Definition, other.Definition) {
 			return false
 		}
 	}
@@ -601,7 +620,6 @@ type AuthorsDiff struct {
 type File struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Mime        *string     `json:"mime,omitempty"`
 	Remote      *string     `json:"remote,omitempty"`
 	Folder      *FolderId   `json:"folder,omitempty"`
 	Size        *int64      `json:"size,omitempty"`
@@ -617,7 +635,6 @@ type File struct {
 // [👤semio📚go💻semio🔖file✂️filediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/File/d/i/FileDiff)
 type FileDiff struct {
 	Name        *string         `json:"name,omitempty"`
-	Mime        *string         `json:"mime,omitempty"`
 	Remote      *string         `json:"remote,omitempty"`
 	Size        *int64          `json:"size,omitempty"`
 	Hash        *string         `json:"hash,omitempty"`
@@ -1661,66 +1678,87 @@ type Change[TEntity any, TDiff any] struct {
 // [👤semio📚go💻semio🔖kit✂️attributechange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/AttributeChange)
 // AttributeChange holds the data fields for a AttributeChange record.
 type AttributeChange = Change[Attribute, AttributeDiff]
+
 // [👤semio📚go💻semio🔖kit✂️locationchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/LocationChange)
 // LocationChange holds the data fields for a LocationChange record.
 type LocationChange = Change[Location, LocationDiff]
+
 // [👤semio📚go💻semio🔖kit✂️authorchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/AuthorChange)
 // AuthorChange holds the data fields for a AuthorChange record.
 type AuthorChange = Change[Author, AuthorDiff]
+
 // [👤semio📚go💻semio🔖kit✂️filechange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/FileChange)
 // FileChange holds the data fields for a FileChange record.
 type FileChange = Change[File, FileDiff]
+
 // [👤semio📚go💻semio🔖kit✂️folderchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/FolderChange)
 // FolderChange holds the data fields for a FolderChange record.
 type FolderChange = Change[Folder, FolderDiff]
+
 // [👤semio📚go💻semio🔖kit✂️benchmarkchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/BenchmarkChange)
 // BenchmarkChange holds the data fields for a BenchmarkChange record.
 type BenchmarkChange = Change[Benchmark, BenchmarkDiff]
+
 // [👤semio📚go💻semio🔖kit✂️qualitychange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/QualityChange)
 // QualityChange holds the data fields for a QualityChange record.
 type QualityChange = Change[Quality, QualityDiff]
+
 // [👤semio📚go💻semio🔖kit✂️portchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/PortChange)
 // PortChange holds the data fields for a PortChange record.
 type PortChange = Change[Port, PortDiff]
+
 // [👤semio📚go💻semio🔖kit✂️propchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/PropChange)
 // PropChange holds the data fields for a PropChange record.
 type PropChange = Change[Prop, PropDiff]
+
 // [👤semio📚go💻semio🔖kit✂️tagchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/TagChange)
 // TagChange holds the data fields for a TagChange record.
 type TagChange = Change[Tag, TagDiff]
+
 // [👤semio📚go💻semio🔖kit✂️conceptchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/ConceptChange)
 // ConceptChange holds the data fields for a ConceptChange record.
 type ConceptChange = Change[Concept, ConceptDiff]
+
 // [👤semio📚go💻semio🔖kit✂️modelchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/ModelChange)
 // ModelChange holds the data fields for a ModelChange record.
 type ModelChange = Change[Model, ModelDiff]
+
 // [👤semio📚go💻semio🔖kit✂️connectorchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/ConnectorChange)
 // ConnectorChange holds the data fields for a ConnectorChange record.
 type ConnectorChange = Change[Connector, ConnectorDiff]
+
 // [👤semio📚go💻semio🔖kit✂️typechange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/TypeChange)
 // TypeChange holds the data fields for a TypeChange record.
 type TypeChange = Change[Type, TypeDiff]
+
 // [👤semio📚go💻semio🔖kit✂️layerchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/LayerChange)
 // LayerChange holds the data fields for a LayerChange record.
 type LayerChange = Change[Layer, LayerDiff]
+
 // [👤semio📚go💻semio🔖kit✂️piecechange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/PieceChange)
 // PieceChange holds the data fields for a PieceChange record.
 type PieceChange = Change[Piece, PieceDiff]
+
 // [👤semio📚go💻semio🔖kit✂️groupchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/GroupChange)
 // GroupChange holds the data fields for a GroupChange record.
 type GroupChange = Change[Group, GroupDiff]
+
 // [👤semio📚go💻semio🔖kit✂️sidechange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/SideChange)
 // SideChange holds the data fields for a SideChange record.
 type SideChange = Change[Side, SideDiff]
+
 // [👤semio📚go💻semio🔖kit✂️connectionchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/ConnectionChange)
 // ConnectionChange holds the data fields for a ConnectionChange record.
 type ConnectionChange = Change[Connection, ConnectionDiff]
+
 // [👤semio📚go💻semio🔖kit✂️statchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/StatChange)
 // StatChange holds the data fields for a StatChange record.
 type StatChange = Change[Stat, StatDiff]
+
 // [👤semio📚go💻semio🔖kit✂️designchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/DesignChange)
 // DesignChange holds the data fields for a DesignChange record.
 type DesignChange = Change[Design, DesignDiff]
+
 // [👤semio📚go💻semio🔖kit✂️kitchange](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/KitChange)
 // KitChange holds the data fields for a KitChange record.
 type KitChange = Change[Kit, KitDiff]
@@ -2737,6 +2775,7 @@ func getTypesDiff(before, after []Type) TypesDiff {
 // getTypeDiff MUST perform the getTypeDiff operation.
 func getTypeDiff(before, after Type) TypeDiff {
 	diff := TypeDiff{}
+	diff.setFields = make(map[string]bool)
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
@@ -2748,9 +2787,11 @@ func getTypeDiff(before, after Type) TypeDiff {
 	}
 	if !optBoolEqual(before.Virtual, after.Virtual) {
 		diff.Virtual = after.Virtual
+		diff.setFields["virtual"] = true
 	}
 	if normalizeStr(before.Unit) != normalizeStr(after.Unit) {
 		diff.Unit = after.Unit
+		diff.setFields["unit"] = true
 	}
 	if normalizeOptInt(before.Stock) != normalizeOptInt(after.Stock) {
 		diff.Stock = after.Stock
@@ -2769,6 +2810,7 @@ func getTypeDiff(before, after Type) TypeDiff {
 	}
 	if normalizeStr(before.Description) != normalizeStr(after.Description) {
 		diff.Description = after.Description
+		diff.setFields["description"] = true
 	}
 	if !areAuthorIdsEqual(before.Authors, after.Authors) {
 		diff.Authors = after.Authors
@@ -2960,14 +3002,17 @@ func getTagsDiff(before, after []Tag) TagsDiff {
 // getTagDiff MUST perform the getTagDiff operation.
 func getTagDiff(before, after Tag) TagDiff {
 	diff := TagDiff{}
+	diff.setFields = make(map[string]bool)
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
 	if normalizeStr(before.Description) != normalizeStr(after.Description) {
 		diff.Description = after.Description
+		diff.setFields["description"] = true
 	}
 	if normalizeStr(before.Icon) != normalizeStr(after.Icon) {
 		diff.Icon = after.Icon
+		diff.setFields["icon"] = true
 	}
 	attrsDiff := getAttributesDiff(before.Attributes, after.Attributes)
 	if !isAttributesDiffEmpty(attrsDiff) {
@@ -3022,14 +3067,17 @@ func getConceptsDiff(before, after []Concept) ConceptsDiff {
 // getConceptDiff MUST perform the getConceptDiff operation.
 func getConceptDiff(before, after Concept) ConceptDiff {
 	diff := ConceptDiff{}
+	diff.setFields = make(map[string]bool)
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
 	if normalizeStr(before.Description) != normalizeStr(after.Description) {
 		diff.Description = after.Description
+		diff.setFields["description"] = true
 	}
 	if normalizeStr(before.Icon) != normalizeStr(after.Icon) {
 		diff.Icon = after.Icon
+		diff.setFields["icon"] = true
 	}
 	attrsDiff := getAttributesDiff(before.Attributes, after.Attributes)
 	if !isAttributesDiffEmpty(attrsDiff) {
@@ -3084,14 +3132,17 @@ func getPortsDiff(before, after []Port) PortsDiff {
 // getPortDiff MUST perform the getPortDiff operation.
 func getPortDiff(before, after Port) PortDiff {
 	diff := PortDiff{}
+	diff.setFields = make(map[string]bool)
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
 	if normalizeStr(before.Description) != normalizeStr(after.Description) {
 		diff.Description = after.Description
+		diff.setFields["description"] = true
 	}
 	if normalizeStr(before.Icon) != normalizeStr(after.Icon) {
 		diff.Icon = after.Icon
+		diff.setFields["icon"] = true
 	}
 	if !arePortIdSlicesEqual(before.CompatiblePorts, after.CompatiblePorts) {
 		diff.CompatiblePorts = after.CompatiblePorts
@@ -3152,9 +3203,6 @@ func getFileDiff(before, after File) FileDiff {
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
-	if normalizeStr(before.Mime) != normalizeStr(after.Mime) {
-		diff.Mime = after.Mime
-	}
 	if normalizeStr(before.Remote) != normalizeStr(after.Remote) {
 		diff.Remote = after.Remote
 	}
@@ -3184,7 +3232,7 @@ func getFileDiff(before, after File) FileDiff {
 // isFileDiffEmpty holds the data fields for a isFileDiffEmpty record.
 // isFileDiffEmpty MUST perform the isFileDiffEmpty operation.
 func isFileDiffEmpty(diff FileDiff) bool {
-	return diff.Name == nil && diff.Mime == nil && diff.Remote == nil && diff.Folder == nil && diff.Size == nil && diff.Hash == nil && diff.Blob == nil && diff.Description == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Remote == nil && diff.Folder == nil && diff.Size == nil && diff.Hash == nil && diff.Blob == nil && diff.Description == nil && diff.Attributes == nil
 }
 
 // [👤semio📚go💻semio🔖kitoperations🛠️getfoldersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/getFoldersDiff)
@@ -3415,6 +3463,7 @@ func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {
 // inverseTypeDiff MUST perform the inverseTypeDiff operation.
 func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 	inverse := TypeDiff{}
+	inverse.setFields = make(map[string]bool)
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
@@ -3426,9 +3475,11 @@ func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 	}
 	if appliedDiff.HasField("virtual") {
 		inverse.Virtual = original.Virtual
+		inverse.setFields["virtual"] = true
 	}
 	if appliedDiff.HasField("unit") {
 		inverse.Unit = original.Unit
+		inverse.setFields["unit"] = true
 	}
 	if appliedDiff.Stock != nil {
 		inverse.Stock = original.Stock
@@ -3447,6 +3498,7 @@ func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 	}
 	if appliedDiff.HasField("description") {
 		inverse.Description = original.Description
+		inverse.setFields["description"] = true
 	}
 	if appliedDiff.Authors != nil {
 		inverse.Authors = original.Authors
@@ -3618,14 +3670,17 @@ func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {
 // inverseTagDiff MUST perform the inverseTagDiff operation.
 func inverseTagDiff(original Tag, appliedDiff TagDiff) TagDiff {
 	inverse := TagDiff{}
+	inverse.setFields = make(map[string]bool)
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
 	if appliedDiff.Description != nil {
 		inverse.Description = original.Description
+		inverse.setFields["description"] = true
 	}
 	if appliedDiff.Icon != nil {
 		inverse.Icon = original.Icon
+		inverse.setFields["icon"] = true
 	}
 	if appliedDiff.Attributes != nil {
 		attrsDiff := inverseAttributesDiff(original.Attributes, *appliedDiff.Attributes)
@@ -3670,14 +3725,17 @@ func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) ConceptsD
 // inverseConceptDiff MUST perform the inverseConceptDiff operation.
 func inverseConceptDiff(original Concept, appliedDiff ConceptDiff) ConceptDiff {
 	inverse := ConceptDiff{}
+	inverse.setFields = make(map[string]bool)
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
 	if appliedDiff.Description != nil {
 		inverse.Description = original.Description
+		inverse.setFields["description"] = true
 	}
 	if appliedDiff.Icon != nil {
 		inverse.Icon = original.Icon
+		inverse.setFields["icon"] = true
 	}
 	if appliedDiff.Attributes != nil {
 		attrsDiff := inverseAttributesDiff(original.Attributes, *appliedDiff.Attributes)
@@ -3722,14 +3780,17 @@ func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {
 // inversePortDiff MUST perform the inversePortDiff operation.
 func inversePortDiff(original Port, appliedDiff PortDiff) PortDiff {
 	inverse := PortDiff{}
+	inverse.setFields = make(map[string]bool)
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
 	if appliedDiff.Description != nil {
 		inverse.Description = original.Description
+		inverse.setFields["description"] = true
 	}
 	if appliedDiff.Icon != nil {
 		inverse.Icon = original.Icon
+		inverse.setFields["icon"] = true
 	}
 	if appliedDiff.CompatiblePorts != nil {
 		inverse.CompatiblePorts = original.CompatiblePorts
@@ -3779,9 +3840,6 @@ func inverseFileDiff(original File, appliedDiff FileDiff) FileDiff {
 	inverse := FileDiff{}
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
-	}
-	if appliedDiff.Mime != nil {
-		inverse.Mime = original.Mime
 	}
 	if appliedDiff.Remote != nil {
 		inverse.Remote = original.Remote
@@ -4272,9 +4330,26 @@ func inverseSideDiff(original Side, appliedDiff SideDiff) *SideDiff {
 	return inverse
 }
 
-// [👤semio📚go💻semio🔖kitoperations🛠️inverseattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseAttributesDiff)
+// [👤semio📚go💻semio🔖kitoperations🛠️inverseattributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseAttributeDiff)
 // inverseAttributesDiff holds the data fields for a inverseAttributesDiff record.
 // inverseAttributesDiff MUST perform the inverseAttributesDiff operation.
+func inverseAttributeDiff(original Attribute, appliedDiff AttributeDiff) AttributeDiff {
+	inverse := AttributeDiff{}
+	if appliedDiff.Key != nil {
+		inverse.Key = &original.Key
+	}
+	if appliedDiff.Value != nil {
+		inverse.Value = original.Value
+	}
+	if appliedDiff.Definition != nil {
+		inverse.Definition = original.Definition
+	}
+	return inverse
+}
+
+// [👤semio📚go💻semio🔖kitoperations🛠️inverseattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/inverseAttributesDiff)
+// inverseAttributesDiff MUST perform the inverseAttributesDiff operation.
+// inverseAttributesDiff performs the inverseAttributesDiff operation.
 func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) AttributesDiff {
 	inverse := AttributesDiff{}
 	for _, added := range appliedDiff.Added {
@@ -4284,6 +4359,18 @@ func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) Att
 		for _, a := range original {
 			if a.Guid == removed.Guid {
 				inverse.Added = append(inverse.Added, a)
+				break
+			}
+		}
+	}
+	for _, updated := range appliedDiff.Updated {
+		for _, a := range original {
+			if a.Guid == updated.Attribute.Guid {
+				inverseDiff := inverseAttributeDiff(a, updated.Diff)
+				inverse.Updated = append(inverse.Updated, struct {
+					Attribute AttributeId   `json:"attribute"`
+					Diff      AttributeDiff `json:"diff"`
+				}{Attribute: AttributeId{Guid: a.Guid}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -4544,9 +4631,33 @@ func areFolderIdsEqual(a, b *FolderId) bool {
 	return a.Guid == b.Guid
 }
 
-// [👤semio📚go💻semio🔖kitoperations🛠️getattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/getAttributesDiff)
+// [👤semio📚go💻semio🔖kitoperations🛠️getattributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/getAttributeDiff)
 // getAttributesDiff holds the data fields for a getAttributesDiff record.
 // getAttributesDiff MUST perform the getAttributesDiff operation.
+func getAttributeDiff(before, after Attribute) AttributeDiff {
+	diff := AttributeDiff{}
+	if before.Key != after.Key {
+		diff.Key = &after.Key
+	}
+	if !optStringEqual(before.Value, after.Value) {
+		diff.Value = after.Value
+	}
+	if !optStringEqual(before.Definition, after.Definition) {
+		diff.Definition = after.Definition
+	}
+	return diff
+}
+
+// [👤semio📚go💻semio🔖kitoperations🛠️isattributediffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/isAttributeDiffEmpty)
+// isAttributeDiffEmpty MUST perform the isAttributeDiffEmpty operation.
+// isAttributeDiffEmpty performs the isAttributeDiffEmpty operation.
+func isAttributeDiffEmpty(diff AttributeDiff) bool {
+	return diff.Key == nil && diff.Value == nil && diff.Definition == nil
+}
+
+// getAttributesDiff holds the data fields for a getAttributesDiff record.
+// getAttributesDiff MUST perform the getAttributesDiff operation.
+// [👤semio📚go💻semio🔖kitoperations🛠️getattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/getAttributesDiff)
 func getAttributesDiff(before, after []Attribute) AttributesDiff {
 	diff := AttributesDiff{}
 	beforeMap := make(map[string]Attribute)
@@ -4565,6 +4676,14 @@ func getAttributesDiff(before, after []Attribute) AttributesDiff {
 	for _, a := range after {
 		if _, ok := beforeMap[a.Guid]; !ok {
 			diff.Added = append(diff.Added, a)
+		} else {
+			attrDiff := getAttributeDiff(beforeMap[a.Guid], a)
+			if !isAttributeDiffEmpty(attrDiff) {
+				diff.Updated = append(diff.Updated, struct {
+					Attribute AttributeId   `json:"attribute"`
+					Diff      AttributeDiff `json:"diff"`
+				}{Attribute: AttributeId{Guid: a.Guid}, Diff: attrDiff})
+			}
 		}
 	}
 	return diff
@@ -4834,6 +4953,23 @@ func isGroupDiffEmpty(diff GroupDiff) bool {
 	return diff.Pieces == nil && diff.Name == nil && diff.Color == nil && diff.Description == nil && diff.Attributes == nil
 }
 
+// [👤semio📚go💻semio🔖kitoperations🛠️applyattributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/applyAttributeDiff)
+// applyAttributesDiff holds the data fields for a applyAttributesDiff record.
+// applyAttributesDiff MUST perform the applyAttributesDiff operation.
+func applyAttributeDiff(base Attribute, diff AttributeDiff) Attribute {
+	result := base
+	if diff.Key != nil {
+		result.Key = *diff.Key
+	}
+	if diff.Value != nil {
+		result.Value = diff.Value
+	}
+	if diff.Definition != nil {
+		result.Definition = diff.Definition
+	}
+	return result
+}
+
 // [👤semio📚go💻semio🔖kitoperations🛠️applyattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/applyAttributesDiff)
 // applyAttributesDiff holds the data fields for a applyAttributesDiff record.
 // applyAttributesDiff MUST perform the applyAttributesDiff operation.
@@ -4843,8 +4979,17 @@ func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute {
 	for _, r := range diff.Removed {
 		removedGuids[r.Guid] = true
 	}
+	updatedDiffs := make(map[string]AttributeDiff)
+	for _, u := range diff.Updated {
+		updatedDiffs[u.Attribute.Guid] = u.Diff
+	}
 	for _, a := range base {
-		if !removedGuids[a.Guid] {
+		if removedGuids[a.Guid] {
+			continue
+		}
+		if d, ok := updatedDiffs[a.Guid]; ok {
+			result = append(result, applyAttributeDiff(a, d))
+		} else {
 			result = append(result, a)
 		}
 	}
@@ -5154,6 +5299,39 @@ func isConnectorDiffEmpty(diff ConnectorDiff) bool {
 	return diff.Name == nil && diff.Description == nil && diff.Port == nil && diff.Mandatory == nil && diff.T == nil && diff.Point == nil && diff.Direction == nil && diff.Props == nil && diff.Attributes == nil
 }
 
+// [👤semio📚go💻semio🔖kitoperations🛠️getmodeldiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/getModelDiff)
+// getModelsDiff holds the data fields for a getModelsDiff record.
+// getModelsDiff MUST perform the getModelsDiff operation.
+func getModelDiff(before, after Model) ModelDiff {
+	diff := ModelDiff{}
+	if normalizeStr(before.Name) != normalizeStr(after.Name) {
+		diff.Name = after.Name
+	}
+	if before.File.Guid != after.File.Guid {
+		diff.File = &after.File
+	}
+	tagsEqual := len(before.Tags) == len(after.Tags)
+	if tagsEqual {
+		for i, t := range before.Tags {
+			if t.Guid != after.Tags[i].Guid {
+				tagsEqual = false
+				break
+			}
+		}
+	}
+	if !tagsEqual {
+		diff.Tags = after.Tags
+	}
+	if normalizeStr(before.Description) != normalizeStr(after.Description) {
+		diff.Description = after.Description
+	}
+	attrsDiff := getAttributesDiff(before.Attributes, after.Attributes)
+	if !isAttributesDiffEmpty(attrsDiff) {
+		diff.Attributes = &attrsDiff
+	}
+	return diff
+}
+
 // [👤semio📚go💻semio🔖kitoperations🛠️getmodelsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/getModelsDiff)
 // getModelsDiff holds the data fields for a getModelsDiff record.
 // getModelsDiff MUST perform the getModelsDiff operation.
@@ -5173,8 +5351,19 @@ func getModelsDiff(before, after []Model) ModelsDiff {
 		}
 	}
 	for _, m := range after {
-		if _, ok := beforeMap[m.Guid]; !ok {
+		if bm, ok := beforeMap[m.Guid]; !ok {
 			diff.Added = append(diff.Added, m)
+		} else {
+			modelDiff := getModelDiff(bm, m)
+			if modelDiff.Name != nil || modelDiff.File != nil || modelDiff.Tags != nil || modelDiff.Description != nil || modelDiff.Attributes != nil {
+				diff.Updated = append(diff.Updated, struct {
+					Model ModelId   `json:"model"`
+					Diff  ModelDiff `json:"diff"`
+				}{
+					Model: ModelId{Guid: m.Guid},
+					Diff:  modelDiff,
+				})
+			}
 		}
 	}
 	return diff
@@ -5244,6 +5433,13 @@ func getPieceDiff(before, after Piece) PieceDiff {
 		diff.Scale = after.Scale
 	}
 	if (before.Center == nil) != (after.Center == nil) || (before.Center != nil && after.Center != nil && (before.Center.U != after.Center.U || before.Center.V != after.Center.V)) {
+		if after.Center != nil {
+			diff.Center = &CoordDiff{U: &after.Center.U, V: &after.Center.V}
+		}
+	}
+	if (before.MirrorPlane == nil) != (after.MirrorPlane == nil) || (before.MirrorPlane != nil && after.MirrorPlane != nil && !arePlanesEqual(*before.MirrorPlane, *after.MirrorPlane)) {
+		if after.MirrorPlane != nil {
+			diff.MirrorPlane = &PlaneDiff{
 				Origin: &PointDiff{X: &after.MirrorPlane.Origin.X, Y: &after.MirrorPlane.Origin.Y, Z: &after.MirrorPlane.Origin.Z},
 				XAxis:  &VectorDiff{X: &after.MirrorPlane.XAxis.X, Y: &after.MirrorPlane.XAxis.Y, Z: &after.MirrorPlane.XAxis.Z},
 				YAxis:  &VectorDiff{X: &after.MirrorPlane.YAxis.X, Y: &after.MirrorPlane.YAxis.Y, Z: &after.MirrorPlane.YAxis.Z},
@@ -5498,142 +5694,6 @@ func areTypesEqual(a, b Type) bool {
 		return false
 	}
 	return true
-}
-
-// [👤semio📚go💻semio🔖kitoperations🛠️areconnectorsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/areConnectorsEqual)
-// areConnectorsEqual holds the data fields for a areConnectorsEqual record.
-// areConnectorsEqual MUST perform the areConnectorsEqual operation.
-
-// [👤semio📚go💻semio🔖kitoperations🛠️debugaretypesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/debugAreTypesEqual)
-// debugAreTypesEqual holds the data fields for a debugAreTypesEqual record.
-// debugAreTypesEqual MUST perform the debugAreTypesEqual operation.
-func debugAreTypesEqual(a, b Type) (bool, string) {
-	if a.Name != b.Name {
-		return false, "name"
-	}
-	if normalizeStr(a.Description) != normalizeStr(b.Description) {
-		return false, "description"
-	}
-	if (a.Parent == nil) != (b.Parent == nil) {
-		return false, "parent nil"
-	}
-	if a.Parent != nil && a.Parent.Guid != b.Parent.Guid {
-		return false, "parent guid"
-	}
-	if !optBoolEqual(a.IsAbstract, b.IsAbstract) {
-		return false, "isAbstract"
-	}
-	if !optBoolEqual(a.Virtual, b.Virtual) {
-		return false, "virtual"
-	}
-	if normalizeStr(a.Unit) != normalizeStr(b.Unit) {
-		return false, "unit"
-	}
-	if normalizeOptInt(a.Stock) != normalizeOptInt(b.Stock) {
-		return false, "stock"
-	}
-	if (a.Location == nil) != (b.Location == nil) {
-		return false, "location nil"
-	}
-	if a.Location != nil && a.Location.Guid != b.Location.Guid {
-		return false, "location guid"
-	}
-	if normalizeStr(a.Folder) != normalizeStr(b.Folder) {
-		return false, "folder"
-	}
-	if normalizeStr(a.Icon) != normalizeStr(b.Icon) {
-		return false, "icon"
-	}
-	if normalizeStr(a.Image) != normalizeStr(b.Image) {
-		return false, "image"
-	}
-	if !areAuthorIdsEqual(a.Authors, b.Authors) {
-		return false, fmt.Sprintf("authors: %d vs %d", len(a.Authors), len(b.Authors))
-	}
-	if !areConceptIdsEqual(a.Concepts, b.Concepts) {
-		return false, fmt.Sprintf("concepts: %d vs %d", len(a.Concepts), len(b.Concepts))
-	}
-	if len(a.Connectors) != len(b.Connectors) {
-		return false, fmt.Sprintf("connectors len: %d vs %d", len(a.Connectors), len(b.Connectors))
-	}
-	for _, ca := range a.Connectors {
-		found := false
-		for _, cb := range b.Connectors {
-			if ca.Guid == cb.Guid {
-				if !areConnectorsEqual(ca, cb) {
-					_, creason := debugAreConnectorsEqual(ca, cb)
-					return false, fmt.Sprintf("connector %s %q: %s", ca.Guid[:8], normalizeStr(ca.Name), creason)
-				}
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false, fmt.Sprintf("connector %s not found", ca.Guid[:8])
-		}
-	}
-	if len(a.Models) != len(b.Models) {
-		return false, fmt.Sprintf("models len: %d vs %d", len(a.Models), len(b.Models))
-	}
-	for _, ma := range a.Models {
-		found := false
-		for _, mb := range b.Models {
-			if ma.Guid == mb.Guid {
-				if !areModelsEqual(ma, mb) {
-					return false, fmt.Sprintf("model %s %q", ma.Guid[:8], normalizeStr(ma.Name))
-				}
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false, fmt.Sprintf("model %s not found", ma.Guid[:8])
-		}
-	}
-	if !arePropsEqual(a.Props, b.Props) {
-		return false, "props"
-	}
-	if !areAttributesEqual(a.Attributes, b.Attributes) {
-		return false, "attributes"
-	}
-	return true, ""
-}
-
-// [👤semio📚go💻semio🔖kitoperations🛠️debugareconnectorsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/debugAreConnectorsEqual)
-// debugAreConnectorsEqual holds the data fields for a debugAreConnectorsEqual record.
-// debugAreConnectorsEqual MUST perform the debugAreConnectorsEqual operation.
-func debugAreConnectorsEqual(a, b Connector) (bool, string) {
-	if normalizeStr(a.Name) != normalizeStr(b.Name) {
-		return false, fmt.Sprintf("name: %q vs %q", normalizeStr(a.Name), normalizeStr(b.Name))
-	}
-	if !floatEqual(a.Point.X, b.Point.X, 1e-9) || !floatEqual(a.Point.Y, b.Point.Y, 1e-9) || !floatEqual(a.Point.Z, b.Point.Z, 1e-9) {
-		return false, fmt.Sprintf("point: (%v,%v,%v) vs (%v,%v,%v)", a.Point.X, a.Point.Y, a.Point.Z, b.Point.X, b.Point.Y, b.Point.Z)
-	}
-	if !floatEqual(a.Direction.X, b.Direction.X, 1e-9) || !floatEqual(a.Direction.Y, b.Direction.Y, 1e-9) || !floatEqual(a.Direction.Z, b.Direction.Z, 1e-9) {
-		return false, fmt.Sprintf("direction: (%v,%v,%v) vs (%v,%v,%v)", a.Direction.X, a.Direction.Y, a.Direction.Z, b.Direction.X, b.Direction.Y, b.Direction.Z)
-	}
-	if !floatEqual(a.T, b.T, 1e-9) {
-		return false, fmt.Sprintf("t: %v vs %v", a.T, b.T)
-	}
-	if normalizeStr(a.Description) != normalizeStr(b.Description) {
-		return false, fmt.Sprintf("description: %q vs %q", normalizeStr(a.Description), normalizeStr(b.Description))
-	}
-	if (a.Port == nil) != (b.Port == nil) {
-		return false, "port nil"
-	}
-	if a.Port != nil && a.Port.Guid != b.Port.Guid {
-		return false, "port guid"
-	}
-	if !optBoolEqual(a.Mandatory, b.Mandatory) {
-		return false, "mandatory"
-	}
-	if !arePropsEqual(a.Props, b.Props) {
-		return false, "props"
-	}
-	if !areAttributesEqual(a.Attributes, b.Attributes) {
-		return false, "attributes"
-	}
-	return true, ""
 }
 
 // [👤semio📚go💻semio🔖kitoperations🛠️areconnectorsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/areConnectorsEqual)
@@ -5981,9 +6041,6 @@ func arePortsEqual(a, b Port) bool {
 // areFilesEqual MUST perform the areFilesEqual operation.
 func areFilesEqual(a, b File) bool {
 	if a.Name != b.Name {
-		return false
-	}
-	if normalizeStr(a.Mime) != normalizeStr(b.Mime) {
 		return false
 	}
 	if normalizeStr(a.Remote) != normalizeStr(b.Remote) {
@@ -6606,35 +6663,35 @@ func applyPieceDiff(base Piece, diff PieceDiff) Piece {
 		}
 		if diff.Plane.Origin != nil {
 			if diff.Plane.Origin.X != nil {
-				result.Plane.Origin.X += *diff.Plane.Origin.X
+				result.Plane.Origin.X = *diff.Plane.Origin.X
 			}
 			if diff.Plane.Origin.Y != nil {
-				result.Plane.Origin.Y += *diff.Plane.Origin.Y
+				result.Plane.Origin.Y = *diff.Plane.Origin.Y
 			}
 			if diff.Plane.Origin.Z != nil {
-				result.Plane.Origin.Z += *diff.Plane.Origin.Z
+				result.Plane.Origin.Z = *diff.Plane.Origin.Z
 			}
 		}
 		if diff.Plane.XAxis != nil {
 			if diff.Plane.XAxis.X != nil {
-				result.Plane.XAxis.X += *diff.Plane.XAxis.X
+				result.Plane.XAxis.X = *diff.Plane.XAxis.X
 			}
 			if diff.Plane.XAxis.Y != nil {
-				result.Plane.XAxis.Y += *diff.Plane.XAxis.Y
+				result.Plane.XAxis.Y = *diff.Plane.XAxis.Y
 			}
 			if diff.Plane.XAxis.Z != nil {
-				result.Plane.XAxis.Z += *diff.Plane.XAxis.Z
+				result.Plane.XAxis.Z = *diff.Plane.XAxis.Z
 			}
 		}
 		if diff.Plane.YAxis != nil {
 			if diff.Plane.YAxis.X != nil {
-				result.Plane.YAxis.X += *diff.Plane.YAxis.X
+				result.Plane.YAxis.X = *diff.Plane.YAxis.X
 			}
 			if diff.Plane.YAxis.Y != nil {
-				result.Plane.YAxis.Y += *diff.Plane.YAxis.Y
+				result.Plane.YAxis.Y = *diff.Plane.YAxis.Y
 			}
 			if diff.Plane.YAxis.Z != nil {
-				result.Plane.YAxis.Z += *diff.Plane.YAxis.Z
+				result.Plane.YAxis.Z = *diff.Plane.YAxis.Z
 			}
 		}
 	}
@@ -6655,35 +6712,35 @@ func applyPieceDiff(base Piece, diff PieceDiff) Piece {
 		}
 		if diff.MirrorPlane.Origin != nil {
 			if diff.MirrorPlane.Origin.X != nil {
-				result.MirrorPlane.Origin.X += *diff.MirrorPlane.Origin.X
+				result.MirrorPlane.Origin.X = *diff.MirrorPlane.Origin.X
 			}
 			if diff.MirrorPlane.Origin.Y != nil {
-				result.MirrorPlane.Origin.Y += *diff.MirrorPlane.Origin.Y
+				result.MirrorPlane.Origin.Y = *diff.MirrorPlane.Origin.Y
 			}
 			if diff.MirrorPlane.Origin.Z != nil {
-				result.MirrorPlane.Origin.Z += *diff.MirrorPlane.Origin.Z
+				result.MirrorPlane.Origin.Z = *diff.MirrorPlane.Origin.Z
 			}
 		}
 		if diff.MirrorPlane.XAxis != nil {
 			if diff.MirrorPlane.XAxis.X != nil {
-				result.MirrorPlane.XAxis.X += *diff.MirrorPlane.XAxis.X
+				result.MirrorPlane.XAxis.X = *diff.MirrorPlane.XAxis.X
 			}
 			if diff.MirrorPlane.XAxis.Y != nil {
-				result.MirrorPlane.XAxis.Y += *diff.MirrorPlane.XAxis.Y
+				result.MirrorPlane.XAxis.Y = *diff.MirrorPlane.XAxis.Y
 			}
 			if diff.MirrorPlane.XAxis.Z != nil {
-				result.MirrorPlane.XAxis.Z += *diff.MirrorPlane.XAxis.Z
+				result.MirrorPlane.XAxis.Z = *diff.MirrorPlane.XAxis.Z
 			}
 		}
 		if diff.MirrorPlane.YAxis != nil {
 			if diff.MirrorPlane.YAxis.X != nil {
-				result.MirrorPlane.YAxis.X += *diff.MirrorPlane.YAxis.X
+				result.MirrorPlane.YAxis.X = *diff.MirrorPlane.YAxis.X
 			}
 			if diff.MirrorPlane.YAxis.Y != nil {
-				result.MirrorPlane.YAxis.Y += *diff.MirrorPlane.YAxis.Y
+				result.MirrorPlane.YAxis.Y = *diff.MirrorPlane.YAxis.Y
 			}
 			if diff.MirrorPlane.YAxis.Z != nil {
-				result.MirrorPlane.YAxis.Z += *diff.MirrorPlane.YAxis.Z
+				result.MirrorPlane.YAxis.Z = *diff.MirrorPlane.YAxis.Z
 			}
 		}
 	}
@@ -6974,9 +7031,6 @@ func applyFileDiff(base File, diff FileDiff) File {
 	result := base
 	if diff.Name != nil {
 		result.Name = *diff.Name
-	}
-	if diff.Mime != nil {
-		result.Mime = diff.Mime
 	}
 	if diff.Remote != nil {
 		result.Remote = diff.Remote

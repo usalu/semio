@@ -99,6 +99,13 @@
       "problemMatcher": []
     },
     {
+      "label": "semio/3dm build",
+      "type": "shell",
+      "command": "npx nx build @semio/3dm",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
       "label": "semio/assets build",
       "type": "shell",
       "command": "npx nx build semio/assets",
@@ -648,6 +655,13 @@
         }
       },
       "group": "none"
+    },
+    {
+      "label": "semio/3dm dev",
+      "type": "shell",
+      "command": "npx nx dev @semio/3dm",
+      "group": "none",
+      "problemMatcher": []
     },
     {
       "label": "semio/desktop dev",

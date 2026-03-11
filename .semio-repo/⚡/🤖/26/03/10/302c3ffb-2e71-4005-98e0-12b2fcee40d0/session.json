@@ -1,0 +1,1197 @@
+{
+  "id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+  "uri": "semiorepo://s/302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+  "contributor": "🧑‍💻ueli",
+  "client": "windsurf-chat",
+  "second": "2026-03-10T19:25:26Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_user_prompt",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:25:25.893833956Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "user_prompt": "semio repo cli:\nWrong event mapping on glob that should be search\n\n{\n  \"native\": {\n    \"event\": {\n      \"session_id\": \"d632004e-4a01-49a2-a7e6-df2e7fcad233\",\n      \"transcript_path\": \"/home/vscode/.claude/projects/-workspaces-semio/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\",\n      \"cwd\": \"/workspaces/semio\",\n      \"permission_mode\": \"bypassPermissions\",\n      \"hook_event_name\": \"PreToolUse\",\n      \"tool_name\": \"Glob\",\n      \"tool_input\": {\n        \"pattern\": \"**/*.json\",\n        \"path\": \"/workspaces/semio/semio-repo\"\n      },\n      \"tool_use_id\": \"toolu_01Bc4xiTYjJqgwFu1t8mP7Ca\"\n    }\n  },\n  \"event\": {\n    \"checkpoint\": \"🔀41db5caa7e18b3d93d53069b0dbc5cd1953a41b3\",\n    \"client\": \"claude-code\",\n    \"contributor\": \"🧑‍💻ueli\",\n    \"input\": {\n      \"path\": \"/workspaces/semio/semio-repo\",\n      \"pattern\": \"**/*.json\"\n    },\n    \"kind\": \"agent.tool.starting\",\n    \"name\": \"Glob\",\n    \"second\": \"🎆26🌙03☀️02⏰12⌚10⏱️31\",\n    \"session\": \"⚪d632004e4a0149a2a7e6df2e7fcad233\",\n    \"transcript\": \"/home/vscode/.claude/projects/-workspaces-semio/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\"\n  },\n  \"response\": {\n    \"allowed\": true\n  }\n}\n{\n  \"native\": {\n    \"event\": {\n      \"session_id\": \"d632004e-4a01-49a2-a7e6-df2e7fcad233\",\n      \"transcript_path\": \"/home/vscode/.claude/projects/-workspaces-semio/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\",\n      \"cwd\": \"/workspaces/semio\",\n      \"permission_mode\": \"bypassPermissions\",\n      \"hook_event_name\": \"PostToolUse\",\n      \"tool_name\": \"Glob\",\n      \"tool_input\": {\n        \"pattern\": \"**/*.json\",\n        \"path\": \"/workspaces/semio/semio-repo\"\n      },\n      \"tool_response\": {\n        \"filenames\": [\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug-companion/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug-companion/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.vscode-js-profile-table/tsconfig.browser.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.vscode-js-profile-table/tsconfig.browser.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/telemetry.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/telemetry.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/vk_swiftshader_icd.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/extensions/extensions.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/user-data/User/chatLanguageModels.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/user-data/User/workspaceStorage/ext-dev/chatEditingSessions/1a9864e4-38b0-4f83-a28a-38a3c8e12897/state.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/user-data/User/workspaceStorage/ext-dev/chatEditingSessions/ee60e6b0-044e-4056-be0a-d990924bafec/state.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/syntaxes/batchfile.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/syntaxes/clojure.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/syntaxes/coffeescript.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/configuration-editing/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/configuration-editing/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/configuration-editing/schemas/attachContainer.schema.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/c.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/cpp.embedded.macro.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/cpp.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/cuda-cpp.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/platform.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/syntaxes/csharp.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/syntaxes/css.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/schemas/package.schema.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/server/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/syntaxes/dart.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-auto-launch/.vscode/launch.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-auto-launch/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-auto-launch/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-server-ready/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-server-ready/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/syntaxes/diff.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/syntaxes/docker.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/syntaxes/dotenv.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/emmet/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/emmet/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/extension-editing/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/extension-editing/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/syntaxes/fsharp.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git/resources/emojis.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/languages/git-commit.language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/languages/git-rebase.language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/languages/ignore.language-configuration.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/syntaxes/git-commit.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/syntaxes/git-rebase.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/syntaxes/ignore.tmLanguage.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github/package.nls.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github-authentication/package.json\",\n          \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github-authentication/package.nls.json\"\n        ],\n        \"durationMs\": 4487,\n        \"numFiles\": 100,\n        \"truncated\": true\n      },\n      \"tool_use_id\": \"toolu_01Bc4xiTYjJqgwFu1t8mP7Ca\"\n    }\n  },\n  \"event\": {\n    \"checkpoint\": \"🔀41db5caa7e18b3d93d53069b0dbc5cd1953a41b3\",\n    \"client\": \"claude-code\",\n    \"contributor\": \"🧑‍💻ueli\",\n    \"input\": {\n      \"path\": \"/workspaces/semio/semio-repo\",\n      \"pattern\": \"**/*.json\"\n    },\n    \"kind\": \"agent.tool.ended\",\n    \"name\": \"Glob\",\n    \"response\": {\n      \"durationMs\": 4487,\n      \"filenames\": [\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug-companion/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug-companion/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.vscode-js-profile-table/tsconfig.browser.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.vscode-js-profile-table/tsconfig.browser.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/src/ui/basic-wat.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/resources/app/extensions/ms-vscode.js-debug/telemetry.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.5/resources/app/extensions/ms-vscode.js-debug/telemetry.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.3/vk_swiftshader_icd.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/extensions/extensions.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/user-data/User/chatLanguageModels.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/user-data/User/workspaceStorage/ext-dev/chatEditingSessions/1a9864e4-38b0-4f83-a28a-38a3c8e12897/state.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/user-data/User/workspaceStorage/ext-dev/chatEditingSessions/ee60e6b0-044e-4056-be0a-d990924bafec/state.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/bat/syntaxes/batchfile.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/clojure/syntaxes/clojure.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/coffeescript/syntaxes/coffeescript.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/configuration-editing/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/configuration-editing/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/configuration-editing/schemas/attachContainer.schema.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/c.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/cpp.embedded.macro.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/cpp.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/cuda-cpp.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/cpp/syntaxes/platform.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/csharp/syntaxes/csharp.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css/syntaxes/css.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/schemas/package.schema.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/css-language-features/server/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dart/syntaxes/dart.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-auto-launch/.vscode/launch.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-auto-launch/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-auto-launch/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-server-ready/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/debug-server-ready/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/diff/syntaxes/diff.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/docker/syntaxes/docker.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/dotenv/syntaxes/dotenv.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/emmet/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/emmet/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/extension-editing/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/extension-editing/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/fsharp/syntaxes/fsharp.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git/resources/emojis.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/languages/git-commit.language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/languages/git-rebase.language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/languages/ignore.language-configuration.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/syntaxes/git-commit.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/syntaxes/git-rebase.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/git-base/syntaxes/ignore.tmLanguage.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github/package.nls.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github-authentication/package.json\",\n        \"/workspaces/semio/semio-repo/vscode/.vscode-test/vscode-linux-x64-1.109.0/resources/app/extensions/github-authentication/package.nls.json\"\n      ],\n      \"numFiles\": 100,\n      \"truncated\": true\n    },\n    \"second\": \"🎆26🌙03☀️02⏰12⌚10⏱️45\",\n    \"session\": \"⚪d632004e4a0149a2a7e6df2e7fcad233\",\n    \"transcript\": \"/home/vscode/.claude/projects/-workspaces-semio/d632004e-4a01-49a2-a7e6-df2e7fcad233.jsonl\"\n  },\n  \"response\": {\n    \"allowed\": true\n  }\n}"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚25⏱️26",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:25:46.792827251Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook prompt.submit windsurf-chat",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook prompt.submit windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "repo.hook.prompt.submit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚25⏱️47",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:25:46.792827251Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook prompt.submit windsurf-chat",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook prompt.submit windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚25⏱️47",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:26:06.052559861Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "repo.hook.agent.starting.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚26⏱️06",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:26:06.052559861Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚26⏱️06",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:26:40.164659934Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_folder_absolute_uri=/workspaces/semio search_term=map Glob tool name to search event\"",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_folder_absolute_uri=/workspaces/semio search_term=map Glob tool name to search event\"",
+        "contributor": "🧑‍💻ueli",
+        "kind": "repo.hook.tool.calling.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚26⏱️40",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:26:40.164659934Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_folder_absolute_uri=/workspaces/semio search_term=map Glob tool name to search event\"",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_folder_absolute_uri=/workspaces/semio search_term=map Glob tool name to search event\"",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚26⏱️40",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:27:01.993734168Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚27⏱️02",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:27:22.886595356Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚27⏱️23",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:27:48.341310707Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\tcase \"read_file\", \"grep_search\", \"file_search\", \"semantic_search\", \"list_dir\",\n\t\t\"get_errors\", \"read\", \"readfile\", \"searchfiles\", \"grepsearch\", \"listdir\",\n\t\t\"list_code_usages\", \"get_search_view_results\",\n\t\t\"geterrors\", \"getsearchviewresults\", \"listcodeusages\",\n\t\t\"fetch_webpage\", \"open_simple_browser\", \"grep\":\n\t\treturn ToolKindCodeSearch",
+                "new_string": "\tcase \"read_file\", \"grep_search\", \"file_search\", \"semantic_search\", \"list_dir\",\n\t\t\"get_errors\", \"read\", \"readfile\", \"searchfiles\", \"grepsearch\", \"listdir\",\n\t\t\"list_code_usages\", \"get_search_view_results\",\n\t\t\"geterrors\", \"getsearchviewresults\", \"listcodeusages\",\n\t\t\"fetch_webpage\", \"open_simple_browser\", \"grep\", \"glob\":\n\t\treturn ToolKindCodeSearch"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚27⏱️48",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:28:03.215956904Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\tcase \"read_file\", \"grep_search\", \"file_search\", \"semantic_search\", \"list_dir\",\n\t\t\"get_errors\", \"read\", \"readfile\", \"searchfiles\", \"grepsearch\", \"listdir\",\n\t\t\"list_code_usages\", \"get_search_view_results\",\n\t\t\"geterrors\", \"getsearchviewresults\", \"listcodeusages\",\n\t\t\"fetch_webpage\", \"open_simple_browser\", \"grep\":\n\t\treturn ToolKindCodeSearch",
+                "new_string": "\tcase \"read_file\", \"grep_search\", \"file_search\", \"semantic_search\", \"list_dir\",\n\t\t\"get_errors\", \"read\", \"readfile\", \"searchfiles\", \"grepsearch\", \"listdir\",\n\t\t\"list_code_usages\", \"get_search_view_results\",\n\t\t\"geterrors\", \"getsearchviewresults\", \"listcodeusages\",\n\t\t\"fetch_webpage\", \"open_simple_browser\", \"grep\", \"glob\":\n\t\treturn ToolKindCodeSearch"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚28⏱️03",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:28:27.135570992Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli🥼maintest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli🥼maintest📌1📌21878"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚28⏱️27",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:28:38.762456786Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli🥼maintest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli🥼maintest📌1📌21878"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚28⏱️39",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:29:03.266505498Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\t\t{\"fetch_webpage\", \"fetch_webpage\", ToolKindCodeSearch},\n\t\t{\"open_simple_browser\", \"open_simple_browser\", ToolKindCodeSearch},\n\t\t{\"tool_search_tool_regex\", \"tool_search_tool_regex\", ToolKindGeneric},\n\t\t{\"empty\", \"\", ToolKindGeneric},\n\t}",
+                "new_string": "\t\t{\"fetch_webpage\", \"fetch_webpage\", ToolKindCodeSearch},\n\t\t{\"open_simple_browser\", \"open_simple_browser\", ToolKindCodeSearch},\n\t\t{\"Glob\", \"Glob\", ToolKindCodeSearch},\n\t\t{\"tool_search_tool_regex\", \"tool_search_tool_regex\", ToolKindGeneric},\n\t\t{\"empty\", \"\", ToolKindGeneric},\n\t}"
+              },
+              {
+                "old_string": "\t\t{\"claude PreToolUse Bash\", \"PreToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalStarting, \"\", false},\n\t\t{\"claude PostToolUse Bash\", \"PostToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalEnded, \"\", false},\n\t\t{\"claude PreToolUse Read\", \"PreToolUse\", \"claude-code\", \"Read\", HookAgentToolSearchStarting, \"\", false},\n\t\t{\"claude PreToolUse Edit\", \"PreToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditStarting, \"\", false},\n\t\t{\"claude PostToolUse Edit\", \"PostToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditEnded, \"\", false},",
+                "new_string": "\t\t{\"claude PreToolUse Bash\", \"PreToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalStarting, \"\", false},\n\t\t{\"claude PostToolUse Bash\", \"PostToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalEnded, \"\", false},\n\t\t{\"claude PreToolUse Read\", \"PreToolUse\", \"claude-code\", \"Read\", HookAgentToolSearchStarting, \"\", false},\n\t\t{\"claude PreToolUse Glob\", \"PreToolUse\", \"claude-code\", \"Glob\", HookAgentToolSearchStarting, \"\", false},\n\t\t{\"claude PostToolUse Glob\", \"PostToolUse\", \"claude-code\", \"Glob\", HookAgentToolSearchEnded, \"\", false},\n\t\t{\"claude PreToolUse Edit\", \"PreToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditStarting, \"\", false},\n\t\t{\"claude PostToolUse Edit\", \"PostToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditEnded, \"\", false},"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚29⏱️03",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:29:18.3315322Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\t\t{\"fetch_webpage\", \"fetch_webpage\", ToolKindCodeSearch},\n\t\t{\"open_simple_browser\", \"open_simple_browser\", ToolKindCodeSearch},\n\t\t{\"tool_search_tool_regex\", \"tool_search_tool_regex\", ToolKindGeneric},\n\t\t{\"empty\", \"\", ToolKindGeneric},\n\t}",
+                "new_string": "\t\t{\"fetch_webpage\", \"fetch_webpage\", ToolKindCodeSearch},\n\t\t{\"open_simple_browser\", \"open_simple_browser\", ToolKindCodeSearch},\n\t\t{\"Glob\", \"Glob\", ToolKindCodeSearch},\n\t\t{\"tool_search_tool_regex\", \"tool_search_tool_regex\", ToolKindGeneric},\n\t\t{\"empty\", \"\", ToolKindGeneric},\n\t}"
+              },
+              {
+                "old_string": "\t\t{\"claude PreToolUse Bash\", \"PreToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalStarting, \"\", false},\n\t\t{\"claude PostToolUse Bash\", \"PostToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalEnded, \"\", false},\n\t\t{\"claude PreToolUse Read\", \"PreToolUse\", \"claude-code\", \"Read\", HookAgentToolSearchStarting, \"\", false},\n\t\t{\"claude PreToolUse Edit\", \"PreToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditStarting, \"\", false},\n\t\t{\"claude PostToolUse Edit\", \"PostToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditEnded, \"\", false},",
+                "new_string": "\t\t{\"claude PreToolUse Bash\", \"PreToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalStarting, \"\", false},\n\t\t{\"claude PostToolUse Bash\", \"PostToolUse\", \"claude-code\", \"Bash\", HookAgentToolTerminalEnded, \"\", false},\n\t\t{\"claude PreToolUse Read\", \"PreToolUse\", \"claude-code\", \"Read\", HookAgentToolSearchStarting, \"\", false},\n\t\t{\"claude PreToolUse Glob\", \"PreToolUse\", \"claude-code\", \"Glob\", HookAgentToolSearchStarting, \"\", false},\n\t\t{\"claude PostToolUse Glob\", \"PostToolUse\", \"claude-code\", \"Glob\", HookAgentToolSearchEnded, \"\", false},\n\t\t{\"claude PreToolUse Edit\", \"PreToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditStarting, \"\", false},\n\t\t{\"claude PostToolUse Edit\", \"PostToolUse\", \"claude-code\", \"Edit\", HookAgentToolCodeEditEnded, \"\", false},"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚29⏱️19",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:29:43.501095556Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "command_line": "go test ./...",
+            "cwd": "/workspaces/semio/semio-repo/cli"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "🧰semiorepo⌨️cli🥼maintest"
+        ],
+        "kind": "agent.tool.test.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚29⏱️44",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0",
+        "tests": [
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🧪testinteractionunmarshalauthorshapes",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🧪testcontributordiscovery",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testgoalpathtosemioid",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testsemioidtogoalpath",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testcontributorsemioidroundtrip",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testticketmarshaljsongoaltosemioid",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testticketunmarshaljsonsemioidtogoalpath",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testgoalmarshaljsonparenttosemioid",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testticketgoalroundtripthroughjson",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testbundlesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testcontributorsnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testticketsnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testpoliciesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪teststatutesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testfoldersnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testfilesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testbreachsnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testtickettitlevalidation",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testbuildtechnologylinkargs",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testfilterticketworkspacefiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testnormalizeticketfileinput",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testmatchesignorepatterndirectorycoverage",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testglobbyextensionskipsignoreddirectoryroot",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪teststreamandlistticketsignorenestedworkspacefiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testnodesandedgesquick",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testnodesandedges",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testnodequery",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testsectionsedges",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testdefinitionsedges",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testdefinitionkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖codebase🧪testcodebasecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖analyze🧪testanalyzecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖analyze🧪testanalyzefile",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfileheaderid",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testderivefilekind",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfilekindemoji",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileid",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileididempotent",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileiddetection",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileidendtoend",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixapplyautofixes",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testformatterplanscoverregisteredlanguages",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testapplyautofixesrunsformatterafteredit",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testapplyautofixesformatterfallbacknormalizestext",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixsectionmissingendname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixsectionnamemismatch",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixsectionempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixinlinecomment",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixblockcomment",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixjsdoccomment",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixmultiplebreachssamefile",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfiximprovedcommentlogic",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixconfigignored",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsgo",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentspython",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentscsharp",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentstypescript",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsshell",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsrust",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testemojivariationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixnonautofixablenotfixed",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixviagraphql",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixviarepocontext",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixidempotent",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixnestedsections",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixextractfilefromscope",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixstatutemeta",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfindmatchingsectionstartname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testistestfunctionname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdefinitionkindtestemoji",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdefinitionkindtestcode",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdefinitionkindtestisvalid",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testbuilddefinitionidtestkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdetectbundlelanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testunflattentestname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testresolvetestscopes",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testcollectgotestsinsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🔖alpha🧪testalpha",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🔖alpha🧪testalphabeta",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🔖gamma🧪testgamma",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testresolvetestfunctionname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testmyfunction",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪benchmarkmyfunction",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testtestcommandhelp",
+          "🧰semiorepo⌨️cli🥼maintest🧪testexporttosqliteschema",
+          "🧰semiorepo⌨️cli🥼maintest🧪testexporttosqliteempty",
+          "🧰semiorepo⌨️cli🥼maintest🧪testexportkindmappings",
+          "🧰semiorepo⌨️cli🥼maintest🧪testextractreadmesummary",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicylistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicytreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicycheckcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicybreachlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testfixturebreachsgroupedinline",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testfixturebreachsbylanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionmissingsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwithsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionmissingsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwithsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectiondoclinesexemptsdoccomments",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionmissingidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwithidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionmissingidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwithidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionidentificationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionidentificationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwrongidentificationdetected",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwrongidentificationdetected",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwrongidentificationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwrongidentificationautofixgotypeusesinterfacekind",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionmissingidentificationautofixgotypeusesinterfacekind",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionnativedocstring",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionnativedocstringautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpythontriplequotedocstringautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpythontriplequotedocstringmerge",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpythontriplequotedocstringexemptfromcommentban",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionjsdocexemptfromcommentban",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionheaderidanduri",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionheaderidanduri",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testrequirementsbreach",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdocsbreach",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testformatheaderstructure",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testformatheaderemptyrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testformatheaderalllanguages",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testheaderpolicyoldformatid",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testterritory",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicydefallkinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsystempolicy",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testbuildterritorytree",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testregisteredpolicieshavegroups",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicygroupsgraphql",
+          "🧰semiorepo⌨️cli🥼maintest🔖bundle🧪testbundlelistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖bundle🧪testbundletreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖folder🧪testfolderlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖folder🧪testfoldertreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖folder🧪testfoldercreatemovedelete",
+          "🧰semiorepo⌨️cli🥼maintest🔖file🧪testfilelistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖file🧪testfiletreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖file🧪testfilecreatemovedelete",
+          "🧰semiorepo⌨️cli🥼maintest🔖section🧪testsectionlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖section🧪testsectiontreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖definition🧪testdefinitionlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖ticket🧪testticketlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖ticket🧪testticketopennoticketkeyword",
+          "🧰semiorepo⌨️cli🥼maintest🔖ticket🧪testticketopencontinuekeyword",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoalcreatevalidation",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoalcreateandcleanup",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoalhierarchy",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoallist",
+          "🧰semiorepo⌨️cli🥼maintest🔖contributor🧪testcontributorlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidroot",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidyears",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidyear",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidmonths",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidmonth",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddays",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidday",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidhours",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidhour",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidminutes",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidminute",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidseconds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsecond",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcodebase",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtechnologies",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidbundles",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidbundle",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfolders",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfolder",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfile",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidline",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidrange",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsections",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddefinitions",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddefinition",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidgoals",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidgoal",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtickets",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidticket",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddrafts",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddraft",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtodos",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtodo",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidpolicies",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidpolicy",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcontributors",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcontributor",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcheckpoints",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcheckpoint",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidinteraction",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsessions",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsession",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifacturisessions",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifacturisession",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessionidtouri",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessionuritoid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessionkindemoji",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessiongetid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessiongeturi",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testnormalizeticketsessionid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidbreach",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoalartifactid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testspecexactids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testpropagateparentids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testflat",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testmonorepotreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoaltreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcontributortreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcheckpointtreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testentitykinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testresourcekinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testdiffablekinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testrelatedtofilekinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testtechnologylistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testbundlelistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsectionlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcontributorlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoallistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testticketlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testdraftlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testmonorepotreefullidhierarchy",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoaltreeids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcontributortreeids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcheckpointtreeids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testallspecidexamples",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlrepoquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlbundlesquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlpoliciesquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlticketsquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlanalyzequery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlcontributorsquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlfixmutation",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testtreecommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testclie2eticketlifecyclesyntaxesnomanagement",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testclie2egoallifecyclesyntaxesnomanagement",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testclie2emisccommandsnosideeffects",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketclose",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketreopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketchange",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalclose",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalreopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalchange",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargspolicycheck",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsfolderoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsfileoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargssectionoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsdefinitionoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargscontributoroperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgraphql",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargstodooperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargstopleveloperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargserrormessages",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testclijsonpuredata",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testclijsonerrorstostderr",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultdefinition",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultbundle",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultfolder",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultfile",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultadditional",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultmutationkeys",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultsingleentities",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultlists",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testcollectentitypropsmultilineescaped",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultanalyze",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultfix",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultfilewithsections",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultnojsonfallback",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultmutationkeys",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testrenderentitymarkdownlinkallkinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testinferentitykind",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testmarkdownoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testlifecyclecommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testlistcommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testsectioncommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststreaminglist",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testticketlifecyclenomanagement",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testextractsessionidfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testtrackhookinopenticketusesstablesessionids",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testartifactidanduri",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testidtouri",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testuritoid",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testpathtouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testpathfromuripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testsectionidvaluetouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testdefinitionidvaluetouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testparsesectionuripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatuteidtouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatuteuripathtoid",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testtitleizeslug",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatutepathtoidvalue",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatuteidvaluetopath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatutepathidvalueroundtrip",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testiduriroundtrip",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testmcptoolsschemas",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testqueryflag",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testqueryfuzzymatch",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testcacheindexandtreequery",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testqueryemptyreturnsall",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪teststatutecommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testcheckpointcommands",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooltechnologylist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooltechnologytree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolcontributorlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolgoallist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolticketlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooldraftlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfolderlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfoldertree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfilelist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfiletree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolsectionlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolsectiontree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooldefinitionlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolpolicylist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolpolicycheck",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolanalyzescope",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfixscope",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfoldercrud",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfilecrud",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolticketlifecycle",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooldraftlifecycle",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolgoaluri",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitygoallist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitycontributorlist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparityticketlist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitydraftlist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitytechnologylist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitytechnologytree",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitypolicylist",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreenodekindconstants",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefilteriskindvisible",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchessubkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchesdate",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchesstatus",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchescontributor",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testfiltermonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testsearchmonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testrendermonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testbuildmonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testcollapsefilteredkinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testsorttreechildren",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreecommandflags",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testtreenodekindtoentitykindcoversall",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderinggoalidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderingticketidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderingsectionidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderingallkindidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testcollectentitypropsconsistency",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testsinglelineoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testnodoubledashinmarkdownoutput",
+          "🧰semiorepo⌨️cli🥼maintest🧪testmigrateauthorfieldstostring",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfixheaderwithshebang",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyemptyfolder",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyemptyfolderautofix",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyskipsexcludeddirs",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfile",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfilesupportsglobpatterns",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfileskipssemiorepo",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfileskipsnestednodemodules",
+          "🧰semiorepo⌨️cli🥼maintest🧪testsetrootdirresetsgitignorecache",
+          "🧰semiorepo⌨️cli🥼maintest🧪testsetrootdircanonicalizestoreporoot",
+          "🧰semiorepo⌨️cli🥼maintest🧪testrenderprompttemplateusesrepometaroot",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfindreporootprefersmonorepomarkeroverlocalgomod",
+          "🧰semiorepo⌨️cli🥼maintest🧪testgetcachedirusesmonoreporoot",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicynogodfile",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyregistered",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicyregistered",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testvalidatehookevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookeventkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testistoolblocked",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testsplitcommandsegments",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testiscommandsegmentblocked",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookagentevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhooktoolblocking",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhooktoolallowed",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookunknownevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookthinkingevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testallhookeventscompleteness",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandcli",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandtoolblocking",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandjsonoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratecopilotconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolnamefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracthookeventnamefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testvscodeeventfromhookevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testformatvscodehookoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandcopilotchatvscodeoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratecursorconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratewindsurfconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgenerateclaudecodeconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testconfiguregithooks",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgetclienthookmappings",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testblockedtoolpatterns",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhooklogging",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testsessionjsontracksplan",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testmergeticketagentplansteps",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookloggingtoolblocked",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookloggingstdininput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testderiverepoopfrommcptool",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testderiverepoopfromclicommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testlogrepooperationhookmcptool",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testlogrepooperationhookcli",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookagenttoolstartingderivedrepoevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookalleventslogged",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhooksearchingpattern",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookblockedevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookterminalevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhooktranscriptinsession",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookcodeeditedlogstofile",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandstdinpiped",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcommandfromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcommandfromstdinblocking",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratedroidconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testclassifytool",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testclassifycommandkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvehookeventcommandreclassification",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testparsetestinfofromcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttestsegmentfromcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvetestfilesfromcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvealltestdefinitionids",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🔖tests🧪testalpha",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🔖tests🧪testbeta",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractteststartingfrominputresolvestestids",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testone",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtwo",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttestendedfrominputresolvesfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvehookevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvepretooluse",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolveposttooluse",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstarting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstartingsubagentparentfromcontextusessession",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstartingsubagentusesagentidassession",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstartingparentfromcontext",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatapromptsubmitting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacompacting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatatoolstarting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatatoolended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataplanupdating",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodesearching",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodeediting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodeeditingwithall",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodeedited",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataterminalstarting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataterminalended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataversioncheckpointended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataversioncheckpointstartingfromfile",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatarawfield",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatanoinputnoraw",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatatoolnamefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodesearchwithexclude",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractplanstepsfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractsearchfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolinputmapfromdata",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolinputfromstdinnativeformat",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractsearchdefinitionreadsfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhooksearchstartingincludesdefinitions",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testbuilddefinitionreadsfullfilereturnsfileid",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testbuilddefinitionreadsusesreporelativepaths",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookprereadcodedefinitionidsarereporelative",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testshouldexecutesearchcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcodeeditfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolinputfromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolresponsefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractterminalendedfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractchatfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractreportfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcheckpointmessagefrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcheckpointshafrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractparentfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookresultjsonfields",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookresultomitempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testnativehookeventmappingwithrealdata",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testnativehookeventmappingfromreallogfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testcheckpointinallagentevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testcheckpointinallversionevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testcheckpointinloggedeventjson",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testeventidsusesemiorepoformat",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidlocbytechnologiesbundlesfoldersfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidlocbylanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidlocbycontributors",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidcommandlocbytechnologiesbundlesfoldersfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidcommandlocbylanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidescapelabel",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testproviderregistry",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgetmanagementprovider",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testnullmanagementprovider",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testalleditorproviders",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgeteditorprovider",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testeditorproviderhookmapping",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testmanagementproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testversioncontrolproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderconfigure",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testcomputecompositefingerprintignoresuntrackedfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercurrentcheckpoint",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercurrentbranch",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercheckpoint",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderstageall",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderstagedfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercheckin",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercheckout",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testversionhookeventsdispatch",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testsandboxproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testeditorproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testislicensetext",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testisheadermetaline",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractmarkdownsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractfileheadersummary",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractfileheadersummaryreturnsactualsummary",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractfileheaderrequirementsnolicense",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractsectionleadcommentsskipslicense",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractsectionleadcommentsskipsregionmarkers",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologydocs",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologytodos",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirementsinvalidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologydocsinvalidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologytodosinvalidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirementssemio",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologydocssemio",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirementssemiorepo",
+          "🧰semiorepo⌨️cli🥼maintest🧪testextractsearchfrominputlinenumbers",
+          "🧰semiorepo⌨️cli🥼maintest🧪testextractsearchfrominputcompletefilerange",
+          "🧰semiorepo⌨️cli🥼maintest🧪testsectionnewlineafterregion"
+        ]
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:30:10.115439636Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli🥼maintest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚30⏱️10",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:30:10.115268996Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47433"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚30⏱️10",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:30:20.921012316Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli🥼maintest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚30⏱️22",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:30:20.948738255Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli🥼maintest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚30⏱️25",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:30:32.620176854Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47433"
+        ],
+        "second": "🎆26🌙03☀️10⏰19⌚30⏱️33",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_cascade_response",
+          "trajectory_id": "302c3ffb-2e71-4005-98e0-12b2fcee40d0",
+          "timestamp": "2026-03-10T19:30:54.34299363Z",
+          "execution_id": "322914fe-1a3a-478b-83e5-cf5bf4f9f812",
+          "tool_info": {
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n- (Global) Triggered Rule: global_rules.md\n\n*User accepted the command `./semio-repo/cli/cli hook prompt.submit windsurf-chat`*\n\n*User accepted the command `./semio-repo/cli/cli hook agent.starting windsurf-chat`*\n\n*Updated todo list*\n\n*User accepted the command `./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_folder_absolute_uri=/workspaces/semio search_term=map Glob tool name to search event\"`*\n\n*Found code context*\n\n*Edited relevant file*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n*Viewed file:///workspaces/semio/semio-repo/cli/main_test.go*\n\n*Edited relevant file*\n\n*User accepted the command `go test ./...`*\n\n*Updated todo list*\n\n*Viewed file:///workspaces/semio/semio-repo/cli/main.go*\n\n*Viewed file:///workspaces/semio/semio-repo/cli/main_test.go*\n\n*Viewed file:///workspaces/semio/semio-repo/cli/main_test.go*\n\n### Planner Response\n\nImplemented a focused fix for the `Glob` misclassification so it now maps to **search** events.\n\n### What I changed\n\n1. **Tool classification fix**\n   - Added `\"glob\"` to code-search tool aliases in `classifyTool`.\n   - This makes `PreToolUse/PostToolUse` for Claude `Glob` resolve to:\n     - `agent.tool.search.starting`\n     - `agent.tool.search.ended`\n\n   Code: @/workspaces/semio/semio-repo/cli/main.go#38321-38326\n\n2. **Regression tests**\n   - Added `Glob` case to [TestClassifyTool](file:///workspaces/semio/semio-repo/cli/main_test.go:17887:0-17931:1).\n   - Added Claude `PreToolUse Glob` and `PostToolUse Glob` cases to [TestResolveHookEvent](file:///workspaces/semio/semio-repo/cli/main_test.go:18796:0-18890:1).\n\n   Code:\n   - @/workspaces/semio/semio-repo/cli/main_test.go#17898-17922\n   - @/workspaces/semio/semio-repo/cli/main_test.go#18857-18860\n\n### Validation\n\nI ran:\n\n- `go test ./...` in `semio-repo/cli`\n\nResult: test run is currently blocked by **pre-existing syntax errors** in [main.go](file:///workspaces/semio/semio-repo/cli/main.go:0:0-0:0) unrelated to this change (first reported at @/workspaces/semio/semio-repo/cli/main.go#5609 and onward), so the suite cannot complete until those compile errors are fixed."
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰19⌚30⏱️54",
+        "session": "⚪302c3ffb2e71400598e012b2fcee40d0"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

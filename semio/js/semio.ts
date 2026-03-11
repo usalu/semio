@@ -2382,7 +2382,6 @@ export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 export const FileSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  mime: z.string().optional(),
   remote: z.string().optional(),
   folder: FolderIdSchema.optional(),
   size: z.number().optional(),
@@ -2438,7 +2437,6 @@ export type FileDiff = z.infer<typeof FileDiffSchema>;
 export const getFileDiff = (before: File, after: File): FileDiff => {
   const diff: FileDiff = {};
   if (before.name !== after.name) diff.name = after.name;
-  if (before.mime !== after.mime) diff.mime = after.mime;
   if (before.remote !== after.remote) diff.remote = after.remote;
   if (before.size !== after.size) diff.size = after.size;
   if (before.hash !== after.hash) diff.hash = after.hash;
@@ -2459,7 +2457,6 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
   const inverse: FileDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.mime !== undefined) inverse.mime = original.mime;
   if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
   if (appliedDiff.size !== undefined) inverse.size = original.size;
   if (appliedDiff.hash !== undefined) inverse.hash = original.hash;
@@ -2493,7 +2490,6 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
     name: diff.name ?? base.name,
   };
 
-  if (diff.mime !== undefined || base.mime !== undefined) result.mime = diff.mime ?? base.mime;
   if (diff.remote !== undefined || base.remote !== undefined) result.remote = diff.remote ?? base.remote;
   if (diff.size !== undefined || base.size !== undefined) result.size = diff.size ?? base.size;
   if (diff.hash !== undefined || base.hash !== undefined) result.hash = diff.hash ?? base.hash;
@@ -8701,7 +8697,7 @@ const getSqlJs = async () => {
 
 // [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨buildfolderpath](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/buildFolderPath)
 // buildFolderPath builds a slash-separated folder path from root to the given folder guid.
-// Always uses application/octet-stream to avoid spurious diffs when mime field changes.
+// Uses proper mime type inferred from file extension.
 const buildFolderPath = (kit: Kit, folderGuid: string): string => {
   const findFolder = (guid: string): Folder | undefined => (kit.folders || []).find((f) => f.guid === guid);
   const parts: string[] = [];
@@ -8715,7 +8711,7 @@ const buildFolderPath = (kit: Kit, folderGuid: string): string => {
 
 // [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨buildfilepath](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/buildFilePath)
 // buildFilePath builds the full path of a kit file including its folder hierarchy.
-// Always uses application/octet-stream to avoid spurious diffs when mime field changes.
+// Uses proper mime type inferred from file extension.
 const buildFilePath = (kit: Kit, file: File): string => {
   if (file.folder?.guid) {
     const folderPath = buildFolderPath(kit, file.folder.guid);
@@ -8792,7 +8788,16 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
         const bytes = new Uint8Array(arrayBuf);
         let binary = "";
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        file.blob = `data:application/octet-stream;base64,${btoa(binary)}`;
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        const mimeMap: Record<string, string> = {
+          stl: 'model/stl', obj: 'model/obj', glb: 'model/gltf-binary',
+          gltf: 'model/gltf+json', '3dm': 'model/vnd.3dm', png: 'image/png',
+          jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml',
+          pdf: 'application/pdf', zip: 'application/zip', json: 'application/json',
+          csv: 'text/csv', txt: 'text/plain',
+        };
+        const mime = mimeMap[ext] || 'application/octet-stream';
+        file.blob = `data:${mime};base64,${btoa(binary)}`;
       }
     }
   }
@@ -10131,7 +10136,6 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       ? files.map((row: any) => ({
         guid: row.guid,
         name: row.name,
-        mime: toUndefined(row.mime),
         remote: toUndefined(row.remote_url),
         folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
         size: row.size,
@@ -10277,7 +10281,6 @@ CREATE TABLE folder (
 CREATE TABLE file (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
-	mime VARCHAR(128),
 	folder_guid VARCHAR(36),
 	size INTEGER,
 	hash VARCHAR(128),
@@ -10721,10 +10724,9 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   });
 
   toArray(kit.files).forEach((file) => {
-    db.run("INSERT INTO file (guid, name, mime, folder_guid, size, hash, remote_url, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    db.run("INSERT INTO file (guid, name, folder_guid, size, hash, remote_url, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
       file.guid,
       file.name,
-      file.mime || null,
       file.folder?.guid || null,
       file.size || null,
       file.hash || null,

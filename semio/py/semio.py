@@ -382,7 +382,7 @@ class Semio(sqlmodel.SQLModel, table=True):
 # [🔖semio/py/semio.py#Modeling](semiorepo://section/semio/py/semio.py/MODELING)
 
 # region Primitives
-# [👤semio📚py💻semio🔖modeling🔖primitives](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives)
+# [👤semio📚py💻semio🔖modeling](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling)
 # Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
 class SModel(sqlmodel.SQLModel, abc.ABC):
@@ -628,7 +628,7 @@ class TableEntityNode(TableNode):
 # [🔖semio/py/semio.py#Domain](semiorepo://section/semio/py/semio.py/DOMAIN)
 
 # region Attribute
-# [👤semio📚py💻semio🔖domain](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain)
+# [👤semio📚py💻semio🔖domain🔖attribute](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute)
 # Attribute entity with key-value pairs and definitions.
 
 class AttributeKeyField(RealField, abc.ABC):
@@ -1687,12 +1687,6 @@ class FileNameField(RealField, abc.ABC):
     """
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-class FileMimeField(RealField, abc.ABC):
-    """Field mixin for the mime of a file.
-    FileMimeField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filemimefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileMimeField)
-    """
-    mime: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 class FileRemoteField(RealField, abc.ABC):
     """Field mixin for the remote of a file.
@@ -1774,7 +1768,6 @@ class FileProps(
     FileSizeField,
     FileFolderField,
     FileRemoteField,
-    FileMimeField,
     FileNameField,
     FileGuidField,
     Props,
@@ -1795,7 +1788,6 @@ class FileInput(
     FileSizeField,
     FileFolderField,
     FileRemoteField,
-    FileMimeField,
     FileNameField,
     FileGuidField,
     Input,
@@ -1823,7 +1815,6 @@ class FileOutput(
     FileSizeField,
     FileFolderField,
     FileRemoteField,
-    FileMimeField,
     FileNameField,
     FileGuidField,
     Output,
@@ -1844,7 +1835,6 @@ class File(
     FileSizeField,
     FileFolderField,
     FileRemoteField,
-    FileMimeField,
     FileNameField,
     FileGuidField,
     TableEntity,
@@ -2975,7 +2965,7 @@ class PortInputNode(InputNode):
 # [🔖semio/py/semio.py#Connector](semiorepo://section/semio/py/semio.py/CONNECTOR)
 
 # region CompatiblePort
-# [👤semio📚py💻semio🔖domain🔖connector](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector)
+# [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort)
 # Compatible port entity for specifying allowed port pairings on connectors.
 
 class CompatiblePortNameField(RealField, abc.ABC):
@@ -8699,8 +8689,6 @@ def _getFileDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     if _normalizeValue(before.get("description")) != _normalizeValue(after.get("description")):
         diff["description"] = after.get("description")
-    if _normalizeValue(before.get("mime")) != _normalizeValue(after.get("mime")):
-        diff["mime"] = after.get("mime")
     if _normalizeValue(before.get("remote")) != _normalizeValue(after.get("remote")):
         diff["remote"] = after.get("remote")
     if before.get("size") != after.get("size"):
@@ -8724,7 +8712,7 @@ def _applyFileDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyfilediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyFileDiff)
     """
     result = dict(base)
-    for key in ["name", "description", "mime", "remote", "size", "hash", "blob"]:
+    for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in diff:
             result[key] = diff[key]
     if "folder" in diff:
@@ -9348,7 +9336,7 @@ def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefilediff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFileDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description", "mime", "remote", "size", "hash", "blob"]:
+    for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if "folder" in appliedDiff:
@@ -9483,6 +9471,7 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
 class Change:
     """Change holds the data fields for a Change record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️change](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/Change)
+    Change MUST perform the Change operation.
     """
     forward: dict
     backward: dict
@@ -9513,6 +9502,7 @@ def changeToDict(change: Change) -> dict:
 class AttributeChange(Change):
     """AttributeChange holds the data fields for a AttributeChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️attributechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AttributeChange)
+    AttributeChange MUST perform the AttributeChange operation.
     """
     pass
 
@@ -9530,6 +9520,7 @@ class AuthorChange(Change):
 class FileChange(Change):
     """FileChange holds the data fields for a FileChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️filechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FileChange)
+    FileChange MUST perform the FileChange operation.
     """
     pass
 
@@ -9538,6 +9529,7 @@ class FileChange(Change):
 class FolderChange(Change):
     """FolderChange holds the data fields for a FolderChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️folderchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FolderChange)
+    FolderChange MUST perform the FolderChange operation.
     """
     pass
 
@@ -9564,6 +9556,7 @@ class PortChange(Change):
 class PropChange(Change):
     """PropChange holds the data fields for a PropChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️propchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PropChange)
+    PropChange MUST perform the PropChange operation.
     """
     pass
 
@@ -9572,6 +9565,7 @@ class PropChange(Change):
 class TagChange(Change):
     """TagChange holds the data fields for a TagChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️tagchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TagChange)
+    TagChange MUST perform the TagChange operation.
     """
     pass
 
@@ -9580,6 +9574,7 @@ class TagChange(Change):
 class ConceptChange(Change):
     """ConceptChange holds the data fields for a ConceptChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️conceptchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConceptChange)
+    ConceptChange MUST perform the ConceptChange operation.
     """
     pass
 
@@ -9588,6 +9583,7 @@ class ConceptChange(Change):
 class ModelChange(Change):
     """ModelChange holds the data fields for a ModelChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️modelchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ModelChange)
+    ModelChange MUST perform the ModelChange operation.
     """
     pass
 
@@ -9596,6 +9592,7 @@ class ModelChange(Change):
 class ConnectorChange(Change):
     """ConnectorChange holds the data fields for a ConnectorChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectorchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectorChange)
+    ConnectorChange MUST perform the ConnectorChange operation.
     """
     pass
 
@@ -9604,6 +9601,7 @@ class ConnectorChange(Change):
 class TypeChange(Change):
     """TypeChange holds the data fields for a TypeChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️typechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TypeChange)
+    TypeChange MUST perform the TypeChange operation.
     """
     pass
 
@@ -9612,6 +9610,7 @@ class TypeChange(Change):
 class LayerChange(Change):
     """LayerChange holds the data fields for a LayerChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️layerchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/LayerChange)
+    LayerChange MUST perform the LayerChange operation.
     """
     pass
 
@@ -9620,6 +9619,7 @@ class LayerChange(Change):
 class PieceChange(Change):
     """PieceChange holds the data fields for a PieceChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️piecechange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PieceChange)
+    PieceChange MUST perform the PieceChange operation.
     """
     pass
 
@@ -9628,6 +9628,7 @@ class PieceChange(Change):
 class GroupChange(Change):
     """GroupChange holds the data fields for a GroupChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️groupchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/GroupChange)
+    GroupChange MUST perform the GroupChange operation.
     """
     pass
 
@@ -9636,6 +9637,7 @@ class GroupChange(Change):
 class ConnectionChange(Change):
     """ConnectionChange holds the data fields for a ConnectionChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectionchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectionChange)
+    ConnectionChange MUST perform the ConnectionChange operation.
     """
     pass
 
@@ -9644,6 +9646,7 @@ class ConnectionChange(Change):
 class StatChange(Change):
     """StatChange holds the data fields for a StatChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️statchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/StatChange)
+    StatChange MUST perform the StatChange operation.
     """
     pass
 
@@ -9652,6 +9655,7 @@ class StatChange(Change):
 class DesignChange(Change):
     """DesignChange holds the data fields for a DesignChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️designchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/DesignChange)
+    DesignChange MUST perform the DesignChange operation.
     """
     pass
 
@@ -9660,6 +9664,7 @@ class DesignChange(Change):
 class KitChange(Change):
     """KitChange holds the data fields for a KitChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️kitchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/KitChange)
+    KitChange MUST perform the KitChange operation.
     """
     pass
 
@@ -9667,6 +9672,7 @@ class KitChange(Change):
 def getDesignChange(before: dict, after: dict, author: typing.Optional[str] = None, time: typing.Optional[datetime.datetime] = None) -> DesignChange:
     """getDesignChange performs the getDesignChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesignchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getDesignChange)
+    getDesignChange MUST perform the getDesignChange operation.
     """
     forward_diff = _getDesignDiff(before, after)
     backward_diff = _inverseDesignDiff(before, forward_diff)
@@ -9676,6 +9682,7 @@ def getDesignChange(before: dict, after: dict, author: typing.Optional[str] = No
 def getKitChange(before: dict, after: dict, author: typing.Optional[str] = None, time: typing.Optional[datetime.datetime] = None) -> KitChange:
     """getKitChange performs the getKitChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getkitchange](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getKitChange)
+    getKitChange MUST perform the getKitChange operation.
     """
     forward_diff = getKitDiffDict(before, after)
     backward_diff = inverseKitDiffDict(before, forward_diff)
@@ -10056,9 +10063,8 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
     for file_entry in kit_dict.get("files", []):
         file_path = _build_file_path(kit_dict, file_entry)
         if file_path in files:
-            mime = file_entry.get("mime") or "application/octet-stream"
             encoded = base64.b64encode(files[file_path]).decode("ascii")
-            file_entry["blob"] = f"data:{mime};base64,{encoded}"
+            file_entry["blob"] = f"data:application/octet-stream;base64,{encoded}"
 
     return KitData(kit_dict), files
 

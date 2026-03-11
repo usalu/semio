@@ -69,6 +69,8 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 # 🛠️ Changes
 
+TODO: Add roomie to discord for verification
+
 ## [👤semio](semiorepo://project/semio)
 
 TODO: Rename tilt to slope, Add rotation to piece node
@@ -110,9 +112,51 @@ There MUST be only one schema, no migrations or legacy api support.
 
 ## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)
 
+## 👤semio🖱️3dm
+
+Create semio/3dm bundle with one npm package `ui` and one .NET package `rhp`.
+The purpose of the ui is display a tree view from sketchpad in the side panel. It should use semio js and on buttons call the native rhino ui.
+It should have an action to import kits and one to import models directly into the action document.
+When importing a model use the layers:
+semio
+KITNAME
+Types
+TYPENAME
+Models
+MODELTAGS
+
+Rhino Tree of semio for sidepanel:
+Kits # Import
+KIT
+Types
+TYPE
+Models
+Model # Import
+Designs
+Design
+Use the react_rhino_connector plan as reference and https://github.com/specklesystems/speckle-sharp-connectors/tree/main
+
 ## 👤semio🖱️gh
 
+semio net and gh:
+Add a new component: Design to Blocks
+Input: Kit, DesignId, Tags
+Output: Block Instance
+It creates for each Piece a Block Instance.
+The Block Definition is either the model
+
 semio gh:
+Add new component: Preview Design
+Inputs: Kit, DesignId, Tags
+For previewing it imports the files of the models (selected based on the tags), uses flatten design for the planes and
+
+Add a new component Group to Model Object that does the reverse of Model Object to Group
+
+In semio changes were introduced. Add a param and passthrough component for every change entity (kit, design, etc)
+
+Refactor all dynamic code that is not type safe to be explicit and make errors compile time detectable.
+e.g. 1. Solution exception:No overload for method 'ApplyDiff' takes 1 arguments
+
 Add a new component `Import Model` that takes a file blob string as input and has output param Rhino ModelObject
 
 There MUST be an apply diff for every entity. All apply componentsMUST NOT be persistent. Only Update Kit takes a kit diff and an optional directory and then it MUST update the static kit along with sqlite.

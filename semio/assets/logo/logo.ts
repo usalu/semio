@@ -43,7 +43,7 @@ interface TransformData {
 
 /**
  * GroupData holds the data fields for a GroupData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️keyframedata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/KeyframeData)
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️groupdata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/GroupData)
  **/
 interface GroupData {
   id: string;
@@ -70,7 +70,7 @@ interface KeyframeData {
 
 /**
  * [👤semio🏪assets🛅logo💻logo🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️transformtomatrix](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/transformToMatrix)
  * Functions for parsing SVG files and generating animated SVG logos.
  **/
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {

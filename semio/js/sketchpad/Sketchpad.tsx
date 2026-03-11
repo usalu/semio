@@ -6815,25 +6815,32 @@ export class KitStore {
     return pathMap;
   }
 
-  async storeFileBlobs(blobs: Map<string, Blob>): Promise<void> {
+  async storeFileBlobs(kit: Kit): Promise<void> {
+    if (!kit.files) return;
     const pathMap = this.buildFilePathMap();
 
-    for (const [path, blob] of blobs) {
-      const fileGuid = pathMap.get(path);
-      if (fileGuid) {
-        const objectUrl = URL.createObjectURL(blob);
-        this.regularFiles.set(path, objectUrl);
+    for (const kitFile of kit.files) {
+      if (!kitFile.blob) continue;
+      const path = this.getFileStoragePath(kitFile as any);
+      const fileGuid = pathMap.get(path) ?? kitFile.guid;
 
-        if (this.fileProvider) {
-          try {
-            const remoteUrl = await this.fileProvider.upload(this.guid, fileGuid, path, blob);
-            const fileStore = this.files.get(fileGuid);
-            if (fileStore) {
-              fileStore.change({ remote: remoteUrl });
-            }
-          } catch (error) {
-            console.error(`[KIT ${this.name}] Failed to upload file ${path}:`, error);
+      const base64 = kitFile.blob.startsWith("data:") ? kitFile.blob.slice(kitFile.blob.indexOf(",") + 1) : kitFile.blob;
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes]);
+      const objectUrl = URL.createObjectURL(blob);
+      this.regularFiles.set(path, objectUrl);
+
+      if (this.fileProvider) {
+        try {
+          const remoteUrl = await this.fileProvider.upload(this.guid, fileGuid, path, blob);
+          const fileStore = this.files.get(fileGuid);
+          if (fileStore) {
+            fileStore.change({ remote: remoteUrl });
           }
+        } catch (error) {
+          console.error(`[KIT ${this.name}] Failed to upload file ${path}:`, error);
         }
       }
     }
@@ -8333,12 +8340,7 @@ export const kitCommands = {
             files,
           };
         } else {
-          const { kit, files: importedFiles } = await importKit(url);
-          const files: KitCommandResult["files"] = [];
-
-          for (const [path, blob] of importedFiles.entries()) {
-            files.push(new File([blob], path));
-          }
+          const { kit } = await importKit(url);
 
           return {
             diff: {
@@ -8349,7 +8351,6 @@ export const kitCommands = {
               designs: kit.designs && kit.designs.length > 0 ? { added: kit.designs } : undefined,
               files: kit.files && kit.files.length > 0 ? { added: kit.files } : undefined,
             },
-            files,
           };
         }
       } catch (error) {
@@ -13508,14 +13509,9 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
     const doImportKits = async () => {
       for (const url of props.importKitUrls!) {
         try {
-          const { kit, files: importedFiles } = await importKit(url);
+          const { kit } = await importKit(url);
 
           await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
-
-          if (store.hasKit(kit.guid)) {
-            const kitStore = store.kit(kit.guid);
-            await kitStore.storeFileBlobs(importedFiles);
-          }
         } catch (error) {
           console.error(`[Sketchpad] Failed to auto-import kit from ${url}:`, error);
         }
@@ -14566,10 +14562,10 @@ export function useSketchpadCommands() {
           panelSizes: newSizes,
         });
       },
-      storeKitFileBlobs: async (kitGuid: Guid, files: Map<string, Blob>) => {
+      storeKitFileBlobs: async (kitGuid: Guid, kit: Kit) => {
         if (!store.hasKit(kitGuid)) return;
         const kitStore = store.kit(kitGuid);
-        await kitStore.storeFileBlobs(files);
+        await kitStore.storeFileBlobs(kit);
       },
       getKitSnapshot: (kitGuid: Guid): Kit | null => {
         if (!store.hasKit(kitGuid)) return null;

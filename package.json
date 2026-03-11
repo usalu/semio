@@ -24,7 +24,9 @@
     "semio/sqlite",
     "semio-repo/sqlite",
     "coda/py",
-    "semio/sketchpad"
+    "semio/sketchpad",
+    "semio/3dm/Semio.Rhino",
+    "semio/3dm/ui"
   ],
   "engines": {
     "node": ">=22.13.1"

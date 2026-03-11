@@ -81,47 +81,44 @@ class Program
 
             var tempZipPath = "temp_benchmark_metabolism.zip";
 
-            var schemaPath = Path.Combine("../../sql/sqlite/schema.sql");
-            var schemaSql = System.IO.File.ReadAllText("../sql/sqlite/semio/schema.sql");
-
-            ZipRoundtrip.ExportKit(importResult.Kit, importResult.Files, tempZipPath, schemaSql);
+            ZipRoundtrip.ExportKit(importResult.Kit, tempZipPath);
             if (System.IO.File.Exists(tempZipPath)) System.IO.File.Delete(tempZipPath);
         });
 
         Bench("Diff/Metabolism", () =>
         {
-            var k2 = kitMetabolism.ApplyDiff(diffForward);
-            k2.ApplyDiff(diffInverse);
+            var k2 = Kit.ApplyDiff(kitMetabolism, diffForward);
+            Kit.ApplyDiff(k2, diffInverse);
         });
 
         var d1 = FindDesign(kitMetabolism, "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower", () =>
         {
-            d1.Flatten(kitMetabolism.Types);
+            Design.Flatten(Entity<Design>.DeepClone(d1)!, kitMetabolism.Types);
         });
 
         var d2 = FindDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Slanted", () =>
         {
-            d2.Flatten(kitMetabolism.Types);
+            Design.Flatten(Entity<Design>.DeepClone(d2)!, kitMetabolism.Types);
         });
 
         var d3 = FindDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Twisted", () =>
         {
-            d3.Flatten(kitMetabolism.Types);
+            Design.Flatten(Entity<Design>.DeepClone(d3)!, kitMetabolism.Types);
         });
 
         var d4 = FindDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Dancing", () =>
         {
-            d4.Flatten(kitMetabolism.Types);
+            Design.Flatten(Entity<Design>.DeepClone(d4)!, kitMetabolism.Types);
         });
 
         var d5 = FindDesign(kitMetabolism, "Capsule Dream");
         Bench("Flatten Design/Capsule Dream", () =>
         {
-            d5.Flatten(kitMetabolism.Types);
+            Design.Flatten(Entity<Design>.DeepClone(d5)!, kitMetabolism.Types);
         });
 
         Bench("Validation/Invalid Kit", () =>

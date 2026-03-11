@@ -17,6 +17,12 @@
 #endregion 🔖Header
 
 using System.Drawing;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using Grasshopper.Kernel;
+using Grasshopper.Kernel.Parameters;
+using Grasshopper.Rhinoceros.Model;
+using Grasshopper.Rhinoceros.Model.Params;
 using Rhino.FileIO;
 using Rhino.Geometry;
 using Semio.Grasshopper;
@@ -98,6 +104,53 @@ public class ImportModelUtilityTests
     }
 
     [Fact]
+    public void ImportRhinoModelContextFromSemioFile_ShouldImportFromFileBlob()
+    {
+        var model = new File3dm();
+        model.Objects.AddPoint(Point3d.Origin);
+        var blob = Convert.ToBase64String(model.ToByteArray());
+        var file = new Semio.File { Guid = "file-1", Blob = blob };
+
+        var context = Utility.ImportRhinoModelContextFromSemioFile(file);
+
+        Assert.NotNull(context);
+        Assert.NotNull(context.Model);
+        Assert.NotNull(context.ModelObject);
+        Assert.Equal(Rhino.DocObjects.ObjectType.Point, context.ModelObject.Geometry.ObjectType);
+    }
+
+    [Fact]
+    public void ImportRhinoModelContextFromSemioFile_ShouldAllowModelWithoutObjects()
+    {
+        var model = new File3dm();
+        var blob = Convert.ToBase64String(model.ToByteArray());
+        var file = new Semio.File { Guid = "file-empty", Blob = blob, Name = "empty.3dm" };
+
+        var context = Utility.ImportRhinoModelContextFromSemioFile(file);
+
+        Assert.NotNull(context);
+        Assert.NotNull(context.Model);
+        Assert.Null(context.ModelObject);
+    }
+
+    [Fact]
+    public void ImportRhinoModelObjectDataFromSemioFile_ShouldReturnGrasshopperModelObjectWithImportMetadata()
+    {
+        var model = new File3dm();
+        model.Objects.AddPoint(Point3d.Origin);
+        var blob = Convert.ToBase64String(model.ToByteArray());
+        var file = new Semio.File { Guid = "file-object-data", Blob = blob, Name = "sample.3dm" };
+
+        var importedModelObjectData = Utility.ImportRhinoModelObjectDataFromSemioFile(file);
+
+        Assert.NotNull(importedModelObjectData);
+        Assert.IsType<ModelObject>(importedModelObjectData);
+        Assert.True(importedModelObjectData.IsValid);
+        Assert.True(importedModelObjectData.UserText.TryGetValue("semio.import-model.blob", out var resolvedBlob));
+        Assert.Equal(blob, resolvedBlob);
+    }
+
+    [Fact]
     public void TranslateRhinoModelObjectToSingleGroup_ShouldCreateRecursiveNamedLayerGroups()
     {
         var model = new File3dm();
@@ -124,5 +177,140 @@ public class ImportModelUtilityTests
         Assert.Contains(group.Attributes, attribute => attribute.Key == "LayerGroup/Parent/Child");
         Assert.Contains(group.Attributes, attribute => attribute.Key == "LayerGroup");
     }
+
+    [Fact]
+    public void TranslateRhinoModelObjectsToSingleGroup_ShouldMergeListIntoSingleRecursiveGroup()
+    {
+        var firstModel = new File3dm();
+        var firstLayer = new Rhino.DocObjects.Layer { Name = "First", Id = Guid.NewGuid(), Color = Color.Red };
+        var firstChildLayer = new Rhino.DocObjects.Layer { Name = "Nested", Id = Guid.NewGuid(), ParentLayerId = firstLayer.Id, Color = Color.Orange };
+        firstModel.Layers.Add(firstLayer);
+        firstModel.Layers.Add(firstChildLayer);
+        firstModel.Objects.AddPoint(new Point3d(0, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
+        firstModel.Objects.AddPoint(new Point3d(1, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 1 });
+
+        var secondModel = new File3dm();
+        var secondLayer = new Rhino.DocObjects.Layer { Name = "Second", Id = Guid.NewGuid(), Color = Color.Blue };
+        secondModel.Layers.Add(secondLayer);
+        secondModel.Objects.AddPoint(new Point3d(2, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
+
+        var importedModelObjects = new List<Utility.RhinoModelObject>
+        {
+            Utility.ImportRhinoModelContextFromBlob(Convert.ToBase64String(firstModel.ToByteArray())),
+            Utility.ImportRhinoModelContextFromBlob(Convert.ToBase64String(secondModel.ToByteArray()))
+        };
+
+        var group = Utility.TranslateRhinoModelObjectsToSingleGroup(importedModelObjects);
+
+        Assert.NotNull(group);
+        Assert.Equal("Imported Rhino Layer Group", group.Name);
+        Assert.Equal(3, group.Pieces.Count);
+        Assert.Contains(group.Attributes, attribute => attribute.Key == "LayerGroup/First");
+        Assert.Contains(group.Attributes, attribute => attribute.Key == "LayerGroup/First/Nested");
+        Assert.Contains(group.Attributes, attribute => attribute.Key == "LayerGroup/Second");
+        Assert.Contains(group.Attributes, attribute => attribute.Key == "LayerGroup");
+    }
+
+    [Fact]
+    public void TranslateRhinoModelObjectsToSingleGroup_ShouldThrowWhenListIsEmpty()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() => Utility.TranslateRhinoModelObjectsToSingleGroup(new List<Utility.RhinoModelObject>()));
+        Assert.Contains("at least one Rhino ModelObject", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }
 #endregion 🔖ImportModelUtilityTests
+
+#region 🔖ModelObjectToGroupComponentTests
+// Tests MUST verify ModelObject To Group consumes list input from Import Model output.
+public class ModelObjectToGroupComponentTests
+{
+    [Fact]
+    public void RegisterParams_ShouldUseNativeRhinoKindsForInputAndOutput()
+    {
+        var component = new ModelObjectToGroupComponent();
+
+        Assert.Single(component.Params.Input);
+        Assert.Equal(GH_ParamAccess.list, component.Params.Input[0].Access);
+        Assert.Equal("Mo*", component.Params.Input[0].NickName);
+        Assert.IsType<Param_ModelObject>(component.Params.Input[0]);
+        Assert.Single(component.Params.Output);
+        Assert.Equal("Gr", component.Params.Output[0].NickName);
+        Assert.IsType<Param_Group>(component.Params.Output[0]);
+    }
+}
+#endregion 🔖ModelObjectToGroupComponentTests
+
+#region 🔖GroupToModelObjectComponentTests
+// Tests MUST verify Group To Model Object consumes a single Group input and produces list ModelObject output.
+public class GroupToModelObjectComponentTests
+{
+    [Fact]
+    public void RegisterParams_ShouldUseNativeRhinoKindsForInputAndOutput()
+    {
+        var component = new GroupToModelObjectComponent();
+
+        Assert.Single(component.Params.Input);
+        Assert.Equal(GH_ParamAccess.item, component.Params.Input[0].Access);
+        Assert.Equal("Gr", component.Params.Input[0].NickName);
+        Assert.IsType<Param_Group>(component.Params.Input[0]);
+        Assert.Single(component.Params.Output);
+        Assert.Equal("Mo*", component.Params.Output[0].NickName);
+        Assert.Equal(GH_ParamAccess.list, component.Params.Output[0].Access);
+        Assert.IsType<Param_ModelObject>(component.Params.Output[0]);
+    }
+}
+#endregion 🔖GroupToModelObjectComponentTests
+
+#region 🔖NamingConventionTests
+// Tests MUST verify Grasshopper components and parameters follow repo naming and description rules.
+public class NamingConventionTests
+{
+    [Fact]
+    public void AllComponents_ShouldUseConsistentNicknamesAndDescriptions()
+    {
+        var componentKind = typeof(Component);
+        var scriptingComponentKind = typeof(ScriptingComponent);
+        var componentKinds = componentKind.Assembly.GetTypes()
+            .Where(kind => kind.IsClass && !kind.IsAbstract && componentKind.IsAssignableFrom(kind) && !scriptingComponentKind.IsAssignableFrom(kind))
+            .OrderBy(kind => kind.FullName)
+            .ToList();
+
+        Assert.NotEmpty(componentKinds);
+
+        foreach (var kind in componentKinds)
+        {
+            var component = Activator.CreateInstance(kind) as Component;
+            Assert.NotNull(component);
+
+            Assert.Matches("^[A-Z0-9]{3}$", component!.NickName);
+            Assert.False(string.IsNullOrWhiteSpace(component.Description));
+            Assert.Contains(component.Name, component.Description, StringComparison.OrdinalIgnoreCase);
+
+            foreach (var parameter in component.Params.Input)
+                AssertParamMatchesNamingRules(component, parameter, false);
+            foreach (var parameter in component.Params.Output)
+                AssertParamMatchesNamingRules(component, parameter, true);
+        }
+    }
+
+    private static void AssertParamMatchesNamingRules(Component component, IGH_Param parameter, bool isOutput)
+    {
+        var cardinalitySuffix = parameter.Access is GH_ParamAccess.list or GH_ParamAccess.tree
+            ? "*"
+            : parameter.Optional ? "?" : "";
+        var expectedPattern = cardinalitySuffix.Length == 0
+            ? "^[A-Za-z0-9]{2}$"
+            : $"^[A-Za-z0-9]{{2}}{Regex.Escape(cardinalitySuffix)}$";
+        Assert.Matches(expectedPattern, parameter.NickName);
+
+        Assert.False(string.IsNullOrWhiteSpace(parameter.Description));
+        Assert.Contains(component.Name, parameter.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(parameter.Name, parameter.Description, StringComparison.OrdinalIgnoreCase);
+
+        if (isOutput)
+            Assert.Contains("produced by", parameter.Description, StringComparison.OrdinalIgnoreCase);
+        else
+            Assert.Contains("consumed by", parameter.Description, StringComparison.OrdinalIgnoreCase);
+    }
+}
+#endregion 🔖NamingConventionTests

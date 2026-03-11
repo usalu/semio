@@ -900,6 +900,7 @@ func auditCommand(factory EngineFactory, config *Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if scope == "" && len(args) > 0 {
 				scope = args[0]
+			}
 			variables := map[string]interface{}{}
 			if scope != "" {
 				variables["scope"] = scope
@@ -4952,15 +4953,16 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 // [🧰semiorepo⌨️cli💻main🔖cliadapter🛠️definitioncommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/definitionCommand)
 func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "definition", Short: "Definition management commands"}
-	listCmd := &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"tree"},
-		Short:   "List definitions",
-		Args:    cobra.MaximumNArgs(1),
-			path, _ := cmd.Flags().GetString("file")
-			if path == "" && len(args) > 0 {
-				path = args[0]
-			}
+		listCmd := &cobra.Command{
+			Use:     "list",
+			Aliases: []string{"tree"},
+			Short:   "List definitions",
+			Args:    cobra.MaximumNArgs(1),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				path, _ := cmd.Flags().GetString("file")
+				if path == "" && len(args) > 0 {
+					path = args[0]
+				}
 			if path == "" {
 				return fmt.Errorf("missing file")
 			}
@@ -4976,12 +4978,13 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 					StreamDefinitions(context.Background(), path, defChan, opts)
 				}()
 
-				for d := range defChan {
-					data, err := json.Marshal(map[string]interface{}{"definition": d})
-					if err != nil {
-						continue
-					stream <- Event{Kind: KindResult, Command: "definition list", Data: data}
-				}
+					for d := range defChan {
+						data, err := json.Marshal(map[string]interface{}{"definition": d})
+						if err != nil {
+							continue
+						}
+						stream <- Event{Kind: KindResult, Command: "definition list", Data: data}
+					}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 
@@ -5003,12 +5006,13 @@ func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Short: "Move an artifact from source to target",
 		Long:  "Move an artifact (file, folder, section) between locations. Supports cross-kind moves: file→section calls integrate, section→file calls extract.",
 		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := factory(*config)
-			if err != nil {
-				return err
+			RunE: func(cmd *cobra.Command, args []string) error {
+				_, err := factory(*config)
+				if err != nil {
+					return err
+				}
 
-			source := ParseArtifactRef(args[0])
+				source := ParseArtifactRef(args[0])
 			target := ParseArtifactRef(args[1])
 
 			var result ToolResult
@@ -35988,11 +35992,6 @@ var analyzeCmd = &cobra.Command{
 				return err
 			}
 			ctx.LoadPolicies()
-			codebase := BuildCodebase(ctx)
-			reportPath := filepath.Join(GetRepoMetaDir(), "📊", "codebase.json")
-			if err := WriteJSONFile(reportPath, codebase); err != nil {
-				return err
-			}
 		}
 		variables := map[string]interface{}{}
 		if scope != nil {
@@ -37671,8 +37670,8 @@ const (
 	HookAgentToolEnded                HookEvent = "agent.tool.ended"
 	HookAgentToolPlanUpdatingStarting HookEvent = "agent.tool.plan.updating.starting"
 	HookAgentToolPlanUpdatingEnded    HookEvent = "agent.tool.plan.updating.ended"
-	HookAgentToolSearchStarting       HookEvent = "agent.tool.search.starting"
-	HookAgentToolSearchEnded          HookEvent = "agent.tool.search.ended"
+	HookAgentToolSearchStarting       HookEvent = "agent.file.read.starting"
+	HookAgentToolSearchEnded          HookEvent = "agent.file.read.ended"
 	HookAgentToolCodeEditStarting     HookEvent = "agent.tool.code.edit.starting"
 	HookAgentToolCodeEditEnded        HookEvent = "agent.tool.code.edit.ended"
 	HookAgentToolTestStarting         HookEvent = "agent.tool.test.starting"
@@ -37810,6 +37809,7 @@ type HookResultAgentStarted struct {
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentended](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentEnded)
 type HookResultAgentEnded struct {
 	HookResultAgentBase
+	Report string `json:"report,omitempty"`
 }
 
 // HookResultAgentPromptSubmitting represents the result of an agent prompt submitting event.
@@ -38317,7 +38317,7 @@ func classifyTool(toolName string) ToolKind {
 		"get_errors", "read", "readfile", "searchfiles", "grepsearch", "listdir",
 		"list_code_usages", "get_search_view_results",
 		"geterrors", "getsearchviewresults", "listcodeusages",
-		"fetch_webpage", "open_simple_browser", "grep":
+		"fetch_webpage", "open_simple_browser", "grep", "glob":
 		return ToolKindCodeSearch
 	case "replace_string_in_file", "create_file", "multi_replace_string_in_file",
 		"edit", "write", "editfile", "createfile", "multiedit", "create_directory",
@@ -39636,7 +39636,7 @@ func deriveRepoOpFromCLICommand(command string) string {
 	return strings.Join(ops, ".")
 }
 
-// logRepoOperationHook writes a derived repo-specific log entry when a semio-repo
+// logRepoOperationHook writes a derived agent operation log entry when a semio-repo
 // MCP tool or CLI command is detected in the hook context.
 // logRepoOperationHook MUST perform the logRepoOperationHook operation.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️logrepooperationhook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/logRepoOperationHook)
@@ -39672,7 +39672,7 @@ func logRepoOperationHook(hctx HookContext, result HookResult, logDir string, no
 	} else {
 		suffix = ".ended"
 	}
-	kind := "repo." + op + suffix
+	kind := "agent." + op + suffix
 
 	resultData, _ := json.Marshal(result)
 	var eventMap map[string]interface{}
@@ -39803,7 +39803,10 @@ func dispatchHook(hctx HookContext) HookResult {
 		ab.Parent = parent
 		return HookResultAgentStarted{HookResultAgentBase: ab}
 	case HookAgentEnded:
-		return HookResultAgentEnded{HookResultAgentBase: agentBase("agent.ended acknowledged")}
+		return HookResultAgentEnded{
+			HookResultAgentBase: agentBase("agent.ended acknowledged"),
+			Report:              extractReportFromInput(hctx.Input),
+		}
 	case HookAgentPromptSubmitting:
 		return HookResultAgentPromptSubmitting{
 			HookResultAgentBase: agentBase("agent.prompt.submitting acknowledged"),
@@ -42033,6 +42036,57 @@ func extractChatFromInput(input json.RawMessage) string {
 	return ""
 }
 
+// extractReportFromInput extracts a text report from agent-ended payloads.
+// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractreportfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractReportFromInput)
+// extractReportFromInput MUST perform the extractReportFromInput operation.
+func extractReportFromInput(input json.RawMessage) string {
+	if len(input) == 0 {
+		return ""
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return ""
+	}
+	getReport := func(node map[string]interface{}) string {
+		if node == nil {
+			return ""
+		}
+		if report, ok := node["report"].(string); ok && strings.TrimSpace(report) != "" {
+			return strings.TrimSpace(report)
+		}
+		if toolInfo, ok := node["tool_info"].(map[string]interface{}); ok {
+			if response, ok := toolInfo["response"].(string); ok && strings.TrimSpace(response) != "" {
+				return strings.TrimSpace(response)
+			}
+		}
+		return ""
+	}
+	if report := getReport(data); report != "" {
+		return report
+	}
+	if nested, ok := data["event"].(map[string]interface{}); ok {
+		if report := getReport(nested); report != "" {
+			return report
+		}
+	}
+	if nested, ok := data["input"].(map[string]interface{}); ok {
+		if report := getReport(nested); report != "" {
+			return report
+		}
+	}
+	if native, ok := data["native"].(map[string]interface{}); ok {
+		if report := getReport(native); report != "" {
+			return report
+		}
+		if eventData, ok := native["event"].(map[string]interface{}); ok {
+			if report := getReport(eventData); report != "" {
+				return report
+			}
+		}
+	}
+	return ""
+}
+
 // extractCheckpointMessageFromInput MUST perform the extractCheckpointMessageFromInput operation.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcheckpointmessagefrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCheckpointMessageFromInput)
 // extractCheckpointMessageFromInput performs the extractCheckpointMessageFromInput operation.
@@ -42473,8 +42527,8 @@ Accepts neutral semio-repo events or native client events (inlet adapter resolve
   agent.tool.ended             Tool completed (generic, excludes plan, search, code, test, build, terminal)
   agent.tool.plan.updating.starting  Plan/task list updating start
   agent.tool.plan.updating.ended     Plan/task list updating end
-  agent.tool.search.starting   Code search/read starting
-  agent.tool.search.ended      Code search/read ended
+  agent.file.read.starting     Code search/read starting
+  agent.file.read.ended        Code search/read ended
   agent.tool.code.edit.starting Code edit starting
   agent.tool.code.edit.ended   Code edit completed
   agent.tool.test.starting     Test starting

@@ -1,0 +1,1399 @@
+{
+  "id": "159d13fe-8e1d-4296-918f-600be07b953c",
+  "uri": "semiorepo://s/159d13fe-8e1d-4296-918f-600be07b953c",
+  "contributor": "🧑‍💻ueli",
+  "client": "windsurf-chat",
+  "second": "2026-03-10T23:41:23Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_user_prompt",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:41:21.305306589Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "user_prompt": "semio repo:\nRename file search to file read for agent events"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚41⏱️23",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:41:58.144162273Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "repo.hook.agent.starting.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚41⏱️58",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:41:58.144162273Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook agent.starting windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚41⏱️58",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:42:34.879271112Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_term=Rename file search to file read for agent events\"",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_term=Rename file search to file read for agent events\"",
+        "contributor": "🧑‍💻ueli",
+        "kind": "repo.hook.tool.calling.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚42⏱️35",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:42:34.879271112Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "command_line": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_term=Rename file search to file read for agent events\"",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "command": "./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_term=Rename file search to file read for agent events\"",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚42⏱️35",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:42:54.873101427Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "agent events file search file read rename"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚42⏱️55",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:43:29.210478878Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "agent events file search file read rename"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚43⏱️29",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:43:46.962182467Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚43⏱️47",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:44:10.63984022Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚44⏱️11",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:44:26.332372989Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚44⏱️26",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:45:17.480306516Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47428"
+        ],
+        "second": "🎆26🌙03☀️10⏰23⌚45⏱️18",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:45:24.101520066Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli🥼maintest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli🥼maintest📌1📌21881"
+        ],
+        "second": "🎆26🌙03☀️10⏰23⌚45⏱️24",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:45:24.106287801Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47428"
+        ],
+        "second": "🎆26🌙03☀️10⏰23⌚45⏱️24",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:45:43.627101955Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "client": "windsurf-chat",
+              "llm": "gpt-5-2-codex",
+              "no_github": true,
+              "prompt": "Rename semio-repo agent event slugs from file search to file read (agent.file.read.starting/ended), update routing/tests/docs references accordingly.",
+              "title": "Rename File Search Agent Events To File Read"
+            },
+            "mcp_tool_name": "ticket_open"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚45⏱️44",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:46:04.569168042Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "goals semio-repo cli hooks agent events"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚46⏱️05",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:46:21.482960985Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "goals semio-repo cli hooks agent events"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚46⏱️22",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:46:48.459708351Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/.semio-repo/🎯"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚46⏱️49",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:47:00.269405739Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "file_path": "/workspaces/semio/.semio-repo/🎯"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚47⏱️00",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:47:20.574713Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "client": "windsurf-chat",
+              "goal": "AI-OPTIMIZED-REPO",
+              "llm": "gpt-5-2-codex",
+              "no_github": true,
+              "prompt": "Rename semio-repo agent hook event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended, and update corresponding tests and event docs in cli/main.go and cli/main_test.go.",
+              "title": "Rename File Search Agent Events To File Read"
+            },
+            "mcp_tool_name": "ticket_open"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚47⏱️21",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:47:39.380131627Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_result": "[🎫renamefilesearchagenteventstofileread](semiorepo://y/26/m/03/d/10/tk/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ) - `open`\n",
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "client": "windsurf-chat",
+              "goal": "AI-OPTIMIZED-REPO",
+              "llm": "gpt-5-2-codex",
+              "no_github": true,
+              "prompt": "Rename semio-repo agent hook event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended, and update corresponding tests and event docs in cli/main.go and cli/main_test.go.",
+              "title": "Rename File Search Agent Events To File Read"
+            },
+            "mcp_tool_name": "ticket_open"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚47⏱️39",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:48:08.053272829Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\tHookAgentToolStarting             HookEvent = \"agent.tool.starting\"\n\tHookAgentToolEnded                HookEvent = \"agent.tool.ended\"\n\tHookAgentToolPlanUpdatingStarting HookEvent = \"agent.tool.plan.updating.starting\"\n\tHookAgentToolPlanUpdatingEnded    HookEvent = \"agent.tool.plan.updating.ended\"\n\tHookAgentToolSearchStarting       HookEvent = \"agent.file.search.starting\"\n\tHookAgentToolSearchEnded          HookEvent = \"agent.file.search.ended\"\n\tHookAgentToolCodeEditStarting     HookEvent = \"agent.tool.code.edit.starting\"\n\tHookAgentToolCodeEditEnded        HookEvent = \"agent.tool.code.edit.ended\"\n\tHookAgentToolTestStarting         HookEvent = \"agent.tool.test.starting\"\n\tHookAgentToolTestEnded            HookEvent = \"agent.tool.test.ended\"",
+                "new_string": "\tHookAgentToolStarting             HookEvent = \"agent.tool.starting\"\n\tHookAgentToolEnded                HookEvent = \"agent.tool.ended\"\n\tHookAgentToolPlanUpdatingStarting HookEvent = \"agent.tool.plan.updating.starting\"\n\tHookAgentToolPlanUpdatingEnded    HookEvent = \"agent.tool.plan.updating.ended\"\n\tHookAgentToolSearchStarting       HookEvent = \"agent.file.read.starting\"\n\tHookAgentToolSearchEnded          HookEvent = \"agent.file.read.ended\"\n\tHookAgentToolCodeEditStarting     HookEvent = \"agent.tool.code.edit.starting\"\n\tHookAgentToolCodeEditEnded        HookEvent = \"agent.tool.code.edit.ended\"\n\tHookAgentToolTestStarting         HookEvent = \"agent.tool.test.starting\"\n\tHookAgentToolTestEnded            HookEvent = \"agent.tool.test.ended\""
+              },
+              {
+                "old_string": "  agent.file.search.starting   Code search/read starting\n  agent.file.search.ended      Code search/read ended\n  agent.tool.code.edit.starting Code edit starting\n  agent.tool.code.edit.ended   Code edit completed\n  agent.tool.test.starting     Test starting",
+                "new_string": "  agent.file.read.starting     Code search/read starting\n  agent.file.read.ended        Code search/read ended\n  agent.tool.code.edit.starting Code edit starting\n  agent.tool.code.edit.ended   Code edit completed\n  agent.tool.test.starting     Test starting"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚48⏱️08",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:48:20.612797766Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\tHookAgentToolStarting             HookEvent = \"agent.tool.starting\"\n\tHookAgentToolEnded                HookEvent = \"agent.tool.ended\"\n\tHookAgentToolPlanUpdatingStarting HookEvent = \"agent.tool.plan.updating.starting\"\n\tHookAgentToolPlanUpdatingEnded    HookEvent = \"agent.tool.plan.updating.ended\"\n\tHookAgentToolSearchStarting       HookEvent = \"agent.file.search.starting\"\n\tHookAgentToolSearchEnded          HookEvent = \"agent.file.search.ended\"\n\tHookAgentToolCodeEditStarting     HookEvent = \"agent.tool.code.edit.starting\"\n\tHookAgentToolCodeEditEnded        HookEvent = \"agent.tool.code.edit.ended\"\n\tHookAgentToolTestStarting         HookEvent = \"agent.tool.test.starting\"\n\tHookAgentToolTestEnded            HookEvent = \"agent.tool.test.ended\"",
+                "new_string": "\tHookAgentToolStarting             HookEvent = \"agent.tool.starting\"\n\tHookAgentToolEnded                HookEvent = \"agent.tool.ended\"\n\tHookAgentToolPlanUpdatingStarting HookEvent = \"agent.tool.plan.updating.starting\"\n\tHookAgentToolPlanUpdatingEnded    HookEvent = \"agent.tool.plan.updating.ended\"\n\tHookAgentToolSearchStarting       HookEvent = \"agent.file.read.starting\"\n\tHookAgentToolSearchEnded          HookEvent = \"agent.file.read.ended\"\n\tHookAgentToolCodeEditStarting     HookEvent = \"agent.tool.code.edit.starting\"\n\tHookAgentToolCodeEditEnded        HookEvent = \"agent.tool.code.edit.ended\"\n\tHookAgentToolTestStarting         HookEvent = \"agent.tool.test.starting\"\n\tHookAgentToolTestEnded            HookEvent = \"agent.tool.test.ended\""
+              },
+              {
+                "old_string": "  agent.file.search.starting   Code search/read starting\n  agent.file.search.ended      Code search/read ended\n  agent.tool.code.edit.starting Code edit starting\n  agent.tool.code.edit.ended   Code edit completed\n  agent.tool.test.starting     Test starting",
+                "new_string": "  agent.file.read.starting     Code search/read starting\n  agent.file.read.ended        Code search/read ended\n  agent.tool.code.edit.starting Code edit starting\n  agent.tool.code.edit.ended   Code edit completed\n  agent.tool.test.starting     Test starting"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚48⏱️21",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:48:57.949293863Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\t\t{\"agent tool ended\", \"agent.tool.ended\", true, HookAgentToolEnded},\n\t\t{\"agent tool plan updating starting\", \"agent.tool.plan.updating.starting\", true, HookAgentToolPlanUpdatingStarting},\n\t\t{\"agent tool plan updating ended\", \"agent.tool.plan.updating.ended\", true, HookAgentToolPlanUpdatingEnded},\n\t\t{\"agent tool code searching\", \"agent.file.search.starting\", true, HookAgentToolSearchStarting},\n\t\t{\"agent tool searched\", \"agent.file.search.ended\", true, HookAgentToolSearchEnded},\n\t\t{\"agent tool code editing\", \"agent.tool.code.edit.starting\", true, HookAgentToolCodeEditStarting},\n\t\t{\"agent tool code edited\", \"agent.tool.code.edit.ended\", true, HookAgentToolCodeEditEnded},\n\t\t{\"agent tool terminal starting\", \"agent.tool.terminal.starting\", true, HookAgentToolTerminalStarting},",
+                "new_string": "\t\t{\"agent tool ended\", \"agent.tool.ended\", true, HookAgentToolEnded},\n\t\t{\"agent tool plan updating starting\", \"agent.tool.plan.updating.starting\", true, HookAgentToolPlanUpdatingStarting},\n\t\t{\"agent tool plan updating ended\", \"agent.tool.plan.updating.ended\", true, HookAgentToolPlanUpdatingEnded},\n\t\t{\"agent tool code searching\", \"agent.file.read.starting\", true, HookAgentToolSearchStarting},\n\t\t{\"agent tool searched\", \"agent.file.read.ended\", true, HookAgentToolSearchEnded},\n\t\t{\"agent tool code editing\", \"agent.tool.code.edit.starting\", true, HookAgentToolCodeEditStarting},\n\t\t{\"agent tool code edited\", \"agent.tool.code.edit.ended\", true, HookAgentToolCodeEditEnded},\n\t\t{\"agent tool terminal starting\", \"agent.tool.terminal.starting\", true, HookAgentToolTerminalStarting},"
+              },
+              {
+                "old_string": "\t\t{\"agent.ended subagent\", HookAgentEnded, \"subagent\", \"SubagentStop\"},\n\t\t{\"agent.prompt.submitting\", HookAgentPromptSubmitting, \"\", \"UserPromptSubmit\"},\n\t\t{\"agent.compacting\", HookAgentCompacting, \"\", \"PreCompact\"},\n\t\t{\"agent.file.search.starting\", HookAgentToolSearchStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, \"\", \"PostToolUse\"},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, \"\", \"PreToolUse\"},",
+                "new_string": "\t\t{\"agent.ended subagent\", HookAgentEnded, \"subagent\", \"SubagentStop\"},\n\t\t{\"agent.prompt.submitting\", HookAgentPromptSubmitting, \"\", \"UserPromptSubmit\"},\n\t\t{\"agent.compacting\", HookAgentCompacting, \"\", \"PreCompact\"},\n\t\t{\"agent.file.read.starting\", HookAgentToolSearchStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, \"\", \"PostToolUse\"},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, \"\", \"PreToolUse\"},"
+              },
+              {
+                "old_string": "\t}{\n\t\t{\"agent.started\", HookAgentStarted, sessionInput},\n\t\t{\"agent.tool.starting\", HookAgentToolStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_name\":\"grep_search\"}`)},\n\t\t{\"agent.file.search.starting\", HookAgentToolSearchStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"hello\",\"includePattern\":\"src/**\"}}`)},\n\t\t{\"agent.file.search.ended\", HookAgentToolSearchEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"world\"}}`)},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"command\":\"go test ./...\"}}`)},",
+                "new_string": "\t}{\n\t\t{\"agent.started\", HookAgentStarted, sessionInput},\n\t\t{\"agent.tool.starting\", HookAgentToolStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_name\":\"grep_search\"}`)},\n\t\t{\"agent.file.read.starting\", HookAgentToolSearchStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"hello\",\"includePattern\":\"src/**\"}}`)},\n\t\t{\"agent.file.read.ended\", HookAgentToolSearchEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"world\"}}`)},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"command\":\"go test ./...\"}}`)},"
+              },
+              {
+                "old_string": "\t\t{\"agent.tool.ended\", HookAgentToolEnded, json.RawMessage(`{\"session_id\":\"checkpoint-test\",\"tool_name\":\"read_file\"}`)},\n\t\t{\"agent.tool.plan.updating.starting\", HookAgentToolPlanUpdatingStarting, sessionInput},\n\t\t{\"agent.tool.plan.updating.ended\", HookAgentToolPlanUpdatingEnded, sessionInput},\n\t\t{\"agent.file.search.starting\", HookAgentToolSearchStarting, sessionInput},\n\t\t{\"agent.file.search.ended\", HookAgentToolSearchEnded, sessionInput},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, sessionInput},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, sessionInput},\n\t\t{\"agent.tool.test.starting\", HookAgentToolTestStarting, sessionInput},",
+                "new_string": "\t\t{\"agent.tool.ended\", HookAgentToolEnded, json.RawMessage(`{\"session_id\":\"checkpoint-test\",\"tool_name\":\"read_file\"}`)},\n\t\t{\"agent.tool.plan.updating.starting\", HookAgentToolPlanUpdatingStarting, sessionInput},\n\t\t{\"agent.tool.plan.updating.ended\", HookAgentToolPlanUpdatingEnded, sessionInput},\n\t\t{\"agent.file.read.starting\", HookAgentToolSearchStarting, sessionInput},\n\t\t{\"agent.file.read.ended\", HookAgentToolSearchEnded, sessionInput},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, sessionInput},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, sessionInput},\n\t\t{\"agent.tool.test.starting\", HookAgentToolTestStarting, sessionInput},"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚48⏱️58",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:49:12.062767644Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\t\t{\"agent tool ended\", \"agent.tool.ended\", true, HookAgentToolEnded},\n\t\t{\"agent tool plan updating starting\", \"agent.tool.plan.updating.starting\", true, HookAgentToolPlanUpdatingStarting},\n\t\t{\"agent tool plan updating ended\", \"agent.tool.plan.updating.ended\", true, HookAgentToolPlanUpdatingEnded},\n\t\t{\"agent tool code searching\", \"agent.file.search.starting\", true, HookAgentToolSearchStarting},\n\t\t{\"agent tool searched\", \"agent.file.search.ended\", true, HookAgentToolSearchEnded},\n\t\t{\"agent tool code editing\", \"agent.tool.code.edit.starting\", true, HookAgentToolCodeEditStarting},\n\t\t{\"agent tool code edited\", \"agent.tool.code.edit.ended\", true, HookAgentToolCodeEditEnded},\n\t\t{\"agent tool terminal starting\", \"agent.tool.terminal.starting\", true, HookAgentToolTerminalStarting},",
+                "new_string": "\t\t{\"agent tool ended\", \"agent.tool.ended\", true, HookAgentToolEnded},\n\t\t{\"agent tool plan updating starting\", \"agent.tool.plan.updating.starting\", true, HookAgentToolPlanUpdatingStarting},\n\t\t{\"agent tool plan updating ended\", \"agent.tool.plan.updating.ended\", true, HookAgentToolPlanUpdatingEnded},\n\t\t{\"agent tool code searching\", \"agent.file.read.starting\", true, HookAgentToolSearchStarting},\n\t\t{\"agent tool searched\", \"agent.file.read.ended\", true, HookAgentToolSearchEnded},\n\t\t{\"agent tool code editing\", \"agent.tool.code.edit.starting\", true, HookAgentToolCodeEditStarting},\n\t\t{\"agent tool code edited\", \"agent.tool.code.edit.ended\", true, HookAgentToolCodeEditEnded},\n\t\t{\"agent tool terminal starting\", \"agent.tool.terminal.starting\", true, HookAgentToolTerminalStarting},"
+              },
+              {
+                "old_string": "\t\t{\"agent.ended subagent\", HookAgentEnded, \"subagent\", \"SubagentStop\"},\n\t\t{\"agent.prompt.submitting\", HookAgentPromptSubmitting, \"\", \"UserPromptSubmit\"},\n\t\t{\"agent.compacting\", HookAgentCompacting, \"\", \"PreCompact\"},\n\t\t{\"agent.file.search.starting\", HookAgentToolSearchStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, \"\", \"PostToolUse\"},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, \"\", \"PreToolUse\"},",
+                "new_string": "\t\t{\"agent.ended subagent\", HookAgentEnded, \"subagent\", \"SubagentStop\"},\n\t\t{\"agent.prompt.submitting\", HookAgentPromptSubmitting, \"\", \"UserPromptSubmit\"},\n\t\t{\"agent.compacting\", HookAgentCompacting, \"\", \"PreCompact\"},\n\t\t{\"agent.file.read.starting\", HookAgentToolSearchStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, \"\", \"PreToolUse\"},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, \"\", \"PostToolUse\"},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, \"\", \"PreToolUse\"},"
+              },
+              {
+                "old_string": "\t}{\n\t\t{\"agent.started\", HookAgentStarted, sessionInput},\n\t\t{\"agent.tool.starting\", HookAgentToolStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_name\":\"grep_search\"}`)},\n\t\t{\"agent.file.search.starting\", HookAgentToolSearchStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"hello\",\"includePattern\":\"src/**\"}}`)},\n\t\t{\"agent.file.search.ended\", HookAgentToolSearchEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"world\"}}`)},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"command\":\"go test ./...\"}}`)},",
+                "new_string": "\t}{\n\t\t{\"agent.started\", HookAgentStarted, sessionInput},\n\t\t{\"agent.tool.starting\", HookAgentToolStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_name\":\"grep_search\"}`)},\n\t\t{\"agent.file.read.starting\", HookAgentToolSearchStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"hello\",\"includePattern\":\"src/**\"}}`)},\n\t\t{\"agent.file.read.ended\", HookAgentToolSearchEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"query\":\"world\"}}`)},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"filePath\":\"/tmp/test.go\",\"oldString\":\"old\",\"newString\":\"new\"}}`)},\n\t\t{\"agent.tool.terminal.starting\", HookAgentToolTerminalStarting, json.RawMessage(`{\"session_id\":\"test-session-1\",\"tool_input\":{\"command\":\"go test ./...\"}}`)},"
+              },
+              {
+                "old_string": "\t\t{\"agent.tool.ended\", HookAgentToolEnded, json.RawMessage(`{\"session_id\":\"checkpoint-test\",\"tool_name\":\"read_file\"}`)},\n\t\t{\"agent.tool.plan.updating.starting\", HookAgentToolPlanUpdatingStarting, sessionInput},\n\t\t{\"agent.tool.plan.updating.ended\", HookAgentToolPlanUpdatingEnded, sessionInput},\n\t\t{\"agent.file.search.starting\", HookAgentToolSearchStarting, sessionInput},\n\t\t{\"agent.file.search.ended\", HookAgentToolSearchEnded, sessionInput},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, sessionInput},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, sessionInput},\n\t\t{\"agent.tool.test.starting\", HookAgentToolTestStarting, sessionInput},",
+                "new_string": "\t\t{\"agent.tool.ended\", HookAgentToolEnded, json.RawMessage(`{\"session_id\":\"checkpoint-test\",\"tool_name\":\"read_file\"}`)},\n\t\t{\"agent.tool.plan.updating.starting\", HookAgentToolPlanUpdatingStarting, sessionInput},\n\t\t{\"agent.tool.plan.updating.ended\", HookAgentToolPlanUpdatingEnded, sessionInput},\n\t\t{\"agent.file.read.starting\", HookAgentToolSearchStarting, sessionInput},\n\t\t{\"agent.file.read.ended\", HookAgentToolSearchEnded, sessionInput},\n\t\t{\"agent.tool.code.edit.starting\", HookAgentToolCodeEditStarting, sessionInput},\n\t\t{\"agent.tool.code.edit.ended\", HookAgentToolCodeEditEnded, sessionInput},\n\t\t{\"agent.tool.test.starting\", HookAgentToolTestStarting, sessionInput},"
+              }
+            ],
+            "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚49⏱️12",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:49:43.341360599Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "command_line": "go test ./...",
+            "cwd": "/workspaces/semio/semio-repo/cli"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "🧰semiorepo⌨️cli🥼maintest"
+        ],
+        "kind": "agent.tool.test.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚49⏱️43",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c",
+        "tests": [
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🧪testinteractionunmarshalauthorshapes",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🧪testcontributordiscovery",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testgoalpathtosemioid",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testsemioidtogoalpath",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testcontributorsemioidroundtrip",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testticketmarshaljsongoaltosemioid",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testticketunmarshaljsonsemioidtogoalpath",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testgoalmarshaljsonparenttosemioid",
+          "🧰semiorepo⌨️cli🥼maintest🔖helpers🔖semiorepoidconversion🧪testticketgoalroundtripthroughjson",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testbundlesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testcontributorsnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testticketsnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testpoliciesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪teststatutesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testfoldersnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testfilesnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testbreachsnonempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testtickettitlevalidation",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testbuildtechnologylinkargs",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testfilterticketworkspacefiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testnormalizeticketfileinput",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testmatchesignorepatterndirectorycoverage",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testglobbyextensionskipsignoreddirectoryroot",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪teststreamandlistticketsignorenestedworkspacefiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖collection🧪testnodesandedgesquick",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testnodesandedges",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testnodequery",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testsectionsedges",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testdefinitionsedges",
+          "🧰semiorepo⌨️cli🥼maintest🔖nodesandedges🧪testdefinitionkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖codebase🧪testcodebasecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖analyze🧪testanalyzecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖analyze🧪testanalyzefile",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfileheaderid",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testderivefilekind",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfilekindemoji",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileid",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileididempotent",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileiddetection",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixheaderwrongfileidendtoend",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixapplyautofixes",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testformatterplanscoverregisteredlanguages",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testapplyautofixesrunsformatterafteredit",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testapplyautofixesformatterfallbacknormalizestext",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixsectionmissingendname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixsectionnamemismatch",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixsectionempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixinlinecomment",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixblockcomment",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixjsdoccomment",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖fix🧪testfixmultiplebreachssamefile",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfiximprovedcommentlogic",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixconfigignored",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsgo",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentspython",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentscsharp",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentstypescript",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsshell",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsrust",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testscancommentsautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testemojivariationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixnonautofixablenotfixed",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixviagraphql",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixviarepocontext",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixidempotent",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixnestedsections",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixextractfilefromscope",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfixstatutemeta",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🧪testfindmatchingsectionstartname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testistestfunctionname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdefinitionkindtestemoji",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdefinitionkindtestcode",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdefinitionkindtestisvalid",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testbuilddefinitionidtestkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testdetectbundlelanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testunflattentestname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testresolvetestscopes",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testcollectgotestsinsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🔖alpha🧪testalpha",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🔖alpha🧪testalphabeta",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🔖gamma🧪testgamma",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testresolvetestfunctionname",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testmyfunction",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪benchmarkmyfunction",
+          "🧰semiorepo⌨️cli🥼maintest🔖cli🔖testcommand🧪testtestcommandhelp",
+          "🧰semiorepo⌨️cli🥼maintest🧪testexporttosqliteschema",
+          "🧰semiorepo⌨️cli🥼maintest🧪testexporttosqliteempty",
+          "🧰semiorepo⌨️cli🥼maintest🧪testexportkindmappings",
+          "🧰semiorepo⌨️cli🥼maintest🧪testextractreadmesummary",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicylistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicytreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicycheckcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicybreachlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testfixturebreachsgroupedinline",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testfixturebreachsbylanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionmissingsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwithsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionmissingsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwithsummaryandrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectiondoclinesexemptsdoccomments",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionmissingidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwithidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionmissingidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwithidentification",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionidentificationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionidentificationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwrongidentificationdetected",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwrongidentificationdetected",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionwrongidentificationautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionwrongidentificationautofixgotypeusesinterfacekind",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionmissingidentificationautofixgotypeusesinterfacekind",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionnativedocstring",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionnativedocstringautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpythontriplequotedocstringautofix",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpythontriplequotedocstringmerge",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpythontriplequotedocstringexemptfromcommentban",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionjsdocexemptfromcommentban",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsectionheaderidanduri",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdefinitionheaderidanduri",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testrequirementsbreach",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testdocsbreach",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testformatheaderstructure",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testformatheaderemptyrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testformatheaderalllanguages",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testheaderpolicyoldformatid",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testterritory",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicydefallkinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testsystempolicy",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testbuildterritorytree",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testregisteredpolicieshavegroups",
+          "🧰semiorepo⌨️cli🥼maintest🔖policy🧪testpolicygroupsgraphql",
+          "🧰semiorepo⌨️cli🥼maintest🔖bundle🧪testbundlelistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖bundle🧪testbundletreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖folder🧪testfolderlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖folder🧪testfoldertreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖folder🧪testfoldercreatemovedelete",
+          "🧰semiorepo⌨️cli🥼maintest🔖file🧪testfilelistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖file🧪testfiletreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖file🧪testfilecreatemovedelete",
+          "🧰semiorepo⌨️cli🥼maintest🔖section🧪testsectionlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖section🧪testsectiontreecommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖definition🧪testdefinitionlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖ticket🧪testticketlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖ticket🧪testticketopennoticketkeyword",
+          "🧰semiorepo⌨️cli🥼maintest🔖ticket🧪testticketopencontinuekeyword",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoalcreatevalidation",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoalcreateandcleanup",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoalhierarchy",
+          "🧰semiorepo⌨️cli🥼maintest🔖goal🧪testgoallist",
+          "🧰semiorepo⌨️cli🥼maintest🔖contributor🧪testcontributorlistcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidroot",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidyears",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidyear",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidmonths",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidmonth",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddays",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidday",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidhours",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidhour",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidminutes",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidminute",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidseconds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsecond",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcodebase",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtechnologies",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidbundles",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidbundle",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfolders",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfolder",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidfile",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidline",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidrange",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsections",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddefinitions",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddefinition",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidgoals",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidgoal",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtickets",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidticket",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddrafts",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactiddraft",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtodos",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidtodo",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidpolicies",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidpolicy",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcontributors",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcontributor",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcheckpoints",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidcheckpoint",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidinteraction",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsessions",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidsession",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifacturisessions",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifacturisession",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessionidtouri",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessionuritoid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessionkindemoji",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessiongetid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsessiongeturi",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testnormalizeticketsessionid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgetartifactidbreach",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoalartifactid",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testspecexactids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testpropagateparentids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testflat",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testmonorepotreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoaltreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcontributortreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcheckpointtreeentityids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testentitykinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testresourcekinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testdiffablekinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testrelatedtofilekinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testtechnologylistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testbundlelistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testsectionlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcontributorlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoallistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testticketlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testdraftlistids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testmonorepotreefullidhierarchy",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testgoaltreeids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcontributortreeids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testcheckpointtreeids",
+          "🧰semiorepo⌨️cli🥼maintest🔖entityid🧪testallspecidexamples",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlrepoquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlbundlesquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlpoliciesquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlticketsquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlanalyzequery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlcontributorsquery",
+          "🧰semiorepo⌨️cli🥼maintest🔖graphql🧪testgraphqlfixmutation",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testtreecommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testclie2eticketlifecyclesyntaxesnomanagement",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testclie2egoallifecyclesyntaxesnomanagement",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testclie2emisccommandsnosideeffects",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketclose",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketreopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsticketchange",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalclose",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalreopen",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgoalchange",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargspolicycheck",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsfolderoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsfileoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargssectionoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsdefinitionoperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargscontributoroperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargsgraphql",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargstodooperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargstopleveloperations",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testcliwrongargserrormessages",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testclijsonpuredata",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖wrongargument🧪testclijsonerrorstostderr",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultdefinition",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultbundle",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultfolder",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultfile",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultadditional",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultmutationkeys",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultsingleentities",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultlists",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testcollectentitypropsmultilineescaped",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultanalyze",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultfix",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultfilewithsections",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatmarkdownresultnojsonfallback",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testformatresultmutationkeys",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testrenderentitymarkdownlinkallkinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testinferentitykind",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testmarkdownoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testlifecyclecommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testlistcommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testsectioncommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststreaminglist",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testticketlifecyclenomanagement",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testextractsessionidfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testtrackhookinopenticketusesstablesessionids",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testartifactidanduri",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testidtouri",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testuritoid",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testpathtouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testpathfromuripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testsectionidvaluetouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testdefinitionidvaluetouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testparsesectionuripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatuteidtouripath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatuteuripathtoid",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testtitleizeslug",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatutepathtoidvalue",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatuteidvaluetopath",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪teststatutepathidvalueroundtrip",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🔖consolidated🧪testiduriroundtrip",
+          "🧰semiorepo⌨️cli🥼maintest🔖tree🧪testmcptoolsschemas",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testqueryflag",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testqueryfuzzymatch",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testcacheindexandtreequery",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testqueryemptyreturnsall",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪teststatutecommands",
+          "🧰semiorepo⌨️cli🥼maintest🔖query🧪testcheckpointcommands",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooltechnologylist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooltechnologytree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolcontributorlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolgoallist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolticketlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooldraftlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfolderlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfoldertree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfilelist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfiletree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolsectionlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolsectiontree",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooldefinitionlist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolpolicylist",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolpolicycheck",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolanalyzescope",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfixscope",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfoldercrud",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolfilecrud",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolticketlifecycle",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtooldraftlifecycle",
+          "🧰semiorepo⌨️cli🥼maintest🧪testtoolgoaluri",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitygoallist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitycontributorlist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparityticketlist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitydraftlist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitytechnologylist",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitytechnologytree",
+          "🧰semiorepo⌨️cli🥼maintest🔖outputparity🧪testparitypolicylist",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreenodekindconstants",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefilteriskindvisible",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchessubkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchesdate",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchesstatus",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreefiltermatchescontributor",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testfiltermonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testsearchmonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testrendermonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testbuildmonorepotree",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testcollapsefilteredkinds",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testsorttreechildren",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🧪testtreecommandflags",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testtreenodekindtoentitykindcoversall",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderinggoalidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderingticketidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderingsectionidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testunifiedrenderingallkindidentity",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testcollectentitypropsconsistency",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testsinglelineoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖monorepotree🔖unifiedrenderingidentity🧪testnodoubledashinmarkdownoutput",
+          "🧰semiorepo⌨️cli🥼maintest🧪testmigrateauthorfieldstostring",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfixheaderwithshebang",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyemptyfolder",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyemptyfolderautofix",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyskipsexcludeddirs",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfile",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfilesupportsglobpatterns",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfileskipssemiorepo",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicygodfileskipsnestednodemodules",
+          "🧰semiorepo⌨️cli🥼maintest🧪testsetrootdirresetsgitignorecache",
+          "🧰semiorepo⌨️cli🥼maintest🧪testsetrootdircanonicalizestoreporoot",
+          "🧰semiorepo⌨️cli🥼maintest🧪testrenderprompttemplateusesrepometaroot",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfindreporootprefersmonorepomarkeroverlocalgomod",
+          "🧰semiorepo⌨️cli🥼maintest🧪testgetcachedirusesmonoreporoot",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicynogodfile",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfolderpolicyregistered",
+          "🧰semiorepo⌨️cli🥼maintest🧪testfilepolicyregistered",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testvalidatehookevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookeventkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testistoolblocked",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testsplitcommandsegments",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testiscommandsegmentblocked",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookagentevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhooktoolblocking",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhooktoolallowed",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookunknownevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookthinkingevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testallhookeventscompleteness",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandcli",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandtoolblocking",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandjsonoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratecopilotconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolnamefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracthookeventnamefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testvscodeeventfromhookevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testformatvscodehookoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandcopilotchatvscodeoutput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratecursorconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratewindsurfconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgenerateclaudecodeconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testconfiguregithooks",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgetclienthookmappings",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testblockedtoolpatterns",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhooklogging",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testsessionjsontracksplan",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testmergeticketagentplansteps",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookloggingtoolblocked",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookloggingstdininput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testderiverepoopfrommcptool",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testderiverepoopfromclicommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testlogrepooperationhookmcptool",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testlogrepooperationhookcli",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookagenttoolstartingderivedrepoevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookalleventslogged",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhooksearchingpattern",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookblockedevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookterminalevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhooktranscriptinsession",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtrackhookcodeeditedlogstofile",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookcommandstdinpiped",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcommandfromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcommandfromstdinblocking",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testgeneratedroidconfig",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testclassifytool",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testclassifycommandkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvehookeventcommandreclassification",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testparsetestinfofromcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttestsegmentfromcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvetestfilesfromcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvealltestdefinitionids",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🔖tests🧪testalpha",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🔖tests🧪testbeta",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractteststartingfrominputresolvestestids",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testone",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testtwo",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttestendedfrominputresolvesfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvehookevent",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolvepretooluse",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testresolveposttooluse",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstarting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstartingsubagentparentfromcontextusessession",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstartingsubagentusesagentidassession",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentstartingparentfromcontext",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataagentended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatapromptsubmitting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacompacting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatatoolstarting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatatoolended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataplanupdating",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodesearching",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodeediting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodeeditingwithall",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodeedited",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataterminalstarting",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataterminalended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataversioncheckpointended",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdataversioncheckpointstartingfromfile",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatarawfield",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatanoinputnoraw",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatatoolnamefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testpopulateeventdatacodesearchwithexclude",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractplanstepsfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractsearchfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolinputmapfromdata",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolinputfromstdinnativeformat",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractsearchdefinitionreadsfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhooksearchstartingincludesdefinitions",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testbuilddefinitionreadsfullfilereturnsfileid",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testbuilddefinitionreadsusesreporelativepaths",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testrunhookprereadcodedefinitionidsarereporelative",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testshouldexecutesearchcommand",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcodeeditfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolinputfromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextracttoolresponsefromstdin",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractterminalendedfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractchatfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractreportfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcheckpointmessagefrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractcheckpointshafrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testextractparentfrominput",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookresultjsonfields",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testhookresultomitempty",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testnativehookeventmappingwithrealdata",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testnativehookeventmappingfromreallogfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testcheckpointinallagentevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testcheckpointinallversionevents",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testcheckpointinloggedeventjson",
+          "🧰semiorepo⌨️cli🥼maintest🔖hook🧪testeventidsusesemiorepoformat",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidlocbytechnologiesbundlesfoldersfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidlocbylanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidlocbycontributors",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidcommandlocbytechnologiesbundlesfoldersfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidcommandlocbylanguage",
+          "🧰semiorepo⌨️cli🥼maintest🔖mermaid🧪testmermaidescapelabel",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testproviderregistry",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgetmanagementprovider",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testnullmanagementprovider",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testalleditorproviders",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgeteditorprovider",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testeditorproviderhookmapping",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testmanagementproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testversioncontrolproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderkind",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderconfigure",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testcomputecompositefingerprintignoresuntrackedfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercurrentcheckpoint",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercurrentbranch",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercheckpoint",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderstageall",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolproviderstagedfiles",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercheckin",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testgitversioncontrolprovidercheckout",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testversionhookeventsdispatch",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testsandboxproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖provider🧪testeditorproviderinterface",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testislicensetext",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testisheadermetaline",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractmarkdownsection",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractfileheadersummary",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractfileheadersummaryreturnsactualsummary",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractfileheaderrequirementsnolicense",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractsectionleadcommentsskipslicense",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testextractsectionleadcommentsskipsregionmarkers",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirements",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologydocs",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologytodos",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirementsinvalidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologydocsinvalidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologytodosinvalidtechnology",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirementssemio",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologydocssemio",
+          "🧰semiorepo⌨️cli🥼maintest🔖technologygenerate🧪testgeneratetechnologyrequirementssemiorepo",
+          "🧰semiorepo⌨️cli🥼maintest🧪testextractsearchfrominputlinenumbers",
+          "🧰semiorepo⌨️cli🥼maintest🧪testextractsearchfrominputcompletefilerange",
+          "🧰semiorepo⌨️cli🥼maintest🧪testsectionnewlineafterregion"
+        ]
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:50:10.837171152Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "files": [
+                "semio-repo/cli/main.go",
+                "semio-repo/cli/main_test.go"
+              ],
+              "no_github": true,
+              "path": "26/03/10/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ",
+              "summary": "Renamed neutral agent event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended in CLI hook constants, help text, and all related tests. Verified no remaining agent.file.search references in semio-repo."
+            },
+            "mcp_tool_name": "ticket_close"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚50⏱️11",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:50:58.021599619Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "mcp_result": "[🎫renamefilesearchagenteventstofileread](semiorepo://y/00/m/00/d/00/tk/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ) - `closed` - `closed 1 second ago`\n",
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "files": [
+                "semio-repo/cli/main.go",
+                "semio-repo/cli/main_test.go"
+              ],
+              "no_github": true,
+              "path": "26/03/10/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ",
+              "summary": "Renamed neutral agent event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended in CLI hook constants, help text, and all related tests. Verified no remaining agent.file.search references in semio-repo."
+            },
+            "mcp_tool_name": "ticket_close"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚50⏱️58",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_cascade_response",
+          "trajectory_id": "159d13fe-8e1d-4296-918f-600be07b953c",
+          "timestamp": "2026-03-10T23:51:14.440105696Z",
+          "execution_id": "4f0bf999-dd6c-4c44-8f3e-09c800317223",
+          "tool_info": {
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n- (Global) Triggered Rule: global_rules.md\n\n*User accepted the command `./semio-repo/cli/cli hook agent.starting windsurf-chat`*\n\n*User accepted the command `./semio-repo/cli/cli hook prompt.submit windsurf-chat`*\n\n*Updated todo list*\n\n*User accepted the command `./semio-repo/cli/cli hook tool.calling windsurf-chat --tool-name \"code_search\" --tool-args \"search_term=Rename file search to file read for agent events\"`*\n\n*Running MCP tool*\n\n*Found code context*\n\n*Found code context*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///workspaces/semio/semio-repo/cli/main.go*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n*Viewed file:///workspaces/semio/semio-repo/cli/main_test.go*\n- (Glob) Triggered Rule: AGENTS.md\n- (Glob) Triggered Rule: AGENTS.md\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Updated todo list*\n\n*Listed directory file:///workspaces/semio/.semio-repo/%F0%9F%8E%AF*\n\n*Running MCP tool*\n\n*Edited relevant file*\n\n*Grep searched codebase*\n\n*Edited relevant file*\n\n*Grep searched codebase*\n\n*User accepted the command `go test ./...`*\n\n*Updated todo list*\n\n*Running MCP tool*\n\n### Planner Response\n\nUpdated in **semio-repo**: renamed agent event slugs from **file search** to **file read**.\n\n### What changed\n\n1. **Hook event constants**\n   - `agent.file.search.starting` → `agent.file.read.starting`\n   - `agent.file.search.ended` → `agent.file.read.ended`\n   - File: @semio-repo/cli/main.go#37673-37674\n\n2. **CLI help/docs output**\n   - Neutral hook list now prints `agent.file.read.starting/ended`\n   - File: @semio-repo/cli/main.go#42530-42531\n\n3. **Tests updated**\n   - Replaced all test expectations using `agent.file.search.*` with `agent.file.read.*`\n   - File refs:\n     - @semio-repo/cli/main_test.go#15454-15455\n     - @semio-repo/cli/main_test.go#16041-16041\n     - @semio-repo/cli/main_test.go#17502-17503\n     - @semio-repo/cli/main_test.go#20513-20514\n\n### Validation\n\n- Verified no remaining `agent.file.search` occurrences under `semio-repo`.\n- `go test ./...` in `semio-repo/cli` currently fails due to **pre-existing syntax errors** in [main.go](file:///workspaces/semio/semio-repo/cli/main.go:0:0-0:0) unrelated to this change (around lines ~5609+), so full test pass could not be confirmed in current workspace state."
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰23⌚51⏱️14",
+        "session": "⚪159d13fe8e1d4296918f600be07b953c"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}
