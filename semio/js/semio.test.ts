@@ -20,6 +20,7 @@
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign } from "@semio/assets";
 import { describe, expect, it } from "vitest";
 import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
+import { buildControlTree, ControlDef } from "./sketchpad/elements";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -293,6 +294,31 @@ describe("Sketchpad Selection Composition", () => {
     expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { altKey: true })).toBe("subtractive");
     expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { metaKey: true })).toBe("subtractive");
     expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true, ctrlKey: true })).toBe("intersect");
+  });
+});
+
+describe("Sketchpad ControlTree", () => {
+  it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
+    const controls: ControlDef[] = [
+      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+    ];
+    const folderSettings = {
+      Transform: { path: "Transform", order: 2 },
+      "Appearance/Material": { path: "Appearance/Material", order: 1, collapsed: true },
+    };
+    const fullTree = buildControlTree(controls, "", folderSettings);
+    expect(Object.keys(fullTree)).toEqual(["Transform", "Appearance"]);
+    expect(fullTree.Transform.kind).toBe("folder");
+    expect(fullTree.Transform.order).toBe(2);
+    expect(fullTree.Transform.children?.Position.kind).toBe("folder");
+    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe("control");
+    expect(fullTree.Appearance.children?.Material.order).toBe(1);
+    const filteredTree = buildControlTree(controls, "rouGH", folderSettings);
+    expect(Object.keys(filteredTree)).toEqual(["Appearance"]);
+    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe("control");
+    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe("Appearance/Material/roughness");
   });
 });
 

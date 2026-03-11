@@ -162,6 +162,13 @@
             }
           }
         },
+        "copyJsonToClipboard": {
+          "label": {
+            "normal": "Copy JSON",
+            "beginner": "Copy the current sketchpad JSON state to clipboard"
+          },
+          "hotkey": "Ctrl+Shift+J"
+        },
         "breadcrumb": {
           "label": {
             "normal": "",
@@ -370,6 +377,10 @@
             }
           },
           "chat": {
+            "label": {
+              "normal": "Toggle Chat",
+              "beginner": "Toggle the chat panel"
+            },
             "show": {
               "label": {
                 "normal": "Show",
@@ -386,6 +397,10 @@
             }
           },
           "settings": {
+            "label": {
+              "normal": "Toggle Settings",
+              "beginner": "Toggle the settings panel"
+            },
             "show": {
               "label": {
                 "normal": "Show",
@@ -1316,6 +1331,30 @@
                 "normal": "Remote",
                 "beginner": "Remote"
               }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter kits by location"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Create",
+                "beginner": "Create a new kit"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Home settings"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Home chat"
             }
           }
         },
@@ -1695,10 +1734,22 @@
                 "beginner": "Concepts"
               }
             },
+            "selection": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection tools"
+              }
+            },
             "filters": {
               "label": {
                 "normal": "Filters",
                 "beginner": "Filter artifacts by type"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Create",
+                "beginner": "Create new artifacts"
               }
             },
             "resetFilters": {
@@ -2109,6 +2160,18 @@
                 "normal": "Hand",
                 "beginner": "Hand"
               }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Kit settings"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Kit chat"
             }
           }
         },
@@ -3141,6 +3204,10 @@
               "beginner": "Tools"
             },
             "select": {
+              "label": {
+                "normal": "Select",
+                "beginner": "Selection tool"
+              },
               "mode": {
                 "additive": {
                   "label": {
@@ -3237,6 +3304,12 @@
                 "normal": "Add Piece",
                 "beginner": "Add a new piece to the design"
               }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter design elements by visibility"
+              }
             }
           }
         },
@@ -3266,6 +3339,12 @@
               "label": {
                 "normal": "Models",
                 "beginner": "Models"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filters",
+                "beginner": "Filter type elements by visibility"
               }
             }
           },
@@ -3782,6 +3861,12 @@
                 }
               }
             },
+            "selection": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection tool"
+              }
+            },
             "hand": {
               "label": {
                 "normal": "Hand",
@@ -3813,7 +3898,59 @@
               "beginner": "Define measurement qualities"
             }
           },
+          "title": {
+            "label": {
+              "normal": "Quality",
+              "beginner": "Quality"
+            }
+          },
+          "toolbar": {
+            "view": {
+              "label": {
+                "normal": "View",
+                "beginner": "View options"
+              }
+            },
+            "actions": {
+              "label": {
+                "normal": "Actions",
+                "beginner": "Quality actions"
+              }
+            }
+          },
+          "workbench": {
+            "nodes": {
+              "label": {
+                "normal": "Nodes",
+                "beginner": "Quality formula nodes"
+              }
+            },
+            "qualities": {
+              "label": {
+                "normal": "Qualities",
+                "beginner": "Available qualities"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Quality settings"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Quality chat"
+            }
+          },
           "tools": {
+            "selection": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection tool"
+              }
+            },
             "select": {
               "additive": {
                 "label": {
@@ -4363,6 +4500,14 @@
                 "beginner": "Failed to submit feedback. Please try again."
               }
             }
+          },
+          "toolbar": {
+            "send": {
+              "label": {
+                "normal": "Send",
+                "beginner": "Send feedback"
+              }
+            }
           }
         }
       },
@@ -4386,6 +4531,56 @@
         "label": {
           "normal": "Toolbar",
           "beginner": "Toolbar"
+        },
+        "group": {
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
+          "selection": {
+            "label": {
+              "normal": "Selection",
+              "beginner": "Selection"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
+            }
+          },
+          "filter": {
+            "label": {
+              "normal": "Filter",
+              "beginner": "Filter"
+            }
+          },
+          "create": {
+            "label": {
+              "normal": "Create",
+              "beginner": "Create"
+            }
+          },
+          "view": {
+            "label": {
+              "normal": "View",
+              "beginner": "View"
+            }
+          },
+          "actions": {
+            "label": {
+              "normal": "Actions",
+              "beginner": "Actions"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Settings"
+            }
+          }
         },
         "parent": {
           "hand": "Hand",

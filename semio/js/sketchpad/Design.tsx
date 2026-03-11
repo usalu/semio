@@ -74,7 +74,7 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, PieceIcon, PortIcon, RemoveIcon, SceneIcon, SelectToolIcon, TableViewIcon, TypeIcon } from "@semio/assets";
+import { AddIcon, ChatIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, PieceIcon, PortIcon, RemoveIcon, SceneIcon, SelectToolIcon, SettingsIcon, TableViewIcon, TypeIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -121,6 +121,7 @@ import {
     applyNodeChanges,
     Avatar,
     AvatarFallback,
+    BasicChatPanel,
     BaseEdge,
     Button,
     Combobox,
@@ -141,9 +142,11 @@ import {
     ToggleGroup,
     ToolbarGroup,
     TransactionProvider,
+    Tree,
     TreeItem,
     TreeRow,
     TreeSection,
+    TreeStateProvider,
     useReactFlow,
     useStoreApi,
     ViewportPortal
@@ -163,6 +166,7 @@ import {
     SketchpadStore,
     useAddFooterItem,
     useAddPanelSection,
+    useAddSidePanelTab,
     useAppPanelVisibility,
     useAppType,
     useClusterableGroups,
@@ -205,6 +209,7 @@ import {
     usePieceStatus,
     useRemoveFooterItem,
     useRemovePanelSection,
+    useRemoveSidePanelTab,
     useReplacableDesigns,
     useReplacableTypes,
     useSketchpad,
@@ -1180,6 +1185,10 @@ export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]):
  **/
 export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
   private readonly kitGuid: Guid;
+  private _draggingPieceIds: Set<string> = new Set();
+  get draggingPieceIds(): Set<string> { return this._draggingPieceIds; }
+  setDraggingPieces(ids: Set<string>): void { this._draggingPieceIds = ids; this.notify(); }
+  clearDraggingPieces(): void { if (this._draggingPieceIds.size === 0) return; this._draggingPieceIds = new Set(); this.notify(); }
   private readonly designGuid: Guid;
 
   constructor(parent: SketchpadStore, id: DesignAppId, initialState?: DesignAppState) {
@@ -3026,6 +3035,10 @@ function getTransactionAffectedPieces(store: DesignStore | null): { changedPiece
   const statusMap = new Map<string, DiffStatus>();
 
   if (!store) return { changedPieces, statusMap };
+  for (const pieceId of store.draggingPieceIds) {
+    changedPieces.add(pieceId);
+    if (!statusMap.has(pieceId)) statusMap.set(pieceId, DiffStatus.Modified);
+  }
   const currentStack = store.currentTransactionStack;
   if (!currentStack || currentStack.length === 0) return { changedPieces, statusMap };
 
@@ -7446,6 +7459,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const { hoverClearTimeoutRef, currentHoveredPieceGuidRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
   const suppressEdgeRecomputeRef = useRef(false);
   const rfStoreApi = useStoreApi();
+  const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
@@ -7660,6 +7674,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const pendingPieceUpdatesRef = useRef<Array<{ id: string; diff: any }>>([]);
   const dragDescendantsRef = useRef<Set<string>>(new Set());
   const dragDescendantOffsetsRef = useRef<Map<string, { dx: number; dy: number }>>(new Map());
+  const dragDescendantNodeIdsRef = useRef<Map<string, string>>(new Map());
   const dragSelectedNodesRef = useRef<DiagramNode[]>([]);
   const dragNonSelectedNodesRef = useRef<DiagramNode[]>([]);
   const helperLinesDomRef = useRef<HTMLDivElement | null>(null);
@@ -7696,6 +7711,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const handleDiagramPointerDown = useCallback(
     (e: PointerEvent) => {
+      const target = e.currentTarget as HTMLElement | null;
+      if (target && document.activeElement !== target) {
+        target.focus({ preventScroll: true });
+      }
       if (e.button === 1 || e.button === 2) {
         isPanningRef.current = true;
         const nodesContainer = document.querySelector(`[data-diagram-id="${diagramId}"] .react-flow__nodes`);
@@ -7709,6 +7728,35 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       }
     },
     [diagramId, isPanningRef],
+  );
+  const handleDiagramKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "c" || (!e.metaKey && !e.ctrlKey) || e.altKey || e.shiftKey) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.isContentEditable) return;
+      const tagName = target.tagName;
+      if (tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT") return;
+      if (!dropZoneRef.current || !dropZoneRef.current.contains(target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (!design) return;
+      const currentSelection = selectionRef.current;
+      const selectedPieceGuids = new Set((currentSelection?.pieces ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((g): g is Guid => typeof g === "string" && g.length > 0));
+      const selectedConnectionGuids = new Set((currentSelection?.connections ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((g): g is Guid => typeof g === "string" && g.length > 0));
+      const hasSelection = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
+      let payload: { pieces: typeof design.pieces; connections: typeof design.connections };
+      if (hasSelection) {
+        const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
+        const pieceGuidSet = new Set(pieces.map((p) => p.guid));
+        const connections = (design.connections ?? []).filter((c) => selectedConnectionGuids.has(c.guid) || (c.connected?.piece?.guid && c.connecting?.piece?.guid && pieceGuidSet.has(c.connected.piece.guid) && pieceGuidSet.has(c.connecting.piece.guid)));
+        payload = { pieces, connections };
+      } else {
+        payload = { pieces: design.pieces ?? [], connections: design.connections ?? [] };
+      }
+      sketchpadCommands.copyJsonToClipboard("semio.sketchpad.app.design.canvas.diagram.keydown.cmdC", payload);
+    },
+    [sketchpadCommands, design],
   );
 
   const handleDiagramPointerUp = useCallback(() => {
@@ -7729,17 +7777,20 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         dropZoneRef.current.removeEventListener("pointerdown", handleDiagramPointerDown as any);
         dropZoneRef.current.removeEventListener("pointerup", handleDiagramPointerUp as any);
         dropZoneRef.current.removeEventListener("pointerleave", handleDiagramPointerUp as any);
+        dropZoneRef.current.removeEventListener("keydown", handleDiagramKeyDown as any);
       }
       if (node) {
         node.setAttribute("data-drop-zone", "diagram");
         node.setAttribute("data-drop-zone-id", diagramId);
+        node.tabIndex = 0;
         node.addEventListener("pointerdown", handleDiagramPointerDown as any);
         node.addEventListener("pointerup", handleDiagramPointerUp as any);
         node.addEventListener("pointerleave", handleDiagramPointerUp as any);
+        node.addEventListener("keydown", handleDiagramKeyDown as any);
       }
       dropZoneRef.current = node;
     },
-    [diagramId, handleDiagramPointerDown, handleDiagramPointerUp],
+    [diagramId, handleDiagramPointerDown, handleDiagramPointerUp, handleDiagramKeyDown],
   );
 
   const handleDragEnd = useCallback(
@@ -7819,6 +7870,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         pendingSelectionRef.current = null;
         dragDescendantsRef.current = new Set();
         dragDescendantOffsetsRef.current = new Map();
+        dragDescendantNodeIdsRef.current = new Map();
         updateHelperLinesDom(EMPTY_HELPER_LINES);
         if (reactFlowInstanceRef.current) {
           reactFlowInstanceRef.current.setNodes((nodes) => nodes.map((node) => ({ ...node })));
@@ -8071,16 +8123,19 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const descendants = getDownstreamDescendants(metadata, dragRoots);
       dragDescendantsRef.current = descendants;
       const offsets = new Map<string, { dx: number; dy: number }>();
+      const descNodeIds = new Map<string, string>();
       if (descendants.size > 0) {
         const dragNodePos = { x: node.position.x, y: node.position.y };
         for (const descGuid of descendants) {
           const descNode = nodes.find((n) => getPieceIdFromNode(n) === descGuid);
           if (descNode) {
             offsets.set(descGuid, { dx: descNode.position.x - dragNodePos.x, dy: descNode.position.y - dragNodePos.y });
+            descNodeIds.set(descGuid, descNode.id);
           }
         }
       }
       dragDescendantOffsetsRef.current = offsets;
+      dragDescendantNodeIdsRef.current = descNodeIds;
       const diagramEl = document.querySelector(`[data-diagram-id="${diagramId}"]`);
       if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "true";
       const selectedIds = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
@@ -8093,9 +8148,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragSelectedNodesRef.current = selected;
       dragNonSelectedNodesRef.current = nonSelected;
       sceneFrameControlRef.current?.pause();
+      const allDraggedIds = new Set([...selectedIds, ...descendants]);
+      designStore?.setDraggingPieces(allDraggedIds);
       setTimeout(() => transaction?.start(), 0);
     },
-    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId],
+    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore],
   );
 
   const isDraggingRef = useRef(false);
@@ -8597,6 +8654,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           if (!offset) continue;
           const newX = draggedX + offset.dx;
           const newY = draggedY + offset.dy;
+          const descNodeId = dragDescendantNodeIdsRef.current.get(descGuid);
+          if (descNodeId) {
+            const descInternalNode = reactFlowInstanceRef.current!.getInternalNode(descNodeId);
+            if (descInternalNode) {
+              descInternalNode.internals.positionAbsolute.x = newX;
+              descInternalNode.internals.positionAbsolute.y = newY;
+              descInternalNode.position.x = newX;
+              descInternalNode.position.y = newY;
+            }
+          }
           updatedPieces.push({
             id: descGuid,
             diff: {
@@ -8610,8 +8677,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       }
       dragPositionRef.current = { x: draggedX, y: draggedY };
       pendingPieceUpdatesRef.current = updatedPieces;
+      if (designStore && updatedPieces.length > 0) {
+        designStore.setDraggingPieces(new Set(updatedPieces.map((u) => u.id)));
+      }
     },
-    [design, reactFlowInstanceRef, metadata],
+    [design, reactFlowInstanceRef, metadata, designStore],
   );
 
   const onNodeDragStop = useCallback(
@@ -8620,6 +8690,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "false";
       isDraggingRef.current = false;
       suppressEdgeRecomputeRef.current = false;
+      const savedSelectedNodes = dragSelectedNodesRef.current;
+      const savedNonSelectedNodes = dragNonSelectedNodesRef.current;
+      const savedDescendantOffsets = dragDescendantOffsetsRef.current;
       dragSelectedNodesRef.current = [];
       dragNonSelectedNodesRef.current = [];
       const pendingSelection = pendingSelectionRef.current;
@@ -8629,6 +8702,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragPositionRef.current = null;
       dragDescendantsRef.current = new Set();
       dragDescendantOffsetsRef.current = new Map();
+      dragDescendantNodeIdsRef.current = new Map();
+      designStore?.clearDraggingPieces();
       if (pendingSelection) {
         const { pieceId, compositionKind } = pendingSelection;
         if (setSelection) setTimeout(() => setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) }), 650);
@@ -8641,6 +8716,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const startPos = dragStartPositionRef.current;
       dragStartPositionRef.current = null;
       const finalUpdates: Array<{ id: string; diff: any }> = [];
+      const visualPositions = new Map<string, { x: number; y: number }>();
       if (design && startPos) {
         const offsetU = (finalX - startPos.x) / ICON_WIDTH;
         const offsetV = -(finalY - startPos.y) / ICON_WIDTH;
@@ -8648,7 +8724,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           const originalPiece = design.pieces?.find((p) => p.guid === pieceGuid);
           if (!originalPiece) continue;
           const baseCenter = originalPiece.center ?? metadata.get(pieceGuid)?.center ?? { u: 0, v: 0 };
-          finalUpdates.push({ id: pieceGuid, diff: { center: { u: (baseCenter.u ?? 0) + offsetU, v: (baseCenter.v ?? 0) + offsetV } } });
+          const newCenter = { u: (baseCenter.u ?? 0) + offsetU, v: (baseCenter.v ?? 0) + offsetV };
+          finalUpdates.push({ id: pieceGuid, diff: { center: newCenter } });
+          visualPositions.set(pieceGuid, { x: newCenter.u * ICON_WIDTH, y: -newCenter.v * ICON_WIDTH });
+        }
+        for (const [descGuid, offset] of savedDescendantOffsets) {
+          visualPositions.set(descGuid, { x: finalX + offset.dx, y: finalY + offset.dy });
         }
         const piecesDesign = { guid: "", name: "", pieces: pieceIdsToUpdate.map((g) => ({ guid: g })) } as Design;
         const dragDiff = dragPiecesInDesign(design, piecesDesign, { u: offsetU, v: offsetV });
@@ -8658,24 +8739,25 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             const originalConn = design.connections?.find((c) => c.guid === cu.connection.guid);
             return { id: cu.connection.guid, diff: { u: (originalConn?.u ?? 0) + (cu.diff.u ?? 0), v: (originalConn?.v ?? 0) + (cu.diff.v ?? 0) } };
           });
-          setTimeout(() => updateConnections?.(connUpdates), 600);
+          updateConnections?.(connUpdates);
         }
       }
-      if (finalUpdates.length > 0) {
-        const updateMap = new Map(finalUpdates.map(u => [u.id, u.diff.center]));
+      if (visualPositions.size > 0) {
         setNodes(prevNodes => prevNodes.map(n => {
           const pieceGuid = (n as any).data?.piece?.guid;
           if (!pieceGuid) return n;
-          const center = updateMap.get(pieceGuid);
-          if (!center) return n;
-          return { ...n, position: { x: center.u * ICON_WIDTH, y: -center.v * ICON_WIDTH } };
+          const pos = visualPositions.get(pieceGuid);
+          if (!pos) return n;
+          return { ...n, position: pos };
         }));
-        setTimeout(() => updatePieces?.(finalUpdates), 600);
+      }
+      if (finalUpdates.length > 0) {
+        updatePieces?.(finalUpdates);
       }
       if (reactFlowInstanceRef.current && !event.altKey) {
         const rfInstance = reactFlowInstanceRef.current;
-        const selectedNodes = dragSelectedNodesRef.current;
-        const nonSelectedNodes = dragNonSelectedNodesRef.current;
+        const selectedNodes = savedSelectedNodes;
+        const nonSelectedNodes = savedNonSelectedNodes;
         setTimeout(() => {
           if (!rfInstance) return;
           const MIN_DISTANCE = 150;
@@ -8765,7 +8847,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       updateHelperLinesDom(EMPTY_HELPER_LINES);
       sceneFrameControlRef.current?.resume();
     },
-    [transaction, updatePieces, updateConnections, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId],
+    [transaction, updatePieces, updateConnections, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId, designStore],
   );
 
   const onConnect = useCallback(
@@ -9849,7 +9931,9 @@ const App: FC<AppProps> = () => {
   );
 
   const addSection = useAddPanelSection();
+  const addSidePanelTab = useAddSidePanelTab();
   const removeSection = useRemovePanelSection();
+  const removeSidePanelTab = useRemoveSidePanelTab();
   const { useKitAppCommands } = getKitAppHooks();
   const kitAppCommands = useKitAppCommands();
   const sketchpadCommands = useSketchpadCommands();
@@ -9875,6 +9959,32 @@ const App: FC<AppProps> = () => {
   useHotkeys("ctrl+shift+z", () => redo?.(), { enableOnFormTags: true });
 
   const appType = useAppType();
+
+  useEffect(() => {
+    if (appType !== "design") return;
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.design.settings",
+      icon: SettingsIcon,
+      order: 100,
+      content: () => (
+        <TreeStateProvider>
+          <Tree className="min-w-0 overflow-hidden p-double">
+            <DesignSettingsContent />
+          </Tree>
+        </TreeStateProvider>
+      ),
+    });
+    addSidePanelTab("right", {
+      id: "semio.sketchpad.app.design.chat",
+      icon: ChatIcon,
+      order: 101,
+      content: () => <BasicChatPanel id="semio.sketchpad.app.design.chat" title="Design" />,
+    });
+    return () => {
+      removeSidePanelTab("right", "semio.sketchpad.app.design.settings");
+      removeSidePanelTab("right", "semio.sketchpad.app.design.chat");
+    };
+  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -10097,7 +10207,7 @@ const App: FC<AppProps> = () => {
       order: 1,
       content: () => <PiecesWorkbenchContent />,
     });
-    addSection("workbench", {
+    addSection("tools", {
       id: "semio.sketchpad.app.design.windows",
       specificity: 20,
       order: 2,
@@ -10105,7 +10215,7 @@ const App: FC<AppProps> = () => {
     });
     return () => {
       removeSection("workbench", "semio.sketchpad.app.kit.pieces");
-      removeSection("workbench", "semio.sketchpad.app.design.windows");
+      removeSection("tools", "semio.sketchpad.app.design.windows");
     };
   }, [appType, addSection, removeSection]);
 
@@ -10432,6 +10542,37 @@ const App: FC<AppProps> = () => {
 };
 
 // #region Settings
+
+const DesignSettingsContent: FC = () => {
+  const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useDesignAppPanelVisibility();
+  const showToolbarLabel = useLabel("semio.sketchpad.navbar.panelToggle.toolbar.show");
+  const showWorkbenchLabel = useLabel("semio.sketchpad.navbar.panelToggle.workbench.show");
+  const showDetailsLabel = useLabel("semio.sketchpad.navbar.panelToggle.details.show");
+  const showWindowsLabel = useLabel("semio.sketchpad.navbar.panelToggle.tools.show");
+  const togglePanelVisibility = useCallback(
+    (panelKey: "toolbar" | "leftSidePanel" | "rightSidePanel" | "details") => {
+      if (!canSetPanelVisibility || !setPanelVisibility) return;
+      setPanelVisibility({ ...panelVisibility, [panelKey]: !panelVisibility[panelKey] });
+    },
+    [canSetPanelVisibility, panelVisibility, setPanelVisibility],
+  );
+  return (
+    <>
+      <TreeRow>
+        <Toggle id="semio.sketchpad.app.design.settings.panel.toolbar" pressed={!!panelVisibility.toolbar} onPressedChange={() => togglePanelVisibility("toolbar")} text={showToolbarLabel} disabled={!canSetPanelVisibility} />
+      </TreeRow>
+      <TreeRow>
+        <Toggle id="semio.sketchpad.app.design.settings.panel.workbench" pressed={!!panelVisibility.leftSidePanel} onPressedChange={() => togglePanelVisibility("leftSidePanel")} text={showWorkbenchLabel} disabled={!canSetPanelVisibility} />
+      </TreeRow>
+      <TreeRow>
+        <Toggle id="semio.sketchpad.app.design.settings.panel.windows" pressed={!!panelVisibility.rightSidePanel} onPressedChange={() => togglePanelVisibility("rightSidePanel")} text={showWindowsLabel} disabled={!canSetPanelVisibility} />
+      </TreeRow>
+      <TreeRow>
+        <Toggle id="semio.sketchpad.app.design.settings.panel.details" pressed={!!panelVisibility.details} onPressedChange={() => togglePanelVisibility("details")} text={showDetailsLabel} disabled={!canSetPanelVisibility} />
+      </TreeRow>
+    </>
+  );
+};
 
 const DesignApp: FC = () => {
   initializeDesignStore();

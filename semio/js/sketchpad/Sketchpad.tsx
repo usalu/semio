@@ -145,6 +145,7 @@ import {
     Action,
     ActionGroup,
     ActionGroupItem,
+    BasicChatPanel,
     Breadcrumb,
     ButtonGroup,
     ButtonGroupItem,
@@ -12430,6 +12431,34 @@ export class SketchpadStore {
       input.click();
       return {} as T;
     }
+    if (command === "semio.sketchpad.copyJsonToClipboard") {
+      const payload = rest.length > 1 ? rest[1] : undefined;
+      let serializedState: unknown = payload;
+      if (serializedState === undefined) {
+        const navigation = this.snapshot().navigation ?? "";
+        const activeKitGuid = navigation.match(/^\/kits\/([^/?#]+)/)?.[1] ?? navigation.match(/^\/kit\/([^/?#]+)/)?.[1];
+        if (activeKitGuid && this.hasKit(activeKitGuid)) {
+          serializedState = this.kit(activeKitGuid).snapshot();
+        } else {
+          const firstKit = this.kits.values().next();
+          serializedState = firstKit.done ? {} : firstKit.value.snapshot();
+        }
+      }
+      const stateJson = JSON.stringify(serializedState, null, 2);
+      if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(stateJson);
+        return {} as T;
+      }
+      const textarea = document.createElement("textarea");
+      textarea.value = stateJson;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return {} as T;
+    }
     const callback = this.commandRegistry.get(command);
     if (!callback) {
       throw new Error(`Command "${command}" not found in sketchpad store`);
@@ -13950,6 +13979,7 @@ export function useSketchpadCommands() {
       setExpertise: (origin: string, expertise: Expertise) => store.execute("semio.sketchpad.setExpertise", origin, expertise),
       setMode: (origin: string, mode: Mode) => store.execute("semio.sketchpad.setMode", origin, mode),
       exportState: (origin: string) => store.execute("semio.sketchpad.exportState", origin),
+      copyJsonToClipboard: (origin: string, payload?: unknown) => store.execute("semio.sketchpad.copyJsonToClipboard", origin, payload),
       setState: (origin: string, state: Partial<SketchpadState>) => store.execute("semio.sketchpad.setState", origin, state),
       toggleFullscreen: (origin: string) => store.execute("semio.sketchpad.toggleFullscreen", origin),
       toggleNavbarExpanded: (origin: string) => store.execute("semio.sketchpad.toggleNavbarExpanded", origin),
@@ -14264,6 +14294,9 @@ export const commands = {
         activeHotkeySetting: path,
       },
     };
+  },
+  "semio.sketchpad.copyJsonToClipboard": (_context: SketchpadCommandContext): SketchpadCommandResult => {
+    return {};
   },
   "semio.sketchpad.setState": (context: SketchpadCommandContext, ...args: any[]): SketchpadCommandResult => {
     let state: Partial<SketchpadState>;
@@ -17315,6 +17348,31 @@ const PanelTabContent: FC<{ sections: PanelSection[] }> = ({ sections }) => {
   );
 };
 
+const UtilityFallbackSettingsContent: FC<{ appType: string }> = ({ appType }) => {
+  const appCommands = useAppCommands();
+  const panelVisibility = useAppPanelVisibility();
+  const showToolbarLabel = useLabel("semio.sketchpad.navbar.panelToggle.toolbar.show");
+  const showWorkbenchLabel = useLabel("semio.sketchpad.navbar.panelToggle.workbench.show");
+  const showDetailsLabel = useLabel("semio.sketchpad.navbar.panelToggle.details.show");
+  const showWindowsLabel = useLabel("semio.sketchpad.navbar.panelToggle.tools.show");
+  const togglePanelVisibility = useCallback(
+    (panelKey: "toolbar" | "leftSidePanel" | "rightSidePanel" | "details") => {
+      appCommands?.togglePanel?.(`semio.sketchpad.app.${appType}.settings.panel.${panelKey}`, panelKey);
+    },
+    [appCommands, appType],
+  );
+  return (
+    <TreeStateProvider>
+      <Tree className="min-w-0 overflow-hidden p-double">
+        <Toggle id={`semio.sketchpad.app.${appType}.settings.panel.toolbar`} pressed={!!panelVisibility.toolbar} onPressedChange={() => togglePanelVisibility("toolbar")} text={showToolbarLabel} />
+        <Toggle id={`semio.sketchpad.app.${appType}.settings.panel.workbench`} pressed={!!panelVisibility.leftSidePanel} onPressedChange={() => togglePanelVisibility("leftSidePanel")} text={showWorkbenchLabel} />
+        <Toggle id={`semio.sketchpad.app.${appType}.settings.panel.windows`} pressed={!!panelVisibility.rightSidePanel} onPressedChange={() => togglePanelVisibility("rightSidePanel")} text={showWindowsLabel} />
+        <Toggle id={`semio.sketchpad.app.${appType}.settings.panel.details`} pressed={!!panelVisibility.details} onPressedChange={() => togglePanelVisibility("details")} text={showDetailsLabel} />
+      </Tree>
+    </TreeStateProvider>
+  );
+};
+
 const LayoutWrapper: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -17443,6 +17501,9 @@ const LayoutWrapper: FC = () => {
   }, [appType, panelVisibility.settings, panelVisibility.chat, panelVisibility.rightSidePanel, rightSidePanelTabs, activeRightTabId, setActiveRightTabId]);
 
   const sketchpadCommands = useSketchpadCommands();
+  useHotkeys("semio.sketchpad.navbar.copyJsonToClipboard", () => {
+    sketchpadCommands.copyJsonToClipboard("semio.sketchpad.hotkey.copyJsonToClipboard");
+  });
 
   useEffect(() => {
     const migratedPath = migratePath(location.pathname);
@@ -17963,7 +18024,7 @@ const LayoutWrapper: FC = () => {
                           content: () => {
                             const chatTab = rightSidePanelTabs.find(t => t.id.includes("chat"));
                             return chatTab ? (typeof chatTab.content === "function" ? chatTab.content() : chatTab.content) : (
-                              <div className="p-double text-muted-foreground">Chat not available</div>
+                              <BasicChatPanel id={`semio.sketchpad.app.${appType}.chat`} title={appType.charAt(0).toUpperCase() + appType.slice(1)} />
                             );
                           },
                         },
@@ -17988,7 +18049,7 @@ const LayoutWrapper: FC = () => {
                             content: () => {
                               const settingsTab = rightSidePanelTabs.find(t => t.id.includes("settings"));
                               return settingsTab ? (typeof settingsTab.content === "function" ? settingsTab.content() : settingsTab.content) : (
-                                <div className="p-double text-muted-foreground">Settings not available</div>
+                                <UtilityFallbackSettingsContent appType={appType} />
                               );
                             },
                           },

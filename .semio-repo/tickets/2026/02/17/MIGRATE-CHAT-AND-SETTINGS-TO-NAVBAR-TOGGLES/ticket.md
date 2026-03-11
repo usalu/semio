@@ -6,39 +6,43 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Fixed the navbar chat hook-order crash by moving side-panel tab callbacks back into component render boundaries and adding regression coverage for the Design chat toggle.
+Restored functional Design navbar utility settings/chat panels by adding Design utility tab registration and shell-level utility fallbacks; added focused Playwright coverage for navbar settings availability.
 ## Plan
 
-1. Isolate the hook-order violation in the shared side-panel rendering path used by navbar chat.
-2. Refactor shared tab rendering so tab callbacks render as React components instead of being invoked inline.
-3. Extend the existing panel coverage to exercise the Design navbar chat toggle and catch hook-order/runtime errors.
-4. Run the affected validation checks and record environment blockers.
+1. Reproduce the navbar settings unavailability in Design and trace the utility tab resolution path.
+2. Restore Design-side utility registration for settings/chat tabs.
+3. Add shell-level utility fallback rendering for settings/chat so navbar utility toggles remain functional even when app-specific tabs are missing.
+4. Extend the existing sketchpad Playwright coverage for navbar settings availability.
+5. Validate with TypeScript and focused Playwright coverage.
 
 ## Todos
 
-- [x] Isolate the `SidePanel` hook-order failure path triggered by the navbar chat toggle
-- [x] Refactor shared side-panel rendering to preserve hook ownership inside tab content
-- [x] Remove direct nested utility-tab callback invocation in the shared sketchpad shell
-- [x] Extend the existing `sketchpad.test.ts` `Panels` coverage for the Design navbar chat toggle
+- [x] Reproduce Design navbar settings unavailable state
+- [x] Add Design right-side utility tabs for `settings` and `chat`
+- [x] Add shell-level utility fallback content for `settings` and `chat` in `Sketchpad.tsx`
+- [x] Add Design utility settings content with panel visibility controls
+- [x] Extend existing Playwright spec to validate Design navbar settings utility path
 - [x] Run `npx tsc -p semio/js/tsconfig.json --noEmit`
-- [x] Attempt `npx playwright test sketchpad.test.ts --grep "Panels" --reporter=line`
+- [x] Run `npx playwright test semio/js/sketchpad.test.ts --grep "Design Navbar Settings Is Available" --reporter=line`
 
 ## Changes
-- Updated `semio/js/sketchpad/elements.tsx`:
-  - Added `SidePanelTabContent` and changed `SidePanel` to render function tab content as a React component instead of calling `activeTab.content()` inline.
+- Updated `semio/js/sketchpad/Design.tsx`:
+  - Added Design-specific right-side utility tab registration for `semio.sketchpad.app.design.settings` and `semio.sketchpad.app.design.chat`.
+  - Added `DesignSettingsContent` with toolbar/workbench/windows/details visibility toggles.
+  - Added required imports for chat/settings icons, utility tab hooks, chat panel, and tree wrappers.
 - Updated `semio/js/sketchpad/Sketchpad.tsx`:
-  - Added `SidePanelTabSlot` to safely render registered side-panel tabs or fallback content.
-  - Added memoized lookup for utility `chat` and `settings` side-panel tabs.
-  - Replaced direct `chatTab.content()` and `settingsTab.content()` invocation in the navbar utility panel path with `SidePanelTabSlot`.
+  - Added `UtilityFallbackSettingsContent` for navbar utility settings when no app-provided settings tab exists.
+  - Added navbar chat fallback rendering with `BasicChatPanel` when no app-provided chat tab exists.
+  - Removed hardcoded “Settings not available” / “Chat not available” fallback messages.
 - Updated `semio/js/sketchpad.test.ts`:
-  - Extended `initConsole` to capture `pageerror` events into the existing error collection.
-  - Added a Design `Panels` assertion path that clicks the navbar chat toggle and fails on hook-order runtime errors.
+  - Replaced the Design utility removal assertion with `Design Navbar Settings Is Available`.
+  - Added assertions for navbar settings availability and no fallback utility-unavailable text when toggling settings/chat.
 
 ## Log
 - Reopened on 2026-02-27 to finish the migration: `Docs`, `Kit`, `Type`, and `Quality` still exposed `settings` and `chat` as window tabs, and `Design` still carried legacy tab-migration references.
 - Reopened again on 2026-02-27 to remove chat/settings from the details panel only.
 - Reopened again on 2026-02-27 to fix the navbar chat runtime crash caused by inline side-panel tab callback invocation in the shared renderer.
+- Reopened on 2026-03-11 for regression: Sketchpad navbar settings toggle showed unavailable fallback content in Design.
 - Validation:
   - `npx tsc -p semio/js/tsconfig.json --noEmit` passed.
-  - `npx playwright test semio/js/sketchpad.test.ts --grep "Panels" --reporter=line` failed before assertions because `page.goto("/")` had no valid base URL from the repo root.
-  - `npx playwright test sketchpad.test.ts --grep "Panels" --reporter=line` from `semio/js` failed with the same existing `page.goto("/")` invalid URL issue before the new Design chat assertions ran.
+  - `npx playwright test semio/js/sketchpad.test.ts --grep "Design Navbar Settings Is Available" --reporter=line` passed with local `vite` server on `127.0.0.1:5173`.

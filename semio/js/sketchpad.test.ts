@@ -1007,6 +1007,57 @@ test.describe("sketchpad", () => {
     // #endregion 🔖Home Selection State
   });
 
+  test("Copy Json To Clipboard Command", async ({ page }) => {
+    await page.addInitScript(() => {
+      const writeText = async (value: string) => {
+        (window as any).__semioCopiedJson = value;
+      };
+      try {
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: { writeText },
+        });
+      } catch (_error) {
+        void 0;
+      }
+    });
+    await initDesign(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+    const diagramContainer = page.locator('[id="semio.sketchpad.app.design.canvas.diagram"]').first();
+    await expect(diagramContainer).toBeVisible({ timeout: 15000 });
+    await diagramContainer.click({ force: true });
+    await page.keyboard.press("Meta+C");
+    const copiedByMeta = await page.waitForFunction(() => typeof (window as any).__semioCopiedJson === "string" && (window as any).__semioCopiedJson.length > 0, undefined, { timeout: 3000 }).then(() => true).catch(() => false);
+    if (!copiedByMeta) {
+      await page.evaluate(() => {
+        const diagram = document.querySelector('[id="semio.sketchpad.app.design.canvas.diagram"]') as HTMLElement | null;
+        if (!diagram) return;
+        diagram.focus();
+        diagram.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "c",
+            metaKey: true,
+            bubbles: true,
+          }),
+        );
+      });
+    }
+    await page.waitForFunction(() => {
+      const value = (window as any).__semioCopiedJson;
+      return typeof value === "string" && value.length > 0;
+    });
+    const copiedJson = await page.evaluate(() => (window as any).__semioCopiedJson as string);
+    const copiedKit = JSON.parse(copiedJson) as { guid?: string; name?: string; types?: unknown[]; designs?: unknown[]; sketchpad?: unknown };
+    expect(copiedKit).toHaveProperty("guid");
+    expect(copiedKit).toHaveProperty("name");
+    expect(copiedKit).toHaveProperty("types");
+    expect(copiedKit).toHaveProperty("designs");
+    expect(copiedKit).not.toHaveProperty("sketchpad");
+    expect((copiedKit.guid ?? "").length).toBeGreaterThan(0);
+    expect((copiedKit.designs ?? []).length).toBeGreaterThan(0);
+  });
+
   test("Kit", async ({ page }) => {
     test.setTimeout(180000);
     const { errors, warnings, messages } = await initConsole(page);
@@ -2323,6 +2374,33 @@ test.describe("sketchpad", () => {
     }
     console.log(`[Design] Workbench panel visible: ${isWorkbenchVisible}`);
     if (isWorkbenchVisible) {
+      const leftSidePanelTabs = workbenchWindowEl.locator('[data-slot="side-panel-tabs"]');
+      const workbenchTabButton = leftSidePanelTabs.locator('[id="semio.sketchpad.navbar.panelToggle.workbench.show"]').first();
+      const toolsTabButton = leftSidePanelTabs.locator('[id="semio.sketchpad.navbar.panelToggle.tools.show"]').first();
+      await expect(workbenchTabButton).toBeVisible({ timeout: 5000 });
+      await expect(toolsTabButton).toBeVisible({ timeout: 5000 });
+      await workbenchTabButton.click();
+      await page.waitForTimeout(200);
+      const piecesSectionInWorkbench = workbenchWindowEl.locator('[id="semio.sketchpad.app.kit.pieces"]').first();
+      const windowsSectionInWorkbench = workbenchWindowEl.locator('[id="semio.sketchpad.app.design.windows"]').first();
+      const hasPiecesSectionInWorkbench = await piecesSectionInWorkbench.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasWindowsSectionInWorkbench = await windowsSectionInWorkbench.isVisible({ timeout: 1000 }).catch(() => false);
+      console.log(`[Design] Workbench tab has pieces section: ${hasPiecesSectionInWorkbench}`);
+      console.log(`[Design] Workbench tab has windows section: ${hasWindowsSectionInWorkbench}`);
+      expect(hasPiecesSectionInWorkbench).toBeTruthy();
+      expect(hasWindowsSectionInWorkbench).toBeFalsy();
+      await toolsTabButton.click();
+      await page.waitForTimeout(200);
+      const windowsSectionInTools = workbenchWindowEl.locator('[id="semio.sketchpad.app.design.windows"]').first();
+      const piecesSectionInTools = workbenchWindowEl.locator('[id="semio.sketchpad.app.kit.pieces"]').first();
+      const hasWindowsSectionInTools = await windowsSectionInTools.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasPiecesSectionInTools = await piecesSectionInTools.isVisible({ timeout: 1000 }).catch(() => false);
+      console.log(`[Design] Tools tab has windows section: ${hasWindowsSectionInTools}`);
+      console.log(`[Design] Tools tab has pieces section: ${hasPiecesSectionInTools}`);
+      expect(hasWindowsSectionInTools).toBeTruthy();
+      expect(hasPiecesSectionInTools).toBeFalsy();
+      await workbenchTabButton.click();
+      await page.waitForTimeout(200);
       const draggableWorkbenchAvatars = workbenchWindowEl.locator('[data-drag-kind="type"][data-drag-guid]');
       let draggableWorkbenchAvatarCount = await draggableWorkbenchAvatars.count();
       console.log(`[Design] Draggable workbench avatars visible: ${draggableWorkbenchAvatarCount}`);
@@ -4099,6 +4177,10 @@ test.describe("sketchpad", () => {
               const childCenterDeltaV = childCenterAfter.v - childCenterBefore.v;
               console.log(`[Design] Parent center delta: du=${parentCenterDeltaU}, dv=${parentCenterDeltaV}`);
               console.log(`[Design] Child center delta: du=${childCenterDeltaU}, dv=${childCenterDeltaV}`);
+              expect(Math.abs(parentCenterDeltaU)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(parentCenterDeltaV)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaU)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(childCenterDeltaV)).toBeGreaterThan(TOLERANCE);
               expect(Math.abs(childCenterDeltaU - parentCenterDeltaU)).toBeLessThan(TOLERANCE);
               expect(Math.abs(childCenterDeltaV - parentCenterDeltaV)).toBeLessThan(TOLERANCE);
             }
@@ -4109,6 +4191,8 @@ test.describe("sketchpad", () => {
               const gcDeltaU = grandchildCenterAfter.u - grandchildCenterBefore.u;
               const gcDeltaV = grandchildCenterAfter.v - grandchildCenterBefore.v;
               console.log(`[Design] Grandchild center delta: du=${gcDeltaU}, dv=${gcDeltaV}`);
+              expect(Math.abs(gcDeltaU)).toBeGreaterThan(TOLERANCE);
+              expect(Math.abs(gcDeltaV)).toBeGreaterThan(TOLERANCE);
               expect(Math.abs(gcDeltaU - parentCenterDeltaU)).toBeLessThan(TOLERANCE);
               expect(Math.abs(gcDeltaV - parentCenterDeltaV)).toBeLessThan(TOLERANCE);
             }
@@ -5248,7 +5332,7 @@ test.describe("sketchpad", () => {
     console.log("[Panels] All panel combination tests complete");
   });
 
-  test("Design Utility Tabs Stay Removed", async ({ page }) => {
+  test("Design Navbar Settings Is Available", async ({ page }) => {
     test.setTimeout(120000);
     await initDesign(page);
 
@@ -5257,18 +5341,23 @@ test.describe("sketchpad", () => {
 
     await expectNoLegacyWindowTabs(page, "Design Utility Tabs");
     await expectUtilityPanelTogglesInNavbar(page, "Design Utility Tabs");
+    const settingsToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]');
+    await expect(settingsToggle).toBeVisible({ timeout: 10000 });
+    await settingsToggle.click();
+    await page.waitForTimeout(400);
 
-    const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
-    if (await rightPanelToggle.isVisible({ timeout: 10000 }).catch(() => false)) {
-      await rightPanelToggle.click();
-      await page.waitForTimeout(300);
-    }
+    const settingsUnavailable = page.getByText("Settings not available").first();
+    await expect(settingsUnavailable).toHaveCount(0);
+    await expect(page.locator('[id="semio.sketchpad.app.design.settings.panel.toolbar"]').first()).toBeVisible({ timeout: 10000 });
 
-    const designUtilityTabCount = await page.locator('[data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.settings"], [data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.chat"]').count();
-    const designUtilityContentCount = await page.locator('[id="semio.sketchpad.app.design.settings"], [id="semio.sketchpad.app.design.chat"]').count();
-    console.log(`[Design Utility Tabs] Design utility affordances: tabs=${designUtilityTabCount}, content=${designUtilityContentCount}`);
-    expect(designUtilityTabCount).toBe(0);
-    expect(designUtilityContentCount).toBe(0);
+    const chatToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]');
+    await expect(chatToggle).toBeVisible({ timeout: 10000 });
+    await chatToggle.click();
+    await page.waitForTimeout(400);
+
+    const chatUnavailable = page.getByText("Chat not available").first();
+    await expect(chatUnavailable).toHaveCount(0);
+    await expect(page.locator('[data-panel="rightSidePanel"]').first()).toBeVisible({ timeout: 10000 });
   });
 
   // #region 🔖Design Undo Redo

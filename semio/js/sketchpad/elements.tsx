@@ -843,13 +843,27 @@ interface LabelProps {
 
 function Label({ id, children, className, labelElementId }: LabelProps) {
   const label = useLabel(id);
+  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
+  const treeLabelCellPaddingLeft = `${detailPanelIndentPx(level) + 20}px`;
   return (
-    <div data-slot="property-row" className={cn("group grid min-w-0 w-full items-center grid-cols-[96px_1fr] gap-x-[8px] min-h-[24px]", className)}>
+    <div data-slot="property-row" className={cn("group grid min-w-0 w-full items-center gap-x-[8px] min-h-[24px]", isTree ? "grid-cols-[minmax(0,1fr)_160px]" : "grid-cols-[96px_1fr]", className)}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
-            {label}
-          </span>
+          {isTree ? (
+            <div data-slot="property-label-tree" className="relative min-w-0" style={{ paddingLeft: treeLabelCellPaddingLeft }}>
+              <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
+              <div className="inline-flex items-center gap-[6px] min-w-0 h-[22px]">
+                <div className="w-[14px] flex-shrink-0" />
+                <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
+                  {label}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
+              {label}
+            </span>
+          )}
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -1579,7 +1593,7 @@ function ActionGroupItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="contents">{actionGroupItemElement}</span>
+          {actionGroupItemElement}
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -1698,7 +1712,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="contents">{actionElement}</span>
+          {actionElement}
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -1812,7 +1826,7 @@ function ButtonGroupItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="contents">{buttonGroupItemElement}</span>
+          {buttonGroupItemElement}
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -3010,7 +3024,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="contents">{toggleGroupItemElement}</span>
+          {toggleGroupItemElement}
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -3964,7 +3978,7 @@ const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
   );
 };
 
-const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean }>({ level: 0, isLastAtLevel: [], showLines: true });
+const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false });
 const detailPanelIndentPx = (level: number): number => level * 10;
 const indentationLinePx = (i: number): number => detailPanelIndentPx(i) + 7;
 
@@ -4068,7 +4082,7 @@ interface SortableTreeItemsProps {
  *  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treesection](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-SECTION)
  **/
 export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
-  const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
   const { t } = useTranslation();
   const mode = useTooltipMode();
   const displayLabel = id ? useLabel(id) : label;
@@ -4202,7 +4216,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent className="min-w-0">
-        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines }}>
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree }}>
           <div className="flex flex-col gap-y-[2px]">{children}</div>
         </TreeContext.Provider>
       </CollapsibleContent>
@@ -4225,7 +4239,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   actions = [],
   onDoubleClick,
 }) => {
-  const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
   const displayLabel = id ? useLabel(id) : label;
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
@@ -4306,13 +4320,13 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </div>
           )}
         </div>
-        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
+        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
       </>
     );
   }
 
   if (!displayLabel) {
-    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>;
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree }}>{children}</TreeContext.Provider>;
   }
 
   return (
@@ -4431,7 +4445,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     );
   }
 
-  const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
   const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
   const itemId = `item-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
@@ -4500,13 +4514,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             </div>
           )}
         </div>
-        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
+        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
       </>
     );
   }
 
   if (!resolvedLabel) {
-    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines }}>{children}</TreeContext.Provider>;
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree }}>{children}</TreeContext.Provider>;
   }
 
   return (
@@ -4551,7 +4565,7 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
  **/
 export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: (event: React.MouseEvent) => void; onDoubleClick?: (event: React.MouseEvent) => void; actions?: TreeSectionAction[] }> = ({ children, className, id, onClick, onDoubleClick, actions }) => (
   <TreeItem className={className} id={id} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
-    <TreeContent>{children}</TreeContent>
+    {children}
   </TreeItem>
 );
 
@@ -4592,7 +4606,7 @@ export const Tree: React.FC<{ children: React.ReactNode; className?: string; sho
 } = ({ children, className = "", showLines = true }) => {
   return (
     <TreeStateProvider>
-      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines }}>
+      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true }}>
         <div className={`w-full min-w-0 overflow-hidden ${className}`}>{children}</div>
       </TreeContext.Provider>
     </TreeStateProvider>
@@ -4720,7 +4734,7 @@ interface FileTreeItemProps {
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
-  const { level } = React.useContext(TreeContext);
+  const { level, isTree } = React.useContext(TreeContext);
   const [isHovered, setIsHovered] = React.useState(false);
   const itemId = `file-${node.path}`;
   const { open, setOpen } = useTreeOpenState(itemId, true);
@@ -4772,7 +4786,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
       <>
         {itemElement}
         {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [], showLines: false }}>
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [], showLines: false, isTree }}>
             {node.children!.map((child, idx) => (
               <FileTreeItem key={idx} node={child} currentPath={currentPath} onNavigate={onNavigate} as={as} />
             ))}
@@ -4801,7 +4815,7 @@ Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = 
     <TreeStateProvider>
       <div className={`not-prose my-medium p-medium rounded-lg border border-element bg-card ${className}`}>
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
-        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false }}>
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: true }}>
           <div className="flex flex-col gap-single">
             {nodes.map((node, idx) => (
               <FileTreeItem key={idx} node={node} currentPath={currentPath} onNavigate={onNavigate} as={as} />
@@ -4942,16 +4956,16 @@ export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
     case "number":
       return <Stepper id={controlId} value={def.value} onChange={def.onChange} min={def.meta?.min} max={def.meta?.max} step={def.meta?.step ?? 1} />;
     case "slider":
-      return <Slider id={controlId} value={[def.value]} onValueChange={(v) => def.onChange(v[0])} min={def.meta?.min ?? 0} max={def.meta?.max ?? 100} showLabel />;
+      return <Slider id={controlId} value={[def.value]} onValueChange={(v) => def.onChange(v[0])} min={def.meta?.min ?? 0} max={def.meta?.max ?? 100} />;
     case "boolean":
       return <Toggle id={controlId} pressed={def.value} onPressedChange={def.onChange} icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />} />;
     case "string":
-      return <Input id={controlId} lazy value={def.value} onLazyChange={def.onChange} showLabel />;
+      return <Input id={controlId} lazy value={def.value} onLazyChange={def.onChange} />;
     case "color":
-      return <Input id={controlId} type="color" value={def.value} onChange={(e) => def.onChange(e.target.value)} showLabel />;
+      return <Input id={controlId} type="color" value={def.value} onChange={(e) => def.onChange(e.target.value)} />;
     case "select":
       return (
-        <Select id={controlId} showLabel value={def.value} onValueChange={def.onChange}>
+        <Select id={controlId} value={def.value} onValueChange={def.onChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -4965,9 +4979,9 @@ export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
         </Select>
       );
     case "text":
-      return <Textarea id={controlId} lazy value={def.value} onLazyChange={def.onChange} showLabel />;
+      return <Textarea id={controlId} lazy value={def.value} onLazyChange={def.onChange} />;
     default:
-      return <Input id={controlId} lazy value={String(def.value)} onLazyChange={def.onChange} showLabel />;
+      return <Input id={controlId} lazy value={String(def.value)} onLazyChange={def.onChange} />;
   }
 };
 
@@ -4978,29 +4992,111 @@ interface ControlTreeFolderProps {
   renderControl: (def: ControlDef) => React.ReactNode;
   classNames?: ControlTreeClassNames;
 }
+const controlTreeValueColumnWidthPx = 160;
+interface ControlTreeRowProps {
+  className?: string;
+  left: React.ReactNode;
+  right?: React.ReactNode;
+}
+const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right }) => (
+  <div data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-[8px] min-h-[20px]", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${controlTreeValueColumnWidthPx}px` }}>
+    <div data-slot="control-tree-row-left" className="relative min-w-0">{left}</div>
+    <div data-slot="control-tree-row-right" className="min-w-0">{right}</div>
+  </div>
+);
+interface ControlTreeFolderRowProps {
+  node: ControlTreeNode;
+  classNames?: ControlTreeClassNames;
+  children?: React.ReactNode;
+  defaultOpen: boolean;
+  onToggleFolder?: (path: string, collapsed: boolean) => void;
+}
+const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, classNames, children, defaultOpen, onToggleFolder }) => {
+  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
+  const itemId = `control-tree-folder-${node.path}`;
+  const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
+  const hasChildren = hasNonEmptyChildren(children);
+  return (
+    <>
+      <ControlTreeRow
+        className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.folderRow)}
+        left={
+          <div
+            className="flex min-w-0 items-center gap-[6px]"
+            style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 2}px` }}
+          >
+            <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
+            {hasChildren ? (
+              <button
+                className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const nextOpen = !open;
+                  setOpen(nextOpen);
+                  onToggleFolder?.(node.path, !nextOpen);
+                }}
+              >
+                {open ? <ChevronDownIcon className={cn("size-[14px] flex-shrink-0", classNames?.folderChevron)} /> : <ChevronRightIcon className={cn("size-[14px] flex-shrink-0", classNames?.folderChevron)} />}
+              </button>
+            ) : (
+              <div className="w-[14px] flex-shrink-0" />
+            )}
+            <span data-slot="control-tree-folder-label" className={cn("text-xs font-semibold uppercase tracking-wide truncate text-muted-foreground", classNames?.folderTitle)}>
+              {node.key}
+            </span>
+          </div>
+        }
+      />
+      {open && hasChildren && (
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree }}>
+          <div className={cn("flex flex-col gap-y-[2px]", classNames?.folderChildren)}>{children}</div>
+        </TreeContext.Provider>
+      )}
+    </>
+  );
+};
+interface ControlTreeLeafRowProps {
+  node: ControlTreeNode;
+  renderControl: (def: ControlDef) => React.ReactNode;
+  classNames?: ControlTreeClassNames;
+}
+const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderControl, classNames }) => {
+  const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
+  return (
+    <ControlTreeRow
+      className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
+      left={
+        <div
+          className="flex min-w-0 items-center gap-[6px]"
+          style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 2}px` }}
+        >
+          <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
+          <div className="w-[14px] flex-shrink-0" />
+          <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-foreground", classNames?.controlLabel)}>
+            {node.key}
+          </span>
+        </div>
+      }
+      right={<div data-slot="control-tree-control-body" className={cn("min-w-0", classNames?.controlBody)}>{renderControl(node.control!)}</div>}
+    />
+  );
+};
 
 const ControlTreeFolder: React.FC<ControlTreeFolderProps> = ({ node, folderSettings, onToggleFolder, renderControl, classNames }) => {
   const settings = folderSettings?.[node.path];
   const defaultOpen = !(settings?.collapsed ?? false);
   const sorted = sortControlTreeNodes(node.children ?? {});
   return (
-    <TreeSection
-      label={node.key}
-      className={classNames?.folderRow}
-      defaultOpen={defaultOpen}
-    >
+    <ControlTreeFolderRow node={node} classNames={classNames} defaultOpen={defaultOpen} onToggleFolder={onToggleFolder}>
       {sorted.map((child) =>
         child.kind === "folder" ? (
           <ControlTreeFolder key={child.path} node={child} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
         ) : (
-          <TreeItem key={child.path}>
-            <TreeContent>
-              <div data-slot="control-tree-leaf" className={classNames?.controlRow}>{renderControl(child.control!)}</div>
-            </TreeContent>
-          </TreeItem>
+          <ControlTreeLeafRow key={child.path} node={child} renderControl={renderControl} classNames={classNames} />
         ),
       )}
-    </TreeSection>
+    </ControlTreeFolderRow>
   );
 };
 
@@ -5042,11 +5138,7 @@ export const ControlTree: React.FC<ControlTreeProps> = ({
           node.kind === "folder" ? (
             <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
           ) : (
-            <TreeItem key={node.path}>
-              <TreeContent>
-                <div data-slot="control-tree-leaf" className={classNames?.controlRow}>{renderControl(node.control!)}</div>
-              </TreeContent>
-            </TreeItem>
+            <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
           ),
         )}
       </Tree>

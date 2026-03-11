@@ -162,6 +162,13 @@
             }
           }
         },
+        "copyJsonToClipboard": {
+          "label": {
+            "normal": "JSON kopieren",
+            "beginner": "Den aktuellen Sketchpad-JSON-Status in die Zwischenablage kopieren"
+          },
+          "hotkey": "Ctrl+Shift+J"
+        },
         "breadcrumb": {
           "label": {
             "normal": "",
@@ -370,6 +377,10 @@
             }
           },
           "chat": {
+            "label": {
+              "normal": "Chat umschalten",
+              "beginner": "Chat-Panel umschalten"
+            },
             "show": {
               "label": {
                 "normal": "Anzeigen",
@@ -378,6 +389,10 @@
             }
           },
           "settings": {
+            "label": {
+              "normal": "Einstellungen umschalten",
+              "beginner": "Einstellungen-Panel umschalten"
+            },
             "show": {
               "label": {
                 "normal": "Anzeigen",
@@ -839,7 +854,7 @@
           "settings": {
             "label": {
               "normal": "Einstellungen",
-              "beginner": "Anwendungseinstellungen konfigurieren"
+              "beginner": "Home-Einstellungen"
             },
             "theme": {
               "label": {
@@ -1071,7 +1086,7 @@
           "chat": {
             "label": {
               "normal": "Chat",
-              "beginner": "Chat"
+              "beginner": "Home-Chat"
             }
           },
           "createKit": {
@@ -1102,6 +1117,56 @@
             "label": {
               "normal": "Kit importieren",
               "beginner": "Kit importieren"
+            }
+          },
+          "toolbar": {
+            "showTemporary": {
+              "label": {
+                "normal": "Temporär",
+                "beginner": "Temporär"
+              }
+            },
+            "showLocal": {
+              "label": {
+                "normal": "Lokal",
+                "beginner": "Lokal"
+              }
+            },
+            "showRemote": {
+              "label": {
+                "normal": "Remote",
+                "beginner": "Remote"
+              }
+            },
+            "createTemporary": {
+              "label": {
+                "normal": "Temporär",
+                "beginner": "Temporär"
+              }
+            },
+            "createLocal": {
+              "label": {
+                "normal": "Lokal",
+                "beginner": "Lokal"
+              }
+            },
+            "createRemote": {
+              "label": {
+                "normal": "Remote",
+                "beginner": "Remote"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Kits nach Standort filtern"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Erstellen",
+                "beginner": "Neues Kit erstellen"
+              }
             }
           }
         },
@@ -1478,6 +1543,18 @@
                 "normal": "Filter Zurücksetzen",
                 "beginner": "Aktive Artefaktfilter entfernen und alle Artefaktarten anzeigen"
               }
+            },
+            "selection": {
+              "label": {
+                "normal": "Auswahl",
+                "beginner": "Auswahlwerkzeuge"
+              }
+            },
+            "create": {
+              "label": {
+                "normal": "Erstellen",
+                "beginner": "Neue Artefakte erstellen"
+              }
             }
           },
           "canvas": {
@@ -1693,8 +1770,8 @@
           },
           "settings": {
             "label": {
-              "normal": "Kit-Editor",
-              "beginner": "Kit-Editor-Einstellungen"
+              "normal": "Einstellungen",
+              "beginner": "Kit-Einstellungen"
             },
             "diagram": {
               "chargeStrength": {
@@ -1875,6 +1952,12 @@
                   "beginner": "Describe this folder..."
                 }
               }
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Kit-Chat"
             }
           }
         },
@@ -2896,6 +2979,10 @@
               "beginner": "Werkzeuge"
             },
             "select": {
+              "label": {
+                "normal": "Auswählen",
+                "beginner": "Auswahlwerkzeug"
+              },
               "mode": {
                 "additive": {
                   "label": {
@@ -2991,6 +3078,12 @@
               "label": {
                 "normal": "Bauteil hinzufügen",
                 "beginner": "Ein neues Bauteil zum Entwurf hinzufügen"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Design-Elemente nach Sichtbarkeit filtern"
               }
             }
           }
@@ -3261,6 +3354,14 @@
                 "beginner": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
               }
             }
+          },
+          "toolbar": {
+            "send": {
+              "label": {
+                "normal": "Senden",
+                "beginner": "Feedback senden"
+              }
+            }
           }
         },
         "type": {
@@ -3289,6 +3390,12 @@
               "label": {
                 "normal": "Darstellungen",
                 "beginner": "Darstellungen"
+              }
+            },
+            "filters": {
+              "label": {
+                "normal": "Filter",
+                "beginner": "Typ-Elemente nach Sichtbarkeit filtern"
               }
             }
           },
@@ -3816,6 +3923,12 @@
                 "normal": "Konnektor",
                 "beginner": "Konnektor-Erstellungswerkzeug"
               }
+            },
+            "selection": {
+              "label": {
+                "normal": "Auswahl",
+                "beginner": "Auswahlwerkzeug"
+              }
             }
           },
           "title": {
@@ -3855,6 +3968,12 @@
                   "normal": "Schnittmenge",
                   "beginner": "Schnittmengen-Auswahl - nur überlappende Elemente auswählen"
                 }
+              }
+            },
+            "selection": {
+              "label": {
+                "normal": "Auswahl",
+                "beginner": "Auswahlwerkzeug"
               }
             }
           },
@@ -4101,8 +4220,8 @@
           },
           "title": {
             "label": {
-              "normal": "Titel",
-              "beginner": "Titel"
+              "normal": "Qualität",
+              "beginner": "Qualität"
             }
           },
           "functions": {
@@ -4115,6 +4234,46 @@
             "label": {
               "normal": "Qualitäten",
               "beginner": "Qualitäten"
+            }
+          },
+          "toolbar": {
+            "view": {
+              "label": {
+                "normal": "Ansicht",
+                "beginner": "Ansichtsoptionen"
+              }
+            },
+            "actions": {
+              "label": {
+                "normal": "Aktionen",
+                "beginner": "Qualitätsaktionen"
+              }
+            }
+          },
+          "workbench": {
+            "nodes": {
+              "label": {
+                "normal": "Knoten",
+                "beginner": "Qualitätsformel-Knoten"
+              }
+            },
+            "qualities": {
+              "label": {
+                "normal": "Qualitäten",
+                "beginner": "Verfügbare Qualitäten"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Qualitäts-Einstellungen"
+            }
+          },
+          "chat": {
+            "label": {
+              "normal": "Chat",
+              "beginner": "Qualitäts-Chat"
             }
           }
         }
@@ -4307,6 +4466,56 @@
         "label": {
           "normal": "Werkzeugleiste",
           "beginner": "Werkzeugleiste"
+        },
+        "group": {
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
+          "selection": {
+            "label": {
+              "normal": "Auswahl",
+              "beginner": "Auswahl"
+            }
+          },
+          "lasso": {
+            "label": {
+              "normal": "Lasso",
+              "beginner": "Lasso"
+            }
+          },
+          "filter": {
+            "label": {
+              "normal": "Filter",
+              "beginner": "Filter"
+            }
+          },
+          "create": {
+            "label": {
+              "normal": "Erstellen",
+              "beginner": "Erstellen"
+            }
+          },
+          "view": {
+            "label": {
+              "normal": "Ansicht",
+              "beginner": "Ansicht"
+            }
+          },
+          "actions": {
+            "label": {
+              "normal": "Aktionen",
+              "beginner": "Aktionen"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Einstellungen"
+            }
+          }
         },
         "parent": {
           "selection": {

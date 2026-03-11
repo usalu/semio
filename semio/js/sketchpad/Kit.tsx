@@ -7297,6 +7297,80 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
   return { nodes, edges };
 };
 
+const hasAnySelection = (selection: KitAppSelection): boolean =>
+  (selection.types?.length ?? 0) > 0 ||
+  (selection.designs?.length ?? 0) > 0 ||
+  (selection.qualities?.length ?? 0) > 0 ||
+  (selection.ports?.length ?? 0) > 0 ||
+  (selection.tags?.length ?? 0) > 0 ||
+  (selection.concepts?.length ?? 0) > 0 ||
+  (selection.files?.length ?? 0) > 0 ||
+  (selection.folders?.length ?? 0) > 0 ||
+  (selection.authors?.length ?? 0) > 0;
+
+const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
+  const selectedTypeGuids = new Set(selection.types ?? []);
+  const selectedDesignGuids = new Set(selection.designs ?? []);
+  const selectedPortGuids = new Set(selection.ports ?? []);
+  const selectedTagGuids = new Set(selection.tags ?? []);
+  const selectedConceptGuids = new Set(selection.concepts ?? []);
+  const selectedFileIds = new Set(selection.files ?? []);
+  const selectedFolderGuids = new Set(selection.folders ?? []);
+  const selectedAuthorIds = new Set(selection.authors ?? []);
+  const selectedQualityIds = new Set(selection.qualities ?? []);
+  const typeByGuid = new Map((kit.types ?? []).map((t) => [t.guid, t]));
+  const collectAncestorTypes = (guid: string, collected: Set<string>) => {
+    if (collected.has(guid)) return;
+    collected.add(guid);
+    const t = typeByGuid.get(guid);
+    if (t?.parent?.guid) collectAncestorTypes(t.parent.guid, collected);
+  };
+  const allTypeGuids = new Set(selectedTypeGuids);
+  for (const guid of selectedTypeGuids) collectAncestorTypes(guid, allTypeGuids);
+  const designByGuid = new Map((kit.designs ?? []).map((d) => [d.guid, d]));
+  const collectAncestorDesigns = (guid: string, collected: Set<string>) => {
+    if (collected.has(guid)) return;
+    collected.add(guid);
+    const d = designByGuid.get(guid);
+    if (d?.parent?.guid) collectAncestorDesigns(d.parent.guid, collected);
+  };
+  const allDesignGuids = new Set(selectedDesignGuids);
+  for (const guid of selectedDesignGuids) collectAncestorDesigns(guid, allDesignGuids);
+  for (const designGuid of allDesignGuids) {
+    const d = designByGuid.get(designGuid);
+    for (const piece of d?.pieces ?? []) {
+      if (piece.type?.guid && typeByGuid.has(piece.type.guid)) collectAncestorTypes(piece.type.guid, allTypeGuids);
+    }
+  }
+  for (const typeGuid of allTypeGuids) {
+    const t = typeByGuid.get(typeGuid);
+    for (const connector of t?.connectors ?? []) {
+      if (connector.port?.guid) selectedPortGuids.add(connector.port.guid);
+    }
+  }
+  const types = (kit.types ?? []).filter((t) => allTypeGuids.has(t.guid));
+  const designs = (kit.designs ?? []).filter((d) => allDesignGuids.has(d.guid));
+  const ports = (kit.ports ?? []).filter((p) => selectedPortGuids.has(p.guid));
+  const tags = (kit.tags ?? []).filter((t) => selectedTagGuids.has(t.guid));
+  const concepts = (kit.concepts ?? []).filter((c) => selectedConceptGuids.has(c.guid));
+  const files = (kit.files ?? []).filter((f) => selectedFileIds.has(f.guid));
+  const folders = (kit.folders ?? []).filter((f) => selectedFolderGuids.has(f.guid));
+  const authors = (kit.authors ?? []).filter((a) => selectedAuthorIds.has(a.guid));
+  const qualities = (kit.qualities ?? []).filter((q) => selectedQualityIds.has(q.guid));
+  return {
+    ...kit,
+    types,
+    designs,
+    ports,
+    tags,
+    concepts,
+    files,
+    folders,
+    authors,
+    qualities,
+  };
+};
+
 interface KitDiagramProps {}
 
 interface ForceNode extends SimulationNodeDatum {
@@ -7824,10 +7898,27 @@ const KitDiagramInner: FC = () => {
     if (clearHover) clearHover();
   }, [clearHover]);
 
+  const sketchpadCommands = useSketchpadCommands();
+
+  useEffect(() => {
+    const handleCopyKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "c" || !(e.metaKey || e.ctrlKey)) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      if (!reactFlowWrapper.current?.contains(target)) return;
+      e.preventDefault();
+      if (!kit) return;
+      const payload = selection && hasAnySelection(selection) ? buildSelectionKit(kit, selection) : kit;
+      sketchpadCommands.copyJsonToClipboard("semio.sketchpad.app.kit.diagram.copy", payload);
+    };
+    window.addEventListener("keydown", handleCopyKeyDown);
+    return () => window.removeEventListener("keydown", handleCopyKeyDown);
+  }, [kit, selection, sketchpadCommands]);
+
   if (!kit) return null;
 
   return (
-    <div ref={reactFlowWrapper} className="w-full h-full" data-testid="kit-diagram">
+    <div ref={reactFlowWrapper} className="w-full h-full" data-testid="kit-diagram" tabIndex={0} onPointerDown={() => reactFlowWrapper.current?.focus()}>
       <Diagram
         nodes={diagramNodes}
         edges={diagramEdges}

@@ -333,6 +333,151 @@ addSection("toolbar", {
 
 ---
 
+## Left Toggle Panel
+
+### Architecture
+The left toggle panel is the left side tabbed panel opened by the navbar toggle `semio.sketchpad.navbar.panelToggle.leftSidePanel`. It renders only when two conditions are true:
+- `leftSidePanelTabs.length > 0`
+- `panelVisibility.leftSidePanel === true`
+
+It is passed to `LayoutComponent` as `leftSidePanel` with:
+- `position: "left"`
+- `size: panelSizes.leftSidePanelWidth`
+- `onSizeChange: (size) => setPanelSize("leftSidePanelWidth", size)`
+- `tabs: leftSidePanelTabs`
+- `activeTabId` / `onActiveTabChange` from `useActiveLeftTabId`
+
+### Tab Registration Contract
+Left panel tabs are generated from app panel definitions, not hardcoded in the layout.
+
+`LayoutWrapper` flow:
+1. Read current app panel definitions from `panelConfigs[appType]`.
+2. Resolve each panel kind through `panelKindConfigs`.
+3. For kinds with `position === PanelPosition.LEFT`, register a side tab via `addSidePanelTab("left", tab)`.
+4. On cleanup/app change, unregister via `removeSidePanelTab("left", id)`.
+
+Each tab content renders `PanelTabContent` (tree of sections) wrapped in `ToolbarScopeWrapper`.
+
+### Left Panel Kinds
+`panelKindConfigs` defines left-position kinds:
+- `PanelKind.WORKBENCH` (`position: LEFT`, icon: `WorkbenchIcon`)
+- `PanelKind.TOOLS` (`position: LEFT`, icon: `ToolsIcon`)
+
+These kinds become tabs only if the current app config includes them in `getPanels()`.
+
+### Design App Mapping
+The Design app registers both left tabs:
+- `WORKBENCH` tab via `createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show")`
+- `TOOLS` tab via `createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show")`
+
+Design app section mapping:
+- `addSection("workbench", { id: "semio.sketchpad.app.kit.pieces", content: PiecesWorkbenchContent })`
+- `addSection("tools", { id: "semio.sketchpad.app.design.windows", content: WindowLibrary })`
+
+This yields:
+- **Workbench tab**: type/design tree and add-piece actions.
+- **Tools tab**: draggable window templates (`WindowLibrary`).
+
+### Toggle Behavior
+Navbar toggle behavior for the left panel:
+- Toggle shown only when `hasLeftTabs` is true.
+- Pressing toggle calls `togglePanel("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel")`.
+- Left toggle is independent from right/chat/settings exclusivity rules.
+
+### State, Sorting, and Defaults
+- `defaultPanelVisibility.leftSidePanel` is `false`.
+- Default left panel width is `280` (`leftSidePanelWidth`).
+- Tabs are sorted by `order` ascending in `SidePanelTabProvider`.
+- Active left tab is persisted in local provider state (`activeLeftTabId`) and controlled by the side panel UI.
+
+### Invariants
+- Left panel MUST NOT render when there are zero left tabs.
+- Left panel MUST NOT render when `panelVisibility.leftSidePanel` is false.
+- Left tab registration MUST be derived from `panelConfigs[appType]` + `panelKindConfigs`, not route-specific conditionals in layout JSX.
+- Every app that registers left panel definitions MUST clean up sections/tabs on unmount.
+
+### Manual Formula (Prompt-Ready)
+Use this manual block when you want to change left panel behavior by prompt.
+
+#### Base Formula
+```yaml
+left_toggle_panel_manual:
+  target:
+    app: "design|kit|type|quality|home|docs|feedback"
+    panel: "leftSidePanel"
+  visibility:
+    requiresTabs: true
+    requiresPanelFlag: true
+    panelFlagKey: "leftSidePanel"
+  size:
+    panelSizeKey: "leftSidePanelWidth"
+    defaultWidth: 280
+  tabs:
+    source:
+      fromPanelConfigs: true
+      positionFilter: "PanelPosition.LEFT"
+    allowedKinds:
+      - "WORKBENCH"
+      - "TOOLS"
+    sort: "order-asc"
+    activeTabState: "activeLeftTabId"
+  navbarToggle:
+    id: "semio.sketchpad.navbar.panelToggle.leftSidePanel"
+    command: "togglePanel(..., 'leftSidePanel')"
+    independentFrom:
+      - "rightSidePanel"
+      - "chat"
+      - "settings"
+  cleanup:
+    removeTabsOnUnmount: true
+    removeSectionsOnUnmount: true
+```
+
+#### Diff Addon Formula
+Use this when you want to request new features or addons as a delta instead of rewriting the full spec.
+
+```yaml
+left_toggle_panel_diff_request:
+  changeSetId: "short-title"
+  intent: "what new feature/addon should do"
+  operations:
+    add:
+      - path: "tabs.allowedKinds"
+        value: "NEW_KIND"
+      - path: "tabs.source"
+        value: "new-source-rule"
+    update:
+      - path: "size.defaultWidth"
+        from: 280
+        to: 320
+      - path: "navbarToggle.independentFrom"
+        from: ["rightSidePanel","chat","settings"]
+        to: ["rightSidePanel","chat","settings","anotherToggle"]
+    remove:
+      - path: "tabs.allowedKinds[WORKBENCH]"
+  constraints:
+    keepRegistrationFromPanelConfigs: true
+    keepUnmountCleanup: true
+    keepNoLegacyApi: true
+  acceptance:
+    - "new behavior appears in left panel tabs"
+    - "toggle behavior remains deterministic"
+    - "no orphan tabs/sections after app switch"
+```
+
+#### Prompt Template
+```txt
+Apply this left toggle panel diff:
+<paste left_toggle_panel_diff_request>
+
+Then update:
+1) README left-toggle-panel specs
+2) affected app panel definitions/sections
+3) tests in existing sketchpad test files only
+```
+
+---
+
 ## Detail Panel Quick Reference
 
 ### Structure

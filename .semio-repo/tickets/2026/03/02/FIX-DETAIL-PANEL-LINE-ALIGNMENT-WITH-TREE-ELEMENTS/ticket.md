@@ -6,11 +6,34 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Fixed detail panel indentation lines alignment with tree elements. Changed indentationLinePx formula from midpoint between levels to chevron-center alignment (detailPanelIndentPx(i) + 7). Unified TreeItem and SortableTreeItem chevron sizes from size-3 (12px) to size-[14px] to match TreeSection. Added p-0 border-0 to SortableTreeItem button for consistent sizing. All 13 JS unit tests pass.
+Final continuation complete: TreeRow no longer wraps rows in TreeContent indentation, and tree-aware Label now renders hierarchy indentation/lines only in the left cell while controls remain fixed in a 160px right column across nesting levels. semio/js unit tests pass.
 ## Changes
+- Replaced nested `TreeContent` leaf rendering in `ControlTree` with dedicated shared grid rows.
+- Added fixed control column sizing for all rows (`minmax(0, 1fr)` + `160px`).
+- Kept folder nesting and collapse behavior while moving hierarchy-only layout concerns into left cells.
+- Moved control labels to left tree column and removed duplicated inline control labels in ControlTree renderer paths.
+- Added tree-aware `Label` layout switch: tree rows now use `grid-cols-[minmax(0,1fr)_160px]`, non-tree rows keep `grid-cols-[96px_1fr]`.
+- Extended `TreeContext` with `isTree` and propagated this through tree providers to scope fixed-column behavior to tree UIs.
+- Removed `TreeContent` wrapping from `TreeRow` so form controls are no longer nested inside depth-indented subtree content.
+- Added tree-specific label-cell indentation and line rendering inside `Label` for tree contexts (`IndentationLines` + left spacer).
+- Added/updated tests for ControlTree tree building behavior in existing unit suite.
+- Verified `npm --workspace semio/js test -- semio.test.ts` passes with 16/16 tests.
 
 ## Log
+- Reopened this ticket to implement right toggle panel two-column alignment refactor.
+- Implemented ControlTree-specific row components (`ControlTreeRow`, `ControlTreeFolderRow`, `ControlTreeLeafRow`) in `semio/js/sketchpad/elements.tsx`.
+- Confirmed nested folders still collapse/expand and keep indentation lines in the left column only.
+- Continued by aligning real `TreeRow` label/control rows in tree contexts via `Label` + `TreeContext.isTree`.
+- Final continuation: eliminated TreeRow depth shift by rendering children directly and letting tree-aware Label own left-side hierarchy indentation.
+- Ran JS unit tests successfully after refactor.
 
 ## Todos
+- [x] Implement shared grid row layout for ControlTree folders and controls.
+- [x] Keep collapse/expand and nesting behavior intact.
+- [x] Ensure right control/value column x-position is fixed for every row depth.
+- [x] Extend existing tests and run them.
 
 ## Plan
+- Refactor only the `ControlTree` section in `semio/js/sketchpad/elements.tsx`.
+- Avoid broad `TreeItem`/`TreeSection` regressions by introducing ControlTree-specific row renderers.
+- Validate with existing JS unit tests.
