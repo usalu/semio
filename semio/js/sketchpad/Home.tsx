@@ -211,6 +211,7 @@ export interface HomeCommandResult {
 
 /** createDefaultHomeState holds the data fields for a createDefaultHomeState record.
 // [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖homeapppluginregistration🪨createdefaulthomestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Home%20App%20Plugin%20Registration/d/i/createDefaultHomeState)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖homeapppluginregistration🪨createdefaulthomestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Home%20App%20Plugin%20Registration/d/i/createDefaultHomeState)
  **/
 const createDefaultHomeState = (): HomeState => ({
@@ -261,6 +262,8 @@ if (typeof window !== "undefined") {
     action: (context: any, event: any) => {
       const kits = context.homeApp.selection?.kits || [];
       return { homeApp: { ...context.homeApp, selection: { kits: kits.filter((k: Guid) => k !== event.guid) } } };
+    },
+  });
 }
 
 // #endregion 🔖Home App Plugin Registration
@@ -294,6 +297,7 @@ export const KitSection: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details🪨singlekitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details/d/i/SingleKitSection)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖details🪨singlekitsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleKitSection)
  * SingleKitSection holds the data fields for a SingleKitSection record.
  **/
@@ -341,6 +345,7 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻home🔖details🪨multiplekitssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Details/d/i/MultipleKitsSection)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖details🪨multiplekitssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleKitsSection)
  * MultipleKitsSection holds the data fields for a MultipleKitsSection record.
  **/
@@ -438,6 +443,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 // Settings panel MUST expose theme, language, device, expertise, and mode toggles.
 
 // [👤semio📚js🗃️sketchpad💻home🔖settings🪨settingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Settings/d/i/SettingsContent)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖settings🪨settingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Settings/d/i/SettingsContent)
  * SettingsContent holds the data fields for a SettingsContent record.
  **/
@@ -567,6 +573,7 @@ const SettingsContent: FC = () => {
 
 /** HomeDropZone holds the data fields for a HomeDropZone record.
 // [👤semio📚js🗃️sketchpad💻home🔖imports🔖dropzone🪨homedropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/DropZone/d/i/HomeDropZone)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖dropzone🪨homedropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/DropZone/d/i/HomeDropZone)
  **/
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -684,6 +691,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 type KitKind = "temporary" | "local" | "remote";
 
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarfilters](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarFilters)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarfilters](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarFilters)
  * HomeToolbarFilters holds the data fields for a HomeToolbarFilters record.
  **/
@@ -719,6 +727,7 @@ const HomeToolbarFilters: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarcreate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarCreate)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarcreate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarCreate)
  * HomeToolbarCreate holds the data fields for a HomeToolbarCreate record.
  **/
@@ -781,6 +790,7 @@ type TableRow = {
 };
 
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometablecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeTableContent)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometablecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeTableContent)
  * HomeTableContent holds the data fields for a HomeTableContent record.
  **/
@@ -1669,6 +1679,7 @@ const TableWindow = memo(() => {
 TableWindow.displayName = "TableWindow";
 
 // [👤semio📚js🗃️sketchpad💻home🔖app🔖multiwindowapp🪨home](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/s/Multi-Window%20App/d/i/Home)
+/**
  * [👤semio📚js🗃️sketchpad💻home🔖app🔖multiwindowapp🪨home](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/s/Multi-Window%20App/d/i/Home)
  * Home holds the data fields for a Home record.
  **/

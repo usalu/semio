@@ -139,6 +139,7 @@ export async function loadMDXFile(path: string): Promise<MDXModule | null> {
 
 /** pathToSection holds the data fields for a pathToSection record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🛠️pathtosection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToSection)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨pathtosection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToSection)
  **/
 function pathToSection(filePath: string): string {
@@ -148,6 +149,7 @@ function pathToSection(filePath: string): string {
 
 /** pathToTitle holds the data fields for a pathToTitle record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🛠️pathtotitle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToTitle)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨pathtotitle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToTitle)
  **/
 function pathToTitle(filePath: string, frontmatter?: PageFrontmatter): string {
@@ -238,6 +240,9 @@ export function getAllSections(): SectionInfo[] {
           order: frontmatter?.order ?? 999,
         });
       }
+    }
+  });
+  return Array.from(sectionsMap.values()).sort((a, b) => a.order - b.order);
 }
 
 // #region 🔖SectionTree
@@ -297,6 +302,7 @@ export interface HeadingNode {
 
 /** headingsState holds the data fields for a headingsState record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨headingsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/headingsState)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨headingsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/headingsState)
  **/
 const headingsState = {
@@ -331,10 +337,12 @@ const headingsState = {
 
 /** subscribeHeadings holds the data fields for a subscribeHeadings record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨subscribeheadings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/subscribeHeadings)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨subscribeheadings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/subscribeHeadings)
  **/
 const subscribeHeadings = (callback: () => void) => headingsState.subscribe(callback);
 // [👤semio📚js🗃️sketchpad💻docs🪨getheadingssnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/d/i/getHeadingsSnapshot)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨getheadingssnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/getHeadingsSnapshot)
  * getHeadingsSnapshot holds the data fields for a getHeadingsSnapshot record.
  **/
@@ -361,6 +369,7 @@ export const useHeadings = () => {
 
 /** HeadingsContextValue holds the data fields for a HeadingsContextValue record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/HeadingsContext)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️headingscontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsContextValue)
  **/
 interface HeadingsContextValue {
@@ -370,12 +379,14 @@ interface HeadingsContextValue {
 }
 
 // [👤semio📚js🗃️sketchpad💻docs🪨headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/d/i/HeadingsContext)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsContext)
  * HeadingsContext holds the data fields for a HeadingsContext record.
  **/
 const HeadingsContext = createContext<HeadingsContextValue | null>(null);
 
 // [👤semio📚js🗃️sketchpad💻docs🪨tabitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/d/i/TabItem)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨tabitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/TabItem)
  * TabItem holds the data fields for a TabItem record.
  **/
@@ -383,6 +394,7 @@ const TabItem: FC<{ label: string; children: ReactNode }> = ({ children }) => <>
 
 /** Tabs holds the data fields for a Tabs record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/Tabs)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/Tabs)
  **/
 const Tabs: FC<{ children: ReactNode }> = ({ children }) => {
@@ -409,6 +421,7 @@ const Tabs: FC<{ children: ReactNode }> = ({ children }) => {
 
 /** createComponents holds the data fields for a createComponents record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨createcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/createComponents)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨createcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/createComponents)
  **/
 const createComponents = () => ({
@@ -578,6 +591,7 @@ const createComponents = () => ({
 
 /** HeadingsProviderProps holds the data fields for a HeadingsProviderProps record.
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️headingsproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/HeadingsProviderProps)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️headingsproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsProviderProps)
  **/
 interface HeadingsProviderProps {
@@ -597,6 +611,7 @@ export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️mdxproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/MDXProviderProps)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️mdxproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/MDXProviderProps)
  * MDXProviderProps holds the data fields for a MDXProviderProps record.
  **/
@@ -1095,6 +1110,7 @@ interface TreeNode {
 }
 
 // [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page🪨pagecanvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page/d/i/PageCanvas)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page🪨pagecanvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page/d/i/PageCanvas)
  * PageCanvas holds the data fields for a PageCanvas record.
  **/
@@ -1331,6 +1347,7 @@ export const DocsAppFooter: FC = () => {
 
 /** Workbench holds the data fields for a Workbench record.
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨workbench](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Workbench)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨workbench](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Workbench)
  **/
 const Workbench: FC = () => {
@@ -1348,6 +1365,7 @@ const Workbench: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨overview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Overview)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨overview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Overview)
  * Overview holds the data fields for a Overview record.
  **/
@@ -1367,6 +1385,7 @@ const Overview: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Details)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Details)
  * Details holds the data fields for a Details record.
  **/
@@ -1389,6 +1408,7 @@ const Details: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Settings)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Settings)
  * Settings holds the data fields for a Settings record.
  **/
@@ -1411,6 +1431,7 @@ export enum DocsAppWindowKind {
 }
 
 // [👤semio📚js🗃️sketchpad💻docs🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App/d/i/App)
+/**
  * [👤semio📚js🗃️sketchpad💻docs🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App/d/i/App)
  * App holds the data fields for a App record.
  **/

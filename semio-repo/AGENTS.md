@@ -861,7 +861,7 @@ changes:
 - 👤semio🟥211🟩156➖55
 ```
 
-## 📛 Concepts
+## 📛 Entities
 
 ### 🌐 Repo
 

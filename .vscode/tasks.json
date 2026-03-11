@@ -700,6 +700,36 @@
       },
       "group": "none"
     },
+    {
+      "label": "semio/3dm ui dev",
+      "type": "shell",
+      "isBackground": true,
+      "command": "npx nx dev @semio/3dm-ui",
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "http://localhost:5174/"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
     // ========================================
     // MCP
     // ========================================

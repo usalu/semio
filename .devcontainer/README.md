@@ -34,6 +34,10 @@ Engine compatibility for the local extension is aligned to the lowest supported 
 The devcontainer packages the workspace VS Code extension during setup, uninstalls any existing semio-repo extension on attach, and installs the generated `.vsix` across supported IDEs so the extension is ready without manual "Install Extension From Location..." steps.
 This keeps the active editor clean of stale versions while aligning installation with a running IDE server, avoiding failures during container creation and preserving automatic delivery.
 
+## Search Tooling
+
+The devcontainer image installs ripgrep (`rg`) as part of the base apt package set so fast recursive code search is available immediately in all editor terminals and scripts.
+
 ## Playwright Browser Cache
 
 Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.

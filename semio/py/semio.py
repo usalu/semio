@@ -4304,7 +4304,7 @@ class Side(BaseModel):
     """
     piece: PieceId = sqlmodel.Field()
     designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
-    connector: ConnectorId = sqlmodel.Field()
+    connector: typing.Optional[ConnectorId] = sqlmodel.Field(default=None)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -4313,11 +4313,15 @@ class Side(BaseModel):
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         piece = PieceId.parse(obj["piece"])
-        connector = ConnectorId.parse(obj["connector"])
         try:
-            designPieceObj = obj["designPiece"]
+            connectorObj = obj.get("connector")
+            connector = ConnectorId.parse(connectorObj) if connectorObj is not None else None
+        except (KeyError, TypeError):
+            connector = None
+        try:
+            designPieceObj = obj.get("designPiece")
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
-        except KeyError:
+        except (KeyError, TypeError):
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
@@ -4361,7 +4365,7 @@ class SideNode(Node):
 
     piece = graphene.NonNull(lambda: PieceNode)
     designPiece = graphene.Field(lambda: PieceNode)
-    connector = graphene.NonNull(lambda: ConnectorNode)
+    connector = graphene.Field(lambda: ConnectorNode)
 
     def resolve_piece(self, info):
         return self.piece
@@ -4384,7 +4388,7 @@ class SideInputNode(InputNode):
 
     piece = graphene.NonNull(PieceIdInputNode)
     designPiece = PieceIdInputNode()
-    connector = graphene.NonNull(ConnectorIdInputNode)
+    connector = ConnectorIdInputNode()
 
 # endregion Side
 
@@ -4756,20 +4760,24 @@ class Connection(
         connectedType = connectedPiece.type
         if connectedType is None:
             raise FeatureNotYetSupported()
-        connectedConnector = [p for p in connectedType.connectors if p.id_ == connected.connector.id_]
-        if len(connectedConnector) == 0:
-            raise ConnectorNotFound(connectedType, connected.connector)
-        else:
-            connectedConnector = connectedConnector[0]
+        connectedConnector = None
+        if connected.connector is not None:
+            connectedConnectorList = [p for p in connectedType.connectors if p.id_ == connected.connector.id_]
+            if len(connectedConnectorList) == 0:
+                raise ConnectorNotFound(connectedType, connected.connector)
+            else:
+                connectedConnector = connectedConnectorList[0]
         connectingPiece = piecesDict[connecting.piece.id_]
         connectingType = connectingPiece.type
         if connectingType is None:
             raise FeatureNotYetSupported()
-        connectingConnector = [p for p in connectingType.connectors if p.id_ == connecting.connector.id_]
-        if len(connectingConnector) == 0:
-            raise ConnectorNotFound(connectingType, connecting.connector)
-        else:
-            connectingConnector = connectingConnector[0]
+        connectingConnector = None
+        if connecting.connector is not None:
+            connectingConnectorList = [p for p in connectingType.connectors if p.id_ == connecting.connector.id_]
+            if len(connectingConnectorList) == 0:
+                raise ConnectorNotFound(connectingType, connecting.connector)
+            else:
+                connectingConnector = connectingConnectorList[0]
         entity = cls(
             connectedPiece=connectedPiece,
             connectedConnector=connectedConnector,
@@ -4864,9 +4872,9 @@ class Connection(
     def idMembers(self) -> RecursiveAnyList:
         return [
             self.connected.piece.id_,
-            self.connected.connector.id_,
+            self.connected.connector.id_ if self.connected.connector is not None else "",
             self.connecting.piece.id_,
-            self.connecting.connector.id_,
+            self.connecting.connector.id_ if self.connecting.connector is not None else "",
         ]
 
 class ConnectionInputNode(InputNode):
@@ -10213,10 +10221,10 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             guid VARCHAR(36) PRIMARY KEY,
             connected_piece_guid VARCHAR(36) NOT NULL,
             connected_design_piece_guid VARCHAR(36),
-            connected_connector_guid VARCHAR(36) NOT NULL,
+            connected_connector_guid VARCHAR(36),
             connecting_piece_guid VARCHAR(36) NOT NULL,
             connecting_design_piece_guid VARCHAR(36),
-            connecting_connector_guid VARCHAR(36) NOT NULL,
+            connecting_connector_guid VARCHAR(36),
             gap FLOAT DEFAULT 0,
             shift FLOAT DEFAULT 0,
             rise FLOAT DEFAULT 0,
@@ -10331,14 +10339,14 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             (
                 design_guid,
                 d.get("name", ""),
-                d.get("parent"),
+                _getGuidFromRef(d.get("parent")),
                 d.get("variant"),
                 view_center.get("u"),
                 view_center.get("v"),
                 view.get("zoom"),
                 d.get("unit"),
-                d.get("location"),
-                d.get("activeLayer"),
+                _getGuidFromRef(d.get("location")),
+                _getGuidFromRef(d.get("activeLayer")),
                 1 if d.get("isAbstract") else 0,
                 d.get("folder"),
                 1 if d.get("canScale") else (0 if d.get("canScale") is False else None),
@@ -10374,9 +10382,9 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             """,
                 (
                     p.get("guid", str(uuid.uuid4())),
-                    p.get("id"),
-                    p.get("type"),
-                    p.get("design"),
+                    p.get("name") or p.get("id"),
+                    _getGuidFromRef(p.get("type")),
+                    _getGuidFromRef(p.get("design")),
                     plane_origin.get("x") if plane else None,
                     plane_origin.get("y") if plane else None,
                     plane_origin.get("z") if plane else None,
@@ -10409,6 +10417,18 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
         for c in d.get("connections", []):
             connected = c.get("connected", {})
             connecting = c.get("connecting", {})
+            connected_piece = connected.get("piece")
+            connected_piece_guid = connected_piece.get("guid") if isinstance(connected_piece, dict) else connected_piece
+            connected_design_piece = connected.get("designPiece")
+            connected_design_piece_guid = connected_design_piece.get("guid") if isinstance(connected_design_piece, dict) else connected_design_piece
+            connected_connector = connected.get("connector")
+            connected_connector_guid = connected_connector.get("guid") if isinstance(connected_connector, dict) else connected_connector
+            connecting_piece = connecting.get("piece")
+            connecting_piece_guid = connecting_piece.get("guid") if isinstance(connecting_piece, dict) else connecting_piece
+            connecting_design_piece = connecting.get("designPiece")
+            connecting_design_piece_guid = connecting_design_piece.get("guid") if isinstance(connecting_design_piece, dict) else connecting_design_piece
+            connecting_connector = connecting.get("connector")
+            connecting_connector_guid = connecting_connector.get("guid") if isinstance(connecting_connector, dict) else connecting_connector
             cursor.execute(
                 """
                 INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_connector_guid,
@@ -10418,12 +10438,12 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             """,
                 (
                     c.get("guid", str(uuid.uuid4())),
-                    connected.get("piece"),
-                    connected.get("designPiece"),
-                    connected.get("connector"),
-                    connecting.get("piece"),
-                    connecting.get("designPiece"),
-                    connecting.get("connector"),
+                    connected_piece_guid,
+                    connected_design_piece_guid,
+                    connected_connector_guid,
+                    connecting_piece_guid,
+                    connecting_design_piece_guid,
+                    connecting_connector_guid,
                     c.get("gap", 0.0),
                     c.get("shift", 0.0),
                     c.get("rise", 0.0),

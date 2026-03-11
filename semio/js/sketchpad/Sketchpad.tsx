@@ -268,6 +268,8 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
   if (groupId === "selection") return <FocusIcon size={16} />;
   if (groupId === "filter") return <SearchIcon size={16} />;
   if (groupId === "create") return <LayoutIcon size={16} />;
+  return null;
+}
 
 // #region 🔖Store
 
@@ -1481,6 +1483,7 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 // Yjs-backed attribute store for kit metadata.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattributeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/YAttributeVal)
  * YAttributeVal holds the data fields for a YAttributeVal record.
  *
@@ -1489,6 +1492,7 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 type YAttributeVal = string;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/YAttribute)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/YAttribute)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/YAttribute)
@@ -1497,6 +1501,7 @@ type YAttribute = Y.Map<YAttributeVal>;
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits🛠️attributestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/AttributeStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord🛠️ycoordval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoordVal)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits🛠️attributestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/AttributeStore)
@@ -1576,12 +1581,14 @@ class AttributeStore {
 // Yjs-backed coordinate store managing u/v values.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord✂️ycoordval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoordVal)
  * YCoordVal holds the data fields for a YCoordVal record.
  **/
 type YCoordVal = number;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoord)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoord)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoord)
@@ -1589,6 +1596,7 @@ type YCoordVal = number;
 type YCoord = Y.Map<YCoordVal>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord🛠️ycoordstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoordStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord🛠️ycoordstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/YCoordStore)
  * YCoordStore holds the data fields for a YCoordStore record.
  **/
@@ -1655,6 +1663,7 @@ class YCoordStore {
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecVal)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecVal)
@@ -1662,6 +1671,7 @@ class YCoordStore {
 type YVecVal = number;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVec)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVec)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVec)
@@ -1670,6 +1680,7 @@ type YVec = Y.Map<YVecVal>;
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/YPointStore)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecStore)
@@ -1736,17 +1747,20 @@ class YVecStore {
 // Yjs-backed 3D point store managing x/y/z coordinates.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖point](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Point)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖point✂️ypointval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/YPointVal)
  * YPointVal holds the data fields for a YPointVal record.
  **/
 type YPointVal = number;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point✂️ypoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/YPoint)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖point✂️ypoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Point/d/i/YPoint)
  * YPoint holds the data fields for a YPoint record.
  **/
 type YPoint = Y.Map<YPointVal>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/YPointStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Point/d/i/YPointStore)
  * YPointStore holds the data fields for a YPointStore record.
  **/
@@ -1822,11 +1836,13 @@ class YPointStore {
 // Yjs-backed 3D direction vector store managing x/y/z components.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vector)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖vector✂️yvectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Vector/d/i/YVectorVal)
  * YVectorVal holds the data fields for a YVectorVal record.
  **/
 type YVectorVal = number;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector✂️yvector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/YVector)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖vector✂️yvector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Vector/d/i/YVector)
  * YVector holds the data fields for a YVector record.
  **/
@@ -1834,6 +1850,7 @@ type YVector = Y.Map<YVectorVal>;
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/YVectorStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane🛠️yplaneval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/YPlaneVal)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/YVectorStore)
@@ -1910,17 +1927,20 @@ class YVectorStore {
 // Yjs-backed 3D plane store managing origin point and direction vectors.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖plane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Plane)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/YPlane)
  * YPlaneVal holds the data fields for a YPlaneVal record.
  **/
 type YPlaneVal = YPoint | YVector;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/YPlane)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plane/d/i/YPlane)
  * YPlane holds the data fields for a YPlane record.
  **/
 type YPlane = Y.Map<YPlaneVal>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane🛠️yplanestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/YPlaneStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plane🛠️yplanestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plane/d/i/YPlaneStore)
  * YPlaneStore holds the data fields for a YPlaneStore record.
  **/
@@ -1987,18 +2007,21 @@ class YPlaneStore {
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/YCameraVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/YCameraVal)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/YCameraVal)
  **/
 type YCameraVal = YPoint | YVector;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/YCamera)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera✂️ycamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/YCamera)
  * YCamera holds the data fields for a YCamera record.
  **/
 type YCamera = Y.Map<YCameraVal>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera🛠️ycamerastore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/YCameraStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖camera🛠️ycamerastore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Camera/d/i/YCameraStore)
  * YCameraStore holds the data fields for a YCameraStore record.
  **/
@@ -2066,18 +2089,21 @@ class YCameraStore {
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocationVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocationVal)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocationVal)
  **/
 type YLocationVal = number | string | YAttributes;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocation)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location✂️ylocation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocation)
  * YLocation holds the data fields for a YLocation record.
  **/
 type YLocation = Y.Map<YLocationVal>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location🛠️ylocationstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocationStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖location🛠️ylocationstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Location/d/i/YLocationStore)
  * YLocationStore holds the data fields for a YLocationStore record.
  **/
@@ -2170,30 +2196,35 @@ class YLocationStore {
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthor)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorVal)
  **/
 type YAuthorVal = string | YAttributes;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthor)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthor)
  * YAuthor holds the data fields for a YAuthor record.
  **/
 type YAuthor = Y.Map<YAuthorVal>;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthors)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthors)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthors)
  **/
 type YAuthors = Y.Array<YAuthor>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorUuid)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthoruuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorUuid)
  * YAuthorUuid holds the data fields for a YAuthorUuid record.
  **/
 type YAuthorUuid = string;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorUuids)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorUuids)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/YAuthorUuids)
@@ -2202,6 +2233,7 @@ type YAuthorUuids = Y.Array<YAuthorUuid>;
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🛠️authorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🛠️authorscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorScopeContext)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author🛠️authorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorStore)
@@ -2300,11 +2332,13 @@ class AuthorStore {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️authorscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️authorscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorScope)
  * AuthorScope holds the data fields for a AuthorScope record.
  **/
 type AuthorScope = { guid: string };
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🪨authorscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖author🪨authorscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Author/d/i/AuthorScopeContext)
  * AuthorScopeContext holds the data fields for a AuthorScopeContext record.
  **/
@@ -2322,6 +2356,7 @@ export const AuthorScopeProvider = (props: { guid: string; children: React.React
   return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
 };
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🪨useauthorscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/useAuthorScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🪨useauthorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/useAuthorStore)
  * useAuthorScope holds the data fields for a useAuthorScope record.
  *
@@ -2330,6 +2365,7 @@ export const AuthorScopeProvider = (props: { guid: string; children: React.React
 const useAuthorScope = () => useContext(AuthorScopeContext);
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🛠️useauthorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/useAuthorStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author🛠️useauthorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/useAuthorStore)
  * useAuthorStore holds the data fields for a useAuthorStore record.
  **/
@@ -2367,11 +2403,13 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
 // Yjs-backed file store managing file metadata and content references.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖file](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/YFiles)
  * YFile holds the data fields for a YFile record.
  **/
 type YFile = Y.Map<string | number | YAttributes>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/YFiles)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/File/d/i/YFiles)
  * YFiles holds the data fields for a YFiles record.
  **/
@@ -2379,6 +2417,7 @@ type YFiles = Y.Array<YFile>;
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file🛠️filestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/FileStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder🛠️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/YFolders)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖file🛠️filestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/FileStore)
@@ -2525,17 +2564,20 @@ class FileStore {
 // Yjs-backed folder store managing folder hierarchy and file references.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖folder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Folder)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖folder✂️yfolder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/YFolder)
  * YFolder holds the data fields for a YFolder record.
  **/
 type YFolder = Y.Map<string | YAttributes>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder✂️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/YFolders)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖folder✂️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Folder/d/i/YFolders)
  * YFolders holds the data fields for a YFolders record.
  **/
 type YFolders = Y.Array<YFolder>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder🛠️folderstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/FolderStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖folder🛠️folderstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Folder/d/i/FolderStore)
  * FolderStore holds the data fields for a FolderStore record.
  **/
@@ -2670,6 +2712,7 @@ class FolderStore {
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/YBenchmark)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/YBenchmark)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/YBenchmark)
@@ -2677,6 +2720,7 @@ class FolderStore {
 type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmarks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/YBenchmarks)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/YQuality)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark✂️ybenchmarks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/YBenchmarks)
@@ -2684,6 +2728,7 @@ type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark🛠️benchmarkstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/BenchmarkStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality🛠️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/YQuality)
  * BenchmarkStore holds the data fields for a BenchmarkStore record.
  **/
@@ -2804,12 +2849,14 @@ class BenchmarkStore {
 // Yjs-backed quality store managing quality criteria definitions.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖quality✂️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Quality/d/i/YQuality)
  * YQuality holds the data fields for a YQuality record.
  **/
 type YQuality = Y.Map<string | number | YAttributes>;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/YQualities)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/YQualities)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/YQualities)
@@ -2934,6 +2981,7 @@ export class QualityStore {
 // Yjs-backed prop store managing design property definitions.
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProp)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProp)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProp)
@@ -2941,6 +2989,7 @@ export class QualityStore {
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProps)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️propstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PropStore)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProps)
@@ -2948,6 +2997,7 @@ type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🛠️propstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PropStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🛠️propstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/PropStore)
  * PropStore holds the data fields for a PropStore record.
  **/
@@ -3038,22 +3088,26 @@ class PropStore {
 
 /** YModelVal holds the data fields for a YModelVal record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities✂️ymodelval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/YModelVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodelval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/YModelVal)
  **/
 type YModelVal = string | Y.Array<string> | YAttributes;
 /** YModel holds the data fields for a YModel record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities✂️ymodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/YModel)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/YModel)
  **/
 type YModel = Y.Map<YModelVal>;
 /** YModels holds the data fields for a YModels record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities✂️ymodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/YModels)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/YModels)
  **/
 type YModels = Y.Array<YModel>;
 
 /**
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connector🛠️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/YConnectorVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model🛠️modelstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/ModelStore)
  **/
   private yModel: YModel;
@@ -3173,17 +3227,20 @@ type YModels = Y.Array<YModel>;
 // Yjs-backed connector store managing type connectors and their ports.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connector✂️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connector/d/i/YConnectorVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/YConnectorVal)
  * YConnectorVal holds the data fields for a YConnectorVal record.
  **/
 type YConnectorVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
 /** YConnector holds the data fields for a YConnector record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connector✂️yconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/YConnector)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/YConnector)
  **/
 type YConnector = Y.Map<YConnectorVal>;
 /** YConnectors holds the data fields for a YConnectors record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connector✂️yconnectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/YConnectors)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/YConnectors)
  **/
 type YConnectors = Y.Array<YConnector>;
@@ -3194,6 +3251,7 @@ type YConnectors = Y.Array<YConnector>;
  * ConnectorStore holds the data fields for a ConnectorStore record.
  **/
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖type🛠️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/YTypeVal)
+/**
  * ConnectorStore holds the data fields for a ConnectorStore record.
  **/
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connector🛠️connectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connector/d/i/ConnectorStore)
@@ -3320,16 +3378,19 @@ class ConnectorStore {
 // Yjs-backed type store managing architectural type definitions and connectors.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/YTypeVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/YTypeVal)
  * YTypeVal holds the data fields for a YTypeVal record.
  **/
 type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YConnectors | YProps | YLocation;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/YType)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/YType)
  * YType holds the data fields for a YType record.
  **/
 type YType = Y.Map<YTypeVal>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/YTypes)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/YTypes)
  * YTypes holds the data fields for a YTypes record.
  **/
@@ -3731,11 +3792,13 @@ export class TypeStore {
 
 /** TypeScope holds the data fields for a TypeScope record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖type✂️typescope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/TypeScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️typescope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/TypeScope)
  **/
 type TypeScope = { guid: string };
 /** TypeScopeContext holds the data fields for a TypeScopeContext record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖type🪨typescopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/TypeScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type🪨typescopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/TypeScopeContext)
  **/
 const TypeScopeContext = createContext<TypeScope | null>(null);
@@ -3763,6 +3826,7 @@ export const useIsInTypeScope = () => useTypeScope() !== null;
 
 /** useTypeStore holds the data fields for a useTypeStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖type🛠️usetypestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/useTypeStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type🪨usetypestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/useTypeStore)
  **/
 function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore | null {
@@ -3791,11 +3855,13 @@ export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolea
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️qualityscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/QualityScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️qualityscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/QualityScope)
  * QualityScope holds the data fields for a QualityScope record.
  **/
 type QualityScope = { guid: string };
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type🪨qualityscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/QualityScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type🪨qualityscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/QualityScopeContext)
  * QualityScopeContext holds the data fields for a QualityScopeContext record.
  **/
@@ -3824,6 +3890,7 @@ export const useIsInQualityScope = () => useQualityScope() !== null;
 
 /** useQualityStore holds the data fields for a useQualityStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖type🛠️usequalitystore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/useQualityStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type🪨usequalitystore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/useQualityStore)
  **/
 function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string): T | QualityStore | null {
@@ -3855,17 +3922,20 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
 // Yjs-backed layer store managing visibility layers in designs.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer✂️ylayer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/YLayer)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer✂️ylayer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/YLayer)
  * YLayer holds the data fields for a YLayer record.
  **/
 type YLayer = Y.Map<string | boolean | YAttributes>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer✂️ylayers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/YLayers)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer✂️ylayers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/YLayers)
  * YLayers holds the data fields for a YLayers record.
  **/
 type YLayers = Y.Array<YLayer>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer🛠️layerstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/LayerStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer🛠️layerstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/LayerStore)
  * LayerStore holds the data fields for a LayerStore record.
  **/
@@ -3986,22 +4056,26 @@ class LayerStore {
 
 /** YPieceVal holds the data fields for a YPieceVal record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/YPieceVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/YPieceVal)
  **/
 type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
 /** YPiece holds the data fields for a YPiece record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/YPiece)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/YPiece)
  **/
 type YPiece = Y.Map<YPieceVal>;
 /** YPieces holds the data fields for a YPieces record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/YPieces)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/YPieces)
  **/
 type YPieces = Y.Array<YPiece>;
 
 /** PieceStore holds the data fields for a PieceStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖piece🛠️piecescope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/PieceScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece🛠️piecestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/PieceStore)
  **/
 class PieceStore {
@@ -4293,11 +4367,13 @@ class PieceStore {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖piece✂️piecescope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Piece/d/i/PieceScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️piecescope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/PieceScope)
  * PieceScope holds the data fields for a PieceScope record.
  **/
 type PieceScope = { guid: string };
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖piece🪨piecescopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Piece/d/i/PieceScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece🪨piecescopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/PieceScopeContext)
  * PieceScopeContext holds the data fields for a PieceScopeContext record.
  **/
@@ -4320,6 +4396,7 @@ export const usePieceScope = () => useContext(PieceScopeContext);
 
 /** usePieceStore holds the data fields for a usePieceStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖piece🛠️usepiecestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/usePieceStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece🪨usepiecestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/usePieceStore)
  **/
 function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T | PieceStore {
@@ -4498,22 +4575,26 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
 /** YGroupVal holds the data fields for a YGroupVal record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖group✂️ygroupval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/YGroupVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroupval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/YGroupVal)
  **/
 type YGroupVal = string | Y.Array<string> | YAttributes;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖group✂️ygroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Group/d/i/YGroup)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/YGroup)
  * YGroup holds the data fields for a YGroup record.
  **/
 type YGroup = Y.Map<YGroupVal>;
 /** YGroups holds the data fields for a YGroups record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖group✂️ygroups](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/YGroups)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroups](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/YGroups)
  **/
 type YGroups = Y.Array<YGroup>;
 
 /** GroupStore holds the data fields for a GroupStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖group🛠️groupstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/GroupStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group🛠️groupstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/GroupStore)
  **/
 class GroupStore {
@@ -4625,6 +4706,7 @@ class GroupStore {
 // Side store managing connection endpoints for pieces.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖side🛠️sidestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Side/d/i/SideStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖side🛠️sidestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Side/d/i/SideStore)
  * SideStore holds the data fields for a SideStore record.
  **/
@@ -4768,16 +4850,19 @@ class SideStore {
 // Yjs-backed connection store managing piece-to-piece connections.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️ysideval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/YSideVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️ysideval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/YSideVal)
  * YSideVal holds the data fields for a YSideVal record.
  **/
 type YSideVal = string | number | YAttributes;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/YSide)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/YSide)
  * YSide holds the data fields for a YSide record.
  **/
 type YSide = Y.Map<YSideVal>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️ysides](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/YSides)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️ysides](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/YSides)
  * YSides holds the data fields for a YSides record.
  **/
@@ -4785,15 +4870,18 @@ type YSides = Y.Array<YSide>;
 
 /** YConnectionVal holds the data fields for a YConnectionVal record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connection✂️yconnectionval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection/d/i/YConnectionVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnectionval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/YConnectionVal)
  **/
 type YConnectionVal = string | number | YAttributes | YSide;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/YConnection)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/YConnection)
  * YConnection holds the data fields for a YConnection record.
  **/
 type YConnection = Y.Map<YConnectionVal>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/YConnections)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/YConnections)
  * YConnections holds the data fields for a YConnections record.
  **/
@@ -4801,6 +4889,7 @@ type YConnections = Y.Array<YConnection>;
 
 /** ConnectionStore holds the data fields for a ConnectionStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connection🛠️connectionstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection/d/i/ConnectionStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection🛠️connectionstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/ConnectionStore)
  **/
 class ConnectionStore {
@@ -4983,11 +5072,13 @@ class ConnectionStore {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️connectionscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/ConnectionScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️connectionscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/ConnectionScope)
  * ConnectionScope holds the data fields for a ConnectionScope record.
  **/
 type ConnectionScope = { guid: string };
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection🪨connectionscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/ConnectionScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection🪨connectionscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/ConnectionScopeContext)
  * ConnectionScopeContext holds the data fields for a ConnectionScopeContext record.
  **/
@@ -5039,16 +5130,19 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 
 /** YStat holds the data fields for a YStat record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/d/i/YDesigns)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat✂️ystat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/YStat)
  **/
 type YStat = Y.Map<string | number | boolean>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖stat✂️ystats](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Stat/d/i/YStats)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat✂️ystats](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/YStats)
  * YStats holds the data fields for a YStats record.
  **/
 type YStats = Y.Array<YStat>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖stat🛠️statstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Stat/d/i/StatStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat🛠️statstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/StatStore)
  * StatStore holds the data fields for a StatStore record.
  **/
@@ -5178,16 +5272,19 @@ class StatStore {
 // Yjs-backed design store managing complete design layouts with pieces and connections.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesignval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/YDesignVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesignval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/YDesignVal)
  * YDesignVal holds the data fields for a YDesignVal record.
  **/
 type YDesignVal = string | boolean | number | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats | YProps | YLocation | Y.Array<string>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/YDesign)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/YDesign)
  * YDesign holds the data fields for a YDesign record.
  **/
 type YDesign = Y.Map<YDesignVal>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/YDesigns)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/YDesigns)
  * YDesigns holds the data fields for a YDesigns record.
  **/
@@ -5943,6 +6040,7 @@ export class DesignStore {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️designscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/DesignScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️designscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/DesignScope)
  * DesignScope holds the data fields for a DesignScope record.
  * DesignScopeContext holds the data fields for a DesignScopeContext record.
@@ -5971,6 +6069,7 @@ export const useDesignScope = () => useContext(DesignScopeContext);
 export const useIsInDesignScope = () => useDesignScope() !== null;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design🛠️usedesignstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/useDesignStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design🪨usedesignstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/useDesignStore)
  * useDesignStore holds the data fields for a useDesignStore record.
  **/
@@ -5995,11 +6094,13 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖design🪨emptypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/d/i/EMPTY_PIECES)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design🪨emptypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/EMPTY_PIECES)
  * EMPTY_PIECES holds the data fields for a EMPTY_PIECES record.
  **/
 const EMPTY_PIECES: Piece[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design🪨emptyconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/EMPTY_CONNECTIONS)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design🪨emptyconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/EMPTY_CONNECTIONS)
  * EMPTY_CONNECTIONS holds the data fields for a EMPTY_CONNECTIONS record.
  **/
@@ -6222,22 +6323,26 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 // Yjs-backed kit store managing the complete kit data structure.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconceptval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YConceptVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconceptval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YConceptVal)
  * YConceptVal holds the data fields for a YConceptVal record.
  **/
 type YConceptVal = string | YAttributes;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YConcept)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YConcept)
  * YConcept holds the data fields for a YConcept record.
  **/
 type YConcept = Y.Map<YConceptVal>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YConcepts)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YConcepts)
  * YConcepts holds the data fields for a YConcepts record.
  **/
 type YConcepts = Y.Array<YConcept>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🛠️conceptstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/ConceptStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🛠️conceptstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/ConceptStore)
  * ConceptStore holds the data fields for a ConceptStore record.
  **/
@@ -6391,21 +6496,25 @@ class ConceptStore {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yidmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YIdMap)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yidmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YIdMap)
  * YIdMap holds the data fields for a YIdMap record.
  **/
 type YIdMap = Y.Map<string>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykitval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YKitVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykitval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YKitVal)
  * YKitVal holds the data fields for a YKitVal record.
  **/
 type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFiles | YFolders | YBenchmarks | YQualities | YProps | YTypes | YDesigns | YConcepts;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YKit)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YKit)
  * YKit holds the data fields for a YKit record.
  **/
 type YKit = Y.Map<YKitVal>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/YKits)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/YKits)
  * YKits holds the data fields for a YKits record.
  **/
@@ -7535,11 +7644,13 @@ export class KitStore {
   }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️kitscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/KitScope)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️kitscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/KitScope)
  * KitScope holds the data fields for a KitScope record.
  **/
 type KitScope = { guid: string };
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🪨kitscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/KitScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🪨kitscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/KitScopeContext)
  * KitScopeContext holds the data fields for a KitScopeContext record.
  **/
@@ -7601,103 +7712,123 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
 // React hooks for accessing specific kit data through scope providers.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_TYPES)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_TYPES)
  * EMPTY_TYPES holds the data fields for a EMPTY_TYPES record.
  **/
 const EMPTY_TYPES: Type[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptyauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_AUTHORS)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptyauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_AUTHORS)
  * EMPTY_AUTHORS holds the data fields for a EMPTY_AUTHORS record.
  **/
 const EMPTY_AUTHORS: Author[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptyfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_FILES)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptyfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_FILES)
  * EMPTY_FILES holds the data fields for a EMPTY_FILES record.
  **/
 const EMPTY_FILES: SemioFile[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptyqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_QUALITIES)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptyqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_QUALITIES)
  * EMPTY_QUALITIES holds the data fields for a EMPTY_QUALITIES record.
  **/
 const EMPTY_QUALITIES: Quality[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_DESIGNS)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_DESIGNS)
  * EMPTY_DESIGNS holds the data fields for a EMPTY_DESIGNS record.
  **/
 const EMPTY_DESIGNS: Design[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptyfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_FOLDERS)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptyfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_FOLDERS)
  * EMPTY_FOLDERS holds the data fields for a EMPTY_FOLDERS record.
  **/
 const EMPTY_FOLDERS: Folder[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptyinterfaces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_INTERFACES)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptyinterfaces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_INTERFACES)
  * EMPTY_INTERFACES holds the data fields for a EMPTY_INTERFACES record.
  **/
 const EMPTY_INTERFACES: Port[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptytags](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_TAGS)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptytags](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_TAGS)
  * EMPTY_TAGS holds the data fields for a EMPTY_TAGS record.
  **/
 const EMPTY_TAGS: Tag[] = [];
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptyconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_CONCEPTS)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptyconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_CONCEPTS)
  * EMPTY_CONCEPTS holds the data fields for a EMPTY_CONCEPTS record.
  **/
 const EMPTY_CONCEPTS: Concept[] = [];
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selecttypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectTypes)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selecttypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectTypes)
  * selectTypes holds the data fields for a selectTypes record.
  **/
 const selectTypes = (k: KitShallow | Kit) => k.types ?? EMPTY_TYPES;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selectname](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectName)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectname](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectName)
  * selectName holds the data fields for a selectName record.
  **/
 const selectName = (k: KitShallow | Kit) => k.name;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selectdescription](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectDescription)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectdescription](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectDescription)
  * selectDescription holds the data fields for a selectDescription record.
  **/
 const selectDescription = (k: KitShallow | Kit) => k.description;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selectauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectAuthors)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectAuthors)
  * selectAuthors holds the data fields for a selectAuthors record.
  **/
 const selectAuthors = (k: KitShallow | Kit) => k.authors ?? EMPTY_AUTHORS;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selectfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectFiles)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectFiles)
  * selectFiles holds the data fields for a selectFiles record.
  **/
 const selectFiles = (k: KitShallow | Kit) => k.files ?? EMPTY_FILES;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selectqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectQualities)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectQualities)
  * selectQualities holds the data fields for a selectQualities record.
  **/
 const selectQualities = (k: KitShallow | Kit) => k.qualities ?? EMPTY_QUALITIES;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selectdesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectDesigns)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectdesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectDesigns)
  * selectDesigns holds the data fields for a selectDesigns record.
  **/
 const selectDesigns = (k: KitShallow | Kit) => k.designs ?? EMPTY_DESIGNS;
 /** selectFolders holds the data fields for a selectFolders record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🔖targetedkithooks🪨selectfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectFolders)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectFolders)
  **/
 const selectFolders = (k: KitShallow | Kit) => k.folders ?? EMPTY_FOLDERS;
 /** selectPorts holds the data fields for a selectPorts record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🔖targetedkithooks🪨selectports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectPorts)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectPorts)
  **/
 const selectPorts = (k: KitShallow | Kit) => k.ports ?? EMPTY_INTERFACES;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selecttags](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectTags)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selecttags](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectTags)
  * selectTags holds the data fields for a selectTags record.
  **/
 const selectTags = (k: KitShallow | Kit) => k.tags ?? EMPTY_TAGS;
 /** selectConcepts holds the data fields for a selectConcepts record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🔖targetedkithooks🪨selectconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectConcepts)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selectconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectConcepts)
  **/
 const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
@@ -8109,6 +8240,7 @@ export function useKitCommands() {
 // Kit command definitions for import, export, and sync operations.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖commands🪨sqlwasmurl](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Commands/d/i/sqlWasmUrl)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖commands🪨sqlwasmurl](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Commands/d/i/sqlWasmUrl)
  * sqlWasmUrl holds the data fields for a sqlWasmUrl record.
  **/
@@ -9010,6 +9142,7 @@ export type SketchpadEvent =
 
 /** migratePath holds the data fields for a migratePath record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️migratepath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/migratePath)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️migratepath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/migratePath)
  **/
 function migratePath(path: string): string {
@@ -9030,6 +9163,7 @@ function migratePath(path: string): string {
 
 /** buildSnapshot holds the data fields for a buildSnapshot record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️applydiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/applyDiff)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🪨buildsnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/buildSnapshot)
  **/
 function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
@@ -9096,6 +9230,7 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖helpers🛠️applydiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Helpers/d/i/applyDiff)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️applydiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/applyDiff)
  **/
 function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): void {
@@ -9240,6 +9375,7 @@ export function createDefaultQualityAppState(): QualityAppState {
 
 /** createDefaultSketchpadState holds the data fields for a createDefaultSketchpadState record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️createdefaultsketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/createDefaultSketchpadState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️createdefaultsketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/createDefaultSketchpadState)
  **/
 function createDefaultSketchpadState(id?: string): SketchpadState {
@@ -9288,6 +9424,7 @@ function createDefaultSketchpadState(id?: string): SketchpadState {
 
 /** mergeSketchpadState holds the data fields for a mergeSketchpadState record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️mergesketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/mergeSketchpadState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️mergesketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/mergeSketchpadState)
  **/
 function mergeSketchpadState(base: SketchpadState, partial?: Partial<SketchpadState>): SketchpadState {
@@ -9316,6 +9453,7 @@ function mergeSketchpadState(base: SketchpadState, partial?: Partial<SketchpadSt
 
 /** readSketchpadStateFromLocalStorage holds the data fields for a readSketchpadStateFromLocalStorage record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️readsketchpadstatefromlocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/readSketchpadStateFromLocalStorage)
  **/
 function readSketchpadStateFromLocalStorage(id: string): Partial<SketchpadState> | undefined {
@@ -9329,6 +9467,7 @@ function readSketchpadStateFromLocalStorage(id: string): Partial<SketchpadState>
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
  * writeSketchpadStateToLocalStorage holds the data fields for a writeSketchpadStateToLocalStorage record.
  **/
@@ -9341,6 +9480,7 @@ function writeSketchpadStateToLocalStorage(id: string, state: SketchpadState): v
 
 /** toSketchpadInitialState holds the data fields for a toSketchpadInitialState record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️tosketchpadinitialstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/toSketchpadInitialState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🪨tosketchpadinitialstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/toSketchpadInitialState)
  **/
 function toSketchpadInitialState(initialState?: ExtendedInitialState): Partial<SketchpadState> | undefined {
@@ -9351,6 +9491,7 @@ function toSketchpadInitialState(initialState?: ExtendedInitialState): Partial<S
 
 /** applySketchpadDiffToState holds the data fields for a applySketchpadDiffToState record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers🛠️applysketchpaddifftostate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers/d/i/applySketchpadDiffToState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🪨applysketchpaddifftostate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/applySketchpadDiffToState)
  **/
 function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): SketchpadState {
@@ -10357,6 +10498,7 @@ export const selectSketchpadSettings = (state: { context: SketchpadContext }) =>
 
 /** getAppTransaction holds the data fields for a getAppTransaction record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨getapptransaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Sketchpad%20Machine/s/Sketchpad%20Selectors/d/i/getAppTransaction)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨getapptransaction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Sketchpad%20Machine/s/Sketchpad%20Selectors/d/i/getAppTransaction)
  **/
 const getAppTransaction = (context: SketchpadContext, appKey: string): AppTransactionState | undefined => {
@@ -10377,6 +10519,7 @@ const getAppTransaction = (context: SketchpadContext, appKey: string): AppTransa
 
 /** defaultTransactionState holds the data fields for a defaultTransactionState record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨defaulttransactionstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Sketchpad%20Machine/s/Sketchpad%20Selectors/d/i/defaultTransactionState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖sketchpadmachine🔖sketchpadselectors🪨defaulttransactionstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Sketchpad%20Machine/s/Sketchpad%20Selectors/d/i/defaultTransactionState)
  **/
 const defaultTransactionState: AppTransactionState = {
@@ -10619,6 +10762,7 @@ export type KitEvent =
 
 /** buildKitSnapshot holds the data fields for a buildKitSnapshot record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖legacytypeexports🛠️buildkitsnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Legacy%20Type%20Exports/d/i/buildKitSnapshot)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖legacytypeexports🛠️buildkitsnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Legacy%20Type%20Exports/d/i/buildKitSnapshot)
  **/
 function buildKitSnapshot(yKit: Y.Map<any>): Partial<Kit> {
@@ -11676,17 +11820,20 @@ export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨performanceloggingenabled](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/performanceLoggingEnabled)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨performanceloggingenabled](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/performanceLoggingEnabled)
  * performanceLoggingEnabled holds the data fields for a performanceLoggingEnabled record.
  **/
 let performanceLoggingEnabled = false;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨performancelogcounts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/performanceLogCounts)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨performancelogcounts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/performanceLogCounts)
  * performanceLogCounts holds the data fields for a performanceLogCounts record.
  **/
 const performanceLogCounts = new Map<string, number>();
 /** performanceLogTimestamps holds the data fields for a performanceLogTimestamps record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨performancelogtimestamps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/performanceLogTimestamps)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨performancelogtimestamps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/performanceLogTimestamps)
  **/
 const performanceLogTimestamps = new Map<string, number>();
@@ -11706,6 +11853,7 @@ export function enablePerformanceLogging(enabled: boolean = true) {
 
 /** logStateAccess holds the data fields for a logStateAccess record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️logstateaccess](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/logStateAccess)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨logstateaccess](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/logStateAccess)
  **/
 function logStateAccess(hookName: string, storeType: string, selectorInfo?: string) {
@@ -12066,6 +12214,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
 
 /** initialDocsPanelVisibility holds the data fields for a initialDocsPanelVisibility record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨initialdocspanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/initialDocsPanelVisibility)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨initialdocspanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/initialDocsPanelVisibility)
  **/
 const initialDocsPanelVisibility: PanelVisibility = {
@@ -12081,22 +12230,26 @@ const initialDocsPanelVisibility: PanelVisibility = {
 
 /** docsPanelVisibilityState holds the data fields for a docsPanelVisibilityState record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨docspanelvisibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/docsPanelVisibilityState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨docspanelvisibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/docsPanelVisibilityState)
  **/
 let docsPanelVisibilityState: PanelVisibility = initialDocsPanelVisibility;
 /** docsPanelVisibilityListeners holds the data fields for a docsPanelVisibilityListeners record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨docspanelvisibilitylisteners](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/docsPanelVisibilityListeners)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨docspanelvisibilitylisteners](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/docsPanelVisibilityListeners)
  **/
 const docsPanelVisibilityListeners = new Set<() => void>();
 
 /** DocsPanelVisibilityUpdate holds the data fields for a DocsPanelVisibilityUpdate record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️docspanelvisibilityupdate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/DocsPanelVisibilityUpdate)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️docspanelvisibilityupdate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/DocsPanelVisibilityUpdate)
  **/
 type DocsPanelVisibilityUpdate = PanelVisibility | ((prev: PanelVisibility) => PanelVisibility);
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️getdocspanelvisibilitysnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/getDocsPanelVisibilitySnapshot)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️getdocspanelvisibilitysnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/getDocsPanelVisibilitySnapshot)
  * getDocsPanelVisibilitySnapshot holds the data fields for a getDocsPanelVisibilitySnapshot record.
  **/
@@ -12105,6 +12258,7 @@ function getDocsPanelVisibilitySnapshot(): PanelVisibility {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️subscribedocspanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/subscribeDocsPanelVisibility)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️subscribedocspanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/subscribeDocsPanelVisibility)
  * subscribeDocsPanelVisibility holds the data fields for a subscribeDocsPanelVisibility record.
  **/
@@ -12116,6 +12270,7 @@ function subscribeDocsPanelVisibility(listener: () => void) {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️updatedocspanelvisibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/updateDocsPanelVisibilityState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨updatedocspanelvisibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/updateDocsPanelVisibilityState)
  * updateDocsPanelVisibilityState holds the data fields for a updateDocsPanelVisibilityState record.
  **/
@@ -12127,6 +12282,7 @@ function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨nullstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/nullStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨nullstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/nullStore)
  * nullStore holds the data fields for a nullStore record.
  **/
@@ -12173,6 +12329,7 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️aresamekit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/areSameKit)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️aresamekit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/areSameKit)
  * areSameKit holds the data fields for a areSameKit record.
  **/
@@ -12181,6 +12338,7 @@ function areSameKit(kit1: Guid, kit2: Guid): boolean {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️aresamedesignapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/areSameDesignApp)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️aresamedesignapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/areSameDesignApp)
  * areSameDesignApp holds the data fields for a areSameDesignApp record.
  **/
@@ -12189,6 +12347,7 @@ function areSameDesignApp(designApp: DesignAppId, other: DesignAppId): boolean {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️hassamedesignapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/hasSameDesignApp)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️hassamedesignapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/hasSameDesignApp)
  * hasSameDesignApp holds the data fields for a hasSameDesignApp record.
  **/
@@ -12198,6 +12357,7 @@ function hasSameDesignApp(designApp: DesignAppId, others: DesignAppId[]): boolea
 
 /** areSameKitApp holds the data fields for a areSameKitApp record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/YKitApp)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️aresamekitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/areSameKitApp)
  **/
 function areSameKitApp(kitApp: KitAppId, other: KitAppId): boolean {
@@ -12205,6 +12365,7 @@ function areSameKitApp(kitApp: KitAppId, other: KitAppId): boolean {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️hassamekitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/hasSameKitApp)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️hassamekitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/hasSameKitApp)
  * hasSameKitApp holds the data fields for a hasSameKitApp record.
  **/
@@ -12213,27 +12374,32 @@ function hasSameKitApp(kitApp: KitAppId, others: KitAppId[]): boolean {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/YKitAppVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YKitAppVal)
  * YKitAppVal holds the data fields for a YKitAppVal record.
  **/
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/YKitApp)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YKitApp)
  * YKitApp holds the data fields for a YKitApp record.
  **/
 type YKitApp = Y.Map<YKitAppVal>;
 /** YKitApps holds the data fields for a YKitApps record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/YKitMetadata)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YKitApps)
  **/
 type YKitApps = Y.Map<YKitApp>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/YKitMetadata)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YKitMetadata)
  * YKitMetadata holds the data fields for a YKitMetadata record.
  **/
 type YKitMetadata = Y.Map<string | boolean>;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadatas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/YKitMetadatas)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadatas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YKitMetadatas)
  * YKitMetadatas holds the data fields for a YKitMetadatas record.
  **/
@@ -12241,36 +12407,43 @@ type YKitMetadatas = Y.Array<YKitMetadata>;
 
 /** KitAppStoreInstance holds the data fields for a KitAppStoreInstance record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️kitappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/KitAppStoreInstance)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️kitappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/KitAppStoreInstance)
  **/
 type KitAppStoreInstance = any;
 /** DesignAppStoreInstance holds the data fields for a DesignAppStoreInstance record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️designappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/DesignAppStoreInstance)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️designappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/DesignAppStoreInstance)
  **/
 type DesignAppStoreInstance = any;
 /** TypeAppStoreInstance holds the data fields for a TypeAppStoreInstance record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️typeappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/TypeAppStoreInstance)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️typeappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/TypeAppStoreInstance)
  **/
 type TypeAppStoreInstance = any;
 /** QualityAppStoreInstance holds the data fields for a QualityAppStoreInstance record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️qualityappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/QualityAppStoreInstance)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️qualityappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/QualityAppStoreInstance)
  **/
 type QualityAppStoreInstance = any;
 /** HomeStoreInstance holds the data fields for a HomeStoreInstance record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️homestoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/HomeStoreInstance)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️homestoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/HomeStoreInstance)
  **/
 type HomeStoreInstance = any;
 /** DocsAppStoreInstance holds the data fields for a DocsAppStoreInstance record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/KitAppStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️docsappstoreinstance](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/DocsAppStoreInstance)
  **/
 type DocsAppStoreInstance = any;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/KitAppStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/KitAppStoreFactory)
  * KitAppStoreFactory holds the data fields for a KitAppStoreFactory record.
  **/
@@ -12278,25 +12451,30 @@ type KitAppStoreFactory = (parent: SketchpadStore, yMap: YKitApp, transact: (fn:
 
 /** DesignAppStoreFactoryLocal holds the data fields for a DesignAppStoreFactoryLocal record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️typeappstorefactorylocal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/TypeAppStoreFactoryLocal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️designappstorefactorylocal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/DesignAppStoreFactoryLocal)
  **/
 type DesignAppStoreFactoryLocal = (parent: SketchpadStore, id: DesignAppId, state?: DesignAppState) => DesignAppStoreInstance;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️typeappstorefactorylocal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/TypeAppStoreFactoryLocal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️typeappstorefactorylocal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/TypeAppStoreFactoryLocal)
  * TypeAppStoreFactoryLocal holds the data fields for a TypeAppStoreFactoryLocal record.
  **/
 type TypeAppStoreFactoryLocal = (parent: SketchpadStore, id: TypeAppId, state?: TypeAppState) => TypeAppStoreInstance;
 /** QualityAppStoreFactoryLocal holds the data fields for a QualityAppStoreFactoryLocal record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️qualityappstorefactorylocal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/QualityAppStoreFactoryLocal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️qualityappstorefactorylocal](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/QualityAppStoreFactoryLocal)
  **/
 type QualityAppStoreFactoryLocal = (parent: SketchpadStore, id: QualityAppId, state?: QualityAppState) => QualityAppStoreInstance;
 /** HomeStoreFactory holds the data fields for a HomeStoreFactory record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️homestorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/HomeStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️homestorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/HomeStoreFactory)
  **/
 type HomeStoreFactory = (parent: SketchpadStore) => HomeStoreInstance;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️docsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/DocsAppStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️docsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/DocsAppStoreFactory)
  * DocsAppStoreFactory holds the data fields for a DocsAppStoreFactory record.
  **/
@@ -12315,11 +12493,13 @@ import {
 
 /** homeStoreFactory holds the data fields for a homeStoreFactory record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨homestorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/homeStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨homestorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/homeStoreFactory)
  **/
 let homeStoreFactory: HomeStoreFactory | undefined;
 /** docsAppStoreFactory holds the data fields for a docsAppStoreFactory record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨docsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/docsAppStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨docsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/docsAppStoreFactory)
  **/
 let docsAppStoreFactory: DocsAppStoreFactory | undefined;
@@ -12344,6 +12524,7 @@ export function registerDocsAppStoreFactory(factory: DocsAppStoreFactory) {
 
 /** resolveHomeStoreFactory holds the data fields for a resolveHomeStoreFactory record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/YSketchpad)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️resolvehomestorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/resolveHomeStoreFactory)
  **/
 function resolveHomeStoreFactory(): HomeStoreFactory {
@@ -12352,6 +12533,7 @@ function resolveHomeStoreFactory(): HomeStoreFactory {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️resolvedocsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/resolveDocsAppStoreFactory)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️resolvedocsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/resolveDocsAppStoreFactory)
  * resolveDocsAppStoreFactory holds the data fields for a resolveDocsAppStoreFactory record.
  **/
@@ -12363,11 +12545,13 @@ function resolveDocsAppStoreFactory(): DocsAppStoreFactory {
 export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQualityAppStoreFactory, registerTypeAppStoreFactory };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/YSketchpadVal)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YSketchpadVal)
  * YSketchpadVal holds the data fields for a YSketchpadVal record.
  **/
 type YSketchpadVal = string | number | boolean;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/YSketchpad)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/YSketchpad)
  * YSketchpad holds the data fields for a YSketchpad record.
  **/
@@ -13438,6 +13622,7 @@ export class SketchpadStore {
 SketchpadStore._loadModules();
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨stores](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/stores)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨stores](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/stores)
  * stores holds the data fields for a stores record.
  **/
@@ -13452,6 +13637,7 @@ if (import.meta.hot?.data.stores) {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨actors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/actors)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨actors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/actors)
  * actors holds the data fields for a actors record.
  **/
@@ -13467,6 +13653,7 @@ if (import.meta.hot?.data.actors) {
 
 /** SketchpadScopeContext holds the data fields for a SketchpadScopeContext record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨sketchpadscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SketchpadScopeContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨sketchpadscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SketchpadScopeContext)
  **/
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
@@ -14867,6 +15054,7 @@ export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
 
 /** AppRegistry holds the data fields for a AppRegistry record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖appsregistry🛠️appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps%20Registry/d/i/AppRegistry)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖appsregistry🛠️appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps%20Registry/d/i/AppRegistry)
  **/
 class AppRegistry {
@@ -14954,6 +15142,7 @@ class AppRegistry {
 
 /** appRegistry holds the data fields for a appRegistry record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖appsregistry🪨appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps%20Registry/d/i/appRegistry)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖appsregistry🪨appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps%20Registry/d/i/appRegistry)
  **/
 const appRegistry = new AppRegistry();
@@ -14961,11 +15150,13 @@ const appRegistry = new AppRegistry();
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup, SnapshotFrom } from "xstate";
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖appsregistry🪨appconfigsloadpromise](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps%20Registry/d/i/appConfigsLoadPromise)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖appsregistry🪨appconfigsloadpromise](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps%20Registry/d/i/appConfigsLoadPromise)
  * appConfigsLoadPromise holds the data fields for a appConfigsLoadPromise record.
  **/
 let appConfigsLoadPromise: Promise<void> | null = null;
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖appsregistry🛠️loadappconfigs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps%20Registry/d/i/loadAppConfigs)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖appsregistry🛠️loadappconfigs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps%20Registry/d/i/loadAppConfigs)
  * loadAppConfigs holds the data fields for a loadAppConfigs record.
  **/
@@ -15000,6 +15191,7 @@ export { appRegistry, loadAppConfigs };
 
 /** FocusContextValue holds the data fields for a FocusContextValue record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖navbar✂️focuscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Navbar/d/i/FocusContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar✂️focuscontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/FocusContextValue)
  **/
 interface FocusContextValue {
@@ -15010,6 +15202,7 @@ interface FocusContextValue {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖navbar🪨focuscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Navbar/d/i/FocusContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar🪨focuscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/FocusContext)
  * FocusContext holds the data fields for a FocusContext record.
  **/
@@ -15067,6 +15260,7 @@ export const useFocusSafe = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖navbar✂️panelsectioncontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Navbar/d/i/PanelSectionContextValue)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar✂️panelsectioncontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/PanelSectionContextValue)
  * PanelSectionContextValue holds the data fields for a PanelSectionContextValue record.
  **/
@@ -15078,6 +15272,7 @@ interface PanelSectionContextValue {
 
 /** PanelSectionContext holds the data fields for a PanelSectionContext record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖navbar🪨panelsectioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Navbar/d/i/PanelSectionContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar🪨panelsectioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/PanelSectionContext)
  **/
 const PanelSectionContext = createContext<PanelSectionContextValue | null>(null);
@@ -15160,6 +15355,7 @@ export const useRemovePanelSection = () => {
 // Context provider managing side panel and HUD panel tab registration.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sidepaneltabs✂️hudpaneltabsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/SidePanel%20Tabs/d/i/HudPanelTabsState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sidepaneltabs✂️sidepaneltabsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/SidePanel%20Tabs/d/i/SidePanelTabsState)
  * SidePanelTabsState holds the data fields for a SidePanelTabsState record.
  **/
@@ -15169,6 +15365,7 @@ interface SidePanelTabsState {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sidepaneltabs✂️hudpaneltabsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/SidePanel%20Tabs/d/i/HudPanelTabsState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sidepaneltabs✂️hudpaneltabsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/SidePanel%20Tabs/d/i/HudPanelTabsState)
  * HudPanelTabsState holds the data fields for a HudPanelTabsState record.
  **/
@@ -15177,6 +15374,7 @@ interface HudPanelTabsState {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sidepaneltabs✂️sidepaneltabcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/SidePanel%20Tabs/d/i/SidePanelTabContextValue)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sidepaneltabs✂️sidepaneltabcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/SidePanel%20Tabs/d/i/SidePanelTabContextValue)
  * SidePanelTabContextValue holds the data fields for a SidePanelTabContextValue record.
  **/
@@ -15195,6 +15393,7 @@ interface SidePanelTabContextValue {
   setActiveHudTabId: (tabId: string) => void;
 }
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sidepaneltabs🪨sidepaneltabcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/SidePanel%20Tabs/d/i/SidePanelTabContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sidepaneltabs🪨sidepaneltabcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/SidePanel%20Tabs/d/i/SidePanelTabContext)
  * SidePanelTabContext holds the data fields for a SidePanelTabContext record.
  **/
@@ -15347,6 +15546,7 @@ export const useActiveHudTabId = (): [string | undefined, (tabId: string) => voi
 
 /** OriginStore holds the data fields for a OriginStore record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖origin✂️originstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Origin/d/i/OriginStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin✂️originstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/OriginStore)
  **/
 type OriginStore = {
@@ -15356,11 +15556,13 @@ type OriginStore = {
 
 /** DEFAULT_ORIGIN holds the data fields for a DEFAULT_ORIGIN record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖origin🪨defaultorigin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Origin/d/i/DEFAULT_ORIGIN)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🪨defaultorigin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/DEFAULT_ORIGIN)
  **/
 const DEFAULT_ORIGIN = "semio.sketchpad.unknown";
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖origin🛠️createoriginstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Origin/d/i/createOriginStore)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🪨createoriginstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/createOriginStore)
  * createOriginStore holds the data fields for a createOriginStore record.
  **/
@@ -15382,6 +15584,7 @@ function createOriginStore(): OriginStore & { setOrigin: (origin: string) => voi
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖origin🛠️resolveoriginfromtarget](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Origin/d/i/resolveOriginFromTarget)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🛠️resolveoriginfromtarget](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/resolveOriginFromTarget)
  **/
 function resolveOriginFromTarget(target: EventTarget | null): string {
@@ -15393,6 +15596,7 @@ function resolveOriginFromTarget(target: EventTarget | null): string {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖origin🪨origincontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Origin/d/i/OriginContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🪨origincontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/OriginContext)
  * OriginContext holds the data fields for a OriginContext record.
  **/
@@ -15455,6 +15659,7 @@ export function useOriginValue(): string {
 
 /** FooterItemContextValue holds the data fields for a FooterItemContextValue record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖footeritems✂️footeritemcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Footer%20Items/d/i/FooterItemContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖footeritems✂️footeritemcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Footer%20Items/d/i/FooterItemContextValue)
  **/
 interface FooterItemContextValue {
@@ -15463,6 +15668,7 @@ interface FooterItemContextValue {
   removeItem: (itemId: string) => void;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖footeritems🪨footeritemcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Footer%20Items/d/i/FooterItemContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖footeritems🪨footeritemcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Footer%20Items/d/i/FooterItemContext)
  * FooterItemContext holds the data fields for a FooterItemContext record.
  **/
@@ -15531,6 +15737,7 @@ export const useRemoveFooterItem = () => {
 // Global footer items component that registers persistent footer entries.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖globalfooteritems🪨globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Global%20Footer%20Items/d/i/GlobalFooterItems)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖globalfooteritems🪨globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Global%20Footer%20Items/d/i/GlobalFooterItems)
  **/
 const GlobalFooterItems: FC = () => {
@@ -15688,6 +15895,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 
 /** DragDropContextValue holds the data fields for a DragDropContextValue record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖dragdrop✂️dragdropcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop/d/i/DragDropContextValue)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖dragdrop✂️dragdropcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/DragDrop/d/i/DragDropContextValue)
  **/
 interface DragDropContextValue {
@@ -15699,6 +15907,7 @@ interface DragDropContextValue {
 
 /** DragDropContext holds the data fields for a DragDropContext record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖dragdrop🪨dragdropcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/DragDrop/d/i/DragDropContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖dragdrop🪨dragdropcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/DragDrop/d/i/DragDropContext)
  **/
 
@@ -15839,6 +16048,7 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
 
 /** NavigationProps holds the data fields for a NavigationProps record.
 // [👤semio📚js🗃️sketchpad💻sketchpad✂️navigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/d/i/Navigation)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store✂️navigationprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/NavigationProps)
  **/
 interface NavigationProps {
@@ -15846,6 +16056,7 @@ interface NavigationProps {
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🪨navigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/Navigation)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🪨navigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/Navigation)
  * Navigation holds the data fields for a Navigation record.
  **/
@@ -16668,6 +16879,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store✂️searchresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/SearchResult)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store✂️searchresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/SearchResult)
  * SearchResult holds the data fields for a SearchResult record.
  **/
@@ -16678,6 +16890,7 @@ type SearchResult = {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🪨buildsearchresultpath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/buildSearchResultPath)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🪨buildsearchresultpath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/buildSearchResultPath)
  * buildSearchResultPath holds the data fields for a buildSearchResultPath record.
  **/
@@ -16692,6 +16905,7 @@ const buildSearchResultPath = (result: SearchResult): string => {
 
 /** Search holds the data fields for a Search record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🪨search](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/d/i/Search)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🪨search](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/Search)
  **/
 const Search: FC = ({ }) => {
@@ -16914,6 +17128,7 @@ const Search: FC = ({ }) => {
 
 /** Focus holds the data fields for a Focus record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🪨focus](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/d/i/Focus)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🪨focus](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/Focus)
  **/
 const Focus: FC = ({ }) => {
@@ -17024,6 +17239,7 @@ const Focus: FC = ({ }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🪨paneltoggles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/PanelToggles)
+/**
  * PanelToggles holds the data fields for a PanelToggles record.
  **/
 const PanelToggles: FC = ({ }) => {
@@ -17121,6 +17337,7 @@ export type WindowConfig = {
 
 /** CanvasContext holds the data fields for a CanvasContext record.
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖canvas🪨canvascontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Canvas/d/i/CanvasContext)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas🪨canvascontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/CanvasContext)
  **/
 const CanvasContext = createContext<{ activeWindow?: string; onActiveWindowChange?: (windowId: string) => void } | null>(null);
@@ -17167,6 +17384,7 @@ export const VerticalWindows: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas🪨windowcontrolsgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/WindowControlsGroup)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas🪨windowcontrolsgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/WindowControlsGroup)
  * WindowControlsGroup holds the data fields for a WindowControlsGroup record.
  **/
@@ -17220,6 +17438,7 @@ const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) =>
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas✂️layouterrorboundaryprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/LayoutErrorBoundaryProps)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas✂️layouterrorboundaryprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/LayoutErrorBoundaryProps)
  * LayoutErrorBoundaryProps holds the data fields for a LayoutErrorBoundaryProps record.
  **/
@@ -17229,6 +17448,7 @@ interface LayoutErrorBoundaryProps {
   onError?: (error: Error, info: React.ErrorInfo) => void;
 }
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas✂️layouterrorboundarystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/LayoutErrorBoundaryState)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas✂️layouterrorboundarystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/LayoutErrorBoundaryState)
  * LayoutErrorBoundaryState holds the data fields for a LayoutErrorBoundaryState record.
  **/
@@ -17237,6 +17457,7 @@ interface LayoutErrorBoundaryState {
   error: Error | null;
 }
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas🛠️layouterrorboundary](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/LayoutErrorBoundary)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas🛠️layouterrorboundary](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/LayoutErrorBoundary)
  * LayoutErrorBoundary holds the data fields for a LayoutErrorBoundary record.
  **/
@@ -17850,6 +18071,7 @@ export const LayoutCanvas: FC<{
 // React Router integration with scope providers and route-based app switching.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖approuter🪨scopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/App%20Router/d/i/ScopeWrapper)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖approuter🪨scopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/App%20Router/d/i/ScopeWrapper)
  * ScopeWrapper holds the data fields for a ScopeWrapper record.
  **/
@@ -17861,6 +18083,7 @@ const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: 
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖approuter🪨approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/App%20Router/d/i/AppRouter)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖approuter🪨approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/App%20Router/d/i/AppRouter)
  * AppRouter holds the data fields for a AppRouter record.
  **/
@@ -17936,6 +18159,7 @@ const AppRouter: FC = () => {
 // Top-level sketchpad React components for rendering the complete application.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨toolbarscopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/ToolbarScopeWrapper)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨toolbarscopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/ToolbarScopeWrapper)
  * ToolbarScopeWrapper holds the data fields for a ToolbarScopeWrapper record.
  **/
@@ -17970,6 +18194,7 @@ const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨layoutwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/LayoutWrapper)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨layoutwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/LayoutWrapper)
  * LayoutWrapper holds the data fields for a LayoutWrapper record.
  **/
@@ -18666,6 +18891,7 @@ const LayoutWrapper: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨sketchpadinteractionbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/SketchpadInteractionBridge)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨sketchpadinteractionbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/SketchpadInteractionBridge)
  * SketchpadInteractionBridge holds the data fields for a SketchpadInteractionBridge record.
  **/
@@ -18690,6 +18916,7 @@ const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ childre
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨globalnavigationbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/GlobalNavigationBridge)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨globalnavigationbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/GlobalNavigationBridge)
  * GlobalNavigationBridge holds the data fields for a GlobalNavigationBridge record.
  **/
@@ -18711,6 +18938,7 @@ const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children })
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨sketchpadcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/SketchpadContent)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨sketchpadcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/SketchpadContent)
  * SketchpadContent holds the data fields for a SketchpadContent record.
  **/
@@ -18719,6 +18947,7 @@ const SketchpadContent: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/Sketchpad)
+/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/Sketchpad)
  * Sketchpad holds the data fields for a Sketchpad record.
  **/

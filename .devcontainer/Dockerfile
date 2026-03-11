@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     wget \
+    ripgrep \
     socat \
     netcat-openbsd \
     iproute2 \

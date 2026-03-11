@@ -1,19 +1,9 @@
 {
   "profiles": {
-    "Rhino 8 (net48)": {
+    "Rhino 8": {
       "commandName": "Executable",
       "executablePath": "C:\\Program Files\\Rhino 8\\System\\Rhino.exe",
-      "environmentVariables": {
-        "RHINO_PLUGIN_PATH": "$(ProjectDir)bin\\Debug\\net48\\Semio.Rhino.rhp"
-      }
-    },
-    "Rhino 8 (net8.0)": {
-      "commandName": "Executable",
-      "executablePath": "C:\\Program Files\\Rhino 8\\System\\Rhino.exe",
-      "commandLineArgs": "/netcore",
-      "environmentVariables": {
-        "RHINO_PLUGIN_PATH": "$(ProjectDir)bin\\Debug\\net8.0\\Semio.Rhino.rhp"
-      }
+      "commandLineArgs": "\"$(TargetDir)Semio.Rhino.rhp\" /netfx"
     }
   }
 }

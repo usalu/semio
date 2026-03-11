@@ -84,6 +84,13 @@ TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
 
 semio:
+Add a new
+
+Introduce a new concept: Operation
+An Operation always returns a Result.
+A result has a diff, meta
+e.g.
+FlattenDesign is an operation.
 
 File blobs should not be pure base encoded strings, but common data encoded with uri etc. You MUST update all programming languages.
 
@@ -179,7 +186,12 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ## 🧰semiorepo
 
-TODO: Rename project to technology
+semio repo:
+Rename concepts to entities.
+
+Every technology has `Operations`. An operation has a name, involves entities, input, side-effects
+
+Rename project to technology
 
 ```diff
 - 🧰semiorepo⌨️cli💻main

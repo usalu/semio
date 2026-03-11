@@ -100,9 +100,9 @@ legacy_tox_ini = """
 
     [testenv]
     skip_install = true
-    allowlist_externals = poetry
-    commands_pre = poetry install
-    commands = tests.sh
+    allowlist_externals = uv
+    commands_pre = uv sync
+    commands = uv run pytest
 """
 
 [tool.pylint.'MESSAGES CONTROL']

@@ -1,0 +1,5228 @@
+{
+  "id": "d9b38937-8799-4612-b797-80c78589da1d",
+  "uri": "semiorepo://s/d9b38937-8799-4612-b797-80c78589da1d",
+  "checkpoint": "763ae2bbf7112cf22509af849e13a331fa5e6d96",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-11T13:41:28Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:41:27.939Z",
+          "hook_event_name": "SubagentStart",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "agent_id": "1e89aa00-aabf-4484-9e69-1db4fc76c230",
+          "agent_type": "Explore",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.started acknowledged",
+            "hookEventName": "SubagentStart"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "d9b38937-8799-4612-b797-80c78589da1d",
+        "second": "🎆26🌙03☀️11⏰13⌚41⏱️28",
+        "session": "⚪1e89aa00aabf44849e691db4fc76c230"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:41:41.851Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "prompt": "Thoroughly explore the semio/js directory in /workspaces/semio/semio/js/ to understand its complete structure, data model, and code patterns. I need to understand:\n\n1. The complete directory structure (all files and folders)\n2. The main source file(s) - read all key source files completely\n3. The data model/types/interfaces used\n4. How the MCP server is implemented\n5. How tests are structured\n6. Package.json contents\n7. Any schema definitions\n8. Export structure\n\nRead ALL source files completely - every .ts, .tsx file in the src directory. Be thorough - I need the complete picture to port this to Python.",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.prompt.submitting acknowledged",
+            "hookEventName": "UserPromptSubmit"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "prompt": "Thoroughly explore the semio/js directory in /workspaces/semio/semio/js/ to understand its complete structure, data model, and code patterns. I need to understand:\n\n1. The complete directory structure (all files and folders)\n2. The main source file(s) - read all key source files completely\n3. The data model/types/interfaces used\n4. How the MCP server is implemented\n5. How tests are structured\n6. Package.json contents\n7. Any schema definitions\n8. Export structure\n\nRead ALL source files completely - every .ts, .tsx file in the src directory. Be thorough - I need the complete picture to port this to Python.",
+        "second": "🎆26🌙03☀️11⏰13⌚41⏱️42",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:41:59.605Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/js"
+          },
+          "tool_use_id": "toolu_01KDMrJun4ppKav3LiRXGypA__vscode-1773233523283",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️00",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:12.766Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/js"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01KDMrJun4ppKav3LiRXGypA__vscode-1773233523283",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️13",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:15.338Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/js/**/*.{ts,tsx}",
+            "maxResults": 100
+          },
+          "tool_use_id": "toolu_015q9qj3BJ1MYeV15XCX2e1k__vscode-1773233523285",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️16",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:15.355Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/js/package.json",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_use_id": "toolu_01KBDicAk1XbE7NiC1vfk2de__vscode-1773233523286",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js⚙️package📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️16",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:24.938Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/js/**/*.{ts,tsx}",
+            "maxResults": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_015q9qj3BJ1MYeV15XCX2e1k__vscode-1773233523285",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️25",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:24.982Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/js/**/src/**/*.{ts,tsx}",
+            "maxResults": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01RJrBY8PVWNp5fvWU7MVc6J__vscode-1773233523284",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️25",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:29.722Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/js/package.json",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01KBDicAk1XbE7NiC1vfk2de__vscode-1773233523286",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js⚙️package📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️30",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:33.041Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "startLine": 1,
+            "endLine": 200
+          },
+          "tool_use_id": "toolu_01Cp3EQsMzEBMv5g1bFjaBHH__vscode-1773233523287",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻index"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻index📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️33",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:33.070Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/js/semio.test.ts",
+            "startLine": 1,
+            "endLine": 200
+          },
+          "tool_use_id": "toolu_018kTdEKtjxh5PaPnTBCNfUL__vscode-1773233523289",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest🛠️centersequal",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js🥼semiotest🛠️finddesign",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js🥼semiotest🛠️planesequal",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js🥼semiotest🪨tolerance",
+            "loc": 2
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️33",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:45.430Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/js/index.ts",
+            "startLine": 1,
+            "endLine": 200
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01Cp3EQsMzEBMv5g1bFjaBHH__vscode-1773233523287",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻index"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻index📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️46",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:42:57.685Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/js/semio.test.ts",
+            "startLine": 1,
+            "endLine": 200
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_018kTdEKtjxh5PaPnTBCNfUL__vscode-1773233523289",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest🛠️centersequal",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js🥼semiotest🛠️finddesign",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js🥼semiotest🛠️planesequal",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js🥼semiotest🪨tolerance",
+            "loc": 2
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️59",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:43:01.374Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 1800,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 300
+          },
+          "tool_use_id": "toolu_0143LoJZNe3ztL7wwnZRaxSz__vscode-1773233523290",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️attribute",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️attributediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️attributesdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmarkid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️conceptid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectionid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️coord",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️coorddiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️fileid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folderid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️groupid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kitid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layerid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️modelid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️pieceid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️plane",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️point",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️pointdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️portid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️propid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️qualityid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️statid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tagid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vec",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vecdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vector",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyattributediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyattributesdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applycoorddiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applypointdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyvecdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyvectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameattributeid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameauthorid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamebenchmarkid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconceptid",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconnectionid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconnectorid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamedesignid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamefileid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamefolderid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamegroupid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamekitid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamelayerid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamelocationid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamemodelid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamepieceid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameportid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamepropid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamequalityid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamestatid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresametagid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresametypeid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createattributeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createauthorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createbenchmarkid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createconceptid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createconnectionid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createconnectorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createdesignid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createfileid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createfolderid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️creategroupid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createkitid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createlayerid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createlocationid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createmodelid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createpieceid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createportid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createpropid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createqualityid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createstatid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createtagid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createtypeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️dateproperty",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeattribute",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializecoord",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializepoint",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializevec",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializevector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getattributediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getattributeguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getattributesdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getauthorguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getbenchmarkguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconceptguid",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectionguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectorguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getcoorddiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getdesignguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfileguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfolderguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getgroupguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getkitguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlayerguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlocationguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getmodelguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpieceguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpointdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getportguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpropguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getqualityguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getstatguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettagguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettypeguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getvecdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getvectordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseattributediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseattributesdiff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversecoorddiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversepointdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversevecdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversevectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeattributediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeattributesdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergecoorddiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergepointdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergevecdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergevectordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeattribute",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializecoord",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializepoint",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializevec",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializevector",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributeidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributeschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authoridschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarkidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectionidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectoridschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨coorddiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨coordschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layeridschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨locationidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modelidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pieceidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨planeschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pointdiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pointschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualityidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typeidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vecdiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vecschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vectordiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vectorschema",
+            "loc": 5
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌300📌1800"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️02",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:43:20.079Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 1800,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 300
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_0143LoJZNe3ztL7wwnZRaxSz__vscode-1773233523290",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️attribute",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️attributediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️attributesdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmarkid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️conceptid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectionid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️coord",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️coorddiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️fileid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folderid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️groupid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kitid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layerid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️modelid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️pieceid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️plane",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️point",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️pointdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️portid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️propid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️qualityid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️statid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tagid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vec",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vecdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vector",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️vectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyattributediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyattributesdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applycoorddiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applypointdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyvecdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyvectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameattributeid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameauthorid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamebenchmarkid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconceptid",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconnectionid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconnectorid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamedesignid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamefileid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamefolderid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamegroupid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamekitid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamelayerid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamelocationid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamemodelid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamepieceid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameportid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamepropid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamequalityid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamestatid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresametagid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresametypeid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createattributeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createauthorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createbenchmarkid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createconceptid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createconnectionid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createconnectorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createdesignid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createfileid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createfolderid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️creategroupid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createkitid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createlayerid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createlocationid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createmodelid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createpieceid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createportid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createpropid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createqualityid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createstatid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createtagid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createtypeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️dateproperty",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeattribute",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializecoord",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializepoint",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializevec",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializevector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getattributediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getattributeguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getattributesdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getauthorguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getbenchmarkguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconceptguid",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectionguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectorguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getcoorddiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getdesignguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfileguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfolderguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getgroupguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getkitguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlayerguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlocationguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getmodelguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpieceguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpointdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getportguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpropguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getqualityguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getstatguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettagguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettypeguid",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getvecdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getvectordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseattributediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseattributesdiff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversecoorddiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversepointdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversevecdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversevectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeattributediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeattributesdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergecoorddiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergepointdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergevecdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergevectordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeattribute",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializecoord",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializepoint",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializevec",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializevector",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributeidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributeschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨attributesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authoridschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarkidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectionidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectoridschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨coorddiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨coordschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layeridschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨locationidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modelidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pieceidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨planeschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pointdiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pointschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualityidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typeidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vecdiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vecschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vectordiffschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨vectorschema",
+            "loc": 5
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌300📌1800"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️21",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:43:23.103Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "startLine": 1800,
+            "endLine": 3500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts"
+          },
+          "tool_use_id": "toolu_01AvUGQPTN1dKYYPDBFS6NF4__vscode-1773233523291",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️author",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️authordiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️authorsdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmark",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmarkdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmarksdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️camera",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️cameradiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️file",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filesdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folderdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️foldersdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️location",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️locationdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️plane",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio✂️planediff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️port",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️portdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️portsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️prop",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️propdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️propsdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️quality",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️qualitydiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyauthordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applybenchmarkdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applybenchmarksdiff",
+            "loc": 21
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applycameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfilediff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfolderdiff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applylocationdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyplanediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyportdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyportsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applypropdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyqualitydiff",
+            "loc": 31
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️areportscompatible",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️averageplane",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeauthor",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializebenchmark",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializecamera",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefile",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefolder",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializelocation",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeplane",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeport",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeprop",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializequality",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getbenchmarkdiff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getbenchmarksdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getcameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfilediff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfolderdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlocationdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getplanediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getportdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getportsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpropdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpropsdiff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getqualitydiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversebenchmarkdiff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversebenchmarksdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversecameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefilediff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefolderdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverselocationdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseplanediff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseportdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseportsdiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversepropdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversequalitydiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️matrixtoplane",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeauthordiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergebenchmarkdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergebenchmarksdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergecameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefilediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefolderdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergelocationdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeplanediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeportdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeportsdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergepropdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergequalitydiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️planetomatrix",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️roundplane",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeauthor",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializebenchmark",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializecamera",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefile",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefolder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializelocation",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeplane",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeport",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeprop",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializequality",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authordiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authorschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authorsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarkdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarkschema",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarksdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨cameradiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨cameraschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileschema",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderschema",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🪨foldersdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨locationdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨locationschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨planediffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portdiffschema",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualitiesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualitydiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualityschema",
+            "loc": 23
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌1800📌3500"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️23",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:43:42.031Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "startLine": 1800,
+            "endLine": 3500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01AvUGQPTN1dKYYPDBFS6NF4__vscode-1773233523291",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️author",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️authordiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️authorsdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmark",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmarkdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️benchmarksdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️camera",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️cameradiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️file",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filesdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folderdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️foldersdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️location",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️locationdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️plane",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio✂️planediff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio✂️port",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️portdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️portsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️prop",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️propdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️propsdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️quality",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️qualitydiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyauthordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applybenchmarkdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applybenchmarksdiff",
+            "loc": 21
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applycameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfilediff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfolderdiff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applylocationdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyplanediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyportdiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyportsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applypropdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyqualitydiff",
+            "loc": 31
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️areportscompatible",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️averageplane",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeauthor",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializebenchmark",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializecamera",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefile",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefolder",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializelocation",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeplane",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeport",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeprop",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializequality",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getbenchmarkdiff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getbenchmarksdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getcameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfilediff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfolderdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlocationdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getplanediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getportdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getportsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpropdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpropsdiff",
+            "loc": 18
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getqualitydiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversebenchmarkdiff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversebenchmarksdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversecameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefilediff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefolderdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverselocationdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseplanediff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseportdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseportsdiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversepropdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversequalitydiff",
+            "loc": 23
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️matrixtoplane",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeauthordiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergebenchmarkdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergebenchmarksdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergecameradiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefilediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefolderdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergelocationdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeplanediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeportdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeportsdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergepropdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergequalitydiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️planetomatrix",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️roundplane",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeauthor",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializebenchmark",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializecamera",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefile",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefolder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializelocation",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeplane",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeport",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeprop",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializequality",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authordiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authorschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authorsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarkdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarkschema",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🪨benchmarksdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨cameradiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨cameraschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileschema",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderschema",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🪨foldersdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨locationdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨locationschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨planediffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portdiffschema",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨portsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨propsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualitiesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualitydiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨qualityschema",
+            "loc": 23
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌1800📌3500"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️43",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:43:45.427Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "^// #region 🔖",
+            "isRegexp": true,
+            "includePattern": "**/semio/js/semio.ts"
+          },
+          "tool_use_id": "toolu_01RPviDgaMKVnxxVCiujTV68__vscode-1773233523292",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️46",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:43:58.672Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "^// #region 🔖",
+            "isRegexp": true,
+            "includePattern": "**/semio/js/semio.ts"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01RPviDgaMKVnxxVCiujTV68__vscode-1773233523292",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️59",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:44:01.457Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "startLine": 3550,
+            "endLine": 5500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts"
+          },
+          "tool_use_id": "toolu_01YSp8piqSUBJ5S7vA8fomLU__vscode-1773233523293",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️concept",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️conceptdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️conceptsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectordiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectorsdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️group",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️groupdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layer",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layerdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layersdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️model",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️modeldiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️modelfilevalidation",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio✂️piece",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️piecediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️piecesdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️side",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sidediff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sideid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio✂️supported3dextension",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tag",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tagdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tagsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typeshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconceptdiff",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconceptsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconnectordiff",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applygroupdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applylayerdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applymodeldiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applypiecediff",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applytagdiff",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applytagsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applytypediff",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️areconnectorscompatible",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamemodel",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeconcept",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeconnector",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializegroup",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializelayer",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializemodel",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializepiece",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializetag",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializetype",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializetypeshallow",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️filtermodelsbytagguids",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconcept",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnector",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectorintype",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findmodel",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpiece",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findtag",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️fixpieceindesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️fixpiecesindesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getalltagguidsfrommodels",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getavailabletagguidsformodels",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconceptdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconceptsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectorsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getgroupdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlayerdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getmodeldiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpiecediff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpiecemodelfileguids",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpiecemodelurls",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettagdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettagsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettypediff",
+            "loc": 25
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconceptdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconceptsdiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconnectordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversegroupdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverselayerdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversemodeldiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversepiecediff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversetagdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversetagsdiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversetypediff",
+            "loc": 21
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️isfixedpiece",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️issupportedmodelextension",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconceptdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconceptsdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconnectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergegroupdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergelayerdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergemodeldiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergepiecediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergetagdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergetagsdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergetypediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️selectbestmodel",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeconcept",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeconnector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializegroup",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializelayer",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializemodel",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializepiece",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializetag",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializetype",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializetypeshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️type",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️unifyconnectorportsandcompatibleportsfortypes",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️validatemodelfile",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectordiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectorschema",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectorsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layerdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layerschema",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layersdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modeldiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modelschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modelsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨piecediffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pieceschema",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🪨piecesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sidediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sideidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sideschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨supported3dextensions",
+            "loc": 61
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typediffschema",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typeschema",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typeshallowschema",
+            "loc": 1
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌3550📌5500"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚44⏱️02",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:44:19.957Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "startLine": 3550,
+            "endLine": 5500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01YSp8piqSUBJ5S7vA8fomLU__vscode-1773233523293",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️concept",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️conceptdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️conceptsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectordiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectorsdiff",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️group",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️groupdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layer",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layerdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️layersdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️model",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️modeldiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️modelfilevalidation",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio✂️piece",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️piecediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️piecesdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️side",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sidediff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sideid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio✂️supported3dextension",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tag",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tagdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️tagsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️typeshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconceptdiff",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconceptsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconnectordiff",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applygroupdiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applylayerdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applymodeldiff",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applypiecediff",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applytagdiff",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applytagsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applytypediff",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️areconnectorscompatible",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresamemodel",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeconcept",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeconnector",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializegroup",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializelayer",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializemodel",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializepiece",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializetag",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializetype",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializetypeshallow",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️filtermodelsbytagguids",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconcept",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnector",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectorintype",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findmodel",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpiece",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findtag",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️fixpieceindesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️fixpiecesindesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getalltagguidsfrommodels",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getavailabletagguidsformodels",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconceptdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconceptsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectorsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getgroupdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getlayerdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getmodeldiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpiecediff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpiecemodelfileguids",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getpiecemodelurls",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettagdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettagsdiff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️gettypediff",
+            "loc": 25
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconceptdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconceptsdiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconnectordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversegroupdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverselayerdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversemodeldiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversepiecediff",
+            "loc": 17
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversetagdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversetagsdiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversetypediff",
+            "loc": 21
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️isfixedpiece",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️issupportedmodelextension",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconceptdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconceptsdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconnectordiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergegroupdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergelayerdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergemodeldiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergepiecediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergetagdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergetagsdiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergetypediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️selectbestmodel",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeconcept",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeconnector",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializegroup",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializelayer",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializemodel",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializepiece",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializetag",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializetype",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializetypeshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️type",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️unifyconnectorportsandcompatibleportsfortypes",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️validatemodelfile",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨conceptsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectordiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectorschema",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectorsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨groupsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layerdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layerschema",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🪨layersdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modeldiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modelschema",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨modelsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨piecediffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨pieceschema",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🪨piecesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sidediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sideidschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sideschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨supported3dextensions",
+            "loc": 61
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tagsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typediffschema",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typeschema",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨typeshallowschema",
+            "loc": 1
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌3550📌5500"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚44⏱️21",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:44:25.168Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 7500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 5500
+          },
+          "tool_use_id": "toolu_01E3B3AM7nntjSCg2Qoy2urd__vscode-1773233523294",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️collectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connection",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectiondiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectionsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️design",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designsdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️entityidtype",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️includeddesigninfo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kitdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kitshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sideid",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sidesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️stat",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️statdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addconnectionstodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addconnectiontodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addpiecestodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addpiecetodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconnectiondiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applydesigndiff",
+            "loc": 40
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applysidediff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applystatdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconnection",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameside",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️computechildplane",
+            "loc": 67
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createclustereddesign",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeconnection",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializedesign",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializedesignshallow",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializekit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializekitshallow",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeside",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializestat",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️expanddesignpieces",
+            "loc": 64
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnection",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectionindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectionpiecesindesign",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectionsindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectorforpieceinconnection",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpiececonnections",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpiececonnectionsindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpieceindesign",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findstaleconnectionsindesign",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️flattendesign",
+            "loc": 291
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getclusterablegroups",
+            "loc": 50
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectiondiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getdesigndiff",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getincludeddesigns",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getkitdiff",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getsidediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getstatdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconnectiondiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversedesigndiff",
+            "loc": 25
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversesidediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversestatdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️isconnectionindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️isportinuse",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconnectiondiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergedesigndiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergedesigns",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergesidediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergestatdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️orientdesign",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removeconnectionfromdesigndiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removeconnectionsfromdesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removepiecefromdesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removepiecesandconnectionsfromdesign",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removepiecesfromdesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️replaceclusterwithdesign",
+            "loc": 46
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeconnection",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializedesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializedesignshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializekit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializekitshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeside",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializestat",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setconnectionindesigndiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setconnectionsindesigndiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setpieceindesigndiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setpiecesindesigndiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨applycollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectiondiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectionschema",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectionsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designschema",
+            "loc": 26
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designshallowschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨getcollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨inversecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitschema",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitshallowschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨mergecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sidesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statdiffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statschema",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statsdiffschema",
+            "loc": 5
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌5500📌7500"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚44⏱️25",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:44:37.943Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 7500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 5500
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01E3B3AM7nntjSCg2Qoy2urd__vscode-1773233523294",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️collectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connection",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectiondiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️connectionsdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️design",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designsdiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio✂️designshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️entityidtype",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️includeddesigninfo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kitdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio✂️kitshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sideid",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio✂️sidesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️stat",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio✂️statdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addconnectionstodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addconnectiontodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addpiecestodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️addpiecetodesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyconnectiondiff",
+            "loc": 22
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applydesigndiff",
+            "loc": 40
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applysidediff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applystatdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameconnection",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️aresameside",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️computechildplane",
+            "loc": 67
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️createclustereddesign",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeconnection",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializedesign",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializedesignshallow",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializekit",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializekitshallow",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializeside",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializestat",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️expanddesignpieces",
+            "loc": 64
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnection",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectionindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectionpiecesindesign",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectionsindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findconnectorforpieceinconnection",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpiececonnections",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpiececonnectionsindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findpieceindesign",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️findstaleconnectionsindesign",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️flattendesign",
+            "loc": 291
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getclusterablegroups",
+            "loc": 50
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getconnectiondiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getdesigndiff",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getincludeddesigns",
+            "loc": 27
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getkitdiff",
+            "loc": 33
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getsidediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getstatdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseconnectiondiff",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversedesigndiff",
+            "loc": 25
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversesidediff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversestatdiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️isconnectionindesign",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️isportinuse",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeconnectiondiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergedesigndiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergedesigns",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergesidediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergestatdiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️orientdesign",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removeconnectionfromdesigndiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removeconnectionsfromdesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removepiecefromdesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removepiecesandconnectionsfromdesign",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️removepiecesfromdesigndiff",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️replaceclusterwithdesign",
+            "loc": 46
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeconnection",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializedesign",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializedesignshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializekit",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializekitshallow",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializeside",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializestat",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setconnectionindesigndiff",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setconnectionsindesigndiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setpieceindesigndiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️setpiecesindesigndiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨applycollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectiondiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectionschema",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚js💻semio🪨connectionsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designschema",
+            "loc": 26
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨designshallowschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨getcollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨inversecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitschema",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚js💻semio🪨kitshallowschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨mergecollectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨sidesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statdiffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statschema",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🪨statsdiffschema",
+            "loc": 5
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌5500📌7500"
+        ],
+        "second": "🎆26🌙03☀️11⏰13⌚44⏱️38",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:45:16.775Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "memory",
+          "tool_input": {
+            "command": "create",
+            "path": "/memories/session/semio-js-exploration.md",
+            "file_text": "# Semio/JS Complete Structure and Data Model\n\n## Directory Structure\n```\n/workspaces/semio/semio/js/\n├── src/                           (No explicit src folder - root level files)\n├── .storybook/                    (Storybook stories for UI components)\n├── sketchpad/                     (Sketchpad application)\n│   ├── Sketchpad.tsx              (Main component)\n│   ├── Design.tsx\n│   ├── Kit.tsx\n│   ├── Type.tsx\n│   ├── Quality.tsx\n│   ├── Home.tsx, Docs.tsx, etc.\n│   ├── elements.tsx               (Custom UI elements)\n│   ├── shared.ts                  (Shared types for file providers)\n│   └── apps/\n├── Main Source Files (Root)\n│   ├── index.ts                   (Barrel export)\n│   ├── semio.ts                   (CORE DOMAIN MODEL - 7500+ lines)\n│   ├── semio.test.ts              (Main tests)\n│   ├── semio.benchmark.ts         (Benchmarks)\n│   ├── site.tsx                   (Landing site)\n│   ├── dev.ts                     (Dev server setup)\n│   ├── i18n.ts                    (Internationalization)\n│   ├── global.d.ts                (Global types)\n│   ├── constants.json             (Constants)\n│   └── _debug_diff.ts\n├── Config Files\n│   ├── package.json               (Main manifest)\n│   ├── tsconfig.json\n│   ├── vite.config.ts\n│   ├── vitest.config.ts\n│   ├── tailwind.config.ts\n│   ├── postcss.config.ts\n│   ├── eslint.config.ts\n│   ├── components.json\n│   └── playwright.config.ts\n└── public/\n    └── sql-wasm.wasm              (For SQLite support)\n```\n\n## Package.json Key Details\n\n**Type**: ES Module (`\"type\": \"module\"`)\n\n**Main Exports**:\n```javascript\n{\n  \".\": \"./index.ts\",\n  \"./semio\": \"./semio.ts\",\n  \"./globals.css\": \"./globals.css\",\n  \"./theme.css\": \"./theme.css\"\n}\n```\n\n**Key Scripts**:\n- `dev`: `tsx dev.ts` - Development server\n- `build`: `storybook build` - Builds Storybook\n- `test`: `vitest run` - Unit tests\n- `test:e2e`: `playwright test` - E2E tests\n- `preflight`: Prettier + TypeScript check\n\n**Key Dependencies**:\n- React 19.2.3\n- Three.js 0.182.0 (3D graphics)\n- Zod 4.3.5 (Schema validation)\n- XState 5.25.0 (State management)\n- D3 Force, Dagre, Cytoscape (Graph algorithms)\n- @react-three/fiber, @xyflow/react (Visual components)\n- Golden-layout, React-router, Yjs (Collaboration/routing)\n\n## Semio Data Model (semio.ts) - Core Architecture\n\n### Key Principles\n1. **Region Organization**: Uses `#region 🔖` markers for hierarchical code organization\n2. **Zod Schemas**: All types have Zod validation schemas\n3. **Diff-based Changes**: Every entity has a diff system for tracking changes\n4. **Complete Traceability**: Each definition has tracking URLs in documentation comments\n\n### Entity ID Types (Weak References)\n```typescript\n// All follow pattern: type EntityId = { guid: Guid }\nAttributeId, LocationId, AuthorId, FileId, FolderId, BenchmarkId, QualityId,\nPortId, PropId, ModelId, ConnectorId, TypeId, LayerId, PieceId, GroupId,\nConnectionId, StatId, DesignId, KitId, TagId, ConceptId\n```\n\n### Weak Entities (Value Objects)\nThese are composite types without independent identity:\n- **Coord**: `{ u: number, v: number }` - 2D coordinates\n- **Vec**: `{ u: number, v: number }` - 2D vectors\n- **Point**: `{ x: number, y: number, z: number }` - 3D point\n- **Vector**: `{ x: number, y: number, z: number }` - 3D vector\n- **Plane**: `{ origin: Point, xAxis: Vector, yAxis: Vector }` - 3D plane\n- **Camera**: `{ position: Point, forward: Vector, up: Vector }` - View camera\n- **Side**: `{ piece: PieceId, designPiece?: PieceId, connector?: ConnectorId }`\n\n### Core Attributes/Metadata Entities\n1. **Attribute**\n   - Key-value pairs with optional definition\n   - Fields: `guid, key, value?, definition?`\n   \n2. **Location**\n   - Geo-spatial data\n   - Fields: `guid, longitude, latitude, altitude?, attributes?`\n   \n3. **Author**\n   - Person/entity metadata\n   - Fields: `guid, name, email, attributes?`\n   \n4. **File**\n   - File reference with metadata\n   - Fields: `guid, name, remote?, size?, hash?, folder?, createdAt?, createdBy?, updatedAt?, updatedBy?`\n   \n5. **Folder**\n   - Hierarchical folder structure\n   - Fields: `guid, name, parent?, description?, attributes?, createdAt?, createdBy?`\n\n### Domain Entities\n\n1. **Quality** (Property Definition)\n   - Defines measurable properties (e.g., weight, height)\n   - Fields: `guid, key, name, description?, uri?, canScale?, defaultSiUnit?, defaultImperialUnit?, benchmarks[], attributes?`\n   - Contains: Benchmarks (min/max constraints)\n\n2. **Benchmark** (Range Constraint)\n   - Min/max value constraints for qualities\n   - Fields: `guid, name, icon?, min?, minExcluded?, max?, maxExcluded?, attributes?`\n\n3. **Port** (Interface Definition)\n   - Defines connection points on types\n   - Fields: `guid, name, description?, icon?, compatiblePorts[], attributes?`\n\n4. **Prop** (Property Instance)\n   - Named value for a quality at instance level\n   - Fields: `guid, quality: QualityId, value: string, unit?, attributes?`\n\n5. **Model** (3D Representation)\n   - References 3D file + metadata\n   - Fields: `guid, name?, tags[], file: FileId, description?, attributes?`\n   - Tag-based selection mechanism for variants\n\n6. **Connector** (Connection Point Instance)\n   - Specific connection on a type instance\n   - Fields: `guid, name?, t: number, point: Point, direction: Vector, port?, mandatory?, props[], attributes?`\n   - `t` parameter: position along a path (0-1)\n   - Has position, direction, optional port type\n\n7. **Type** (Component Definition)\n   - Base component/part definition\n   - Fields: `guid, name, parent?, isAbstract?, models[], connectors[], props[], stock?, location?, authors[], concepts[], icon?, image?`\n   - Has: connectors (connection points), models (3D variants), props (default values)\n\n8. **Piece** (Component Instance)\n   - Instance of a Type in a Design\n   - Fields: `guid, name?, type: TypeId, design?, plane?, center?, scale?, mirrorPlane?, isHidden?, isLocked?, props[], attributes?`\n   - Placement: `plane` (5-point transformation) + `center` (2D coordinate in parent)\n\n9. **Connection** (Assembly Relationship)\n   - Links two pieces together\n   - Fields: `guid, connected: Side, connecting: Side, gap?, shift?, rise?, rotation?, turn?, tilt?, u?, v?, attributes?`\n   - Connection parameters: `gap` (distance), `shift/rise` (offsets), rotation angles (`rotation`, `turn`, `tilt`)\n   - UV coordinates for constraint resolution\n\n10. **Layer** (Organization)\n    - Groups pieces by visibility/lock state\n    - Fields: `guid, path: string, isHidden?, isLocked?, color?, description?, attributes?`\n\n11. **Group** (Piece Collection)\n    - Named collection of pieces\n    - Fields: `guid, pieces[], color?, name?, description?, attributes?`\n\n12. **Stat** (Measured Property)\n    - Computed/measured value from design\n    - Fields: `guid, quality: QualityId, unit?, min?, minExcluded?, max?, maxExcluded?`\n\n13. **Tag** (Classification)\n    - Named tag for categorization\n    - Fields: `guid, name, description?, icon?, attributes?`\n\n14. **Concept** (Domain Concept)\n    - High-level concept/principle\n    - Fields: `guid, name, description?, icon?, attributes?`\n\n15. **Design** (Assembly/Instance)\n    - Collection of pieces, connections, and constraints\n    - Fields: `guid, name, parent?, isAbstract?, pieces[], connections[], stats[], props[], layers[], groups[], canScale?, canMirror?, unit?, location?, authors[], concepts?, icon?, image?`\n    - Hierarchical: designs can reference other designs via pieces\n    - Key functions: flatten, cluster, expand\n\n16. **Kit** (Component Library)\n    - Container for all domain data\n    - Fields: `guid, name, version?, types[], designs[], tags[], concepts[], ports[], qualities[], files[], folders[], authors?, remote?, homepage?, license?, preview?, icon?, image?`\n    - Complete system definition\n\n### Utility Functions \u0026 Patterns\n\n**General Utilities**:\n- `cn()` - Merge CSS classes (Tailwind)\n- `guid()` - Generate UUID v7\n- `Generator.randomId(), randomName()` - Seeded random name generation\n- `normalize()` - Null-safe string normalization\n- `round()` - Round to tolerance\n- `jaccard()` - Jaccard similarity\n- `deepEqual(), arraysEqual()` - Recursive comparisons\n- `generateUniqueName()` - Create non-conflicting names\n\n**Coordinate/Transform**:\n- `planeToMatrix(), matrixToPlane()` - 3D transforms\n- `averagePlane()` - Average planes\n- `toThreeRotation(), toSemioRotation()` - Coordinate system conversions\n- `vectorToThree()` - Convert to Three.js\n\n**Diff System Pattern** (for EVERY entity):\nEach entity X has:\n1. `XSchema` - Zod validation schema\n2. `X` - Type alias\n3. `serializeX()` - JSON serialize\n4. `deserializeX()` - JSON deserialize\n5. `XDiffSchema` - Partial schema for changes\n6. `XDiff` - Diff type\n7. `getXDiff(before, after)` - Compute diff\n8. `applyXDiff(base, diff)` - Apply diff\n9. `inverseXDiff(original, diff)` - Reverse diff\n10. `mergeXDiff(diff1, diff2)` - Merge diffs\n\n**Collection Diff Pattern**:\n```typescript\n{\n  removed?: EntityId[],\n  updated?: Array\u003c{ entity: EntityId, diff: EntityDiff }\u003e,\n  added?: Entity[]\n}\n```\n\n**Advanced Design Operations**:\n- `flattenDesign()` - Flatten hierarchy to flat pieces with planes\n- `createClusteredDesign()` - Group pieces into sub-design\n- `replaceClusterWithDesign()` - Substitute cluster reference\n- `expandDesignPieces()` - Expand design references into pieces\n- `getIncludedDesigns()` - Find nested designs\n- `getClusterableGroups()` - Find piece groupings\n\n**Model Selection**:\n- `selectBestModel()` - Choose 3D variant by tags\n- `findModel()` - Find model by tag similarity (Jaccard)\n- `filterModelsByTagGuids()` - Filter by tag requirements\n- `getAvailableTagGuidsForModels()` - Available tag options\n\n**Export/Import**:\n- `serializeKit()` - To JSON\n- `deserializeKit()` - From JSON\n- `exportKit()` - To ZIP\n- `importKit()` - From ZIP\n\n### Design Patterns\n\n1. **Immutable Updates**: All changes via diffs, never mutate\n2. **Reversible Operations**: Every diff has an inverse\n3. **Composable Changes**: Diffs can merge\n4. **Validation**: Zod schemas everywhere\n5. **Type Safety**: Full TypeScript coverage\n6. **Hierarchical Organization**: Designs contain pieces, types contain connectors\n7. **Parameterized Connections**: Gap, shift, rise, rotation parameters\n8. **Plane-based Positioning**: CSG-like relative positioning via Plane\n\n## Test Structure (semio.test.ts)\n\nUsing Vitest framework:\n\n**Test Suites**:\n1. **Change** - Kit diff computation\n2. **Flatten** - Design flattening to explicit geometry\n3. **Roundtrip** - JSON ↔ Kit, Zip ↔ Kit\n4. **Validation** - Kit validation reports\n5. **Cluster** - Design clustering operations\n\n**Test Data**: Uses `MetabolismKit` from assets (Nakagin Capsule Tower example)\n\n## Sketchpad Architecture\n\nUI application structure:\n- Main views: Design, Kit, Type, Quality, Home, Docs, Feedback, Tutorials\n- File providers: Memory, Local, Remote, Composite\n- App registry system for plugin-like apps\n- Shared UI elements from elements.tsx\n\n## Code Organization Pattern\n\nEach section uses consistent structure:\n```typescript\n// #region 🔖SectionName\n// [URL tracking comment]\n// Brief description\n\n// Schemas \u0026 Types\nexport const NameSchema = z.object({...});\nexport type Name = z.infer\u003ctypeof NameSchema\u003e;\n\n// Serialization\nexport const serializeName = (val: Name): string =\u003e {...};\nexport const deserializeName = (json: string): Name =\u003e {...};\n\n// Diff System\nexport const NameDiffSchema = ...;\nexport type NameDiff = ...;\nexport const getNameDiff = (before, after) =\u003e {...};\nexport const applyNameDiff = (base, diff) =\u003e {...};\n// ... more diff functions\n\n// Utility Functions\nexport const findName = (names: Name[], guid: string): Name =\u003e {...};\n\n// #endregion 🔖SectionName\n```\n\n## Export Summary (index.ts)\n\nExports:\n- Sketchpad component + config\n- Semio domain functions (areKitsEqual, exportKit, importKit)\n- UI components (Action, ActionGroup, Avatar, Card, Tabs, etc.)\n- Configs (eslint, postcss, tailwind)\n- Styles (globals.css, theme.css)\n"
+          },
+          "tool_use_id": "toolu_01AfjUCjfsk4VT7grWf95tWH__vscode-1773233523295",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "command": "create",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚45⏱️17",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:45:30.170Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "tool_name": "memory",
+          "tool_input": {
+            "command": "create",
+            "path": "/memories/session/semio-js-exploration.md",
+            "file_text": "# Semio/JS Complete Structure and Data Model\n\n## Directory Structure\n```\n/workspaces/semio/semio/js/\n├── src/                           (No explicit src folder - root level files)\n├── .storybook/                    (Storybook stories for UI components)\n├── sketchpad/                     (Sketchpad application)\n│   ├── Sketchpad.tsx              (Main component)\n│   ├── Design.tsx\n│   ├── Kit.tsx\n│   ├── Type.tsx\n│   ├── Quality.tsx\n│   ├── Home.tsx, Docs.tsx, etc.\n│   ├── elements.tsx               (Custom UI elements)\n│   ├── shared.ts                  (Shared types for file providers)\n│   └── apps/\n├── Main Source Files (Root)\n│   ├── index.ts                   (Barrel export)\n│   ├── semio.ts                   (CORE DOMAIN MODEL - 7500+ lines)\n│   ├── semio.test.ts              (Main tests)\n│   ├── semio.benchmark.ts         (Benchmarks)\n│   ├── site.tsx                   (Landing site)\n│   ├── dev.ts                     (Dev server setup)\n│   ├── i18n.ts                    (Internationalization)\n│   ├── global.d.ts                (Global types)\n│   ├── constants.json             (Constants)\n│   └── _debug_diff.ts\n├── Config Files\n│   ├── package.json               (Main manifest)\n│   ├── tsconfig.json\n│   ├── vite.config.ts\n│   ├── vitest.config.ts\n│   ├── tailwind.config.ts\n│   ├── postcss.config.ts\n│   ├── eslint.config.ts\n│   ├── components.json\n│   └── playwright.config.ts\n└── public/\n    └── sql-wasm.wasm              (For SQLite support)\n```\n\n## Package.json Key Details\n\n**Type**: ES Module (`\"type\": \"module\"`)\n\n**Main Exports**:\n```javascript\n{\n  \".\": \"./index.ts\",\n  \"./semio\": \"./semio.ts\",\n  \"./globals.css\": \"./globals.css\",\n  \"./theme.css\": \"./theme.css\"\n}\n```\n\n**Key Scripts**:\n- `dev`: `tsx dev.ts` - Development server\n- `build`: `storybook build` - Builds Storybook\n- `test`: `vitest run` - Unit tests\n- `test:e2e`: `playwright test` - E2E tests\n- `preflight`: Prettier + TypeScript check\n\n**Key Dependencies**:\n- React 19.2.3\n- Three.js 0.182.0 (3D graphics)\n- Zod 4.3.5 (Schema validation)\n- XState 5.25.0 (State management)\n- D3 Force, Dagre, Cytoscape (Graph algorithms)\n- @react-three/fiber, @xyflow/react (Visual components)\n- Golden-layout, React-router, Yjs (Collaboration/routing)\n\n## Semio Data Model (semio.ts) - Core Architecture\n\n### Key Principles\n1. **Region Organization**: Uses `#region 🔖` markers for hierarchical code organization\n2. **Zod Schemas**: All types have Zod validation schemas\n3. **Diff-based Changes**: Every entity has a diff system for tracking changes\n4. **Complete Traceability**: Each definition has tracking URLs in documentation comments\n\n### Entity ID Types (Weak References)\n```typescript\n// All follow pattern: type EntityId = { guid: Guid }\nAttributeId, LocationId, AuthorId, FileId, FolderId, BenchmarkId, QualityId,\nPortId, PropId, ModelId, ConnectorId, TypeId, LayerId, PieceId, GroupId,\nConnectionId, StatId, DesignId, KitId, TagId, ConceptId\n```\n\n### Weak Entities (Value Objects)\nThese are composite types without independent identity:\n- **Coord**: `{ u: number, v: number }` - 2D coordinates\n- **Vec**: `{ u: number, v: number }` - 2D vectors\n- **Point**: `{ x: number, y: number, z: number }` - 3D point\n- **Vector**: `{ x: number, y: number, z: number }` - 3D vector\n- **Plane**: `{ origin: Point, xAxis: Vector, yAxis: Vector }` - 3D plane\n- **Camera**: `{ position: Point, forward: Vector, up: Vector }` - View camera\n- **Side**: `{ piece: PieceId, designPiece?: PieceId, connector?: ConnectorId }`\n\n### Core Attributes/Metadata Entities\n1. **Attribute**\n   - Key-value pairs with optional definition\n   - Fields: `guid, key, value?, definition?`\n   \n2. **Location**\n   - Geo-spatial data\n   - Fields: `guid, longitude, latitude, altitude?, attributes?`\n   \n3. **Author**\n   - Person/entity metadata\n   - Fields: `guid, name, email, attributes?`\n   \n4. **File**\n   - File reference with metadata\n   - Fields: `guid, name, remote?, size?, hash?, folder?, createdAt?, createdBy?, updatedAt?, updatedBy?`\n   \n5. **Folder**\n   - Hierarchical folder structure\n   - Fields: `guid, name, parent?, description?, attributes?, createdAt?, createdBy?`\n\n### Domain Entities\n\n1. **Quality** (Property Definition)\n   - Defines measurable properties (e.g., weight, height)\n   - Fields: `guid, key, name, description?, uri?, canScale?, defaultSiUnit?, defaultImperialUnit?, benchmarks[], attributes?`\n   - Contains: Benchmarks (min/max constraints)\n\n2. **Benchmark** (Range Constraint)\n   - Min/max value constraints for qualities\n   - Fields: `guid, name, icon?, min?, minExcluded?, max?, maxExcluded?, attributes?`\n\n3. **Port** (Interface Definition)\n   - Defines connection points on types\n   - Fields: `guid, name, description?, icon?, compatiblePorts[], attributes?`\n\n4. **Prop** (Property Instance)\n   - Named value for a quality at instance level\n   - Fields: `guid, quality: QualityId, value: string, unit?, attributes?`\n\n5. **Model** (3D Representation)\n   - References 3D file + metadata\n   - Fields: `guid, name?, tags[], file: FileId, description?, attributes?`\n   - Tag-based selection mechanism for variants\n\n6. **Connector** (Connection Point Instance)\n   - Specific connection on a type instance\n   - Fields: `guid, name?, t: number, point: Point, direction: Vector, port?, mandatory?, props[], attributes?`\n   - `t` parameter: position along a path (0-1)\n   - Has position, direction, optional port type\n\n7. **Type** (Component Definition)\n   - Base component/part definition\n   - Fields: `guid, name, parent?, isAbstract?, models[], connectors[], props[], stock?, location?, authors[], concepts[], icon?, image?`\n   - Has: connectors (connection points), models (3D variants), props (default values)\n\n8. **Piece** (Component Instance)\n   - Instance of a Type in a Design\n   - Fields: `guid, name?, type: TypeId, design?, plane?, center?, scale?, mirrorPlane?, isHidden?, isLocked?, props[], attributes?`\n   - Placement: `plane` (5-point transformation) + `center` (2D coordinate in parent)\n\n9. **Connection** (Assembly Relationship)\n   - Links two pieces together\n   - Fields: `guid, connected: Side, connecting: Side, gap?, shift?, rise?, rotation?, turn?, tilt?, u?, v?, attributes?`\n   - Connection parameters: `gap` (distance), `shift/rise` (offsets), rotation angles (`rotation`, `turn`, `tilt`)\n   - UV coordinates for constraint resolution\n\n10. **Layer** (Organization)\n    - Groups pieces by visibility/lock state\n    - Fields: `guid, path: string, isHidden?, isLocked?, color?, description?, attributes?`\n\n11. **Group** (Piece Collection)\n    - Named collection of pieces\n    - Fields: `guid, pieces[], color?, name?, description?, attributes?`\n\n12. **Stat** (Measured Property)\n    - Computed/measured value from design\n    - Fields: `guid, quality: QualityId, unit?, min?, minExcluded?, max?, maxExcluded?`\n\n13. **Tag** (Classification)\n    - Named tag for categorization\n    - Fields: `guid, name, description?, icon?, attributes?`\n\n14. **Concept** (Domain Concept)\n    - High-level concept/principle\n    - Fields: `guid, name, description?, icon?, attributes?`\n\n15. **Design** (Assembly/Instance)\n    - Collection of pieces, connections, and constraints\n    - Fields: `guid, name, parent?, isAbstract?, pieces[], connections[], stats[], props[], layers[], groups[], canScale?, canMirror?, unit?, location?, authors[], concepts?, icon?, image?`\n    - Hierarchical: designs can reference other designs via pieces\n    - Key functions: flatten, cluster, expand\n\n16. **Kit** (Component Library)\n    - Container for all domain data\n    - Fields: `guid, name, version?, types[], designs[], tags[], concepts[], ports[], qualities[], files[], folders[], authors?, remote?, homepage?, license?, preview?, icon?, image?`\n    - Complete system definition\n\n### Utility Functions \u0026 Patterns\n\n**General Utilities**:\n- `cn()` - Merge CSS classes (Tailwind)\n- `guid()` - Generate UUID v7\n- `Generator.randomId(), randomName()` - Seeded random name generation\n- `normalize()` - Null-safe string normalization\n- `round()` - Round to tolerance\n- `jaccard()` - Jaccard similarity\n- `deepEqual(), arraysEqual()` - Recursive comparisons\n- `generateUniqueName()` - Create non-conflicting names\n\n**Coordinate/Transform**:\n- `planeToMatrix(), matrixToPlane()` - 3D transforms\n- `averagePlane()` - Average planes\n- `toThreeRotation(), toSemioRotation()` - Coordinate system conversions\n- `vectorToThree()` - Convert to Three.js\n\n**Diff System Pattern** (for EVERY entity):\nEach entity X has:\n1. `XSchema` - Zod validation schema\n2. `X` - Type alias\n3. `serializeX()` - JSON serialize\n4. `deserializeX()` - JSON deserialize\n5. `XDiffSchema` - Partial schema for changes\n6. `XDiff` - Diff type\n7. `getXDiff(before, after)` - Compute diff\n8. `applyXDiff(base, diff)` - Apply diff\n9. `inverseXDiff(original, diff)` - Reverse diff\n10. `mergeXDiff(diff1, diff2)` - Merge diffs\n\n**Collection Diff Pattern**:\n```typescript\n{\n  removed?: EntityId[],\n  updated?: Array\u003c{ entity: EntityId, diff: EntityDiff }\u003e,\n  added?: Entity[]\n}\n```\n\n**Advanced Design Operations**:\n- `flattenDesign()` - Flatten hierarchy to flat pieces with planes\n- `createClusteredDesign()` - Group pieces into sub-design\n- `replaceClusterWithDesign()` - Substitute cluster reference\n- `expandDesignPieces()` - Expand design references into pieces\n- `getIncludedDesigns()` - Find nested designs\n- `getClusterableGroups()` - Find piece groupings\n\n**Model Selection**:\n- `selectBestModel()` - Choose 3D variant by tags\n- `findModel()` - Find model by tag similarity (Jaccard)\n- `filterModelsByTagGuids()` - Filter by tag requirements\n- `getAvailableTagGuidsForModels()` - Available tag options\n\n**Export/Import**:\n- `serializeKit()` - To JSON\n- `deserializeKit()` - From JSON\n- `exportKit()` - To ZIP\n- `importKit()` - From ZIP\n\n### Design Patterns\n\n1. **Immutable Updates**: All changes via diffs, never mutate\n2. **Reversible Operations**: Every diff has an inverse\n3. **Composable Changes**: Diffs can merge\n4. **Validation**: Zod schemas everywhere\n5. **Type Safety**: Full TypeScript coverage\n6. **Hierarchical Organization**: Designs contain pieces, types contain connectors\n7. **Parameterized Connections**: Gap, shift, rise, rotation parameters\n8. **Plane-based Positioning**: CSG-like relative positioning via Plane\n\n## Test Structure (semio.test.ts)\n\nUsing Vitest framework:\n\n**Test Suites**:\n1. **Change** - Kit diff computation\n2. **Flatten** - Design flattening to explicit geometry\n3. **Roundtrip** - JSON ↔ Kit, Zip ↔ Kit\n4. **Validation** - Kit validation reports\n5. **Cluster** - Design clustering operations\n\n**Test Data**: Uses `MetabolismKit` from assets (Nakagin Capsule Tower example)\n\n## Sketchpad Architecture\n\nUI application structure:\n- Main views: Design, Kit, Type, Quality, Home, Docs, Feedback, Tutorials\n- File providers: Memory, Local, Remote, Composite\n- App registry system for plugin-like apps\n- Shared UI elements from elements.tsx\n\n## Code Organization Pattern\n\nEach section uses consistent structure:\n```typescript\n// #region 🔖SectionName\n// [URL tracking comment]\n// Brief description\n\n// Schemas \u0026 Types\nexport const NameSchema = z.object({...});\nexport type Name = z.infer\u003ctypeof NameSchema\u003e;\n\n// Serialization\nexport const serializeName = (val: Name): string =\u003e {...};\nexport const deserializeName = (json: string): Name =\u003e {...};\n\n// Diff System\nexport const NameDiffSchema = ...;\nexport type NameDiff = ...;\nexport const getNameDiff = (before, after) =\u003e {...};\nexport const applyNameDiff = (base, diff) =\u003e {...};\n// ... more diff functions\n\n// Utility Functions\nexport const findName = (names: Name[], guid: string): Name =\u003e {...};\n\n// #endregion 🔖SectionName\n```\n\n## Export Summary (index.ts)\n\nExports:\n- Sketchpad component + config\n- Semio domain functions (areKitsEqual, exportKit, importKit)\n- UI components (Action, ActionGroup, Avatar, Card, Tabs, etc.)\n- Configs (eslint, postcss, tailwind)\n- Styles (globals.css, theme.css)\n"
+          },
+          "tool_response": "File created successfully at: /memories/session/semio-js-exploration.md",
+          "tool_use_id": "toolu_01AfjUCjfsk4VT7grWf95tWH__vscode-1773233523295",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "command": "create",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚45⏱️30",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:45:30.662Z",
+          "hook_event_name": "PreCompact",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "trigger": "auto",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.compacting acknowledged",
+            "hookEventName": "PreCompact"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.compacting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚45⏱️31",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-11T13:47:21.183Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "d9b38937-8799-4612-b797-80c78589da1d",
+          "agent_id": "1e89aa00-aabf-4484-9e69-1db4fc76c230",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚47⏱️21",
+        "session": "⚪d9b3893787994612b79780c78589da1d"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

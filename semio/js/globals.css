@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
-@import "semio/js/theme.css";
+@import "./theme.css";
 @import "golden-layout/dist/css/goldenlayout-base.css";
 @import "golden-layout/dist/css/themes/goldenlayout-dark-theme.css";
 

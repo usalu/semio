@@ -429,6 +429,24 @@
       }
     },
     {
+      "name": "semio/3dm ui dev",
+      "preLaunchTask": "semio/3dm ui dev",
+      "type": "chrome",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "dev",
+        "@semio/3dm-ui"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:5174)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "semio/docs dev",
       "preLaunchTask": "semio/docs dev",
       "type": "chrome",

@@ -52,6 +52,23 @@ using File = Semio.File;
 
 #endregion 🔖Imports
 
+#region 🔖AssemblyAttributes
+// [👤semio📚3dm🛅semiorhino💻semiorhino🔖assemblyattributes](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/AssemblyAttributes)
+// Assembly-level attributes required by Rhino to identify this plugin.
+// The Guid is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
+#if RHINO_PLUGIN
+[assembly: System.Runtime.InteropServices.Guid("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
+[assembly: PlugInDescription(DescriptionType.Address, "")]
+[assembly: PlugInDescription(DescriptionType.Country, "")]
+[assembly: PlugInDescription(DescriptionType.Email, "ueli@semio-tech.com")]
+[assembly: PlugInDescription(DescriptionType.Phone, "")]
+[assembly: PlugInDescription(DescriptionType.Organization, "semio")]
+[assembly: PlugInDescription(DescriptionType.UpdateUrl, "")]
+[assembly: PlugInDescription(DescriptionType.WebSite, "https://semio.tech")]
+[assembly: PlugInDescription(DescriptionType.Icon, "Semio.Rhino.semio_32x32.ico")]
+#endif
+#endregion 🔖AssemblyAttributes
+
 #region 🔖Namespace
 // [👤semio📚3dm🛅semiorhino💻semiorhino🔖namespace](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Namespace)
 // Implementations MUST reside in this namespace.
@@ -668,24 +685,24 @@ public class ShowSemioCommand : Command
     {
         Instance = this;
 
-        var iconPath = Path.Combine(GetAssemblyDirectory(), "Resources", "semio32.ico");
-        var sysIcon = System.IO.File.Exists(iconPath)
-            ? new System.Drawing.Icon(iconPath)
-            : System.Drawing.SystemIcons.Application;
+        var sysIcon = LoadEmbeddedIcon("Semio.Rhino.semio_32x32.ico")
+            ?? System.Drawing.SystemIcons.Application;
 
         Panels.RegisterPanel(
             SemioRhinoPlugin.Instance!,
             typeof(SemioPanelHost),
             "semio",
-            sysIcon
+            sysIcon,
+            PanelType.System
         );
     }
 
-    private static string GetAssemblyDirectory()
+    private static System.Drawing.Icon? LoadEmbeddedIcon(string resourceName)
     {
         var assembly = Assembly.GetExecutingAssembly();
-        var location = assembly.Location;
-        return Path.GetDirectoryName(location) ?? "";
+        var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream == null) return null;
+        return new System.Drawing.Icon(stream);
     }
 
     public override string EnglishName => "ShowSemio";

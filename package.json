@@ -34,6 +34,7 @@
   "packageManager": "npm@11.7.0",
   "scripts": {
     "dev": "npx nx run-many -t dev",
+    "dev:3dm:ui": "npx nx dev @semio/3dm-ui",
     "dev:js:js:storybook": "npx nx dev:storybook semio/js",
     "dev:js:js:sketchpad": "npx nx dev:sketchpad semio/js",
     "analyze": "semio-repo/cli/cli analyze",

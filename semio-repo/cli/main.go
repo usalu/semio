@@ -731,7 +731,6 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(analyzeCommand(factory, &config))
 	root.AddCommand(entityEmojisCommand(&config))
 	root.AddCommand(benchmarkCmd)
-	root.AddCommand(preflightCmd)
 	root.AddCommand(updateCmd)
 	return root, &config
 }
@@ -25876,7 +25875,7 @@ CREATE TABLE IF NOT EXISTS technology (
     summary TEXT,
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (technology_kind_id) REFERENCES technology_kind (id) ON DELETE CASCADE
-CREATE TABLE IF NOT EXISTS concept (
+CREATE TABLE IF NOT EXISTS entity (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     technology_id INTEGER,
     bundle_id INTEGER,
@@ -25906,12 +25905,12 @@ CREATE TABLE IF NOT EXISTS system (
     specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
     UNIQUE (name, emoji)
 );
-CREATE TABLE IF NOT EXISTS system_concepts (
+CREATE TABLE IF NOT EXISTS system_entities (
     system_id INTEGER NOT NULL,
-    concept_id INTEGER NOT NULL,
-    UNIQUE (system_id, concept_id),
+    entity_id INTEGER NOT NULL,
+    UNIQUE (system_id, entity_id),
     FOREIGN KEY (system_id) REFERENCES system (id) ON DELETE CASCADE,
-    FOREIGN KEY (concept_id) REFERENCES concept (id) ON DELETE CASCADE
+    FOREIGN KEY (entity_id) REFERENCES entity (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS bundle_kind (
     id INTEGER PRIMARY KEY,
@@ -37546,106 +37545,6 @@ func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
 
 // #endregion 🔖Benchmark Command
 
-// #region 🔖Preflight Command
-
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command)
-// Preflight command implementation for pre-publish validation.
-
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand🪨preflightcmd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command/d/i/preflightCmd)
-// preflightCmd holds the data fields for a preflightCmd record.
-var preflightCmd = &cobra.Command{
-	Use:   "preflight [command]",
-	Short: "Run preflight checks (fix, analyze, test, build, publish)",
-	RunE:  runPreflight,
-}
-
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand🪨preflightdryrun](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command/d/i/preflightDryRun)
-// preflightDryRun holds the data fields for a preflightDryRun record.
-var preflightDryRun bool
-
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand🛠️runpreflight](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command/d/i/runPreflight)
-// runPreflight holds the data fields for a runPreflight record.
-// runPreflight MUST perform the runPreflight operation.
-func runPreflight(cmd *cobra.Command, args []string) error {
-	if preflightDryRun {
-		return nil
-	}
-	command := "preflight"
-	if len(args) > 0 {
-		command = args[0]
-	}
-	switch command {
-	case "autofix":
-		return runPreflightFix()
-	case "analyze":
-		return runPreflightAnalyze()
-	case "preflight":
-		if err := runPreflightFix(); err != nil {
-			return err
-		}
-		return runPreflightAnalyze()
-	case "test":
-		if err := runPreflightFix(); err != nil {
-			return err
-		}
-		if err := runPreflightAnalyze(); err != nil {
-			return err
-		}
-		return runNx("test")
-	case "build":
-		if err := runNx("test"); err != nil {
-			return err
-		}
-		return runNx("build")
-	case "publish:test":
-		if err := runNx("build"); err != nil {
-			return err
-		}
-		return runNx("publish:test")
-	case "publish":
-		if err := runNx("build"); err != nil {
-			return err
-		}
-		return runNx("publish")
-	default:
-		return fmt.Errorf("unknown command: %s", command)
-	}
-}
-
-// runPreflightFix holds the data fields for a runPreflightFix record.
-// runPreflightFix MUST perform the runPreflightFix operation.
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand🛠️runpreflightfix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command/d/i/runPreflightFix)
-func runPreflightFix() error {
-	fmt.Println("Running autofix...")
-	return autofixCmd.RunE(autofixCmd, []string{})
-}
-
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand🛠️runpreflightanalyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command/d/i/runPreflightAnalyze)
-// runPreflightAnalyze holds the data fields for a runPreflightAnalyze record.
-// runPreflightAnalyze MUST perform the runPreflightAnalyze operation.
-func runPreflightAnalyze() error {
-	fmt.Println("Running analyze...")
-	return analyzeCmd.RunE(analyzeCmd, []string{})
-}
-
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖preflightcommand🛠️runnx](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Preflight%20Command/d/i/runNx)
-// runNx MUST perform the runNx operation.
-// runNx performs the runNx operation.
-func runNx(target string, args ...string) error {
-	fmt.Printf("Running nx %s...\n", target)
-	cmdArgs := []string{"nx", "run-many", "-t", target}
-	cmdArgs = append(cmdArgs, args...)
-
-	cmd := exec.Command("npx", cmdArgs...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
-}
-
-// #endregion 🔖Preflight Command
-
 // #region 🔖Hooks
 
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks)
@@ -38240,7 +38139,7 @@ func extractToolNameFromStdin(input json.RawMessage) string {
 			if len(parts) > 0 {
 				toolName := parts[0]
 				switch toolName {
-				case "grep", "rg":
+				case "grep", "rg", "ripgrep":
 					return "grep_search"
 				case "find", "fd":
 					return "file_search"
@@ -38317,7 +38216,7 @@ func classifyTool(toolName string) ToolKind {
 		"get_errors", "read", "readfile", "searchfiles", "grepsearch", "listdir",
 		"list_code_usages", "get_search_view_results",
 		"geterrors", "getsearchviewresults", "listcodeusages",
-		"fetch_webpage", "open_simple_browser", "grep", "glob":
+		"fetch_webpage", "open_simple_browser", "grep", "rg", "ripgrep", "glob":
 		return ToolKindCodeSearch
 	case "replace_string_in_file", "create_file", "multi_replace_string_in_file",
 		"edit", "write", "editfile", "createfile", "multiedit", "create_directory",
@@ -38574,7 +38473,7 @@ func classifySingleCommandKind(command string) ToolKind {
 		return ToolKindTest
 	case "nunit-console", "nunit3-console":
 		return ToolKindTest
-	case "grep", "rg", "ag", "ack", "ack-grep":
+	case "grep", "rg", "ripgrep", "ag", "ack", "ack-grep":
 		return ToolKindCodeSearch
 	case "find", "fd", "fdfind", "locate", "mlocate":
 		return ToolKindCodeSearch
@@ -43056,7 +42955,6 @@ func init() {
 	updateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show what would be updated without making changes")
 	updateCmd.Flags().BoolVar(&updateApply, "apply", false, "Apply updates (default is dry-run)")
 	benchmarkCmd.Flags().BoolVar(&benchmarkDryRun, "dry-run", false, "Initialize and exit without running benchmarks")
-	preflightCmd.Flags().BoolVar(&preflightDryRun, "dry-run", false, "Initialize and exit without running checks")
 }
 
 // DependabotConfig holds the data fields for a dependabot config record.

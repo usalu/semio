@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS technology (
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (kind_id) REFERENCES technology_kind (id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS concept (
+CREATE TABLE IF NOT EXISTS entity (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     technology_id INTEGER,
     bundle_id INTEGER,
@@ -150,12 +150,12 @@ CREATE TABLE IF NOT EXISTS system (
     specification TEXT NOT NULL CHECK (length (trim(specification)) > 0), -- nn_text
     UNIQUE (name, emoji)
 );
-CREATE TABLE IF NOT EXISTS system_concepts (
+CREATE TABLE IF NOT EXISTS system_entities (
     system_id INTEGER NOT NULL,
-    concept_id INTEGER NOT NULL,
-    UNIQUE (system_id, concept_id),
+    entity_id INTEGER NOT NULL,
+    UNIQUE (system_id, entity_id),
     FOREIGN KEY (system_id) REFERENCES system (id) ON DELETE CASCADE,
-    FOREIGN KEY (concept_id) REFERENCES concept (id) ON DELETE CASCADE
+    FOREIGN KEY (entity_id) REFERENCES entity (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS bundle_kind (
     id INTEGER PRIMARY KEY, -- enum[📚library🛂schema⌨️binary🖱️ui📔examples🌐site🏪assets]

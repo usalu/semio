@@ -256,11 +256,6 @@ export interface TypeAppCommandResult {
  * EMPTY_TYPE_SELECTION holds the data fields for a EMPTY_TYPE_SELECTION record.
  **/
 const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
-// [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management/d/i/EMPTY_MODEL_TAG_ARRAY)
- * [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement🪨emptyothers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management/d/i/EMPTY_OTHERS)
- * EMPTY_OTHERS holds the data fields for a EMPTY_OTHERS record.
- * [👤semio📚js🗃️sketchpad💻type🔖internalstatemanagement🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Internal%20State%20Management/d/i/EMPTY_MODEL_TAG_ARRAY)
- * EMPTY_MODEL_TAG_ARRAY holds the data fields for a EMPTY_MODEL_TAG_ARRAY record.
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖imports🔖internalstatemanagement🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Internal%20State%20Management/d/i/EMPTY_MODEL_TAG_ARRAY)
  * EMPTY_MODEL_TAG_ARRAY holds the data fields for a EMPTY_MODEL_TAG_ARRAY record.
@@ -1208,9 +1203,11 @@ export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: strin
  * TypeAppScopeContext holds the data fields for a TypeAppScopeContext record.
  **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🪨typeappscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/TypeAppScopeContext)
+/**
  * TypeAppScopeContext holds the data fields for a TypeAppScopeContext record.
  **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks🪨typeappscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks/d/i/TypeAppScopeContext)
+/**
  * TypeAppScopeContext holds the data fields for a TypeAppScopeContext record.
  **/
 // [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨typeappscopecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/TypeAppScopeContext)
@@ -1223,6 +1220,7 @@ export const TypeAppScopeProvider = (props: { id: string; children: React.ReactN
   return React.createElement(TypeAppScopeContext.Provider, { value }, props.children as any);
 };
 // [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
  * useTypeAppScope holds the data fields for a useTypeAppScope record.
 
@@ -1481,6 +1479,7 @@ const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨connectorpreview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/ConnectorPreview)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨connectorpreview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/ConnectorPreview)
  * ConnectorPreview holds the data fields for a ConnectorPreview record.
  **/
@@ -1507,12 +1506,14 @@ const ConnectorPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> =
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨getcomputedcolorformesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/getComputedColorForMesh)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨getcomputedcolorformesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/getComputedColorForMesh)
  * getComputedColorForMesh holds the data fields for a getComputedColorForMesh record.
  **/
 const getComputedColorForMesh = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/GLTFMesh)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨gltfmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/GLTFMesh)
  * GLTFMesh holds the data fields for a GLTFMesh record.
  **/
@@ -1550,6 +1551,7 @@ const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointe
 
 /** FBXMesh holds the data fields for a FBXMesh record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/FBXMesh)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/FBXMesh)
  **/
 const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
@@ -1586,6 +1588,7 @@ const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointer
 
 /** OBJMesh holds the data fields for a OBJMesh record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/OBJMesh)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/OBJMesh)
  **/
 const OBJMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointerMove: any; onPointerOut: any }> = ({ url, onPointerDown, onPointerUp, onPointerMove, onPointerOut }) => {
@@ -1647,16 +1650,19 @@ const LoadedTypeMesh: FC<{
 
 /** selectTypeModels holds the data fields for a selectTypeModels record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypemodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypeModels)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypemodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeModels)
  **/
 const selectTypeModels = (type: Type) => type.models;
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeConcepts)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeConcepts)
  * selectTypeConcepts holds the data fields for a selectTypeConcepts record.
  **/
 const selectTypeConcepts = (type: Type) => type.concepts;
 /** selectTypeMeshGuid holds the data fields for a selectTypeMeshGuid record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypemeshguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypeMeshGuid)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypemeshguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeMeshGuid)
  **/
 const selectTypeMeshGuid = (type: Type) => type.guid;
@@ -1844,11 +1850,13 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
  * selectTypePorts holds the data fields for a selectTypePorts record.
  **/
 const selectTypePorts = (type: Type) => type.connectors;
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeGuid)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeGuid)
  * selectTypeGuid holds the data fields for a selectTypeGuid record.
  **/
@@ -2068,6 +2076,7 @@ export const TypeDetails: FC = () => {
 
 /** TypeDetailsForm holds the data fields for a TypeDetailsForm record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨typedetailsform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/TypeDetailsForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨typedetailsform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/TypeDetailsForm)
  **/
 const TypeDetailsForm: FC = () => {
@@ -2148,6 +2157,7 @@ export const ModelsSection: FC = () => {
 
 /** ModelsSectionForm holds the data fields for a ModelsSectionForm record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨modelssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ModelsSectionForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨modelssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ModelsSectionForm)
  **/
 const ModelsSectionForm: FC = () => {
@@ -2312,6 +2322,7 @@ export const ConnectorsListSection: FC = () => {
 
 /** ConnectorsListSectionForm holds the data fields for a ConnectorsListSectionForm record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨connectorslistsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ConnectorsListSectionForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorslistsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsListSectionForm)
  **/
 const ConnectorsListSectionForm: FC = () => {
@@ -2606,6 +2617,7 @@ export const AuthorsSection: FC = () => {
 
 /** AuthorsSectionForm holds the data fields for a AuthorsSectionForm record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨authorssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/AuthorsSectionForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨authorssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AuthorsSectionForm)
  **/
 const AuthorsSectionForm: FC = () => {
@@ -2719,6 +2731,7 @@ export const AttributesSection: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨attributessectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AttributesSectionForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨attributessectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AttributesSectionForm)
  * AttributesSectionForm holds the data fields for a AttributesSectionForm record.
  **/
@@ -2860,6 +2873,7 @@ export const ConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid })
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
  * ConnectorSectionForm holds the data fields for a ConnectorSectionForm record.
  **/
@@ -3060,6 +3074,7 @@ export const ConnectorsMultipleSection: FC<{ connectorGuids: Guid[] }> = ({ conn
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsmultiplesectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSectionForm)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsmultiplesectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSectionForm)
  * ConnectorsMultipleSectionForm holds the data fields for a ConnectorsMultipleSectionForm record.
  **/
@@ -3232,6 +3247,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 // Settings panel for theme, language, device, expertise, and mode selection. MUST use toggle groups and select elements.
 
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖settings🪨typesettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Settings/d/i/TypeSettingsContent)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖settings🪨typesettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Settings/d/i/TypeSettingsContent)
  * TypeSettingsContent holds the data fields for a TypeSettingsContent record.
  **/
@@ -3344,6 +3360,7 @@ const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Too
 
 /** ConnectorToolContent holds the data fields for a ConnectorToolContent record.
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖tools🪨connectortoolcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Tools/d/i/ConnectorToolContent)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖tools🪨connectortoolcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools/d/i/ConnectorToolContent)
  **/
 const ConnectorToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
@@ -3467,6 +3484,7 @@ export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, Selectio
 // Main TypeApp component orchestrating panels, scene, keyboard shortcuts, and drag-and-drop. MUST register sections on mount.
 
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/App/d/i/App)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/App)
  * App holds the data fields for a App record.
  **/
@@ -3728,6 +3746,7 @@ const App: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖app🪨typeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/TypeApp)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖app🪨typeapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/TypeApp)
  * TypeApp holds the data fields for a TypeApp record.
  **/
@@ -3784,6 +3803,7 @@ const TypeApp: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖app🛠️usetypeappinitialize](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/useTypeAppInitialize)
+/**
  * [👤semio📚js🗃️sketchpad💻type🔖app🪨usetypeappinitialize](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/useTypeAppInitialize)
  * useTypeAppInitialize holds the data fields for a useTypeAppInitialize record.
  **/

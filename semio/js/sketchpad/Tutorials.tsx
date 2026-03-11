@@ -66,6 +66,7 @@ export const TutorialControls: FC = () => {
 
 /** TutorialControlsContent holds the data fields for a TutorialControlsContent record.
 // [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🪨tutorialcontrolscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/d/i/TutorialControlsContent)
+/**
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🪨tutorialcontrolscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/d/i/TutorialControlsContent)
  **/
 const TutorialControlsContent: FC = () => {
@@ -161,6 +162,7 @@ export const RecordingControls: FC = () => {
 
 /** RecordingControlsContent holds the data fields for a RecordingControlsContent record.
 // [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖recordingcontrols🪨recordingcontrolscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Recording%20Controls/d/i/RecordingControlsContent)
+/**
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖recordingcontrols🪨recordingcontrolscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Recording%20Controls/d/i/RecordingControlsContent)
  **/
 const RecordingControlsContent: FC = () => {
@@ -297,6 +299,7 @@ interface FocusOverlayProps {
 }
 
 // [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialoverlay🪨focusoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Overlay/d/i/FocusOverlay)
+/**
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialoverlay🪨focusoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Overlay/d/i/FocusOverlay)
  * FocusOverlay holds the data fields for a FocusOverlay record.
  **/
@@ -375,6 +378,7 @@ interface AnimatedCursorProps {
 
 /** AnimatedCursor holds the data fields for a AnimatedCursor record.
 // [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖tutorialoverlay🪨animatedcursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Tutorial%20Overlay/d/i/AnimatedCursor)
+/**
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialoverlay🪨animatedcursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Overlay/d/i/AnimatedCursor)
  **/
 const AnimatedCursor: FC<AnimatedCursorProps> = ({ position, action }) => {
@@ -821,6 +825,7 @@ export const TutorialProvider: FC<{ store: TutorialStore; children: ReactNode }>
 
 /** useTutorialContext holds the data fields for a useTutorialContext record.
 // [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖context🪨usetutorialcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Context/d/i/useTutorialContext)
+/**
  * [👤semio📚js🗃️sketchpad💻tutorials🔖context🪨usetutorialcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Context/d/i/useTutorialContext)
  **/
 const useTutorialContext = () => {

@@ -3906,7 +3906,7 @@ func TestExportToSQLiteEmpty(t *testing.T) {
 	tables := []string{
 		"contributor", "release", "release_contributors", "version", "checkpoint",
 		"folder_kind", "folder", "file_kind", "file",
-		"technology_kind", "technology", "concept", "mechanism", "system", "system_concepts",
+		"technology_kind", "technology", "entity", "mechanism", "system", "system_entities",
 		"bundle_kind", "bundle", "section",
 		"definition_kind", "definition",
 		"client_kind", "agent", "session", "event_kind", "event",
@@ -17897,6 +17897,8 @@ func TestClassifyTool(t *testing.T) {
 		{"TodoWrite", "TodoWrite", ToolKindPlan},
 		{"read_file", "read_file", ToolKindCodeSearch},
 		{"grep_search", "grep_search", ToolKindCodeSearch},
+		{"rg", "rg", ToolKindCodeSearch},
+		{"ripgrep", "ripgrep", ToolKindCodeSearch},
 		{"file_search", "file_search", ToolKindCodeSearch},
 		{"semantic_search", "semantic_search", ToolKindCodeSearch},
 		{"list_dir", "list_dir", ToolKindCodeSearch},
@@ -17942,6 +17944,7 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"grep", "grep -r foo .", ToolKindCodeSearch},
 		{"grep with path", "/usr/bin/grep -rn pattern file.go", ToolKindCodeSearch},
 		{"rg", "rg --type go pattern", ToolKindCodeSearch},
+		{"ripgrep", "ripgrep --type go pattern", ToolKindCodeSearch},
 		{"ag", "ag pattern src/", ToolKindCodeSearch},
 		{"ack", "ack --go pattern", ToolKindCodeSearch},
 		{"ack-grep", "ack-grep pattern", ToolKindCodeSearch},
@@ -18151,6 +18154,7 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 	}{
 		{"grep", "grep -r pattern ."},
 		{"rg", "rg pattern"},
+		{"ripgrep", "ripgrep pattern"},
 		{"ag", "ag pattern"},
 		{"find", "find . -name '*.go'"},
 		{"fd", "fd pattern"},

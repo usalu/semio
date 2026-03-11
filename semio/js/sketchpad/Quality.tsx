@@ -462,6 +462,7 @@ export function parseFormula(formula: string): any {
 
 /** tokenizeFormula holds the data fields for a tokenizeFormula record.
 // [👤semio📚js🗃️sketchpad💻quality🔖functions🛠️tokenizeformula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/tokenizeFormula)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖functions🪨tokenizeformula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/tokenizeFormula)
  **/
 function tokenizeFormula(formula: string): string[] {
@@ -571,6 +572,7 @@ export function formulaToLatex(ast: any): string {
 }
 
 // [👤semio📚js🗃️sketchpad💻quality🔖functions🛠️inversequalityappselectiondiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/inverseQualityAppSelectionDiff)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖functions🪨inversequalityappselectiondiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/inverseQualityAppSelectionDiff)
  * inverseQualityAppSelectionDiff holds the data fields for a inverseQualityAppSelectionDiff record.
  **/
@@ -933,6 +935,7 @@ export const QualityAppScopeProvider = (props: { guid: string; children: React.R
 };
 /** useQualityAppScope holds the data fields for a useQualityAppScope record.
 // [👤semio📚js🗃️sketchpad💻quality🔖store🪨usequalityappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store/d/i/useQualityAppScope)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖store🪨usequalityappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store/d/i/useQualityAppScope)
  **/
 const useQualityAppScope = () => useContext(QualityAppScopeContext);
@@ -1308,6 +1311,7 @@ declare global {
 
 /** FunctionNodeComponent holds the data fields for a FunctionNodeComponent record.
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNodeComponent)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNodeComponent)
  **/
 const FunctionNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, selected }) => {
@@ -1316,6 +1320,7 @@ const FunctionNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, se
 };
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitynodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityNodeComponent)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitynodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityNodeComponent)
  * QualityNodeComponent holds the data fields for a QualityNodeComponent record.
  **/
@@ -1330,6 +1335,7 @@ const QualityNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, sel
 };
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨variablenodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/VariableNodeComponent)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨variablenodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/VariableNodeComponent)
  * VariableNodeComponent holds the data fields for a VariableNodeComponent record.
  **/
@@ -1340,6 +1346,7 @@ const VariableNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, se
 };
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨valuenodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/ValueNodeComponent)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨valuenodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/ValueNodeComponent)
  * ValueNodeComponent holds the data fields for a ValueNodeComponent record.
  **/
@@ -1349,6 +1356,7 @@ const ValueNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, selec
 };
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨placeholdernodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/PlaceholderNodeComponent)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨placeholdernodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/PlaceholderNodeComponent)
  * PlaceholderNodeComponent holds the data fields for a PlaceholderNodeComponent record.
  **/
@@ -1379,6 +1387,7 @@ interface QualityDiagramProps {
 
 /** QualityDiagram holds the data fields for a QualityDiagram record.
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitydiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityDiagram)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitydiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityDiagram)
  **/
 const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
@@ -1495,6 +1504,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
 
 /** Formula holds the data fields for a Formula record.
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨formula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/Formula)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨formula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/Formula)
  **/
 const Formula: FC = () => {
@@ -1651,6 +1661,7 @@ interface FunctionNodeProps {
 }
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNode)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNode)
  * FunctionNode holds the data fields for a FunctionNode record.
  **/
@@ -1827,6 +1838,7 @@ interface QualityTreeNode {
 }
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨buildqualitytree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/buildQualityTree)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨buildqualitytree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/buildQualityTree)
  * buildQualityTree holds the data fields for a buildQualityTree record.
  **/
@@ -1862,6 +1874,7 @@ const buildQualityTree = (qualities: Quality[]): Map<string, QualityTreeNode> =>
 };
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitytree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityTree)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitytree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityTree)
  * QualityTree holds the data fields for a QualityTree record.
  **/
@@ -1904,6 +1917,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
 };
 
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualityworkbenchqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityWorkbenchQualities)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualityworkbenchqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityWorkbenchQualities)
  * QualityWorkbenchQualities holds the data fields for a QualityWorkbenchQualities record.
  **/
@@ -1951,6 +1965,7 @@ const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInst
 DiagramWindow.displayName = "DiagramWindow";
 
 // [👤semio📚js🗃️sketchpad💻quality🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App/d/i/App)
+/**
  * [👤semio📚js🗃️sketchpad💻quality🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/App/d/i/App)
  * App holds the data fields for a App record.
  **/

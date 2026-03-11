@@ -40,6 +40,7 @@ import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, Feedbac
 // MUST register the Feedback app plugin with default state and event handlers.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖feedbackapppluginregistration🪨createdefaultfeedbackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Feedback%20App%20Plugin%20Registration/d/i/createDefaultFeedbackState)
+/**
  * [👤semio📚js🗃️sketchpad💻feedback🔖feedbackapppluginregistration🪨createdefaultfeedbackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Feedback%20App%20Plugin%20Registration/d/i/createDefaultFeedbackState)
  * createDefaultFeedbackState holds the data fields for a createDefaultFeedbackState record.
  **/
@@ -263,6 +264,7 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
 // MUST render feedback form for submitting bug reports and ideas.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖components🔖form🪨feedbackform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components/s/Form/d/i/FeedbackForm)
+/**
  * [👤semio📚js🗃️sketchpad💻feedback🔖components🔖form🪨feedbackform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components/s/Form/d/i/FeedbackForm)
  * FeedbackForm holds the data fields for a FeedbackForm record.
  **/
@@ -485,6 +487,7 @@ const FeedbackForm: FC = () => {
 // MUST integrate feedback app with toolbar and layout canvas.
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/FeedbackToolbar)
+/**
  * [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/FeedbackToolbar)
  * FeedbackToolbar holds the data fields for a FeedbackToolbar record.
  **/
@@ -510,6 +513,7 @@ const FeedbackToolbar: FC = () => {
 };
 
 // [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/Feedback)
+/**
  * [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/Feedback)
  * Feedback holds the data fields for a Feedback record.
  **/
