@@ -2352,12 +2352,6 @@ The code runs in different environments (different browsers, electron, mobile/de
 - `semio/play` - Playground.
 - `semio-repo/vscode` - VS Code extension.
 
-## Preflight
-
-```bash
-cd semio/js && npm run preflight
-```
-
 ## Channels
 
 <details>
@@ -4311,7 +4305,7 @@ External and internal module imports.
 
 Reactive stores backed by Yjs for collaborative state management.
 
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖plainappstorenoyjs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Plain%20App%20Store%20(No%20YJS))
+## [👤semio📚js🗃️sketchpad💻sketchpad🔖plainappstorenoyjs](<semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Plain%20App%20Store%20(No%20YJS)>)
 
 Non-YJS application stores using plain in-memory state with transaction support.
 
@@ -4323,7 +4317,7 @@ In-memory file storage provider for temporary or test scenarios.
 
 In-memory file storage provider for temporary or test scenarios.
 
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖localfileproviderindexeddb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Local%20File%20Provider%20(IndexedDB))
+## [👤semio📚js🗃️sketchpad💻sketchpad🔖localfileproviderindexeddb](<semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Local%20File%20Provider%20(IndexedDB)>)
 
 Browser-local file storage provider backed by IndexedDB.
 

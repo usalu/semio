@@ -6,8 +6,7 @@
   "projectType": "library",
   "scripts": {
     "build": "cargo build --release",
-    "test": "cargo test",
-    "preflight": "cargo fmt --check && cargo clippy"
+    "test": "cargo test"
   },
   "author": {
     "name": "Ueli Saluz",

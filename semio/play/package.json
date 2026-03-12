@@ -4,9 +4,9 @@
   "type": "module",
   "name": "@semio/play",
   "version": "0.1.0",
-  "description": "semio \u22c5 playground",
+  "description": "semio ⋅ playground",
   "scripts": {
-    "dev": "vite --strictPort --port 4000 --host 0.0.0.0",
+    "dev": "CHOKIDAR_USEPOLLING=1 vite --strictPort --port 4000 --host 0.0.0.0",
     "build": "vite build",
     "publish": "vite build && npm publish",
     "preflight": "echo \"No preflight checks configured\""

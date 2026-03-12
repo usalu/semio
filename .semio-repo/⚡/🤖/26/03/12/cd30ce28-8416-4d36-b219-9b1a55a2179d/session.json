@@ -1,0 +1,192 @@
+{
+  "id": "cd30ce28-8416-4d36-b219-9b1a55a2179d",
+  "uri": "semiorepo://s/cd30ce28-8416-4d36-b219-9b1a55a2179d",
+  "checkpoint": "b206b77c4747a568056c9529317b17e33a0bd823",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-12T13:22:20Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-12T13:22:18.529Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "cd30ce28-8416-4d36-b219-9b1a55a2179d",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl",
+          "source": "new",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.started acknowledged",
+            "hookEventName": "SessionStart"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰13⌚22⏱️20",
+        "session": "⚪cd30ce2884164d36b2199b1a55a2179d",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-12T13:22:51.053Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "cd30ce28-8416-4d36-b219-9b1a55a2179d",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl",
+          "prompt": "semio engine:\nThe engine is used to interact with local kits (path) and remote kits (server with accounts and auth). It only runs on clients. All functionality \nMUST work for both kind of kits. Extend the engine with a way to authenticate with servers and refactor everything to work with this two modes. Test everything.",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.prompt.submitting acknowledged",
+            "hookEventName": "UserPromptSubmit"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "prompt": "semio engine:\nThe engine is used to interact with local kits (path) and remote kits (server with accounts and auth). It only runs on clients. All functionality \nMUST work for both kind of kits. Extend the engine with a way to authenticate with servers and refactor everything to work with this two modes. Test everything.",
+        "second": "🎆26🌙03☀️12⏰13⌚22⏱️52",
+        "session": "⚪cd30ce2884164d36b2199b1a55a2179d",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-12T13:23:44.935Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "cd30ce28-8416-4d36-b219-9b1a55a2179d",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl",
+          "tool_name": "mcp_semio-repo_search",
+          "tool_input": {
+            "query": "engine authentication server remote local kit path"
+          },
+          "tool_use_id": "toolu_bdrk_019UXdRH7oZ44rExP92mQbjW__vscode-1773321376818",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "input": {
+          "query": "engine authentication server remote local kit path"
+        },
+        "kind": "agent.tool.starting",
+        "name": "mcp_semio-repo_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰13⌚23⏱️45",
+        "session": "⚪cd30ce2884164d36b2199b1a55a2179d",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-12T13:24:43.038Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "cd30ce28-8416-4d36-b219-9b1a55a2179d",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl",
+          "tool_name": "mcp_semio-repo_search",
+          "tool_input": {
+            "query": "engine authentication server remote local kit path"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_019UXdRH7oZ44rExP92mQbjW__vscode-1773321376818",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "input": {
+          "query": "engine authentication server remote local kit path"
+        },
+        "kind": "agent.tool.ended",
+        "name": "mcp_semio-repo_search",
+        "parent": "",
+        "response": "",
+        "second": "🎆26🌙03☀️12⏰13⌚24⏱️43",
+        "session": "⚪cd30ce2884164d36b2199b1a55a2179d",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-12T13:24:56.103Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "cd30ce28-8416-4d36-b219-9b1a55a2179d",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl",
+          "tool_name": "mcp_semio-repo_search",
+          "tool_input": {
+            "query": "engine kit authentication server remote local"
+          },
+          "tool_use_id": "toolu_bdrk_01T7f1kN9PcmPGrqVeXW8EXR__vscode-1773321376819",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "input": {
+          "query": "engine kit authentication server remote local"
+        },
+        "kind": "agent.tool.starting",
+        "name": "mcp_semio-repo_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰13⌚24⏱️56",
+        "session": "⚪cd30ce2884164d36b2199b1a55a2179d",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/cd30ce28-8416-4d36-b219-9b1a55a2179d.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

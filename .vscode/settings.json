@@ -8,5 +8,58 @@
   "playwright.env": {
     "PWDEBUG": "console"
   },
-  "workbench.externalBrowser": "chrome"
+  "workbench.externalBrowser": "chrome",
+  "workbench.trustedDomains": [
+    "*"
+  ],
+  "remote.autoForwardPorts": true,
+  "remote.portsAttributes": {
+    "6274": {
+      "label": "MCP Inspector UI",
+      "onAutoForward": "openBrowser"
+    },
+    "6277": {
+      "label": "MCP Inspector Proxy",
+      "onAutoForward": "silent"
+    }
+  },
+  "mcp.servers": {
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "run-test-mcp-server"
+      ]
+    },
+    "semio-repo": {
+      "type": "stdio",
+      "command": "./semio-repo/cli/cli",
+      "args": [
+        "mcp"
+      ]
+    },
+    "semio": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "engine.py",
+        "--mcp-stdio"
+      ]
+    },
+    "coda": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio-coda/py",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ]
+    }
+  }
 }

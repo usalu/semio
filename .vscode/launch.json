@@ -525,8 +525,11 @@
         "uriFormat": "%s"
       }
     },
+    // ========================================
+    // MCP
+    // ========================================
     {
-      "name": "mcp dev",
+      "name": "mcp inspector",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -540,7 +543,65 @@
         "SERVER_PORT": "6277"
       },
       "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "semio:mcp",
+      "preLaunchTask": "inspector mcp",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "engine.py",
+        "--mcp-stdio"
+      ],
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "coda:mcp",
+      "preLaunchTask": "inspector mcp",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "--directory",
+        "semio-coda/py",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "semio-repo:mcp",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
+      "env": {
+        "MCP_AUTO_OPEN_ENABLED": "false",
+        "MCP_PROXY_AUTH_TOKEN": "semio-repo-mcp-debug-token"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
+        "uriFormat": "%s&transport=stdio&serverCommand=./semio-repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+      }
     },
     {
       "name": "Go dev",
@@ -556,6 +617,17 @@
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "mcp dev",
+      "configurations": [
+        "mcp inspector",
+        "semio:mcp",
+        "coda:mcp",
+        "semio-repo:mcp"
+      ]
     }
   ]
 }

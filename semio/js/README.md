@@ -2294,12 +2294,6 @@ The code runs in different environments (different browsers, electron, mobile/de
 - `semio/play` - Playground.
 - `semio-repo/vscode` - VS Code extension.
 
-## Preflight
-
-```bash
-cd semio/js && npm run preflight
-```
-
 ## Channels
 
 <details>

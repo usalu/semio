@@ -523,7 +523,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️️
+Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️️
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 
@@ -664,8 +664,8 @@ The default model for agent work is the one native to the platform we use for th
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
-The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
+All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
+The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
 Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `npm run pre-commit:install` once, then use `npm run pre-commit` to run hooks on all files.
 
 # ♻ Ecosystems [↑](#-overview)

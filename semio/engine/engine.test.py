@@ -32,7 +32,7 @@ from starlette.testclient import TestClient
 # endregion Imports
 
 # region Constants
-ASSETS_DIR = pathlib.Path(__file__).parent.parent.parent / "assets" / "semio"
+ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
 KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
 
 # endregion Constants
@@ -429,8 +429,155 @@ class TestMcp:
                 {"guid": "pc3", "name": "Piece3", "type": {"guid": "t1"}},
             ]},
         ]}
-        result = engine.sum_quality_in_design(kit, "d1", "q1")
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        engine._mcp_session_kits[id(mock_ctx.session)] = kit
+        result = engine.sum_quality_in_design("d1", "q1", mock_ctx)
         assert abs(result.get("result") - 41.0) < 0.001
+
+    def test_start_working_in_local_kit_loads_from_path(self):
+        """start_working_in_local_kit loads kit from metabolism JSON path."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
+        assert result.get("ok") is True
+        assert "kit_metabolism" in result.get("path", "")
+        assert id(mock_ctx.session) in engine._mcp_session_kits
+
+    def test_start_working_in_local_kit_loads_from_folder(self):
+        """start_working_in_local_kit loads kit from folder containing kit_metabolism.json."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
+        assert result.get("ok") is True
+        kit = engine._mcp_session_kits[id(mock_ctx.session)]
+        assert "designs" in kit
+
+    def test_start_working_in_local_kit_clears_design_and_type(self):
+        """start_working_in_local_kit clears any previously set design and type."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_designs[sid] = {"guid": "old-design"}
+        engine._mcp_session_types[sid] = {"guid": "old-type"}
+        engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
+        assert sid not in engine._mcp_session_designs
+        assert sid not in engine._mcp_session_types
+
+    def test_start_working_in_local_kit_and_sum_quality_metabolism(self, kitMetabolismJson: dict):
+        """start_working_in_local_kit then sum_quality_in_design for Nakagin effective floor area."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        engine._mcp_session_kits[id(mock_ctx.session)] = kitMetabolismJson
+        design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+        quality = next(q for q in kitMetabolismJson.get("qualities", []) if q.get("name") == "effective floor area")
+        result = engine.sum_quality_in_design(design["guid"], quality["guid"], mock_ctx)
+        assert abs(result.get("result") - 2349.53) < 0.01
+
+    def test_start_working_in_design(self, kitMetabolismJson: dict):
+        """start_working_in_design selects a design by GUID from the session kit."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+        result = engine.start_working_in_design(design["guid"], mock_ctx)
+        assert result.get("ok") is True
+        assert result.get("guid") == design["guid"]
+        assert sid in engine._mcp_session_designs
+        assert engine._mcp_session_designs[sid]["guid"] == design["guid"]
+
+    def test_start_working_in_design_not_found(self, kitMetabolismJson: dict):
+        """start_working_in_design returns error for unknown GUID."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        engine._mcp_session_kits[id(mock_ctx.session)] = kitMetabolismJson
+        result = engine.start_working_in_design("nonexistent-guid", mock_ctx)
+        assert "error" in result
+
+    def test_read_current_design(self, kitMetabolismJson: dict):
+        """read_current_design returns the design set by start_working_in_design."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+        engine.start_working_in_design(design["guid"], mock_ctx)
+        result = engine.read_current_design(mock_ctx)
+        assert result.get("guid") == design["guid"]
+        assert result.get("name") == "Nakagin Capsule Tower"
+
+    def test_read_current_design_without_start(self):
+        """read_current_design returns error if no design was set."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.read_current_design(mock_ctx)
+        assert "error" in result
+
+    def test_finish_working_in_design(self, kitMetabolismJson: dict):
+        """finish_working_in_design clears the current design from session."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+        engine.start_working_in_design(design["guid"], mock_ctx)
+        assert sid in engine._mcp_session_designs
+        result = engine.finish_working_in_design(mock_ctx)
+        assert result.get("ok") is True
+        assert sid not in engine._mcp_session_designs
+
+    def test_start_working_in_type(self, kitMetabolismJson: dict):
+        """start_working_in_type selects a type by GUID from the session kit."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        t = kitMetabolismJson.get("types", [])[0]
+        result = engine.start_working_in_type(t["guid"], mock_ctx)
+        assert result.get("ok") is True
+        assert result.get("guid") == t["guid"]
+        assert sid in engine._mcp_session_types
+        assert engine._mcp_session_types[sid]["guid"] == t["guid"]
+
+    def test_start_working_in_type_not_found(self, kitMetabolismJson: dict):
+        """start_working_in_type returns error for unknown GUID."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        engine._mcp_session_kits[id(mock_ctx.session)] = kitMetabolismJson
+        result = engine.start_working_in_type("nonexistent-guid", mock_ctx)
+        assert "error" in result
+
+    def test_read_current_type(self, kitMetabolismJson: dict):
+        """read_current_type returns the type set by start_working_in_type."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        t = kitMetabolismJson.get("types", [])[0]
+        engine.start_working_in_type(t["guid"], mock_ctx)
+        result = engine.read_current_type(mock_ctx)
+        assert result.get("guid") == t["guid"]
+
+    def test_read_current_type_without_start(self):
+        """read_current_type returns error if no type was set."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.read_current_type(mock_ctx)
+        assert "error" in result
+
+    def test_finish_working_in_type(self, kitMetabolismJson: dict):
+        """finish_working_in_type clears the current type from session."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        t = kitMetabolismJson.get("types", [])[0]
+        engine.start_working_in_type(t["guid"], mock_ctx)
+        assert sid in engine._mcp_session_types
+        result = engine.finish_working_in_type(mock_ctx)
+        assert result.get("ok") is True
+        assert sid not in engine._mcp_session_types
+
+    def test_finish_working_in_kit(self, kitMetabolismJson: dict):
+        """finish_working_in_kit clears kit, design, and type from session."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+        engine.start_working_in_design(design["guid"], mock_ctx)
+        t = kitMetabolismJson.get("types", [])[0]
+        engine.start_working_in_type(t["guid"], mock_ctx)
+        result = engine.finish_working_in_kit(mock_ctx)
+        assert result.get("ok") is True
+        assert sid not in engine._mcp_session_kits
+        assert sid not in engine._mcp_session_designs
+        assert sid not in engine._mcp_session_types
 
 
 # endregion MCP Tests

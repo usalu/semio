@@ -113,11 +113,17 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
-## [👤semio📚js](semiorepo://project/semio/bundle/js)
+## 👤semio⌨️engine
 
-## [👤semio📚js🗃️sketchpad](semiorepo://project/semio/bundle/js/folder/sketchpad)
+semio engine:
+The engine is used to interact with local kits (path) and remote kits (server with accounts and auth). It only runs on clients. All functionality
+MUST work for both kind of kits. Extend the engine with a way to authenticate with servers and refactor everything to work with this two modes. Test everything.
 
-## [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)
+## 👤semio📚js
+
+## 👤semio📚js🗃️sketchpad
+
+## 👤semio📚js🗃️sketchpad💻designtsx
 
 ## 👤semio🖱️3dm
 

@@ -36120,8 +36120,6 @@ func isRepoExcludedPath(path string) bool {
 	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/assets/repo/") {
 		return true
 	}
-		return true
-	}
 	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") {
 		return true
 	}

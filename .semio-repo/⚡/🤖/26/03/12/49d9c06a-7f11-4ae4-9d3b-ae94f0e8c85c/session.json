@@ -1,0 +1,433 @@
+{
+  "id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+  "uri": "semiorepo://s/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+  "contributor": "🧑‍💻ueli",
+  "client": "cursor-chat",
+  "second": "2026-03-12T11:27:46Z",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "content": "---\ntitle: Preview Design\ndescription: Visualize your model using the Preview Design component\nicon: 🖼️\norder: 4\n---\n\n## 🔍 From Logic to Look\n\nOnce you've done the following:\n\n1️⃣ **Placed your Bricks** – by defining **Pieces** (instances of your brick molds)  \n2️⃣ **Snapped them together** – by setting up **Connections** between their Connectors  \n3️⃣ **Organized the build** – by assembling them into a full **Design**\n\n🎉 It’s time to **see your LEGO model come to life**!\n\n---\n\nUp to now, we’ve been working behind the scenes 🛠️\nWe’ve been defining meaning, relationships, and structure — not just drawing shapes\n\nBut unlike regular Grasshopper workflows, semio doesn’t preview geometry automatically ⚠️ The visualization happens in a dedicated step 🎬 like revealing your finished LEGO model after following all the instructions\n\n## 🧩 Visualize the Design\n\nOnce your modular system is ready, it’s time to see it come together!  \nTo visualize the final assembly, semio uses the `Preview Design` component in Grasshopper\n\n🔌 **Connect these inputs to the `Preview Design` component**:\n\n- **🧱 Design**  \n  The complete structure — tells semio which Pieces are used and how they’re connected\n\n- **📦 Types**  \n  The brick molds used in the Design — including Connectors and logic for snapping\n\n- **🧊 Models**  \n  The geometry files (e.g. `.glb`) or `Objects` for each Type and Variant — the actual shape of each brick\n\n---\n\n🔍 Once connected, the `Preview Design` component renders your full modular creation:  \nbrick by brick, just like snapping together your final LEGO model on the table! 🧩\n\nHere’s what gets visualized:\n\n- 🧱 **Brick Placement**  \n  Every Piece is shown in its final position — exactly where your Design logic places it\n\n- 🧲 **Connector Connections**  \n  All **Connectors** are displayed — including their direction — so you can clearly see how Pieces are designed to snap together, and which ones are actually connected\n\n- 🔄 **Snapping Adjustments**  \n  Rotations, gaps, shifts, or tilts added during connection are shown — making alignment easy to check\n\n![📁 Preview Design](/assets/images/preview-design.png)\n![📁 Preview Design](/assets/images/preview-design-2-black.png)\n\n---\n\n✅ That’s it — you’ve built and visualized your first modular kit in Semio!  \nFrom mold to model, every part now fits where it belongs\n",
+          "file_path": "./semio/js/sketchpad/pages/tutorials/hello-semio/show-design.mdx",
+          "attachments": [],
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad🗃️pages🗃️tutorials🗃️hellosemio💾showdesign"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad🗃️pages🗃️tutorials🗃️hellosemio💾showdesign📌1📌63"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚27⏱️46",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "./semio/js/sketchpad/Design.tsx"
+          },
+          "tool_output": "{\"file_path\":\"./semio/js/sketchpad/Design.tsx\",\"content_length\":487201}",
+          "duration": 2386.453,
+          "tool_use_id": "tool_a7e7a95b-2d23-4ed5-b4d2-8255aabfc6d-38c635af",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad💻design"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad💻design📌1📌11115"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚27⏱️46",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "./semio/js/sketchpad/Sketchpad.tsx"
+          },
+          "tool_output": "{\"file_path\":\"./semio/js/sketchpad/Sketchpad.tsx\",\"content_length\":797753}",
+          "duration": 4790.559,
+          "tool_use_id": "tool_a7e7a95b-2d23-4ed5-b4d2-8255aabfc6d-0a68d716",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad💻sketchpad"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad💻sketchpad📌1📌19414"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚27⏱️46",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio-coda/examples/semio-blnbo-roomprogram/.github/agents/semio-to-roomprogram-translation-subagent.agent.md"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/semio-coda/examples/semio-blnbo-roomprogram/.github/agents/semio-to-roomprogram-translation-subagent.agent.md\",\"content_length\":1842}",
+          "duration": 4914.63,
+          "tool_use_id": "tool_15d2cfa5-b55f-4bf9-9cf1-687863a43ab",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🔬coda📚examples🗃️semioblnboroomprogram🛅github🗃️agents📃semiotoroomprogramtranslationsubagentagent"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "🔬coda📚examples🗃️semioblnboroomprogram🛅github🗃️agents📃semiotoroomprogramtranslationsubagentagent📌1📌57"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚27⏱️59",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "./semio/js/sketchpad/pages/tutorials/hello-semio/sketch-setup.mdx"
+          },
+          "tool_output": "{\"file_path\":\"./semio/js/sketchpad/pages/tutorials/hello-semio/sketch-setup.mdx\",\"content_length\":4323}",
+          "duration": 2433.694,
+          "tool_use_id": "tool_a7e7a95b-2d23-4ed5-b4d2-8255aabfc6d-84d213e6",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad🗃️pages🗃️tutorials🗃️hellosemio💾sketchsetup"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad🗃️pages🗃️tutorials🗃️hellosemio💾sketchsetup📌1📌121"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚27⏱️59",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "./semio/js/sketchpad/README.md"
+          },
+          "tool_output": "{\"file_path\":\"./semio/js/sketchpad/README.md\",\"content_length\":25350}",
+          "duration": 236.235,
+          "tool_use_id": "tool_a7e7a95b-2d23-4ed5-b4d2-8255aabfc6d-aec9eb96",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad📃readme"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad📃readme📌1📌569"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚27⏱️59",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "./semio/js/sketchpad/pages/getting-started/starter.mdx"
+          },
+          "tool_output": "{\"file_path\":\"./semio/js/sketchpad/pages/getting-started/starter.mdx\",\"content_length\":2335}",
+          "duration": 61.834,
+          "tool_use_id": "tool_a7e7a95b-2d23-4ed5-b4d2-8255aabfc6d-8312e70f",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad🗃️pages🗃️gettingstarted💾starter"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad🗃️pages🗃️gettingstarted💾starter📌1📌76"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚28⏱️06",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "./semio/js/sketchpad/pages/tutorials/hello-semio/show-design.mdx"
+          },
+          "tool_output": "{\"file_path\":\"./semio/js/sketchpad/pages/tutorials/hello-semio/show-design.mdx\",\"content_length\":2350}",
+          "duration": 90.806,
+          "tool_use_id": "tool_a7e7a95b-2d23-4ed5-b4d2-8255aabfc6d-f79d9941",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🗃️sketchpad🗃️pages🗃️tutorials🗃️hellosemio💾showdesign"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🗃️sketchpad🗃️pages🗃️tutorials🗃️hellosemio💾showdesign📌1📌63"
+        ],
+        "second": "🎆26🌙03☀️12⏰11⌚28⏱️06",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "text": "",
+          "duration_ms": 96,
+          "model": "composer-1.5",
+          "hook_event_name": "afterAgentThought",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.thinking.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰11⌚28⏱️10",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "generation_id": "87aa05d3-c433-45da-827d-5ac78e2f7a91",
+          "model": "composer-1.5",
+          "session_id": "49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c",
+          "reason": "window_close",
+          "duration_ms": 0,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰13⌚15⏱️37",
+        "session": "⚪49d9c06a7f114ae49d3bae94f0e8c85c",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c/49d9c06a-7f11-4ae4-9d3b-ae94f0e8c85c.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

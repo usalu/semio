@@ -420,10 +420,6 @@ ToolAnalyze performs the tool analyze operation.
 
 Benchmark command implementation for performance measurement.
 
-## [🧰semiorepo⌨️cli💻maingo🔖preflightcommand](semiorepo://section/Preflight%20Command)
-
-Preflight command implementation for pre-publish validation.
-
 ## [🧰semiorepo⌨️cli💻maingo🔖hooks](semiorepo://section/Hooks)
 
 Hook event types, context, handler, and blocked tool patterns for git and agent lifecycle hooks.
@@ -661,7 +657,7 @@ NDJSONRenderer holds the data fields for a n d j s o n renderer record.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️render](semiorepo://definition/semio-repo/cli/main.go/Render)
 
-Render renders the  into its output representation.
+Render renders the into its output representation.
 
 ## [🧰semiorepo⌨️cli💻maingo✂️humanrenderer](semiorepo://definition/semio-repo/cli/main.go/HumanRenderer)
 
@@ -669,7 +665,7 @@ HumanRenderer holds the data fields for a human renderer record.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️render](semiorepo://definition/semio-repo/cli/main.go/Render)
 
-Render renders the  into its output representation.
+Render renders the into its output representation.
 
 ## [🧰semiorepo⌨️cli💻maingo✂️markdownrenderer](semiorepo://definition/semio-repo/cli/main.go/MarkdownRenderer)
 
@@ -677,7 +673,7 @@ MarkdownRenderer holds the data fields for a markdown renderer record.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️render](semiorepo://definition/semio-repo/cli/main.go/Render)
 
-Render renders the  into its output representation.
+Render renders the into its output representation.
 
 ## [🧰semiorepo⌨️cli💻maingo✂️node](semiorepo://definition/semio-repo/cli/main.go/Node)
 
@@ -3589,7 +3585,7 @@ Extract extracts the extract from the source.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️repo](semiorepo://definition/semio-repo/cli/main.go/Repo_)
 
-Repo_ performs the repo_ operation on the resolver.
+Repo* performs the repo* operation on the resolver.
 
 ## [🧰semiorepo⌨️cli💻maingo🛠️bundles](semiorepo://definition/semio-repo/cli/main.go/Bundles)
 

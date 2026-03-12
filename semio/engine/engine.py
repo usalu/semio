@@ -54,7 +54,7 @@ import sqlmodel
 import starlette.applications
 import starlette_graphene3
 import uvicorn
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "semio"))
 from semio import (
@@ -134,7 +134,6 @@ from semio import (
     changeValues,
     createClusteredDesignDict,
     decode,
-    dragPiecesInDesignDict,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
@@ -1520,10 +1519,87 @@ rest.openapi = custom_openapi
 
 # region Mcp
 # [👤semio📚engine💻engine🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
-# Mcp MUST expose pure, stateless kit operations via Model Context Protocol.
-# All tools take kit dicts as input and return results or diffs.
+# Mcp MUST expose stateful kit operations via Model Context Protocol.
+# Call start_working_in_local_kit(path) first; then use start_working_in_design/start_working_in_type to scope further.
 
-mcp = FastMCP("semio", stateless_http=True, json_response=True)
+mcp = FastMCP("semio", stateless_http=False, json_response=True)
+
+# Session-scoped state. Keyed by session id for isolation.
+_mcp_session_kits: dict[int, dict] = {}
+_mcp_session_designs: dict[int, dict] = {}
+_mcp_session_types: dict[int, dict] = {}
+
+
+def _load_kit_from_path(path: str) -> dict:
+    """Load kit dict from path (JSON file or folder with .semio/kit.sqlite3 or kit JSON).
+    [👤semio📚engine💻engine🔖mcp🛠️loadkitfrompath](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_path)
+    """
+    p = pathlib.Path(path).resolve()
+    if p.is_file() and p.suffix == ".json":
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f)
+    if p.is_dir():
+        sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
+        if sqlite_path.exists():
+            store = StoreFactory(str(p))
+            kit = store.get({"kind": "kit", "kitUri": str(p)})
+            return kit.model_dump() if hasattr(kit, "model_dump") else KitOutput.model_validate(kit).model_dump()
+        for name in ("kit_metabolism.json", "kit.json"):
+            json_path = p / name
+            if json_path.exists():
+                with open(json_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        parent_json = p.parent / "kit_metabolism.json"
+        if parent_json.exists():
+            with open(parent_json, "r", encoding="utf-8") as f:
+                return json.load(f)
+    raise FileNotFoundError(f"Kit not found at path: {path}")
+
+
+def _session_id(ctx) -> int:
+    """Get session id from context."""
+    return id(ctx.session) if ctx and hasattr(ctx, "session") else None
+
+
+def _get_session_kit(ctx) -> dict:
+    """Get kit from session. Raises if start_working_in_local_kit was not called."""
+    sid = _session_id(ctx)
+    if sid is None or sid not in _mcp_session_kits:
+        raise ValueError("Call start_working_in_local_kit(path) first to set the kit for this session.")
+    return _mcp_session_kits[sid]
+
+
+def _get_session_design(ctx) -> dict:
+    """Get current design from session. Raises if start_working_in_design was not called."""
+    sid = _session_id(ctx)
+    if sid is None or sid not in _mcp_session_designs:
+        raise ValueError("Call start_working_in_design(guid) first to set the design for this session.")
+    return _mcp_session_designs[sid]
+
+
+def _get_session_type(ctx) -> dict:
+    """Get current type from session. Raises if start_working_in_type was not called."""
+    sid = _session_id(ctx)
+    if sid is None or sid not in _mcp_session_types:
+        raise ValueError("Call start_working_in_type(guid) first to set the type for this session.")
+    return _mcp_session_types[sid]
+
+
+@mcp.tool()
+def start_working_in_local_kit(path: str, ctx: Context) -> dict:
+    """Start working in a local kit for this MCP session. MUST be called first.
+    Path: absolute path to kit folder (with .semio/kit.sqlite3) or JSON file, or folder containing kit_metabolism.json.
+    [👤semio📚engine💻engine🔖mcp🛠️startworkinginlocalkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_local_kit)
+    """
+    try:
+        kit = _load_kit_from_path(path)
+        sid = _session_id(ctx)
+        _mcp_session_kits[sid] = kit
+        _mcp_session_designs.pop(sid, None)
+        _mcp_session_types.pop(sid, None)
+        return {"ok": True, "path": path}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @mcp.tool()
@@ -1547,18 +1623,6 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
     """
     try:
         return flattenDesignDict(kit, design_guid)
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def drag_pieces_in_design(design: dict, pieces: dict, offset: dict) -> dict:
-    """Compute a design diff that drags selected pieces by an offset.
-    Callers MUST provide a valid design dict, a pieces dict with selected pieces, and an offset dict with u/v.
-    [👤semio📚engine💻engine🔖mcp🛠️dragpiecesindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/drag_pieces_in_design)
-    """
-    try:
-        return dragPiecesInDesignDict(design, pieces, offset)
     except Exception as e:
         return {"error": str(e)}
 
@@ -1867,13 +1931,113 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
 
 
 @mcp.tool()
-def sum_quality_in_design(kit: dict, design_guid: str, quality_guid: str) -> dict:
+def start_working_in_design(guid: str, ctx: Context) -> dict:
+    """Start working in a design within the current kit.
+    Callers MUST have called start_working_in_local_kit first. Selects the design by GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️startworkingindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_design)
+    """
+    try:
+        kit = _get_session_kit(ctx)
+        design = next((d for d in kit.get("designs", []) if d.get("guid") == guid), None)
+        if design is None:
+            return {"error": f"Design with guid {guid} not found in kit."}
+        sid = _session_id(ctx)
+        _mcp_session_designs[sid] = design
+        return {"ok": True, "guid": guid, "name": design.get("name", "")}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def read_current_design(ctx: Context) -> dict:
+    """Read the current design that was set via start_working_in_design.
+    [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
+    """
+    try:
+        return _get_session_design(ctx)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def finish_working_in_design(ctx: Context) -> dict:
+    """Finish working in the current design. Clears the design from session state.
+    [👤semio📚engine💻engine🔖mcp🛠️finishworkingindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_design)
+    """
+    try:
+        sid = _session_id(ctx)
+        _mcp_session_designs.pop(sid, None)
+        return {"ok": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def start_working_in_type(guid: str, ctx: Context) -> dict:
+    """Start working in a type within the current kit.
+    Callers MUST have called start_working_in_local_kit first. Selects the type by GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️startworkingintype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_type)
+    """
+    try:
+        kit = _get_session_kit(ctx)
+        t = next((t for t in kit.get("types", []) if t.get("guid") == guid), None)
+        if t is None:
+            return {"error": f"Type with guid {guid} not found in kit."}
+        sid = _session_id(ctx)
+        _mcp_session_types[sid] = t
+        return {"ok": True, "guid": guid, "name": t.get("name", "")}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def read_current_type(ctx: Context) -> dict:
+    """Read the current type that was set via start_working_in_type.
+    [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
+    """
+    try:
+        return _get_session_type(ctx)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def finish_working_in_type(ctx: Context) -> dict:
+    """Finish working in the current type. Clears the type from session state.
+    [👤semio📚engine💻engine🔖mcp🛠️finishworkingintype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_type)
+    """
+    try:
+        sid = _session_id(ctx)
+        _mcp_session_types.pop(sid, None)
+        return {"ok": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def finish_working_in_kit(ctx: Context) -> dict:
+    """Finish working in the current kit. Clears kit, design, and type from session state.
+    [👤semio📚engine💻engine🔖mcp🛠️finishworkinginkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_kit)
+    """
+    try:
+        sid = _session_id(ctx)
+        _mcp_session_kits.pop(sid, None)
+        _mcp_session_designs.pop(sid, None)
+        _mcp_session_types.pop(sid, None)
+        return {"ok": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> dict:
     """Sum up the values of a quality across all pieces in a design.
     For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
-    Callers MUST provide a valid kit dict, design GUID, and quality GUID.
+    Callers MUST have called start_working_in_local_kit first.
     [👤semio📚engine💻engine🔖mcp🛠️sumqualityindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/sum_quality_in_design)
     """
     try:
+        kit = _get_session_kit(ctx)
         return {"result": sumQualityInDesignDict(kit, design_guid, quality_guid)}
     except Exception as e:
         return {"error": str(e)}

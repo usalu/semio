@@ -8,7 +8,6 @@
     "dev": "vite",
     "build": "vite build",
     "publish": "vite build && npm publish",
-    "preflight": "echo \"No preflight checks configured\"",
     "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
   },
   "dependencies": {
